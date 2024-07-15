@@ -15,12 +15,17 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
 
     private val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
     private val inputBinariesProperty: Provider<String> = project.providers
-        .gradleProperty("bisq.release.binaries_path")
+            .gradleProperty("bisq.release.binaries_path")
+    private val defaultInputDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/jpackage/packages")
 
     fun registerCopyReleaseBinariesTask() {
         val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
         project.tasks.register<Copy>("copyReleaseBinaries") {
-            from(inputBinariesProperty)
+            if (inputBinariesProperty.isPresent) {
+                from(inputBinariesProperty)
+            } else {
+                from(defaultInputDir)
+            }
             include("*.dmg", "*.deb", "*.exe", "*.rpm")
             into(releaseDir)
             /* Bisq 1: "Bisq-1.9.15.dmg"          -> "Bisq-1.9.15.dmg"
@@ -33,33 +38,25 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
                        "Bisq2-2.0.4.exe"         -> "Bisq-2.0.4.exe"
                        "bisq2-2.0.4-1.x86_64.rpm" -> "Bisq-2.0.4.rpm" */
             rename { fileName: String ->
-                if (fileName.startsWith("Bisq2") || fileName.contains("bisq2")) {
-                    fileName.replace("Bisq2", "Bisq") // "Bisq2-2.0.4.exe", "Bisq2-2.0.4.dmg"
-                        .replace("bisq2_", "Bisq-") // "bisq2_2.0.4-1_amd64.deb"
-                        .replace("bisq2-", "Bisq-") // "bisq2-2.0.4-1.x86_64.rpm"
+                // For Bisq 2 we do not use Bisq2 but the version number contains the '2'
+                val canonicalFileName = fileName.replace("bisq", "Bisq")
+                        .replace("Bisq2", "Bisq")
+                        .replace("Bisq_", "Bisq-")
                         .replace("-1_amd64", "")
                         .replace("-1.x86_64", "")
-                } else {
-                    if (fileName.endsWith(".exe")) { // "Bisq-64bit-1.9.15.exe"
-                        fileName.replace("Bisq-", "Bisq-64bit-")
-                    } else if (fileName.endsWith(".rpm")) { //  Bisq-64bit-1.9.15.rpm
-                        fileName.replace("bisq-", "Bisq-64bit-")
-                            .replace("-1.x86_64.rpm", ".rpm")// "bisq-1.9.15-1.x86_64.rpm"
-                    } else if (fileName.endsWith(".deb")) { // "bisq_1.9.15-1_amd64.deb"
-                        fileName.replace("bisq_", "Bisq-64bit-")
-                            .replace("-1_amd64.deb", ".deb")//  "Bisq-64bit-1.9.15.deb"
-                    } else {
-                        fileName
-                    }
-                }
+                val fileWithoutExtension = canonicalFileName.substring(0, canonicalFileName.length - 4)
+                val fileExtension = canonicalFileName.substring(canonicalFileName.length - 4, canonicalFileName.length)
+                val platformName = getPlatform().platformName
+                // E.g. Bisq-2.0.4-macos_arm64.dmg
+                "$fileWithoutExtension-$platformName$fileExtension"
             }
         }
     }
 
     fun registerCopyMaintainerPublicKeysTask() {
         val maintainerPublicKeys = project.layout.files(
-            "$MAINTAINER_PUBLIC_KEY_DIRECTORY/387C8307.asc",
-            "$MAINTAINER_PUBLIC_KEY_DIRECTORY/E222AA02.asc"
+                "$MAINTAINER_PUBLIC_KEY_DIRECTORY/387C8307.asc",
+                "$MAINTAINER_PUBLIC_KEY_DIRECTORY/E222AA02.asc"
         )
         project.tasks.register<Copy>("copyMaintainerPublicKeys") {
             from(maintainerPublicKeys)
@@ -69,7 +66,7 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
 
     fun registerCopySigningPublicKeyTask() {
         val signingPublicKey = project.layout.projectDirectory
-            .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/E222AA02.asc")
+                .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/E222AA02.asc")
         project.tasks.register<Copy>("copySigningPublicKey") {
             from(signingPublicKey)
             into(releaseDir)
@@ -78,20 +75,28 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
     }
 
     fun registerMergeOsSpecificJarHashesTask(appVersion: Property<String>) {
+        // E.g. For Bisq-2.0.4-macos_arm64.dmg -> Bisq-2.0.4-macos_arm64-all-jars.sha256
+        val postFix = "-all-jars.sha256"
         val files = project.files(
-            inputBinariesProperty.map { inputDir ->
-                appVersion.map { "$inputDir/desktop-$it-all-mac.jar.SHA-256" }
-            },
-            inputBinariesProperty.map { inputDir ->
-                appVersion.map { "$inputDir/desktop-$it-all-linux.jar.SHA-256" }
-            },
-            inputBinariesProperty.map { inputDir ->
-                appVersion.map { "$inputDir/desktop-$it-all-windows.jar.SHA-256" }
-            }
+                inputBinariesProperty.map { inputDir ->
+                    appVersion.map { version -> "$inputDir/Bisq-$version-${Platform.LINUX_X86_64.platformName}$postFix" }
+                },
+                inputBinariesProperty.map { inputDir ->
+                    appVersion.map { version -> "$inputDir/Bisq-$version-${Platform.LINUX_ARM_64.platformName}$postFix" }
+                },
+                inputBinariesProperty.map { inputDir ->
+                    appVersion.map { version -> "$inputDir/Bisq-$version-${Platform.MACOS_X86_64.platformName}$postFix" }
+                },
+                inputBinariesProperty.map { inputDir ->
+                    appVersion.map { version -> "$inputDir/Bisq-$version-${Platform.MACOS_ARM_64.platformName}$postFix" }
+                },
+                inputBinariesProperty.map { inputDir ->
+                    appVersion.map { version -> "$inputDir/Bisq-$version-${Platform.WIN_X86_64.platformName}$postFix" }
+                }
         )
 
-        val mergedShaFile: Provider<RegularFile> = appVersion.flatMap {
-            project.layout.buildDirectory.file("packaging/release/Bisq-$it.jar.txt")
+        val mergedShaFile: Provider<RegularFile> = appVersion.flatMap { version ->
+            project.layout.buildDirectory.file("packaging/release/Bisq-$version$postFix")
         }
 
         project.tasks.register<MergeOsSpecificJarHashesTask>("mergeOsSpecificJarHashes") {

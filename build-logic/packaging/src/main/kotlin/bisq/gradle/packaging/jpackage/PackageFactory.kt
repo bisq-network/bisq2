@@ -88,14 +88,11 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             }
 
     private fun deleteFileOrDirectory(dir: File) {
-        val files = dir.listFiles()
-        if (files != null) {
-            for (file in files) {
-                deleteFileOrDirectory(file)
-            }
-        }
         if (dir.exists()) {
-            Files.delete(dir.toPath())
+            Files.walk(dir.toPath())
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete)
         }
     }
 }

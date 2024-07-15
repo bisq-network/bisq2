@@ -41,6 +41,9 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         checkNotNull(javaApplicationExtension) { "Can't find JavaApplication extension." }
 
         project.tasks.register<JPackageTask>("generateInstallers") {
+            group = "distribution"
+            description = "Generate the installer or the platform the project is running"
+
             val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam-app" }?.map { e -> e.value.project }?.first()
             webcamProject?.let { webcam ->
                 val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
@@ -90,14 +93,9 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
     }
 
     private fun getHashFileForOs(project: Project, extension: PackagingPluginExtension): Provider<RegularFile> {
-        val osName = when (getOS()) {
-            OS.LINUX -> "linux"
-            OS.MAC_OS -> "mac"
-            OS.WINDOWS -> "win"
-        }
-
+        val platformName = getPlatform().platformName
         return extension.version.flatMap { version ->
-            project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/desktop-$version-all-$osName.jar.SHA-256")
+            project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/Bisq-$version-$platformName-all-jars.sha256")
         }
     }
 
