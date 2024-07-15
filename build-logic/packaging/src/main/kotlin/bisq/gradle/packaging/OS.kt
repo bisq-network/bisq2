@@ -2,12 +2,14 @@ package bisq.gradle.packaging
 
 import java.util.*
 
-enum class OS {
-    LINUX, MAC_OS, WINDOWS
+enum class OS(val osName: String) {
+    LINUX("linux"),
+    MAC_OS("macos"),
+    WINDOWS("win")
 }
 
 fun getOS(): OS {
-    val osName = System.getProperty("os.name").lowercase(Locale.US)
+    val osName = getOSName()
     if (isLinux(osName)) {
         return OS.LINUX
     } else if (isMacOs(osName)) {
@@ -29,4 +31,8 @@ private fun isMacOs(osName: String): Boolean {
 
 private fun isWindows(osName: String): Boolean {
     return osName.contains("win")
+}
+
+fun getOSName(): String {
+    return System.getProperty("os.name").lowercase(Locale.US)
 }
