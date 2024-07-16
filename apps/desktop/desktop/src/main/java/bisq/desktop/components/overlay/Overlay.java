@@ -20,6 +20,8 @@ package bisq.desktop.components.overlay;
 import bisq.application.ShutDownHandler;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.locale.LanguageRepository;
+import bisq.common.platform.OS;
+import bisq.common.platform.Platform;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
@@ -426,8 +428,8 @@ public abstract class Overlay<T extends Overlay<T>> {
         processMessage(Res.get("popup.reportError"));
 
         String version = ApplicationVersion.getVersion().getVersionAsString();
-        String osInfo = OsUtils.getOsInfo();
-        String errorReport = Res.get("popup.reportBug.report", version, osInfo, message);
+        String platformDetails = Platform.getDetails();
+        String errorReport = Res.get("popup.reportBug.report", version, platformDetails, message);
         TextArea errorReportTextArea = new TextArea(errorReport);
         errorReportTextArea.setEditable(false);
         errorReportTextArea.setPrefWidth(width);
@@ -794,7 +796,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             Window window = rootScene.getWindow();
             double titleBarHeight = window.getHeight() - rootScene.getHeight();
 
-            if (OsUtils.isWindows()) {
+            if (OS.isWindows()) {
                 titleBarHeight -= 9;
             }
             double leftDistance = (window.getWidth() - getRootContainer().getWidth()) / 2;

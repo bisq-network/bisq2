@@ -18,8 +18,8 @@
 package bisq.wallets.electrum;
 
 import bisq.common.archive.ZipFileExtractor;
+import bisq.common.platform.OS;
 import bisq.common.util.FileUtils;
-import bisq.common.util.OsUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -50,7 +50,7 @@ public class ElectrumBinaryExtractor {
             createDestDirIfNotPresent();
 
             try (InputStream inputStream = openBinariesZipAsStream()) {
-                if (OsUtils.isMac()) {
+                if (OS.isMacOs()) {
                     extractElectrumAppFileToDataDir(inputStream);
 
                 } else {

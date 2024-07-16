@@ -22,7 +22,7 @@ import bisq.bonded_roles.security_manager.min_reputation_score.MinRequiredReputa
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.OS;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -139,7 +139,7 @@ public class PreferencesController implements Controller {
                 value -> settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, value));
 
         // Currently we support transient notifications only for Linux
-        if (OsUtils.isLinux()) {
+        if (OS.isLinux()) {
             model.setUseTransientNotificationsVisible(true);
             model.getUseTransientNotifications().set(settingsService.getCookie().asBoolean(CookieKey.USE_TRANSIENT_NOTIFICATIONS).orElse(true));
             useTransientNotificationsPin = EasyBind.subscribe(model.getUseTransientNotifications(),

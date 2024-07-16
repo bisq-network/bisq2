@@ -17,6 +17,8 @@
 
 package bisq.common.util;
 
+import bisq.common.platform.LinuxDistribution;
+import bisq.common.platform.OS;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -26,7 +28,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 @Slf4j
 public class OsUtils {
@@ -34,11 +35,11 @@ public class OsUtils {
     public static final int EXIT_FAILURE = 1;
 
     public static Path getUserDataDir() {
-        if (isWindows()) {
+        if (OS.isWindows()) {
             return Paths.get(System.getenv("APPDATA"));
         }
 
-        if (isMac()) {
+        if (OS.isMacOs()) {
             return Paths.get(System.getProperty("user.home"), "Library", "Application Support");
         }
 
@@ -50,117 +51,19 @@ public class OsUtils {
         return Runtime.getRuntime().availableProcessors();
     }
 
-    public static boolean isWindows() {
-        return getOSName().contains("win");
-    }
-
-    public static boolean isMac() {
-        return getOSName().toLowerCase().contains("mac") || getOSName().contains("darwin");
-    }
-
-    public static boolean isAppleSiliconMac() {
-        return isMac() && getOSArchitecture().equals("aarch64");
-    }
-
-    public static boolean isIntelMac() {
-        return isMac() && getOSArchitecture().equals("x86_64");
-    }
-
-    public static boolean isLinux() {
-        return getOSName().contains("linux");
-    }
-
-    public static boolean isLinux32() {
-        return getOSName().contains("linux") && getOSBitVersion().equals("32");
-    }
-
-    public static boolean isLinux64() {
-        return getOSName().contains("linux") && getOSBitVersion().equals("64");
-    }
-
-    public static boolean isDebianLinux() {
-        return isLinux() && new File("/etc/debian_version").isFile();
-    }
-
-    public static boolean isRedHatLinux() {
-        return isLinux() && new File("/etc/redhat-release").isFile();
-    }
-
-    public static boolean isWhonix() {
-        return isLinux() && new File("/usr/share/whonix/marker").isFile() &&
-                new File("/usr/share/anon-dist/marker").isFile();
-    }
-
     public static String getInstallerExtension() {
-        if (OsUtils.isMac()) {
+        if (OS.isMacOs()) {
             return ".dmg";
-        } else if (OsUtils.isWindows()) {
+        } else if (OS.isWindows()) {
             return ".exe";
-        } else if (OsUtils.isDebianLinux()) {
+        } else if (LinuxDistribution.isDebian()) {
             return ".deb";
-        } else if (OsUtils.isRedHatLinux()) {
+        } else if (LinuxDistribution.isRedHat()) {
             return ".rpm";
         } else {
             throw new RuntimeException("No suitable install package available for your OS.");
         }
     }
-
-    public static String getVersionString() {
-        return System.getProperty("os.version");
-    }
-
-    public static String getOsInfo() {
-        return getOSName() + " / " + getOSArchitecture() + " / " + getOSBitVersion() + " v." + getVersionString();
-    }
-
-    public static Version getVersion() {
-        return new Version(getVersionString());
-    }
-
-    public static String getOSArchitecture() {
-        return System.getProperty("os.arch");
-    }
-
-    public static String getOSBitVersion() {
-        if (isWindows()) {
-            // See: Like always windows needs extra treatment
-            // https://stackoverflow.com/questions/20856694/how-to-find-the-os-bit-type
-            String arch = System.getenv("PROCESSOR_ARCHITECTURE");
-            String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
-            return arch.endsWith("64")
-                    || wow64Arch != null && wow64Arch.endsWith("64")
-                    ? "64" : "32";
-        }
-
-        String osArch = System.getProperty("os.arch");
-        // armv8 is 64 bit, armv7l is 32 bit
-        if (osArch.contains("arm")) {
-            return osArch.contains("64") || osArch.contains("v8") ? "64" : "32";
-        }
-
-        if (isLinux()) {
-            return osArch.startsWith("i") ? "32" : "64";
-        }
-
-        return osArch.contains("64") ? "64" : osArch;
-    }
-
-    public static String getOSName() {
-        return System.getProperty("os.name").toLowerCase(Locale.US);
-    }
-
-    public static OperatingSystem getOperatingSystem() {
-        if (isLinux()) {
-            return OperatingSystem.LINUX;
-        } else if (isMac()) {
-            return OperatingSystem.MAC;
-        } else if (isWindows()) {
-            return OperatingSystem.WIN;
-        } else {
-            throw new UnsupportedOperationException("Unsupported operating system: " + OsUtils.getOSName());
-        }
-    }
-
 
     public static void makeBinaryExecutable(Path binaryPath) {
         boolean isSuccess = binaryPath.toFile().setExecutable(true);
@@ -184,17 +87,17 @@ public class OsUtils {
     }
 
     public static boolean open(String target) {
-        if (isLinux()) {
+        if (OS.isLinux()) {
             if (runCommand("kde-open", "%s", target)) return true;
             if (runCommand("gnome-open", "%s", target)) return true;
             if (runCommand("xdg-open", "%s", target)) return true;
         }
 
-        if (isMac()) {
+        if (OS.isMacOs()) {
             if (runCommand("open", "%s", target)) return true;
         }
 
-        if (isWindows()) {
+        if (OS.isWindows()) {
             return runCommand("explorer", "%s", "\"" + target + "\"");
         }
 
@@ -248,6 +151,6 @@ public class OsUtils {
     }
 
     public static String getHomeDirectory() {
-        return isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
+        return OS.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
     }
 }
