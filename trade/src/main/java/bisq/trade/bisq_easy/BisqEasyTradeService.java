@@ -17,9 +17,13 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.alert.AlertType;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.Service;
 import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -66,11 +70,14 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     // We don't persist the protocol, only the model.
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
+    private final AlertService alertService;
+    private boolean haltTrading;
 
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.serviceProvider = serviceProvider;
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        alertService = serviceProvider.getBondedRolesService().getAlertService();
     }
 
 
@@ -82,6 +89,33 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         serviceProvider.getNetworkService().addConfidentialMessageListener(this);
 
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
+        alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(AuthorizedAlertData authorizedAlertData) {
+                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
+                    if (authorizedAlertData.isHaltTrading()) {
+                        haltTrading = true;
+                    }
+                }
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof AuthorizedAlertData) {
+                    AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) element;
+                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
+                        if (authorizedAlertData.isHaltTrading()) {
+                            haltTrading = false;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void clear() {
+                haltTrading = false;
+            }
+        });
 
         return CompletableFuture.completedFuture(true);
     }
@@ -99,6 +133,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyTradeMessage) {
+            verifyTradingNotOnHalt();
+
             BisqEasyTradeMessage bisqEasyTradeMessage = (BisqEasyTradeMessage) envelopePayloadMessage;
             if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
@@ -183,6 +219,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                                                    Optional<UserProfile> mediator,
                                                    PriceSpec agreedPriceSpec,
                                                    long marketPrice) {
+        verifyTradingNotOnHalt();
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(
                 System.currentTimeMillis(),
@@ -246,6 +283,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     private void handleBisqEasyTradeEvent(BisqEasyTrade trade, BisqEasyTradeEvent event) {
+        verifyTradingNotOnHalt();
         handleEvent(getProtocol(trade.getId()), event);
     }
 
@@ -318,5 +356,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         trade.setProtocolVersion(tradeProtocol.getVersion());
         tradeProtocolById.put(id, tradeProtocol);
         return tradeProtocol;
+    }
+
+    private void verifyTradingNotOnHalt() {
+        checkArgument(!haltTrading, "Trading is on halt for security reasons. The Bisq security manager has published an emergency alert with haltTrading set to true");
     }
 }
