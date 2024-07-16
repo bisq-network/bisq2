@@ -135,10 +135,6 @@ public final class Cookie implements PersistableProto {
         map.put(new CookieMapKey(key, subKey), value);
     }
 
-    void putAll(Map<CookieMapKey, String> map) {
-        map.forEach((key, value) -> putAsString(key.getCookieKey(), value));
-    }
-
     void putAsBoolean(CookieKey key, boolean value) {
         putAsBoolean(key, null, value);
     }
@@ -161,6 +157,10 @@ public final class Cookie implements PersistableProto {
 
     void remove(CookieKey key, @Nullable String subKey) {
         map.remove(new CookieMapKey(key, subKey));
+    }
+
+    void putAll(Map<CookieMapKey, String> map) {
+        map.forEach((key, value) -> putAsString(key.getCookieKey(), key.getSubKey().orElse(null), value));
     }
 
     Map<CookieMapKey, String> getMap() {
