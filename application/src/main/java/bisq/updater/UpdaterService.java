@@ -23,6 +23,7 @@ import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.threading.ExecutorFactory;
@@ -58,18 +59,16 @@ public class UpdaterService implements Service {
     private final ObservableArray<DownloadItem> downloadItemList = new ObservableArray<>();
     private final ApplicationService.Config config;
     private ExecutorService executorService;
+    private final CollectionObserver<ReleaseNotification> observer;
+    private Pin releaseNotificationsPin;
 
     public UpdaterService(ApplicationService.Config config, SettingsService settingsService, ReleaseNotificationsService releaseNotificationsService) {
         this.config = config;
 
         this.settingsService = settingsService;
         this.releaseNotificationsService = releaseNotificationsService;
-    }
 
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        releaseNotificationsService.getReleaseNotifications().addObserver(new CollectionObserver<>() {
+        observer = new CollectionObserver<>() {
             @Override
             public void add(ReleaseNotification releaseNotification) {
                 onNewReleaseNotificationAdded(releaseNotification);
@@ -94,7 +93,14 @@ public class UpdaterService implements Service {
             public void clear() {
                 releaseNotification.set(null);
             }
-        });
+        };
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+
+        releaseNotificationsPin = releaseNotificationsService.getReleaseNotifications().addObserver(observer);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -113,35 +119,11 @@ public class UpdaterService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onNewReleaseNotificationAdded(ReleaseNotification releaseNotification) {
-        if (releaseNotification == null) {
-            log.warn("releaseNotification is null");
-            return;
+    public void reapplyAllReleaseNotifications() {
+        if (releaseNotificationsPin != null) {
+            releaseNotificationsPin.unbind();
         }
-
-        Version newVersion = releaseNotification.getReleaseVersion();
-        Version installedVersion = ApplicationVersion.getVersion();
-        if (newVersion.belowOrEqual(installedVersion)) {
-            log.debug("Our installed version is the same or higher as the version of the new releaseNotification.");
-            return;
-        }
-
-        if (this.releaseNotification.get() != null && newVersion.belowOrEqual(this.releaseNotification.get().getReleaseVersion())) {
-            log.debug("The version of our existing releaseNotification is the same or higher as the version of the new releaseNotification.");
-            return;
-        }
-
-        boolean ignoreVersion = settingsService.getCookie().asBoolean(CookieKey.IGNORE_VERSION, newVersion.toString()).orElse(false);
-        if (ignoreVersion) {
-            log.debug("We had clicked ignore for that version");
-            return;
-        }
-        boolean notifyForPreRelease = settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false);
-        if (releaseNotification.isPreRelease() && !notifyForPreRelease) {
-            log.debug("This is a pre-release and we have not enabled to get notified for pre-releases.");
-            return;
-        }
-        this.releaseNotification.set(releaseNotification);
+        releaseNotificationsPin = releaseNotificationsService.getReleaseNotifications().addObserver(observer);
     }
 
     public CompletableFuture<Void> downloadAndVerify() throws IOException {
@@ -174,6 +156,38 @@ public class UpdaterService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private/package static
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onNewReleaseNotificationAdded(ReleaseNotification releaseNotification) {
+        if (releaseNotification == null) {
+            log.warn("releaseNotification is null");
+            return;
+        }
+
+        Version newVersion = releaseNotification.getReleaseVersion();
+        Version installedVersion = ApplicationVersion.getVersion();
+        if (newVersion.belowOrEqual(installedVersion)) {
+            log.debug("Our installed version is the same or higher as the version of the new releaseNotification.");
+            return;
+        }
+
+        if (this.releaseNotification.get() != null && newVersion.belowOrEqual(this.releaseNotification.get().getReleaseVersion())) {
+            log.debug("The version of our existing releaseNotification is the same or higher as the version of the new releaseNotification.");
+            return;
+        }
+
+        boolean ignoreVersion = settingsService.getCookie().asBoolean(CookieKey.IGNORE_VERSION, newVersion.toString()).orElse(false);
+        if (ignoreVersion) {
+            log.debug("We had clicked ignore for that version");
+            return;
+        }
+        boolean notifyForPreRelease = settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false);
+        if (releaseNotification.isPreRelease() && !notifyForPreRelease) {
+            log.debug("This is a pre-release and we have not enabled to get notified for pre-releases.");
+            return;
+        }
+        this.releaseNotification.set(releaseNotification);
+    }
+
 
     private static CompletableFuture<Void> downloadAndVerify(String version,
                                                              boolean isLauncherUpdate,
