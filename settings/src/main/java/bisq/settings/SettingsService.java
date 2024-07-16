@@ -231,23 +231,23 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void setCookie(CookieKey key, boolean value) {
-        getCookie().putAsBoolean(key, value);
-        persist();
-        updateCookieChangedFlag();
+        setCookie(key, null, value);
     }
 
     public void setCookie(CookieKey key, String subKey, boolean value) {
-        setCookie(key, subKey, value);
-    }
-
-    public void setCookie(CookieKey key, double value) {
-        getCookie().putAsDouble(key, value);
+        getCookie().putAsBoolean(key, subKey, value);
         persist();
         updateCookieChangedFlag();
     }
 
+    public void setCookie(CookieKey key, double value) {
+        setCookie(key, null, value);
+    }
+
     public void setCookie(CookieKey key, String subKey, double value) {
-        setCookie(key, subKey, value);
+        getCookie().putAsDouble(key, subKey, value);
+        persist();
+        updateCookieChangedFlag();
     }
 
     public void setCookie(CookieKey key, String value) {

@@ -140,11 +140,19 @@ public final class Cookie implements PersistableProto {
     }
 
     void putAsBoolean(CookieKey key, boolean value) {
-        putAsString(key, value ? "1" : "0");
+        putAsBoolean(key, null, value);
+    }
+
+    void putAsBoolean(CookieKey key, @Nullable String subKey, boolean value) {
+        putAsString(key, subKey, value ? "1" : "0");
     }
 
     void putAsDouble(CookieKey key, double value) {
-        putAsString(key, String.valueOf(value));
+        putAsDouble(key, null, value);
+    }
+
+    void putAsDouble(CookieKey key, @Nullable String subKey, double value) {
+        putAsString(key, subKey, String.valueOf(value));
     }
 
     void remove(CookieKey key) {
