@@ -20,11 +20,13 @@ package bisq.trade.bisq_easy;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.util.Version;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
@@ -72,6 +74,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
     private final AlertService alertService;
     private boolean haltTrading;
+    private boolean requireVersionForTrading;
+    private Optional<String> minVersion = Optional.empty();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
@@ -96,6 +100,10 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                     if (authorizedAlertData.isHaltTrading()) {
                         haltTrading = true;
                     }
+                    if (authorizedAlertData.isRequireVersionForTrading()) {
+                        requireVersionForTrading = true;
+                        minVersion = authorizedAlertData.getMinVersion();
+                    }
                 }
             }
 
@@ -107,6 +115,10 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                         if (authorizedAlertData.isHaltTrading()) {
                             haltTrading = false;
                         }
+                        if (authorizedAlertData.isRequireVersionForTrading()) {
+                            requireVersionForTrading = false;
+                            minVersion = Optional.empty();
+                        }
                     }
                 }
             }
@@ -114,6 +126,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             @Override
             public void clear() {
                 haltTrading = false;
+                requireVersionForTrading = false;
+                minVersion = Optional.empty();
             }
         });
 
@@ -134,6 +148,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyTradeMessage) {
             verifyTradingNotOnHalt();
+            verifyMinVersionForTrading();
 
             BisqEasyTradeMessage bisqEasyTradeMessage = (BisqEasyTradeMessage) envelopePayloadMessage;
             if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
@@ -220,6 +235,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                                                    PriceSpec agreedPriceSpec,
                                                    long marketPrice) {
         verifyTradingNotOnHalt();
+        verifyMinVersionForTrading();
+
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(
                 System.currentTimeMillis(),
@@ -284,6 +301,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     private void handleBisqEasyTradeEvent(BisqEasyTrade trade, BisqEasyTradeEvent event) {
         verifyTradingNotOnHalt();
+        verifyMinVersionForTrading();
         handleEvent(getProtocol(trade.getId()), event);
     }
 
@@ -359,6 +377,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     private void verifyTradingNotOnHalt() {
-        checkArgument(!haltTrading, "Trading is on halt for security reasons. The Bisq security manager has published an emergency alert with haltTrading set to true");
+        checkArgument(!haltTrading, "Trading is on halt for security reasons. " +
+                "The Bisq security manager has published an emergency alert with haltTrading set to true");
+    }
+
+    private void verifyMinVersionForTrading() {
+        if (requireVersionForTrading && minVersion.isPresent()) {
+            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minVersion.get())),
+                    "For trading you need to have version " + minVersion.get() + " installed. " +
+                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+        }
     }
 }
