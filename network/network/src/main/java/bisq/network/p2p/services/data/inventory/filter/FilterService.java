@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.util.ByteUnit;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.Inventory;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -56,12 +58,12 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     abstract protected boolean isAddAppendOnlyDataRequestMissing(T filter, Map.Entry<ByteArray, AddAppendOnlyDataRequest> entry);
 
-    public Inventory createInventory(InventoryFilter inventoryFilter) {
+    public Inventory createInventory(InventoryFilter inventoryFilter, Predicate<Integer> addAuthenticatedDataRequestPredicate) {
         final AtomicInteger accumulatedSize = new AtomicInteger();
         final AtomicBoolean maxSizeReached = new AtomicBoolean();
         // The type is not defined at compile time, thus we do a safe cast
         T filter = safeCast(inventoryFilter);
-        List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached);
+        List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached, addAuthenticatedDataRequestPredicate);
 
         if (!maxSizeReached.get()) {
             dataRequests.addAll(getMailboxRequests(filter, accumulatedSize, maxSizeReached));
@@ -80,7 +82,8 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     private List<DataRequest> getAuthenticatedDataRequests(T filter,
                                                            AtomicInteger accumulatedSize,
-                                                           AtomicBoolean maxSizeReached) {
+                                                           AtomicBoolean maxSizeReached,
+                                                           Predicate<Integer> addAuthenticatedDataRequestPredicate) {
         List<AddAuthenticatedDataRequest> addRequests = new ArrayList<>();
         List<RemoveAuthenticatedDataRequest> removeRequests = new ArrayList<>();
         storageService.getAuthenticatedDataStoreMaps().flatMap(map -> map.entrySet().stream())
@@ -88,7 +91,11 @@ public abstract class FilterService<T extends InventoryFilter> {
                     if (isAuthenticatedDataRequestMissing(filter, mapEntry)) {
                         AuthenticatedDataRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                            addRequests.add((AddAuthenticatedDataRequest) dataRequest);
+                            AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) dataRequest;
+                            DistributedData distributedData = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData();
+                            if (addAuthenticatedDataRequestPredicate.test(distributedData.getVersion())) {
+                                addRequests.add(addAuthenticatedDataRequest);
+                            }
                         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
                             removeRequests.add((RemoveAuthenticatedDataRequest) dataRequest);
                         }

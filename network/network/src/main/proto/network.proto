@@ -154,6 +154,7 @@ message AckMessage {
 message InventoryRequest {
   InventoryFilter inventoryFilter = 1;
   sint32 nonce = 2;
+  sint32 version = 3;
 }
 
 message InventoryResponse {
