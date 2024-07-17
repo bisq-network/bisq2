@@ -42,6 +42,7 @@ import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,6 +82,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Node implements Connection.Handler {
+    @Setter
+    public static int preferredVersion = 0;
+
     public enum State {
         NEW,
         STARTING,
@@ -396,10 +400,11 @@ public class Node implements Connection.Handler {
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
-        // At release time we might get mainy failures as most user have not updated, but as soon most have updated
-        // we have a better bet. We could also add a date or version check to flip the preferred version, but for now we
-        // keep it simple.
-        Capability candidate = Capability.withVersion(myCapability, 1);
+        // To get better chances to use the right version at the first attempt we use the preferredVersion which will
+        // be set from another higher level service and is based on the distribution of versions.
+        // If v2.0.5 reaches 50% distribution rate we use vesion 1 as preferredVersion.
+        // This code can be removed once no old versions are expected anymore.
+        Capability candidate = Capability.withVersion(myCapability, preferredVersion);
         log.info("Create outbound connection to {} with capability version 1", address);
         try {
             return doCreateOutboundConnection(address, candidate);
@@ -407,7 +412,8 @@ public class Node implements Connection.Handler {
             if (e.getCause() != null && e.getReason() != null && e.getReason() == HANDSHAKE_FAILED) {
                 log.warn("Handshake at creating outbound connection to {} failed. We try again with capability version 0. Error: {}",
                         address, ExceptionUtil.getMessageOrToString(e));
-                candidate = Capability.withVersion(myCapability, 0);
+                int version = preferredVersion == 0 ? 1 : 0;
+                candidate = Capability.withVersion(myCapability, version);
                 return doCreateOutboundConnection(address, candidate);
             } else {
                 // In case of ConnectExceptions we don't try again as peer is offline
