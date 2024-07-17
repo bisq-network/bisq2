@@ -31,6 +31,7 @@ import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 @Slf4j
 public class InventoryResponseService implements Node.Listener {
@@ -79,10 +80,20 @@ public class InventoryResponseService implements Node.Listener {
         if (filterServiceMap.containsKey(inventoryFilterType)) {
             FilterService<? extends InventoryFilter> filterService = filterServiceMap.get(inventoryFilterType);
             long ts = System.currentTimeMillis();
-            Inventory inventory = filterService.createInventory(inventoryFilter);
+            int requestersVersion = request.getVersion();
+
+            // We filter out version 1 obejcts in AddAuthenticatedDataRequest objects which would break the hash when requested from old nodes (pre v.2.0.5)
+            // This code can be removed once there are no old nodes expected in the network anymore.
+            Predicate<Integer> addAuthenticatedDataRequestPredicate = distributedDataVersion -> requestersVersion > 0 || distributedDataVersion == 0;
+
+            Inventory inventory = filterService.createInventory(inventoryFilter, addAuthenticatedDataRequestPredicate);
+
+            // The requestersVersion param can be removed once there are no old nodes expected in the network anymore.
+            InventoryResponse inventoryResponse = new InventoryResponse(requestersVersion, inventory, request.getNonce());
+
             NetworkService.NETWORK_IO_POOL.submit(() -> {
                 try {
-                    node.send(new InventoryResponse(inventory, request.getNonce()), connection);
+                    node.send(inventoryResponse, connection);
                     log.info("Successfully sent an InventoryResponse to peer {} with {} kb. Took {} ms",
                             connection.getPeerAddress(),
                             ByteUnit.BYTE.toKB(inventory.getSerializedSize()),

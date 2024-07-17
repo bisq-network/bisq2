@@ -42,7 +42,7 @@ public final class InventoryResponse implements BroadcastMessage, Response {
         this(VERSION, inventory, requestNonce);
     }
 
-    private InventoryResponse(int version, Inventory inventory, int requestNonce) {
+    public InventoryResponse(int version, Inventory inventory, int requestNonce) {
         this.version = version;
         this.inventory = inventory;
         this.requestNonce = requestNonce;
