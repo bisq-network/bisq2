@@ -34,6 +34,7 @@ import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -65,6 +66,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 // TODO (refactor, low prio) Consider to use a base class to avoid code duplication with TradeWizardReviewController
@@ -86,6 +88,7 @@ public class TakeOfferReviewController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final MediationRequestService mediationRequestService;
     private Pin errorMessagePin, peersErrorMessagePin;
+    private UIScheduler timeoutScheduler;
 
     public TakeOfferReviewController(ServiceProvider serviceProvider,
                                      Consumer<Boolean> mainButtonsVisibleHandler,
@@ -228,8 +231,18 @@ public class TakeOfferReviewController implements Controller {
 
         mainButtonsVisibleHandler.accept(false);
         String tradeId = bisqEasyTrade.getId();
+        if (timeoutScheduler != null) {
+            timeoutScheduler.stop();
+        }
+        timeoutScheduler = UIScheduler.run(() -> {
+                    closeAndNavigateToHandler.accept(NavigationTarget.BISQ_EASY);
+                    throw new RuntimeException("Take offer message sending did not succeed after 2 minutes.");
+                })
+                .after(2, TimeUnit.MINUTES);
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
+                    timeoutScheduler.stop();
+
                     // In case the user has switched to another market we want to select that market in the offer book
                     ChatChannelSelectionService chatChannelSelectionService =
                             chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
@@ -306,6 +319,9 @@ public class TakeOfferReviewController implements Controller {
         }
         if (peersErrorMessagePin != null) {
             peersErrorMessagePin.unbind();
+        }
+        if (timeoutScheduler != null) {
+            timeoutScheduler.stop();
         }
     }
 
