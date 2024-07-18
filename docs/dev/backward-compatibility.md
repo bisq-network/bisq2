@@ -116,3 +116,10 @@ certain changes will degrade network availability, providing "natural" pressure 
 version distribution display to the network settings pane, which gives better insight into the version distribution of
 active users. Since the application version is part of the UserProfile, which gets frequently republished for active
 users, we get a pretty accurate picture.
+
+## Testing
+
+Regardless of the chosen strategy, it's important to test well and make sure it works as expected.
+* A relative safe way is to copy the IDE project and run one node there and the other in the to-be-tested version.
+   This avoids that changes are hotswapped to running apps. Also, it's best to run the seed on the old version to see if there are issues.
+* Another option is to disable hotswap.
