@@ -67,13 +67,13 @@ public class TradeOverviewController implements Controller {
                 NavigationTarget.MULTISIG,
                 TradeProtocolType.MULTISIG,
                 new Pair<>(10000L, 700000L),
-                "Q3/24"
+                "Q4/24"
         );
         ProtocolListItem submarine = new ProtocolListItem(TradeAppsAttributes.Type.SUBMARINE,
                 NavigationTarget.SUBMARINE,
                 TradeProtocolType.SUBMARINE,
                 new Pair<>(10000L, 700000L),
-                "Q4/24"
+                "Q2/25"
         );
         ProtocolListItem liquidFiat = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_LIGHTNING,
                 NavigationTarget.BISQ_LIGHTNING,
@@ -92,7 +92,7 @@ public class TradeOverviewController implements Controller {
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.LIQUID_MULTISIG,
                 new Pair<>(10000L, 700000L),
-                "Q4/24"
+                "Q2/25"
         );
         ProtocolListItem moneroSwap = new ProtocolListItem(TradeAppsAttributes.Type.MONERO_SWAP,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,

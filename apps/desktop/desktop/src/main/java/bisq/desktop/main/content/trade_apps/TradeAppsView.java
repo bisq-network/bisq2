@@ -30,7 +30,7 @@ public class TradeAppsView extends ContentTabView<TradeAppsModel, TradeAppsContr
     public TradeAppsView(TradeAppsModel model, TradeAppsController controller) {
         super(model, controller);
 
-        addTab(Res.get("tradeApps.overview"), NavigationTarget.TRADE_PROTOCOLS_OVERVIEW);
+        addTab(Res.get("tradeApps.compare"), NavigationTarget.TRADE_PROTOCOLS_OVERVIEW);
         addTab(Res.get("tradeApps.multisig"), NavigationTarget.MULTISIG);
         addTab(Res.get("tradeApps.subMarine"), NavigationTarget.SUBMARINE);
         addTab(Res.get("tradeApps.bisqLightning"), NavigationTarget.BISQ_LIGHTNING);
