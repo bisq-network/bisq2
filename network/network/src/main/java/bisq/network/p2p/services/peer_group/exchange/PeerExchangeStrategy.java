@@ -44,24 +44,24 @@ public class PeerExchangeStrategy {
         private final int numSeedNodesAtBoostrap;
         private final int numPersistedPeersAtBoostrap;
         private final int numReportedPeersAtBoostrap;
-
-        public Config() {
-            this(2, 40, 20);
-        }
+        private final boolean supportPeerReporting;
 
         public Config(int numSeedNodesAtBoostrap,
                       int numPersistedPeersAtBoostrap,
-                      int numReportedPeersAtBoostrap) {
+                      int numReportedPeersAtBoostrap,
+                      boolean supportPeerReporting) {
             this.numSeedNodesAtBoostrap = numSeedNodesAtBoostrap;
             this.numPersistedPeersAtBoostrap = numPersistedPeersAtBoostrap;
             this.numReportedPeersAtBoostrap = numReportedPeersAtBoostrap;
+            this.supportPeerReporting = supportPeerReporting;
         }
 
         public static Config from(com.typesafe.config.Config typesafeConfig) {
             return new PeerExchangeStrategy.Config(
                     typesafeConfig.getInt("numSeedNodesAtBoostrap"),
                     typesafeConfig.getInt("numPersistedPeersAtBoostrap"),
-                    typesafeConfig.getInt("numReportedPeersAtBoostrap"));
+                    typesafeConfig.getInt("numReportedPeersAtBoostrap"),
+                    typesafeConfig.getBoolean("supportPeerReporting"));
         }
     }
 
@@ -127,6 +127,49 @@ public class PeerExchangeStrategy {
     boolean needsMoreConnections() {
         return peerGroupService.getAllConnectedPeers(node).count() < peerGroupService.getTargetNumConnectedPeers();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Reporting
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Set<Peer> getPeersForReporting(Address requesterAddress) {
+        // Oracel nodes run only a default node but receive requests from user-level nodes. If we include the connected
+        // peers of oracle nodes we would mix up the gossip network with those user-level nodes. Therefor we set the
+        // flag to supportPeerReporting false for oracle nodes and do not share our peers in peer reporting.
+        if (!config.isSupportPeerReporting()) {
+            return new HashSet<>();
+        }
+
+        Set<Peer> connectedPeers = getSortedAllConnectedPeers()
+                .filter(peer -> notSameAddress(requesterAddress, peer))
+                .collect(Collectors.toSet());
+        Set<Peer> reportedPeers = getSortedReportedPeers()
+                .filter(peer -> notSameAddress(requesterAddress, peer))
+                .limit(Math.round(REPORTED_PEERS_LIMIT))
+                .collect(Collectors.toSet());
+
+        Set<Peer> peers = new HashSet<>(connectedPeers);
+        peers.addAll(reportedPeers);
+        return peers;
+    }
+
+    void addReportedPeers(Set<Peer> reportedPeers, Address reporterAddress) {
+        Set<Peer> peers = reportedPeers.stream()
+                .filter(peer -> notSameAddress(reporterAddress, peer))
+                .filter(this::isValidNonSeedPeer)
+                .filter(this::isNotOutDated)
+                .sorted()
+                .limit(REPORTED_PEERS_LIMIT)
+                .collect(Collectors.toSet());
+        peerGroupService.addReportedPeers(peers);
+        peerGroupService.addPersistedPeers(peers);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private List<Address> getCandidates(List<Address> priorityList) {
         return priorityList.stream()
@@ -195,38 +238,6 @@ public class PeerExchangeStrategy {
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Reporting
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Set<Peer> getPeersForReporting(Address requesterAddress) {
-        Set<Peer> connectedPeers = getSortedAllConnectedPeers()
-                .filter(peer -> notSameAddress(requesterAddress, peer))
-                .collect(Collectors.toSet());
-        Set<Peer> reportedPeers = getSortedReportedPeers()
-                .filter(peer -> notSameAddress(requesterAddress, peer))
-                .limit(Math.round(REPORTED_PEERS_LIMIT))
-                .collect(Collectors.toSet());
-
-        Set<Peer> peers = new HashSet<>(connectedPeers);
-        peers.addAll(reportedPeers);
-        return peers;
-    }
-
-    void addReportedPeers(Set<Peer> reportedPeers, Address reporterAddress) {
-        Set<Peer> peers = reportedPeers.stream()
-                .filter(peer -> notSameAddress(reporterAddress, peer))
-                .filter(this::isValidNonSeedPeer)
-                .filter(this::isNotOutDated)
-                .sorted()
-                .limit(REPORTED_PEERS_LIMIT)
-                .collect(Collectors.toSet());
-        peerGroupService.addReportedPeers(peers);
-        peerGroupService.addPersistedPeers(peers);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils
