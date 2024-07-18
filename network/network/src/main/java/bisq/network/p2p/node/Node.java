@@ -416,7 +416,7 @@ public class Node implements Connection.Handler {
                 candidate = Capability.withVersion(myCapability, version);
                 return doCreateOutboundConnection(address, candidate);
             } else {
-                // In case of ConnectExceptions we don't try again as peer is offline
+                // In case of other ConnectExceptions we don't try again as peer is offline
                 throw e;
             }
         }

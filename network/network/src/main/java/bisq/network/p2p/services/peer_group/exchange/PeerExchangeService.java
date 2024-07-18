@@ -163,13 +163,11 @@ public class PeerExchangeService implements Node.Listener {
                             boolean needsMoreReportedPeers = peerExchangeStrategy.needsMoreReportedPeers();
                             if (tooManyFailures || needsMoreConnections || needsMoreReportedPeers) {
                                 if (tooManyFailures) {
-                                    log.info("Repeat peer exchange. Reason: tooManyFailures");
-                                }
-                                if (needsMoreConnections) {
-                                    log.info("Repeat peer exchange. Reason: needsMoreConnections");
-                                }
-                                if (needsMoreReportedPeers) {
-                                    log.info("Repeat peer exchange. Reason: needsMoreReportedPeers");
+                                    log.info("Repeat initial peer exchange after {} sec. Reason: tooManyFailures", peerExchangeDelaySec);
+                                } else if (needsMoreConnections) {
+                                    log.info("Repeat initial peer exchange after {} sec. Reason: needsMoreConnections", peerExchangeDelaySec);
+                                } else {
+                                    log.info("Repeat initial peer exchange after {} sec. Reason: needsMoreReportedPeers", peerExchangeDelaySec);
                                 }
                                 peerExchangeScheduler.ifPresent(Scheduler::stop);
                                 peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
@@ -189,7 +187,8 @@ public class PeerExchangeService implements Node.Listener {
             boolean await = latch.await(2, MINUTES);
             checkArgument(await, "CountDownLatch not completed in 2 minutes");
         } catch (Exception e) {
-            log.info("Error at CountDownLatch.await: {}", ExceptionUtil.getMessageOrToString(e));
+            log.info("Error at CountDownLatch.await: {}. Repeat initial peer exchange after {} sec.",
+                    ExceptionUtil.getRootCauseMessage(e), peerExchangeDelaySec);
             peerExchangeScheduler.ifPresent(Scheduler::stop);
             peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
                     .after(peerExchangeDelaySec, TimeUnit.SECONDS)
