@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node_app;
+package bisq.oracle_node;
 
 import bisq.application.Executable;
 import bisq.common.util.FileUtils;

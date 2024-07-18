@@ -18,12 +18,10 @@
 package bisq.desktop.webcam;
 
 import bisq.application.ApplicationService;
-import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.NetworkUtils;
-import ch.qos.logback.classic.Level;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,7 +67,6 @@ public class WebcamAppService {
         webcamProcessLauncher = new WebcamProcessLauncher(model.getBaseDir());
 
         state.set(NEW);
-        LogSetup.setLevel(Level.ERROR);
     }
 
     public void start() {

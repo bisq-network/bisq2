@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle_node_app;
+package bisq.oracle_node;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
@@ -23,7 +23,6 @@ import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
-import bisq.oracle_node.OracleNodeService;
 import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

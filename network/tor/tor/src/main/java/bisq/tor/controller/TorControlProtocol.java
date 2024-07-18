@@ -53,6 +53,11 @@ public class TorControlProtocol implements AutoCloseable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        try {
+            whonixTorControlReader.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void authenticate(PasswordDigest passwordDigest) {

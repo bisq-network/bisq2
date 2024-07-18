@@ -11,7 +11,7 @@ repositories {
 }
 
 application {
-    mainClass.set("bisq.oracle_node_app.OracleNodeApp")
+    mainClass.set("bisq.oracle_node.OracleNodeApp")
 }
 
 dependencies {
