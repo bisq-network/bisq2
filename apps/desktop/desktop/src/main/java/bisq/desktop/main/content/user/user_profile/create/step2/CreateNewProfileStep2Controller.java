@@ -130,6 +130,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
             return;
         }
 
+        model.getSaveButtonDisabled().set(true);
         userIdentityService.createAndPublishNewUserProfile(
                         nickName,
                         model.getKeyPair(),
@@ -143,6 +144,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
                         model.getCreateProfileProgress().set(0);
                         close();
                     } else {
+                        model.getSaveButtonDisabled().set(false);
                         new Popup().error(throwable).show();
                     }
                 }));
