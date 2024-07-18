@@ -24,6 +24,7 @@ public class WhonixTorControlReader implements AutoCloseable {
     private final List<HsDescEventListener> hsDescEventListeners = new CopyOnWriteArrayList<>();
 
     private Optional<Thread> workerThread = Optional.empty();
+    private volatile boolean isStopped;
 
     public void start(InputStream inputStream) {
         Thread thread = new Thread(() -> {
@@ -31,7 +32,7 @@ public class WhonixTorControlReader implements AutoCloseable {
                 var bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
 
                 String line;
-                while ((line = bufferedReader.readLine()) != null) {
+                while (!isStopped && (line = bufferedReader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
 
                     if (isEvent(line)) {
                         String[] parts = line.split(" ");
@@ -71,9 +72,10 @@ public class WhonixTorControlReader implements AutoCloseable {
                     }
                 }
             } catch (IOException e) {
-                log.error("Tor control port reader couldn't read reply.", e);
+                if (!isStopped) {
+                    log.error("Tor control port reader couldn't read reply.", e);
+                }
             }
-
         });
         workerThread = Optional.of(thread);
         thread.start();
@@ -81,6 +83,7 @@ public class WhonixTorControlReader implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
+        isStopped = true;
         workerThread.ifPresent(Thread::interrupt);
     }
 
