@@ -40,12 +40,12 @@ public class TradeWizardPaymentMethodsModel implements Model {
     private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<FiatPaymentMethod> addedCustomFiatPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = FXCollections.observableArrayList();
-    private final SortedList<BitcoinPaymentMethod> sortedBitcoinPaymentMethods = new SortedList<>(bitcoinPaymentMethods);
     private final ObservableList<BitcoinPaymentMethod> selectedBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<BitcoinPaymentMethod> addedCustomBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
+    private final BooleanProperty isLNMethodAllowed = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {

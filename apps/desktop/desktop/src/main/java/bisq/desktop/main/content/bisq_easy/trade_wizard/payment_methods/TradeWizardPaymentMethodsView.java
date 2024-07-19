@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -31,9 +30,11 @@ import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +45,10 @@ import org.fxmisc.easybind.Subscription;
 public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPaymentMethodsModel, TradeWizardPaymentMethodsController> {
     private final MaterialTextField custom;
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
-    private final ListChangeListener<BitcoinPaymentMethod> bitcoinPaymentMethodListener;
-    private final FlowPane fiatMethodsFlowPane, bitcoinMethodsFlowPane;
+    private final FlowPane fiatMethodsFlowPane;
     private final Label headlineLabel, nonFoundLabel;
     private final BisqIconButton addButton;
+    private final CheckBox allowLNMethodSwitch;
     private Subscription addCustomMethodIconEnabledPin;
 
     public TradeWizardPaymentMethodsView(TradeWizardPaymentMethodsModel model, TradeWizardPaymentMethodsController controller) {
@@ -84,25 +85,21 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         addButton.setAlignment(Pos.CENTER);
         custom.setMaxWidth(300);
 
-        bitcoinMethodsFlowPane = new FlowPane();
-        bitcoinMethodsFlowPane.setAlignment(Pos.CENTER);
-        bitcoinMethodsFlowPane.setVgap(20);
-        bitcoinMethodsFlowPane.setHgap(20);
+        Label allowLNNetworkMethodLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.allowLN"));
+        allowLNMethodSwitch = new CheckBox();
+        HBox allowLNHBox = new HBox(10, allowLNMethodSwitch, allowLNNetworkMethodLabel);
+        allowLNHBox.getStyleClass().add("offerbook-subheader-checkbox");
+        allowLNHBox.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(fiatMethodsFlowPane, new Insets(20, 60, 25, 60));
-        VBox.setMargin(bitcoinMethodsFlowPane, new Insets(10, 60, 10, 60));
+        VBox.setMargin(fiatMethodsFlowPane, new Insets(20, 60, 10, 60));
+        VBox.setMargin(allowLNHBox, new Insets(20, 0, 0, 0));
         root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, nonFoundLabel, fiatMethodsFlowPane,
-                custom, bitcoinMethodsFlowPane, Spacer.fillVBox());
+                custom, allowLNHBox, Spacer.fillVBox());
 
         fiatPaymentMethodListener = c -> {
             c.next();
             fillFiatPaymentMethods();
-        };
-
-        bitcoinPaymentMethodListener = c -> {
-            c.next();
-            fillBitcoinPaymentMethods();
         };
     }
 
@@ -115,6 +112,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         fiatMethodsFlowPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
         fiatMethodsFlowPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
         addButton.disableProperty().bind(model.getIsAddCustomMethodIconEnabled().not());
+        allowLNMethodSwitch.selectedProperty().bindBidirectional(model.getIsLNMethodAllowed());
 
         addCustomMethodIconEnabledPin = EasyBind.subscribe(model.getIsAddCustomMethodIconEnabled(), enabled -> {
             custom.setIcon(enabled ? "add" : "add-white");
@@ -122,13 +120,11 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         });
 
         model.getFiatPaymentMethods().addListener(fiatPaymentMethodListener);
-        model.getBitcoinPaymentMethods().addListener(bitcoinPaymentMethodListener);
 
-        addButton.setOnAction(e -> controller.onAddCustomMethod());
+        addButton.setOnAction(e -> controller.onAddCustomFiatMethod());
         root.setOnMousePressed(e -> root.requestFocus());
 
         fillFiatPaymentMethods();
-        fillBitcoinPaymentMethods();
     }
 
     @Override
@@ -139,13 +135,9 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         fiatMethodsFlowPane.visibleProperty().unbind();
         fiatMethodsFlowPane.managedProperty().unbind();
         addButton.disableProperty().unbind();
+        allowLNMethodSwitch.selectedProperty().unbindBidirectional(model.getIsLNMethodAllowed());
 
         fiatMethodsFlowPane.getChildren().stream()
-                .filter(e -> e instanceof ChipButton)
-                .map(e -> (ChipButton) e)
-                .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
-
-        bitcoinMethodsFlowPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
                 .map(e -> (ChipButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
@@ -153,7 +145,6 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         addCustomMethodIconEnabledPin.unsubscribe();
 
         model.getFiatPaymentMethods().removeListener(fiatPaymentMethodListener);
-        model.getBitcoinPaymentMethods().removeListener(bitcoinPaymentMethodListener);
 
         addButton.setOnAction(null);
         root.setOnMousePressed(null);
@@ -171,7 +162,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
                 chipButton.setSelected(true);
             }
             chipButton.setOnAction(() -> {
-                boolean wasAdded = controller.onTogglePaymentMethod(fiatPaymentMethod, chipButton.isSelected());
+                boolean wasAdded = controller.onToggleFiatPaymentMethod(fiatPaymentMethod, chipButton.isSelected());
                 if (!wasAdded) {
                     UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
                 }
@@ -182,7 +173,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
                     .ifPresentOrElse(
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(fiatPaymentMethod));
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveFiatCustomMethod(fiatPaymentMethod));
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
@@ -190,40 +181,6 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
                                 chipButton.setLeftIcon(icon);
                             });
             fiatMethodsFlowPane.getChildren().add(chipButton);
-        }
-    }
-
-    private void fillBitcoinPaymentMethods() {
-        bitcoinMethodsFlowPane.getChildren().clear();
-        for (BitcoinPaymentMethod bitcoinPaymentMethod : model.getSortedBitcoinPaymentMethods()) {
-            // enum name or custom name
-            ChipButton chipButton = new ChipButton(bitcoinPaymentMethod.getShortDisplayString());
-            if (!bitcoinPaymentMethod.getShortDisplayString().equals(bitcoinPaymentMethod.getDisplayString())) {
-                chipButton.setTooltip(new BisqTooltip(bitcoinPaymentMethod.getDisplayString()));
-            }
-            if (model.getSelectedBitcoinPaymentMethods().contains(bitcoinPaymentMethod)) {
-                chipButton.setSelected(true);
-            }
-            chipButton.setOnAction(() -> {
-                boolean wasAdded = controller.onTogglePaymentMethod(bitcoinPaymentMethod, chipButton.isSelected());
-                if (!wasAdded) {
-                    UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
-                }
-            });
-            model.getAddedCustomBitcoinPaymentMethods().stream()
-                    .filter(customMethod -> customMethod.equals(bitcoinPaymentMethod))
-                    .findAny()
-                    .ifPresentOrElse(
-                            customMethod -> {
-                                ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(bitcoinPaymentMethod));
-                            },
-                            () -> {
-                                // Lookup for an image with the id of the BitcoinPaymentRail enum name (MAIN_CHAIN)
-                                ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
-                                chipButton.setLeftIcon(icon);
-                            });
-            bitcoinMethodsFlowPane.getChildren().add(chipButton);
         }
     }
 }
