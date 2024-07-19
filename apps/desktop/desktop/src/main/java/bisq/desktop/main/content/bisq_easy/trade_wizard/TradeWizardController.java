@@ -29,7 +29,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.btc_payment_method.TradeWizardBitcoinPaymentMethodController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.fiat_payment_method.TradeWizardFiatPaymentMethodController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods.TradeWizardFiatPaymentMethodController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.price.TradeWizardPriceController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.review.TradeWizardReviewController;
