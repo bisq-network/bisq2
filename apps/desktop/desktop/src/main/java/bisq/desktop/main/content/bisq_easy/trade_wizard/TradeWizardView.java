@@ -209,7 +209,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         priceProgressItemLabel = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.price"));
         priceProgressItemLine = getHLine();
         Label amount = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.amount"));
-        Label fiatPaymentMethod = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.fiatPaymentMethod"));
+        Label paymentMethods = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.paymentMethods"));
         takeOfferProgressItem = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.takeOffer"));
         takeOfferProgressLine = getHLine();
         Label review = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.review"));
@@ -230,7 +230,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 getHLine(),
                 amount,
                 getHLine(),
-                fiatPaymentMethod,
+                paymentMethods,
                 takeOfferProgressLine,
                 takeOfferProgressItem,
                 getHLine(),
@@ -238,7 +238,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 Spacer.fillHBox(),
                 closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, amount, fiatPaymentMethod, takeOfferProgressItem, review)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, amount, paymentMethods, takeOfferProgressItem, review)));
     }
 
     private Region getHLine() {
