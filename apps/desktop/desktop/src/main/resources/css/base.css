@@ -55,6 +55,8 @@
     -bisq2-green-dim-80: #11220e;
     -bisq2-green-dim-90: #081107;
 
+    -bisq2-green-desaturated: #2c372b; /* -bisq2-green; saturation -70; lightness -60 */
+
     -bisq2-yellow: #d0831f;
     -bisq2-yellow-dim-10: #bb751b;
     -bisq2-yellow-dim-20: #a66818;
@@ -132,6 +134,9 @@
                 -fx-mid-text-color,
                 -fx-dark-text-color
         );
+
+    -bisq2-my-bubble-message: -bisq2-green-desaturated;
+    -bisq2-peer-bubble-message: -bisq-dark-grey-40;
 }
 
 /* Avoid color artefacts at antialias */

@@ -47,6 +47,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
+        activeReactionsDisplayHBox.getStyleClass().add("peer-text-message-box-active-reactions");
         messageHBox.getChildren().setAll(messageBgHBox, activeReactionsDisplayHBox, Spacer.fillHBox());
         actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, reactMenuBox, moreActionsMenu, Spacer.fillHBox());
 
