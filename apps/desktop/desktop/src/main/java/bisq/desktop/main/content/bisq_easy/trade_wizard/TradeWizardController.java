@@ -136,7 +136,7 @@ public class TradeWizardController extends NavigationController implements InitW
                 NavigationTarget.TRADE_WIZARD_DIRECTION,
                 NavigationTarget.TRADE_WIZARD_MARKET,
                 NavigationTarget.TRADE_WIZARD_AMOUNT,
-                NavigationTarget.TRADE_WIZARD_FIAT_PAYMENT_METHOD,
+                NavigationTarget.TRADE_WIZARD_PAYMENT_METHODS,
                 NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
                 NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
         ));
@@ -248,7 +248,7 @@ public class TradeWizardController extends NavigationController implements InitW
             case TRADE_WIZARD_PRICE: {
                 return Optional.of(tradeWizardPriceController);
             }
-            case TRADE_WIZARD_FIAT_PAYMENT_METHOD: {
+            case TRADE_WIZARD_PAYMENT_METHODS: {
                 return Optional.of(tradeWizardPaymentMethodsController);
             }
             case TRADE_WIZARD_AMOUNT: {
@@ -326,7 +326,7 @@ public class TradeWizardController extends NavigationController implements InitW
             return tradeWizardPriceController.validate();
         } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_AMOUNT) {
             return tradeWizardAmountController.validate();
-        } else if (calledFromNext && model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_FIAT_PAYMENT_METHOD) {
+        } else if (calledFromNext && model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHODS) {
             // For PaymentMethod we tolerate to go back without having one selected
             return tradeWizardPaymentMethodsController.validate();
         }
