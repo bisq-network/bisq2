@@ -130,7 +130,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                     StringUtils.truncate(Hex.encode(proofOfWork.getPayload()), 200),
                     payload.length,
                     proofOfWork.getPayload().length,
-                    StringUtils.truncate(message.toString(), 500));
+                    StringUtils.truncate(message.toString(), 1000));
             return false;
         }
 
