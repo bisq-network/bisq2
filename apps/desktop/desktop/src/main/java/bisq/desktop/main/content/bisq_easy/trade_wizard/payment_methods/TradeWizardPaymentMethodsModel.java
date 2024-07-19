@@ -30,7 +30,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class TradeWizardFiatPaymentMethodModel implements Model {
+public class TradeWizardPaymentMethodsModel implements Model {
     @Setter
     private Direction direction;
     @Setter

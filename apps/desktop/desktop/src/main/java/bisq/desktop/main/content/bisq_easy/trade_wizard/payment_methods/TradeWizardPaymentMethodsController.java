@@ -42,22 +42,22 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public class TradeWizardFiatPaymentMethodController implements Controller {
-    private final TradeWizardFiatPaymentMethodModel model;
+public class TradeWizardPaymentMethodsController implements Controller {
+    private final TradeWizardPaymentMethodsModel model;
     @Getter
-    private final TradeWizardFiatPaymentMethodView view;
+    private final TradeWizardPaymentMethodsView view;
     private final SettingsService settingsService;
     private final Runnable onNextHandler;
     private final Region owner;
     private Subscription customMethodPin;
 
-    public TradeWizardFiatPaymentMethodController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
+    public TradeWizardPaymentMethodsController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
         settingsService = serviceProvider.getSettingsService();
         this.onNextHandler = onNextHandler;
         this.owner = owner;
 
-        model = new TradeWizardFiatPaymentMethodModel();
-        view = new TradeWizardFiatPaymentMethodView(model, this);
+        model = new TradeWizardPaymentMethodsModel();
+        view = new TradeWizardPaymentMethodsView(model, this);
     }
 
     public ObservableList<FiatPaymentMethod> getFiatPaymentMethods() {
