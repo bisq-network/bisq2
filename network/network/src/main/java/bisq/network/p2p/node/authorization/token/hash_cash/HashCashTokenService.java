@@ -121,10 +121,16 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         byte[] payload = getPayload(message);
         if (!Arrays.equals(payload, proofOfWork.getPayload())) {
             log.warn("Message payload not matching proof of work payload. " +
-                            "getPayload(message)={}; proofOfWork.getPayload()={}; " +
-                            "getPayload(message).length={}; proofOfWork.getPayload().length={}",
-                    StringUtils.truncate(Hex.encode(payload), 200), StringUtils.truncate(Hex.encode(proofOfWork.getPayload()), 200),
-                    payload.length, proofOfWork.getPayload().length);
+                            "getPayload(message)={};\n" +
+                            "proofOfWork.getPayload()={};\n" +
+                            "getPayload(message).length={};\n" +
+                            "proofOfWork.getPayload().length={}\n" +
+                            "message={}",
+                    StringUtils.truncate(Hex.encode(payload), 200),
+                    StringUtils.truncate(Hex.encode(proofOfWork.getPayload()), 200),
+                    payload.length,
+                    proofOfWork.getPayload().length,
+                    StringUtils.truncate(message.toString(), 500));
             return false;
         }
 
