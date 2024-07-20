@@ -120,15 +120,20 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Override
     protected void exitJvm() {
         if (applicationService != null && applicationService.getShutDownErrorMessage().get() == null) {
-            doExit();
+            exitJavaFXPlatform();
         }
         // If we have an error popup we leave it to the user to close it and shutdown the app by clicking the shutdown button
     }
 
-    private void doExit() {
-        log.info("Exiting JavaFX Platform");
-        Platform.exit();
-        super.exitJvm();
+    private void exitJavaFXPlatform() {
+        if (Platform.isFxApplicationThread()) {
+            // See https://openjfx.io/javadoc/19/javafx.graphics/javafx/application/Application.html
+            // Calling System.exit after Platform.exit causes exception
+            log.info("Exiting JavaFX Platform");
+            Platform.exit();
+        } else {
+            super.exitJvm();
+        }
     }
 
     private void setupStartupAndShutdownErrorHandlers() {
@@ -137,7 +142,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                 UIThread.run(() ->
                         new Popup().error(Res.get("popup.startup.error", errorMessage))
                                 .closeButtonText(Res.get("action.shutDown"))
-                                .onClose(this::doExit)
+                                .onClose(this::exitJavaFXPlatform)
                                 .show()
                 );
             }
@@ -152,7 +157,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                     Popup popup = new Popup();
                     popup.error(Res.get("popup.shutdown.error", errorMessage))
                             .closeButtonText(Res.get("action.shutDown"))
-                            .onClose(this::doExit)
+                            .onClose(this::exitJavaFXPlatform)
                             .show();
                     // The error popup allow to report to GH, in that case we get closed the error popup.
                     // We leave the app open and reset the shutDownStarted flag, so that at another
