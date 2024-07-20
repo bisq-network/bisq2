@@ -47,6 +47,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     private static final int VERSION = 1;
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @ExcludeForHash
     private final int version;

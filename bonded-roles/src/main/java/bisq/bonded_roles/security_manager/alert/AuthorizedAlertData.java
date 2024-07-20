@@ -49,6 +49,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @ExcludeForHash
     private final int version;

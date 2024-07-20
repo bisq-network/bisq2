@@ -45,6 +45,7 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     public static final long TTL = TTL_100_DAYS;
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName());
     @ExcludeForHash
     private final int version;

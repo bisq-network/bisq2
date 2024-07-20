@@ -44,6 +44,7 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     public static final long TTL = TTL_30_DAYS;
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
     @ExcludeForHash
     private final int version;

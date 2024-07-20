@@ -49,6 +49,7 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
     @ExcludeForHash
     private final int version;

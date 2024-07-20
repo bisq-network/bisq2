@@ -45,6 +45,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     public static final long TTL = TTL_100_DAYS;
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
     @ExcludeForHash
     private final int version;
