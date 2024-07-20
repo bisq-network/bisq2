@@ -30,10 +30,12 @@ import lombok.ToString;
 public final class InventoryResponse implements BroadcastMessage, Response {
     private static final int VERSION = 1;
 
+    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
     // After v 2.0.6 version 0 should not be used anymore. Then we can remove the excludeOnlyInVersions param to
     // not need to maintain future versions. We add though hypothetical versions 2 and 3 for safety
+    @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final Inventory inventory;
     private final int requestNonce;
