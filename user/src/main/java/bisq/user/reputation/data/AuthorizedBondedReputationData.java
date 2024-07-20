@@ -52,14 +52,20 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     private final long amount;
     private final byte[] hash;
     private final long lockTime;
-    @EqualsAndHashCode.Exclude
-    private final boolean staticPublicKeysProvided;
     @ExcludeForHash
     private final int version;
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final int blockHeight;
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String txId;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no pre version 2.0.5 nodes are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @EqualsAndHashCode.Exclude
+    private final boolean staticPublicKeysProvided;
 
     public AuthorizedBondedReputationData(long blockTime,
                                           long amount,

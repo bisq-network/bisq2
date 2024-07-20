@@ -18,6 +18,7 @@
 package bisq.bonded_roles.release;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -53,8 +54,15 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private final String releaseNotes;
     private final String versionString;
     private final String releaseManagerProfileId;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no pre version 2.0.5 nodes are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
+
     @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
     private transient final Version releaseVersion;
 
