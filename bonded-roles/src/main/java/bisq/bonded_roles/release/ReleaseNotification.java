@@ -66,7 +66,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final Version releaseVersion;
 
     public ReleaseNotification(String id,

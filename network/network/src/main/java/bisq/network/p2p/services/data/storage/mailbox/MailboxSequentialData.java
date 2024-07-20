@@ -38,7 +38,7 @@ public final class MailboxSequentialData implements NetworkProto {
     private final byte[] receiversPubKeyBytes;
     private final long created;
     private final int sequenceNumber;
-    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final PublicKey receiversPubKey;
 
     public MailboxSequentialData(MailboxData mailboxData,

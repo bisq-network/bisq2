@@ -41,7 +41,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     private final Optional<String> channelAdminId;
     private final List<String> channelModeratorIds;
     private final String channelTitle;
-    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final String description;
 
     public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelTitle) {
