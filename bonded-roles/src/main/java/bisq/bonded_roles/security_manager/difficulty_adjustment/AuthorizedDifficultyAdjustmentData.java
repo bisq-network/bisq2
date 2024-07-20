@@ -71,7 +71,7 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
                 staticPublicKeysProvided);
     }
 
-    private AuthorizedDifficultyAdjustmentData(int version,
+    public AuthorizedDifficultyAdjustmentData(int version,
                                                long date,
                                                double difficultyAdjustmentFactor,
                                                String securityManagerProfileId,

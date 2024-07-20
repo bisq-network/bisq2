@@ -88,7 +88,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 staticPublicKeysProvided);
     }
 
-    private ReleaseNotification(int version,
+    public ReleaseNotification(int version,
                                 String id,
                                 long date,
                                 boolean isPreRelease,

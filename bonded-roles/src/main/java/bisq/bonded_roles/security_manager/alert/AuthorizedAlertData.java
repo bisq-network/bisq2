@@ -96,7 +96,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 staticPublicKeysProvided);
     }
 
-    private AuthorizedAlertData(int version,
+    public AuthorizedAlertData(int version,
                                 String id,
                                 long date,
                                 AlertType alertType,

@@ -89,7 +89,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 staticPublicKeysProvided);
     }
 
-    private AuthorizedBondedRole(int version,
+    public AuthorizedBondedRole(int version,
                                  String profileId,
                                  String authorizedPublicKey,
                                  BondedRoleType bondedRoleType,

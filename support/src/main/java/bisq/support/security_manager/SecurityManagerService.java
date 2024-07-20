@@ -112,6 +112,22 @@ public class SecurityManagerService implements Service {
                 bannedRole,
                 profileId,
                 staticPublicKeysProvided);
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        AuthorizedAlertData oldVersion = new AuthorizedAlertData(0,
+                StringUtils.createUid(),
+                new Date().getTime(),
+                alertType,
+                headline,
+                message,
+                haltTrading,
+                requireVersionForTrading,
+                minVersion,
+                bannedRole,
+                profileId,
+                staticPublicKeysProvided);
+        networkService.publishAuthorizedData(oldVersion, keyPair);
+
         return networkService.publishAuthorizedData(authorizedAlertData, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
@@ -129,6 +145,15 @@ public class SecurityManagerService implements Service {
                 difficultyAdjustmentFactor,
                 profileId,
                 staticPublicKeysProvided);
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        AuthorizedDifficultyAdjustmentData oldVersion = new AuthorizedDifficultyAdjustmentData(0,
+                new Date().getTime(),
+                difficultyAdjustmentFactor,
+                profileId,
+                staticPublicKeysProvided);
+        networkService.publishAuthorizedData(oldVersion, keyPair);
+
         return networkService.publishAuthorizedData(data, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
@@ -141,6 +166,15 @@ public class SecurityManagerService implements Service {
                 minRequiredReputationScore,
                 profileId,
                 staticPublicKeysProvided);
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        AuthorizedMinRequiredReputationScoreData oldVersion = new AuthorizedMinRequiredReputationScoreData(0,
+                new Date().getTime(),
+                minRequiredReputationScore,
+                profileId,
+                staticPublicKeysProvided);
+        networkService.publishAuthorizedData(oldVersion, keyPair);
+
         return networkService.publishAuthorizedData(data, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }

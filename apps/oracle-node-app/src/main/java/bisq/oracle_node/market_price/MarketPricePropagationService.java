@@ -43,7 +43,13 @@ public class MarketPricePropagationService implements Service {
         log.info("initialize");
         marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() -> {
             if (!marketPriceRequestService.getMarketPriceByCurrencyMap().isEmpty()) {
-                publishAuthorizedData(new AuthorizedMarketPriceData(new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap()), staticPublicKeysProvided));
+                publishAuthorizedData(new AuthorizedMarketPriceData(new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap()),
+                        staticPublicKeysProvided));
+
+                // Can be removed once there are no pre 2.1.0 versions out there anymore
+                publishAuthorizedData(new AuthorizedMarketPriceData(0,
+                        new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap()),
+                        staticPublicKeysProvided));
             }
         });
 

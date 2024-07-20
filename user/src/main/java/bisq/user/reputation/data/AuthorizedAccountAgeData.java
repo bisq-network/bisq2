@@ -68,7 +68,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
                 staticPublicKeysProvided);
     }
 
-    private AuthorizedAccountAgeData(int version,
+    public AuthorizedAccountAgeData(int version,
                                      String profileId,
                                      long date,
                                      boolean staticPublicKeysProvided) {

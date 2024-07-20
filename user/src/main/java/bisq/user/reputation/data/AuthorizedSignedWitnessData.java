@@ -68,7 +68,7 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
                 staticPublicKeysProvided);
     }
 
-    private AuthorizedSignedWitnessData(int version,
+    public AuthorizedSignedWitnessData(int version,
                                         String profileId,
                                         long witnessSignDate,
                                         boolean staticPublicKeysProvided) {

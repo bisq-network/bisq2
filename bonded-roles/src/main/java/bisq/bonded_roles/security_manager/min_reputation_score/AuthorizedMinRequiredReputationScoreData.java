@@ -71,7 +71,7 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
                 staticPublicKeysProvided);
     }
 
-    private AuthorizedMinRequiredReputationScoreData(int version,
+    public AuthorizedMinRequiredReputationScoreData(int version,
                                                      long date,
                                                      long minRequiredReputationScore,
                                                      String securityManagerProfileId,

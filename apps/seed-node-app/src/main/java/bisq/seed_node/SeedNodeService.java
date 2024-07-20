@@ -111,6 +111,7 @@ public class SeedNodeService implements Service {
             KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(defaultKeyId).getKeyPair();
 
             // TODO deactivate republishing until issues are resolved
+
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
            /* startupScheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))
                     .repeated(1, 10, TimeUnit.SECONDS, 3);

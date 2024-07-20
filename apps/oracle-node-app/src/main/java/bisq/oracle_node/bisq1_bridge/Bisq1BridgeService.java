@@ -99,6 +99,8 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
     @Setter
+    private AuthorizedOracleNode authorizedOracleNodeOldVersion;
+    @Setter
     private Identity identity;
 
     @Nullable
@@ -338,8 +340,17 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                     if (date == requestDate) {
                                         persistableStore.getAccountAgeRequests().add(request);
                                         persist();
-                                        AuthorizedAccountAgeData data = new AuthorizedAccountAgeData(profileId, requestDate, staticPublicKeysProvided);
+                                        AuthorizedAccountAgeData data = new AuthorizedAccountAgeData(profileId,
+                                                requestDate,
+                                                staticPublicKeysProvided);
                                         publishAuthorizedData(data);
+
+                                        // Can be removed once there are no pre 2.1.0 versions out there anymore
+                                        AuthorizedAccountAgeData oldVersion = new AuthorizedAccountAgeData(0,
+                                                profileId,
+                                                requestDate,
+                                                staticPublicKeysProvided);
+                                        publishAuthorizedData(oldVersion);
                                     } else {
                                         log.warn("Date of account age for {} is not matching the date from the users request. " +
                                                         "Date from bridge service call: {}; Date from users request: {}",
@@ -384,8 +395,17 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                     if (date == witnessSignDate) {
                                         persistableStore.getSignedWitnessRequests().add(request);
                                         persist();
-                                        AuthorizedSignedWitnessData data = new AuthorizedSignedWitnessData(request.getProfileId(), request.getWitnessSignDate(), staticPublicKeysProvided);
+                                        AuthorizedSignedWitnessData data = new AuthorizedSignedWitnessData(request.getProfileId(),
+                                                request.getWitnessSignDate(),
+                                                staticPublicKeysProvided);
                                         publishAuthorizedData(data);
+
+                                        // Can be removed once there are no pre 2.1.0 versions out there anymore
+                                        AuthorizedSignedWitnessData oldVersion = new AuthorizedSignedWitnessData(0,
+                                                request.getProfileId(),
+                                                request.getWitnessSignDate(),
+                                                staticPublicKeysProvided);
+                                        publishAuthorizedData(oldVersion);
                                     } else {
                                         log.warn("Date of signed witness for {} is not matching the date from the users request. " +
                                                         "Date from bridge service call: {}; Date from users request: {}",
@@ -438,6 +458,25 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                         .forEach(this::removeAuthorizedData);
                             } else {
                                 publishAuthorizedData(data);
+                            }
+
+                            // Can be removed once there are no pre 2.1.0 versions out there anymore
+                            AuthorizedBondedRole oldVersion = new AuthorizedBondedRole(0,
+                                    profileId,
+                                    request.getAuthorizedPublicKey(),
+                                    bondedRoleType,
+                                    bondUserName,
+                                    signatureBase64,
+                                    request.getAddressByTransportTypeMap(),
+                                    request.getNetworkId(),
+                                    Optional.of(authorizedOracleNodeOldVersion),
+                                    false);
+                            if (request.isCancellationRequest()) {
+                                authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                                        .filter(authorizedBondedRole -> authorizedBondedRole.equals(oldVersion))
+                                        .forEach(this::removeAuthorizedData);
+                            } else {
+                                publishAuthorizedData(oldVersion);
                             }
                         } else {
                             log.warn("RequestBondedRole failed. {}", bondedRoleVerificationDto.getErrorMessage());

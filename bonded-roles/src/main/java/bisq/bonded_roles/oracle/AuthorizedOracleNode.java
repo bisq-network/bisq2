@@ -76,7 +76,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
                 staticPublicKeysProvided);
     }
 
-    private AuthorizedOracleNode(int version,
+    public AuthorizedOracleNode(int version,
                                  NetworkId networkId,
                                  String profileId,
                                  String authorizedPublicKey,

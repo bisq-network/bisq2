@@ -63,7 +63,7 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
                 staticPublicKeysProvided);
     }
 
-    private BannedUserProfileData(int version,
+    public BannedUserProfileData(int version,
                                   UserProfile userProfile,
                                   boolean staticPublicKeysProvided) {
         this.version = version;
