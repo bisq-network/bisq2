@@ -21,6 +21,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 
 public class BisqMenuItem extends Button {
@@ -71,6 +72,12 @@ public class BisqMenuItem extends Button {
     public void setTooltip(String tooltip) {
         if (tooltip != null) {
             Tooltip.install(this, new BisqTooltip(tooltip));
+        }
+    }
+
+    public void applyIconColorAdjustment(ColorAdjust colorAdjust) {
+        if (colorAdjust != null) {
+            buttonIcon.setEffect(colorAdjust);
         }
     }
 

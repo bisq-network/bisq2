@@ -162,7 +162,7 @@
 /* Peer Message Background */
 .chat-message-bg-peer-message,
 .chat-peer-offer-message-bg {
-    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-color: -bisq2-peer-bubble-message;
     -fx-background-radius: 8;
 }
 
@@ -222,7 +222,7 @@
 /* My Message Background */
 .chat-message-bg-my-message,
 .chat-my-offer-message-bg {
-    -fx-background-color: #2c372b; /* -bisq2-green; saturation -70; lightness -60 */
+    -fx-background-color: -bisq2-my-bubble-message;
     -fx-background-radius: 8;
 }
 
@@ -561,7 +561,6 @@
     -fx-font-size: 10;
     -fx-text-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans SemiBold";
-    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 15;
     -fx-padding: 6;
 }
@@ -571,4 +570,12 @@
     -fx-border-color: -bisq-mid-grey-20;
     -fx-border-radius: 15;
     -fx-padding: 5 !important;
+}
+
+.my-text-message-box-active-reactions .button.bisq-menu-item.active-reaction-menu-item {
+    -fx-background-color: -bisq2-my-bubble-message;
+}
+
+.peer-text-message-box-active-reactions .button.bisq-menu-item.active-reaction-menu-item {
+    -fx-background-color: -bisq2-peer-bubble-message;
 }

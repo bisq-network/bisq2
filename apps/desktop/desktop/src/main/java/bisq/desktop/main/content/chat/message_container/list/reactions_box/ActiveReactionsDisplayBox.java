@@ -26,6 +26,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 
@@ -115,6 +116,10 @@ public class ActiveReactionsDisplayBox extends HBox {
             setGraphicTextGap(4);
             addStyleClasses();
             setOnAction(e -> toggleReaction.execute(reactionItem));
+
+            ColorAdjust colorAdjust = new ColorAdjust();
+            colorAdjust.setBrightness(-0.1);
+            applyIconColorAdjustment(colorAdjust);
         }
 
         private ActiveReactionMenuItem(String iconId) {

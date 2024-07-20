@@ -26,6 +26,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
+import javafx.scene.effect.ColorAdjust;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -89,6 +90,10 @@ public class ReactMenuBox extends DrawerMenu {
             getStyleClass().add("reaction-menu-item");
             setOnAction(e -> toggleReaction.execute(reactionItem));
             setIsReactionSelected(reactionItem.getSelected().get());
+
+            ColorAdjust colorAdjust = new ColorAdjust();
+            colorAdjust.setBrightness(-0.1);
+            applyIconColorAdjustment(colorAdjust);
         }
 
         private ReactionMenuItem(String iconId) {
