@@ -47,6 +47,7 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
     private final String profileId;

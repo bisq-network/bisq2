@@ -51,6 +51,7 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
     // We need deterministic sorting or the map, so we use a treemap

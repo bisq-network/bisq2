@@ -46,6 +46,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
     private final NetworkId networkId;
