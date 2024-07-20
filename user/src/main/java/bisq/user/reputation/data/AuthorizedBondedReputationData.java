@@ -48,12 +48,12 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
 
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final long blockTime;
     private final long amount;
     private final byte[] hash;
     private final long lockTime;
-    @ExcludeForHash
-    private final int version;
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final int blockHeight;
     @ExcludeForHash(excludeOnlyInVersions = {0})

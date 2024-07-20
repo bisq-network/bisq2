@@ -41,10 +41,13 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public static final long TTL = TTL_100_DAYS;
 
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final String profileId;
     private final long witnessSignDate;
 
@@ -56,7 +59,20 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedSignedWitnessData(String profileId, long witnessSignDate, boolean staticPublicKeysProvided) {
+    public AuthorizedSignedWitnessData(String profileId,
+                                       long witnessSignDate,
+                                       boolean staticPublicKeysProvided) {
+        this(VERSION,
+                profileId,
+                witnessSignDate,
+                staticPublicKeysProvided);
+    }
+
+    private AuthorizedSignedWitnessData(int version,
+                                        String profileId,
+                                        long witnessSignDate,
+                                        boolean staticPublicKeysProvided) {
+        this.version = version;
         this.profileId = profileId;
         this.witnessSignDate = witnessSignDate;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
@@ -75,7 +91,8 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         return bisq.user.protobuf.AuthorizedSignedWitnessData.newBuilder()
                 .setProfileId(profileId)
                 .setWitnessSignDate(witnessSignDate)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -85,9 +102,11 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
 
     public static AuthorizedSignedWitnessData fromProto(bisq.user.protobuf.AuthorizedSignedWitnessData proto) {
         return new AuthorizedSignedWitnessData(
+                proto.getVersion(),
                 proto.getProfileId(),
                 proto.getWitnessSignDate(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

@@ -40,8 +40,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class BannedUserProfileData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
+
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final UserProfile userProfile;
 
     // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
@@ -52,7 +56,17 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public BannedUserProfileData(UserProfile userProfile, boolean staticPublicKeysProvided) {
+    public BannedUserProfileData(UserProfile userProfile,
+                                 boolean staticPublicKeysProvided) {
+        this(VERSION,
+                userProfile,
+                staticPublicKeysProvided);
+    }
+
+    private BannedUserProfileData(int version,
+                                  UserProfile userProfile,
+                                  boolean staticPublicKeysProvided) {
+        this.version = version;
         this.userProfile = userProfile;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
@@ -67,7 +81,8 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     public bisq.user.protobuf.BannedUserProfileData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.BannedUserProfileData.newBuilder()
                 .setUserProfile(userProfile.toProto(serializeForHash))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -77,8 +92,10 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
 
     public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto) {
         return new BannedUserProfileData(
+                proto.getVersion(),
                 UserProfile.fromProto(proto.getUserProfile()),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

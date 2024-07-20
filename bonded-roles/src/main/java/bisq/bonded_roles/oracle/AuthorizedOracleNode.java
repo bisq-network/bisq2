@@ -41,8 +41,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedOracleNode implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
+
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    @ExcludeForHash
+    private final int version;
     private final NetworkId networkId;
     private final String profileId;
     private final String authorizedPublicKey;
@@ -63,6 +67,23 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
                                 String bondUserName,
                                 String signatureBase64,
                                 boolean staticPublicKeysProvided) {
+        this(VERSION,
+                networkId,
+                profileId,
+                authorizedPublicKey,
+                bondUserName,
+                signatureBase64,
+                staticPublicKeysProvided);
+    }
+
+    private AuthorizedOracleNode(int version,
+                                 NetworkId networkId,
+                                 String profileId,
+                                 String authorizedPublicKey,
+                                 String bondUserName,
+                                 String signatureBase64,
+                                 boolean staticPublicKeysProvided) {
+        this.version = version;
         this.networkId = networkId;
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
@@ -89,7 +110,8 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
                 .setAuthorizedPublicKey(authorizedPublicKey)
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -98,12 +120,15 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     }
 
     public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto) {
-        return new AuthorizedOracleNode(NetworkId.fromProto(proto.getNetworkId()),
+        return new AuthorizedOracleNode(
+                proto.getVersion(),
+                NetworkId.fromProto(proto.getNetworkId()),
                 proto.getProfileId(),
                 proto.getAuthorizedPublicKey(),
                 proto.getBondUserName(),
                 proto.getSignatureBase64(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

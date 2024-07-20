@@ -44,8 +44,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
+
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    @ExcludeForHash
+    private final int version;
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
@@ -73,6 +77,29 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 NetworkId networkId,
                                 Optional<AuthorizedOracleNode> authorizingOracleNode,
                                 boolean staticPublicKeysProvided) {
+        this(VERSION,
+                profileId,
+                authorizedPublicKey,
+                bondedRoleType,
+                bondUserName,
+                signatureBase64,
+                addressByTransportTypeMap,
+                networkId,
+                authorizingOracleNode,
+                staticPublicKeysProvided);
+    }
+
+    private AuthorizedBondedRole(int version,
+                                 String profileId,
+                                 String authorizedPublicKey,
+                                 BondedRoleType bondedRoleType,
+                                 String bondUserName,
+                                 String signatureBase64,
+                                 Optional<AddressByTransportTypeMap> addressByTransportTypeMap,
+                                 NetworkId networkId,
+                                 Optional<AuthorizedOracleNode> authorizingOracleNode,
+                                 boolean staticPublicKeysProvided) {
+        this.version = version;
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
         this.bondedRoleType = bondedRoleType;
@@ -103,7 +130,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto(serializeForHash))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
         addressByTransportTypeMap.ifPresent(e -> builder.setAddressByTransportTypeMap(e.toProto(serializeForHash)));
         authorizingOracleNode.ifPresent(oracleNode -> builder.setAuthorizingOracleNode(oracleNode.toProto(serializeForHash)));
         return builder;
@@ -115,7 +143,9 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     }
 
     public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
-        return new AuthorizedBondedRole(proto.getProfileId(),
+        return new AuthorizedBondedRole(
+                proto.getVersion(),
+                proto.getProfileId(),
                 proto.getAuthorizedPublicKey(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
@@ -127,7 +157,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 proto.hasAuthorizingOracleNode() ?
                         Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) :
                         Optional.empty(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

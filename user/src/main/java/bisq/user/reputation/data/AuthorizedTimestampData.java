@@ -40,10 +40,13 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedTimestampData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public static final long TTL = TTL_30_DAYS;
 
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final String profileId;
     private final long date;
 
@@ -55,7 +58,20 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedTimestampData(String profileId, long date, boolean staticPublicKeysProvided) {
+    public AuthorizedTimestampData(String profileId,
+                                   long date,
+                                   boolean staticPublicKeysProvided) {
+        this(VERSION,
+                profileId,
+                date,
+                staticPublicKeysProvided);
+    }
+
+    private AuthorizedTimestampData(int version,
+                                    String profileId,
+                                    long date,
+                                    boolean staticPublicKeysProvided) {
+        this.version = version;
         this.profileId = profileId;
         this.date = date;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
@@ -74,7 +90,8 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
         return bisq.user.protobuf.AuthorizedTimestampData.newBuilder()
                 .setProfileId(profileId)
                 .setDate(date)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -84,9 +101,11 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
 
     public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto) {
         return new AuthorizedTimestampData(
+                proto.getVersion(),
                 proto.getProfileId(),
                 proto.getDate(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

@@ -41,10 +41,13 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public static final long TTL = TTL_100_DAYS;
 
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final String profileId;
     private final long date;
 
@@ -56,7 +59,20 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedAccountAgeData(String profileId, long date, boolean staticPublicKeysProvided) {
+    public AuthorizedAccountAgeData(String profileId,
+                                    long date,
+                                    boolean staticPublicKeysProvided) {
+        this(VERSION,
+                profileId,
+                date,
+                staticPublicKeysProvided);
+    }
+
+    private AuthorizedAccountAgeData(int version,
+                                     String profileId,
+                                     long date,
+                                     boolean staticPublicKeysProvided) {
+        this.version = version;
         this.profileId = profileId;
         this.date = date;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
@@ -75,7 +91,8 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         return bisq.user.protobuf.AuthorizedAccountAgeData.newBuilder()
                 .setProfileId(profileId)
                 .setDate(date)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -85,9 +102,11 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
 
     public static AuthorizedAccountAgeData fromProto(bisq.user.protobuf.AuthorizedAccountAgeData proto) {
         return new AuthorizedAccountAgeData(
+                proto.getVersion(),
                 proto.getProfileId(),
                 proto.getDate(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

@@ -133,23 +133,27 @@ message AuthorizedAccountAgeData {
   string profileId = 1;
   sint64 date = 2;
   bool staticPublicKeysProvided = 3;
+  sint32 version = 4;
 }
 
 message AuthorizedSignedWitnessData {
   string profileId = 1;
   sint64 witnessSignDate = 2;
   bool staticPublicKeysProvided = 3;
+  sint32 version = 4;
 }
 
 message AuthorizedTimestampData {
   string profileId = 1;
   sint64 date = 2;
   bool staticPublicKeysProvided = 3;
+  sint32 version = 4;
 }
 
 message BannedUserProfileData {
   UserProfile userProfile = 1;
   bool staticPublicKeysProvided = 2;
+  sint32 version = 3;
 }
 message BannedUserStore {
   repeated BannedUserProfileData bannedUserProfileDataSet = 1;

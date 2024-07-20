@@ -45,10 +45,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
 
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     // We need deterministic sorting or the map, so we use a treemap
     private final TreeMap<Market, MarketPrice> marketPriceByCurrencyMap;
 
@@ -60,7 +63,15 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedMarketPriceData(TreeMap<Market, MarketPrice> marketPriceByCurrencyMap, boolean staticPublicKeysProvided) {
+    public AuthorizedMarketPriceData(TreeMap<Market, MarketPrice> marketPriceByCurrencyMap,
+                                     boolean staticPublicKeysProvided) {
+        this(VERSION, marketPriceByCurrencyMap, staticPublicKeysProvided);
+    }
+
+    private AuthorizedMarketPriceData(int version,
+                                      TreeMap<Market, MarketPrice> marketPriceByCurrencyMap,
+                                      boolean staticPublicKeysProvided) {
+        this.version = version;
         this.marketPriceByCurrencyMap = marketPriceByCurrencyMap;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
@@ -79,7 +90,8 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
                 .putAllMarketPriceByCurrencyMap(marketPriceByCurrencyMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().getMarketCodes(),
                                 e -> e.getValue().toProto(serializeForHash))))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -92,7 +104,11 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
                 .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
                 .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
                         e -> MarketPrice.fromProto(e.getValue())));
-        return new AuthorizedMarketPriceData(new TreeMap<>(map), proto.getStaticPublicKeysProvided());
+        return new AuthorizedMarketPriceData(
+                proto.getVersion(),
+                new TreeMap<>(map),
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

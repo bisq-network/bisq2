@@ -43,10 +43,13 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class ReleaseNotification implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final String id;
     private final long date;
     private final boolean isPreRelease;
@@ -74,6 +77,27 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                                String versionString,
                                String releaseManagerProfileId,
                                boolean staticPublicKeysProvided) {
+        this(VERSION,
+                id,
+                date,
+                isPreRelease,
+                isLauncherUpdate,
+                releaseNotes,
+                versionString,
+                releaseManagerProfileId,
+                staticPublicKeysProvided);
+    }
+
+    private ReleaseNotification(int version,
+                                String id,
+                                long date,
+                                boolean isPreRelease,
+                                boolean isLauncherUpdate,
+                                String releaseNotes,
+                                String versionString,
+                                String releaseManagerProfileId,
+                                boolean staticPublicKeysProvided) {
+        this.version = version;
         this.id = id;
         this.date = date;
         this.isPreRelease = isPreRelease;
@@ -107,7 +131,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 .setReleaseNotes(releaseNotes)
                 .setVersionString(versionString)
                 .setReleaseManagerProfileId(releaseManagerProfileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -116,14 +141,17 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     }
 
     public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto) {
-        return new ReleaseNotification(proto.getId(),
+        return new ReleaseNotification(
+                proto.getVersion(),
+                proto.getId(),
                 proto.getDate(),
                 proto.getIsPreRelease(),
                 proto.getIsLauncherUpdate(),
                 proto.getReleaseNotes(),
                 proto.getVersionString(),
                 proto.getReleaseManagerProfileId(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

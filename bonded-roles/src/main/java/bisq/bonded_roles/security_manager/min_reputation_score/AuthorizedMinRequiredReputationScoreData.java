@@ -42,8 +42,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedMinRequiredReputationScoreData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
+
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final long date;
     private final long minRequiredReputationScore;
     private final String securityManagerProfileId;
@@ -60,6 +64,19 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
                                                     long minRequiredReputationScore,
                                                     String securityManagerProfileId,
                                                     boolean staticPublicKeysProvided) {
+        this(VERSION,
+                date,
+                minRequiredReputationScore,
+                securityManagerProfileId,
+                staticPublicKeysProvided);
+    }
+
+    private AuthorizedMinRequiredReputationScoreData(int version,
+                                                     long date,
+                                                     long minRequiredReputationScore,
+                                                     String securityManagerProfileId,
+                                                     boolean staticPublicKeysProvided) {
+        this.version = version;
         this.date = date;
         this.minRequiredReputationScore = minRequiredReputationScore;
         this.securityManagerProfileId = securityManagerProfileId;
@@ -80,7 +97,8 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
                 .setDate(date)
                 .setMinRequiredReputationScore(minRequiredReputationScore)
                 .setSecurityManagerProfileId(securityManagerProfileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -89,10 +107,13 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
     }
 
     public static AuthorizedMinRequiredReputationScoreData fromProto(bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData proto) {
-        return new AuthorizedMinRequiredReputationScoreData(proto.getDate(),
+        return new AuthorizedMinRequiredReputationScoreData(
+                proto.getVersion(),
+                proto.getDate(),
                 proto.getMinRequiredReputationScore(),
                 proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
