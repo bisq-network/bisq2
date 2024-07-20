@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.fiat_payment_method;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
@@ -30,9 +30,11 @@ import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -40,15 +42,16 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeWizardFiatPaymentMethodView extends View<VBox, TradeWizardFiatPaymentMethodModel, TradeWizardFiatPaymentMethodController> {
+public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPaymentMethodsModel, TradeWizardPaymentMethodsController> {
     private final MaterialTextField custom;
-    private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
-    private final FlowPane flowPane;
+    private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
+    private final FlowPane fiatMethodsFlowPane;
     private final Label headlineLabel, nonFoundLabel;
     private final BisqIconButton addButton;
+    private final CheckBox allowLNMethodSwitch;
     private Subscription addCustomMethodIconEnabledPin;
 
-    public TradeWizardFiatPaymentMethodView(TradeWizardFiatPaymentMethodModel model, TradeWizardFiatPaymentMethodController controller) {
+    public TradeWizardPaymentMethodsView(TradeWizardPaymentMethodsModel model, TradeWizardPaymentMethodsController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -67,10 +70,10 @@ public class TradeWizardFiatPaymentMethodView extends View<VBox, TradeWizardFiat
         nonFoundLabel.getStyleClass().add("bisq-text-6");
         nonFoundLabel.setAlignment(Pos.CENTER);
 
-        flowPane = new FlowPane();
-        flowPane.setAlignment(Pos.CENTER);
-        flowPane.setVgap(20);
-        flowPane.setHgap(20);
+        fiatMethodsFlowPane = new FlowPane();
+        fiatMethodsFlowPane.setAlignment(Pos.CENTER);
+        fiatMethodsFlowPane.setVgap(20);
+        fiatMethodsFlowPane.setHgap(20);
 
         custom = new MaterialTextField(Res.get("bisqEasy.tradeWizard.paymentMethod.customMethod"),
                 Res.get("bisqEasy.tradeWizard.paymentMethod.customMethod.prompt"));
@@ -82,13 +85,21 @@ public class TradeWizardFiatPaymentMethodView extends View<VBox, TradeWizardFiat
         addButton.setAlignment(Pos.CENTER);
         custom.setMaxWidth(300);
 
-        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(flowPane, new Insets(20, 60, 25, 60));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
+        Label allowLNNetworkMethodLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.allowLN"));
+        allowLNMethodSwitch = new CheckBox();
+        HBox allowLNHBox = new HBox(10, allowLNMethodSwitch, allowLNNetworkMethodLabel);
+        allowLNHBox.getStyleClass().add("offerbook-subheader-checkbox");
+        allowLNHBox.setAlignment(Pos.CENTER);
 
-        paymentMethodListener = c -> {
+        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(fiatMethodsFlowPane, new Insets(20, 60, 10, 60));
+        VBox.setMargin(allowLNHBox, new Insets(20, 0, 0, 0));
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, nonFoundLabel, fiatMethodsFlowPane,
+                custom, allowLNHBox, Spacer.fillVBox());
+
+        fiatPaymentMethodListener = c -> {
             c.next();
-            fillPaymentMethods();
+            fillFiatPaymentMethods();
         };
     }
 
@@ -98,21 +109,22 @@ public class TradeWizardFiatPaymentMethodView extends View<VBox, TradeWizardFiat
         custom.textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
-        flowPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        flowPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        fiatMethodsFlowPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        fiatMethodsFlowPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
         addButton.disableProperty().bind(model.getIsAddCustomMethodIconEnabled().not());
+        allowLNMethodSwitch.selectedProperty().bindBidirectional(model.getIsLNMethodAllowed());
 
         addCustomMethodIconEnabledPin = EasyBind.subscribe(model.getIsAddCustomMethodIconEnabled(), enabled -> {
             custom.setIcon(enabled ? "add" : "add-white");
             addButton.setOpacity(enabled ? 1 : 0.15);
         });
 
-        model.getFiatPaymentMethods().addListener(paymentMethodListener);
+        model.getFiatPaymentMethods().addListener(fiatPaymentMethodListener);
 
-        addButton.setOnAction(e -> controller.onAddCustomMethod());
+        addButton.setOnAction(e -> controller.onAddCustomFiatMethod());
         root.setOnMousePressed(e -> root.requestFocus());
 
-        fillPaymentMethods();
+        fillFiatPaymentMethods();
     }
 
     @Override
@@ -120,25 +132,26 @@ public class TradeWizardFiatPaymentMethodView extends View<VBox, TradeWizardFiat
         custom.textProperty().unbindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
-        flowPane.visibleProperty().unbind();
-        flowPane.managedProperty().unbind();
+        fiatMethodsFlowPane.visibleProperty().unbind();
+        fiatMethodsFlowPane.managedProperty().unbind();
         addButton.disableProperty().unbind();
+        allowLNMethodSwitch.selectedProperty().unbindBidirectional(model.getIsLNMethodAllowed());
 
-        flowPane.getChildren().stream()
+        fiatMethodsFlowPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
                 .map(e -> (ChipButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
 
         addCustomMethodIconEnabledPin.unsubscribe();
 
-        model.getFiatPaymentMethods().removeListener(paymentMethodListener);
+        model.getFiatPaymentMethods().removeListener(fiatPaymentMethodListener);
 
         addButton.setOnAction(null);
         root.setOnMousePressed(null);
     }
 
-    private void fillPaymentMethods() {
-        flowPane.getChildren().clear();
+    private void fillFiatPaymentMethods() {
+        fiatMethodsFlowPane.getChildren().clear();
         for (FiatPaymentMethod fiatPaymentMethod : model.getSortedFiatPaymentMethods()) {
             // enum name or custom name
             ChipButton chipButton = new ChipButton(fiatPaymentMethod.getShortDisplayString());
@@ -149,7 +162,7 @@ public class TradeWizardFiatPaymentMethodView extends View<VBox, TradeWizardFiat
                 chipButton.setSelected(true);
             }
             chipButton.setOnAction(() -> {
-                boolean wasAdded = controller.onTogglePaymentMethod(fiatPaymentMethod, chipButton.isSelected());
+                boolean wasAdded = controller.onToggleFiatPaymentMethod(fiatPaymentMethod, chipButton.isSelected());
                 if (!wasAdded) {
                     UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
                 }
@@ -160,14 +173,14 @@ public class TradeWizardFiatPaymentMethodView extends View<VBox, TradeWizardFiat
                     .ifPresentOrElse(
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
-                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(fiatPaymentMethod));
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveFiatCustomMethod(fiatPaymentMethod));
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
                                 ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
                                 chipButton.setLeftIcon(icon);
                             });
-            flowPane.getChildren().add(chipButton);
+            fiatMethodsFlowPane.getChildren().add(chipButton);
         }
     }
 }

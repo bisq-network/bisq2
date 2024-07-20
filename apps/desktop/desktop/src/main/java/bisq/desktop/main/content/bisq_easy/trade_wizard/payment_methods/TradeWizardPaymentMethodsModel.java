@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.fiat_payment_method;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
@@ -29,7 +30,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class TradeWizardFiatPaymentMethodModel implements Model {
+public class TradeWizardPaymentMethodsModel implements Model {
     @Setter
     private Direction direction;
     @Setter
@@ -38,9 +39,13 @@ public class TradeWizardFiatPaymentMethodModel implements Model {
     private final SortedList<FiatPaymentMethod> sortedFiatPaymentMethods = new SortedList<>(fiatPaymentMethods);
     private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<FiatPaymentMethod> addedCustomFiatPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<BitcoinPaymentMethod> selectedBitcoinPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<BitcoinPaymentMethod> addedCustomBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
+    private final BooleanProperty isLNMethodAllowed = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {
@@ -49,6 +54,8 @@ public class TradeWizardFiatPaymentMethodModel implements Model {
         fiatPaymentMethods.clear();
         selectedFiatPaymentMethods.clear();
         addedCustomFiatPaymentMethods.clear();
+        bitcoinPaymentMethods.clear();
+        selectedBitcoinPaymentMethods.clear();
         customFiatPaymentMethodName.set("");
         isPaymentMethodsEmpty.set(false);
         isAddCustomMethodIconEnabled.set(false);
