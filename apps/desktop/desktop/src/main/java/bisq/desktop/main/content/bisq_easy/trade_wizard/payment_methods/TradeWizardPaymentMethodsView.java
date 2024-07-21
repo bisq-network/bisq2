@@ -31,6 +31,7 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
@@ -85,7 +86,9 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         addButton.setAlignment(Pos.CENTER);
         custom.setMaxWidth(300);
 
-        Label allowLNNetworkMethodLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.allowLN"));
+        Label allowLNNetworkMethodLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.allowLN"), ImageUtil.getImageViewById("LN"));
+        allowLNNetworkMethodLabel.setContentDisplay(ContentDisplay.RIGHT);
+        allowLNNetworkMethodLabel.setGraphicTextGap(12);
         allowLNMethodSwitch = new CheckBox();
         HBox allowLNHBox = new HBox(10, allowLNMethodSwitch, allowLNNetworkMethodLabel);
         allowLNHBox.getStyleClass().add("offerbook-subheader-checkbox");
