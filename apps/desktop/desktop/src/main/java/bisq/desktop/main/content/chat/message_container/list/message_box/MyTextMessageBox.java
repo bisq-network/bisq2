@@ -75,8 +75,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         deliveryStateHBox.setAlignment(Pos.CENTER);
 
         messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliveryStatusNode(), node -> {
-            deliveryStateHBox.setManaged(node != null);
-            deliveryStateHBox.setVisible(node != null);
+            messageStatusHbox.setManaged(node != null);
+            messageStatusHbox.setVisible(node != null);
             if (node != null) {
                 deliveryStateHBox.getChildren().setAll(node);
             }
