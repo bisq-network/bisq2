@@ -176,8 +176,10 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
             fiatMethodsGridPane.add(chipButton, col, row);
         }
 
-        col = i % numColumns;
-        row = i / numColumns;
-        fiatMethodsGridPane.add(addCustomPaymentMethodBox, col, row);
+        if (model.getCanAddCustomFiatPaymentMethod().get()) {
+            col = i % numColumns;
+            row = i / numColumns;
+            fiatMethodsGridPane.add(addCustomPaymentMethodBox, col, row);
+        }
     }
 }

@@ -46,6 +46,7 @@ import java.util.stream.Stream;
 public class TradeWizardPaymentMethodsController implements Controller {
     private static final BitcoinPaymentMethod ON_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
     private static final BitcoinPaymentMethod LN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.LN);
+    private static final int MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS = 3;
 
     private final TradeWizardPaymentMethodsModel model;
     @Getter
@@ -53,8 +54,9 @@ public class TradeWizardPaymentMethodsController implements Controller {
     private final SettingsService settingsService;
     private final Runnable onNextHandler;
     private final Region owner;
-    private Subscription customMethodPin, isLNMethodAllowedPin;
+    private Subscription isLNMethodAllowedPin;
     private ListChangeListener<BitcoinPaymentMethod> selectedBitcoinPaymentMethodsListener;
+    private ListChangeListener<FiatPaymentMethod> addedCustomFiatPaymentMethodsListener;
 
     public TradeWizardPaymentMethodsController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
         settingsService = serviceProvider.getSettingsService();
@@ -138,6 +140,10 @@ public class TradeWizardPaymentMethodsController implements Controller {
             model.getIsLNMethodAllowed().set(isLNSelected);
         };
         model.getSelectedBitcoinPaymentMethods().addListener(selectedBitcoinPaymentMethodsListener);
+        addedCustomFiatPaymentMethodsListener = change ->
+            model.getCanAddCustomFiatPaymentMethod().set(model.getAddedCustomFiatPaymentMethods().size() < MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS);;
+        model.getAddedCustomFiatPaymentMethods().addListener(addedCustomFiatPaymentMethodsListener);
+        maybeRemoveCustomFiatPaymentMethods();
 
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
                 .ifPresent(names -> {
@@ -164,8 +170,6 @@ public class TradeWizardPaymentMethodsController implements Controller {
                         maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
                     });
                 });
-        customMethodPin = EasyBind.subscribe(model.getCustomFiatPaymentMethodName(),
-                customMethod -> model.getIsAddCustomMethodIconEnabled().set(customMethod != null && !customMethod.isEmpty()));
         isLNMethodAllowedPin = EasyBind.subscribe(model.getIsLNMethodAllowed(), isLNAllowed ->
            onToggleBitcoinPaymentMethod(LN_PAYMENT_METHOD, isLNAllowed));
     }
@@ -173,7 +177,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
     @Override
     public void onDeactivate() {
         model.getSelectedBitcoinPaymentMethods().removeListener(selectedBitcoinPaymentMethodsListener);
-        customMethodPin.unsubscribe();
+        model.getAddedCustomFiatPaymentMethods().removeListener(addedCustomFiatPaymentMethodsListener);
         isLNMethodAllowedPin.unsubscribe();
     }
 
@@ -292,5 +296,13 @@ public class TradeWizardPaymentMethodsController implements Controller {
     private void setCreateOfferBitcoinMethodsCookie() {
         settingsService.setCookie(CookieKey.CREATE_OFFER_BITCOIN_METHODS,
                 Joiner.on(",").join(PaymentMethodUtil.getPaymentMethodNames(model.getSelectedBitcoinPaymentMethods())));
+    }
+
+    private void maybeRemoveCustomFiatPaymentMethods() {
+        // To ensure backwards compatibility we need to drop custom fiat payment methods if the user has more than 3,
+        // which is the max allowed number of custom fiat payment methods per market
+        while (model.getAddedCustomFiatPaymentMethods().size() > MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS) {
+            model.getAddedCustomFiatPaymentMethods().remove(model.getAddedCustomBitcoinPaymentMethods().size() - 1);
+        }
     }
 }
