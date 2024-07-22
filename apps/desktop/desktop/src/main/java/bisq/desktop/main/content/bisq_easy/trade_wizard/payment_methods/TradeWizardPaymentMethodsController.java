@@ -78,8 +78,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
 
     public boolean validate() {
         if (getCustomFiatPaymentMethodNameNotEmpty()) {
-            tryAddCustomFiatPaymentMethodAndNavigateNext();
-            return true;
+            return tryAddCustomFiatPaymentMethodAndNavigateNext();
         }
         if (model.getSelectedFiatPaymentMethods().isEmpty()) {
             new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.noPaymentMethodSelected"))
@@ -95,10 +94,12 @@ public class TradeWizardPaymentMethodsController implements Controller {
         return StringUtils.isNotEmpty(model.getCustomFiatPaymentMethodName().get());
     }
 
-    public void tryAddCustomFiatPaymentMethodAndNavigateNext() {
+    public boolean tryAddCustomFiatPaymentMethodAndNavigateNext() {
         if (doAddCustomFiatMethod()) {
             onNextHandler.run();
+            return true;
         }
+        return false;
     }
 
     public void setDirection(Direction direction) {
@@ -218,8 +219,12 @@ public class TradeWizardPaymentMethodsController implements Controller {
             new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.tooLong")).show();
             return false;
         }
-        maybeAddCustomFiatPaymentMethod(FiatPaymentMethod.fromCustomName(customName));
-        return true;
+        FiatPaymentMethod customFiatPaymentMethod = FiatPaymentMethod.fromCustomName(customName);
+        if (model.getAddedCustomFiatPaymentMethods().contains(customFiatPaymentMethod)) {
+            new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.customPaymentMethodAlreadyExists", customFiatPaymentMethod.getName())).show();
+            return false;
+        }
+        return maybeAddCustomFiatPaymentMethod(customFiatPaymentMethod);
     }
 
     private void maybeAddFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
@@ -232,23 +237,24 @@ public class TradeWizardPaymentMethodsController implements Controller {
         }
     }
 
-    private void maybeAddCustomFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
+    private boolean maybeAddCustomFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod) {
         if (fiatPaymentMethod != null) {
             if (!model.getAddedCustomFiatPaymentMethods().contains(fiatPaymentMethod)) {
                 String customName = fiatPaymentMethod.getName().toUpperCase().strip();
                 if (isPredefinedPaymentMethodsContainName(customName)) {
                     new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.customNameMatchesPredefinedMethod")).show();
                     model.getCustomFiatPaymentMethodName().set("");
-                    return;
+                    return false;
                 }
                 model.getAddedCustomFiatPaymentMethods().add(fiatPaymentMethod);
             } else {
-                new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.customPaymentMethodAlreadyExists", fiatPaymentMethod.getName())).show();
-                return;
+                return false;
             }
             maybeAddFiatPaymentMethod(fiatPaymentMethod);
             model.getCustomFiatPaymentMethodName().set("");
+            return true;
         }
+        return false;
     }
 
     private boolean isPredefinedPaymentMethodsContainName(String name) {

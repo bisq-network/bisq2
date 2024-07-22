@@ -67,10 +67,6 @@ public class AddCustomPaymentMethodBox extends HBox {
         return customPaymentMethodField.getText();
     }
 
-    public StringProperty textProperty() {
-        return customPaymentMethodField.textProperty();
-    }
-
     private void applyStyle(boolean isFocused) {
         addIcon.setId(isFocused ? activeIconId : defaultIconId);
         addIconButton.setGraphic(addIcon);

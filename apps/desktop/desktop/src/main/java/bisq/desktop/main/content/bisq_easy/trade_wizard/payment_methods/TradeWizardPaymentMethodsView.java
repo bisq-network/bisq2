@@ -33,6 +33,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -95,7 +96,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
     @Override
     protected void onViewAttached() {
         headlineLabel.setText(model.getHeadline());
-        addCustomPaymentMethodBox.textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
+        addCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
         fiatMethodsGridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
@@ -112,7 +113,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
 
     @Override
     protected void onViewDetached() {
-        addCustomPaymentMethodBox.textProperty().unbindBidirectional(model.getCustomFiatPaymentMethodName());
+        addCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().unbindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
         fiatMethodsGridPane.visibleProperty().unbind();
