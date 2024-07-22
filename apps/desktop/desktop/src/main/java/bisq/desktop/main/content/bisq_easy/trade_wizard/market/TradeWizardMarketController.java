@@ -120,8 +120,8 @@ public class TradeWizardMarketController implements Controller {
                 String search = searchText.toLowerCase();
                 model.getFilteredList().setPredicate(item ->
                         item != null &&
-                                (item.getQuoteCurrencyName().toLowerCase().contains(search) ||
-                                        item.getMarket().getQuoteCurrencyName().toLowerCase().contains(search))
+                                (item.getQuoteCurrencyDisplayName().toLowerCase().contains(search) ||
+                                        item.getMarket().getQuoteCurrencyDisplayName().toLowerCase().contains(search))
                 );
             }
         });

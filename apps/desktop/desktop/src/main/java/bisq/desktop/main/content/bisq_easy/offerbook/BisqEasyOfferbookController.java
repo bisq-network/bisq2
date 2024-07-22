@@ -146,7 +146,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.setMarketSearchTextPredicate(item ->
                         item != null &&
                                 (item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(search) ||
-                                        item.getMarket().getQuoteCurrencyName().toLowerCase().contains(search))
+                                        item.getMarket().getQuoteCurrencyDisplayName().toLowerCase().contains(search))
                 );
             }
             updateFilteredMarketChannelItems();

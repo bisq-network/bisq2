@@ -57,7 +57,7 @@ public class FiatCurrencyRepository {
         minorCurrencies = new ArrayList<>(currencyByCode.values());
         minorCurrencies.remove(defaultCurrency);
         minorCurrencies.removeAll(majorCurrencies);
-        minorCurrencies.sort(Comparator.comparing(TradeCurrency::getNameAndCode));
+        minorCurrencies.sort(Comparator.comparing(TradeCurrency::getDisplayNameAndCode));
 
         allCurrencies = new ArrayList<>();
         allCurrencies.add(defaultCurrency);
@@ -98,6 +98,10 @@ public class FiatCurrencyRepository {
 
     public static Optional<String> getName(String code) {
         return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
+    }
+
+    public static Optional<String> getDisplayName(String code) {
+        return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getDisplayName);
     }
 
     public static List<String> getAllFiatCurrencyCodes() {

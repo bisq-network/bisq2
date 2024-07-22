@@ -64,9 +64,10 @@ public final class FiatCurrency extends TradeCurrency {
 
     // The name field is the displayName using the US locale. For display purpose we use the name based on the user's locale.
     @Override
-    public String getName() {
+    public String getDisplayName() {
         if (displayName == null) {
-            displayName = currency.getDisplayName(LocaleRepository.getDefaultLocale());
+            Locale defaultLocale = LocaleRepository.getDefaultLocale();
+            displayName = currency.getDisplayName(defaultLocale);
         }
         return displayName;
     }

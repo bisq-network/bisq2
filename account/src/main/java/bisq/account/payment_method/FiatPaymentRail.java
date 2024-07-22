@@ -95,7 +95,7 @@ public enum FiatPaymentRail implements PaymentRail {
                         .distinct()
                         .sorted(Comparator.comparingInt(TradeCurrency::hashCode))
                         .collect(Collectors.toList());
-        this.tradeCurrencies.sort(Comparator.comparing(TradeCurrency::getName));
+        this.tradeCurrencies.sort(Comparator.comparing(TradeCurrency::getDisplayName));
 
         this.currencyCodes = currencyCodes != null ?
                 currencyCodes :

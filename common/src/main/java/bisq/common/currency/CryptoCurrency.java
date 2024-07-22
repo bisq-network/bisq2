@@ -47,7 +47,7 @@ public final class CryptoCurrency extends TradeCurrency {
     }
 
     @Override
-    public String getName() {
+    public String getDisplayName() {
         return name;
     }
 }
