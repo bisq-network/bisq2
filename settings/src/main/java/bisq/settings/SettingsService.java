@@ -19,8 +19,11 @@ package bisq.settings;
 
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
+import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
+import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
+import bisq.common.locale.LocaleRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
@@ -32,6 +35,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -119,8 +123,15 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     @Override
     public void onPersistedApplied(SettingsStore persisted) {
-        LanguageRepository.setDefaultLanguage(getLanguageCode().get());
-        Res.setLanguage(getLanguageCode().get());
+        String languageCode = getLanguageCode().get();
+
+        LanguageRepository.setDefaultLanguage(languageCode);
+        Res.setLanguage(languageCode);
+        Locale currentLocale = LocaleRepository.getDefaultLocale();
+        Locale newLocale = new Locale(languageCode, currentLocale.getCountry(), currentLocale.getVariant());
+        LocaleRepository.setDefaultLocale(newLocale);
+        CountryRepository.applyDefaultLocale(newLocale);
+        FiatCurrencyRepository.setLocale(newLocale);
     }
 
 
