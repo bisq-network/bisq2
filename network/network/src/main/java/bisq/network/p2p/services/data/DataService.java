@@ -259,8 +259,8 @@ public class DataService implements StorageService.Listener {
                         // Send also with version 0 for backward compatibility
                         RemoveAuthenticatedDataRequest oldVersion = RemoveAuthenticatedDataRequest.cloneWithVersion0(request);
                         DataStorageResult oldVersionDataStorageResult = store.remove(oldVersion);
-                        if (oldVersionDataStorageResult.isSuccess()) {
-                            new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(oldVersion)));
+                        if (dataStorageResult.isSuccess() || oldVersionDataStorageResult.isSuccess()) {
+                            broadcasters.forEach(broadcaster -> broadcaster.broadcast(oldVersion));
                         }
 
                         if (dataStorageResult.isSuccess()) {
@@ -289,8 +289,8 @@ public class DataService implements StorageService.Listener {
                         // Send also with version 0 for backward compatibility
                         RemoveMailboxRequest oldVersion = RemoveMailboxRequest.cloneWithVersion0(request);
                         DataStorageResult oldVersionDataStorageResult = store.remove(oldVersion);
-                        if (oldVersionDataStorageResult.isSuccess()) {
-                            new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(oldVersion)));
+                        if (dataStorageResult.isSuccess() || oldVersionDataStorageResult.isSuccess()) {
+                            broadcasters.forEach(broadcaster -> broadcaster.broadcast(oldVersion));
                         }
 
                         if (dataStorageResult.isSuccess()) {
