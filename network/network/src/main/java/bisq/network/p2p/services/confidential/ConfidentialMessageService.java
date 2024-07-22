@@ -262,12 +262,17 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
 
         MailboxData mailboxData = new MailboxData(metaData, confidentialMessage);
-        // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
+        // We do not wait for the broadcast result as that can take a while. We pack the future into our result,
         // so clients can react on it as they wish.
-        BroadcastResult mailboxFuture = dataService.get().addMailboxData(mailboxData,
-                        senderKeyPair,
-                        receiverPubKey.getPublicKey())
-                .join(); // TODO (refactor, low prio) async for creating the stores, could be made blocking
+        PublicKey publicKey = receiverPubKey.getPublicKey();
+
+        // TODO (refactor, low prio) async for creating the stores, could be made blocking
+        BroadcastResult mailboxFuture = dataService.get().addMailboxData(mailboxData, senderKeyPair, publicKey).join();
+
+        // Send also with version 0 for backward compatibility
+        MailboxData oldVersion = MailboxData.cloneWithVersion0(mailboxData);
+        dataService.get().addMailboxData(oldVersion, senderKeyPair, publicKey).join();
+
         return new SendConfidentialMessageResult(MessageDeliveryStatus.TRY_ADD_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 
