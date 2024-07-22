@@ -34,8 +34,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasyOpenTradeMessageReaction extends PrivateChatMessageReaction {
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessage.
-    @EqualsAndHashCode.Exclude
-    private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     public BisqEasyOpenTradeMessageReaction(String id,
                                             UserProfile senderUserProfile,

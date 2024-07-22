@@ -44,8 +44,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPartyPrivateChatMessageReaction> {
     // Metadata needs to be symmetric with TwoPartyPrivateChatMessageReaction.
-    @EqualsAndHashCode.Exclude
-    private final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,

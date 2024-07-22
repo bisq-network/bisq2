@@ -43,9 +43,8 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     private static final int VERSION = 1;
     public static final long TTL = TTL_30_DAYS;
 
-    @EqualsAndHashCode.Exclude
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-    private final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

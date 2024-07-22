@@ -83,8 +83,8 @@ public final class UserProfile implements DistributedData {
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
-    @EqualsAndHashCode.Exclude
-    private final MetaData metaData = new MetaData(TTL_15_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_15_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final String nickName;
     // We need the proofOfWork for verification of the nym and cathash icon
     private final ProofOfWork proofOfWork;

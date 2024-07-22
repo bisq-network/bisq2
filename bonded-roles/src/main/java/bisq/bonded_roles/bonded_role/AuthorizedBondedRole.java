@@ -46,9 +46,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
-    @EqualsAndHashCode.Exclude
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

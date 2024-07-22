@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public class CommonPublicChatMessageReaction extends ChatMessageReaction implements DistributedData {
     // Metadata needs to be symmetric with CommonPublicChatMessage.
-    @EqualsAndHashCode.Exclude
-    private final MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, getClass().getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, getClass().getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
 
     public CommonPublicChatMessageReaction(String id,
                                            String userProfileId,
