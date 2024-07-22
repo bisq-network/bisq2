@@ -736,7 +736,7 @@
 }
 
 .bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box {
-    -fx-alignment: center;
+    -fx-alignment: center-left;
     -fx-background-color: -bisq-dark-grey-50;
     -fx-background-radius: 32;
     -fx-padding: 4;

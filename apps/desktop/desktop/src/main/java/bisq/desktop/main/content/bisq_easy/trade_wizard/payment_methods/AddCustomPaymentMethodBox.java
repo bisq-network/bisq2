@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.i18n.Res;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -52,10 +51,10 @@ public class AddCustomPaymentMethodBox extends HBox {
 
         getStyleClass().add("add-custom-payment-method-box");
         getChildren().addAll(addIconButton, customPaymentMethodField);
-        initialize();
     }
 
-    private void initialize() {
+    public void initialize() {
+        reset();
         customPaymentMethodField.focusedProperty().addListener(focusedListener);
     }
 
@@ -70,5 +69,9 @@ public class AddCustomPaymentMethodBox extends HBox {
     private void applyStyle(boolean isFocused) {
         addIcon.setId(isFocused ? activeIconId : defaultIconId);
         addIconButton.setGraphic(addIcon);
+    }
+
+    private void reset() {
+        applyStyle(false);
     }
 }

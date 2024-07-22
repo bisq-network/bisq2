@@ -137,14 +137,15 @@ public class TradeWizardPaymentMethodsController implements Controller {
                 .collect(Collectors.toList());
         model.getBitcoinPaymentMethods().setAll(paymentMethods);
         model.getSelectedBitcoinPaymentMethods().setAll(ON_CHAIN_PAYMENT_METHOD); // By default, always allow on chain
-        selectedBitcoinPaymentMethodsListener = change -> {
-            boolean isLNSelected = model.getSelectedBitcoinPaymentMethods().contains(LN_PAYMENT_METHOD);
-            model.getIsLNMethodAllowed().set(isLNSelected);
-        };
+
+        selectedBitcoinPaymentMethodsListener = change -> updateIsLNMethodAllowed();
         model.getSelectedBitcoinPaymentMethods().addListener(selectedBitcoinPaymentMethodsListener);
-        addedCustomFiatPaymentMethodsListener = change ->
-            model.getCanAddCustomFiatPaymentMethod().set(model.getAddedCustomFiatPaymentMethods().size() < MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS);;
+        updateIsLNMethodAllowed();
+
+        addedCustomFiatPaymentMethodsListener = change -> updateCanAddCustomFiatPaymentMethod();
         model.getAddedCustomFiatPaymentMethods().addListener(addedCustomFiatPaymentMethodsListener);
+        updateCanAddCustomFiatPaymentMethod();
+
         maybeRemoveCustomFiatPaymentMethods();
 
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
@@ -319,5 +320,14 @@ public class TradeWizardPaymentMethodsController implements Controller {
         while (model.getAddedCustomFiatPaymentMethods().size() > MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS) {
             model.getAddedCustomFiatPaymentMethods().remove(model.getAddedCustomBitcoinPaymentMethods().size() - 1);
         }
+    }
+
+    private void updateIsLNMethodAllowed() {
+        boolean isLNSelected = model.getSelectedBitcoinPaymentMethods().contains(LN_PAYMENT_METHOD);
+        model.getIsLNMethodAllowed().set(isLNSelected);
+    }
+
+    private void updateCanAddCustomFiatPaymentMethod() {
+        model.getCanAddCustomFiatPaymentMethod().set(model.getAddedCustomFiatPaymentMethods().size() < MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS);
     }
 }

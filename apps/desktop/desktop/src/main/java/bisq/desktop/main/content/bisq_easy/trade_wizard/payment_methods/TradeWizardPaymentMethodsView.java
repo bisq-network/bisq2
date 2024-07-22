@@ -33,7 +33,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -106,6 +105,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         model.getFiatPaymentMethods().addListener(fiatPaymentMethodListener);
 
         addCustomPaymentMethodBox.getAddIconButton().setOnAction(e -> controller.onAddCustomFiatMethod());
+        addCustomPaymentMethodBox.initialize();
         root.setOnMousePressed(e -> root.requestFocus());
 
         setUpAndFillFiatPaymentMethods();
@@ -136,7 +136,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         fiatMethodsGridPane.getChildren().clear();
         fiatMethodsGridPane.getColumnConstraints().clear();
         int paymentMethodsCount = model.getSortedFiatPaymentMethods().size();
-        int numColumns = paymentMethodsCount < 9 ? 3 : 4;
+        int numColumns = paymentMethodsCount < 10 ? 3 : 4;
         GridPaneUtil.setGridPaneMultiColumnsConstraints(fiatMethodsGridPane, numColumns);
 
         int i = 0;
