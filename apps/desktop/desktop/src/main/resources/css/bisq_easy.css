@@ -731,6 +731,32 @@
     -fx-padding: 0 0 15 0;
 }
 
+.bisq-easy-trade-wizard-payment-methods-step .fiat-methods-grid-pane {
+    /*-fx-background-color: green;*/
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box {
+    -fx-alignment: center;
+    -fx-background-color: -bisq-dark-grey-50;
+    -fx-background-radius: 32;
+    -fx-padding: 4;
+    -fx-spacing: 7;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box .custom-payment-method-button {
+    -fx-background-color: none;
+    -fx-padding: 0;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box .custom-payment-method-text-field {
+    -fx-background-color: none;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-prompt-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans";
+}
+
 .bisq-easy-trade-wizard-review-header-description {
     -fx-alignment: left;
     -fx-fill: -fx-mid-text-color;
