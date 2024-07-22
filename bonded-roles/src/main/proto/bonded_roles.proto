@@ -25,6 +25,7 @@ message AuthorizedOracleNode {
   string bondUserName = 4;
   string signatureBase64 = 5;
   bool staticPublicKeysProvided = 6;
+  sint32 version = 7;
 }
 
 message BondedRoleRegistrationRequest {
@@ -48,6 +49,7 @@ message AuthorizedBondedRole {
   network.identity.NetworkId networkId = 7;
   optional AuthorizedOracleNode authorizingOracleNode = 8;
   bool staticPublicKeysProvided = 9;
+  sint32 version = 10;
 }
 
 enum AlertType {
@@ -70,6 +72,7 @@ message AuthorizedAlertData {
   string securityManagerProfileId = 9;
   bool staticPublicKeysProvided = 10;
   optional string headline = 11;
+  sint32 version = 12;
 }
 
 message ReleaseNotification {
@@ -81,6 +84,7 @@ message ReleaseNotification {
   string versionString = 6;
   string releaseManagerProfileId = 7;
   bool staticPublicKeysProvided = 8;
+  sint32 version = 9;
 }
 
 message AuthorizedDifficultyAdjustmentData {
@@ -88,6 +92,7 @@ message AuthorizedDifficultyAdjustmentData {
   double difficultyAdjustmentFactor = 2;
   string securityManagerProfileId = 3;
   bool staticPublicKeysProvided = 4;
+  sint32 version = 5;
 }
 
 message AuthorizedMinRequiredReputationScoreData {
@@ -95,6 +100,7 @@ message AuthorizedMinRequiredReputationScoreData {
   sint64 minRequiredReputationScore = 2;
   string securityManagerProfileId = 3;
   bool staticPublicKeysProvided = 4;
+  sint32 version = 5;
 }
 
 enum MarketPriceProvider {
@@ -115,6 +121,7 @@ message MarketPrice {
 message AuthorizedMarketPriceData {
   map<string, MarketPrice> marketPriceByCurrencyMap = 1;
   bool staticPublicKeysProvided = 2;
+  sint32 version = 3;
 }
 
 message MarketPriceStore {

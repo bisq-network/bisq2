@@ -20,6 +20,7 @@ package bisq.bonded_roles.bonded_role;
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -43,8 +44,14 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
+
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
@@ -54,6 +61,12 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final NetworkId networkId;
     // The oracle node which did the validation and publishing
     private final Optional<AuthorizedOracleNode> authorizingOracleNode;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no pre version 2.0.5 nodes are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
@@ -66,6 +79,29 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 NetworkId networkId,
                                 Optional<AuthorizedOracleNode> authorizingOracleNode,
                                 boolean staticPublicKeysProvided) {
+        this(VERSION,
+                profileId,
+                authorizedPublicKey,
+                bondedRoleType,
+                bondUserName,
+                signatureBase64,
+                addressByTransportTypeMap,
+                networkId,
+                authorizingOracleNode,
+                staticPublicKeysProvided);
+    }
+
+    public AuthorizedBondedRole(int version,
+                                 String profileId,
+                                 String authorizedPublicKey,
+                                 BondedRoleType bondedRoleType,
+                                 String bondUserName,
+                                 String signatureBase64,
+                                 Optional<AddressByTransportTypeMap> addressByTransportTypeMap,
+                                 NetworkId networkId,
+                                 Optional<AuthorizedOracleNode> authorizingOracleNode,
+                                 boolean staticPublicKeysProvided) {
+        this.version = version;
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
         this.bondedRoleType = bondedRoleType;
@@ -96,7 +132,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto(serializeForHash))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
         addressByTransportTypeMap.ifPresent(e -> builder.setAddressByTransportTypeMap(e.toProto(serializeForHash)));
         authorizingOracleNode.ifPresent(oracleNode -> builder.setAuthorizingOracleNode(oracleNode.toProto(serializeForHash)));
         return builder;
@@ -108,7 +145,9 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     }
 
     public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
-        return new AuthorizedBondedRole(proto.getProfileId(),
+        return new AuthorizedBondedRole(
+                proto.getVersion(),
+                proto.getProfileId(),
                 proto.getAuthorizedPublicKey(),
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
@@ -120,7 +159,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 proto.hasAuthorizingOracleNode() ?
                         Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) :
                         Optional.empty(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

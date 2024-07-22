@@ -18,6 +18,7 @@
 package bisq.user.reputation.data;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -40,16 +41,40 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public static final long TTL = TTL_100_DAYS;
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
     private final String profileId;
     private final long witnessSignDate;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no pre version 2.0.5 nodes are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedSignedWitnessData(String profileId, long witnessSignDate, boolean staticPublicKeysProvided) {
+    public AuthorizedSignedWitnessData(String profileId,
+                                       long witnessSignDate,
+                                       boolean staticPublicKeysProvided) {
+        this(VERSION,
+                profileId,
+                witnessSignDate,
+                staticPublicKeysProvided);
+    }
+
+    public AuthorizedSignedWitnessData(int version,
+                                        String profileId,
+                                        long witnessSignDate,
+                                        boolean staticPublicKeysProvided) {
+        this.version = version;
         this.profileId = profileId;
         this.witnessSignDate = witnessSignDate;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
@@ -68,7 +93,8 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         return bisq.user.protobuf.AuthorizedSignedWitnessData.newBuilder()
                 .setProfileId(profileId)
                 .setWitnessSignDate(witnessSignDate)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -78,9 +104,11 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
 
     public static AuthorizedSignedWitnessData fromProto(bisq.user.protobuf.AuthorizedSignedWitnessData proto) {
         return new AuthorizedSignedWitnessData(
+                proto.getVersion(),
                 proto.getProfileId(),
                 proto.getWitnessSignDate(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

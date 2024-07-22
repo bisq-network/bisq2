@@ -61,7 +61,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final Identity myIdentity;
     private final P taker;
     private final P maker;
-    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final TradeRole tradeRole;
     private final Observable<C> contract = new Observable<>();
     private final Observable<String> errorMessage = new Observable<>();

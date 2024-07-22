@@ -41,6 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Capability implements NetworkProto {
     public static final int VERSION = 1;
 
+    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
     private final Address address;
@@ -48,6 +49,7 @@ public final class Capability implements NetworkProto {
     // ExcludeForHash from version 1 on to not break hash for pow check or version 0. We add version 2 and 3 for extra safety...
     // Once no pre version 2.0.5 nodes are expected anymore in the network we can remove the parameter
     // and use default `@ExcludeForHash` instead.
+    @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final List<Feature> features;
     @ExcludeForHash(excludeOnlyInVersions = {0})

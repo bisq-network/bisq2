@@ -243,6 +243,7 @@ message RemoveAuthenticatedDataRequest {
   sint32 sequenceNumber = 4;
   bytes signature = 5;
   sint64 created = 6;
+  sint32 version = 7;
 }
 message RefreshAuthenticatedDataRequest {
   MetaData metaData = 1;
@@ -250,11 +251,13 @@ message RefreshAuthenticatedDataRequest {
   bytes ownerPublicKeyBytes = 3;
   sint32 sequenceNumber = 4;
   bytes signature = 5;
+  sint32 version = 6;
 }
 
 message MailboxData {
   ConfidentialMessage confidentialMessage = 1;
   MetaData metaData = 2;
+  sint32 version = 3;
 }
 message MailboxSequentialData {
   MailboxData mailboxData = 1;
@@ -275,6 +278,7 @@ message RemoveMailboxRequest {
   bytes receiverPublicKeyBytes = 3;
   bytes signature = 4;
   sint64 created = 5;
+  sint32 version = 6;
 }
 
 message AddAppendOnlyDataRequest {

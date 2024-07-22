@@ -108,7 +108,6 @@ public class OracleNodeService implements Service {
     private final String signatureBase64;
     private final String profileId;
     private final boolean staticPublicKeysProvided;
-    private AuthorizedOracleNode authorizedOracleNode;
     @Nullable
     private Scheduler startupScheduler, scheduler;
 
@@ -185,13 +184,23 @@ public class OracleNodeService implements Service {
         KeyPair keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
         byte[] authorizedPublicKeyEncoded = authorizedPublicKey.getEncoded();
         String authorizedPublicKeyAsHex = Hex.encode(authorizedPublicKeyEncoded);
-        authorizedOracleNode = new AuthorizedOracleNode(networkId,
+        AuthorizedOracleNode authorizedOracleNode = new AuthorizedOracleNode(networkId,
                 profileId,
                 authorizedPublicKeyAsHex,
                 bondUserName,
                 signatureBase64,
                 staticPublicKeysProvided);
         bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        AuthorizedOracleNode oldVersion = new AuthorizedOracleNode(0,
+                networkId,
+                profileId,
+                authorizedPublicKeyAsHex,
+                bondUserName,
+                signatureBase64,
+                staticPublicKeysProvided);
+        bisq1BridgeService.setAuthorizedOracleNodeOldVersion(oldVersion);
 
         // We only self-publish if we are a root oracle
         if (staticPublicKeysProvided) {
@@ -206,6 +215,7 @@ public class OracleNodeService implements Service {
                     staticPublicKeysProvided);
 
             // TODO deactivate republishing until issues are resolved
+
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
            /* startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
                     .repeated(1, 10, TimeUnit.SECONDS, 3);

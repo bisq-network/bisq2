@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class InventoryRequest implements BroadcastMessage, Request {
     private static final int VERSION = 1;
 
+    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
     private final InventoryFilter inventoryFilter;

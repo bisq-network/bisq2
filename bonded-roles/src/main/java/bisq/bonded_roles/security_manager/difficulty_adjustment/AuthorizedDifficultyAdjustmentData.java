@@ -18,6 +18,7 @@
 package bisq.bonded_roles.security_manager.difficulty_adjustment;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -41,11 +42,23 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
+
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
     private final long date;
     private final double difficultyAdjustmentFactor;
     private final String securityManagerProfileId;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no pre version 2.0.5 nodes are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
@@ -53,6 +66,19 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
                                               double difficultyAdjustmentFactor,
                                               String securityManagerProfileId,
                                               boolean staticPublicKeysProvided) {
+        this(VERSION,
+                date,
+                difficultyAdjustmentFactor,
+                securityManagerProfileId,
+                staticPublicKeysProvided);
+    }
+
+    public AuthorizedDifficultyAdjustmentData(int version,
+                                               long date,
+                                               double difficultyAdjustmentFactor,
+                                               String securityManagerProfileId,
+                                               boolean staticPublicKeysProvided) {
+        this.version = version;
         this.date = date;
         this.difficultyAdjustmentFactor = difficultyAdjustmentFactor;
         this.securityManagerProfileId = securityManagerProfileId;
@@ -73,7 +99,8 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
                 .setDate(date)
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor)
                 .setSecurityManagerProfileId(securityManagerProfileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -82,10 +109,13 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     }
 
     public static AuthorizedDifficultyAdjustmentData fromProto(bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData proto) {
-        return new AuthorizedDifficultyAdjustmentData(proto.getDate(),
+        return new AuthorizedDifficultyAdjustmentData(
+                proto.getVersion(),
+                proto.getDate(),
                 proto.getDifficultyAdjustmentFactor(),
                 proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

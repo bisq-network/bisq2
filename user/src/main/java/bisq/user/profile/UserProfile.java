@@ -62,11 +62,6 @@ public final class UserProfile implements DistributedData {
                 userProfile.getNetworkId(), terms, statement);
     }
 
-    public static UserProfile forRePublish(UserProfile userProfile) {
-        return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
-                userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement());
-    }
-
     public static UserProfile createNew(String nickName,
                                         ProofOfWork proofOfWork,
                                         int avatarVersion,

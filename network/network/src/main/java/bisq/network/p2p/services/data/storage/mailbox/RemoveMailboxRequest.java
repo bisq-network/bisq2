@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.annotation.ExcludeForHash;
+import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
@@ -27,52 +29,71 @@ import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Optional;
 
 @Slf4j
-@ToString
 @EqualsAndHashCode
 @Getter
 public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
-    private final MetaData metaData;
-    private final byte[] hash;
-    private final byte[] receiverPublicKeyBytes;
-    private final byte[] signature;
-    private final long created;
-    private transient PublicKey receiverPublicKey;
+    private static final int VERSION = 1;
 
     public static RemoveMailboxRequest from(MailboxData mailboxData, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
-        return new RemoveMailboxRequest(mailboxData.getMetaData(), hash, receiverKeyPair.getPublic(), signature);
+        PublicKey publicKey = receiverKeyPair.getPublic();
+        long created = System.currentTimeMillis();
+        return new RemoveMailboxRequest(VERSION,
+                mailboxData.getMetaData(),
+                hash,
+                publicKey.getEncoded(),
+                publicKey,
+                signature,
+                created);
     }
+
+    public static RemoveMailboxRequest cloneWithVersion0(RemoveMailboxRequest request) {
+        return new RemoveMailboxRequest(0,
+                request.getMetaData(),
+                request.getHash(),
+                request.getReceiverPublicKeyBytes(),
+                request.getReceiverPublicKey(),
+                request.getSignature(),
+                request.getCreated());
+    }
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    private final MetaData metaData;
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
+
+    private final byte[] hash;
+    private final byte[] receiverPublicKeyBytes;
+    private final byte[] signature;
+    private final long created;
+    private transient PublicKey receiverPublicKey;
+    @Setter
+    private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 
     // Receiver is owner for remove request
-    public RemoveMailboxRequest(MetaData metaData,
-                                byte[] hash,
-                                PublicKey receiverPublicKey,
-                                byte[] signature) {
-        this(metaData,
-                hash,
-                receiverPublicKey.getEncoded(),
-                receiverPublicKey,
-                signature,
-                System.currentTimeMillis());
-    }
-
-    private RemoveMailboxRequest(MetaData metaData,
+    private RemoveMailboxRequest(int version,
+                                 MetaData metaData,
                                  byte[] hash,
                                  byte[] receiverPublicKeyBytes,
                                  PublicKey receiverPublicKey,
                                  byte[] signature,
                                  long created) {
+        this.version = version;
         this.metaData = metaData;
         this.hash = hash;
         this.receiverPublicKeyBytes = receiverPublicKeyBytes;
@@ -104,6 +125,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public bisq.network.protobuf.RemoveMailboxRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
+                .setVersion(version)
                 .setMetaData(metaData.toProto(serializeForHash))
                 .setHash(ByteString.copyFrom(hash))
                 .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
@@ -116,6 +138,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         try {
             PublicKey receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
             return new RemoveMailboxRequest(
+                    proto.getVersion(),
                     MetaData.fromProto(proto.getMetaData()),
                     proto.getHash().toByteArray(),
                     receiverPublicKeyBytes,
@@ -129,9 +152,17 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         }
     }
 
+    public MetaData getMetaDataFromProto() {
+        return metaData;
+    }
+
+    public MetaData getMetaData() {
+        return metaDataFromDistributedData.orElse(metaData);
+    }
+
     @Override
     public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
+        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
     }
 
     public boolean isPublicKeyHashInvalid(MailboxSequentialData mailboxSequentialData) {
@@ -160,7 +191,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
     public String getClassName() {
-        return metaData.getClassName();
+        return getMetaData().getClassName();
     }
 
     @Override
@@ -170,11 +201,26 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, metaData.getTtl());
+        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, getMetaData().getTtl());
     }
 
     @Override
     public int getMaxMapSize() {
-        return metaData.getMaxMapSize();
+        return getMetaData().getMaxMapSize();
+    }
+
+
+    @Override
+    public String toString() {
+        return "RemoveMailboxRequest{" +
+                "metaData=" + metaData +
+                ", metaDataFromDistributedData=" + metaDataFromDistributedData +
+                ", version=" + version +
+                ", hash=" + Hex.encode(hash) +
+                ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +
+                ", signature=" + Hex.encode(signature) +
+                ", created=" + created +
+                ", receiverPublicKey=" + receiverPublicKey +
+                '}';
     }
 }

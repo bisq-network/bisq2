@@ -101,6 +101,19 @@ public class ReleaseManagerService implements Service {
                 version,
                 profileId,
                 staticPublicKeysProvided);
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        ReleaseNotification oldVersion = new ReleaseNotification(0,
+                StringUtils.createUid(),
+                new Date().getTime(),
+                isPreRelease,
+                isLauncherUpdate,
+                releaseNotes,
+                version,
+                profileId,
+                staticPublicKeysProvided);
+        networkService.publishAuthorizedData(oldVersion, keyPair);
+
         return networkService.publishAuthorizedData(releaseNotification, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }

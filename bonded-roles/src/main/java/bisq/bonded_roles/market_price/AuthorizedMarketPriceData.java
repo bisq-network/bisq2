@@ -18,6 +18,7 @@
 package bisq.bonded_roles.market_price;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -44,16 +45,35 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
     // We need deterministic sorting or the map, so we use a treemap
     private final TreeMap<Market, MarketPrice> marketPriceByCurrencyMap;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no pre version 2.0.5 nodes are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedMarketPriceData(TreeMap<Market, MarketPrice> marketPriceByCurrencyMap, boolean staticPublicKeysProvided) {
+    public AuthorizedMarketPriceData(TreeMap<Market, MarketPrice> marketPriceByCurrencyMap,
+                                     boolean staticPublicKeysProvided) {
+        this(VERSION, marketPriceByCurrencyMap, staticPublicKeysProvided);
+    }
+
+    public AuthorizedMarketPriceData(int version,
+                                      TreeMap<Market, MarketPrice> marketPriceByCurrencyMap,
+                                      boolean staticPublicKeysProvided) {
+        this.version = version;
         this.marketPriceByCurrencyMap = marketPriceByCurrencyMap;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
@@ -72,7 +92,8 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
                 .putAllMarketPriceByCurrencyMap(marketPriceByCurrencyMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().getMarketCodes(),
                                 e -> e.getValue().toProto(serializeForHash))))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -85,7 +106,11 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
                 .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
                 .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
                         e -> MarketPrice.fromProto(e.getValue())));
-        return new AuthorizedMarketPriceData(new TreeMap<>(map), proto.getStaticPublicKeysProvided());
+        return new AuthorizedMarketPriceData(
+                proto.getVersion(),
+                new TreeMap<>(map),
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

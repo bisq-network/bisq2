@@ -33,7 +33,7 @@ public final class FiatCurrency extends TradeCurrency {
     private final static String PREFIX = "★ ";
 
     @Getter
-    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final Currency currency;
 
     public FiatCurrency(String code) {

@@ -58,15 +58,15 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     abstract protected boolean isAddAppendOnlyDataRequestMissing(T filter, Map.Entry<ByteArray, AddAppendOnlyDataRequest> entry);
 
-    public Inventory createInventory(InventoryFilter inventoryFilter, Predicate<Integer> addAuthenticatedDataRequestPredicate) {
+    public Inventory createInventory(InventoryFilter inventoryFilter, Predicate<Integer> predicate) {
         final AtomicInteger accumulatedSize = new AtomicInteger();
         final AtomicBoolean maxSizeReached = new AtomicBoolean();
         // The type is not defined at compile time, thus we do a safe cast
         T filter = safeCast(inventoryFilter);
-        List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached, addAuthenticatedDataRequestPredicate);
+        List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached, predicate);
 
         if (!maxSizeReached.get()) {
-            dataRequests.addAll(getMailboxRequests(filter, accumulatedSize, maxSizeReached));
+            dataRequests.addAll(getMailboxRequests(filter, accumulatedSize, maxSizeReached, predicate));
         }
 
         if (!maxSizeReached.get()) {
@@ -83,7 +83,7 @@ public abstract class FilterService<T extends InventoryFilter> {
     private List<DataRequest> getAuthenticatedDataRequests(T filter,
                                                            AtomicInteger accumulatedSize,
                                                            AtomicBoolean maxSizeReached,
-                                                           Predicate<Integer> addAuthenticatedDataRequestPredicate) {
+                                                           Predicate<Integer> predicate) {
         List<AddAuthenticatedDataRequest> addRequests = new ArrayList<>();
         List<RemoveAuthenticatedDataRequest> removeRequests = new ArrayList<>();
         storageService.getAuthenticatedDataStoreMaps().flatMap(map -> map.entrySet().stream())
@@ -93,11 +93,14 @@ public abstract class FilterService<T extends InventoryFilter> {
                         if (dataRequest instanceof AddAuthenticatedDataRequest) {
                             AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) dataRequest;
                             DistributedData distributedData = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData();
-                            if (addAuthenticatedDataRequestPredicate.test(distributedData.getVersion())) {
+                            if (predicate.test(distributedData.getVersion())) {
                                 addRequests.add(addAuthenticatedDataRequest);
                             }
                         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                            removeRequests.add((RemoveAuthenticatedDataRequest) dataRequest);
+                            RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                            if (predicate.test(removeAuthenticatedDataRequest.getVersion())) {
+                                removeRequests.add(removeAuthenticatedDataRequest);
+                            }
                         }
                         // Refresh is ignored
                     }
@@ -132,7 +135,8 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     private List<DataRequest> getMailboxRequests(T filter,
                                                  AtomicInteger accumulatedSize,
-                                                 AtomicBoolean maxSizeReached) {
+                                                 AtomicBoolean maxSizeReached,
+                                                 Predicate<Integer> predicate) {
         List<AddMailboxRequest> addRequests = new ArrayList<>();
         List<RemoveMailboxRequest> removeRequests = new ArrayList<>();
         storageService.getMailboxStoreMaps().flatMap(map -> map.entrySet().stream())
@@ -140,19 +144,17 @@ public abstract class FilterService<T extends InventoryFilter> {
                     if (isMailboxRequestMissing(filter, mapEntry)) {
                         MailboxRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddMailboxRequest) {
-                            addRequests.add((AddMailboxRequest) dataRequest);
+                            AddMailboxRequest addMailboxRequest = (AddMailboxRequest) dataRequest;
+                            if (predicate.test(addMailboxRequest.getMailboxSequentialData().getMailboxData().getVersion())) {
+                                addRequests.add(addMailboxRequest);
+                            }
                         } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            removeRequests.add((RemoveMailboxRequest) dataRequest);
+                            RemoveMailboxRequest removeMailboxRequest = (RemoveMailboxRequest) dataRequest;
+                            if (predicate.test(removeMailboxRequest.getVersion())) {
+                                removeRequests.add(removeMailboxRequest);
+                            }
                         }
                     }
-                  /*  if (!hashSetFilter.getFilterEntries().contains(toFilterEntry(mapEntry))) {
-                        MailboxRequest dataRequest = mapEntry.getValue();
-                        if (dataRequest instanceof AddMailboxRequest) {
-                            addRequests.add((AddMailboxRequest) dataRequest);
-                        } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            removeRequests.add((RemoveMailboxRequest) dataRequest);
-                        }
-                    }*/
                 });
         List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
                 .sorted((o1, o2) -> Integer.compare(o2.getMailboxSequentialData().getMailboxData().getMetaData().getPriority(),
