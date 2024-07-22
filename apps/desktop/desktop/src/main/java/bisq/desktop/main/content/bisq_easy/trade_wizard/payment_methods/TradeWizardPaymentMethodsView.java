@@ -19,42 +19,39 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPaymentMethodsModel, TradeWizardPaymentMethodsController> {
-    private final MaterialTextField custom;
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
-    private final FlowPane fiatMethodsFlowPane;
     private final Label headlineLabel, nonFoundLabel;
-    private final BisqIconButton addButton;
+    private final AddCustomPaymentMethodBox addCustomPaymentMethodBox;
     private final CheckBox allowLNMethodSwitch;
-    private Subscription addCustomMethodIconEnabledPin;
+    private final GridPane fiatMethodsGridPane;
 
     public TradeWizardPaymentMethodsView(TradeWizardPaymentMethodsModel model, TradeWizardPaymentMethodsController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
+        root.getStyleClass().add("bisq-easy-trade-wizard-payment-methods-step");
 
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -70,89 +67,83 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         nonFoundLabel.getStyleClass().add("bisq-text-6");
         nonFoundLabel.setAlignment(Pos.CENTER);
 
-        fiatMethodsFlowPane = new FlowPane();
-        fiatMethodsFlowPane.setAlignment(Pos.CENTER);
-        fiatMethodsFlowPane.setVgap(20);
-        fiatMethodsFlowPane.setHgap(20);
+        fiatMethodsGridPane = GridPaneUtil.getGridPane(10, 20, new Insets(0));
+        fiatMethodsGridPane.getStyleClass().add("fiat-methods-grid-pane");
 
-        custom = new MaterialTextField(Res.get("bisqEasy.tradeWizard.paymentMethod.customMethod"),
-                Res.get("bisqEasy.tradeWizard.paymentMethod.customMethod.prompt"));
-        custom.setPrefWidth(300);
-        custom.setIcon("add-white");
-        addButton = custom.getIconButton();
-        addButton.setOpacity(0.15);
-        addButton.setDisable(true);
-        addButton.setAlignment(Pos.CENTER);
-        custom.setMaxWidth(300);
+        addCustomPaymentMethodBox = new AddCustomPaymentMethodBox();
 
-        Label allowLNNetworkMethodLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.allowLN"));
+        Label allowLNNetworkMethodLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.allowLN"), ImageUtil.getImageViewById("LN"));
+        allowLNNetworkMethodLabel.setContentDisplay(ContentDisplay.RIGHT);
+        allowLNNetworkMethodLabel.setGraphicTextGap(12);
         allowLNMethodSwitch = new CheckBox();
         HBox allowLNHBox = new HBox(10, allowLNMethodSwitch, allowLNNetworkMethodLabel);
-        allowLNHBox.getStyleClass().add("offerbook-subheader-checkbox");
+        allowLNHBox.getStyleClass().add("ln-checkbox");
         allowLNHBox.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(fiatMethodsFlowPane, new Insets(20, 60, 10, 60));
-        VBox.setMargin(allowLNHBox, new Insets(20, 0, 0, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, nonFoundLabel, fiatMethodsFlowPane,
-                custom, allowLNHBox, Spacer.fillVBox());
+        VBox.setMargin(fiatMethodsGridPane, new Insets(20, 60, 0, 60));
+        VBox.setMargin(allowLNHBox, new Insets(0, 0, 40, 0));
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, nonFoundLabel, fiatMethodsGridPane,
+                Spacer.fillVBox(), allowLNHBox);
 
         fiatPaymentMethodListener = c -> {
             c.next();
-            fillFiatPaymentMethods();
+            setUpAndFillFiatPaymentMethods();
         };
     }
 
     @Override
     protected void onViewAttached() {
         headlineLabel.setText(model.getHeadline());
-        custom.textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
+        addCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
-        fiatMethodsFlowPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        fiatMethodsFlowPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        addButton.disableProperty().bind(model.getIsAddCustomMethodIconEnabled().not());
+        fiatMethodsGridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
+        fiatMethodsGridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
         allowLNMethodSwitch.selectedProperty().bindBidirectional(model.getIsLNMethodAllowed());
-
-        addCustomMethodIconEnabledPin = EasyBind.subscribe(model.getIsAddCustomMethodIconEnabled(), enabled -> {
-            custom.setIcon(enabled ? "add" : "add-white");
-            addButton.setOpacity(enabled ? 1 : 0.15);
-        });
 
         model.getFiatPaymentMethods().addListener(fiatPaymentMethodListener);
 
-        addButton.setOnAction(e -> controller.onAddCustomFiatMethod());
+        addCustomPaymentMethodBox.getAddIconButton().setOnAction(e -> controller.onAddCustomFiatMethod());
+        addCustomPaymentMethodBox.initialize();
         root.setOnMousePressed(e -> root.requestFocus());
 
-        fillFiatPaymentMethods();
+        setUpAndFillFiatPaymentMethods();
     }
 
     @Override
     protected void onViewDetached() {
-        custom.textProperty().unbindBidirectional(model.getCustomFiatPaymentMethodName());
+        addCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().unbindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
-        fiatMethodsFlowPane.visibleProperty().unbind();
-        fiatMethodsFlowPane.managedProperty().unbind();
-        addButton.disableProperty().unbind();
+        fiatMethodsGridPane.visibleProperty().unbind();
+        fiatMethodsGridPane.managedProperty().unbind();
         allowLNMethodSwitch.selectedProperty().unbindBidirectional(model.getIsLNMethodAllowed());
 
-        fiatMethodsFlowPane.getChildren().stream()
+        fiatMethodsGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
                 .map(e -> (ChipButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
 
-        addCustomMethodIconEnabledPin.unsubscribe();
-
         model.getFiatPaymentMethods().removeListener(fiatPaymentMethodListener);
 
-        addButton.setOnAction(null);
+        addCustomPaymentMethodBox.getAddIconButton().setOnAction(null);
+        addCustomPaymentMethodBox.dispose();
         root.setOnMousePressed(null);
     }
 
-    private void fillFiatPaymentMethods() {
-        fiatMethodsFlowPane.getChildren().clear();
-        for (FiatPaymentMethod fiatPaymentMethod : model.getSortedFiatPaymentMethods()) {
+    private void setUpAndFillFiatPaymentMethods() {
+        fiatMethodsGridPane.getChildren().clear();
+        fiatMethodsGridPane.getColumnConstraints().clear();
+        int paymentMethodsCount = model.getSortedFiatPaymentMethods().size();
+        int numColumns = paymentMethodsCount < 10 ? 3 : 4;
+        GridPaneUtil.setGridPaneMultiColumnsConstraints(fiatMethodsGridPane, numColumns);
+
+        int i = 0;
+        int col, row;
+        for (; i < paymentMethodsCount; i++) {
+            FiatPaymentMethod fiatPaymentMethod = model.getSortedFiatPaymentMethods().get(i);
+
             // enum name or custom name
             ChipButton chipButton = new ChipButton(fiatPaymentMethod.getShortDisplayString());
             if (!fiatPaymentMethod.getShortDisplayString().equals(fiatPaymentMethod.getDisplayString())) {
@@ -180,7 +171,16 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
                                 ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
                                 chipButton.setLeftIcon(icon);
                             });
-            fiatMethodsFlowPane.getChildren().add(chipButton);
+
+            col = i % numColumns;
+            row = i / numColumns;
+            fiatMethodsGridPane.add(chipButton, col, row);
+        }
+
+        if (model.getCanAddCustomFiatPaymentMethod().get()) {
+            col = i % numColumns;
+            row = i / numColumns;
+            fiatMethodsGridPane.add(addCustomPaymentMethodBox, col, row);
         }
     }
 }

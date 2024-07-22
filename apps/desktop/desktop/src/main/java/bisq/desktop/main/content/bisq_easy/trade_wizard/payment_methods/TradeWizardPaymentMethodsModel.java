@@ -44,7 +44,7 @@ public class TradeWizardPaymentMethodsModel implements Model {
     private final ObservableList<BitcoinPaymentMethod> addedCustomBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
-    private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
+    private final BooleanProperty canAddCustomFiatPaymentMethod = new SimpleBooleanProperty();
     private final BooleanProperty isLNMethodAllowed = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
@@ -58,7 +58,7 @@ public class TradeWizardPaymentMethodsModel implements Model {
         selectedBitcoinPaymentMethods.clear();
         customFiatPaymentMethodName.set("");
         isPaymentMethodsEmpty.set(false);
-        isAddCustomMethodIconEnabled.set(false);
+        canAddCustomFiatPaymentMethod.set(false);
         market.set(null);
     }
 }
