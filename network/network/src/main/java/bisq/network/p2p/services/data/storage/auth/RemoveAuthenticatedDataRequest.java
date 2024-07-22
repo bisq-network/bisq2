@@ -216,7 +216,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public String toString() {
         return "RemoveAuthenticatedDataRequest{" +
-                "\r\n     metaData=" + metaData +
+                "\r\n     version=" + version +
+                ",\r\n     metaData=" + metaData +
                 ",\r\n     hash=" + Hex.encode(hash) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 ",\r\n     ownerPublicKey=" + ownerPublicKey +

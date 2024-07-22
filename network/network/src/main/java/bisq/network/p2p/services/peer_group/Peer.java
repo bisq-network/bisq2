@@ -39,7 +39,6 @@ import java.util.Date;
 public final class Peer implements NetworkProto, Comparable<Peer> {
     @EqualsAndHashCode.Include
     private final Address address;
-
     private final Capability capability;
     private final NetworkLoad networkLoad;
     private final boolean isOutboundConnection;

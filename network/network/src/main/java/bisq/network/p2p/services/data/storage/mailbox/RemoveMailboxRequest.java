@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
@@ -28,7 +29,6 @@ import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -37,7 +37,6 @@ import java.security.PublicKey;
 import java.util.Arrays;
 
 @Slf4j
-@ToString
 @EqualsAndHashCode
 @Getter
 public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
@@ -196,5 +195,19 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public int getMaxMapSize() {
         return metaData.getMaxMapSize();
+    }
+
+
+    @Override
+    public String toString() {
+        return "RemoveMailboxRequest{" +
+                "metaData=" + metaData +
+                ", version=" + version +
+                ", hash=" + Hex.encode(hash) +
+                ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +
+                ", signature=" + Hex.encode(signature) +
+                ", created=" + created +
+                ", receiverPublicKey=" + receiverPublicKey +
+                '}';
     }
 }

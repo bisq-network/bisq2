@@ -23,7 +23,6 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorageData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,7 +35,6 @@ import java.util.concurrent.TimeUnit;
  * Holds the ConfidentialMessage and metaData providing information about the message type.
  */
 @EqualsAndHashCode
-@ToString
 @Getter
 public final class MailboxData implements StorageData {
     private static final int VERSION = 1;
@@ -100,5 +98,14 @@ public final class MailboxData implements StorageData {
     @Override
     public boolean isDataInvalid(byte[] ownerPubKeyHash) {
         return confidentialMessage.isDataInvalid(ownerPubKeyHash);
+    }
+
+    @Override
+    public String toString() {
+        return "MailboxData{" +
+                "metaData=" + metaData +
+                ", version=" + version +
+                ", confidentialMessage=" + confidentialMessage +
+                '}';
     }
 }
