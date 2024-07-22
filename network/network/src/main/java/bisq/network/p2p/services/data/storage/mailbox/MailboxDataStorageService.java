@@ -23,11 +23,13 @@ import bisq.common.timer.Scheduler;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
@@ -164,6 +166,20 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
             if (request.isSignatureInvalid()) {
                 return new DataStorageResult(false).signatureInvalid();
+            }
+
+            // As metaData from mailboxData is taken from the users current code base but the one from RemoveMailboxRequest
+            // is from the senders version (taken from senders mailboxData) it could be different if both users had
+            // different versions and metaData has changed between those versions.
+            // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
+            MetaData metaDataFromMailboxData = sequentialDataFromMap.getMailboxData().getMetaData();
+            if (!request.getMetaDataFromProto().equals(metaDataFromMailboxData)) {
+                request.setMetaDataFromDistributedData(Optional.of(metaDataFromMailboxData));
+                log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
+                                "metadata with the one we have from the associated mailbox data." +
+                                "{} vs. {}",
+                        request.getMetaDataFromProto(),
+                        metaDataFromMailboxData);
             }
 
             map.put(byteArray, request);

@@ -24,6 +24,7 @@ import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -31,6 +32,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
@@ -176,22 +178,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     "requestFromMap expected be type of AddProtectedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
 
-            // The metaData provided in the RemoveAuthenticatedDataRequest must be the same as we had in the AddAuthenticatedDataRequest
-            // The AddAuthenticatedDataRequest does use the metaData from the code base, not one provided by the message, thus it is trusted.
-            // TODO
-            // As metaData from distributedData is taked from the users current code base but the one from RemoveAuthenticatedDataRequest
-            // is from the senders version (also taken from distributedData) it could be different.
-            // We should give the receivers metadata version the preference.
-            // We could do that by adding a transient delegate field which if set is overriding the metadata from the
-            // RemoveAuthenticatedDataRequest proto data.
-            // There is no guarantee that an AddAuthenticatedDataRequest is available, so we need to make that an
-            // optional override.
-            if (!request.getMetaData().equals(addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData())) {
-                log.warn("MetaData of remove request not matching the one from the addRequest from the map. {} vs. {}",
-                        request.getMetaData(),
-                        addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData());
-            }
-
             // We have an entry, lets validate if we can remove it
             AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
             authenticatedDataFromMap = dataFromMap.getAuthenticatedData();
@@ -209,6 +195,21 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.warn("Signature is invalid at remove. request={}", request);
                 return new DataStorageResult(false).signatureInvalid();
             }
+
+            // As metaData from distributedData is taken from the users current code base but the one from RemoveAuthenticatedDataRequest
+            // is from the senders version (taken from senders distributedData) it could be different if both users had
+            // different versions and metaData has changed between those versions.
+            // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
+            MetaData metaDataFromDistributedData = addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData();
+            if (!request.getMetaDataFromProto().equals(metaDataFromDistributedData)) {
+                request.setMetaDataFromDistributedData(Optional.of(metaDataFromDistributedData));
+                log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
+                                "metadata with the one we have from the associated distributed data." +
+                                "{} vs. {}",
+                        request.getMetaDataFromProto(),
+                        metaDataFromDistributedData);
+            }
+
             map.put(byteArray, request);
         }
         persist();

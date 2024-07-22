@@ -29,12 +29,14 @@ import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Optional;
 
 @Slf4j
 @EqualsAndHashCode
@@ -80,6 +82,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     private final byte[] signature;
     private final long created;
     private transient PublicKey receiverPublicKey;
+    @Setter
+    private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 
     // Receiver is owner for remove request
     private RemoveMailboxRequest(int version,
@@ -148,9 +152,17 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         }
     }
 
+    public MetaData getMetaDataFromProto() {
+        return metaData;
+    }
+
+    public MetaData getMetaData() {
+        return metaDataFromDistributedData.orElse(metaData);
+    }
+
     @Override
     public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
+        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
     }
 
     public boolean isPublicKeyHashInvalid(MailboxSequentialData mailboxSequentialData) {
@@ -179,7 +191,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
     public String getClassName() {
-        return metaData.getClassName();
+        return getMetaData().getClassName();
     }
 
     @Override
@@ -189,12 +201,12 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, metaData.getTtl());
+        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, getMetaData().getTtl());
     }
 
     @Override
     public int getMaxMapSize() {
-        return metaData.getMaxMapSize();
+        return getMetaData().getMaxMapSize();
     }
 
 
@@ -202,6 +214,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     public String toString() {
         return "RemoveMailboxRequest{" +
                 "metaData=" + metaData +
+                ", metaDataFromDistributedData=" + metaDataFromDistributedData +
                 ", version=" + version +
                 ", hash=" + Hex.encode(hash) +
                 ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +

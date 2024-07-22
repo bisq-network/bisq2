@@ -30,12 +30,14 @@ import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Optional;
 
 @Getter
 @EqualsAndHashCode
@@ -83,6 +85,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     private final int sequenceNumber;
     private final byte[] signature;
     private final long created;
+    @Setter
+    private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 
     private RemoveAuthenticatedDataRequest(int version,
                                            MetaData metaData,
@@ -171,9 +175,17 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         }
     }
 
+    public MetaData getMetaDataFromProto() {
+        return metaData;
+    }
+
+    public MetaData getMetaData() {
+        return metaDataFromDistributedData.orElse(metaData);
+    }
+
     @Override
     public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
+        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
     }
 
     public boolean isSignatureInvalid() {
@@ -201,16 +213,16 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > metaData.getTtl();
+        return (System.currentTimeMillis() - created) > getMetaData().getTtl();
     }
 
     @Override
     public int getMaxMapSize() {
-        return metaData.getMaxMapSize();
+        return getMetaData().getMaxMapSize();
     }
 
     public String getClassName() {
-        return metaData.getClassName();
+        return getMetaData().getClassName();
     }
 
     @Override
@@ -218,6 +230,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         return "RemoveAuthenticatedDataRequest{" +
                 "\r\n     version=" + version +
                 ",\r\n     metaData=" + metaData +
+                ",\r\n     metaDataFromDistributedData=" + metaDataFromDistributedData +
                 ",\r\n     hash=" + Hex.encode(hash) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 ",\r\n     ownerPublicKey=" + ownerPublicKey +
