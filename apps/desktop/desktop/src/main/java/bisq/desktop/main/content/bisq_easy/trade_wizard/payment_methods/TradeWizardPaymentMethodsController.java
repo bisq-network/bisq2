@@ -242,6 +242,9 @@ public class TradeWizardPaymentMethodsController implements Controller {
                     return;
                 }
                 model.getAddedCustomFiatPaymentMethods().add(fiatPaymentMethod);
+            } else {
+                new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.customPaymentMethodAlreadyExists", fiatPaymentMethod.getName())).show();
+                return;
             }
             maybeAddFiatPaymentMethod(fiatPaymentMethod);
             model.getCustomFiatPaymentMethodName().set("");

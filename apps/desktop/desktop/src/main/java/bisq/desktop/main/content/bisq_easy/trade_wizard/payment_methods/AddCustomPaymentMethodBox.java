@@ -73,5 +73,6 @@ public class AddCustomPaymentMethodBox extends HBox {
 
     private void applyStyle(boolean isFocused) {
         addIcon.setId(isFocused ? activeIconId : defaultIconId);
+        addIconButton.setGraphic(addIcon);
     }
 }
