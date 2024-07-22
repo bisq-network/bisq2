@@ -82,11 +82,11 @@ public class InventoryResponseService implements Node.Listener {
             long ts = System.currentTimeMillis();
             int requestersVersion = request.getVersion();
 
-            // We filter out version 1 obejcts in AddAuthenticatedDataRequest objects which would break the hash when requested from old nodes (pre v.2.0.5)
+            // We filter out version 1 objects in Add/Remove DataRequest objects which would break the hash when requested from old nodes (pre v.2.0.5)
             // This code can be removed once there are no old nodes expected in the network anymore.
-            Predicate<Integer> addAuthenticatedDataRequestPredicate = distributedDataVersion -> requestersVersion > 0 || distributedDataVersion == 0;
+            Predicate<Integer> predicate = distributedDataVersion -> requestersVersion > 0 || distributedDataVersion == 0;
 
-            Inventory inventory = filterService.createInventory(inventoryFilter, addAuthenticatedDataRequestPredicate);
+            Inventory inventory = filterService.createInventory(inventoryFilter, predicate);
 
             // The requestersVersion param can be removed once there are no old nodes expected in the network anymore.
             InventoryResponse inventoryResponse = new InventoryResponse(requestersVersion, inventory, request.getNonce());
