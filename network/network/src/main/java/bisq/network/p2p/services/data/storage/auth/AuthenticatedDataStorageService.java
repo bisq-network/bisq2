@@ -86,6 +86,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             if (isExceedingMapSize()) {
                 return new DataStorageResult(false).maxMapSizeReached();
             }
+
             requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
                 return new DataStorageResult(false).requestAlreadyReceived();
@@ -159,7 +160,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 // track of the sequence number
                 map.put(byteArray, request);
                 persist();
-                return new DataStorageResult(false).noEntry();
+                return new DataStorageResult(true).noEntry();
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
@@ -170,7 +171,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     map.put(byteArray, request);
                     persist();
                 }
-                return new DataStorageResult(false).alreadyRemoved();
+                return new DataStorageResult(true).alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddProtectedDataRequest
@@ -212,7 +213,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
             map.put(byteArray, request);
         }
+
         persist();
+
         listeners.forEach(listener -> {
             try {
                 listener.onRemoved(authenticatedDataFromMap);

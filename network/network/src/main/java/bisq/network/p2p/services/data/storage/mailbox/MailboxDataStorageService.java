@@ -77,13 +77,13 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             if (isExceedingMapSize()) {
                 return new DataStorageResult(false).maxMapSizeReached();
             }
-            requestFromMap = map.get(byteArray);
-            int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
 
+            requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
                 return new DataStorageResult(false).requestAlreadyReceived();
             }
 
+            int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
             if (requestFromMap != null && mailboxSequentialData.isSequenceNrInvalid(sequenceNumberFromMap)) {
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
@@ -107,7 +107,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         }
         persist();
 
-        // If we had already the data (only updated seq nr) we return false as well and do not notify listeners.
+        // If we had already the data (only updated seq nr) we return false (do not broadcast) as well and do not notify listeners.
         // This should only happen if client re-publishes mailbox data 
         if (requestFromMap != null) {
             return new DataStorageResult(false).payloadAlreadyStored();
@@ -137,7 +137,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 // track of the sequence number
                 map.put(byteArray, request);
                 persist();
-                return new DataStorageResult(false).noEntry();
+                return new DataStorageResult(true).noEntry();
             }
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
@@ -147,7 +147,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     map.put(byteArray, request);
                     persist();
                 }
-                return new DataStorageResult(false).alreadyRemoved();
+                return new DataStorageResult(true).alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddMailboxRequest
