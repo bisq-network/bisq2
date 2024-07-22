@@ -59,19 +59,9 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
                 signature);
     }
 
-    public static RefreshAuthenticatedDataRequest cloneWithVersion0(RefreshAuthenticatedDataRequest request) {
-        return new RefreshAuthenticatedDataRequest(0,
-                request.getMetaData(),
-                request.getHash(),
-                request.getOwnerPublicKeyBytes(),
-                request.getOwnerPublicKey(),
-                request.getSequenceNumber(),
-                request.getSignature());
-    }
-
 
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @ExcludeForHash
     private final MetaData metaData;
 
     @EqualsAndHashCode.Exclude
