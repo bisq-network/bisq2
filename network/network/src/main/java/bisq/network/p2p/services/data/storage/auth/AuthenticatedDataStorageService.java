@@ -126,15 +126,16 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).signatureInvalid();
             }
             map.put(byteArray, request);
+
+            // If we had already the data (only updated seq nr) we return true to broadcast the message but do not
+            // notify listeners as data has not changed.
+            if (requestFromMap != null) {
+                log.warn("requestFromMap != null. request={}", request);
+                return new DataStorageResult(true).payloadAlreadyStored();
+            }
         }
 
         persist();
-
-        // If we had already the data (only updated seq nr) we return false as well and do not notify listeners.
-       /* if (requestFromMap != null) {
-            log.warn("requestFromMap != null. request={}", request);
-            return new Result(false).payloadAlreadyStored();
-        }*/
 
         listeners.forEach(listener -> {
             try {
