@@ -261,7 +261,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             return new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("We have not stored the mailboxMessage because the dataService is not present.");
         }
 
-        MailboxData mailboxData = new MailboxData(confidentialMessage, metaData);
+        MailboxData mailboxData = new MailboxData(metaData, confidentialMessage);
         // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
         // so clients can react on it as they wish.
         BroadcastResult mailboxFuture = dataService.get().addMailboxData(mailboxData,

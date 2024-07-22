@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorageData;
@@ -38,14 +39,32 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @Getter
 public final class MailboxData implements StorageData {
+    private static final int VERSION = 1;
+
+    public static MailboxData cloneWithVersion0(MailboxData mailboxData) {
+        return new MailboxData(0, mailboxData.getMetaData(), mailboxData.getConfidentialMessage());
+    }
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    private final MetaData metaData;
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
+
     public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
 
     private final ConfidentialMessage confidentialMessage;
-    private final MetaData metaData;
 
-    public MailboxData(ConfidentialMessage confidentialMessage, MetaData metaData) {
-        this.confidentialMessage = confidentialMessage;
+    public MailboxData(MetaData metaData, ConfidentialMessage confidentialMessage) {
+        this(VERSION, metaData, confidentialMessage);
+    }
+
+    private MailboxData(int version, MetaData metaData, ConfidentialMessage confidentialMessage) {
+        this.version = version;
         this.metaData = metaData;
+        this.confidentialMessage = confidentialMessage;
 
         verify();
     }
@@ -62,13 +81,16 @@ public final class MailboxData implements StorageData {
     @Override
     public bisq.network.protobuf.MailboxData.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.MailboxData.newBuilder()
-                .setConfidentialMessage(confidentialMessage.toProto(serializeForHash).getConfidentialMessage())
-                .setMetaData(metaData.toProto(serializeForHash));
+                .setVersion(version)
+                .setMetaData(metaData.toProto(serializeForHash))
+                .setConfidentialMessage(confidentialMessage.toProto(serializeForHash).getConfidentialMessage());
     }
 
     public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) {
-        return new MailboxData(ConfidentialMessage.fromProto(proto.getConfidentialMessage()),
-                MetaData.fromProto(proto.getMetaData()));
+        return new MailboxData(
+                proto.getVersion(),
+                MetaData.fromProto(proto.getMetaData()),
+                ConfidentialMessage.fromProto(proto.getConfidentialMessage()));
     }
 
     public String getClassName() {

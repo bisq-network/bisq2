@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
@@ -40,39 +41,56 @@ import java.util.Arrays;
 @EqualsAndHashCode
 @Getter
 public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
+    private static final int VERSION = 1;
+
+    public static RemoveMailboxRequest from(MailboxData mailboxData, KeyPair receiverKeyPair)
+            throws GeneralSecurityException {
+        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
+        byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
+        PublicKey publicKey = receiverKeyPair.getPublic();
+        long created = System.currentTimeMillis();
+        return new RemoveMailboxRequest(VERSION,
+                mailboxData.getMetaData(),
+                hash,
+                publicKey.getEncoded(),
+                publicKey,
+                signature,
+                created);
+    }
+
+    public static RemoveMailboxRequest cloneWithVersion0(RemoveMailboxRequest request) {
+        return new RemoveMailboxRequest(0,
+                request.getMetaData(),
+                request.getHash(),
+                request.getReceiverPublicKeyBytes(),
+                request.getReceiverPublicKey(),
+                request.getSignature(),
+                request.getCreated());
+    }
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
+
     private final byte[] hash;
     private final byte[] receiverPublicKeyBytes;
     private final byte[] signature;
     private final long created;
     private transient PublicKey receiverPublicKey;
 
-    public static RemoveMailboxRequest from(MailboxData mailboxData, KeyPair receiverKeyPair)
-            throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
-        return new RemoveMailboxRequest(mailboxData.getMetaData(), hash, receiverKeyPair.getPublic(), signature);
-    }
-
     // Receiver is owner for remove request
-    public RemoveMailboxRequest(MetaData metaData,
-                                byte[] hash,
-                                PublicKey receiverPublicKey,
-                                byte[] signature) {
-        this(metaData,
-                hash,
-                receiverPublicKey.getEncoded(),
-                receiverPublicKey,
-                signature,
-                System.currentTimeMillis());
-    }
-
-    private RemoveMailboxRequest(MetaData metaData,
+    private RemoveMailboxRequest(int version,
+                                 MetaData metaData,
                                  byte[] hash,
                                  byte[] receiverPublicKeyBytes,
                                  PublicKey receiverPublicKey,
                                  byte[] signature,
                                  long created) {
+        this.version = version;
         this.metaData = metaData;
         this.hash = hash;
         this.receiverPublicKeyBytes = receiverPublicKeyBytes;
@@ -104,6 +122,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public bisq.network.protobuf.RemoveMailboxRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
+                .setVersion(version)
                 .setMetaData(metaData.toProto(serializeForHash))
                 .setHash(ByteString.copyFrom(hash))
                 .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
@@ -116,6 +135,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         try {
             PublicKey receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
             return new RemoveMailboxRequest(
+                    proto.getVersion(),
                     MetaData.fromProto(proto.getMetaData()),
                     proto.getHash().toByteArray(),
                     receiverPublicKeyBytes,

@@ -228,6 +228,7 @@ public class DataService implements StorageService.Listener {
         return storageService.getOrCreateMailboxDataStore(mailboxData.getClassName())
                 .thenApply(store -> {
                     try {
+                        // Send 2 versions
                         AddMailboxRequest request = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverPublicKey);
                         DataStorageResult dataStorageResult = store.add(request);
                         if (dataStorageResult.isSuccess()) {
@@ -252,6 +253,7 @@ public class DataService implements StorageService.Listener {
         return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
                 .thenApply(store -> {
                     try {
+                        // Send 2 versions
                         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
                         DataStorageResult dataStorageResult = store.remove(request);
                         if (dataStorageResult.isSuccess()) {
@@ -274,6 +276,7 @@ public class DataService implements StorageService.Listener {
         return storageService.getOrCreateMailboxDataStore(mailboxData.getClassName())
                 .thenApply(store -> {
                     try {
+                        // Send 2 versions
                         RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, keyPair);
                         DataStorageResult dataStorageResult = store.remove(request);
                         if (dataStorageResult.isSuccess()) {
