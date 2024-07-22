@@ -119,19 +119,28 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
 
         // Verify payload
         byte[] payload = getPayload(message);
-        if (!Arrays.equals(payload, proofOfWork.getPayload())) {
-            log.warn("Message payload not matching proof of work payload. " +
-                            "getPayload(message)={};\n" +
-                            "proofOfWork.getPayload()={};\n" +
-                            "getPayload(message).length={};\n" +
-                            "proofOfWork.getPayload().length={}\n" +
-                            "message={}",
-                    StringUtils.truncate(Hex.encode(payload), 200),
-                    StringUtils.truncate(Hex.encode(proofOfWork.getPayload()), 200),
-                    payload.length,
-                    proofOfWork.getPayload().length,
-                    StringUtils.truncate(message.toString(), 1000));
-            return false;
+        byte[] proofOfWorkPayload = proofOfWork.getPayload();
+        if (!Arrays.equals(payload, proofOfWorkPayload)) {
+            // We try again with ignoring ExcludeForHash annotations by using the serialize() method.
+            byte[] payloadWithoutUsingExcludeForHash = message.serialize();
+            if (Arrays.equals(payloadWithoutUsingExcludeForHash, proofOfWorkPayload)) {
+                log.info("Proof of work payload not matching message.serializeForHash() but " +
+                        "matching message.serialize(). This is expected for certain messages from " +
+                        "nodes which do not run the latest version.");
+            } else {
+                log.warn("Message payload not matching proof of work payload. " +
+                                "getPayload(message)={};\n" +
+                                "proofOfWork.getPayload()={};\n" +
+                                "getPayload(message).length={};\n" +
+                                "proofOfWork.getPayload().length={}\n" +
+                                "message={}",
+                        StringUtils.truncate(Hex.encode(payload), 200),
+                        StringUtils.truncate(Hex.encode(proofOfWorkPayload), 200),
+                        payload.length,
+                        proofOfWorkPayload.length,
+                        StringUtils.truncate(message.toString(), 5000));
+                return false;
+            }
         }
 
         // Verify challenge
