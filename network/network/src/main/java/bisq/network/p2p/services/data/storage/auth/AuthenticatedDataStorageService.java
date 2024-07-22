@@ -178,6 +178,14 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
             // The metaData provided in the RemoveAuthenticatedDataRequest must be the same as we had in the AddAuthenticatedDataRequest
             // The AddAuthenticatedDataRequest does use the metaData from the code base, not one provided by the message, thus it is trusted.
+            // TODO
+            // As metaData from distributedData is taked from the users current code base but the one from RemoveAuthenticatedDataRequest
+            // is from the senders version (also taken from distributedData) it could be different.
+            // We should give the receivers metadata version the preference.
+            // We could do that by adding a transient delegate field which if set is overriding the metadata from the
+            // RemoveAuthenticatedDataRequest proto data.
+            // There is no guarantee that an AddAuthenticatedDataRequest is available, so we need to make that an
+            // optional override.
             if (!request.getMetaData().equals(addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData())) {
                 log.warn("MetaData of remove request not matching the one from the addRequest from the map. {} vs. {}",
                         request.getMetaData(),
