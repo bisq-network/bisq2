@@ -178,23 +178,6 @@
     -fx-padding: 0 25 0 25;
 }
 
-.offerbook-subheader-checkbox .check-box {
-    -fx-scale-x: 0.6;
-    -fx-scale-y: 0.6;
-    -fx-cursor: hand;
-}
-
-.offerbook-subheader-checkbox .label {
-    -fx-text-fill: -fx-mid-text-color;
-}
-
-.offerbook-subheader-checkbox .check-box > .box {
-    -fx-background-color: transparent;
-    -fx-background-radius: 0;
-    -fx-border-color: -bisq-mid-grey-20;
-    -fx-border-width: 1;
-}
-
 .offerbook-subheader .dropdown-offers-filter-menu {
     -fx-padding: 0 10 0 10;
 }
@@ -731,8 +714,24 @@
     -fx-padding: 0 0 15 0;
 }
 
+.bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .check-box {
+    -fx-scale-x: 0.6;
+    -fx-scale-y: 0.6;
+    -fx-cursor: hand;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .label {
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .check-box > .box {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: -fx-light-text-color;
+    -fx-border-width: 2;
+}
+
 .bisq-easy-trade-wizard-payment-methods-step .fiat-methods-grid-pane {
-    /*-fx-background-color: green;*/
 }
 
 .bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box {

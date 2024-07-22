@@ -77,7 +77,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         allowLNNetworkMethodLabel.setGraphicTextGap(12);
         allowLNMethodSwitch = new CheckBox();
         HBox allowLNHBox = new HBox(10, allowLNMethodSwitch, allowLNNetworkMethodLabel);
-        allowLNHBox.getStyleClass().add("offerbook-subheader-checkbox");
+        allowLNHBox.getStyleClass().add("ln-checkbox");
         allowLNHBox.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
