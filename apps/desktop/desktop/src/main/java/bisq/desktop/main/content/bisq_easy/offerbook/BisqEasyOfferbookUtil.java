@@ -14,11 +14,7 @@ import javafx.beans.binding.StringExpression;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -111,13 +107,15 @@ public class BisqEasyOfferbookUtil {
                 }
 
                 if (item != null && !empty) {
-                    marketName.setText(item.getMarket().getQuoteCurrencyName());
+                    String quoteCurrencyDisplayName = item.getMarket().getQuoteCurrencyDisplayName();
+                    marketName.setText(quoteCurrencyDisplayName);
                     marketCode.setText(item.getMarket().getQuoteCurrencyCode());
+                    int numOffersString = item.getNumOffers().get();
                     StringExpression formattedNumOffers = Bindings.createStringBinding(() ->
-                            BisqEasyOfferbookUtil.getFormattedOfferNumber(item.getNumOffers().get()), item.getNumOffers());
+                            BisqEasyOfferbookUtil.getFormattedOfferNumber(numOffersString), item.getNumOffers());
                     numOffers.textProperty().bind(formattedNumOffers);
                     StringExpression formattedTooltip = Bindings.createStringBinding(() ->
-                            BisqEasyOfferbookUtil.getFormattedTooltip(item.getNumOffers().get(), item.getMarket().getQuoteCurrencyName()), item.getNumOffers());
+                            BisqEasyOfferbookUtil.getFormattedTooltip(numOffersString, quoteCurrencyDisplayName), item.getNumOffers());
                     marketDetailsTooltip.textProperty().bind(formattedTooltip);
 
                     // Set up new row

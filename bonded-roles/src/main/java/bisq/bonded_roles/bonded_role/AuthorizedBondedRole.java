@@ -48,8 +48,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash
+    @EqualsAndHashCode.Exclude
     private final int version;
     private final String profileId;
     private final String authorizedPublicKey;
@@ -59,6 +59,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final Optional<AddressByTransportTypeMap> addressByTransportTypeMap;
     private final NetworkId networkId;
     // The oracle node which did the validation and publishing
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @EqualsAndHashCode.Exclude
     private final Optional<AuthorizedOracleNode> authorizingOracleNode;
 
     // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.

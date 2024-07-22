@@ -43,15 +43,13 @@ import java.util.List;
 public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, NetworkProto {
     public final static int MAX_NAME_LENGTH = 50;
 
-    // Only name is used for protobuf, thus we do not need to mark the other fields with ExcludeForHash.
+    // Only name is used for protobuf, thus other fields are transient.
     protected final String name;
 
     // We do not persist the paymentRail but still include it in EqualsAndHashCode.
     protected transient final R paymentRail;
 
-    @EqualsAndHashCode.Exclude
     protected transient final String displayString;
-    @EqualsAndHashCode.Exclude
     protected transient final String shortDisplayString;
 
     /**

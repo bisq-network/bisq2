@@ -120,7 +120,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
                 .left()
                 .minWidth(120)
-                .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyName))
+                .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyDisplayName))
                 .setCellFactory(getNameCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
@@ -154,7 +154,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
                 if (item != null && !empty) {
                     label.setGraphic(item.getMarketLogo());
-                    String quoteCurrencyName = item.getQuoteCurrencyName();
+                    String quoteCurrencyName = item.getQuoteCurrencyDisplayName();
                     label.setText(quoteCurrencyName);
                     if (quoteCurrencyName.length() > 20) {
                         Tooltip tooltip = new BisqTooltip(quoteCurrencyName);
@@ -176,7 +176,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
     @Getter
     static class MarketListItem {
         private final Market market;
-        private final String quoteCurrencyName;
+        private final String quoteCurrencyDisplayName;
         private final int numOffersAsInteger;
         private final int numUsersAsInteger;
         private final String numOffers;
@@ -186,7 +186,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
         MarketListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
             this.market = market;
-            quoteCurrencyName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndName();
+            quoteCurrencyDisplayName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
             this.numOffers = String.valueOf(numOffersAsInteger);
             this.numOffersAsInteger = numOffersAsInteger;
             this.numUsers = String.valueOf(numUsersAsInteger);

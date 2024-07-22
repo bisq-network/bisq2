@@ -17,6 +17,7 @@
 
 package bisq.common.currency;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -31,6 +32,7 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
     public final static int MAX_NAME_LENGTH = 100;
 
     protected final String code;
+    @ExcludeForHash
     @EqualsAndHashCode.Exclude
     protected final String name;
 
@@ -61,37 +63,34 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
     public bisq.common.protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {
         return bisq.common.protobuf.TradeCurrency.newBuilder()
                 .setCode(code)
-                .setCode(name);
+                .setName(name);
     }
 
     public static TradeCurrency fromProto(bisq.common.protobuf.TradeCurrency proto) {
         switch (proto.getMessageCase()) {
             case CRYPTOCURRENCY:
-                return CryptoCurrency.fromProto(proto, proto.getCryptoCurrency());
+                return CryptoCurrency.fromProto(proto);
             case FIATCURRENCY:
-                return FiatCurrency.fromProto(proto, proto.getFiatCurrency());
+                return FiatCurrency.fromProto(proto);
             case MESSAGE_NOT_SET:
                 throw new UnresolvableProtobufMessageException(proto);
         }
         throw new UnresolvableProtobufMessageException(proto);
     }
 
+    public abstract String getDisplayName();
 
-    public String getDisplayPrefix() {
-        return "";
+    public String getDisplayNameAndCode() {
+        return getDisplayName() + " (" + code + ")";
     }
 
-    public String getNameAndCode() {
-        return name + " (" + code + ")";
-    }
-
-    public String getCodeAndName() {
-        return code + " (" + name + ")";
+    public String getCodeAndDisplayName() {
+        return code + " (" + getDisplayName() + ")";
     }
 
     @Override
     public int compareTo(TradeCurrency other) {
-        return this.name.compareTo(other.name);
+        return this.getDisplayName().compareTo(other.getDisplayName());
     }
 
     public abstract boolean isFiat();
