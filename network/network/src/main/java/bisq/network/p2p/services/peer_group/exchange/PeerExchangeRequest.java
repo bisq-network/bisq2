@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.services.peer_group.Peer;
@@ -38,6 +39,8 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
     @Setter
     public static long maxNumPeers;
     private final int nonce;
+    @ExcludeForHash
+    @EqualsAndHashCode.Exclude
     private final List<Peer> peers;
 
     public PeerExchangeRequest(int nonce, List<Peer> peers) {
