@@ -274,7 +274,7 @@ public class DesktopApplicationService extends ApplicationService {
                         }
                     } else {
                         log.error("Initializing applicationService failed", throwable);
-                        startupErrorMessage.set(ExceptionUtil.getMessageOrToString(throwable));
+                        startupErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
                     }
                     setState(State.FAILED);
                     return false;
@@ -309,7 +309,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .handle((result, throwable) -> {
                     if (throwable != null) {
                         log.error("Error at shutdown", throwable);
-                        shutDownErrorMessage.set(ExceptionUtil.getMessageOrToString(throwable));
+                        shutDownErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
                         return false;
                     } else if (!result) {
                         shutDownErrorMessage.set("Shutdown failed with result=false");

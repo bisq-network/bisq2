@@ -29,7 +29,7 @@ public class UIThread {
                 Platform.runLater(task);
             }
         } catch (Exception e) {
-            log.error("Exception at UIThread.run: {}", ExceptionUtil.getMessageOrToString(e));
+            log.error("Exception at UIThread.run: {}", ExceptionUtil.getRootCauseMessage(e));
             throw e;
         }
     }

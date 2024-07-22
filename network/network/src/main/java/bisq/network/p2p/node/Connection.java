@@ -236,7 +236,7 @@ public abstract class Connection {
                     if (isRunning()) {
                         throw exception;
                     } else {
-                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
+                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
                     }
                 }
             }
@@ -253,7 +253,7 @@ public abstract class Connection {
             return this;
         } catch (IOException exception) {
             if (isRunning()) {
-                log.warn("Send message at {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
+                log.warn("Send message at {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
                 shutdown(CloseReason.EXCEPTION.exception(exception));
             }
             // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
