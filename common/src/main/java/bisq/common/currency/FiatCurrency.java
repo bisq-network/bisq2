@@ -29,24 +29,17 @@ import java.util.Locale;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public final class FiatCurrency extends TradeCurrency {
-    // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-    private final static String PREFIX = "★ ";
-
     @Getter
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final Currency currency;
+    private transient String displayName;
 
     public FiatCurrency(String code) {
-        this(Currency.getInstance(code), LocaleRepository.getDefaultLocale());
+        this(Currency.getInstance(code));
     }
 
-    public FiatCurrency(String code, Locale locale) {
-        this(Currency.getInstance(code), locale);
-    }
-
-    public FiatCurrency(Currency currency, Locale locale) {
-        super(currency.getCurrencyCode(), currency.getDisplayName(locale));
-
+    public FiatCurrency(Currency currency) {
+        super(currency.getCurrencyCode(), currency.getDisplayName(Locale.US));
         this.currency = currency;
     }
 
@@ -65,13 +58,17 @@ public final class FiatCurrency extends TradeCurrency {
         return resolveProto(serializeForHash);
     }
 
-    public static FiatCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto, bisq.common.protobuf.FiatCurrency proto) {
+    public static FiatCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto) {
         return new FiatCurrency(baseProto.getCode(), baseProto.getName());
     }
 
+    // The name field is the displayName using the US locale. For display purpose we use the name based on the user's locale.
     @Override
-    public String getDisplayPrefix() {
-        return PREFIX;
+    public String getName() {
+        if (displayName == null) {
+            displayName = currency.getDisplayName(LocaleRepository.getDefaultLocale());
+        }
+        return displayName;
     }
 
     public boolean isFiat() {

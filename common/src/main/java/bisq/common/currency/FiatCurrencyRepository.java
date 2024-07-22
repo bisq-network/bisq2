@@ -79,11 +79,13 @@ public class FiatCurrencyRepository {
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode, Locale locale) {
         if (countryCode.equals("XK")) {
-            return new FiatCurrency("EUR", locale);
+            return new FiatCurrency("EUR");
         }
 
-        Currency currency = Currency.getInstance(new Locale(locale.getLanguage(), countryCode));
-        return new FiatCurrency(currency.getCurrencyCode(), locale);
+        // The language and variant components of the locale at Currency.getInstance are ignored.
+        Locale countryLocale = new Locale(locale.getLanguage(), countryCode);
+        Currency currency = Currency.getInstance(countryLocale);
+        return new FiatCurrency(currency);
     }
 
     public static Map<String, FiatCurrency> getCurrencyByCodeMap() {

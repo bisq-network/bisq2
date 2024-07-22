@@ -27,11 +27,12 @@ import lombok.ToString;
 
 @EqualsAndHashCode
 @ToString
-@Getter
 public abstract class TradeCurrency implements Comparable<TradeCurrency>, PersistableProto {
     public final static int MAX_NAME_LENGTH = 100;
 
+    @Getter
     protected final String code;
+
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
     protected final String name;
@@ -69,31 +70,28 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
     public static TradeCurrency fromProto(bisq.common.protobuf.TradeCurrency proto) {
         switch (proto.getMessageCase()) {
             case CRYPTOCURRENCY:
-                return CryptoCurrency.fromProto(proto, proto.getCryptoCurrency());
+                return CryptoCurrency.fromProto(proto);
             case FIATCURRENCY:
-                return FiatCurrency.fromProto(proto, proto.getFiatCurrency());
+                return FiatCurrency.fromProto(proto);
             case MESSAGE_NOT_SET:
                 throw new UnresolvableProtobufMessageException(proto);
         }
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-
-    public String getDisplayPrefix() {
-        return "";
-    }
+    public abstract String getName();
 
     public String getNameAndCode() {
-        return name + " (" + code + ")";
+        return getName() + " (" + code + ")";
     }
 
     public String getCodeAndName() {
-        return code + " (" + name + ")";
+        return code + " (" + getName() + ")";
     }
 
     @Override
     public int compareTo(TradeCurrency other) {
-        return this.name.compareTo(other.name);
+        return this.getName().compareTo(other.getName());
     }
 
     public abstract boolean isFiat();
