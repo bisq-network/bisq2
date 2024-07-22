@@ -22,21 +22,27 @@ class SignatureVerifier(
     ): Boolean {
         Security.addProvider(BouncyCastleProvider())
 
-        var isSuccess = true
+        val signatureFileInBytes = readSignatureFromFile(signatureFile)
+        val pgpObjectFactory = JcaPGPObjectFactory(signatureFileInBytes)
+        val signatureList: PGPSignatureList = pgpObjectFactory.nextObject() as PGPSignatureList
+
+        val signatureVerificationResult = mutableListOf<Boolean>()
         pgpFingerprintToKeyUrl.forEach { (fingerprint, keyUrl) ->
             val ppgPublicKeyParser = PpgPublicKeyParser(fingerprint, keyUrl)
             ppgPublicKeyParser.parse()
 
             val isSignedByAnyKey = verifyDetachedSignature(
                 potentialSigningKeys = ppgPublicKeyParser.keyById,
-                pgpSignatureByteArray = readSignatureFromFile(signatureFile),
+                signatureList = signatureList,
                 data = fileToVerify.readBytes()
             )
 
-            isSuccess = isSuccess && isSignedByAnyKey
+            signatureVerificationResult.add(isSignedByAnyKey)
         }
 
-        return isSuccess
+        val numberOfSuccessfulVerifications = signatureVerificationResult.filter { isSuccess -> isSuccess }
+            .count()
+        return numberOfSuccessfulVerifications == signatureList.size()
     }
 
     private fun readSignatureFromFile(signatureFile: File): ByteArray {
@@ -48,12 +54,9 @@ class SignatureVerifier(
 
     private fun verifyDetachedSignature(
         potentialSigningKeys: Map<Long, PGPPublicKey>,
-        pgpSignatureByteArray: ByteArray,
+        signatureList: PGPSignatureList,
         data: ByteArray
     ): Boolean {
-        val pgpObjectFactory = JcaPGPObjectFactory(pgpSignatureByteArray)
-        val signatureList: PGPSignatureList = pgpObjectFactory.nextObject() as PGPSignatureList
-
         var pgpSignature: PGPSignature? = null
         var signingKey: PGPPublicKey? = null
 
@@ -65,7 +68,10 @@ class SignatureVerifier(
             }
         }
 
-        checkNotNull(signingKey) { "signingKey not found" }
+        if (signingKey == null) {
+            return false
+        }
+
         checkNotNull(pgpSignature) { "signature for key not found" }
 
         pgpSignature.init(
