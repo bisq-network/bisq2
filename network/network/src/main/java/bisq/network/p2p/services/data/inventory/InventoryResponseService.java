@@ -100,7 +100,7 @@ public class InventoryResponseService implements Node.Listener {
                             System.currentTimeMillis() - ts);
                 } catch (Exception e) {
                     log.warn("Error at sending InventoryResponse to {}. {}", connection.getPeerAddress(),
-                            ExceptionUtil.getMessageOrToString(e));
+                            ExceptionUtil.getRootCauseMessage(e));
                 }
             });
         } else {

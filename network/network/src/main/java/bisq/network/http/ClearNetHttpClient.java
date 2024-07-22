@@ -70,14 +70,14 @@ public class ClearNetHttpClient extends BaseHttpClient {
                             return false;
                         }
                     } catch (IOException e) {
-                        log.error("Error at shutdown {}", ExceptionUtil.getMessageOrToString(e));
+                        log.error("Error at shutdown {}", ExceptionUtil.getRootCauseMessage(e));
                         return false;
                     }
                 }, ExecutorFactory.newSingleThreadExecutor("ClearNetHttpClient-shutdown"))
                 .orTimeout(500, TimeUnit.MILLISECONDS)
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
-                        log.warn("Error at shutdown: {}", ExceptionUtil.getMessageOrToString(throwable));
+                        log.warn("Error at shutdown: {}", ExceptionUtil.getRootCauseMessage(throwable));
                     }
                 });
         connection = null;
@@ -146,7 +146,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
                 throw new HttpException("Request failed", responseCode);
             }
         } catch (Exception e) {
-            String message = "Request to " + baseUrl + "/" + param + " failed with error: " + ExceptionUtil.getMessageOrToString(e);
+            String message = "Request to " + baseUrl + "/" + param + " failed with error: " + ExceptionUtil.getRootCauseMessage(e);
             throw new IOException(message, e);
         } finally {
             try {

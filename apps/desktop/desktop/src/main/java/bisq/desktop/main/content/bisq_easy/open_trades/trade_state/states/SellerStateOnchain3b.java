@@ -192,7 +192,7 @@ public class SellerStateOnchain3b extends BaseState {
                                 model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed",
                                         explorerService.getSelectedProvider().get().getBaseUrl(),
                                         rootCause.getClass().getSimpleName(),
-                                        ExceptionUtil.getMessageOrToString(rootCause)));
+                                        ExceptionUtil.getRootCauseMessage(rootCause)));
                             }
                         });
                     });

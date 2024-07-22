@@ -130,7 +130,7 @@ public abstract class ApplicationService implements Service {
             try {
                 typesafeConfig = ConfigFactory.parseFile(customConfigFile).withFallback(defaultTypesafeConfig);
             } catch (Exception e) {
-                System.err.println("Error when reading custom config file " + ExceptionUtil.getMessageOrToString(e));
+                System.err.println("Error when reading custom config file " + ExceptionUtil.getRootCauseMessage(e));
                 throw new RuntimeException(e);
             }
         } else {

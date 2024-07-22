@@ -102,7 +102,7 @@ public class TakeOfferPaymentController implements Controller {
                                 .filter(spec -> spec.getPaymentMethod().getPaymentRail() == persisted).findAny()
                                 .ifPresent(spec -> model.getSelectedBitcoinPaymentMethodSpec().set(spec));
                     } catch (Exception e) {
-                        log.warn("Could not create BitcoinPaymentRail from persisted name {}. {}", name, ExceptionUtil.getMessageOrToString(e));
+                        log.warn("Could not create BitcoinPaymentRail from persisted name {}. {}", name, ExceptionUtil.getRootCauseMessage(e));
                     }
                 });
         settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_FIAT_METHOD, getCookieSubKey())
@@ -113,7 +113,7 @@ public class TakeOfferPaymentController implements Controller {
                                 .filter(spec -> spec.getPaymentMethod().getPaymentRail() == persisted).findAny()
                                 .ifPresent(spec -> model.getSelectedFiatPaymentMethodSpec().set(spec));
                     } catch (Exception e) {
-                        log.warn("Could not create FiatPaymentRail from persisted name {}. {}", name, ExceptionUtil.getMessageOrToString(e));
+                        log.warn("Could not create FiatPaymentRail from persisted name {}. {}", name, ExceptionUtil.getRootCauseMessage(e));
                     }
                 });
     }
