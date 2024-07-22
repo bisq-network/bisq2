@@ -46,9 +46,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
-    @EqualsAndHashCode.Exclude
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
