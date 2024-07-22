@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.common.Address;
@@ -39,9 +40,13 @@ import java.util.Date;
 public final class Peer implements NetworkProto, Comparable<Peer> {
     @EqualsAndHashCode.Include
     private final Address address;
+    @ExcludeForHash
     private final Capability capability;
+    @ExcludeForHash
     private final NetworkLoad networkLoad;
+    @ExcludeForHash
     private final boolean isOutboundConnection;
+    @ExcludeForHash
     private final long created;
 
     public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection, long created) {
