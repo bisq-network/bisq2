@@ -22,6 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
@@ -38,6 +39,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MyOfferMessageBox extends BubbleMessageBox {
     private final Label myOfferTitle;
+    private BisqMenuItem removeOffer;
 
     public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -63,7 +65,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
         // Actions
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyAction, deleteAction);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyAction, removeOffer);
 
         contentVBox.setAlignment(Pos.CENTER_RIGHT);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
@@ -82,15 +84,16 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     protected void setUpActions() {
         super.setUpActions();
 
-        deleteAction.useIconOnly();
-        deleteAction.setTooltip(Res.get("offer.deleteOffer"));
-        HBox.setMargin(deleteAction, ACTION_ITEMS_MARGIN);
+        removeOffer = new BisqMenuItem("delete-t-grey", "delete-t-red");
+        removeOffer.useIconOnly();
+        removeOffer.setTooltip(Res.get("offer.deleteOffer"));
+        HBox.setMargin(removeOffer, ACTION_ITEMS_MARGIN);
     }
 
     @Override
     protected void addActionsHandlers() {
         copyAction.setOnAction(e -> onCopyMessage(String.format("%s\n%s", myOfferTitle.getText(), message.getText())));
-        deleteAction.setOnAction(e -> controller.onDeleteMessage(item.getChatMessage()));
+        removeOffer.setOnAction(e -> controller.onDeleteMessage(item.getChatMessage()));
     }
 
     private Label createAndGetMyOfferTitle() {
@@ -111,6 +114,6 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     @Override
     public void cleanup() {
         copyAction.setOnAction(null);
-        deleteAction.setOnAction(null);
+        removeOffer.setOnAction(null);
     }
 }
