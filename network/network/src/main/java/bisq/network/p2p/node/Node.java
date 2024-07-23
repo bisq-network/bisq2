@@ -402,7 +402,7 @@ public class Node implements Connection.Handler {
     private Connection createOutboundConnection(Address address, Capability myCapability) {
         // To get better chances to use the right version at the first attempt we use the preferredVersion which will
         // be set from another higher level service and is based on the distribution of versions.
-        // If v2.0.5 reaches 50% distribution rate we use vesion 1 as preferredVersion.
+        // If v2.1.0 reaches 50% distribution rate we use version 1 as preferredVersion.
         // This code can be removed once no old versions are expected anymore.
         Capability candidate = Capability.withVersion(myCapability, preferredVersion);
         log.info("Create outbound connection to {} with capability version 1", address);

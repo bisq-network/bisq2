@@ -57,7 +57,7 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
 
     @Override
     protected boolean isValidVersion(AuthorizedBondedReputationData data) {
-        // We added fields in AuthorizedBondedReputationData in v2.0.5 and increased version in AuthorizedBondedReputationData to 1.
+        // We added fields in AuthorizedBondedReputationData in v2.1.0 and increased version in AuthorizedBondedReputationData to 1.
         // As we publish both version 0 and version 1 objects we ignore the version 0 objects to avoid duplicates.
         return data.getVersion() > 0;
     }

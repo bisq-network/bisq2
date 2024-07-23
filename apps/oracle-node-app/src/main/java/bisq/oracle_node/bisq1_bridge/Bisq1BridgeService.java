@@ -24,7 +24,6 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
-import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.timer.Scheduler;
@@ -225,7 +224,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
-        // After v2.0.6 we can remove support for version 0 data
+        // After v2.1.0 we can remove support for version 0 data
         Stream<AuthorizedProofOfBurnData> oldVersions = proofOfBurnList.stream()
                 .map(dto -> new AuthorizedProofOfBurnData(
                         0,
@@ -234,8 +233,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                         Hex.decode(dto.getHash()),
                         dto.getBlockHeight(),
                         dto.getTxId(),
-                        staticPublicKeysProvided))
-                .filter(e -> ApplicationVersion.getVersion().below("2.0.7"));
+                        staticPublicKeysProvided));
         Stream<AuthorizedProofOfBurnData> newVersions = proofOfBurnList.stream()
                 .map(dto -> new AuthorizedProofOfBurnData(
                         dto.getBlockTime(),
@@ -251,7 +249,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
-        // After v2.0.6 we can remove support for version 0 data
+        // After v2.1.0 we can remove support for version 0 data
         Stream<AuthorizedBondedReputationData> oldVersions = bondedReputationList.stream()
                 .map(dto -> new AuthorizedBondedReputationData(
                         0,
@@ -261,8 +259,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                         dto.getLockTime(),
                         dto.getBlockHeight(),
                         dto.getTxId(),
-                        staticPublicKeysProvided))
-                .filter(e -> ApplicationVersion.getVersion().below("2.0.7"));
+                        staticPublicKeysProvided));
         Stream<AuthorizedBondedReputationData> newVersions = bondedReputationList.stream()
                 .map(dto -> new AuthorizedBondedReputationData(
                         dto.getBlockTime(),

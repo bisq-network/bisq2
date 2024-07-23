@@ -46,7 +46,7 @@ message UserIdentityStore {
   optional string selectedUserIdentityId = 2;
   optional security.EncryptedData encryptedData = 3;
   optional security.ScryptParameters scryptParameters = 4;
-  sint64 lastUserProfilePublishingDate = 5  [deprecated = true]; // Not used anymore in v2.0.5
+  sint64 lastUserProfilePublishingDate = 5  [deprecated = true]; // Not used anymore in v2.1.0
 }
 
 message NymList {
