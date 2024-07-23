@@ -1,3 +1,4 @@
+import bisq.gradle.common.getPlatform
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
@@ -61,9 +62,8 @@ tasks {
     }
 
     named<ShadowJar>("shadowJar") {
-        archiveClassifier.set(
-                System.getProperty("os.name").toLowerCase() + "-all"
-        )
+        val platformName = getPlatform().platformName
+        archiveClassifier.set(platformName + "-all")
     }
 
     distZip {
