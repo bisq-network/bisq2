@@ -40,7 +40,6 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
-    @EqualsAndHashCode.Exclude
     protected transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
 
     protected PublicChatMessage(String messageId,
