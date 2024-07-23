@@ -1,3 +1,4 @@
+import bisq.gradle.common.getPlatform
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
@@ -12,7 +13,7 @@ application {
     mainClass.set("bisq.desktop_app.DesktopApp")
 }
 
-version = "2.0.4"
+version = "2.1.0"
 
 javafx {
     version = "22.0.1"
@@ -61,9 +62,8 @@ tasks {
     }
 
     named<ShadowJar>("shadowJar") {
-        archiveClassifier.set(
-                System.getProperty("os.name").toLowerCase() + "-all"
-        )
+        val platformName = getPlatform().platformName
+        archiveClassifier.set(platformName + "-all")
     }
 
     distZip {

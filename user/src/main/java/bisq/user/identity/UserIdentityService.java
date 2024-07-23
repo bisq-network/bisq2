@@ -17,7 +17,6 @@
 
 package bisq.user.identity;
 
-import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
@@ -236,12 +235,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
 
         // We publish both the old version and the new version to support old clients
-        if (ApplicationVersion.getVersion().below("2.0.7")) {
-            return networkService.publishAuthenticatedData(UserProfile.withVersion(userProfile, 0), keyPair)
-                    .thenCompose(e -> networkService.publishAuthenticatedData(userProfile, keyPair));
-        } else {
-            return networkService.publishAuthenticatedData(userProfile, keyPair);
-        }
+        return networkService.publishAuthenticatedData(UserProfile.withVersion(userProfile, 0), keyPair)
+                .thenCompose(e -> networkService.publishAuthenticatedData(userProfile, keyPair));
     }
 
     private UserIdentity createUserIdentity(String nickName,

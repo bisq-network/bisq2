@@ -1,5 +1,7 @@
 package bisq.gradle.packaging
 
+import bisq.gradle.common.OS
+import bisq.gradle.common.getOS
 import org.apache.commons.codec.binary.Hex
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty

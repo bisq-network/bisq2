@@ -1,4 +1,4 @@
-package bisq.gradle.packaging
+package bisq.gradle.common
 
 import java.util.*
 

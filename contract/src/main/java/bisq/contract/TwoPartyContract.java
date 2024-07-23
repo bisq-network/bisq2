@@ -20,7 +20,7 @@ package bisq.contract;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.contract.multisig.MultisigContract;
+import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.offer.Offer;
 import lombok.Getter;
@@ -49,8 +49,8 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
             case BISQEASYCONTRACT: {
                 return BisqEasyContract.fromProto(proto);
             }
-            case MULTISIGCONTRACT: {
-                return MultisigContract.fromProto(proto);
+            case BISQMUSIGCONTRACT: {
+                return BisqMuSigContract.fromProto(proto);
             }
             case SUBMARINECONTRACT: {
                 return SubmarineContract.fromProto(proto);

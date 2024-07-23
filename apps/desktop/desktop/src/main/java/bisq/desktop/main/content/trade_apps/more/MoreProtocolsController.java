@@ -53,9 +53,9 @@ public class MoreProtocolsController implements InitWithDataController<MoreProto
 
     public Optional<ProtocolRoadmapController> getProtocolRoadmapController(TradeProtocolType tradeProtocolType) {
         switch (tradeProtocolType) {
-            case LIQUID_MULTISIG: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_MULTISIG,
-                        "https://bisq.wiki/Trade_Protocols#Liquid_Multisig"));
+            case LIQUID_MU_SIG: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_MU_SIG,
+                        "https://bisq.wiki/Trade_Protocols#Liquid_MuSig"));
             }
 
             case LIQUID_SWAP: {

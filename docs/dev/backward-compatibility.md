@@ -71,7 +71,7 @@ cases. A new node receiving messages from old nodes will set the version number 
 and `applicationVersion` to an empty string. Messages sent between updated nodes will have `version` set to 1 and thus
 do not apply the exclusion of `applicationVersion` for hash, thereby storing the new object and propagating it.
 
-Other classes where we apply this new pattern for version 2.0.5 are:
+Other classes where we apply this new pattern for version 2.1.0 are:
 
 - `AuthorizedBondedReputationData`
 - `AuthorizedProofOfBurnData`

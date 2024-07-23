@@ -47,7 +47,7 @@ public final class Capability implements NetworkProto {
     private final Address address;
     private final List<TransportType> supportedTransportTypes;
     // ExcludeForHash from version 1 on to not break hash for pow check or version 0. We add version 2 and 3 for extra safety...
-    // Once no pre version 2.0.5 nodes are expected anymore in the network we can remove the parameter
+    // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
     // and use default `@ExcludeForHash` instead.
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})

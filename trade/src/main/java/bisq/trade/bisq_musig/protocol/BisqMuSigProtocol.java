@@ -15,26 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.multisig.protocol;
+package bisq.trade.bisq_musig.protocol;
 
 import bisq.common.fsm.EventHandler;
 import bisq.trade.ServiceProvider;
-import bisq.trade.multisig.MultisigTrade;
+import bisq.trade.bisq_musig.BisqMuSigTrade;
 import bisq.trade.protocol.TradeProtocol;
 
 import java.lang.reflect.InvocationTargetException;
 
-public abstract class MultisigProtocol extends TradeProtocol<MultisigTrade> {
+public abstract class BisqMuSigProtocol extends TradeProtocol<BisqMuSigTrade> {
     private static final String version = "1.0.0";
 
-    public MultisigProtocol(ServiceProvider serviceProvider, MultisigTrade model) {
+    public BisqMuSigProtocol(ServiceProvider serviceProvider, BisqMuSigTrade model) {
         super(version, serviceProvider, model);
     }
 
     @Override
     protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass) {
         try {
-            return handlerClass.getDeclaredConstructor(ServiceProvider.class, MultisigTrade.class).newInstance(serviceProvider, model);
+            return handlerClass.getDeclaredConstructor(ServiceProvider.class, BisqMuSigTrade.class).newInstance(serviceProvider, model);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
             throw new RuntimeException(e);

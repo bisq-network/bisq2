@@ -31,7 +31,7 @@ message TradeParty {
   optional contract.ContractSignatureData contractSignatureData = 2;
   oneof message {
     BisqEasyTradeParty bisqEasyTradeParty = 20;
-    MultisigTradeParty multisigTradeParty = 21;
+    BisqMuSigTradeParty bisqMuSigTradeParty = 21;
     SubmarineTradeParty submarineTradeParty = 22;
   }
 }
@@ -58,7 +58,7 @@ message Trade {
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 30;
-    MultisigTrade multisigTrade = 31;
+    BisqMuSigTrade bisqMuSigTrade = 31;
     SubmarineTrade submarineTrade = 32;
   }
 }
@@ -71,7 +71,7 @@ message TradeMessage {
   oneof message {
     BisqEasyTradeMessage bisqEasyTradeMessage = 20;
     SubmarineTradeMessage submarineTradeMessage = 21;
-    MultisigTradeMessage multisigTradeMessage = 23;
+    BisqMuSigTradeMessage bisqMuSigTradeMessage = 23;
   }
 }
 
@@ -138,16 +138,16 @@ message BisqEasyReportErrorMessage {
 }
 
 
-// MultiSig
-message MultisigTradeMessage{
+// BisqMuSig
+message BisqMuSigTradeMessage{
 }
-message MultisigTradeParty {
-}
-
-message MultisigTrade {
+message BisqMuSigTradeParty {
 }
 
-message MultisigTradeStore {
+message BisqMuSigTrade {
+}
+
+message BisqMuSigTradeStore {
   map<string, Trade> tradeById = 1;
 }
 

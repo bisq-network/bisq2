@@ -17,6 +17,7 @@
 
 package bisq.updater;
 
+import bisq.common.platform.Platform;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 
@@ -52,7 +53,8 @@ public class UpdaterUtils {
     }
 
     public static String getJarFileName(String version) {
-        return "desktop-app-" + version + "-" + System.getProperty("os.name").toLowerCase() + "-all.jar";
+        String platformName = Platform.getPlatform().getPlatformName();
+        return "desktop-app-" + version + "-" + platformName + "-all.jar";
     }
 
     public static Optional<String> readVersionFromVersionFile(String userDataDir) {

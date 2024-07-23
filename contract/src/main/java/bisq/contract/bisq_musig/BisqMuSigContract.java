@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.contract.multisig;
+package bisq.contract.bisq_musig;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
 import bisq.network.identity.NetworkId;
-import bisq.offer.multisig.MultisigOffer;
+import bisq.offer.bisq_musig.BisqMuSigOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,21 +30,21 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class MultisigContract extends TwoPartyContract<MultisigOffer> {
+public class BisqMuSigContract extends TwoPartyContract<BisqMuSigOffer> {
 
-    public MultisigContract(long takeOfferDate,
-                            MultisigOffer offer,
-                            NetworkId takerNetworkId) {
+    public BisqMuSigContract(long takeOfferDate,
+                             BisqMuSigOffer offer,
+                             NetworkId takerNetworkId) {
         this(takeOfferDate,
                 offer,
-                TradeProtocolType.MULTISIG,
+                TradeProtocolType.BISQ_MU_SIG,
                 new Party(Role.TAKER, takerNetworkId));
     }
 
-    private MultisigContract(long takeOfferDate,
-                             MultisigOffer offer,
-                             TradeProtocolType protocolType,
-                             Party taker) {
+    private BisqMuSigContract(long takeOfferDate,
+                              BisqMuSigOffer offer,
+                              TradeProtocolType protocolType,
+                              Party taker) {
         super(takeOfferDate, offer, protocolType, taker);
 
         verify();
@@ -57,8 +57,8 @@ public class MultisigContract extends TwoPartyContract<MultisigOffer> {
 
     @Override
     public bisq.contract.protobuf.Contract.Builder getBuilder(boolean serializeForHash) {
-        var bisqEasyContract = bisq.contract.protobuf.MultisigContract.newBuilder();
-        var twoPartyContract = getTwoPartyContractBuilder(serializeForHash).setMultisigContract(bisqEasyContract);
+        var bisqEasyContract = bisq.contract.protobuf.BisqMuSigContract.newBuilder();
+        var twoPartyContract = getTwoPartyContractBuilder(serializeForHash).setBisqMuSigContract(bisqEasyContract);
         return getContractBuilder(serializeForHash).setTwoPartyContract(twoPartyContract);
     }
 
@@ -67,10 +67,10 @@ public class MultisigContract extends TwoPartyContract<MultisigOffer> {
         return resolveProto(serializeForHash);
     }
 
-    public static MultisigContract fromProto(bisq.contract.protobuf.Contract proto) {
+    public static BisqMuSigContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        return new MultisigContract(proto.getTakeOfferDate(),
-                MultisigOffer.fromProto(proto.getOffer()),
+        return new BisqMuSigContract(proto.getTakeOfferDate(),
+                BisqMuSigOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(twoPartyContractProto.getTaker()));
     }

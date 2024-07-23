@@ -1,5 +1,7 @@
 package bisq.gradle.packaging
 
+import bisq.gradle.common.OS
+import bisq.gradle.common.getOS
 import bisq.gradle.packaging.jpackage.JPackageAppConfig
 import bisq.gradle.packaging.jpackage.JPackageConfig
 import bisq.gradle.packaging.jpackage.PackageFactory

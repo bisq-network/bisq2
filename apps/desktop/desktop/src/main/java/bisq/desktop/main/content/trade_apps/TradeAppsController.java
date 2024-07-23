@@ -58,9 +58,9 @@ public class TradeAppsController extends ContentTabController<TradeAppsModel> {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_EASY,
                         "https://bisq.wiki/Trade_Protocols#Bisq_Easy"));
             }
-            case MULTISIG: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MULTISIG,
-                        "https://bisq.wiki/Trade_Protocols#Bisq_Multisig"));
+            case BISQ_MU_SIG: {
+                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_MU_SIG,
+                        "https://bisq.wiki/Trade_Protocols#Bisq_MuSig"));
             }
             case SUBMARINE: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.SUBMARINE,

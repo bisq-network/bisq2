@@ -15,31 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.multisig.protocol;
+package bisq.trade.bisq_musig.protocol;
 
-import bisq.common.fsm.State;
-import lombok.Getter;
-import lombok.ToString;
+import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_musig.BisqMuSigTrade;
 
-@ToString
-@Getter
-public enum MultisigTradeState implements State {
-    INIT,
 
-    STATE1,
-    STATE2,
+public class BisqMuSigSellerAsMakerProtocol extends BisqMuSigProtocol {
 
-    COMPLETED(true);
-
-    private final boolean isFinalState;
-    private final int ordinal;
-
-    MultisigTradeState() {
-        this(false);
+    public BisqMuSigSellerAsMakerProtocol(ServiceProvider serviceProvider, BisqMuSigTrade model) {
+        super(serviceProvider, model);
     }
 
-    MultisigTradeState(boolean isFinalState) {
-        this.isFinalState = isFinalState;
-        ordinal = ordinal();
+    public void configTransitions() {
     }
 }

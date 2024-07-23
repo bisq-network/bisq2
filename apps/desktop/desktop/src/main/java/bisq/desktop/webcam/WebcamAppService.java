@@ -18,6 +18,7 @@
 package bisq.desktop.webcam;
 
 import bisq.application.ApplicationService;
+import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.timer.Scheduler;
@@ -36,7 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 // On MacOS one can reset the camera access permissions by `tccutil reset Camera`. This is helpful for tesing failure
 // scenarios with failed permissions.
 @Slf4j
-public class WebcamAppService {
+public class WebcamAppService implements Service {
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
     private static final long STARTUP_TIME_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
     private static final long CHECK_HEART_BEAT_INTERVAL = TimeUnit.SECONDS.toMillis(10);
@@ -58,7 +59,7 @@ public class WebcamAppService {
     private final QrCodeListeningServer qrCodeListeningServer;
     private final WebcamProcessLauncher webcamProcessLauncher;
     private Optional<Scheduler> checkHeartBeatUpdateScheduler = Optional.empty();
-    private Optional<Scheduler> maxStartupTimescheduler = Optional.empty();
+    private Optional<Scheduler> maxStartupTimeScheduler = Optional.empty();
 
     public WebcamAppService(ApplicationService.Config config) {
         model = new WebcamAppModel(config);
@@ -67,6 +68,26 @@ public class WebcamAppService {
         webcamProcessLauncher = new WebcamProcessLauncher(model.getBaseDir());
 
         state.set(NEW);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        state.set(STOPPING);
+        stopSchedulers();
+        unbind();
+        qrCodeListeningServer.stopServer();
+        return webcamProcessLauncher.shutdown()
+                .thenApply(terminatedGraceFully -> {
+                    state.set(TERMINATED);
+                    model.reset();
+                    return terminatedGraceFully;
+                });
     }
 
     public void start() {
@@ -84,11 +105,13 @@ public class WebcamAppService {
         qrCodeListeningServer.start(port);
 
         state.set(STARTING);
+        log.error("STARTING");
         webcamProcessLauncher.start(port)
                 .whenComplete((process, throwable) -> {
                     if (throwable != null) {
                         handleException(throwable);
                     } else {
+                        log.error("RUNNING");
                         state.set(RUNNING);
                     }
                 });
@@ -117,20 +140,6 @@ public class WebcamAppService {
         return shutdown();
     }
 
-    public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        state.set(STOPPING);
-        stopSchedulers();
-        unbind();
-        qrCodeListeningServer.stopServer();
-        return webcamProcessLauncher.shutdown()
-                .thenApply(terminatedGraceFully -> {
-                    state.set(TERMINATED);
-                    model.reset();
-                    return terminatedGraceFully;
-                });
-    }
-
     private void unbind() {
         if (qrCodePin != null) {
             qrCodePin.unbind();
@@ -148,8 +157,8 @@ public class WebcamAppService {
     }
 
     private void stopSchedulers() {
-        maxStartupTimescheduler.ifPresent(Scheduler::stop);
-        maxStartupTimescheduler = Optional.empty();
+        maxStartupTimeScheduler.ifPresent(Scheduler::stop);
+        maxStartupTimeScheduler = Optional.empty();
         checkHeartBeatUpdateScheduler.ifPresent(Scheduler::stop);
         checkHeartBeatUpdateScheduler = Optional.empty();
     }
@@ -161,7 +170,7 @@ public class WebcamAppService {
     private void setupTimeoutSchedulers() {
         stopSchedulers();
 
-        maxStartupTimescheduler = Optional.of(Scheduler.run(() -> {
+        maxStartupTimeScheduler = Optional.of(Scheduler.run(() -> {
             if (model.getLastHeartBeatTimestamp().get() == 0) {
                 String errorMessage = "Have not received a heartbeat signal from the webcam app after " + STARTUP_TIME_TIMEOUT / 1000 + " seconds.";
                 log.warn(errorMessage);
