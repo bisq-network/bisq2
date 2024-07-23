@@ -46,11 +46,11 @@ public class WebcamProcessLauncher {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String version = FileUtils.readStringFromResource("webcam-app/version.txt");
-                String jarFilePath = webcamDir + "/webcam-" + version + "-all.jar";
+                String jarFilePath = webcamDir + "/webcam-app-" + version + "-all.jar";
                 File jarFile = new File(jarFilePath);
 
                 if (!jarFile.exists() || DevMode.isDevMode()) {
-                    String resourcePath = "webcam-app/webcam-" + version + ".zip";
+                    String resourcePath = "webcam-app/webcam-app-" + version + ".zip";
                     InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
                     File destDir = new File(webcamDir);
                     ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, destDir);

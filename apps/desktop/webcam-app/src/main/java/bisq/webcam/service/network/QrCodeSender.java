@@ -17,6 +17,7 @@
 
 package bisq.webcam.service.network;
 
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.webcam.ControlSignals;
 import bisq.webcam.service.ErrorCode;
@@ -29,6 +30,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.common.encoding.NonPrintingCharacters.UNIT_SEPARATOR;
@@ -40,6 +42,7 @@ public class QrCodeSender {
 
     private final InetSocketAddress serverAddress;
     private Optional<Scheduler> heartBeatScheduler = Optional.empty();
+    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("QrCodeSender");
 
     public QrCodeSender(int port) {
         serverAddress = new InetSocketAddress("127.0.0.1", port);
@@ -53,6 +56,7 @@ public class QrCodeSender {
 
     public void shutdown() {
         heartBeatScheduler.ifPresent(Scheduler::stop);
+        executorService.shutdownNow();
     }
 
     public CompletableFuture<Void> send(ControlSignals controlSignal) {
@@ -66,15 +70,16 @@ public class QrCodeSender {
     private CompletableFuture<Void> doSend(String message) {
         log.info("send {} to {}", message, serverAddress);
         return CompletableFuture.runAsync(() -> {
-            try (Socket socket = new Socket();) {
-                socket.connect(serverAddress);
-                try (PrintWriter printWriter = new PrintWriter(socket.getOutputStream())) {
-                    printWriter.println(message);
-                }
-            } catch (IOException e) {
-                log.error("Error at sending qrCode {} to {}", message, serverAddress, e);
-                throw new WebcamException(ErrorCode.IO_EXCEPTION, e);
-            }
-        }).orTimeout(SEND_MSG_TIMEOUT, TimeUnit.MILLISECONDS);
+                    try (Socket socket = new Socket();) {
+                        socket.connect(serverAddress);
+                        try (PrintWriter printWriter = new PrintWriter(socket.getOutputStream())) {
+                            printWriter.println(message);
+                        }
+                    } catch (IOException e) {
+                        log.error("Error at sending qrCode {} to {}", message, serverAddress, e);
+                        throw new WebcamException(ErrorCode.IO_EXCEPTION, e);
+                    }
+                }, executorService)
+                .orTimeout(SEND_MSG_TIMEOUT, TimeUnit.MILLISECONDS);
     }
 }

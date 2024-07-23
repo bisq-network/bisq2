@@ -24,13 +24,21 @@ class WebcamAppPlugin : Plugin<Project> {
             dependsOn(project.tasks.named("shadowJar"))
 
             val version = VersionUtil.getVersionFromFile(project)
-            archiveFileName.set("webcam-$version.zip")
+            archiveFileName.set("webcam-app-$version.zip")
             destinationDirectory.set(project.layout.buildDirectory.dir("generated"))
-            include("webcam-$version-all.jar")
+            include("webcam-app-$version-all.jar")
             from(project.layout.buildDirectory.dir("libs"))
         }
 
+        val copyWebcamAppVersionToResources = project.tasks.register<Copy>("copyWebcamAppVersionToResources") {
+            dependsOn(project.tasks.named("processResources"))
+
+            from(project.layout.projectDirectory.asFile.absolutePath + "/version.txt")
+            into(project.layout.buildDirectory.dir("generated/src/main/resources/webcam-app"))
+        }
+
         project.tasks.register<Copy>("processWebcamForDesktop") {
+            dependsOn(copyWebcamAppVersionToResources)
             dependsOn(zipWebcamAppShadowJar)
             dependsOn(copyWebcamAppVersionToDesktop)
 
