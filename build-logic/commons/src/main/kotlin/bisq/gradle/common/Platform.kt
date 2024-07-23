@@ -1,9 +1,9 @@
-package bisq.gradle.packaging
+package bisq.gradle.common
 
-import bisq.gradle.packaging.Architecture.ARM_64
-import bisq.gradle.packaging.Architecture.X86_64
-import bisq.gradle.packaging.OS.*
-import bisq.gradle.packaging.Platform.*
+import bisq.gradle.common.Architecture.ARM_64
+import bisq.gradle.common.Architecture.X86_64
+import bisq.gradle.common.OS.*
+import bisq.gradle.common.Platform.*
 
 enum class Platform(val platformName: String) {
     LINUX_X86_64("linux_x86_64"),
