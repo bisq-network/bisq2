@@ -62,6 +62,15 @@ public class ActiveReactionsDisplayBox extends HBox {
     public void dispose() {
         removeItemListeners();
         sortedReactionItems.removeListener(listChangeListener);
+        disposeReactionMenuUsersPopup();
+    }
+
+    private void disposeReactionMenuUsersPopup() {
+        getChildren().forEach(item -> {
+            if (item instanceof ActiveReactionMenuItem) {
+                ((ActiveReactionMenuItem) item).getReactionUsersPopup().dispose();
+            }
+        });
     }
 
     private void addItemListeners(ReactionItem item) {
@@ -95,6 +104,7 @@ public class ActiveReactionsDisplayBox extends HBox {
 
     private void updateItems() {
         UIThread.run(() -> {
+            disposeReactionMenuUsersPopup();
             getChildren().clear();
             getChildren().addAll(sortedReactionItems.stream()
                     .map(item -> new ActiveReactionMenuItem(item, toggleReaction))
@@ -106,12 +116,14 @@ public class ActiveReactionsDisplayBox extends HBox {
     private static final class ActiveReactionMenuItem extends BisqMenuItem {
         private ReactionItem reactionItem;
         private ToggleReaction toggleReaction;
+        private ReactionUsersPopup reactionUsersPopup;
 
         private ActiveReactionMenuItem(ReactionItem reactionItem, ToggleReaction toggleReaction) {
             this(reactionItem.getIconId());
 
             this.reactionItem = reactionItem;
             this.toggleReaction = toggleReaction;
+            reactionUsersPopup = new ReactionUsersPopup(reactionItem, this);
             setText(reactionItem.getCountAsString());
             setGraphicTextGap(4);
             addStyleClasses();

@@ -27,8 +27,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashSet;
 
 @Slf4j
 @Getter
@@ -38,7 +37,7 @@ public class ReactionItem {
     private long firstAdded;
     private final SimpleIntegerProperty count = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
-    private final Set<UserProfile> users = new HashSet<>();
+    private final LinkedHashSet<UserProfile> users = new LinkedHashSet<>();
     private UserProfile selectedUserProfile;
 
     ReactionItem(Reaction reaction, UserProfile selectedUserProfile) {
