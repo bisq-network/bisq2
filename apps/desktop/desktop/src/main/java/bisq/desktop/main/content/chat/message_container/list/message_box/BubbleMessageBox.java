@@ -66,7 +66,6 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox actionsHBox = new HBox(5);
     protected final VBox quotedMessageVBox, contentVBox;
-    protected final BisqMenuItem deleteAction = new BisqMenuItem("delete-t-grey", "delete-t-red");
     private Subscription reactMenuPin;
     protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected ReactMenuBox reactMenuBox;
