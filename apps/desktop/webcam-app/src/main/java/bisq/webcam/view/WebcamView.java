@@ -17,6 +17,7 @@
 
 package bisq.webcam.view;
 
+import bisq.common.util.FileUtils;
 import bisq.i18n.Res;
 import bisq.webcam.service.VideoSize;
 import javafx.beans.binding.BooleanBinding;
@@ -34,16 +35,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+
 @Slf4j
 public class WebcamView extends StackPane {
     private static final VideoSize VIDEO_SIZE = VideoSize.SD;
 
-    private final ImageView imageView;
+    private final ImageView imageView, errorIcon;
     private final VBox vBox;
     private final WaitingAnimation waitingAnimation;
     private final Label headline, failedConnections;
     private final TextArea errorMessageTextArea;
-    private final ImageView errorIcon;
     private final Button retryButton;
     private int deviceNumber = -1;
 
@@ -88,6 +90,20 @@ public class WebcamView extends StackPane {
         errorMessageTextArea.getStyleClass().addAll("code-block");
         errorMessageTextArea.setMaxHeight(150);
 
+        String versionNumber = "n/a";
+        try {
+            versionNumber = FileUtils.readStringFromResource("webcam-app/version.txt");
+        } catch (IOException e) {
+            log.error("Could not read version. Run gradle task `copyWebcamAppVersionToResources`.", e);
+        }
+
+        Label version = new Label(Res.get("version", versionNumber));
+        version.setAlignment(Pos.CENTER_RIGHT);
+        version.setTextAlignment(TextAlignment.RIGHT);
+        version.setWrapText(true);
+        version.getStyleClass().add("version");
+        version.setMinWidth(videoWidth);
+
         setupBindings();
 
         Region topSpacer = new Region();
@@ -97,9 +113,10 @@ public class WebcamView extends StackPane {
         VBox.setMargin(errorIcon, new Insets(-VIDEO_SIZE.getHeight() / 12d, 0, 0, 0));
         VBox.setMargin(errorMessageTextArea, new Insets(10, 40, -20, 40));
         VBox.setMargin(failedConnections, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(version, new Insets(10, 30, 10, 0));
         VBox.setVgrow(topSpacer, Priority.ALWAYS);
         VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
-        vBox = new VBox(topSpacer, waitingAnimation, errorIcon, retryButton, headline, failedConnections, errorMessageTextArea, bottomSpacer);
+        vBox = new VBox(topSpacer, waitingAnimation, errorIcon, retryButton, headline, failedConnections, errorMessageTextArea, bottomSpacer, version);
         vBox.setSpacing(20);
         vBox.setAlignment(Pos.TOP_CENTER);
 

@@ -33,6 +33,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
@@ -93,8 +94,10 @@ public class WebcamApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         setupStage(primaryStage);
-        startWebcam();
-        qrCodeSender.startSendingHeartBeat();
+        Platform.runLater(() -> {
+            startWebcam();
+            qrCodeSender.startSendingHeartBeat();
+        });
     }
 
     private void shutdown() {
@@ -109,6 +112,7 @@ public class WebcamApp extends Application {
     private void setupStage(Stage primaryStage) {
         webcamView = new WebcamView(this::onRety);
         scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
+        scene.setFill(Paint.valueOf("#1c1c1c"));
         scene.getStylesheets().addAll(requireNonNull(this.getClass().getResource("/css/base.css")).toExternalForm(),
                 requireNonNull(this.getClass().getResource("/css/webapp.css")).toExternalForm());
         primaryStage.setScene(scene);

@@ -19,6 +19,14 @@ javafx {
     modules = listOf("javafx.controls", "javafx.media")
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir(layout.buildDirectory.file("generated/src/main/resources"))
+        }
+    }
+}
+
 dependencies {
     implementation(libs.zxing)
     implementation(libs.sarxos)
