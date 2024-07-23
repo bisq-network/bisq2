@@ -15,19 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.multisig;
+package bisq.trade.bisq_musig;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.ProtobufUtils;
-import bisq.contract.multisig.MultisigContract;
+import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
-import bisq.offer.multisig.MultisigOffer;
+import bisq.offer.bisq_musig.BisqMuSigOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;
 import bisq.trade.TradeRole;
-import bisq.trade.multisig.protocol.MultisigTradeState;
+import bisq.trade.bisq_musig.protocol.BisqMuSigTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -35,40 +35,40 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, MultisigTradeParty> {
-    private final Observable<MultisigTradeState> tradeState = new Observable<>();
+public final class BisqMuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContract, BisqMuSigTradeParty> {
+    private final Observable<BisqMuSigTradeState> tradeState = new Observable<>();
 
-    public MultisigTrade(boolean isBuyer,
-                         boolean isTaker,
-                         Identity myIdentity,
-                         MultisigContract contract,
-                         NetworkId takerNetworkId) {
-        super(MultisigTradeState.INIT,
+    public BisqMuSigTrade(boolean isBuyer,
+                          boolean isTaker,
+                          Identity myIdentity,
+                          BisqMuSigContract contract,
+                          NetworkId takerNetworkId) {
+        super(BisqMuSigTradeState.INIT,
                 isBuyer,
                 isTaker,
                 myIdentity,
                 contract.getOffer(),
-                new MultisigTradeParty(takerNetworkId),
-                new MultisigTradeParty(contract.getMaker().getNetworkId()));
+                new BisqMuSigTradeParty(takerNetworkId),
+                new BisqMuSigTradeParty(contract.getMaker().getNetworkId()));
 
         setContract(contract);
-        stateObservable().addObserver(s -> tradeState.set((MultisigTradeState) s));
+        stateObservable().addObserver(s -> tradeState.set((BisqMuSigTradeState) s));
     }
 
-    private MultisigTrade(MultisigTradeState state,
-                          String id,
-                          TradeRole tradeRole,
-                          Identity myIdentity,
-                          MultisigTradeParty taker,
-                          MultisigTradeParty maker) {
+    private BisqMuSigTrade(BisqMuSigTradeState state,
+                           String id,
+                           TradeRole tradeRole,
+                           Identity myIdentity,
+                           BisqMuSigTradeParty taker,
+                           BisqMuSigTradeParty maker) {
         super(state, id, tradeRole, myIdentity, taker, maker);
 
-        stateObservable().addObserver(s -> tradeState.set((MultisigTradeState) s));
+        stateObservable().addObserver(s -> tradeState.set((BisqMuSigTradeState) s));
     }
 
     @Override
     public bisq.trade.protobuf.Trade.Builder getBuilder(boolean serializeForHash) {
-        return getTradeBuilder(serializeForHash).setMultisigTrade(bisq.trade.protobuf.MultisigTrade.newBuilder());
+        return getTradeBuilder(serializeForHash).setBisqMuSigTrade(bisq.trade.protobuf.BisqMuSigTrade.newBuilder());
     }
 
     @Override
@@ -76,15 +76,15 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
         return resolveProto(serializeForHash);
     }
 
-    public static MultisigTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        MultisigTrade trade = new MultisigTrade(ProtobufUtils.enumFromProto(MultisigTradeState.class, proto.getState()),
+    public static BisqMuSigTrade fromProto(bisq.trade.protobuf.Trade proto) {
+        BisqMuSigTrade trade = new BisqMuSigTrade(ProtobufUtils.enumFromProto(BisqMuSigTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
-                TradeParty.protoToMultisigTradeParty(proto.getTaker()),
-                TradeParty.protoToMultisigTradeParty(proto.getMaker()));
+                TradeParty.protoToBisqMuSigTradeParty(proto.getTaker()),
+                TradeParty.protoToBisqMuSigTradeParty(proto.getMaker()));
         if (proto.hasContract()) {
-            trade.setContract(MultisigContract.fromProto(proto.getContract()));
+            trade.setContract(BisqMuSigContract.fromProto(proto.getContract()));
         }
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
@@ -101,11 +101,11 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
         return trade;
     }
 
-    public MultisigTradeState getTradeState() {
+    public BisqMuSigTradeState getTradeState() {
         return tradeState.get();
     }
 
-    public ReadOnlyObservable<MultisigTradeState> tradeStateObservable() {
+    public ReadOnlyObservable<BisqMuSigTradeState> tradeStateObservable() {
         return tradeState;
     }
 }

@@ -18,5 +18,5 @@
 package bisq.offer.poc;
 
 /**
- * Proof of concept implementation for MultiSig protocol.
+ * Proof of concept implementation for Bisq MuSig protocol.
  */

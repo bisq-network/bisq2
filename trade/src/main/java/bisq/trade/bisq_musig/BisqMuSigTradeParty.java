@@ -15,32 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.multisig.messages;
+package bisq.trade.bisq_musig;
 
-import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.identity.NetworkId;
-import bisq.trade.protocol.messages.TradeMessage;
+import bisq.trade.TradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @ToString(callSuper = true)
-@Getter
 @EqualsAndHashCode(callSuper = true)
-public abstract class MultisigTradeMessage extends TradeMessage {
-    protected MultisigTradeMessage(String id, String tradeId, String protocolVersion, NetworkId sender, NetworkId receiver) {
-        super(id, tradeId, protocolVersion, sender, receiver);
+@Getter
+public class BisqMuSigTradeParty extends TradeParty {
+
+    public BisqMuSigTradeParty(NetworkId networkId) {
+        super(networkId);
     }
 
-    public static MultisigTradeMessage fromProto(bisq.trade.protobuf.MultisigTradeMessage proto) {
-       /* switch (proto.getMessageCase()) {
+    @Override
+    public bisq.trade.protobuf.TradeParty.Builder getBuilder(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqMuSigTradeParty.Builder builder = bisq.trade.protobuf.BisqMuSigTradeParty.newBuilder();
+        return getTradePartyBuilder(serializeForHash).setBisqMuSigTradeParty(builder);
+    }
 
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }*/
-        throw new UnresolvableProtobufMessageException(proto);
+    public static BisqMuSigTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
+        return new BisqMuSigTradeParty(NetworkId.fromProto(proto.getNetworkId()));
     }
 }

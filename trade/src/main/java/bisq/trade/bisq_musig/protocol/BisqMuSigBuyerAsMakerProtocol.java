@@ -15,11 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.multisig.events;
+package bisq.trade.bisq_musig.protocol;
 
-import bisq.trade.protocol.events.TradeEvent;
-import lombok.EqualsAndHashCode;
+import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_musig.BisqMuSigTrade;
 
-@EqualsAndHashCode(callSuper = true)
-public abstract class MultisigTradeEvent extends TradeEvent {
+public class BisqMuSigBuyerAsMakerProtocol extends BisqMuSigProtocol {
+
+    public BisqMuSigBuyerAsMakerProtocol(ServiceProvider serviceProvider, BisqMuSigTrade model) {
+        super(serviceProvider, model);
+    }
+
+    @Override
+    public void configTransitions() {
+    }
 }

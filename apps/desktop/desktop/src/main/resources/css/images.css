@@ -645,16 +645,16 @@
     -fx-image: url("/images/protocols/protocol-bisq-easy.png");
 }
 
-#protocol-multisig {
-    -fx-image: url("/images/protocols/protocol-multisig.png");
+#protocol-bisq_musig {
+    -fx-image: url("/images/protocols/protocol-bisq-musig.png");
 }
 
 #protocol-submarine {
     -fx-image: url("/images/protocols/protocol-submarine.png");
 }
 
-#protocol-liquid-multisig {
-    -fx-image: url("/images/protocols/protocol-liquid-multisig.png");
+#protocol-liquid-musig {
+    -fx-image: url("/images/protocols/protocol-liquid-musig.png");
 }
 
 #protocol-bisq-lightning {

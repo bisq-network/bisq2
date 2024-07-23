@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.multisig;
+package bisq.offer.bisq_musig;
 
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
@@ -30,13 +30,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class MyMultisigOffersService implements PersistenceClient<MyMultisigOffersStore>, Service {
+public class MyBisqMuSigOffersService implements PersistenceClient<MyBisqMuSigOffersStore>, Service {
     @Getter
-    private final MyMultisigOffersStore persistableStore = new MyMultisigOffersStore();
+    private final MyBisqMuSigOffersStore persistableStore = new MyBisqMuSigOffersStore();
     @Getter
-    private final Persistence<MyMultisigOffersStore> persistence;
+    private final Persistence<MyBisqMuSigOffersStore> persistence;
 
-    public MyMultisigOffersService(PersistenceService persistenceService) {
+    public MyBisqMuSigOffersService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
@@ -58,21 +58,21 @@ public class MyMultisigOffersService implements PersistenceClient<MyMultisigOffe
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void add(MultisigOffer offer) {
+    public void add(BisqMuSigOffer offer) {
         persistableStore.add(offer);
         persist();
     }
 
-    public void remove(MultisigOffer offer) {
+    public void remove(BisqMuSigOffer offer) {
         persistableStore.remove(offer);
         persist();
     }
 
-    public ObservableSet<MultisigOffer> getOffers() {
+    public ObservableSet<BisqMuSigOffer> getOffers() {
         return persistableStore.getOffers();
     }
 
-    public Optional<MultisigOffer> findOffer(String offerId) {
+    public Optional<BisqMuSigOffer> findOffer(String offerId) {
         return getOffers().stream()
                 .filter(offer -> offer.getId().equals(offerId))
                 .findAny();

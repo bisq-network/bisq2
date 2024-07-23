@@ -1,4 +1,4 @@
-package bisq.offer.multisig;
+package bisq.offer.bisq_musig;
 
 
 import bisq.account.payment_method.FiatPaymentMethod;
@@ -28,15 +28,15 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class MultisigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
-    public MultisigOffer(NetworkId makerNetworkId,
-                         Direction direction,
-                         Market market,
-                         AmountSpec amountSpec,
-                         PriceSpec priceSpec,
-                         List<FiatPaymentMethod> fiatPaymentMethods,
-                         String makersTradeTerms,
-                         long requiredTotalReputationScore) {
+public final class BisqMuSigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPaymentMethodSpec> {
+    public BisqMuSigOffer(NetworkId makerNetworkId,
+                          Direction direction,
+                          Market market,
+                          AmountSpec amountSpec,
+                          PriceSpec priceSpec,
+                          List<FiatPaymentMethod> fiatPaymentMethods,
+                          String makersTradeTerms,
+                          long requiredTotalReputationScore) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -44,24 +44,24 @@ public final class MultisigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 market,
                 amountSpec,
                 priceSpec,
-                List.of(TradeProtocolType.MULTISIG),
+                List.of(TradeProtocolType.BISQ_MU_SIG),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
                 OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore)
         );
     }
 
-    private MultisigOffer(String id,
-                          long date,
-                          NetworkId makerNetworkId,
-                          Direction direction,
-                          Market market,
-                          AmountSpec amountSpec,
-                          PriceSpec priceSpec,
-                          List<TradeProtocolType> protocolTypes,
-                          List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
-                          List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
-                          List<OfferOption> offerOptions) {
+    private BisqMuSigOffer(String id,
+                           long date,
+                           NetworkId makerNetworkId,
+                           Direction direction,
+                           Market market,
+                           AmountSpec amountSpec,
+                           PriceSpec priceSpec,
+                           List<TradeProtocolType> protocolTypes,
+                           List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs,
+                           List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs,
+                           List<OfferOption> offerOptions) {
         super(id,
                 date,
                 makerNetworkId,
@@ -84,8 +84,8 @@ public final class MultisigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
 
     @Override
     public bisq.offer.protobuf.Offer.Builder getBuilder(boolean serializeForHash) {
-        return getOfferBuilder(serializeForHash).setMultisigOffer(
-                bisq.offer.protobuf.MultisigOffer.newBuilder());
+        return getOfferBuilder(serializeForHash).setBisqMuSigOffer(
+                bisq.offer.protobuf.BisqMuSigOffer.newBuilder());
     }
 
     @Override
@@ -93,7 +93,7 @@ public final class MultisigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
         return resolveProto(serializeForHash);
     }
 
-    public static MultisigOffer fromProto(bisq.offer.protobuf.Offer proto) {
+    public static BisqMuSigOffer fromProto(bisq.offer.protobuf.Offer proto) {
         List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
                 .map(TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
@@ -106,7 +106,7 @@ public final class MultisigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
         List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
                 .map(OfferOption::fromProto)
                 .collect(Collectors.toList());
-        return new MultisigOffer(proto.getId(),
+        return new BisqMuSigOffer(proto.getId(),
                 proto.getDate(),
                 NetworkId.fromProto(proto.getMakerNetworkId()),
                 Direction.fromProto(proto.getDirection()),

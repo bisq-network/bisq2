@@ -51,7 +51,7 @@ message TwoPartyContract {
   Party taker = 1;
   oneof message {
     BisqEasyContract bisqEasyContract = 10;
-    MultisigContract multisigContract = 11;
+    BisqMuSigContract bisqMuSigContract = 11;
     SubmarineContract submarineContract = 12;
   }
 }
@@ -88,8 +88,8 @@ message BisqEasyContract {
 }
 
 
-// MultiSig
-message MultisigContract {
+// BisqMuSig
+message BisqMuSigContract {
 }
 
 

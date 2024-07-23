@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.multisig;
+package bisq.offer.bisq_musig;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
@@ -30,62 +30,62 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class MyMultisigOffersStore implements PersistableStore<MyMultisigOffersStore> {
+public final class MyBisqMuSigOffersStore implements PersistableStore<MyBisqMuSigOffersStore> {
     @Getter
-    private final ObservableSet<MultisigOffer> offers = new ObservableSet<>();
+    private final ObservableSet<BisqMuSigOffer> offers = new ObservableSet<>();
 
-    public MyMultisigOffersStore() {
+    public MyBisqMuSigOffersStore() {
     }
 
-    private MyMultisigOffersStore(Set<MultisigOffer> offers) {
+    private MyBisqMuSigOffersStore(Set<BisqMuSigOffer> offers) {
         this.offers.addAll(offers);
     }
 
 
     @Override
-    public MyMultisigOffersStore getClone() {
-        return new MyMultisigOffersStore(new HashSet<>(offers));
+    public MyBisqMuSigOffersStore getClone() {
+        return new MyBisqMuSigOffersStore(new HashSet<>(offers));
     }
 
     @Override
-    public void applyPersisted(MyMultisigOffersStore persisted) {
+    public void applyPersisted(MyBisqMuSigOffersStore persisted) {
         offers.clear();
         offers.addAll(persisted.getOffers());
     }
 
     @Override
-    public bisq.offer.protobuf.MyMultisigOffersStore.Builder getBuilder(boolean serializeForHash) {
-        return bisq.offer.protobuf.MyMultisigOffersStore.newBuilder()
+    public bisq.offer.protobuf.MyBisqMuSigOffersStore.Builder getBuilder(boolean serializeForHash) {
+        return bisq.offer.protobuf.MyBisqMuSigOffersStore.newBuilder()
                 .addAllOffers(offers.stream()
                         .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()));
     }
 
     @Override
-    public bisq.offer.protobuf.MyMultisigOffersStore toProto(boolean serializeForHash) {
+    public bisq.offer.protobuf.MyBisqMuSigOffersStore toProto(boolean serializeForHash) {
         return resolveProto(serializeForHash);
     }
 
-    public static MyMultisigOffersStore fromProto(bisq.offer.protobuf.MyMultisigOffersStore proto) {
-        return new MyMultisigOffersStore(proto.getOffersList().stream().map(MultisigOffer::fromProto).collect(Collectors.toSet()));
+    public static MyBisqMuSigOffersStore fromProto(bisq.offer.protobuf.MyBisqMuSigOffersStore proto) {
+        return new MyBisqMuSigOffersStore(proto.getOffersList().stream().map(BisqMuSigOffer::fromProto).collect(Collectors.toSet()));
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.offer.protobuf.MyMultisigOffersStore.class));
+                return fromProto(any.unpack(bisq.offer.protobuf.MyBisqMuSigOffersStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
     }
 
-    public void add(MultisigOffer offer) {
+    public void add(BisqMuSigOffer offer) {
         offers.add(offer);
     }
 
-    public void remove(MultisigOffer offer) {
+    public void remove(BisqMuSigOffer offer) {
         offers.remove(offer);
     }
 }

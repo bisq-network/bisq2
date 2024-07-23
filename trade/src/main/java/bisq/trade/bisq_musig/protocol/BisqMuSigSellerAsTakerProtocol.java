@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.multisig.protocol;
+package bisq.trade.bisq_musig.protocol;
 
 import bisq.trade.ServiceProvider;
-import bisq.trade.multisig.MultisigTrade;
+import bisq.trade.bisq_musig.BisqMuSigTrade;
 
 
-public class MultisigSellerAsTakerProtocol extends MultisigProtocol {
+public class BisqMuSigSellerAsTakerProtocol extends BisqMuSigProtocol {
 
-    public MultisigSellerAsTakerProtocol(ServiceProvider serviceProvider, MultisigTrade model) {
+    public BisqMuSigSellerAsTakerProtocol(ServiceProvider serviceProvider, BisqMuSigTrade model) {
         super(serviceProvider, model);
     }
 

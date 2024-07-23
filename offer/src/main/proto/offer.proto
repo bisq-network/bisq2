@@ -130,7 +130,7 @@ message Offer {
   repeated OfferOption offerOptions = 11;
   oneof message {
     BisqEasyOffer bisqEasyOffer = 30;
-    MultisigOffer multisigOffer = 31;
+    BisqMuSigOffer bisqMuSigOffer = 31;
     SubmarineOffer submarineOffer = 32;
   }
 }
@@ -144,10 +144,10 @@ message BisqEasyOffer {
   repeated string supportedLanguageCodes = 1;
 }
 
-// MultiSig
-message MultisigOffer {
+// BisqMuSig
+message BisqMuSigOffer {
 }
-message MyMultisigOffersStore {
+message MyBisqMuSigOffersStore {
   repeated Offer offers = 1;
 }
 

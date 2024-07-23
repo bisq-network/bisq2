@@ -26,7 +26,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.multisig.MultisigOffer;
+import bisq.offer.bisq_musig.BisqMuSigOffer;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -132,8 +132,8 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
             case BISQEASYOFFER: {
                 return BisqEasyOffer.fromProto(proto);
             }
-            case MULTISIGOFFER: {
-                return MultisigOffer.fromProto(proto);
+            case BISQMUSIGOFFER: {
+                return BisqMuSigOffer.fromProto(proto);
             }
             case SUBMARINEOFFER: {
                 return SubmarineOffer.fromProto(proto);

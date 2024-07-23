@@ -15,20 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.multisig;
+package bisq.trade.bisq_musig;
 
 import bisq.common.application.Service;
-import bisq.contract.multisig.MultisigContract;
+import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.offer.multisig.MultisigOffer;
+import bisq.offer.bisq_musig.BisqMuSigOffer;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
-import bisq.trade.multisig.protocol.*;
+import bisq.trade.bisq_musig.protocol.*;
 import bisq.trade.protocol.TradeProtocol;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,17 +42,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class MultisigTradeService implements PersistenceClient<MultisigTradeStore>, Service, ConfidentialMessageService.Listener {
+public class BisqMuSigTradeService implements PersistenceClient<BisqMuSigTradeStore>, Service, ConfidentialMessageService.Listener {
     @Getter
-    private final MultisigTradeStore persistableStore = new MultisigTradeStore();
+    private final BisqMuSigTradeStore persistableStore = new BisqMuSigTradeStore();
     @Getter
-    private final Persistence<MultisigTradeStore> persistence;
+    private final Persistence<BisqMuSigTradeStore> persistence;
     private final ServiceProvider serviceProvider;
 
     // We don't persist the protocol, only the model.
-    private final Map<String, MultisigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
+    private final Map<String, BisqMuSigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
 
-    public MultisigTradeService(ServiceProvider serviceProvider) {
+    public BisqMuSigTradeService(ServiceProvider serviceProvider) {
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.serviceProvider = serviceProvider;
     }
@@ -94,20 +94,20 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     // Events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public MultisigTrade onTakeOffer(Identity takerIdentity, MultisigOffer multisigOffer) {
+    public BisqMuSigTrade onTakeOffer(Identity takerIdentity, BisqMuSigOffer bisqMuSigOffer) {
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
-        MultisigContract contract = new MultisigContract(System.currentTimeMillis(),
-                multisigOffer,
+        BisqMuSigContract contract = new BisqMuSigContract(System.currentTimeMillis(),
+                bisqMuSigOffer,
                 takerNetworkId);
-        boolean isBuyer = multisigOffer.getTakersDirection().isBuy();
-        MultisigTrade tradeModel = new MultisigTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
+        boolean isBuyer = bisqMuSigOffer.getTakersDirection().isBuy();
+        BisqMuSigTrade tradeModel = new BisqMuSigTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
         checkArgument(findProtocol(tradeModel.getId()).isPresent(),
                 "We received the TakeOfferRequest for an already existing protocol");
 
         persistableStore.add(tradeModel);
 
-        TradeProtocol<MultisigTrade> tradeProtocol = createAndAddTradeProtocol(tradeModel);
-        // protocol.handle(new MultisigTakeOfferEvent(takerIdentity, contract));
+        TradeProtocol<BisqMuSigTrade> tradeProtocol = createAndAddTradeProtocol(tradeModel);
+        // protocol.handle(new BisqMuSigTakeOfferEvent(takerIdentity, contract));
         persist();
         return tradeModel;
     }
@@ -117,11 +117,11 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     // Misc API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<MultisigTrade> findTrade(String tradeId) {
+    public Optional<BisqMuSigTrade> findTrade(String tradeId) {
         return persistableStore.findTrade(tradeId);
     }
 
-    public Optional<MultisigProtocol> findProtocol(String id) {
+    public Optional<BisqMuSigProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
     }
 
@@ -129,21 +129,21 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     // TradeProtocol factory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public MultisigProtocol createAndAddTradeProtocol(MultisigTrade model) {
+    public BisqMuSigProtocol createAndAddTradeProtocol(BisqMuSigTrade model) {
         String id = model.getId();
-        MultisigProtocol tradeProtocol;
+        BisqMuSigProtocol tradeProtocol;
         boolean isBuyer = model.isBuyer();
         if (model.isTaker()) {
             if (isBuyer) {
-                tradeProtocol = new MultisigBuyerAsTakerProtocol(serviceProvider, model);
+                tradeProtocol = new BisqMuSigBuyerAsTakerProtocol(serviceProvider, model);
             } else {
-                tradeProtocol = new MultisigSellerAsTakerProtocol(serviceProvider, model);
+                tradeProtocol = new BisqMuSigSellerAsTakerProtocol(serviceProvider, model);
             }
         } else {
             if (isBuyer) {
-                tradeProtocol = new MultisigBuyerAsMakerProtocol(serviceProvider, model);
+                tradeProtocol = new BisqMuSigBuyerAsMakerProtocol(serviceProvider, model);
             } else {
-                tradeProtocol = new MultisigSellerAsMakerProtocol(serviceProvider, model);
+                tradeProtocol = new BisqMuSigSellerAsMakerProtocol(serviceProvider, model);
             }
         }
         tradeProtocolById.put(id, tradeProtocol);
