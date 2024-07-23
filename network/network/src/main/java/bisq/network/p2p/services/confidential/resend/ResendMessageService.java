@@ -53,6 +53,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     private final Map<String, Scheduler> schedulerByMessageId = new HashMap<>();
     private final Set<Pin> nodeStatePins = new HashSet<>();
     private Pin messageDeliveryStatusByMessageIdPin;
+    private volatile boolean isShutdown;
 
     public ResendMessageService(PersistenceService persistenceService,
                                 NetworkService networkService,
@@ -108,13 +109,19 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
     public void shutdown() {
+        if (isShutdown) {
+            return;
+        }
+        isShutdown = true;
         if (messageDeliveryStatusByMessageIdPin != null) {
             messageDeliveryStatusByMessageIdPin.unbind();
         }
         messageDeliveryStatusPinByMessageId.values().forEach(Pin::unbind);
         messageDeliveryStatusPinByMessageId.clear();
         nodeStatePins.forEach(Pin::unbind);
-        schedulerByMessageId.values().forEach(Scheduler::stop);
+        // Clone to avoid ConcurrentModificationException
+        List<Scheduler> schedulers = new ArrayList<>(schedulerByMessageId.values());
+        schedulers.forEach(Scheduler::stop);
         schedulerByMessageId.clear();
     }
 
@@ -124,6 +131,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void handleResendMessageData(ResendMessageData resendMessageData) {
+        if (isShutdown) {
+            return;
+        }
         MessageDeliveryStatus messageDeliveryStatus = resendMessageData.getMessageDeliveryStatus();
         String messageId = resendMessageData.getId();
         switch (messageDeliveryStatus) {
@@ -158,6 +168,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
     public void manuallyResendMessage(String messageId) {
+        if (isShutdown) {
+            return;
+        }
         findResendMessageData(messageId).ifPresent(data -> resendMessage(data, MAX_MANUAL_RESENDS));
     }
 
@@ -245,6 +258,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
     private void resendMessageAllFailedMessages() {
+        if (isShutdown) {
+            return;
+        }
         persistableStore.getResendMessageDataByMessageId().values().stream()
                 .filter(e -> !schedulerByMessageId.containsKey(e.getId())) // If we have a resend scheduled we skip it
                 .filter(e -> !e.getMessageDeliveryStatus().isReceived() &&
@@ -253,6 +269,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
     private void restartResendTimer(ResendMessageData resendMessageData, long interval) {
+        if (isShutdown) {
+            return;
+        }
         String messageId = resendMessageData.getId();
         log.debug("restartResendTimer {}; status={}", messageId, resendMessageData.getMessageDeliveryStatus());
         if (schedulerByMessageId.containsKey(messageId)) {
@@ -269,6 +288,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
     private void stopResendTimer(ResendMessageData resendMessageData) {
+        if (isShutdown) {
+            return;
+        }
         String messageId = resendMessageData.getId();
         if (schedulerByMessageId.containsKey(messageId)) {
             Scheduler scheduler = schedulerByMessageId.get(messageId);
