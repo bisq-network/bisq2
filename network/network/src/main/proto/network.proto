@@ -331,7 +331,7 @@ enum MessageDeliveryStatus {
 
 message DataStore {
   message MapEntry {
-    .common.ByteArray key = 1;
+    .common.ByteArray key = 1; // The leading dot is needed to distinguish between common module and network.common
     DataRequest value = 2;
   }
   repeated MapEntry mapEntries = 1;
