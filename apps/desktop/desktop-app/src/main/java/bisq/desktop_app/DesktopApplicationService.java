@@ -261,6 +261,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> alertNotificationsService.initialize())
                 .thenCompose(result -> favouriteMarketsService.initialize())
                 .thenCompose(result -> dontShowAgainService.initialize())
+                .thenCompose(result -> webcamAppService.initialize())
                 .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {
@@ -285,7 +286,8 @@ public class DesktopApplicationService extends ApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> dontShowAgainService.shutdown()
+        return supplyAsync(() -> webcamAppService.shutdown()
+                .thenCompose(result -> dontShowAgainService.shutdown())
                 .thenCompose(result -> favouriteMarketsService.shutdown())
                 .thenCompose(result -> alertNotificationsService.shutdown())
                 .thenCompose(result -> bisqEasyService.shutdown())
