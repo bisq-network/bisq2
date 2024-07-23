@@ -129,7 +129,12 @@ public class Res {
     public static String decode(String encoded) {
         String separator = String.valueOf(Res.PARAM_SEPARATOR);
         if (!encoded.contains(separator)) {
-            return Res.get(encoded);
+            if (Res.has(encoded)) {
+                return Res.get(encoded);
+            } else {
+                // If we get a log message from an old node we get the resolved string
+                return encoded;
+            }
         }
 
         String[] tokens = encoded.split(separator);
