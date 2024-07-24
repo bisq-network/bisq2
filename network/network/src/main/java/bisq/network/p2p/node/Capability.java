@@ -29,6 +29,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -60,7 +61,11 @@ public final class Capability implements NetworkProto {
     }
 
     public static Capability withVersion(Capability capability, int version) {
-        return new Capability(version, capability.getAddress(), capability.getSupportedTransportTypes(), capability.getFeatures(), capability.getApplicationVersion());
+        return new Capability(version,
+                capability.getAddress(),
+                new ArrayList<>(capability.getSupportedTransportTypes()),
+                new ArrayList<>(capability.getFeatures()),
+                capability.getApplicationVersion());
     }
 
     @VisibleForTesting
