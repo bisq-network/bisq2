@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -70,6 +71,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Optional<ResendMessageService> resendMessageService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<EnvelopePayloadMessage> processedEnvelopePayloadMessages = new HashSet<>();
 
     public ConfidentialMessageService(NodesById nodesById,
                                       KeyBundleService keyBundleService,
@@ -295,18 +297,25 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         byte[] decryptedBytes = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
                         bisq.network.protobuf.EnvelopePayloadMessage decryptedProto = bisq.network.protobuf.EnvelopePayloadMessage.parseFrom(decryptedBytes);
                         EnvelopePayloadMessage decryptedEnvelopePayloadMessage = EnvelopePayloadMessage.fromProto(decryptedProto);
-                        PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
-                        log.info("Decrypted confidentialMessage");
-                        runAsync(() -> {
-                            listeners.forEach(listener -> {
-                                try {
-                                    listener.onMessage(decryptedEnvelopePayloadMessage);
-                                    listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
-                                } catch (Exception e) {
-                                    log.error("Calling onMessage(decryptedEnvelopePayloadMessage, senderPublicKey) at messageListener {} failed", listener, e);
-                                }
-                            });
-                        }, DISPATCHER);
+
+                        // For backward compatibility we send 2 versions of mailbox data, thus we will receive each
+                        // mailbox data 2 times. We do not want that client code need to deal with duplications,
+                        // thus we filter here out the duplicated message and.
+                        boolean wasNotPresent = processedEnvelopePayloadMessages.add(decryptedEnvelopePayloadMessage);
+                        if (wasNotPresent) {
+                            PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
+                            log.info("Decrypted confidentialMessage");
+                            runAsync(() -> {
+                                listeners.forEach(listener -> {
+                                    try {
+                                        listener.onMessage(decryptedEnvelopePayloadMessage);
+                                        listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
+                                    } catch (Exception e) {
+                                        log.error("Calling onMessage(decryptedEnvelopePayloadMessage, senderPublicKey) at messageListener {} failed", listener, e);
+                                    }
+                                });
+                            }, DISPATCHER);
+                        }
                         return true;
                     } catch (Exception e) {
                         log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);

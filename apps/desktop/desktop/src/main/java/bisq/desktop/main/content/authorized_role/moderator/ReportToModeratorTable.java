@@ -139,13 +139,13 @@ public class ReportToModeratorTable {
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
                     break;
                 case DISCUSSION:
-                    Navigation.navigateTo(NavigationTarget.DISCUSSION);
+                    Navigation.navigateTo(NavigationTarget.DISCUSSION_PRIVATECHATS);
                     break;
                 case EVENTS:
-                    Navigation.navigateTo(NavigationTarget.EVENTS);
+                    Navigation.navigateTo(NavigationTarget.EVENTS_PRIVATECHATS);
                     break;
                 case SUPPORT:
-                    Navigation.navigateTo(NavigationTarget.SUPPORT);
+                    Navigation.navigateTo(NavigationTarget.SUPPORT_PRIVATECHATS);
                     break;
             }
         }
@@ -385,8 +385,9 @@ public class ReportToModeratorTable {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         @Getter
-        @EqualsAndHashCode
+        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         private static class ReportListItem implements DateTableItem {
+            @EqualsAndHashCode.Include
             private final ReportToModeratorMessage reportToModeratorMessage;
             private final long date;
             private final String dateString, timeString, message, reporterUserName, accusedUserName, chatChannelDomain;

@@ -33,7 +33,6 @@ import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.moderator.ModeratorService;
-import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
@@ -117,16 +116,8 @@ public class BannedUserProfileTable {
                     });
         }
 
-        void onBan(ReportToModeratorMessage message) {
-            moderatorService.banReportedUser(message);
-        }
-
         void onRemoveBan(BannedUserProfileData data) {
             moderatorService.unBanReportedUser(data);
-        }
-
-        void onDeleteMessage(ReportToModeratorMessage message) {
-            moderatorService.deleteReportToModeratorMessage(message);
         }
 
         private void navigateToChannel(ChatChannelDomain chatChannelDomain) {
@@ -277,7 +268,6 @@ public class BannedUserProfileTable {
         private static class ListItem {
             @EqualsAndHashCode.Include
             private final BannedUserProfileData bannedUserProfileData;
-            @EqualsAndHashCode.Include
             private final UserProfile userProfile;
             private final String userName;
             private final long lastSeen;

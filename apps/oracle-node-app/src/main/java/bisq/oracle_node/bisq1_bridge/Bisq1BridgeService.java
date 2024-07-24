@@ -344,9 +344,9 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
                                         // Can be removed once there are no pre 2.1.0 versions out there anymore
                                         AuthorizedAccountAgeData oldVersion = new AuthorizedAccountAgeData(0,
-                                                profileId,
-                                                requestDate,
-                                                staticPublicKeysProvided);
+                                                data.getProfileId(),
+                                                data.getDate(),
+                                                data.isStaticPublicKeysProvided());
                                         publishAuthorizedData(oldVersion);
                                     } else {
                                         log.warn("Date of account age for {} is not matching the date from the users request. " +
@@ -399,9 +399,9 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
                                         // Can be removed once there are no pre 2.1.0 versions out there anymore
                                         AuthorizedSignedWitnessData oldVersion = new AuthorizedSignedWitnessData(0,
-                                                request.getProfileId(),
-                                                request.getWitnessSignDate(),
-                                                staticPublicKeysProvided);
+                                                data.getProfileId(),
+                                                data.getWitnessSignDate(),
+                                                data.isStaticPublicKeysProvided());
                                         publishAuthorizedData(oldVersion);
                                     } else {
                                         log.warn("Date of signed witness for {} is not matching the date from the users request. " +

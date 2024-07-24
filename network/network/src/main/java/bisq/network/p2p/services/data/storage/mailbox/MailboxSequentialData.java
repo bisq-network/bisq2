@@ -17,19 +17,18 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
 @Getter
-@ToString
 @EqualsAndHashCode
 public final class MailboxSequentialData implements NetworkProto {
     private final MailboxData mailboxData;
@@ -136,5 +135,18 @@ public final class MailboxSequentialData implements NetworkProto {
 
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());
+    }
+
+    @Override
+    public String toString() {
+        return "MailboxSequentialData{" +
+                "sequenceNumber=" + sequenceNumber +
+                ", created=" + created +
+                ", senderPublicKeyHash=" + Hex.encode(senderPublicKeyHash) +
+                ", receiversPublicKeyHash=" + Hex.encode(receiversPublicKeyHash) +
+                ", receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +
+                ", receiversPubKey=" + Hex.encode(receiversPubKey.getEncoded()) +
+                ", mailboxData=" + mailboxData +
+                '}';
     }
 }

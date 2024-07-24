@@ -104,12 +104,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return new DataStorageResult(false).signatureInvalid();
             }
             map.put(byteArray, request);
-
-            // If we had already the data (only updated seq nr) we return true to broadcast the message but do not
-            // notify listeners as data has not changed.
-            if (requestFromMap != null) {
-                return new DataStorageResult(true).payloadAlreadyStored();
-            }
         }
 
         persist();

@@ -176,10 +176,11 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         };
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
     public static class ReleaseNotificationListItem implements DateTableItem {
+        @EqualsAndHashCode.Include
         private final ReleaseNotification releaseNotification;
         private final String dateString, timeString, isLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
         private final long date;

@@ -228,7 +228,6 @@ public class DataService implements StorageService.Listener {
         return storageService.getOrCreateMailboxDataStore(mailboxData.getClassName())
                 .thenApply(store -> {
                     try {
-                        // Send 2 versions
                         AddMailboxRequest request = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverPublicKey);
                         DataStorageResult dataStorageResult = store.add(request);
                         if (dataStorageResult.isSuccess()) {

@@ -286,39 +286,44 @@ public class DesktopApplicationService extends ApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> webcamAppService.shutdown()
-                .thenCompose(result -> dontShowAgainService.shutdown())
-                .thenCompose(result -> favouriteMarketsService.shutdown())
-                .thenCompose(result -> alertNotificationsService.shutdown())
-                .thenCompose(result -> bisqEasyService.shutdown())
-                .thenCompose(result -> updaterService.shutdown())
-                .thenCompose(result -> tradeService.shutdown())
-                .thenCompose(result -> supportService.shutdown())
-                .thenCompose(result -> sendNotificationService.shutdown())
-                .thenCompose(result -> chatService.shutdown())
-                .thenCompose(result -> offerService.shutdown())
-                .thenCompose(result -> settingsService.shutdown())
-                .thenCompose(result -> userService.shutdown())
-                .thenCompose(result -> contractService.shutdown())
-                .thenCompose(result -> accountService.shutdown())
-                .thenCompose(result -> bondedRolesService.shutdown())
-                .thenCompose(result -> identityService.shutdown())
-                .thenCompose(result -> networkService.shutdown())
-                .thenCompose(result -> walletService.map(Service::shutdown)
+        // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
+        // interrupt the shutdown sequence.
+        return supplyAsync(() -> webcamAppService.shutdown().exceptionally(this::logError)
+                .thenCompose(result -> dontShowAgainService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> favouriteMarketsService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> alertNotificationsService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> bisqEasyService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> updaterService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> tradeService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> supportService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> sendNotificationService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> chatService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> offerService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> settingsService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> userService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> contractService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> accountService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> bondedRolesService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> identityService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> networkService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> walletService.map(service -> service.shutdown().exceptionally(this::logError))
                         .orElse(CompletableFuture.completedFuture(true)))
-                .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))
                 .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
-                    if (throwable != null) {
-                        log.error("Error at shutdown", throwable);
+                    if (throwable == null) {
+                        if (result != null && result) {
+                            log.info("ApplicationService shutdown completed");
+                            return true;
+                        } else {
+                            startupErrorMessage.set("Shutdown applicationService failed with result=false");
+                            log.error(shutDownErrorMessage.get());
+                        }
+                    } else {
+                        log.error("Shutdown applicationService failed", throwable);
                         shutDownErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
-                        return false;
-                    } else if (!result) {
-                        shutDownErrorMessage.set("Shutdown failed with result=false");
-                        log.error(startupErrorMessage.get());
-                        return false;
                     }
-                    return true;
+                    return false;
                 })
                 .join());
     }
@@ -328,5 +333,10 @@ public class DesktopApplicationService extends ApplicationService {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
+    }
+
+    private boolean logError(Throwable throwable) {
+        log.error("Exception at shutdown", throwable);
+        return false;
     }
 }

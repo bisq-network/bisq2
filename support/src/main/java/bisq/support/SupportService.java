@@ -113,6 +113,7 @@ public class SupportService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return mediationRequestService.shutdown()
                 .thenCompose(result -> mediatorService.shutdown())
                 .thenCompose(result -> moderatorService.shutdown())

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
@@ -26,7 +27,6 @@ import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
-@ToString
 @EqualsAndHashCode
 @Getter
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
@@ -63,7 +62,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     private final byte[] senderPublicKeyBytes;
     private final PublicKey senderPublicKey;
 
-    public AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
+    private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
                              byte[] signature,
                              PublicKey senderPublicKey) {
         this(mailboxSequentialData, signature, senderPublicKey.getEncoded(), senderPublicKey);
@@ -178,5 +177,15 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public int getMaxMapSize() {
         return mailboxSequentialData.getMailboxData().getMetaData().getMaxMapSize();
+    }
+
+    @Override
+    public String toString() {
+        return "AddMailboxRequest{" +
+                "mailboxSequentialData=" + mailboxSequentialData +
+                ", signature=" + Hex.encode(signature) +
+                ", senderPublicKeyBytes=" + Hex.encode(senderPublicKeyBytes) +
+                ", senderPublicKey=" + Hex.encode(senderPublicKey.getEncoded()) +
+                '}';
     }
 }

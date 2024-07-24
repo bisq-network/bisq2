@@ -27,6 +27,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -43,6 +44,9 @@ public class BisqTableView<T> extends TableView<T> {
     private ListChangeListener<T> listChangeListener;
     private ChangeListener<Number> widthChangeListener;
     private final boolean useComparatorBinding;
+    // If set we use the sum of the minWidth values of all visible columns to set the minWidth of the tableView.
+    @Setter
+    private boolean deriveMinWidthFromColumns = true;
 
     public BisqTableView(ObservableList<T> list) {
         this(new SortedList<>(list));
@@ -65,13 +69,20 @@ public class BisqTableView<T> extends TableView<T> {
             // Need to bind early as otherwise table not applying it
             sortedList.comparatorProperty().bind(this.comparatorProperty());
         }
-        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
     }
 
     public void initialize() {
         if (useComparatorBinding) {
             sortedList.comparatorProperty().unbind();
             sortedList.comparatorProperty().bind(this.comparatorProperty());
+
+            if (deriveMinWidthFromColumns) {
+                setMinWidth(getColumns().stream()
+                        .filter(TableColumnBase::isVisible)
+                        .mapToDouble(TableColumnBase::getMinWidth)
+                        .sum());
+            }
         }
     }
 

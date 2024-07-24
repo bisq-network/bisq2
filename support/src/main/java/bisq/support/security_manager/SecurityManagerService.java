@@ -99,7 +99,7 @@ public class SecurityManagerService implements Service {
                                                    Optional<String> minVersion,
                                                    Optional<AuthorizedBondedRole> bannedRole) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
                 new Date().getTime(),
@@ -110,22 +110,22 @@ public class SecurityManagerService implements Service {
                 requireVersionForTrading,
                 minVersion,
                 bannedRole,
-                profileId,
+                securityManagerProfileId,
                 staticPublicKeysProvided);
 
         // Can be removed once there are no pre 2.1.0 versions out there anymore
         AuthorizedAlertData oldVersion = new AuthorizedAlertData(0,
-                StringUtils.createUid(),
-                new Date().getTime(),
-                alertType,
-                headline,
-                message,
-                haltTrading,
-                requireVersionForTrading,
-                minVersion,
-                bannedRole,
-                profileId,
-                staticPublicKeysProvided);
+                authorizedAlertData.getId(),
+                authorizedAlertData.getDate(),
+                authorizedAlertData.getAlertType(),
+                authorizedAlertData.getHeadline(),
+                authorizedAlertData.getMessage(),
+                authorizedAlertData.isHaltTrading(),
+                authorizedAlertData.isRequireVersionForTrading(),
+                authorizedAlertData.getMinVersion(),
+                authorizedAlertData.getBannedRole(),
+                authorizedAlertData.getSecurityManagerProfileId(),
+                authorizedAlertData.isStaticPublicKeysProvided());
         networkService.publishAuthorizedData(oldVersion, keyPair);
 
         return networkService.publishAuthorizedData(authorizedAlertData, keyPair)
@@ -139,19 +139,19 @@ public class SecurityManagerService implements Service {
 
     public CompletableFuture<Boolean> publishDifficultyAdjustment(double difficultyAdjustmentFactor) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(new Date().getTime(),
                 difficultyAdjustmentFactor,
-                profileId,
+                securityManagerProfileId,
                 staticPublicKeysProvided);
 
         // Can be removed once there are no pre 2.1.0 versions out there anymore
         AuthorizedDifficultyAdjustmentData oldVersion = new AuthorizedDifficultyAdjustmentData(0,
-                new Date().getTime(),
-                difficultyAdjustmentFactor,
-                profileId,
-                staticPublicKeysProvided);
+                data.getDate(),
+                data.getDifficultyAdjustmentFactor(),
+                data.getSecurityManagerProfileId(),
+                data.isStaticPublicKeysProvided());
         networkService.publishAuthorizedData(oldVersion, keyPair);
 
         return networkService.publishAuthorizedData(data, keyPair)
@@ -160,19 +160,19 @@ public class SecurityManagerService implements Service {
 
     public CompletableFuture<Boolean> publishMinRequiredReputationScore(long minRequiredReputationScore) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         AuthorizedMinRequiredReputationScoreData data = new AuthorizedMinRequiredReputationScoreData(new Date().getTime(),
                 minRequiredReputationScore,
-                profileId,
+                securityManagerProfileId,
                 staticPublicKeysProvided);
 
         // Can be removed once there are no pre 2.1.0 versions out there anymore
         AuthorizedMinRequiredReputationScoreData oldVersion = new AuthorizedMinRequiredReputationScoreData(0,
-                new Date().getTime(),
-                minRequiredReputationScore,
-                profileId,
-                staticPublicKeysProvided);
+                data.getDate(),
+                data.getMinRequiredReputationScore(),
+                data.getSecurityManagerProfileId(),
+                data.isStaticPublicKeysProvided());
         networkService.publishAuthorizedData(oldVersion, keyPair);
 
         return networkService.publishAuthorizedData(data, keyPair)
