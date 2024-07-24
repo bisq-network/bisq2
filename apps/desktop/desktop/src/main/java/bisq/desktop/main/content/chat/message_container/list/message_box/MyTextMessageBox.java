@@ -192,7 +192,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             if (keyEvent.getCode() == KeyCode.ENTER) {
                 keyEvent.consume();
                 if (keyEvent.isShiftDown()) {
-                    editInputField.appendText(System.getProperty("line.separator"));
+                    editInputField.appendText(System.lineSeparator());
                 } else if (!editInputField.getText().isEmpty()) {
                     controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText().trim());
                     onCloseEditMessage();
