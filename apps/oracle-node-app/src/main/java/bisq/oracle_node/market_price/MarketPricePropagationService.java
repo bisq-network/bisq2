@@ -1,8 +1,10 @@
 package bisq.oracle_node.market_price;
 
 import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
+import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.common.application.Service;
+import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
@@ -43,13 +45,13 @@ public class MarketPricePropagationService implements Service {
         log.info("initialize");
         marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() -> {
             if (!marketPriceRequestService.getMarketPriceByCurrencyMap().isEmpty()) {
-                publishAuthorizedData(new AuthorizedMarketPriceData(new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap()),
-                        staticPublicKeysProvided));
+                TreeMap<Market, MarketPrice> marketPriceByCurrencyMap = new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap());
+                AuthorizedMarketPriceData data = new AuthorizedMarketPriceData(marketPriceByCurrencyMap, staticPublicKeysProvided);
+                publishAuthorizedData(data);
 
                 // Can be removed once there are no pre 2.1.0 versions out there anymore
-                publishAuthorizedData(new AuthorizedMarketPriceData(0,
-                        new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap()),
-                        staticPublicKeysProvided));
+                AuthorizedMarketPriceData oldVersion = new AuthorizedMarketPriceData(0, marketPriceByCurrencyMap, staticPublicKeysProvided);
+                publishAuthorizedData(oldVersion);
             }
         });
 
