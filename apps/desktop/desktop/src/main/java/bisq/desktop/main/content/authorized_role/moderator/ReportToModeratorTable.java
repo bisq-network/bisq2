@@ -385,8 +385,9 @@ public class ReportToModeratorTable {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         @Getter
-        @EqualsAndHashCode
+        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         private static class ReportListItem implements DateTableItem {
+            @EqualsAndHashCode.Include
             private final ReportToModeratorMessage reportToModeratorMessage;
             private final long date;
             private final String dateString, timeString, message, reporterUserName, accusedUserName, chatChannelDomain;
