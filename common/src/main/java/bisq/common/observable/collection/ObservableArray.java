@@ -17,6 +17,7 @@
 
 package bisq.common.observable.collection;
 
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@EqualsAndHashCode(callSuper = true)
 public class ObservableArray<S> extends ObservableCollection<S> implements List<S> {
     public ObservableArray() {
         super();

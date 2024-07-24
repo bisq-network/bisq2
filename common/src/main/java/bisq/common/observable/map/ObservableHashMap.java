@@ -18,6 +18,7 @@
 package bisq.common.observable.map;
 
 import bisq.common.observable.Pin;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,10 +26,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@EqualsAndHashCode
 public class ObservableHashMap<K, V> implements Map<K, V> {
     @Getter
     private final Map<K, V> map = new HashMap<>();
 
+    @EqualsAndHashCode.Exclude
     private final List<HashMapObserver<K, V>> observers = new CopyOnWriteArrayList<>();
 
     public ObservableHashMap() {

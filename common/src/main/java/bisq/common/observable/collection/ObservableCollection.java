@@ -18,6 +18,7 @@
 package bisq.common.observable.collection;
 
 import bisq.common.observable.Pin;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -27,10 +28,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+@EqualsAndHashCode
 public abstract class ObservableCollection<S> implements Collection<S> {
     protected final Collection<S> collection = createCollection();
 
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
+    @EqualsAndHashCode.Exclude
     protected final List<CollectionObserver<S>> observers = new CopyOnWriteArrayList<>();
 
     protected ObservableCollection() {
