@@ -168,7 +168,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         BannedUserProfileData data = new BannedUserProfileData(message.getAccusedUserProfile(), staticPublicKeysProvided);
 
         // Can be removed once there are no pre 2.1.0 versions out there anymore
-        BannedUserProfileData oldVersion = new BannedUserProfileData(0, message.getAccusedUserProfile(), staticPublicKeysProvided);
+        BannedUserProfileData oldVersion = new BannedUserProfileData(0, data.getUserProfile(), data.staticPublicKeysProvided());
         networkService.publishAuthorizedData(oldVersion, keyPair);
 
         return networkService.publishAuthorizedData(data, keyPair);
@@ -177,6 +177,11 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     public CompletableFuture<BroadcastResult> unBanReportedUser(BannedUserProfileData data) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        BannedUserProfileData oldVersion = new BannedUserProfileData(0, data.getUserProfile(), data.staticPublicKeysProvided());
+        networkService.removeAuthorizedData(oldVersion, keyPair);
+
         return networkService.removeAuthorizedData(data, keyPair);
     }
 
