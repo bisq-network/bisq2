@@ -127,11 +127,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
             map.put(byteArray, request);
 
-            // If we had already the data (only updated seq nr) we return true to broadcast the message but do not
-            // notify listeners as data has not changed.
-            if (requestFromMap != null) {
-                return new DataStorageResult(true).payloadAlreadyStored();
-            }
+            // In case we only updated the seq number we still want to broadcast and update the listeners.
+            // It is a valid use case that we have both an add and remove data request, and we get repeated sequences
+            // of add/remove events. In that case only the sequence number changes, but we still want to notify our
+            // listeners.
         }
 
         persist();
