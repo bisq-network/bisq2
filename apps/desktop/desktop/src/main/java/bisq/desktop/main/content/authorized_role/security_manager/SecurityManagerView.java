@@ -454,10 +454,11 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         };
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
     public static class DifficultyAdjustmentListItem implements DateTableItem {
+        @EqualsAndHashCode.Include
         private final AuthorizedDifficultyAdjustmentData data;
         private final long date;
         private final String dateString, timeString, difficultyAdjustmentFactorString;
@@ -473,10 +474,11 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         }
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
     public static class MinRequiredReputationScoreListItem implements DateTableItem {
+        @EqualsAndHashCode.Include
         private final AuthorizedMinRequiredReputationScoreData data;
         private final long date;
         private final String dateString, timeString, minRequiredReputationScoreString;

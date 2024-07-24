@@ -30,8 +30,10 @@ import java.util.Date;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class WalletTransactionListItem implements DateTableItem {
+    @EqualsAndHashCode.Include
+    private final Transaction transaction;
     private final long date;
     private final String dateString, timeString;
     private final String txId;
@@ -41,6 +43,7 @@ public class WalletTransactionListItem implements DateTableItem {
     private final int confirmations;
 
     public WalletTransactionListItem(Transaction transaction) {
+        this.transaction = transaction;
         date = transaction.getDate().orElseGet(Date::new).getTime();
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);

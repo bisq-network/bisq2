@@ -173,11 +173,14 @@ public class ReputationDetailsPopup extends VBox {
                 .build());
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     static class ListItem implements DateTableItem {
+        @EqualsAndHashCode.Include
         private final ReputationSource reputationSource;
-        private final long date, age, amount, score, lockTime;
+        @EqualsAndHashCode.Include
+        private final long date, score, amount, lockTime;
+        private final long age;
         private final String dateString, timeString, sourceString, ageString, amountString, scoreString, lockTimeString;
 
         public ListItem(ReputationSource reputationSource, long blockTime, long score) {
@@ -188,7 +191,11 @@ public class ReputationDetailsPopup extends VBox {
             this(reputationSource, blockTime, score, Optional.of(amount), Optional.empty());
         }
 
-        public ListItem(ReputationSource reputationSource, long blockTime, long score, Optional<Long> optionalAmount, Optional<Long> optionalLockTime) {
+        public ListItem(ReputationSource reputationSource,
+                        long blockTime,
+                        long score,
+                        Optional<Long> optionalAmount,
+                        Optional<Long> optionalLockTime) {
             this.reputationSource = reputationSource;
             this.date = blockTime;
             dateString = DateFormatter.formatDate(blockTime);
