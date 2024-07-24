@@ -40,7 +40,7 @@
 .error {
     -fx-text-fill: -bisq-error !important;
     -fx-fill: -bisq-error !important;
-    -fx-background-color: -bisq-error !important;
+    /*-fx-background-color: -bisq-error !important; might have be used in some validation context at materialtextfield but need to be moved to another error style class */
 }
 
 .hand-cursor {
