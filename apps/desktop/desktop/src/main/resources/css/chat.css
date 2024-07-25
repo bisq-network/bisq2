@@ -589,5 +589,13 @@
     -fx-border-radius: 8;
     -fx-padding: 10;
     -fx-spacing: 5;
-    -fx-opacity: 1;
 }
+
+.reaction-users-popup .list-view {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-border-radius: 0;
+}
+.reaction-users-popup .list-view .list-cell {
+    -fx-padding: 0 5 0 5;
+}
+

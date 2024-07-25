@@ -29,9 +29,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.PopupControl;
+import javafx.scene.control.Skin;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -74,14 +78,11 @@ public class ReactionUsersPopup extends PopupControl {
         ImageView reactionIcon = ImageUtil.getImageViewById(reactionItem.getIconId());
         Label label = new Label(Res.get("chat.message.reactionPopup"), reactionIcon);
         label.setContentDisplay(ContentDisplay.RIGHT);
-
+        popupContent.setAlignment(Pos.CENTER);
         popupContent.getStyleClass().add("reaction-users-popup");
         popupContent.getChildren().addAll(userProfileListView, label);
         setContentNode(popupContent);
         setAutoHide(true);
-        setOpacity(1.0);
-        popupContent.setOpacity(1.0);
-
         initialize();
     }
 
@@ -134,15 +135,12 @@ public class ReactionUsersPopup extends PopupControl {
             public ListCell<UserProfile> call(ListView<UserProfile> list) {
                 return new ListCell<>() {
                     private final UserProfileIcon userProfileIcon = new UserProfileIcon(CELL_SIZE - 10);
-                    private final VBox userProfileIconVbox = new VBox(userProfileIcon);
                     private final Label userNickname = new Label();
                     final HBox hBox = new HBox(10);
 
                     {
                         hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.setFillHeight(true);
-//                        hBox.setPadding(new Insets(0, 10, 0, 0));
-                        hBox.setCursor(Cursor.HAND);
                     }
 
                     @Override
@@ -152,12 +150,9 @@ public class ReactionUsersPopup extends PopupControl {
                         if (item != null && !empty) {
                             userProfileIcon.setUserProfile(item);
                             userNickname.setText(StringUtils.truncate(item.getNickName(), 28));
-
-                            //hBox.setOnMouseClicked(); // open user profile on the side
-                            hBox.getChildren().setAll(userProfileIconVbox, userNickname);
+                            hBox.getChildren().setAll(userProfileIcon, userNickname);
                             setGraphic(hBox);
                         } else {
-                            //hBox.setOnMouseClicked(null);
                             setGraphic(null);
                         }
                     }
