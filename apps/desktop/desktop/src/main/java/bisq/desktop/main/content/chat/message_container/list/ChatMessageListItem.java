@@ -260,18 +260,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return reputationScoreDisplay.getNumberOfStars();
     }
 
-    public boolean hasAddedReaction(Reaction reaction) {
-        boolean hasAddedReaction = false;
-        if (getUserReactions().containsKey(reaction)) {
-            ReactionItem reactionItem = getUserReactions().get(reaction);
-            Set<UserProfile> userProfileSet = reactionItem.getUsers();
-            UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-            hasAddedReaction = userProfileSet.contains(myProfile);
-            reactionItem.getSelected().set(hasAddedReaction);
-        }
-        return hasAddedReaction;
-    }
-
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
         if (chatMessage instanceof BisqEasyOfferMessage) {
             BisqEasyOfferMessage bisqEasyOfferMessage = (BisqEasyOfferMessage) chatMessage;

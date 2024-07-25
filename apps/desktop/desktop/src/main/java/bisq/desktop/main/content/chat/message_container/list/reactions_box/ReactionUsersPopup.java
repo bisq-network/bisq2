@@ -53,7 +53,10 @@ public class ReactionUsersPopup extends Popup {
         this.reactionItem = reactionItem;
         this.owner = owner;
         reactionIcon = ImageUtil.getImageViewById(reactionItem.getIconId());
-        userProfileList.setAll(reactionItem.getUsers().stream().limit(MAX_USERS_SHOWN).collect(Collectors.toList()));
+        userProfileList.setAll(reactionItem.getUsersByReactionDate().stream()
+                .limit(MAX_USERS_SHOWN)
+                .map(ReactionItem.UserWithReactionDate::getUserProfile)
+                .collect(Collectors.toList()));
         userProfileListView.setCellFactory(getCellFactory());
         initialize();
 

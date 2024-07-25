@@ -27,7 +27,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
+import java.util.TreeSet;
 
 @Slf4j
 @Getter
@@ -37,7 +38,8 @@ public class ReactionItem {
     private long firstAdded;
     private final SimpleIntegerProperty count = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
-    private final LinkedHashSet<UserProfile> users = new LinkedHashSet<>();
+    private final HashMap<UserProfile, UserWithReactionDate> users = new HashMap<>();
+    private final TreeSet<UserWithReactionDate> usersByReactionDate = new TreeSet<>();
     private UserProfile selectedUserProfile;
 
     ReactionItem(Reaction reaction, UserProfile selectedUserProfile) {
@@ -71,15 +73,21 @@ public class ReactionItem {
             firstAdded = chatMessageReaction.getDate();
         }
 
-        users.add(userProfile);
+        UserWithReactionDate userWithReactionDate = new UserWithReactionDate(userProfile, chatMessageReaction.getDate());
+        users.put(userProfile, userWithReactionDate);
+        usersByReactionDate.add(userWithReactionDate);
         count.set(users.size());
         updateSelected();
     }
 
     void removeUser(UserProfile userProfile) {
-        users.remove(userProfile);
-        count.set(users.size());
-        updateSelected();
+        UserWithReactionDate userWithReactionDate = users.get(userProfile);
+        if (userWithReactionDate != null) {
+            users.remove(userProfile);
+            usersByReactionDate.remove(userWithReactionDate);
+            count.set(users.size());
+            updateSelected();
+        }
     }
 
     void setSelectedUserProfile(UserProfile selectedUserProfile) {
@@ -93,6 +101,22 @@ public class ReactionItem {
     }
 
     private void updateSelected() {
-        selected.set(getUsers().contains(selectedUserProfile));
+        selected.set(getUsers().containsKey(selectedUserProfile));
+    }
+
+    @Getter
+    public static final class UserWithReactionDate implements Comparable<UserWithReactionDate> {
+        private final UserProfile userProfile;
+        private final long date;
+
+        private UserWithReactionDate(UserProfile userProfile, long date) {
+            this.userProfile = userProfile;
+            this.date = date;
+        }
+
+        @Override
+        public int compareTo(UserWithReactionDate other) {
+            return Long.compare(this.getDate(), other.getDate());
+        }
     }
 }
