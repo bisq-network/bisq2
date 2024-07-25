@@ -51,7 +51,7 @@ public class ReactionUsersPopup extends PopupControl {
     private static final int MAX_USERS_SHOWN_AT_THE_SAME_TIME = 2; //7
     private static final double CELL_SIZE = 30;
     private static final double MARGIN = 5;
-    private static final double LIST_VIEW_WIDTH = 130;
+    private static final double LIST_VIEW_WIDTH = 150;
 
     private final BisqMenuItem owner;
     private final boolean isMyMessage;
@@ -80,7 +80,7 @@ public class ReactionUsersPopup extends PopupControl {
         ImageView reactionIcon = ImageUtil.getImageViewById(reactionItem.getIconId());
         Label label = new Label(Res.get("chat.message.reactionPopup"), reactionIcon);
         label.setContentDisplay(ContentDisplay.RIGHT);
-        popupContent.setAlignment(Pos.CENTER);
+        label.setGraphicTextGap(5);
         popupContent.getStyleClass().add("reaction-users-popup");
         popupContent.getChildren().addAll(userProfileListView, label);
         setContentNode(popupContent);
@@ -89,8 +89,9 @@ public class ReactionUsersPopup extends PopupControl {
     }
 
     private void initialize() {
+        double listViewPadding = 20;
         userProfileListView.prefHeightProperty().bind(userProfileListView.fixedCellSizeProperty()
-                .multiply(Math.min(userProfileList.size(), MAX_USERS_SHOWN_AT_THE_SAME_TIME)));
+                .multiply(Math.min(userProfileList.size(), MAX_USERS_SHOWN_AT_THE_SAME_TIME)).add(listViewPadding));
 
         owner.setOnMouseEntered(e -> {
             showPopup();
@@ -133,10 +134,10 @@ public class ReactionUsersPopup extends PopupControl {
         boolean inAreaBetweenButtonAndPopup;
 
         if (isMyMessage) {
-            inAreaBetweenButtonAndPopup = (mouseX >= buttonBounds.getMinX() - MARGIN) &&
-                    mouseX <= buttonBounds.getMinX() &&
-                    mouseY >= buttonBounds.getMinY() &&
-                    mouseY <= buttonBounds.getMaxY();
+            inAreaBetweenButtonAndPopup = (mouseX >= buttonBounds.getMinX() - MARGIN)
+                    && mouseX <= buttonBounds.getMinX()
+                    && mouseY >= buttonBounds.getMinY()
+                    && mouseY <= buttonBounds.getMaxY();
         } else {
             inAreaBetweenButtonAndPopup = mouseX >= buttonBounds.getMaxX()
                     && mouseX <= (buttonBounds.getMaxX() + MARGIN)
@@ -158,6 +159,7 @@ public class ReactionUsersPopup extends PopupControl {
                     {
                         hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.setFillHeight(true);
+                        userNickname.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
                     }
 
                     @Override
@@ -174,7 +176,6 @@ public class ReactionUsersPopup extends PopupControl {
                             setGraphic(null);
                         }
                     }
-
                 };
             }
         };
