@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 
 public class ReactionUsersPopup extends PopupControl {
     private static final int MAX_USERS_SHOWN = 99;
-    private static final int MAX_USERS_SHOWN_AT_THE_SAME_TIME = 2; //7
+    private static final int MAX_USERS_SHOWN_AT_THE_SAME_TIME = 7;
     private static final double CELL_SIZE = 30;
     private static final double MARGIN = 5;
     private static final double LIST_VIEW_WIDTH = 150;
