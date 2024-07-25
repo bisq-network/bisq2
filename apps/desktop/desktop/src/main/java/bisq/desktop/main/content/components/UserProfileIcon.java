@@ -111,6 +111,11 @@ public class UserProfileIcon extends StackPane {
         StackPane.setMargin(lastSeenDot, new Insets(top, right, bottom, left));
     }
 
+    public void hideLastSeenDot() {
+        lastSeenDot.setVisible(false);
+        lastSeenDot.setManaged(false);
+    }
+
     private void updateLastSeenDot() {
         boolean wasActiveRecently = lastSeen > 0 && lastSeen < TimeUnit.HOURS.toMillis(1);
         String color;

@@ -23,28 +23,32 @@ import bisq.chat.reactions.Reaction;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.TreeSet;
 
 @Slf4j
 @Getter
 public class ReactionItem {
     private final Reaction reaction;
     private final String iconId;
-    private long firstAdded;
+    private final boolean isMyMessage;
     private final SimpleIntegerProperty count = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
-    private final Set<UserProfile> users = new HashSet<>();
+    private final HashMap<UserProfile, UserWithReactionDate> users = new HashMap<>();
+    private final TreeSet<UserWithReactionDate> usersByReactionDate = new TreeSet<>();
+    private long firstAdded;
     private UserProfile selectedUserProfile;
 
-    ReactionItem(Reaction reaction, UserProfile selectedUserProfile) {
+    ReactionItem(Reaction reaction, UserProfile selectedUserProfile, boolean isMyMessage) {
         this.reaction = reaction;
         this.selectedUserProfile = selectedUserProfile;
         this.iconId = reaction.toString().replace("_", "").toLowerCase();
+        this.isMyMessage = isMyMessage;
     }
 
     public boolean hasActiveReactions() {
@@ -68,19 +72,23 @@ public class ReactionItem {
             return;
         }
 
-        if (firstAdded == 0) {
-            firstAdded = chatMessageReaction.getDate();
-        }
-
-        users.add(userProfile);
+        UserWithReactionDate userWithReactionDate = new UserWithReactionDate(userProfile, chatMessageReaction.getDate());
+        users.put(userProfile, userWithReactionDate);
+        usersByReactionDate.add(userWithReactionDate);
         count.set(users.size());
         updateSelected();
+        updateFirstAdded();
     }
 
     void removeUser(UserProfile userProfile) {
-        users.remove(userProfile);
-        count.set(users.size());
-        updateSelected();
+        UserWithReactionDate userWithReactionDate = users.get(userProfile);
+        if (userWithReactionDate != null) {
+            users.remove(userProfile);
+            usersByReactionDate.remove(userWithReactionDate);
+            count.set(users.size());
+            updateSelected();
+            updateFirstAdded();
+        }
     }
 
     void setSelectedUserProfile(UserProfile selectedUserProfile) {
@@ -94,6 +102,33 @@ public class ReactionItem {
     }
 
     private void updateSelected() {
-        selected.set(getUsers().contains(selectedUserProfile));
+        selected.set(getUsers().containsKey(selectedUserProfile));
+    }
+
+    private void updateFirstAdded() {
+        if (!usersByReactionDate.isEmpty()) {
+            firstAdded = usersByReactionDate.first().getDate();
+        }
+    }
+
+    @Getter
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+    public static final class UserWithReactionDate implements Comparable<UserWithReactionDate> {
+        @EqualsAndHashCode.Include
+        private final UserProfile userProfile;
+        private final long date;
+
+        private UserWithReactionDate(UserProfile userProfile, long date) {
+            this.userProfile = userProfile;
+            this.date = date;
+        }
+
+        @Override
+        public int compareTo(UserWithReactionDate other) {
+            if (userProfile.equals(other.getUserProfile())) {
+                return 0;
+            }
+            return Long.compare(this.getDate(), other.getDate());
+        }
     }
 }
