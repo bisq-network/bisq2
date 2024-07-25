@@ -1,6 +1,7 @@
 package bisq.desktop.main.content.chat.message_container;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -101,7 +102,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         });
         userMentionPopup.init();
 
-        inputField.requestFocus();
+        UIThread.runOnNextRenderFrame(inputField::requestFocus);
     }
 
     @Override
