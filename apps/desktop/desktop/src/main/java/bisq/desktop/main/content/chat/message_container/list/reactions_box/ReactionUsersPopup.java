@@ -51,9 +51,10 @@ public class ReactionUsersPopup extends PopupControl {
     private static final int MAX_USERS_SHOWN_AT_THE_SAME_TIME = 2; //7
     private static final double CELL_SIZE = 30;
     private static final double MARGIN = 5;
-    private static final double POPUP_WIDTH = 130;
+    private static final double LIST_VIEW_WIDTH = 130;
 
     private final BisqMenuItem owner;
+    private final boolean isMyMessage;
     private final ObservableList<UserProfile> userProfileList = FXCollections.observableArrayList();
     private final ListView<UserProfile> userProfileListView = new ListView<>(userProfileList);
     private final VBox popupContent = new VBox();
@@ -63,17 +64,18 @@ public class ReactionUsersPopup extends PopupControl {
     @Setter
     protected Node contentNode;
 
-    public ReactionUsersPopup(ReactionItem reactionItem, BisqMenuItem owner) {
+    public ReactionUsersPopup(ReactionItem reactionItem, BisqMenuItem owner, boolean isMyMessage) {
         this.owner = owner;
+        this.isMyMessage = isMyMessage;
         userProfileList.setAll(reactionItem.getUsersByReactionDate().stream()
                 .limit(MAX_USERS_SHOWN)
                 .map(ReactionItem.UserWithReactionDate::getUserProfile)
                 .collect(Collectors.toList()));
         userProfileListView.setCellFactory(getCellFactory());
         userProfileListView.setFixedCellSize(CELL_SIZE);
-        userProfileListView.setMaxWidth(POPUP_WIDTH);
-        userProfileListView.setPrefWidth(POPUP_WIDTH);
-        userProfileListView.setMinWidth(POPUP_WIDTH);
+        userProfileListView.setMaxWidth(LIST_VIEW_WIDTH);
+        userProfileListView.setPrefWidth(LIST_VIEW_WIDTH);
+        userProfileListView.setMinWidth(LIST_VIEW_WIDTH);
 
         ImageView reactionIcon = ImageUtil.getImageViewById(reactionItem.getIconId());
         Label label = new Label(Res.get("chat.message.reactionPopup"), reactionIcon);
@@ -91,8 +93,7 @@ public class ReactionUsersPopup extends PopupControl {
                 .multiply(Math.min(userProfileList.size(), MAX_USERS_SHOWN_AT_THE_SAME_TIME)));
 
         owner.setOnMouseEntered(e -> {
-            Bounds bounds = owner.localToScreen(owner.getBoundsInLocal());
-            show(owner, bounds.getMaxX() + MARGIN, bounds.getMinY());
+            showPopup();
         });
         owner.setOnMouseExited(e -> {
            if (hasMouseExited(e.getScreenX(), e.getScreenY())) {
@@ -104,6 +105,13 @@ public class ReactionUsersPopup extends PopupControl {
                 hide();
             }
         });
+    }
+
+    private void showPopup() {
+        Bounds bounds = owner.localToScreen(owner.getBoundsInLocal());
+        double padding = 22;
+        show(owner, isMyMessage ? bounds.getMinX() - LIST_VIEW_WIDTH - padding - MARGIN : bounds.getMaxX() + MARGIN,
+                bounds.getMinY());
     }
 
     public void dispose() {
@@ -122,10 +130,19 @@ public class ReactionUsersPopup extends PopupControl {
     private boolean hasMouseExited(double mouseX, double mouseY) {
         boolean inPopupBounds = getRoot().contains(mouseX - getX(), mouseY - getY());
         Bounds buttonBounds = owner.localToScreen(owner.getBoundsInLocal());
-        boolean inAreaBetweenButtonAndPopup = mouseX >= buttonBounds.getMaxX()
-                && mouseX <= (buttonBounds.getMaxX() + MARGIN)
-                && mouseY >= buttonBounds.getMinY()
-                && mouseY <= buttonBounds.getMaxY();
+        boolean inAreaBetweenButtonAndPopup;
+
+        if (isMyMessage) {
+            inAreaBetweenButtonAndPopup = (mouseX >= buttonBounds.getMinX() - MARGIN) &&
+                    mouseX <= buttonBounds.getMinX() &&
+                    mouseY >= buttonBounds.getMinY() &&
+                    mouseY <= buttonBounds.getMaxY();
+        } else {
+            inAreaBetweenButtonAndPopup = mouseX >= buttonBounds.getMaxX()
+                    && mouseX <= (buttonBounds.getMaxX() + MARGIN)
+                    && mouseY >= buttonBounds.getMinY()
+                    && mouseY <= buttonBounds.getMaxY();
+        }
         return !(inPopupBounds || inAreaBetweenButtonAndPopup);
     }
 

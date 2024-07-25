@@ -123,7 +123,7 @@ public class ActiveReactionsDisplayBox extends HBox {
 
             this.reactionItem = reactionItem;
             this.toggleReaction = toggleReaction;
-            reactionUsersPopup = new ReactionUsersPopup(reactionItem, this);
+            reactionUsersPopup = new ReactionUsersPopup(reactionItem, this, reactionItem.isMyMessage());
             setText(reactionItem.getCountAsString());
             setGraphicTextGap(4);
             addStyleClasses();

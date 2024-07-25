@@ -36,17 +36,19 @@ import java.util.TreeSet;
 public class ReactionItem {
     private final Reaction reaction;
     private final String iconId;
-    private long firstAdded;
+    private final boolean isMyMessage;
     private final SimpleIntegerProperty count = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
     private final HashMap<UserProfile, UserWithReactionDate> users = new HashMap<>();
     private final TreeSet<UserWithReactionDate> usersByReactionDate = new TreeSet<>();
+    private long firstAdded;
     private UserProfile selectedUserProfile;
 
-    ReactionItem(Reaction reaction, UserProfile selectedUserProfile) {
+    ReactionItem(Reaction reaction, UserProfile selectedUserProfile, boolean isMyMessage) {
         this.reaction = reaction;
         this.selectedUserProfile = selectedUserProfile;
         this.iconId = reaction.toString().replace("_", "").toLowerCase();
+        this.isMyMessage = isMyMessage;
     }
 
     public boolean hasActiveReactions() {

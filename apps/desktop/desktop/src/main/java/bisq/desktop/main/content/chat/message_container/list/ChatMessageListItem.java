@@ -372,7 +372,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         // Create all the ReactionItems
         UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-        Arrays.stream(Reaction.values()).forEach(reaction -> userReactions.put(reaction, new ReactionItem(reaction, selectedUserProfile)));
+        Arrays.stream(Reaction.values()).forEach(reaction -> userReactions.put(reaction,
+                new ReactionItem(reaction, selectedUserProfile, isMyMessage())));
 
         // Subscribe to changes
         userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
