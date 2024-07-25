@@ -17,6 +17,8 @@
 
 package bisq.desktop.components.controls;
 
+import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.scene.control.CustomMenuItem;
 import lombok.Getter;
 
@@ -28,6 +30,12 @@ public class DropdownMenuItem extends CustomMenuItem {
         bisqMenuItem = new BisqMenuItem(defaultIconId, activeIconId, text);
         bisqMenuItem.getStyleClass().add("dropdown-menu-item-content");
         setContent(bisqMenuItem);
+
+        // Using DropdownMenuItem.setOnAction leads to duplicate execution of the handler on MacOS 14.5 / M3.
+        // Might be a bug in the MacOS specific JavaFX libraries as other devs could not reproduce the issue.
+        // Using an eventFilter and consuming the event solves the issue.
+        // This happens only when bisqMenuItem is used inside the DropdownMenuItem
+        bisqMenuItem.addEventFilter(ActionEvent.ANY, Event::consume);
     }
 
     public DropdownMenuItem(String text) {
