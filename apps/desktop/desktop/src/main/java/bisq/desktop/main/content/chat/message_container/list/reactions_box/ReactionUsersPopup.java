@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 
 public class ReactionUsersPopup extends PopupControl {
     private static final int MAX_USERS_SHOWN = 99;
-    private static final int MAX_USERS_SHOWN_AT_THE_SAME_TIME = 7;
+    private static final int MAX_USERS_SHOWN_AT_THE_SAME_TIME = 2; //7
     private static final double CELL_SIZE = 30;
     private static final double MARGIN = 5;
     private static final double POPUP_WIDTH = 130;
@@ -149,7 +149,8 @@ public class ReactionUsersPopup extends PopupControl {
 
                         if (item != null && !empty) {
                             userProfileIcon.setUserProfile(item);
-                            userNickname.setText(StringUtils.truncate(item.getNickName(), 28));
+                            userProfileIcon.hideLastSeenDot();
+                            userNickname.setText(StringUtils.truncate(item.getNickName(), 15));
                             hBox.getChildren().setAll(userProfileIcon, userNickname);
                             setGraphic(hBox);
                         } else {

@@ -23,6 +23,7 @@ import bisq.chat.reactions.Reaction;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -109,7 +110,9 @@ public class ReactionItem {
     }
 
     @Getter
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static final class UserWithReactionDate implements Comparable<UserWithReactionDate> {
+        @EqualsAndHashCode.Include
         private final UserProfile userProfile;
         private final long date;
 
@@ -120,6 +123,9 @@ public class ReactionItem {
 
         @Override
         public int compareTo(UserWithReactionDate other) {
+            if (userProfile.equals(other.getUserProfile())) {
+                return 0;
+            }
             return Long.compare(this.getDate(), other.getDate());
         }
     }
