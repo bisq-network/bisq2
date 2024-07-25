@@ -100,6 +100,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
         userMentionPopup.init();
+
+        inputField.requestFocus();
     }
 
     @Override
