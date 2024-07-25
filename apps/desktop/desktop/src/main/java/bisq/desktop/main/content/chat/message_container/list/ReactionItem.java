@@ -69,15 +69,12 @@ public class ReactionItem {
             return;
         }
 
-        if (firstAdded == 0) {
-            firstAdded = chatMessageReaction.getDate();
-        }
-
         UserWithReactionDate userWithReactionDate = new UserWithReactionDate(userProfile, chatMessageReaction.getDate());
         users.put(userProfile, userWithReactionDate);
         usersByReactionDate.add(userWithReactionDate);
         count.set(users.size());
         updateSelected();
+        updateFirstAdded();
     }
 
     void removeUser(UserProfile userProfile) {
@@ -87,6 +84,7 @@ public class ReactionItem {
             usersByReactionDate.remove(userWithReactionDate);
             count.set(users.size());
             updateSelected();
+            updateFirstAdded();
         }
     }
 
@@ -102,6 +100,12 @@ public class ReactionItem {
 
     private void updateSelected() {
         selected.set(getUsers().containsKey(selectedUserProfile));
+    }
+
+    private void updateFirstAdded() {
+        if (!usersByReactionDate.isEmpty()) {
+            firstAdded = usersByReactionDate.getFirst().getDate();
+        }
     }
 
     @Getter
