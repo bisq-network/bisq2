@@ -142,14 +142,15 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     }
 
     private void handlePrivateNotification() {
-        AtomicLong count = new AtomicLong();
-        twoPartyPrivateChatChannelService.getChannels().forEach(channel ->
-                count.addAndGet(chatNotificationService.getNotConsumedNotifications(channel.getId()).count()));
-        UIThread.run(() ->
-                model.getTabButtons().stream()
-                        .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())
-                        .findAny()
-                        .ifPresent(tabButton -> tabButton.setNumNotifications(count.get()))
+        UIThread.run(() -> {
+                    AtomicLong count = new AtomicLong();
+                    twoPartyPrivateChatChannelService.getChannels().forEach(channel ->
+                            count.addAndGet(chatNotificationService.getNotConsumedNotifications(channel.getId()).count()));
+                    model.getTabButtons().stream()
+                            .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())
+                            .findAny()
+                            .ifPresent(tabButton -> tabButton.setNumNotifications(count.get()));
+                }
         );
     }
 
