@@ -13,8 +13,8 @@ import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.chat.priv.PrivateChatChannel;
-import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
@@ -86,6 +86,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final Optional<ResendMessageService> resendMessageService;
     private final BisqEasyService bisqEasyService;
     private final MarketPriceService marketPriceService;
+    private final LeavePrivateChatManager leavePrivateChatManager;
     private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
@@ -97,6 +98,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                                       ChatChannelDomain chatChannelDomain) {
         chatService = serviceProvider.getChatService();
         chatNotificationService = chatService.getChatNotificationService();
+        leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         reputationService = serviceProvider.getUserService().getReputationService();
@@ -432,14 +434,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         checkArgument(chatChannel instanceof PrivateChatChannel,
                 "Not possible to leave a channel which is not a private chat.");
 
-        chatService.findChatChannelService(chatChannel)
-                .filter(service -> service instanceof PrivateChatChannelService)
-                .map(service -> (PrivateChatChannelService<?, ?, ?, ?>) service).stream()
-                .findAny()
-                .ifPresent(service -> {
-                    service.leaveChannel(chatChannel.getId());
-                    chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).maybeSelectFirstChannel();
-                });
+        leavePrivateChatManager.leaveChatChannel((PrivateChatChannel<?>) chatChannel);
     }
 
     public void onReactMessage(ChatMessage chatMessage, Reaction reaction, ChatChannel<?> chatChannel) {

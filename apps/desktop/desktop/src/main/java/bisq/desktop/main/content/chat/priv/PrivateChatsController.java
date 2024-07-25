@@ -23,6 +23,8 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.chat.priv.PrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.observable.Pin;
@@ -39,11 +41,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public abstract class PrivateChatsController extends ChatController<PrivateChatsView, PrivateChatsModel> {
     private final TwoPartyPrivateChatChannelService channelService;
     private final ChatNotificationService chatNotificationService;
     private final ReputationService reputationService;
+    private final LeavePrivateChatManager leavePrivateChatManager;
     private Pin channelItemPin, channelsPin, changedChatNotificationPin;
     private Subscription openPrivateChatsPin;
 
@@ -53,6 +58,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         super(serviceProvider, chatChannelDomain, navigationTarget);
 
         channelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
+        leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         reputationService = serviceProvider.getUserService().getReputationService();
     }
@@ -62,11 +68,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         // We access the (model.getListItems() in selectedChannelChanged triggered by the super call,
         // thus we set up the binding before the super call
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, PrivateChatsView.ListItem>bind(model.getListItems())
-                .map(channel -> {
-                    // We call maybeSelectFirst one render frame after we applied the item to the model list.
-                    UIThread.runOnNextRenderFrame(this::maybeSelectFirst);
-                    return new PrivateChatsView.ListItem(channel, reputationService);
-                })
+                .map(channel -> new PrivateChatsView.ListItem(channel, reputationService))
                 .to(channelService.getChannels());
 
         super.onActivate();
@@ -148,11 +150,11 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
     }
 
     void doLeaveChat() {
-        if (model.getSelectedChannel() != null) {
-            channelService.leaveChannel(model.getSelectedChannel().getId());
-            if (channelService.getChannels().isEmpty()) {
-                selectionService.selectChannel(null);
-            }
+        ChatChannel<? extends ChatMessage> selectedChannel = model.getSelectedChannel();
+        if (selectedChannel != null) {
+            checkArgument(selectedChannel instanceof PrivateChatChannel,
+                    "Not possible to leave a channel which is not a private chat.");
+            leavePrivateChatManager.leaveChatChannel((PrivateChatChannel<?>) selectedChannel);
         }
     }
 

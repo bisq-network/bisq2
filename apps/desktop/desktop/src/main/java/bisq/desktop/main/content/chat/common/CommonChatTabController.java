@@ -118,7 +118,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         }
 
         String channelId = notification.getChatChannelId();
-        if (isPrivateChannel(channelId)) {
+        if (isPrivateChannelPresent(channelId)) {
             handlePrivateNotification();
         }
 
@@ -137,19 +137,20 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         });
     }
 
-    private boolean isPrivateChannel(String channelId) {
+    private boolean isPrivateChannelPresent(String channelId) {
         return twoPartyPrivateChatChannelService.findChannel(channelId).isPresent();
     }
 
     private void handlePrivateNotification() {
-        AtomicLong count = new AtomicLong();
-        twoPartyPrivateChatChannelService.getChannels().forEach(channel ->
-                count.addAndGet(chatNotificationService.getNotConsumedNotifications(channel.getId()).count()));
-        UIThread.run(() ->
-                model.getTabButtons().stream()
-                        .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())
-                        .findAny()
-                        .ifPresent(tabButton -> tabButton.setNumNotifications(count.get()))
+        UIThread.run(() -> {
+                    AtomicLong count = new AtomicLong();
+                    twoPartyPrivateChatChannelService.getChannels().forEach(channel ->
+                            count.addAndGet(chatNotificationService.getNotConsumedNotifications(channel.getId()).count()));
+                    model.getTabButtons().stream()
+                            .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())
+                            .findAny()
+                            .ifPresent(tabButton -> tabButton.setNumNotifications(count.get()));
+                }
         );
     }
 

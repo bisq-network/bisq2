@@ -63,11 +63,6 @@ public class BisqEasyPrivateChatChannelSelectionService extends ChatChannelSelec
     }
 
     @Override
-    public void maybeSelectFirstChannel() {
-        selectChannel(channelService.getChannels().stream().findFirst().orElse(null));
-    }
-
-    @Override
     protected Stream<ChatChannel<?>> getAllChatChannels() {
         // fixme (low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
         return Stream.concat(channelService.getChannels().stream(), Stream.empty());

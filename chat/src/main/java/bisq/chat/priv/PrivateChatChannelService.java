@@ -177,7 +177,37 @@ public abstract class PrivateChatChannelService<
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract void processMessage(M message);
+    protected void processMessage(M message) {
+        if (canProcessMessage(message)) {
+            findChannel(message)
+                    .or(() -> {
+                        // We prevent to send leave messages after a peer has left, but there might be still
+                        // race conditions where that might happen, so we check at receiving the message as well, so that
+                        // in cases we would get a leave message as first message (e.g. after having closed the channel)
+                        // we do not create a channel.
+                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                            log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
+                                    "sent a leave message around the same time as we have closed the channel.");
+                            return Optional.empty();
+                        } else {
+                            return createNewChannelFromReceivedMessage(message);
+                        }
+                    })
+                    .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+        }
+    }
+
+    protected boolean canProcessMessage(M message) {
+        return canHandleChannelDomain(message) && isValid(message);
+    }
+
+    protected abstract Optional<C> createNewChannelFromReceivedMessage(M message);
+
+    protected void addMessageAndProcessQueuedReactions(M message, C channel) {
+        addMessage(message, channel);
+        // Check if there are any reactions that should be added to existing messages
+        processQueuedReactions();
+    }
 
     protected void processMessageReaction(R messageReaction) {
         findChannel(messageReaction.getChatChannelId())

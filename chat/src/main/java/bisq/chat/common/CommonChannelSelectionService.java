@@ -88,9 +88,4 @@ public class CommonChannelSelectionService extends ChatChannelSelectionService {
         return Stream.concat(publicChatChannelService.getChannels().stream(),
                 privateChatChannelService.getChannels().stream());
     }
-
-    @Override
-    public void maybeSelectFirstChannel() {
-        publicChatChannelService.getChannels().stream().findFirst().ifPresent(this::selectChannel);
-    }
 }

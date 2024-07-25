@@ -312,41 +312,24 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     }
 
     @Override
-    protected void processMessage(BisqEasyOpenTradeMessage message) {
-        if (canHandleChannelDomain(message) && isValid(message)) {
-            findChannel(message)
-                    .or(() -> {
-                        // We prevent to send leave messages after a peer has left, but there might be still 
-                        // race conditions where that might happen, so we check at receiving the message as well, so that
-                        // in cases we would get a leave message as first message (e.g. after having closed the channel) 
-                        //  we do not create a channel.
-                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                            log.warn("We received a leave message as first message. This is not expected but might " +
-                                    "happen in some rare cases.");
-                            return Optional.empty();
-                        } else if (message.getBisqEasyOffer().isPresent()) {
-                            return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
-                                    .map(myUserIdentity -> traderCreatesChannel(message.getTradeId(),
-                                            message.getBisqEasyOffer().get(),
-                                            myUserIdentity,
-                                            message.getSenderUserProfile(),
-                                            message.getMediator()));
-                        } else {
-                            // It could be that taker sends quickly a message after take offer, and we receive them 
-                            // out of order. In that case the seconds message (which arrived first) would get dropped.
-                            // This is a very unlikely case, so we ignore it.
-                            // It also happens if we left a trade channel and receive a message again. 
-                            // We ignore that and do not re-open the channel.
-                            log.debug("We received the first message for a new channel without an offer. " +
-                                    "We drop that message. Message={}", message);
-                            return Optional.empty();
-                        }
-                    })
-                    .ifPresent(channel -> {
-                        addMessage(message, channel);
-                        // Check if there are any reactions that should be added to existing messages
-                        processQueuedReactions();
-                    });
+    protected Optional<BisqEasyOpenTradeChannel> createNewChannelFromReceivedMessage(BisqEasyOpenTradeMessage message) {
+        if (message.getBisqEasyOffer().isPresent()) {
+            return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
+                    .map(myUserIdentity -> traderCreatesChannel(message.getTradeId(),
+                            message.getBisqEasyOffer().get(),
+                            myUserIdentity,
+                            message.getSenderUserProfile(),
+                            message.getMediator()));
+        } else {
+            // It could be that taker sends quickly a message after take offer, and we receive them
+            // out of order. In that case the seconds message (which arrived first) would get dropped.
+            // This is a very unlikely case, so we ignore it.
+            // It also happens if we left a trade channel and receive a message again.
+            // We ignore that and do not re-open the channel.
+            // TODO we could put it into a queue for re-processing once a valid trade message comes.
+            log.warn("We received the first message for a new channel without an offer. " +
+                    "We drop that message. Message={}", message);
+            return Optional.empty();
         }
     }
 
