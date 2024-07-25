@@ -69,6 +69,4 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
     }
 
     protected abstract Stream<ChatChannel<?>> getAllChatChannels();
-
-    public abstract void maybeSelectFirstChannel();
 }

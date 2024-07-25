@@ -25,7 +25,6 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -60,12 +59,5 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
     protected Stream<ChatChannel<?>> getAllChatChannels() {
         // fixme (low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
         return Stream.concat(channelService.getChannels().stream(), Stream.empty());
-    }
-
-    @Override
-    public void maybeSelectFirstChannel() {
-        selectChannel(Optional.ofNullable((BisqEasyOfferbookChannel) getSelectedChannel().get())
-                .or(() -> channelService.getChannels().stream().findFirst())
-                .orElse(null));
     }
 }
