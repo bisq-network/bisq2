@@ -28,6 +28,7 @@ import bisq.chat.common.CommonChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
@@ -65,6 +66,7 @@ public class ChatService implements Service {
     private final Map<ChatChannelDomain, CommonPublicChatChannelService> commonPublicChatChannelServices = new HashMap<>();
     private final Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices = new HashMap<>();
     private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices = new HashMap<>();
+    private final LeavePrivateChatManager leavePrivateChatManager;
 
     public ChatService(PersistenceService persistenceService,
                        NetworkService networkService,
@@ -130,6 +132,11 @@ public class ChatService implements Service {
                         new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, "reports")));
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.SUPPORT);
         addToChatChannelSelectionServices(ChatChannelDomain.SUPPORT);
+
+        leavePrivateChatManager = new LeavePrivateChatManager(bisqEasyOpenTradeChannelService,
+                twoPartyPrivateChatChannelServices,
+                chatChannelSelectionServices,
+                chatNotificationService);
     }
 
     @Override
