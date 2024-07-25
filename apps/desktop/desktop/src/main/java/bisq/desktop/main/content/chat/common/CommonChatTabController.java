@@ -118,7 +118,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         }
 
         String channelId = notification.getChatChannelId();
-        if (isPrivateChannel(channelId)) {
+        if (isPrivateChannelPresent(channelId)) {
             handlePrivateNotification();
         }
 
@@ -137,7 +137,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         });
     }
 
-    private boolean isPrivateChannel(String channelId) {
+    private boolean isPrivateChannelPresent(String channelId) {
         return twoPartyPrivateChatChannelService.findChannel(channelId).isPresent();
     }
 

@@ -23,7 +23,6 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
-import bisq.common.observable.Pin;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -35,7 +34,6 @@ public class LeavePrivateChatManager {
     private final Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices;
     private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
     private final ChatNotificationService chatNotificationService;
-    private Pin channelsPin;
 
     public LeavePrivateChatManager(BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService,
                                    Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices,
@@ -61,6 +59,8 @@ public class LeavePrivateChatManager {
             log.warn("selectionService.selectedChannel is null at leaveChatChannel. chatChannel={}", chatChannel);
         }
         selectionService.selectChannel(channelService.getChannels().stream().findFirst().orElse(null));
+
+        chatNotificationService.consume(chatChannel.getId());
     }
 
     private PrivateChatChannelService<?, ? extends PrivateChatMessage<?>, ? extends PrivateChatChannel<?>, ?> findChannelService(ChatChannelDomain chatChannelDomain) {
