@@ -22,65 +22,110 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ReactionItem;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Popup;
 import javafx.util.Callback;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.stream.Collectors;
 
-public class ReactionUsersPopup extends Popup {
+public class ReactionUsersPopup extends PopupControl {
     private static final int MAX_USERS_SHOWN = 99;
+    private static final int MAX_USERS_SHOWN_AT_THE_SAME_TIME = 7;
+    private static final double CELL_SIZE = 30;
+    private static final double MARGIN = 5;
+    private static final double POPUP_WIDTH = 130;
 
-    private final ReactionItem reactionItem;
     private final BisqMenuItem owner;
-    private final ImageView reactionIcon;
     private final ObservableList<UserProfile> userProfileList = FXCollections.observableArrayList();
     private final ListView<UserProfile> userProfileListView = new ListView<>(userProfileList);
     private final VBox popupContent = new VBox();
+    @Getter
+    private final StackPane root = new StackPane();
+    @Getter
+    @Setter
+    protected Node contentNode;
 
     public ReactionUsersPopup(ReactionItem reactionItem, BisqMenuItem owner) {
-        this.reactionItem = reactionItem;
         this.owner = owner;
-        reactionIcon = ImageUtil.getImageViewById(reactionItem.getIconId());
         userProfileList.setAll(reactionItem.getUsersByReactionDate().stream()
                 .limit(MAX_USERS_SHOWN)
                 .map(ReactionItem.UserWithReactionDate::getUserProfile)
                 .collect(Collectors.toList()));
         userProfileListView.setCellFactory(getCellFactory());
-        initialize();
+        userProfileListView.setFixedCellSize(CELL_SIZE);
+        userProfileListView.setMaxWidth(POPUP_WIDTH);
+        userProfileListView.setPrefWidth(POPUP_WIDTH);
+        userProfileListView.setMinWidth(POPUP_WIDTH);
 
-        popupContent.getChildren().addAll(userProfileListView, reactionIcon);
-        getContent().add(popupContent);
+        ImageView reactionIcon = ImageUtil.getImageViewById(reactionItem.getIconId());
+        Label label = new Label(Res.get("chat.message.reactionPopup"), reactionIcon);
+        label.setContentDisplay(ContentDisplay.RIGHT);
+
+        popupContent.getStyleClass().add("reaction-users-popup");
+        popupContent.getChildren().addAll(userProfileListView, label);
+        setContentNode(popupContent);
+        setAutoHide(true);
+        setOpacity(1.0);
+        popupContent.setOpacity(1.0);
+
+        initialize();
     }
 
     private void initialize() {
+        userProfileListView.prefHeightProperty().bind(userProfileListView.fixedCellSizeProperty()
+                .multiply(Math.min(userProfileList.size(), MAX_USERS_SHOWN_AT_THE_SAME_TIME)));
+
         owner.setOnMouseEntered(e -> {
             Bounds bounds = owner.localToScreen(owner.getBoundsInLocal());
-            show(owner, bounds.getMaxX(), bounds.getMinY());
+            show(owner, bounds.getMaxX() + MARGIN, bounds.getMinY());
         });
         owner.setOnMouseExited(e -> {
-           if (!popupContent.contains(e.getScreenX() - getX(), e.getScreenY() - getY())) {
+           if (hasMouseExited(e.getScreenX(), e.getScreenY())) {
                hide();
            }
         });
-        popupContent.setOnMouseExited(e -> hide());
+        popupContent.setOnMouseExited(e -> {
+            if (hasMouseExited(e.getScreenX(), e.getScreenY())) {
+                hide();
+            }
+        });
     }
 
     public void dispose() {
+        userProfileListView.prefHeightProperty().unbind();
+
         owner.setOnMouseEntered(null);
         owner.setOnMouseExited(null);
         popupContent.setOnMouseExited(null);
+    }
+
+    @Override
+    protected Skin<?> createDefaultSkin() {
+        return new ReactionPopupSkin(this);
+    }
+
+    private boolean hasMouseExited(double mouseX, double mouseY) {
+        boolean inPopupBounds = getRoot().contains(mouseX - getX(), mouseY - getY());
+        Bounds buttonBounds = owner.localToScreen(owner.getBoundsInLocal());
+        boolean inAreaBetweenButtonAndPopup = mouseX >= buttonBounds.getMaxX()
+                && mouseX <= (buttonBounds.getMaxX() + MARGIN)
+                && mouseY >= buttonBounds.getMinY()
+                && mouseY <= buttonBounds.getMaxY();
+        return !(inPopupBounds || inAreaBetweenButtonAndPopup);
     }
 
     private Callback<ListView<UserProfile>, ListCell<UserProfile>> getCellFactory() {
@@ -88,7 +133,7 @@ public class ReactionUsersPopup extends Popup {
             @Override
             public ListCell<UserProfile> call(ListView<UserProfile> list) {
                 return new ListCell<>() {
-                    private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+                    private final UserProfileIcon userProfileIcon = new UserProfileIcon(CELL_SIZE - 10);
                     private final VBox userProfileIconVbox = new VBox(userProfileIcon);
                     private final Label userNickname = new Label();
                     final HBox hBox = new HBox(10);
@@ -120,5 +165,31 @@ public class ReactionUsersPopup extends Popup {
                 };
             }
         };
+    }
+
+    @Getter
+    private static final class ReactionPopupSkin implements Skin<ReactionUsersPopup> {
+        private final ReactionUsersPopup skinnable;
+
+        public ReactionPopupSkin(final ReactionUsersPopup popup) {
+            this.skinnable = popup;
+            popup.getRoot().getChildren().add(popup.getContentNode());
+            Bindings.bindContent(popup.getRoot().getStyleClass(), popup.getStyleClass());
+        }
+
+        @Override
+        public ReactionUsersPopup getSkinnable() {
+            return skinnable;
+        }
+
+        @Override
+        public Node getNode() {
+            return skinnable.getRoot();
+        }
+
+        @Override
+        public void dispose() {
+            skinnable.dispose();
+        }
     }
 }

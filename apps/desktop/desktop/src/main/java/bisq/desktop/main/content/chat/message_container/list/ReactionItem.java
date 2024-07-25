@@ -104,7 +104,7 @@ public class ReactionItem {
 
     private void updateFirstAdded() {
         if (!usersByReactionDate.isEmpty()) {
-            firstAdded = usersByReactionDate.getFirst().getDate();
+            firstAdded = usersByReactionDate.first().getDate();
         }
     }
 
