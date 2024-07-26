@@ -113,7 +113,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
                 privateChatMessage.getChatMessageReactionsList().stream()
                         .map(TwoPartyPrivateChatMessageReaction::fromProto)
                         .collect(Collectors.toList())
-                );
+        );
     }
 
     @Override
