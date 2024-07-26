@@ -163,7 +163,6 @@ public class Badge extends StackPane {
 
     public final void setText(String value) {
         text.set(value);
-        refreshBadge();
     }
 
     public final StringProperty textProperty() {
