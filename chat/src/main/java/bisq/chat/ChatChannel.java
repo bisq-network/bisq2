@@ -25,7 +25,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -126,8 +125,4 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     public abstract String getDisplayString();
 
     public abstract ObservableSet<M> getChatMessages();
-
-    public boolean isActiveParticipant(UserProfile userProfile) {
-        return userProfileIdsOfActiveParticipants.contains(userProfile.getId());
-    }
 }

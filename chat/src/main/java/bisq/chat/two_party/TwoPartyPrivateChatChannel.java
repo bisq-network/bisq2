@@ -73,9 +73,9 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         return getChatChannelBuilder().setTwoPartyPrivateChatChannel(bisq.chat.protobuf.TwoPartyPrivateChatChannel.newBuilder()
                 .setPeer(peer.toProto(serializeForHash))
                 .setMyUserIdentity(myUserIdentity.toProto(serializeForHash))
-                        .addAllChatMessages(chatMessages.stream()
-                                .map(e -> e.toValueProto(serializeForHash))
-                                .collect(Collectors.toList())));
+                .addAllChatMessages(chatMessages.stream()
+                        .map(e -> e.toValueProto(serializeForHash))
+                        .collect(Collectors.toList())));
     }
 
     public static TwoPartyPrivateChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
