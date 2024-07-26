@@ -44,6 +44,8 @@ import bisq.user.reputation.ReputationService;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -58,6 +60,7 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
     private Pin channelItemPin, tradesPin, channelsPin, selectedChannelPin, tradeRulesConfirmedPin;
     private OpenTradesWelcome openTradesWelcome;
     private TradeDataHeader tradeDataHeader;
+    private final Map<String, Pin> isInMediationPinMap = new HashMap<>();
 
     public BisqEasyOpenTradesController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, NavigationTarget.BISQ_EASY_OPEN_TRADES);
@@ -179,6 +182,10 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
         tradesPin.unbind();
         selectedChannelPin.unbind();
         channelsPin.unbind();
+        if (isInMediationPinMap != null) {
+            isInMediationPinMap.values().forEach(Pin::unbind);
+            isInMediationPinMap.clear();
+        }
         doCloseChatWindow();
         model.reset();
         resetSelectedChildTarget();
@@ -270,6 +277,13 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
                         userProfileService));
                 maybeSelectFirst();
                 updateVisibility();
+
+                Pin pin = channel.isInMediationObservable().addObserver(isInMediation -> {
+                    if (isInMediation != null) {
+                        updateIsAnyTradeInMediation();
+                    }
+                });
+                isInMediationPinMap.put(trade.getId(), pin);
             }
         });
     }
@@ -283,6 +297,8 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
                     model.getListItems().remove(item);
                     maybeSelectFirst();
                     updateVisibility();
+                    isInMediationPinMap.remove(trade.getId());
+                    updateIsAnyTradeInMediation();
                 });
             });
         });
@@ -294,6 +310,14 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
             model.getListItems().clear();
             maybeSelectFirst();
             updateVisibility();
+        });
+    }
+
+    private void updateIsAnyTradeInMediation() {
+        UIThread.runOnNextRenderFrame(() -> {
+            boolean value = channelService.getChannels().stream()
+                    .anyMatch(BisqEasyOpenTradeChannel::isInMediation);
+            model.getIsAnyTradeInMediation().set(value);
         });
     }
 

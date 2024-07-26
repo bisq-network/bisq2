@@ -37,6 +37,7 @@ public final class BisqEasyOpenTradesModel extends BaseChatModel {
     private final BooleanProperty tradeRulesAccepted = new SimpleBooleanProperty();
     private final BooleanProperty chatVisible = new SimpleBooleanProperty();
     private final BooleanProperty tradeStateVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isAnyTradeInMediation = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
     private final ObjectProperty<BisqEasyOpenTradesView.ListItem> selectedItem = new SimpleObjectProperty<>();
@@ -59,6 +60,7 @@ public final class BisqEasyOpenTradesModel extends BaseChatModel {
         tradeRulesAccepted.set(false);
         chatVisible.set(false);
         tradeStateVisible.set(false);
+        isAnyTradeInMediation.set(false);
         chatWindowTitle.set(null);
         chatWindow.set(null);
         selectedItem.set(null);

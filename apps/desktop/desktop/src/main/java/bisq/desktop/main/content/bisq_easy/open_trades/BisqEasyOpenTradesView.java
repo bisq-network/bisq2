@@ -75,7 +75,8 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
     private final BisqTableView<ListItem> tableView;
     private final Button toggleChatWindowButton;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
-            selectedModelItemPin, chatWindowPin;
+            selectedModelItemPin, chatWindowPin, isAnyTradeInMediationPin;
+    private BisqTableColumn<ListItem> mediatorColumn;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
@@ -205,6 +206,18 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
 
         chatWindowPin = EasyBind.subscribe(model.getChatWindow(), this::chatWindowChanged);
 
+        isAnyTradeInMediationPin = EasyBind.subscribe(model.getIsAnyTradeInMediation(), isAnyTradeInMediation -> {
+            if (isAnyTradeInMediation == null) {
+                return;
+            }
+            if (isAnyTradeInMediation && !tableView.getColumns().contains(mediatorColumn)) {
+                tableView.getColumns().add(4, mediatorColumn);
+            } else {
+                tableView.getColumns().remove(mediatorColumn);
+            }
+        });
+
+
         toggleChatWindowButton.setOnAction(e -> getController().onToggleChatWindow());
     }
 
@@ -231,6 +244,7 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         noOpenTradesPin.unsubscribe();
         tradeRulesAcceptedPin.unsubscribe();
         chatWindowPin.unsubscribe();
+        isAnyTradeInMediationPin.unsubscribe();
 
         toggleChatWindowButton.setOnAction(null);
         tableView.setOnMouseClicked(null);
@@ -321,6 +335,14 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                 .setCellFactory(getTradePeerCellFactory())
                 .build());
 
+        mediatorColumn = new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("bisqEasy.openTrades.table.mediator"))
+                .minWidth(110)
+                .left()
+                .comparator(Comparator.comparing(ListItem::getMediatorUserName))
+                .setCellFactory(getMediatorCellFactory())
+                .build();
+
         tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
@@ -396,7 +418,39 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
-                    badge.textProperty().bind(item.getNumTradeNotification());
+                    badge.textProperty().bind(item.getPeerNumNotificationsProperty());
+                    badge.setPosition(Pos.BOTTOM_LEFT);
+                    badge.setBadgeInsets(new Insets(0, 0, 7.5, 20));
+                    // Label color does not get applied from badge style when in a list cell even we use '!important' in the css.
+                    badge.getLabel().setStyle("-fx-text-fill: black !important;");
+                    setGraphic(badge);
+                } else {
+                    if (badge != null) {
+                        badge.textProperty().unbind();
+                        badge.dispose();
+                    }
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMediatorCellFactory() {
+        return column -> new TableCell<>() {
+            private Badge badge;
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
+                    UserProfile mediator = item.getChannel().getMediator().get();
+                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(mediator);
+                    userProfileDisplay.setReputationScore(item.getReputationScore());
+
+                    badge = new Badge(userProfileDisplay);
+                    badge.getStyleClass().add("open-trades-badge");
+                    badge.textProperty().bind(item.getMediatorNumNotificationsProperty());
                     badge.setPosition(Pos.BOTTOM_LEFT);
                     badge.setBadgeInsets(new Insets(0, 0, 7.5, 20));
                     // Label color does not get applied from badge style when in a list cell even we use '!important' in the css.
@@ -462,11 +516,16 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         private final long date, price, baseAmount, quoteAmount;
         private final ChatNotificationService chatNotificationService;
         private final ReputationScore reputationScore;
-        private final StringProperty numTradeNotification = new SimpleStringProperty();
-        private final Pin changedChatNotificationPin;
+        private final StringProperty peerNumNotificationsProperty = new SimpleStringProperty();
+        private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
+        private long peerNumNotifications;
+        private long mediatorNumNotifications;
+        private final Pin changedChatNotificationPin, isInMediationPin;
         private final long lastSeen;
         private final BitcoinPaymentRail bitcoinPaymentRail;
         private final FiatPaymentRail fiatPaymentRail;
+        private String mediatorUserName = "";
+        private boolean isInMediation;
 
         public ListItem(BisqEasyOpenTradeChannel channel,
                         BisqEasyTrade trade,
@@ -509,21 +568,46 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
             lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
-                if (notification == null ||
-                        !notification.getChatChannelId().equals(channel.getId())) {
+                UIThread.run(() -> {
+                    if (notification == null) {
+                        mediatorNumNotifications = 0;
+                        peerNumNotifications = 0;
+                        mediatorNumNotificationsProperty.set("");
+                        peerNumNotificationsProperty.set("");
+                        return;
+                    }
+                    if (!notification.getChatChannelId().equals(channel.getId())) {
+                        return;
+                    }
+                    boolean isSenderMediator = notification.getSenderUserProfile().equals(channel.getMediator());
+                    boolean isNotificationFromMediator = notification.getMediator().equals(notification.getSenderUserProfile());
+                    long numNotifications = chatNotificationService.getNumNotifications(channel.getId());
+                    if (isSenderMediator && isNotificationFromMediator) {
+                        mediatorNumNotifications = numNotifications - peerNumNotifications;
+                        String value = mediatorNumNotifications > 0 ? String.valueOf(mediatorNumNotifications) : "";
+                        mediatorNumNotificationsProperty.set(value);
+                    } else {
+                        peerNumNotifications = numNotifications - mediatorNumNotifications;
+                        String value = peerNumNotifications > 0 ? String.valueOf(peerNumNotifications) : "";
+                        peerNumNotificationsProperty.set(value);
+                    }
+                });
+            });
+
+            isInMediationPin = channel.isInMediationObservable().addObserver(isInMediation -> {
+                if (isInMediation == null) {
                     return;
                 }
-                UIThread.run(() -> {
-                    long numNotifications = chatNotificationService.getNumNotifications(channel.getId());
-                    numTradeNotification.set(numNotifications > 0 ?
-                            String.valueOf(numNotifications) :
-                            "");
-                });
+                this.isInMediation = isInMediation;
+                if (isInMediation) {
+                    mediatorUserName = channel.getMediator().map(UserProfile::getUserName).orElse("");
+                }
             });
         }
 
         public void dispose() {
             changedChatNotificationPin.unbind();
+            isInMediationPin.unbind();
         }
     }
 }
