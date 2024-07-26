@@ -25,7 +25,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -42,7 +41,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     protected final ChatChannelDomain chatChannelDomain;
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     @Getter
-    protected final transient ObservableSet<String> userProfileIdsOfParticipants = new ObservableSet<>();
+    protected final transient ObservableSet<String> userProfileIdsOfActiveParticipants = new ObservableSet<>();
     protected final transient Map<String, AtomicInteger> numMessagesByAuthorId = new HashMap<>();
     @Getter
     protected final transient Set<String> userProfileIdsOfSendingLeaveMessage = new HashSet<>();
@@ -112,7 +111,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
                 AtomicInteger numMessages = numMessagesByAuthorId.get(authorUserProfileId);
                 if (numMessages.get() > 0 && numMessages.decrementAndGet() == 0) {
                     // If no more messages of that user exist we remove them from userProfileIdsOfParticipants
-                    userProfileIdsOfParticipants.remove(chatMessage.getAuthorUserProfileId());
+                    userProfileIdsOfActiveParticipants.remove(chatMessage.getAuthorUserProfileId());
                 }
             }
         }
@@ -126,8 +125,4 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     public abstract String getDisplayString();
 
     public abstract ObservableSet<M> getChatMessages();
-
-    public boolean isParticipant(UserProfile userProfile) {
-        return userProfileIdsOfParticipants.contains(userProfile.getId());
-    }
 }

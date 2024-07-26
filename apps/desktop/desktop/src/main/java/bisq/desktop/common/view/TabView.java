@@ -54,7 +54,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected double lineSidePadding = 0;
     @Getter
     protected Pane topBox;
-    private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
+    private Subscription selectedTabButtonSubscription, rootWidthSubscription, tabsWidthSubscription, layoutDoneSubscription;
     private ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewListener;
 
     public TabView(M model, C controller) {
@@ -86,9 +86,17 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
             if (model.getSelectedTabButton().get() != null) {
                 // Need delay to give time for rendering in case of scrollbars
-                UIThread.runOnNextRenderFrame(() -> selectionMarker.setLayoutX(getSelectionMarkerX(model.getSelectedTabButton().get())));
+                UIThread.runOnNextRenderFrame(this::updateSelectionMarkerLayout);
             }
         });
+
+        tabsWidthSubscription = EasyBind.subscribe(tabs.widthProperty(), w -> {
+            if (model.getSelectedTabButton().get() != null) {
+                // Need delay to give time for rendering in case of scrollbars
+                UIThread.runOnNextRenderFrame(this::updateSelectionMarkerLayout);
+            }
+        });
+
 
         selectedTabButtonSubscription = EasyBind.subscribe(model.getSelectedTabButton(), selectedTabButton -> {
             if (selectedTabButton != null) {
@@ -104,6 +112,24 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         onChildView(null, model.getView().get());
 
         super.onViewAttachedInternal();
+    }
+
+    @Override
+    void onViewDetachedInternal() {
+        line.prefWidthProperty().unbind();
+        selectedTabButtonSubscription.unsubscribe();
+        rootWidthSubscription.unsubscribe();
+        tabsWidthSubscription.unsubscribe();
+        if (layoutDoneSubscription != null) {
+            layoutDoneSubscription.unsubscribe();
+        }
+        model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
+        model.getView().removeListener(viewListener);
+        super.onViewDetachedInternal();
+    }
+
+    private void updateSelectionMarkerLayout() {
+        selectionMarker.setLayoutX(getSelectionMarkerX(model.getSelectedTabButton().get()));
     }
 
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
@@ -146,19 +172,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
         return false;
-    }
-
-    @Override
-    void onViewDetachedInternal() {
-        line.prefWidthProperty().unbind();
-        selectedTabButtonSubscription.unsubscribe();
-        rootWidthSubscription.unsubscribe();
-        if (layoutDoneSubscription != null) {
-            layoutDoneSubscription.unsubscribe();
-        }
-        model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
-        model.getView().removeListener(viewListener);
-        super.onViewDetachedInternal();
     }
 
     @Override

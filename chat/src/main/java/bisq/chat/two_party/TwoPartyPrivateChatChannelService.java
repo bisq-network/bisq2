@@ -96,7 +96,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
     @Override
     public void leaveChannel(TwoPartyPrivateChatChannel channel) {
-        if (channel.isParticipant(channel.getPeer())) {
+        if (!channel.getChatMessages().isEmpty()) {
             sendLeaveMessage(channel, channel.getPeer(), new Date().getTime());
         }
 

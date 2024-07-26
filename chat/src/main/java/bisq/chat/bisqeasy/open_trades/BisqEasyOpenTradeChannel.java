@@ -212,11 +212,12 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
         if (changed) {
             String authorUserProfileId = chatMessage.getAuthorUserProfileId();
 
+
             // todo (refactor, low prio) we get called from inside constructor at fromProto. should be redesigned
             // If we received a leave message the user got removed from userProfileIdsOfParticipants
             // In that case we remove them from userProfileIdsOfSendingLeaveMessage as well to avoid sending a 
             // leave message.
-            if (!userProfileIdsOfParticipants.contains(authorUserProfileId)) {
+            if (!userProfileIdsOfActiveParticipants.contains(authorUserProfileId)) {
                 userProfileIdsOfSendingLeaveMessage.remove(authorUserProfileId);
             }
         }

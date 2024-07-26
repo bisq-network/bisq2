@@ -33,7 +33,7 @@ import java.util.Set;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends ChatChannel<M> {
+public abstract class PrivateChatChannel<M extends PrivateChatMessage<?>> extends ChatChannel<M> {
     @Getter
     protected final UserIdentity myUserIdentity;
     // We persist the messages as they are NOT persisted in the P2P data store.
@@ -67,9 +67,9 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
                 authorIdsSentLeaveMessage.add(authorUserProfileId);
             }
             if (isLeaveMessage || authorIdsSentLeaveMessage.contains(authorUserProfileId)) {
-                userProfileIdsOfParticipants.remove(authorUserProfileId);
+                userProfileIdsOfActiveParticipants.remove(authorUserProfileId);
             } else {
-                userProfileIdsOfParticipants.add(authorUserProfileId);
+                userProfileIdsOfActiveParticipants.add(authorUserProfileId);
             }
         }
         return changed;
