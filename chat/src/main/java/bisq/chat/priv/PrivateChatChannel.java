@@ -67,9 +67,9 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
                 authorIdsSentLeaveMessage.add(authorUserProfileId);
             }
             if (isLeaveMessage || authorIdsSentLeaveMessage.contains(authorUserProfileId)) {
-                userProfileIdsOfParticipants.remove(authorUserProfileId);
+                userProfileIdsOfActiveParticipants.remove(authorUserProfileId);
             } else {
-                userProfileIdsOfParticipants.add(authorUserProfileId);
+                userProfileIdsOfActiveParticipants.add(authorUserProfileId);
             }
         }
         return changed;

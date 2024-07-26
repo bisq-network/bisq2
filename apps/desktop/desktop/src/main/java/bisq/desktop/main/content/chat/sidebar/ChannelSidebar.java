@@ -147,7 +147,7 @@ public class ChannelSidebar {
             if (userProfileIdsOfParticipantsPin != null) {
                 userProfileIdsOfParticipantsPin.unbind();
             }
-            userProfileIdsOfParticipantsPin = chatChannel.getUserProfileIdsOfParticipants().addObserver(new CollectionObserver<>() {
+            userProfileIdsOfParticipantsPin = chatChannel.getUserProfileIdsOfActiveParticipants().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(String userProfileId) {
                     boolean ignored = ignoredChatUserIds.contains(userProfileId);

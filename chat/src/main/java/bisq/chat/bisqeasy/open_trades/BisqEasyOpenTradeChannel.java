@@ -216,7 +216,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
             // If we received a leave message the user got removed from userProfileIdsOfParticipants
             // In that case we remove them from userProfileIdsOfSendingLeaveMessage as well to avoid sending a 
             // leave message.
-            if (!userProfileIdsOfParticipants.contains(authorUserProfileId)) {
+            if (!userProfileIdsOfActiveParticipants.contains(authorUserProfileId)) {
                 userProfileIdsOfSendingLeaveMessage.remove(authorUserProfileId);
             }
         }

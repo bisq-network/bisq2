@@ -42,7 +42,7 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
     public boolean addChatMessage(M chatMessage) {
         boolean changed = super.addChatMessage(chatMessage);
         if (changed) {
-            userProfileIdsOfParticipants.add(chatMessage.getAuthorUserProfileId());
+            userProfileIdsOfActiveParticipants.add(chatMessage.getAuthorUserProfileId());
         }
 
         return changed;
