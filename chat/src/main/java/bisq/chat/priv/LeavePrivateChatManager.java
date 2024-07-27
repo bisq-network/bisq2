@@ -45,7 +45,7 @@ public class LeavePrivateChatManager {
         this.chatNotificationService = chatNotificationService;
     }
 
-    public void leaveChatChannel(PrivateChatChannel<? extends ChatMessage> chatChannel) {
+    public void leaveChannel(PrivateChatChannel<? extends ChatMessage> chatChannel) {
         ChatChannelDomain chatChannelDomain = chatChannel.getChatChannelDomain();
         PrivateChatChannelService<?, ? extends PrivateChatMessage<?>, ? extends PrivateChatChannel<?>, ?> channelService = findChannelService(chatChannelDomain);
         Optional<? extends PrivateChatChannel<?>> optionalChannel = channelService.findChannel(chatChannel.getId());

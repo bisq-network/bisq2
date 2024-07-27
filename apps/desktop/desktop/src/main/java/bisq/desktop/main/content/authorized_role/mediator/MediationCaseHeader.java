@@ -19,7 +19,7 @@ package bisq.desktop.main.content.authorized_role.mediator;
 
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.containers.Spacer;
@@ -70,17 +70,17 @@ public class MediationCaseHeader {
         private final View view;
         private final Model model;
         private final BisqEasyOpenTradeChannelService channelService;
-        private final BisqEasyOpenTradeSelectionService selectionService;
         private final MediatorService mediatorService;
         private final Runnable onCloseHandler;
         private final Runnable onReOpenHandler;
+        private final LeavePrivateChatManager leavePrivateChatManager;
 
         private Controller(ServiceProvider serviceProvider, Runnable onCloseHandler, Runnable onReOpenHandler) {
             this.onCloseHandler = onCloseHandler;
             this.onReOpenHandler = onReOpenHandler;
             ChatService chatService = serviceProvider.getChatService();
             channelService = chatService.getBisqEasyOpenTradeChannelService();
-            selectionService = chatService.getBisqEasyOpenTradesSelectionService();
+            leavePrivateChatManager = chatService.getLeavePrivateChatManager();
             mediatorService = serviceProvider.getSupportService().getMediatorService();
 
             model = new Model();
@@ -120,7 +120,7 @@ public class MediationCaseHeader {
         }
 
         private void doLeave() {
-            channelService.leaveChannel(model.getMediationCaseListItem().get().getChannel());
+            leavePrivateChatManager.leaveChannel(model.getMediationCaseListItem().get().getChannel());
         }
 
         private void doClose() {

@@ -245,7 +245,7 @@ public class MarketPriceRequestService {
                     log.info("Request market price from {}", client.getBaseUrl() + "/" + param);
                     try {
                         String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                        log.info("Received market price from {} after {} ms", client.getBaseUrl() + param, System.currentTimeMillis() - ts);
+                        log.info("Received market price from {} after {} ms", client.getBaseUrl() + "/" + param, System.currentTimeMillis() - ts);
                         Map<Market, MarketPrice> map = parseResponse(json);
                         long now = System.currentTimeMillis();
                         String sinceLastResponse = timeSinceLastResponse == 0 ? "" : "Time since last response: " + (now - timeSinceLastResponse) / 1000 + " sec";

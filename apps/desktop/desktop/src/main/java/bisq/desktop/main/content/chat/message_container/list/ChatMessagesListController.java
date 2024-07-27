@@ -434,7 +434,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         checkArgument(chatChannel instanceof PrivateChatChannel,
                 "Not possible to leave a channel which is not a private chat.");
 
-        leavePrivateChatManager.leaveChatChannel((PrivateChatChannel<?>) chatChannel);
+        leavePrivateChatManager.leaveChannel((PrivateChatChannel<?>) chatChannel);
     }
 
     public void onReactMessage(ChatMessage chatMessage, Reaction reaction, ChatChannel<?> chatChannel) {

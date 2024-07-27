@@ -288,25 +288,33 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
     private <M extends ChatMessage> void onMessageAdded(ChatChannel<M> chatChannel, M chatMessage) {
+        if (chatMessage.isMyMessage(userIdentityService)) {
+            return;
+        }
+
+        if (chatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
+            // TAKE_BISQ_EASY_OFFER does not result in any text message but is a signal message only, thus we don't
+            // use it for notifications
+            return;
+        }
+
+        if (userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId())) {
+            // If we un-ignore later we will get the notifications of the previously banned messages.
+            // We might consider to consume the notification to avoid that.
+            return;
+        }
+
         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
         ChatNotification chatNotification = persistableStore.findNotification(id)
                 .orElseGet(() -> createNotification(id, chatChannel, chatMessage));
-
-        // At first start-up when user has not setup their profile yet, we set all notifications as consumed
-        if (!userIdentityService.hasUserIdentities()) {
-            consumeNotification(chatNotification);
-            return;
-        }
 
         if (isConsumed(chatNotification)) {
             return;
         }
 
-        if (chatMessage.isMyMessage(userIdentityService)) {
-            return;
-        }
-
-        if (userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId())) {
+        // At first start-up when user has not setup their profile yet, we set all notifications as consumed
+        if (!userIdentityService.hasUserIdentities()) {
+            consumeNotification(chatNotification);
             return;
         }
 

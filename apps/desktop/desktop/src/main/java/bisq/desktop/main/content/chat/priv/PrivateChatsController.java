@@ -154,7 +154,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         if (selectedChannel != null) {
             checkArgument(selectedChannel instanceof PrivateChatChannel,
                     "Not possible to leave a channel which is not a private chat.");
-            leavePrivateChatManager.leaveChatChannel((PrivateChatChannel<?>) selectedChannel);
+            leavePrivateChatManager.leaveChannel((PrivateChatChannel<?>) selectedChannel);
         }
     }
 
