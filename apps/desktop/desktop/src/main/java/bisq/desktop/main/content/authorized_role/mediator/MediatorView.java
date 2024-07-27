@@ -393,13 +393,12 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         @Override
         public void onDeactivate() {
             changedChatNotificationPin.unbind();
-            makersBadge.dispose();
         }
 
         private long getNumNotifications(UserProfile userProfile) {
-            return chatNotificationService.getNotConsumedNotifications(channel.getId())
-                    .filter(n -> n.getSenderUserProfile().isPresent())
-                    .filter(n -> n.getSenderUserProfile().get().equals(userProfile))
+            return chatNotificationService.getNotConsumedNotifications(channel)
+                    .filter(notification -> notification.getSenderUserProfile().isPresent())
+                    .filter(notification -> notification.getSenderUserProfile().get().equals(userProfile))
                     .count();
         }
 

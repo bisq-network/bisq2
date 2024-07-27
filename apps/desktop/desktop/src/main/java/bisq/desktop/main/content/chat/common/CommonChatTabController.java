@@ -117,22 +117,23 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         }
 
         String channelId = notification.getChatChannelId();
+        ChatChannelDomain chatChannelDomain = notification.getChatChannelDomain();
         if (isPrivateChannelPresent(channelId)) {
             handlePrivateNotification();
         }
 
         if (model.channelTabButtonModelByChannelId.containsKey(channelId)) {
-            updateTabButtonNotifications(channelId);
+            updateTabButtonNotifications(chatChannelDomain, channelId);
         }
     }
 
-    private void updateTabButtonNotifications(String channelId) {
+    private void updateTabButtonNotifications(ChatChannelDomain chatChannelDomain, String channelId) {
         UIThread.run(() -> {
             ChannelTabButtonModel channelTabButtonModel = model.channelTabButtonModelByChannelId.get(channelId);
             model.getTabButtons().stream()
                     .filter(tabButton -> channelTabButtonModel.getNavigationTarget() == tabButton.getNavigationTarget())
                     .findAny()
-                    .ifPresent(tabButton -> tabButton.setNumNotifications(chatNotificationService.getNumNotifications(channelId)));
+                    .ifPresent(tabButton -> tabButton.setNumNotifications(chatNotificationService.getNumNotifications(chatChannelDomain, channelId)));
         });
     }
 
@@ -143,7 +144,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     private void handlePrivateNotification() {
         UIThread.run(() -> {
             long numNotifications = twoPartyPrivateChatChannelService.getChannels().stream()
-                    .flatMap(channel -> chatNotificationService.getNotConsumedNotifications(channel.getId()))
+                    .flatMap(chatNotificationService::getNotConsumedNotifications)
                     .count();
                     model.getTabButtons().stream()
                             .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())

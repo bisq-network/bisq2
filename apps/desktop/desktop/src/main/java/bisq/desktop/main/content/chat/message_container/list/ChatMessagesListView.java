@@ -123,8 +123,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         scrollDownBackground.managedProperty().bind(model.getShowScrolledDownButton());
 
         scrollDownBadge.textProperty().bind(model.getNumUnReadMessages());
-
         scrollDownBadge.setOpacity(0);
+
         showScrolledDownButtonPin = EasyBind.subscribe(model.getShowScrolledDownButton(), showScrolledDownButton -> {
             if (showScrolledDownButton == null) {
                 return;

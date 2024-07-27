@@ -427,7 +427,6 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                 } else {
                     if (badge != null) {
                         badge.textProperty().unbind();
-                        badge.dispose();
                     }
                     setGraphic(null);
                 }
@@ -459,7 +458,6 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                 } else {
                     if (badge != null) {
                         badge.textProperty().unbind();
-                        badge.dispose();
                     }
                     setGraphic(null);
                 }
@@ -581,7 +579,7 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                     }
                     boolean isSenderMediator = notification.getSenderUserProfile().equals(channel.getMediator());
                     boolean isNotificationFromMediator = notification.getMediator().equals(notification.getSenderUserProfile());
-                    long numNotifications = chatNotificationService.getNumNotifications(channel.getId());
+                    long numNotifications = chatNotificationService.getNumNotifications(channel);
                     if (isSenderMediator && isNotificationFromMediator) {
                         mediatorNumNotifications = numNotifications - peerNumNotifications;
                         String value = mediatorNumNotifications > 0 ? String.valueOf(mediatorNumNotifications) : "";

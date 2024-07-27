@@ -15,21 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.offerbook;
+package bisq.bisq_easy;
 
 import lombok.Getter;
 
-import java.util.function.Predicate;
-
 @Getter
-enum MarketFilter {
-    ALL(item -> true),
-    FAVOURITES(item -> item.getIsFavourite().get()),
-    WITH_OFFERS(item -> item.getNumOffers().get() > 0);
-
-    private final Predicate<MarketChannelItem> predicate;
-
-    MarketFilter(Predicate<MarketChannelItem> predicate) {
-        this.predicate = predicate;
-    }
+public enum BisqEasyMarketFilter {
+    ALL,
+    FAVOURITES,
+    WITH_OFFERS
 }
+

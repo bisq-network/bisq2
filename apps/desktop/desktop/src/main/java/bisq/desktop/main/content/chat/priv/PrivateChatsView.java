@@ -303,7 +303,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na"));
 
-            numMessagesBadge = new Badge(null, Pos.CENTER_RIGHT);
+            numMessagesBadge = new Badge(Pos.CENTER_RIGHT);
         }
 
         public void setNumNotifications(long numNotifications) {

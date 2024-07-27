@@ -60,7 +60,7 @@ public class LeavePrivateChatManager {
         }
         selectionService.selectChannel(channelService.getChannels().stream().findFirst().orElse(null));
 
-        chatNotificationService.consume(chatChannel.getId());
+        chatNotificationService.consume(chatChannel);
     }
 
     private PrivateChatChannelService<?, ? extends PrivateChatMessage<?>, ? extends PrivateChatChannel<?>, ?> findChannelService(ChatChannelDomain chatChannelDomain) {

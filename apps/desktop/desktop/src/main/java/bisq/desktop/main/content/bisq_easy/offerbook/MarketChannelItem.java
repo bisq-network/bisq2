@@ -19,40 +19,50 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.notifications.ChatNotification;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.settings.FavouriteMarketsService;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.*;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.ref.WeakReference;
 
-@EqualsAndHashCode
+@Slf4j
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-class MarketChannelItem {
+public class MarketChannelItem {
     private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
     private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
 
+    @EqualsAndHashCode.Include
     private final BisqEasyOfferbookChannel channel;
     private final FavouriteMarketsService favouriteMarketsService;
+    private final ChatNotificationService chatNotificationService;
     private final Market market;
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
+    @EqualsAndHashCode.Exclude
+    private final StringProperty numMarketNotifications = new SimpleStringProperty();
+    private Pin changedChatNotificationPin;
 
-    MarketChannelItem(BisqEasyOfferbookChannel channel, FavouriteMarketsService favouriteMarketsService) {
+    MarketChannelItem(BisqEasyOfferbookChannel channel,
+                      FavouriteMarketsService favouriteMarketsService,
+                      ChatNotificationService chatNotificationService) {
         this.channel = channel;
         this.favouriteMarketsService = favouriteMarketsService;
+        this.chatNotificationService = chatNotificationService;
         market = channel.getMarket();
         marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
         marketLogo.setCache(true);
@@ -63,6 +73,40 @@ class MarketChannelItem {
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
+
+        chatNotificationService.getNotConsumedNotifications(channel).forEach(this::applyNotification);
+
+        onActivate();
+    }
+
+    void onActivate() {
+        if (changedChatNotificationPin != null) {
+            changedChatNotificationPin.unbind();
+        }
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
+                UIThread.run(() -> applyNotification(notification)));
+    }
+
+    void onDeactivate() {
+        if (changedChatNotificationPin != null) {
+            changedChatNotificationPin.unbind();
+        }
+    }
+
+    private void applyNotification(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
+        long numNotifications = chatNotificationService.getNumNotifications(channel);
+        String value = "";
+        if (numNotifications > 9) {
+            // We don't have enough space for 2-digit numbers, so we show an asterix. Standard asterix would not be
+            // centered, thus we use the `full width asterisk` taken from https://www.piliapp.com/symbol/asterisk/
+            value = "＊";
+        } else if (numNotifications > 0) {
+            value = String.valueOf(numNotifications);
+        }
+        numMarketNotifications.set(value);
     }
 
     private void setUpColorAdjustments() {
