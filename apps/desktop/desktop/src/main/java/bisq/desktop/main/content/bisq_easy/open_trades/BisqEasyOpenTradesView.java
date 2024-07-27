@@ -36,7 +36,7 @@ import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
-import bisq.desktop.main.content.chat.BaseChatView;
+import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
@@ -70,7 +70,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 @Slf4j
-public final class BisqEasyOpenTradesView extends BaseChatView {
+public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
     private final VBox tradeWelcomeViewRoot, tradeStateViewRoot, chatVBox;
     private final BisqTableView<ListItem> tableView;
     private final Button toggleChatWindowButton;
@@ -85,10 +85,8 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                                   Pane channelSidebar,
                                   VBox tradeStateViewRoot,
                                   VBox tradeWelcomeViewRoot) {
-        super(model,
-                controller,
-                chatMessagesComponent,
-                channelSidebar);
+        super(model, controller, chatMessagesComponent, channelSidebar);
+
         this.tradeStateViewRoot = tradeStateViewRoot;
         this.tradeWelcomeViewRoot = tradeWelcomeViewRoot;
 
@@ -133,26 +131,6 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
 
     @Override
     protected void configCenterVBox() {
-    }
-
-    @Override
-    protected void configSideBarVBox() {
-        sideBar.getChildren().add(channelSidebar);
-        sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
-        sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setFillWidth(true);
-    }
-
-    @Override
-    protected void configContainerHBox() {
-        containerHBox.setSpacing(10);
-        containerHBox.setFillHeight(true);
-        HBox.setHgrow(centerVBox, Priority.ALWAYS);
-        HBox.setHgrow(sideBar, Priority.NEVER);
-        containerHBox.getChildren().addAll(centerVBox, sideBar);
-        containerHBox.setPadding(new Insets(0, 40, 0, 40));
-
-        root.setContent(containerHBox);
     }
 
     @Override
@@ -250,7 +228,6 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         tableView.setOnMouseClicked(null);
     }
 
-
     private void chatWindowChanged(Stage chatWindow) {
         if (chatWindow == null) {
             ImageView icon = ImageUtil.getImageViewById("detach");
@@ -309,7 +286,6 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
             UIThread.runOnNextRenderFrame(() -> chatWindow.setOpacity(1));
         }
     }
-
 
     private void configTableView() {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
