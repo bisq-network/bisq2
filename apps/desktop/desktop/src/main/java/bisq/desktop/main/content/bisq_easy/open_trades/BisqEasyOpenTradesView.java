@@ -131,6 +131,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
     @Override
     protected void configCenterVBox() {
+        centerVBox.setAlignment(Pos.CENTER);
+        centerVBox.setFillWidth(true);
     }
 
     @Override
@@ -194,7 +196,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 tableView.getColumns().remove(mediatorColumn);
             }
         });
-
 
         toggleChatWindowButton.setOnAction(e -> getController().onToggleChatWindow());
     }
