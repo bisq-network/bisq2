@@ -380,29 +380,33 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             @Override
             public void add(ChatMessageReaction element) {
                 Reaction reaction = getReactionFromOrdinal(element.getReactionId());
-                if (userReactions.containsKey(reaction)) {
-                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
-                    userProfile.ifPresent(profile -> {
-                        if (!userProfileService.isChatUserIgnored(profile)) {
-                            userReactions.get(reaction).addUser(element, profile);
-                        }
-                    });
-                }
+                UIThread.run(() -> {
+                    if (userReactions.containsKey(reaction)) {
+                        Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
+                        userProfile.ifPresent(profile -> {
+                            if (!userProfileService.isChatUserIgnored(profile)) {
+                                userReactions.get(reaction).addUser(element, profile);
+                            }
+                        });
+                    }
+                });
             }
 
             @Override
             public void remove(Object element) {
                 ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
                 Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
-                if (userReactions.containsKey(reaction)) {
-                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
-                    userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
-                }
+                UIThread.run(() -> {
+                    if (userReactions.containsKey(reaction)) {
+                        Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
+                        userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
+                    }
+                });
             }
 
             @Override
             public void clear() {
-                userReactions.clear();
+                UIThread.run(userReactions::clear);
             }
         }));
     }
