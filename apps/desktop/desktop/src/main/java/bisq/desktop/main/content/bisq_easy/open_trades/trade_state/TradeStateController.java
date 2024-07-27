@@ -21,7 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.contract.Role;
@@ -63,9 +63,9 @@ public class TradeStateController implements Controller {
     private final TradeDataHeader tradeDataHeader;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasyOpenTradeChannelService channelService;
-    private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationRequestService mediationRequestService;
     private final DontShowAgainService dontShowAgainService;
+    private final LeavePrivateChatManager leavePrivateChatManager;
     private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin;
     private Subscription channelPin, hasBuyerAcceptedPriceSpecPin;
 
@@ -74,7 +74,7 @@ public class TradeStateController implements Controller {
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         ChatService chatService = serviceProvider.getChatService();
         channelService = chatService.getBisqEasyOpenTradeChannelService();
-        selectionService = chatService.getBisqEasyOpenTradesSelectionService();
+        leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
 
@@ -244,11 +244,8 @@ public class TradeStateController implements Controller {
         new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.warning.interrupted"))
                 .actionButtonText(Res.get("confirmation.yes"))
                 .onAction(() -> {
-                    BisqEasyTrade trade = model.getBisqEasyTrade().get();
-                    BisqEasyOpenTradeChannel channel = model.getChannel().get();
-                    bisqEasyTradeService.removeTrade(trade);
-                    channelService.leaveChannel(channel);
-                    selectionService.getSelectedChannel().set(null);
+                    bisqEasyTradeService.removeTrade(model.getBisqEasyTrade().get());
+                    leavePrivateChatManager.leaveChatChannel(model.getChannel().get());
                 })
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();

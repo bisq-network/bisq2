@@ -304,7 +304,6 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             return;
         }
 
-
         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
         ChatNotification chatNotification = persistableStore.findNotification(id)
                 .orElseGet(() -> createNotification(id, chatChannel, chatMessage));
@@ -318,7 +317,6 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             consumeNotification(chatNotification);
             return;
         }
-
 
         // For BisqEasyOfferbookChannels we add it to consumed to not get them shown when switching to a new channel
         if (chatChannel instanceof BisqEasyOfferbookChannel &&
