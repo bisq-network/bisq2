@@ -22,12 +22,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 public class BisqEasyOfferbookUtil {
     static final List<Market> majorMarkets = MarketRepository.getMajorMarkets();
 
@@ -160,6 +162,7 @@ public class BisqEasyOfferbookUtil {
                     setGraphic(pane);
                 } else {
                     numMessagesBadge.textProperty().unbind();
+                    numMessagesBadge.setText("");
                     setGraphic(null);
                 }
             }

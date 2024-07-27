@@ -103,7 +103,7 @@ public class Badge extends StackPane {
         // Using weak listeners here was not safe. Some update did not get processed.
         // As we do not reference any external object there should not be any risk for causing a memory leak.
         text.addListener((observable, oldValue, newValue) -> {
-            if (newValue != null && !newValue.equals(oldValue)) {
+            if (oldValue == null || !oldValue.equals(newValue)) {
                 refreshBadge();
             }
         });

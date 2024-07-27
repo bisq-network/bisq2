@@ -223,6 +223,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         updateFilteredMarketChannelItems();
         updateFavouriteMarketChannelItems();
         maybeSelectFirst();
+
+        model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
     }
 
     @Override
@@ -232,6 +234,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         if (offerMessagesPin != null) {
             offerMessagesPin.unbind();
         }
+        model.getMarketChannelItems().forEach(MarketChannelItem::onDeactivate);
 
         showBuyOffersPin.unbind();
         showOfferListExpandedSettingsPin.unbind();
@@ -308,6 +311,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
             selectionService.selectChannel(item.getChannel());
+            chatNotificationService.consume(item.getChannel().getId());
         }
     }
 

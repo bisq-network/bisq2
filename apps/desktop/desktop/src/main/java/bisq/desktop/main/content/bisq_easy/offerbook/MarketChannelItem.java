@@ -55,7 +55,7 @@ class MarketChannelItem {
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
     @EqualsAndHashCode.Exclude
     private final StringProperty numMarketNotifications = new SimpleStringProperty();
-    private final Pin changedChatNotificationPin;
+    private Pin changedChatNotificationPin;
 
     MarketChannelItem(BisqEasyOfferbookChannel channel, FavouriteMarketsService favouriteMarketsService, ChatNotificationService chatNotificationService) {
         this.channel = channel;
@@ -72,18 +72,27 @@ class MarketChannelItem {
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
 
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
-                UIThread.run(() -> applyNotification(notification)));
         chatNotificationService.getNotConsumedNotifications(channel.getId()).forEach(this::applyNotification);
+
+        onActivate();
     }
 
-    void dispose() {
-        changedChatNotificationPin.unbind();
+    void onActivate() {
+        if (changedChatNotificationPin != null) {
+            changedChatNotificationPin.unbind();
+        }
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
+                UIThread.run(() -> applyNotification(notification)));
+    }
+
+    void onDeactivate() {
+        if (changedChatNotificationPin != null) {
+            changedChatNotificationPin.unbind();
+        }
     }
 
     private void applyNotification(ChatNotification notification) {
         if (notification == null) {
-            numMarketNotifications.set("");
             return;
         }
         long numNotifications = chatNotificationService.getNumNotifications(channel.getId());
