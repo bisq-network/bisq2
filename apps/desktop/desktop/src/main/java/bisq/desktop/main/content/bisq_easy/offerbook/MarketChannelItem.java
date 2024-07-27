@@ -19,17 +19,16 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.settings.FavouriteMarketsService;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.*;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
@@ -54,6 +53,9 @@ class MarketChannelItem {
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
+    @EqualsAndHashCode.Exclude
+    private final StringProperty numMarketNotifications = new SimpleStringProperty();
+    private final Pin changedChatNotificationPin;
 
     MarketChannelItem(BisqEasyOfferbookChannel channel, FavouriteMarketsService favouriteMarketsService, ChatNotificationService chatNotificationService) {
         this.channel = channel;
@@ -69,18 +71,31 @@ class MarketChannelItem {
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
+
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
+                UIThread.run(() -> applyNotification(notification)));
+        chatNotificationService.getNotConsumedNotifications(channel.getId()).forEach(this::applyNotification);
     }
 
-    public String getNumMarketNotifications() {
+    void dispose() {
+        changedChatNotificationPin.unbind();
+    }
+
+    private void applyNotification(ChatNotification notification) {
+        if (notification == null) {
+            numMarketNotifications.set("");
+            return;
+        }
         long numNotifications = chatNotificationService.getNumNotifications(channel.getId());
+        String value = "";
         if (numNotifications > 9) {
             // We don't have enough space for 2-digit numbers, so we show an asterix. Standard asterix would not be
             // centered, thus we use the `full width asterisk` taken from https://www.piliapp.com/symbol/asterisk/
-            return "＊";
+            value = "＊";
         } else if (numNotifications > 0) {
-            return String.valueOf(numNotifications);
+            value = String.valueOf(numNotifications);
         }
-        return "";
+        numMarketNotifications.set(value);
     }
 
     private void setUpColorAdjustments() {

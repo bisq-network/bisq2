@@ -153,12 +153,13 @@ public class BisqEasyOfferbookUtil {
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    numMessagesBadge.setText(item.getNumMarketNotifications());
+                    numMessagesBadge.textProperty().bind(item.getNumMarketNotifications());
                     Node marketLogo = item.getMarketLogo();
                     StackPane pane = new StackPane(marketLogo, numMessagesBadge);
                     StackPane.setMargin(numMessagesBadge, new Insets(33, 0, 0, 35));
                     setGraphic(pane);
                 } else {
+                    numMessagesBadge.textProperty().unbind();
                     setGraphic(null);
                 }
             }
