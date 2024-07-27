@@ -4,6 +4,7 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
@@ -14,9 +15,11 @@ import javafx.beans.binding.StringExpression;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.fxmisc.easybind.EasyBind;
@@ -101,8 +104,7 @@ public class BisqEasyOfferbookUtil {
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
 
-                // Clean up previous row
-                if (getTableRow() != null && selectedPin != null) {
+                if (selectedPin != null) {
                     selectedPin.unsubscribe();
                 }
 
@@ -118,10 +120,9 @@ public class BisqEasyOfferbookUtil {
                             BisqEasyOfferbookUtil.getFormattedTooltip(numOffersString, quoteCurrencyDisplayName), item.getNumOffers());
                     marketDetailsTooltip.textProperty().bind(formattedTooltip);
 
-                    // Set up new row
-                    TableRow<MarketChannelItem> newRow = getTableRow();
-                    if (newRow != null) {
-                        selectedPin = EasyBind.subscribe(newRow.selectedProperty(), item::updateMarketLogoEffect);
+                    TableRow<MarketChannelItem> tableRow = getTableRow();
+                    if (tableRow != null) {
+                        selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), item::updateMarketLogoEffect);
                     }
 
                     favouriteLabel.setOnMouseClicked(e -> item.toggleFavourite());
@@ -142,6 +143,8 @@ public class BisqEasyOfferbookUtil {
     static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
             TableCell<MarketChannelItem, MarketChannelItem>> getMarketLogoCellFactory() {
         return column -> new TableCell<>() {
+            private final Badge numMessagesBadge = new Badge(Pos.CENTER);
+
             {
                 setCursor(Cursor.HAND);
             }
@@ -149,8 +152,15 @@ public class BisqEasyOfferbookUtil {
             @Override
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
-
-                setGraphic(item != null && !empty ? item.getMarketLogo() : null);
+                if (item != null && !empty) {
+                    numMessagesBadge.setText(item.getNumMarketNotifications());
+                    Node marketLogo = item.getMarketLogo();
+                    StackPane pane = new StackPane(marketLogo, numMessagesBadge);
+                    StackPane.setMargin(numMessagesBadge, new Insets(33, 0, 0, 35));
+                    setGraphic(pane);
+                } else {
+                    setGraphic(null);
+                }
             }
         };
     }

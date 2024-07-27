@@ -427,7 +427,6 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                 } else {
                     if (badge != null) {
                         badge.textProperty().unbind();
-                        badge.dispose();
                     }
                     setGraphic(null);
                 }
@@ -459,7 +458,6 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                 } else {
                     if (badge != null) {
                         badge.textProperty().unbind();
-                        badge.dispose();
                     }
                     setGraphic(null);
                 }

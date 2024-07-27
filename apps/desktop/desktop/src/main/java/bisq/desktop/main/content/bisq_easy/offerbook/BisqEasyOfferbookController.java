@@ -26,6 +26,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -71,6 +72,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final FavouriteMarketsService favouriteMarketsService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final SetChangeListener<Market> favouriteMarketsListener;
+    private final ChatNotificationService chatNotificationService;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
             favouriteMarketsPin, offerMessagesPin, showBuyOffersPin, showOfferListExpandedSettingsPin,
             showMarketSelectionListCollapsedSettingsPin;
@@ -85,6 +87,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         bisqEasyOfferbookModel = getModel();
         favouriteMarketsListener = change -> {
             if (change.wasAdded()) {
@@ -153,7 +156,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         });
 
         MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).map(name ->
-                        ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.ALL)).orElse(MarketFilter.ALL);
+                ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.ALL)).orElse(MarketFilter.ALL);
         model.getSelectedMarketsFilter().set(persistedMarketsFilter);
 
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
@@ -334,7 +337,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     private void createMarketChannels() {
         List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
-                .map(channel -> new MarketChannelItem(channel, favouriteMarketsService))
+                .map(channel -> new MarketChannelItem(channel, favouriteMarketsService, chatNotificationService))
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);
     }
