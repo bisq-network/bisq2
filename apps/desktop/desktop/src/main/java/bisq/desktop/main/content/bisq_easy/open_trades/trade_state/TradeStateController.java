@@ -245,7 +245,7 @@ public class TradeStateController implements Controller {
                 .actionButtonText(Res.get("confirmation.yes"))
                 .onAction(() -> {
                     bisqEasyTradeService.removeTrade(model.getBisqEasyTrade().get());
-                    leavePrivateChatManager.leaveChatChannel(model.getChannel().get());
+                    leavePrivateChatManager.leaveChannel(model.getChannel().get());
                 })
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();

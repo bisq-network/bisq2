@@ -120,7 +120,7 @@ public class MediationCaseHeader {
         }
 
         private void doLeave() {
-            leavePrivateChatManager.leaveChatChannel(model.getMediationCaseListItem().get().getChannel());
+            leavePrivateChatManager.leaveChannel(model.getMediationCaseListItem().get().getChannel());
         }
 
         private void doClose() {

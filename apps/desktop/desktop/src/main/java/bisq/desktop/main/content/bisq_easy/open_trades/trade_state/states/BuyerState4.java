@@ -92,7 +92,7 @@ public class BuyerState4 extends BaseState {
                     .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
                     .onAction(() -> {
                         bisqEasyTradeService.removeTrade(model.getBisqEasyTrade());
-                        leavePrivateChatManager.leaveChatChannel(model.getChannel());
+                        leavePrivateChatManager.leaveChannel(model.getChannel());
                     })
                     .closeButtonText(Res.get("action.cancel"))
                     .show();
