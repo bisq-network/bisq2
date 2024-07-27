@@ -48,7 +48,6 @@ import bisq.settings.SettingsService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import javafx.collections.ListChangeListener;
-import javafx.collections.SetChangeListener;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -71,7 +70,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final ReputationService reputationService;
     private final FavouriteMarketsService favouriteMarketsService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
-    private final SetChangeListener<Market> favouriteMarketsListener;
     private final ChatNotificationService chatNotificationService;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
             favouriteMarketsPin, offerMessagesPin, showBuyOffersPin, showOfferListExpandedSettingsPin,
@@ -89,25 +87,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         bisqEasyOfferbookModel = getModel();
-        favouriteMarketsListener = change -> {
-            if (change.wasAdded()) {
-                Market market = change.getElementAdded();
-                model.getMarketChannelItems().forEach(item -> item.getIsFavourite().set(market.equals(item.getMarket())));
-            }
-
-            if (change.wasRemoved()) {
-                Market market = change.getElementRemoved();
-                model.getMarketChannelItems().forEach(item -> {
-                    if (market.equals(item.getMarket()) && item.getIsFavourite().get()) {
-                        item.getIsFavourite().set(false);
-                    }
-                });
-            }
-
-            updateFilteredMarketChannelItems();
-            updateFavouriteMarketChannelItems();
-        };
-
         createMarketChannels();
     }
 
@@ -196,27 +175,40 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
-        CollectionObserver<Market> favouriteMarketsObserver = new CollectionObserver<>() {
+        favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(new CollectionObserver<>() {
             @Override
             public void add(Market market) {
-                model.getFavouriteMarkets().add(market);
+                UIThread.run(() -> {
+                    model.getFavouriteMarkets().add(market);
+                    findMarketChannelItem(market).ifPresent(item -> item.getIsFavourite().set(true));
+                    updateFilteredMarketChannelItems();
+                    updateFavouriteMarketChannelItems();
+                });
             }
 
             @Override
             public void remove(Object element) {
                 if (element instanceof Market) {
-                    model.getFavouriteMarkets().remove((Market) element);
+                    Market market = (Market) element;
+                    UIThread.run(() -> {
+                        model.getFavouriteMarkets().remove(market);
+                        findMarketChannelItem(market).ifPresent(item -> item.getIsFavourite().set(false));
+                        updateFilteredMarketChannelItems();
+                        updateFavouriteMarketChannelItems();
+                    });
                 }
             }
 
             @Override
             public void clear() {
-                model.getFavouriteMarkets().clear();
+                UIThread.run(() -> {
+                    model.getFavouriteMarkets().clear();
+                    model.getMarketChannelItems().forEach(item -> item.getIsFavourite().set(false));
+                    updateFilteredMarketChannelItems();
+                    updateFavouriteMarketChannelItems();
+                });
             }
-        };
-        favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(favouriteMarketsObserver);
-
-        model.getFavouriteMarkets().addListener(favouriteMarketsListener);
+        });
 
         model.getSortedMarketChannelItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
 
@@ -247,7 +239,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedMarketSortTypePin.unsubscribe();
         favouriteMarketsPin.unbind();
         showBuyOffersFromModelPin.unsubscribe();
-        model.getFavouriteMarkets().removeListener(favouriteMarketsListener);
 
         resetSelectedChildTarget();
     }
@@ -382,6 +373,13 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             selectionService.selectChannel(model.getSortedMarketChannelItems().get(0).getChannel());
         }
     }
+
+    private Optional<MarketChannelItem> findMarketChannelItem(Market market) {
+        return model.getMarketChannelItems().stream()
+                .filter(e -> e.getMarket().equals(market))
+                .findFirst();
+    }
+
 
     private void bindOfferMessages(BisqEasyOfferbookChannel channel) {
         model.getOfferMessageItems().clear();
