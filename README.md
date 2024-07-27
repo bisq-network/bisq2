@@ -34,7 +34,7 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 
 3. **Run desktop client:**
    ```bash
-   ./gradlew desktop:desktop-app:run
+   ./gradlew apps:desktop:desktop-app:run
    ```
 
 4. **Run desktop client with custom data directory:**
