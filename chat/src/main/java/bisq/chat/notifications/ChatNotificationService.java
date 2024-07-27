@@ -309,6 +309,11 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         if (userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId())) {
             return;
         }
+        if (chatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
+            // TAKE_BISQ_EASY_OFFER does not result in any text message but is a signal message only, thus we don't
+            // use it for notifications
+            return;
+        }
 
         // For BisqEasyOfferbookChannels we add it to consumed to not get them shown when switching to a new channel
         if (chatChannel instanceof BisqEasyOfferbookChannel &&
