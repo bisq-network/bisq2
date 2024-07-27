@@ -107,7 +107,7 @@ public class BisqEasyServiceUtil {
                                                                    List<FiatPaymentMethod> fiatPaymentMethods,
                                                                    AmountSpec amountSpec,
                                                                    PriceSpec priceSpec) {
-        String bitcoinPaymentMethodNames= PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods);
+        String bitcoinPaymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods);
         String fiatPaymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
         return createOfferBookMessageFromPeerPerspective(messageOwnerNickName,
                 marketPriceService,

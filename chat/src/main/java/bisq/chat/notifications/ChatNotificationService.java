@@ -45,11 +45,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -74,6 +75,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     // changedNotification contains the ChatNotification which was added, removed or got the consumed flag changed
     @Getter
     private final Observable<ChatNotification> changedNotification = new Observable<>();
+    private final Map<ChatChannelDomain, Predicate<ChatNotification>> predicateByChatChannelDomain = new HashMap<>();
     private final Map<String, Pin> chatMessagesByChannelIdPins = new ConcurrentHashMap<>();
     private final long startUpDateTime = System.currentTimeMillis();
     @Setter
@@ -133,18 +135,29 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Consume notifications
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void consume(String channelId) {
-        getNotConsumedNotifications(channelId)
-                .forEach(this::consumeNotification);
+    public void consume(ChatChannel<?> channel) {
+        consume(channel.getChatChannelDomain(), channel.getId());
+    }
+
+    public void consume(ChatChannelDomain chatChannelDomain) {
+        getNotConsumedNotifications(chatChannelDomain).forEach(this::consumeNotification);
+    }
+
+    public void consume(ChatChannelDomain chatChannelDomain, String chatChannelId) {
+        getNotConsumedNotifications(chatChannelDomain, chatChannelId).forEach(this::consumeNotification);
     }
 
     public void consumeAllNotifications() {
-        getNotConsumedNotifications()
-                .forEach(this::consumeNotification);
+        getNotConsumedNotifications().forEach(this::consumeNotification);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Not consumed notifications
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Stream<ChatNotification> getNotConsumedNotifications() {
         synchronized (persistableStore) {
@@ -152,28 +165,62 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }
     }
 
+    public Stream<ChatNotification> getNotConsumedNotifications(ChatChannel<?> channel) {
+        return getNotConsumedNotifications(channel.getChatChannelDomain(), channel.getId());
+    }
+
     public Stream<ChatNotification> getNotConsumedNotifications(ChatChannelDomain chatChannelDomain) {
         return getNotConsumedNotifications()
-                .filter(chatNotification -> chatNotification.getChatChannelDomain() == chatChannelDomain);
+                .filter(chatNotification -> chatNotification.getChatChannelDomain() == chatChannelDomain)
+                .filter(chatNotification -> findPredicate(chatChannelDomain)
+                        .map(predicate -> predicate.test(chatNotification))
+                        .orElse(true));
     }
 
-    public Stream<ChatNotification> getNotConsumedNotifications(String channelId) {
+    public Stream<ChatNotification> getNotConsumedNotifications(ChatChannelDomain chatChannelDomain, String chatChannelId) {
+        // We filter early for the channelId to avoid unnecessary calls on the predicates
         return getNotConsumedNotifications()
-                .filter(chatNotification -> chatNotification.getChatChannelId().equals(channelId));
+                .filter(chatNotification -> chatNotification.getChatChannelId().equals(chatChannelId))
+                .filter(chatNotification -> chatNotification.getChatChannelDomain() == chatChannelDomain)
+                .filter(chatNotification -> findPredicate(chatChannelDomain)
+                        .map(predicate -> predicate.test(chatNotification))
+                        .orElse(true));
     }
 
-    public Set<String> getTradeIdsOfNotConsumedNotifications() {
-        return getNotConsumedNotifications(ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                .flatMap(chatNotification -> chatNotification.getTradeId().stream())
-                .collect(Collectors.toSet());
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Number of not consumed notifications
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public long getNumNotifications(ChatChannel<?> channel) {
+        return getNumNotifications(channel.getChatChannelDomain(), channel.getId());
     }
 
     public long getNumNotifications(ChatChannelDomain chatChannelDomain) {
         return getNotConsumedNotifications(chatChannelDomain).count();
     }
 
-    public long getNumNotifications(String channelId) {
-        return getNotConsumedNotifications(channelId).count();
+    public long getNumNotifications(ChatChannelDomain chatChannelDomain, String chatChannelId) {
+        return getNotConsumedNotifications(chatChannelDomain, chatChannelId).count();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatChannelDomain based Predicate
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void putPredicate(ChatChannelDomain chatChannelDomain, Predicate<ChatNotification> predicate) {
+        predicateByChatChannelDomain.put(chatChannelDomain, predicate);
+        // We use the changedNotification observable for triggering updates. We could make predicateByChatChannelDomain
+        // an ObservableHashMap but then all clients need to handle both observables.
+        // Seems better to use the below hack to force an update on changedNotification.
+        ChatNotification temp = changedNotification.get();
+        changedNotification.set(null);
+        changedNotification.set(temp);
+    }
+
+    public Optional<Predicate<ChatNotification>> findPredicate(ChatChannelDomain chatChannelDomain) {
+        return Optional.ofNullable(predicateByChatChannelDomain.get(chatChannelDomain));
     }
 
 
@@ -366,7 +413,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     private <M extends ChatMessage> ChatNotification createNotification(String id, ChatChannel<M> chatChannel, M chatMessage) {
         Optional<UserProfile> senderUserProfile = chatMessage instanceof PrivateChatMessage ?
-                Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile()) :
+                Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile()) :
                 userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         String title, message;
         if (chatMessage instanceof BisqEasyOpenTradeMessage &&

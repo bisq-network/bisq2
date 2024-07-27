@@ -21,8 +21,9 @@ import lombok.Getter;
 
 import java.util.function.Predicate;
 
+// Enum names must be in sync with BisqEasyNotificationsService.updateBisqEasyOfferbookPredicate
 @Getter
-enum MarketFilter {
+public enum MarketFilter {
     ALL(item -> true),
     FAVOURITES(item -> item.getIsFavourite().get()),
     WITH_OFFERS(item -> item.getNumOffers().get() > 0);
@@ -33,3 +34,4 @@ enum MarketFilter {
         this.predicate = predicate;
     }
 }
+

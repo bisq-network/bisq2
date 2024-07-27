@@ -41,7 +41,7 @@ import java.lang.ref.WeakReference;
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-class MarketChannelItem {
+public class MarketChannelItem {
     private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
     private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
 
@@ -57,7 +57,9 @@ class MarketChannelItem {
     private final StringProperty numMarketNotifications = new SimpleStringProperty();
     private Pin changedChatNotificationPin;
 
-    MarketChannelItem(BisqEasyOfferbookChannel channel, FavouriteMarketsService favouriteMarketsService, ChatNotificationService chatNotificationService) {
+    MarketChannelItem(BisqEasyOfferbookChannel channel,
+                      FavouriteMarketsService favouriteMarketsService,
+                      ChatNotificationService chatNotificationService) {
         this.channel = channel;
         this.favouriteMarketsService = favouriteMarketsService;
         this.chatNotificationService = chatNotificationService;
@@ -72,7 +74,7 @@ class MarketChannelItem {
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
 
-        chatNotificationService.getNotConsumedNotifications(channel.getId()).forEach(this::applyNotification);
+        chatNotificationService.getNotConsumedNotifications(channel).forEach(this::applyNotification);
 
         onActivate();
     }
@@ -95,7 +97,7 @@ class MarketChannelItem {
         if (notification == null) {
             return;
         }
-        long numNotifications = chatNotificationService.getNumNotifications(channel.getId());
+        long numNotifications = chatNotificationService.getNumNotifications(channel);
         String value = "";
         if (numNotifications > 9) {
             // We don't have enough space for 2-digit numbers, so we show an asterix. Standard asterix would not be

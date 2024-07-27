@@ -216,7 +216,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     focusSubscription = EasyBind.subscribe(scene.getWindow().focusedProperty(),
                             focused -> {
                                 if (focused && model.getSelectedChannel().get() != null) {
-                                    chatNotificationService.consume(model.getSelectedChannel().get().getId());
+                                    chatNotificationService.consume(model.getSelectedChannel().get());
                                 }
                             });
                 }
@@ -224,7 +224,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 selectedChannelSubscription = EasyBind.subscribe(model.getSelectedChannel(),
                         selectedChannel -> {
                             if (selectedChannel != null) {
-                                chatNotificationService.consume(model.getSelectedChannel().get().getId());
+                                chatNotificationService.consume(model.getSelectedChannel().get());
                             }
                         });
             }

@@ -40,7 +40,6 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.FavouriteMarketsService;
@@ -56,6 +55,7 @@ import org.fxmisc.easybind.Subscription;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -71,6 +71,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final FavouriteMarketsService favouriteMarketsService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final ChatNotificationService chatNotificationService;
+    private final Predicate<MarketChannelItem> marketChannelItemsPredicate;
+    private final Predicate<MarketChannelItem> favouriteMarketChannelItemsPredicate;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
             favouriteMarketsPin, offerMessagesPin, showBuyOffersPin, showOfferListExpandedSettingsPin,
             showMarketSelectionListCollapsedSettingsPin;
@@ -86,8 +88,16 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         reputationService = serviceProvider.getUserService().getReputationService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+
         bisqEasyOfferbookModel = getModel();
         createMarketChannels();
+
+        marketChannelItemsPredicate = item ->
+                model.getMarketFilterPredicate().test(item) &&
+                        model.getMarketSearchTextPredicate().test(item) &&
+                        model.getMarketPricePredicate().test(item) &&
+                        !item.getIsFavourite().get();
+        favouriteMarketChannelItemsPredicate = item -> item.getIsFavourite().get();
     }
 
     @Override
@@ -179,7 +189,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             @Override
             public void add(Market market) {
                 UIThread.run(() -> {
-                    model.getFavouriteMarkets().add(market);
                     findMarketChannelItem(market).ifPresent(item -> item.getIsFavourite().set(true));
                     updateFilteredMarketChannelItems();
                     updateFavouriteMarketChannelItems();
@@ -191,7 +200,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 if (element instanceof Market) {
                     Market market = (Market) element;
                     UIThread.run(() -> {
-                        model.getFavouriteMarkets().remove(market);
                         findMarketChannelItem(market).ifPresent(item -> item.getIsFavourite().set(false));
                         updateFilteredMarketChannelItems();
                         updateFavouriteMarketChannelItems();
@@ -202,7 +210,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             @Override
             public void clear() {
                 UIThread.run(() -> {
-                    model.getFavouriteMarkets().clear();
                     model.getMarketChannelItems().forEach(item -> item.getIsFavourite().set(false));
                     updateFilteredMarketChannelItems();
                     updateFavouriteMarketChannelItems();
@@ -302,7 +309,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
             selectionService.selectChannel(item.getChannel());
-            chatNotificationService.consume(item.getChannel().getId());
+            chatNotificationService.consume(item.getChannel());
         }
     }
 
@@ -348,22 +355,21 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     }
 
     private void updateFilteredMarketChannelItems() {
-        model.getFilteredMarketChannelItems().setPredicate(item ->
-                model.getMarketFilterPredicate().test(item) &&
-                        model.getMarketSearchTextPredicate().test(item) &&
-                        model.getMarketPricePredicate().test(item) &&
-                        !model.getFavouriteMarkets().contains(item.getMarket()));
+        model.getFilteredMarketChannelItems().setPredicate(null);
+        model.getFilteredMarketChannelItems().setPredicate(marketChannelItemsPredicate);
+        model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
     }
 
     private void updateFavouriteMarketChannelItems() {
-        model.getFavouriteMarketChannelItems().setPredicate(item -> model.getFavouriteMarkets().contains(item.getMarket()));
+        // FilteredList has no API for refreshing/invalidating so that the tableView gets updated.
+        // Calling refresh on the tableView also did not refresh the collection.
+        // Thus, we trigger a change of the predicate to force a refresh.
+        model.getFavouriteMarketChannelItems().setPredicate(null);
+        model.getFavouriteMarketChannelItems().setPredicate(favouriteMarketChannelItemsPredicate);
         double padding = 21;
         double tableViewHeight = (model.getFavouriteMarketChannelItems().size() * MARKET_SELECTION_LIST_CELL_HEIGHT) + padding;
         model.getFavouritesTableViewHeight().set(tableViewHeight);
-    }
-
-    private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
-        return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
+        model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
     }
 
     private void maybeSelectFirst() {

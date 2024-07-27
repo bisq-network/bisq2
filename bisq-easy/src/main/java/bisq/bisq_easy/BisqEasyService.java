@@ -108,7 +108,9 @@ public class BisqEasyService implements Service {
         userIdentityService = userService.getUserIdentityService();
 
         bisqEasyNotificationsService = new BisqEasyNotificationsService(chatService.getChatNotificationService(),
-                supportService.getMediatorService());
+                supportService.getMediatorService(),
+                chatService.getBisqEasyOfferbookChannelService(),
+                settingsService);
     }
 
 
