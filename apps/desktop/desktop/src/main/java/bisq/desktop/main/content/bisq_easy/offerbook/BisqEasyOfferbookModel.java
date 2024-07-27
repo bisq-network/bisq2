@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.Observable;
@@ -42,7 +43,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
     private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
-    private final ObjectProperty<MarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
+    private final ObjectProperty<BisqEasyMarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
     private final StringProperty marketPrice = new SimpleStringProperty();
     private final ObservableList<OfferMessageItem> offerMessageItems = FXCollections.observableArrayList();

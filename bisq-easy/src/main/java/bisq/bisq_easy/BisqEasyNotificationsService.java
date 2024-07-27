@@ -149,13 +149,9 @@ public class BisqEasyNotificationsService implements Service {
 
 
     public void updateBisqEasyOfferbookPredicate() {
-        // TODO We cannot use MarketFilter as it has Desktop dependencies. We could consider to add new
-        // boolean CookieKeys for FAVOURITES and WITH_OFFERS (e.g. CookieKey.MARKETS_FILTER_FAVOURITES)
-        // that would allow also a more flexible filter model (multiple filters instead of exclusive).
-        // For now we just need to ensure that we keep the changes in MarketFilter in sync with the code here.
         String cookie = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).orElse(null);
-        boolean isFavoritesOnlyFilterSet = "FAVOURITES".equals(cookie); // Must be in sync with  MarketFilter.FAVOURITES
-        boolean isMarketsWithOffersFilterSet = "WITH_OFFERS".equals(cookie);// Must be in sync with  MarketFilter.WITH_OFFERS
+        boolean isFavoritesOnlyFilterSet = BisqEasyMarketFilter.FAVOURITES.name().equals(cookie);
+        boolean isMarketsWithOffersFilterSet = BisqEasyMarketFilter.WITH_OFFERS.name().equals(cookie);
 
         if (!isFavoritesOnlyFilterSet && !isMarketsWithOffersFilterSet) {
             // No filter selected, we show all

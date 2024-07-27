@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
@@ -144,17 +145,17 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             updateFilteredMarketChannelItems();
         });
 
-        MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).map(name ->
-                ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.ALL)).orElse(MarketFilter.ALL);
+        BisqEasyMarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).map(name ->
+                ProtobufUtils.enumFromProto(BisqEasyMarketFilter.class, name, BisqEasyMarketFilter.ALL)).orElse(BisqEasyMarketFilter.ALL);
         model.getSelectedMarketsFilter().set(persistedMarketsFilter);
 
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
             if (filter != null) {
-                model.setMarketFilterPredicate(filter.getPredicate());
+                model.setMarketFilterPredicate(MarketFilterPredicate.getPredicate(filter));
                 settingsService.setCookie(CookieKey.MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
                 updateFilteredMarketChannelItems();
             }
-            model.getShouldShowAppliedFilters().set(filter == MarketFilter.WITH_OFFERS || filter == MarketFilter.FAVOURITES);
+            model.getShouldShowAppliedFilters().set(filter == BisqEasyMarketFilter.WITH_OFFERS || filter == BisqEasyMarketFilter.FAVOURITES);
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
