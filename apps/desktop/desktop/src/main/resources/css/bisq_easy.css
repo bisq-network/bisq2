@@ -734,6 +734,10 @@
 .bisq-easy-trade-wizard-payment-methods-step .fiat-methods-grid-pane {
 }
 
+.bisq-easy-trade-wizard-payment-methods-step .bitcoin-methods-grid-pane {
+    /*-fx-background-color: blue;*/
+}
+
 .bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box {
     -fx-alignment: center-left;
     -fx-background-color: -bisq-dark-grey-50;
