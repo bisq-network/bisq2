@@ -23,7 +23,6 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -34,7 +33,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
-import bisq.desktop.main.content.chat.BaseChatController;
+import bisq.desktop.main.content.chat.ChatController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -49,15 +48,14 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public final class BisqEasyOpenTradesController extends BaseChatController<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
+public final class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
     private final BisqEasyOpenTradeChannelService channelService;
-    private final BisqEasyOpenTradeSelectionService selectionService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final SettingsService settingsService;
     private final ReputationService reputationService;
     private final ChatNotificationService chatNotificationService;
     private TradeStateController tradeStateController;
-    private Pin channelItemPin, tradesPin, channelsPin, selectedChannelPin, tradeRulesConfirmedPin;
+    private Pin channelItemPin, tradesPin, channelsPin, tradeRulesConfirmedPin;
     private OpenTradesWelcome openTradesWelcome;
     private TradeDataHeader tradeDataHeader;
     private final Map<String, Pin> isInMediationPinMap = new HashMap<>();
@@ -66,7 +64,6 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, NavigationTarget.BISQ_EASY_OPEN_TRADES);
 
         channelService = chatService.getBisqEasyOpenTradeChannelService();
-        selectionService = chatService.getBisqEasyOpenTradesSelectionService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         settingsService = serviceProvider.getSettingsService();
         reputationService = serviceProvider.getUserService().getReputationService();
@@ -78,6 +75,8 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
         tradeStateController = new TradeStateController(serviceProvider);
         openTradesWelcome = new OpenTradesWelcome();
         tradeDataHeader = new TradeDataHeader(serviceProvider, Res.get("bisqEasy.openTrades.chat.peer.description").toUpperCase());
+
+        selectionService = chatService.getBisqEasyOpenTradesSelectionService();
     }
 
     @Override
