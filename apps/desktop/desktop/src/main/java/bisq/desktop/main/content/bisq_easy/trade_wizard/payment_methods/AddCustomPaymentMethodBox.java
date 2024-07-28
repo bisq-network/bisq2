@@ -34,8 +34,8 @@ public class AddCustomPaymentMethodBox extends HBox {
     private final Button addIconButton;
     private final ImageView addIcon;
     private final ChangeListener<Boolean> focusedListener;
-    private final String defaultIconId = "add-white";
-    private final String activeIconId = "add";
+    private final String defaultIconId = "add-custom-grey";
+    private final String activeIconId = "add-custom-green";
 
     public AddCustomPaymentMethodBox() {
         customPaymentMethodField = new TextField();
