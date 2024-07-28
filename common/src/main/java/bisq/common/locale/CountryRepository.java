@@ -48,13 +48,13 @@ public class CountryRepository {
         if (countryCode.equals("XK"))
             return "Republic of Kosovo";
         else
-            return new Locale(LanguageRepository.getDefaultLanguage(), countryCode).getDisplayCountry();
+            return Locale.of(LanguageRepository.getDefaultLanguage(), countryCode).getDisplayCountry();
     }
 
     public static List<Country> getCountriesFromCodes(List<String> codes) {
         List<Country> list = new ArrayList<>();
         for (String code : codes) {
-            Locale locale = new Locale(LanguageRepository.getDefaultLanguage(), code, "");
+            Locale locale = Locale.of(LanguageRepository.getDefaultLanguage(), code, "");
             String countryCode = locale.getCountry();
             String regionCode = RegionRepository.getRegionCode(countryCode);
             Region region = new Region(regionCode, RegionRepository.getRegionName(regionCode));

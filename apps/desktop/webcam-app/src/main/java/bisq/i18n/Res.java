@@ -38,7 +38,7 @@ public class Res {
     private static final List<ResourceBundle> bundles = new ArrayList<>();
 
     public static void setLanguage(String languageCode) {
-        Locale locale = "en".equalsIgnoreCase(languageCode) ? new Locale("") : Locale.forLanguageTag(languageCode);
+        Locale locale = "en".equalsIgnoreCase(languageCode) ? Locale.of("") : Locale.forLanguageTag(languageCode);
 
         bundles.clear();
 

@@ -83,7 +83,7 @@ public class FiatCurrencyRepository {
         }
 
         // The language and variant components of the locale at Currency.getInstance are ignored.
-        Locale countryLocale = new Locale(locale.getLanguage(), countryCode);
+        Locale countryLocale = Locale.of(locale.getLanguage(), countryCode);
         Currency currency = Currency.getInstance(countryLocale);
         return new FiatCurrency(currency);
     }
