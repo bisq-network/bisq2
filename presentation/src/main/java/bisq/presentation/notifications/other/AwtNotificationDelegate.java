@@ -17,18 +17,18 @@
 
 package bisq.presentation.notifications.other;
 
-import bisq.presentation.notifications.NotificationSender;
+import bisq.presentation.notifications.SystemNotificationDelegate;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.ImageIcon;
+import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
 
 @Slf4j
-public class AwtNotificationSender implements NotificationSender {
+public class AwtNotificationDelegate implements SystemNotificationDelegate {
     private final TrayIcon trayIcon;
 
-    public AwtNotificationSender() {
+    public AwtNotificationDelegate() {
         URL image = getClass().getClassLoader().getResource("images/app_window/icon_128.png");
         trayIcon = new TrayIcon(new ImageIcon(image, "Bisq 2").getImage());
         trayIcon.setImageAutoSize(true);
@@ -40,7 +40,7 @@ public class AwtNotificationSender implements NotificationSender {
         }
     }
 
-    public void send(String title, String message) {
+    public void show(String title, String message) {
         trayIcon.displayMessage(title, message, TrayIcon.MessageType.NONE);
     }
 }

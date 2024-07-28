@@ -34,7 +34,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SendNotificationService;
+import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
@@ -67,7 +67,7 @@ public class ServiceProvider {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final SendNotificationService sendNotificationService;
+    private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
@@ -91,7 +91,7 @@ public class ServiceProvider {
                            ChatService chatService,
                            SettingsService settingsService,
                            SupportService supportService,
-                           SendNotificationService sendNotificationService,
+                           SystemNotificationService systemNotificationService,
                            TradeService tradeService,
                            UpdaterService updaterService,
                            BisqEasyService bisqEasyService,
@@ -114,7 +114,7 @@ public class ServiceProvider {
         this.chatService = chatService;
         this.settingsService = settingsService;
         this.supportService = supportService;
-        this.sendNotificationService = sendNotificationService;
+        this.systemNotificationService = systemNotificationService;
         this.tradeService = tradeService;
         this.updaterService = updaterService;
         this.bisqEasyService = bisqEasyService;

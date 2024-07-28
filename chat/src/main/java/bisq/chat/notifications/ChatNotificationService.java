@@ -36,7 +36,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SendNotificationService;
+import bisq.presentation.notifications.SystemNotificationService;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -68,7 +68,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     @Getter
     private final Persistence<ChatNotificationsStore> persistence;
     private final ChatService chatService;
-    private final SendNotificationService sendNotificationService;
+    private final SystemNotificationService systemNotificationService;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
@@ -83,13 +83,13 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     public ChatNotificationService(PersistenceService persistenceService,
                                    ChatService chatService,
-                                   SendNotificationService sendNotificationService,
+                                   SystemNotificationService systemNotificationService,
                                    SettingsService settingsService,
                                    UserIdentityService userIdentityService,
                                    UserProfileService userProfileService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         this.chatService = chatService;
-        this.sendNotificationService = sendNotificationService;
+        this.systemNotificationService = systemNotificationService;
         this.settingsService = settingsService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
@@ -182,9 +182,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         return getNotConsumedNotifications()
                 .filter(chatNotification -> chatNotification.getChatChannelId().equals(chatChannelId))
                 .filter(chatNotification -> chatNotification.getChatChannelDomain() == chatChannelDomain)
-                .filter(chatNotification -> findPredicate(chatChannelDomain)
-                        .map(predicate -> predicate.test(chatNotification))
-                        .orElse(true));
+                .filter(this::testChatChannelDomainPredicate);
     }
 
 
@@ -221,6 +219,12 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     public Optional<Predicate<ChatNotification>> findPredicate(ChatChannelDomain chatChannelDomain) {
         return Optional.ofNullable(predicateByChatChannelDomain.get(chatChannelDomain));
+    }
+
+    public Boolean testChatChannelDomainPredicate(ChatNotification chatNotification) {
+        return findPredicate(chatNotification.getChatChannelDomain())
+                .map(predicate -> predicate.test(chatNotification))
+                .orElse(true);
     }
 
 
@@ -358,6 +362,10 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             return;
         }
 
+        if (isConsumed(chatNotification)) {
+            return;
+        }
+
         // At first start-up when user has not setup their profile yet, we set all notifications as consumed
         if (!userIdentityService.hasUserIdentities()) {
             consumeNotification(chatNotification);
@@ -405,7 +413,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
         if (shouldSendNotification) {
             addNotification(chatNotification);
-            maybeSendSystemNotification(chatNotification);
+            maybeShowSystemNotification(chatNotification);
         } else {
             consumeNotification(chatNotification);
         }
@@ -439,10 +447,13 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 senderUserProfile);
     }
 
-    private void maybeSendSystemNotification(ChatNotification chatNotification) {
-        if (!isApplicationFocussed && isReceivedAfterStartUp(chatNotification)) {
-            sendNotificationService.send(chatNotification);
+    private void maybeShowSystemNotification(ChatNotification chatNotification) {
+        if (!isApplicationFocussed &&
+                isReceivedAfterStartUp(chatNotification) &&
+                testChatChannelDomainPredicate(chatNotification)) {
+            systemNotificationService.show(chatNotification);
         }
+        getNotConsumedNotifications(chatNotification.getChatChannelDomain(), chatNotification.getChatChannelId());
     }
 
     private boolean isReceivedAfterStartUp(ChatNotification chatNotification) {

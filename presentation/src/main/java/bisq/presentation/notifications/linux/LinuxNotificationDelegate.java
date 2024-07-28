@@ -17,7 +17,7 @@
 package bisq.presentation.notifications.linux;
 
 import bisq.common.util.FileUtils;
-import bisq.presentation.notifications.NotificationSender;
+import bisq.presentation.notifications.SystemNotificationDelegate;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +30,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class LinuxNotificationSender implements NotificationSender {
+public class LinuxNotificationDelegate implements SystemNotificationDelegate {
     private final SettingsService settingsService;
     @Nullable
     private String iconPath;
 
-    public LinuxNotificationSender(Path baseDir, SettingsService settingsService) {
+    public LinuxNotificationDelegate(Path baseDir, SettingsService settingsService) {
         this.settingsService = settingsService;
 
         String javaHomePath = System.getProperty("java.home");
@@ -73,7 +73,7 @@ public class LinuxNotificationSender implements NotificationSender {
 
 
     @Override
-    public void send(String title, String message) {
+    public void show(String title, String message) {
         Boolean useTransientNotifications = settingsService.getCookie().asBoolean(CookieKey.USE_TRANSIENT_NOTIFICATIONS)
                 .orElse(true);
 

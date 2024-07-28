@@ -36,7 +36,7 @@ import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SendNotificationService;
+import bisq.presentation.notifications.SystemNotificationService;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
@@ -72,7 +72,7 @@ public class ChatService implements Service {
                        NetworkService networkService,
                        UserService userService,
                        SettingsService settingsService,
-                       SendNotificationService sendNotificationService) {
+                       SystemNotificationService systemNotificationService) {
         this.persistenceService = persistenceService;
         this.networkService = networkService;
         this.userService = userService;
@@ -81,7 +81,7 @@ public class ChatService implements Service {
 
         chatNotificationService = new ChatNotificationService(persistenceService,
                 this,
-                sendNotificationService,
+                systemNotificationService,
                 settingsService,
                 userIdentityService,
                 userProfileService);

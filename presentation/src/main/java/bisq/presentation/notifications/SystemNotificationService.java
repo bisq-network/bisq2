@@ -20,9 +20,9 @@ package bisq.presentation.notifications;
 
 import bisq.common.application.Service;
 import bisq.common.platform.OS;
-import bisq.presentation.notifications.linux.LinuxNotificationSender;
-import bisq.presentation.notifications.osx.OsxNotificationSender;
-import bisq.presentation.notifications.other.AwtNotificationSender;
+import bisq.presentation.notifications.linux.LinuxNotificationDelegate;
+import bisq.presentation.notifications.osx.OsxNotificationDelegate;
+import bisq.presentation.notifications.other.AwtNotificationDelegate;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,19 +31,19 @@ import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class SendNotificationService implements Service {
+public class SystemNotificationService implements Service {
     private final Path baseDir;
     private final SettingsService settingsService;
-    private NotificationSender sender;
-    private boolean isInitialize;
+    private SystemNotificationDelegate sender;
+    private boolean isInitialized;
 
-    public SendNotificationService(Path baseDir, SettingsService settingsService) {
+    public SystemNotificationService(Path baseDir, SettingsService settingsService) {
         this.baseDir = baseDir;
         this.settingsService = settingsService;
     }
 
     public CompletableFuture<Boolean> initialize() {
-        isInitialize = true;
+        isInitialized = true;
         log.info("initialize");
         return CompletableFuture.completedFuture(true);
     }
@@ -53,20 +53,20 @@ public class SendNotificationService implements Service {
     }
 
 
-    public void send(Notification notification) {
-        if (isInitialize) {
-            getSender().send(notification.getTitle(), notification.getMessage());
+    public void show(Notification notification) {
+        if (isInitialized) {
+            getSender().show(notification.getTitle(), notification.getMessage());
         }
     }
 
-    private NotificationSender getSender() {
+    private SystemNotificationDelegate getSender() {
         if (sender == null) {
-            if (OS.isLinux() && LinuxNotificationSender.isSupported()) {
-                sender = new LinuxNotificationSender(baseDir, settingsService);
-            } else if (OS.isMacOs() && OsxNotificationSender.isSupported()) {
-                sender = new OsxNotificationSender();
+            if (OS.isLinux() && LinuxNotificationDelegate.isSupported()) {
+                sender = new LinuxNotificationDelegate(baseDir, settingsService);
+            } else if (OS.isMacOs() && OsxNotificationDelegate.isSupported()) {
+                sender = new OsxNotificationDelegate();
             } else if (SystemTray.isSupported()) {
-                sender = new AwtNotificationSender();
+                sender = new AwtNotificationDelegate();
             }
         }
         return sender;

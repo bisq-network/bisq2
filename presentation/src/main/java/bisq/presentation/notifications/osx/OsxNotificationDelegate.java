@@ -18,13 +18,13 @@ package bisq.presentation.notifications.osx;
 
 import bisq.common.platform.OS;
 import bisq.common.util.Version;
-import bisq.presentation.notifications.NotificationSender;
+import bisq.presentation.notifications.SystemNotificationDelegate;
 import bisq.presentation.notifications.osx.foundation.Foundation;
 import bisq.presentation.notifications.osx.foundation.ID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OsxNotificationSender implements NotificationSender {
+public class OsxNotificationDelegate implements SystemNotificationDelegate {
     public static boolean isSupported() {
         try {
             // Requires at least Mountain Lion
@@ -42,7 +42,7 @@ public class OsxNotificationSender implements NotificationSender {
     }
 
     @Override
-    public void send(String title, String message) {
+    public void show(String title, String message) {
         ID notification = Foundation.invoke(Foundation.getObjcClass("NSUserNotification"), "new");
         Foundation.invoke(notification, "setTitle:",
                 Foundation.nsString(title));
