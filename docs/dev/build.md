@@ -25,7 +25,7 @@
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
 
-2. Bisq requires JDK 17. You can find out which
+2. Bisq requires JDK 22. You can find out which
    version you have with:
 
    ```sh
