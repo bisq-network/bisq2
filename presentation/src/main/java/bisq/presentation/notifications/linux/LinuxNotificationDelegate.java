@@ -65,7 +65,8 @@ public class LinuxNotificationDelegate implements SystemNotificationDelegate {
 
     public static boolean isSupported() {
         try {
-            return Runtime.getRuntime().exec("notify-send --help > nil").waitFor() == 0;
+            String[] command = new String[]{"notify-send --help > nil"};
+            return Runtime.getRuntime().exec(command).waitFor() == 0;
         } catch (Exception e) {
             return false;
         }
