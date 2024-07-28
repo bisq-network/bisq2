@@ -322,7 +322,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
     }
 
     private void maybeAddOnChainPaymentMethodAsSelected() {
-        if (model.getSelectedFiatPaymentMethods().isEmpty()) {
+        if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
             model.getSelectedBitcoinPaymentMethods().add(ON_CHAIN_PAYMENT_METHOD);
         }
     }
