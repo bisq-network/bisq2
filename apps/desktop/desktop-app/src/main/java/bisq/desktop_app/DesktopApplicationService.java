@@ -36,7 +36,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
-import bisq.presentation.notifications.SendNotificationService;
+import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
@@ -90,7 +90,7 @@ public class DesktopApplicationService extends ApplicationService {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final SendNotificationService sendNotificationService;
+    private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
@@ -145,7 +145,7 @@ public class DesktopApplicationService extends ApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        sendNotificationService = new SendNotificationService(config.getBaseDir(), settingsService);
+        systemNotificationService = new SystemNotificationService(config.getBaseDir(), settingsService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -153,7 +153,7 @@ public class DesktopApplicationService extends ApplicationService {
                 networkService,
                 userService,
                 settingsService,
-                sendNotificationService);
+                systemNotificationService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService,
@@ -180,7 +180,7 @@ public class DesktopApplicationService extends ApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                sendNotificationService,
+                systemNotificationService,
                 tradeService);
 
         alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService());
@@ -206,7 +206,7 @@ public class DesktopApplicationService extends ApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                sendNotificationService,
+                systemNotificationService,
                 tradeService,
                 updaterService,
                 bisqEasyService,
@@ -253,7 +253,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
-                .thenCompose(result -> sendNotificationService.initialize())
+                .thenCompose(result -> systemNotificationService.initialize())
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
@@ -296,7 +296,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> updaterService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> tradeService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> supportService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> sendNotificationService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> systemNotificationService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> chatService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> offerService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> settingsService.shutdown().exceptionally(this::logError))
