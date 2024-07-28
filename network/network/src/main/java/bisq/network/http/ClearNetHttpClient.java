@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -93,7 +94,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
         log.debug("requestWithoutProxy: URL={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
         String spec = httpMethod == HttpMethod.GET ? baseUrl + "/" + param : baseUrl;
         try {
-            URL url = new URL(spec);
+            URL url = new URI(spec).toURL();
             if (proxy == null) {
                 connection = (HttpURLConnection) url.openConnection();
             } else {
