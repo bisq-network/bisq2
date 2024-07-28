@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 public class SystemNotificationService implements Service {
     private final Path baseDir;
     private final SettingsService settingsService;
-    private SystemNotificationDelegate sender;
+    private SystemNotificationDelegate delegate;
     private boolean isInitialized;
 
     public SystemNotificationService(Path baseDir, SettingsService settingsService) {
@@ -55,20 +55,20 @@ public class SystemNotificationService implements Service {
 
     public void show(Notification notification) {
         if (isInitialized) {
-            getSender().show(notification.getTitle(), notification.getMessage());
+            getDelegate().show(notification.getTitle(), notification.getMessage());
         }
     }
 
-    private SystemNotificationDelegate getSender() {
-        if (sender == null) {
+    private SystemNotificationDelegate getDelegate() {
+        if (delegate == null) {
             if (OS.isLinux() && LinuxNotificationDelegate.isSupported()) {
-                sender = new LinuxNotificationDelegate(baseDir, settingsService);
+                delegate = new LinuxNotificationDelegate(baseDir, settingsService);
             } else if (OS.isMacOs() && OsxNotificationDelegate.isSupported()) {
-                sender = new OsxNotificationDelegate();
+                delegate = new OsxNotificationDelegate();
             } else if (SystemTray.isSupported()) {
-                sender = new AwtNotificationDelegate();
+                delegate = new AwtNotificationDelegate();
             }
         }
-        return sender;
+        return delegate;
     }
 }

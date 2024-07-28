@@ -17,6 +17,7 @@
 
 package bisq.desktop;
 
+import bisq.common.platform.OS;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
@@ -46,7 +47,14 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
         try {
             stage.setTitle(model.getTitle());
 
-            ImageUtil.addAppIcons(stage);
+            // Modern MacOS versions do some weird transparency effects on the logo and title.
+            // If the window is active the logo gets about 50% alpha and the title is white. If inactive it's
+            // the opposite, which looks even more weird. Logo and title never have the same tint tone (tried with
+            // white logo as well, the green logo when half transparent is even worse)... So better to just not show
+            // it on MacOS.
+            if (!OS.isMacOs()) {
+                ImageUtil.addAppIcons(stage);
+            }
 
             configCss();
             configSizeAndPosition();
