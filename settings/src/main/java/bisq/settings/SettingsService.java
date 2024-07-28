@@ -128,7 +128,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         LanguageRepository.setDefaultLanguage(languageCode);
         Res.setLanguage(languageCode);
         Locale currentLocale = LocaleRepository.getDefaultLocale();
-        Locale newLocale = new Locale(languageCode, currentLocale.getCountry(), currentLocale.getVariant());
+        Locale newLocale = Locale.of(languageCode, currentLocale.getCountry(), currentLocale.getVariant());
         LocaleRepository.setDefaultLocale(newLocale);
         CountryRepository.applyDefaultLocale(newLocale);
         FiatCurrencyRepository.setLocale(newLocale);
