@@ -77,12 +77,14 @@ public abstract class TradeMessage implements MailboxMessage, ExternalNetworkMes
             case SUBMARINETRADEMESSAGE: {
                 return SubmarineTradeMessage.fromProto(proto);
             }
-
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
+            default: {
+                log.error("Invalid protobuf message: {}", proto.getMessageCase());
+                throw new UnresolvableProtobufMessageException(proto);
+            }
         }
-        throw new UnresolvableProtobufMessageException(proto);
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

@@ -32,6 +32,7 @@ hs_err_pid*
 *.spvchain
 *.wallet
 *.ser
+*.sh
 .DS_Store
 .gradle
 build
