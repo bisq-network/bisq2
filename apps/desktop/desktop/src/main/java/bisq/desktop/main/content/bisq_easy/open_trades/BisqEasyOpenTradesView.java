@@ -95,8 +95,10 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
         configTableView();
 
-        VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
-        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
+        ScrollPane scrollPane = new ScrollPane(tableView);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), scrollPane);
         VBox tableViewVBox = triple.getThird();
 
         // ChatBox
@@ -131,7 +133,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
     @Override
     protected void configCenterVBox() {
-        centerVBox.setAlignment(Pos.CENTER);
+        centerVBox.setAlignment(Pos.TOP_CENTER);
         centerVBox.setFillWidth(true);
     }
 
@@ -175,6 +177,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                         tableView.setPlaceholderText(Res.get("bisqEasy.openTrades.noTrades"));
                         tableView.allowVerticalScrollbar();
                         tableView.setFixHeight(150);
+                        tableView.setMinWidth(500);
                         tableView.getStyleClass().add("empty-table");
                     } else {
                         tableView.setPlaceholder(null);
