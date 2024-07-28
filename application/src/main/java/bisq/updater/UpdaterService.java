@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
@@ -208,7 +209,8 @@ public class UpdaterService implements Service {
             for (DownloadItem downloadItem : downloadItemList) {
                 try {
                     log.info("Download {}", downloadItem);
-                    FileUtils.downloadFile(new URL(downloadItem.getUrlPath()), downloadItem.getDestinationFile(), downloadItem.getProgress());
+                    URL url = URI.create(downloadItem.getUrlPath()).toURL();
+                    FileUtils.downloadFile(url, downloadItem.getDestinationFile(), downloadItem.getProgress());
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new RuntimeException(e);

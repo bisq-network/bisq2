@@ -8,7 +8,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.FileOutputStream
-import java.net.URL
+import java.net.URI
 import java.nio.channels.Channels
 
 @CacheableTask
@@ -26,7 +26,7 @@ abstract class DownloadTask : DefaultTask() {
     }
 
     private fun downloadFile() {
-        val url = URL(downloadUrl.get())
+        val url = URI.create(downloadUrl.get()).toURL();
         url.openStream().use { inputStream ->
             Channels.newChannel(inputStream).use { readableByteChannel ->
                 println("Downloading: $url")
