@@ -32,6 +32,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -45,9 +46,9 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
     private final GridPane fiatMethodsGridPane, bitcoinMethodsGridPane;
 
     public TradeWizardPaymentMethodsView(TradeWizardPaymentMethodsModel model, TradeWizardPaymentMethodsController controller) {
-        super(new VBox(10), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setAlignment(Pos.TOP_CENTER);
+        root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-payment-methods-step");
 
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.headline"));
@@ -64,9 +65,8 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         nonFoundLabel.getStyleClass().add("bisq-text-6");
         nonFoundLabel.setAlignment(Pos.CENTER);
 
-        fiatMethodsGridPane = GridPaneUtil.getGridPane(10, 20, new Insets(0));
+        fiatMethodsGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
         fiatMethodsGridPane.getStyleClass().add("fiat-methods-grid-pane");
-        fiatMethodsGridPane.setAlignment(Pos.CENTER);
 
         addCustomPaymentMethodBox = new AddCustomPaymentMethodBox();
 
@@ -77,15 +77,19 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         bitcoinSubtitleLabel.setWrapText(true);
         bitcoinSubtitleLabel.setMaxWidth(600);
 
-        bitcoinMethodsGridPane = GridPaneUtil.getTwoColumnsGridPane(10, 20, new Insets(0));
+        bitcoinMethodsGridPane = GridPaneUtil.getTwoColumnsGridPane(10, 10, new Insets(0));
         bitcoinMethodsGridPane.getStyleClass().add("bitcoin-methods-grid-pane");
         bitcoinMethodsGridPane.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(fiatMethodsGridPane, new Insets(20, 60, 0, 60));
-        VBox.setMargin(bitcoinMethodsGridPane, new Insets(20, 0, 40, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, fiatSubtitleLabel, nonFoundLabel, fiatMethodsGridPane,
-                Spacer.fillVBox(), bitcoinSubtitleLabel, bitcoinMethodsGridPane);
+        VBox fiatVBox = new VBox(20, fiatSubtitleLabel, nonFoundLabel, fiatMethodsGridPane);
+        fiatVBox.setAlignment(Pos.CENTER);
+        VBox btcVBox = new VBox(20, bitcoinSubtitleLabel, bitcoinMethodsGridPane);
+        btcVBox.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(headlineLabel, new Insets(0, 0, -5, 0));
+        VBox.setMargin(fiatMethodsGridPane, new Insets(0, 60, 0, 60));
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), fiatVBox, Spacer.fillVBox(),
+                btcVBox, Spacer.fillVBox());
 
         fiatPaymentMethodListener = c -> {
             c.next();
@@ -192,6 +196,11 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
     private void setUpAndFillBitcoinPaymentMethods() {
         bitcoinMethodsGridPane.getChildren().clear();
         bitcoinMethodsGridPane.getColumnConstraints().clear();
+        for (int i = 0; i < model.getSortedBitcoinPaymentMethods().size(); ++i) {
+            ColumnConstraints col = new ColumnConstraints();
+            col.setPercentWidth(20.5d);
+            bitcoinMethodsGridPane.getColumnConstraints().add(col);
+        }
 
         int row = 0;
         int col = 0;
