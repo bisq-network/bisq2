@@ -41,5 +41,4 @@ fun getPlatform(): Platform {
             }
         }
     }
-    throw IllegalStateException("Running on unsupported Platform: ${os.osName} / ${architecture.architectureName}")
 }
