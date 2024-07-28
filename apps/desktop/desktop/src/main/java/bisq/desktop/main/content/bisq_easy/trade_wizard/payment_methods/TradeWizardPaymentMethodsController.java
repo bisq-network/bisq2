@@ -33,8 +33,6 @@ import javafx.collections.ObservableList;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -45,7 +43,6 @@ import java.util.stream.Stream;
 @Slf4j
 public class TradeWizardPaymentMethodsController implements Controller {
     private static final BitcoinPaymentMethod ON_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
-    private static final BitcoinPaymentMethod LN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.LN);
     private static final int MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS = 3;
     private static final int MAX_ALLOWED_SELECTED_FIAT_PAYMENTS = 4;
 
@@ -55,8 +52,6 @@ public class TradeWizardPaymentMethodsController implements Controller {
     private final SettingsService settingsService;
     private final Runnable onNextHandler;
     private final Region owner;
-    private Subscription isLNMethodAllowedPin;
-    private ListChangeListener<BitcoinPaymentMethod> selectedBitcoinPaymentMethodsListener;
     private ListChangeListener<FiatPaymentMethod> addedCustomFiatPaymentMethodsListener;
 
     public TradeWizardPaymentMethodsController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
@@ -146,10 +141,6 @@ public class TradeWizardPaymentMethodsController implements Controller {
         model.getBitcoinPaymentMethods().setAll(paymentMethods);
         model.getSortedBitcoinPaymentMethods().setComparator(Comparator.comparingInt(o -> o.getPaymentRail().ordinal()));
 
-        selectedBitcoinPaymentMethodsListener = change -> updateIsLNMethodAllowed();
-        model.getSelectedBitcoinPaymentMethods().addListener(selectedBitcoinPaymentMethodsListener);
-        updateIsLNMethodAllowed();
-
         addedCustomFiatPaymentMethodsListener = change -> updateCanAddCustomFiatPaymentMethod();
         model.getAddedCustomFiatPaymentMethods().addListener(addedCustomFiatPaymentMethodsListener);
         updateCanAddCustomFiatPaymentMethod();
@@ -182,16 +173,11 @@ public class TradeWizardPaymentMethodsController implements Controller {
                     });
                 });
         maybeAddOnChainPaymentMethodAsSelected();
-
-        isLNMethodAllowedPin = EasyBind.subscribe(model.getIsLNMethodAllowed(), isLNAllowed ->
-           onToggleBitcoinPaymentMethod(LN_PAYMENT_METHOD, isLNAllowed));
     }
 
     @Override
     public void onDeactivate() {
-        model.getSelectedBitcoinPaymentMethods().removeListener(selectedBitcoinPaymentMethodsListener);
         model.getAddedCustomFiatPaymentMethods().removeListener(addedCustomFiatPaymentMethodsListener);
-        isLNMethodAllowedPin.unsubscribe();
     }
 
     boolean onToggleFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod, boolean isSelected) {
@@ -329,11 +315,6 @@ public class TradeWizardPaymentMethodsController implements Controller {
         while (model.getAddedCustomFiatPaymentMethods().size() > MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS) {
             model.getAddedCustomFiatPaymentMethods().remove(model.getAddedCustomBitcoinPaymentMethods().size() - 1);
         }
-    }
-
-    private void updateIsLNMethodAllowed() {
-        boolean isLNSelected = model.getSelectedBitcoinPaymentMethods().contains(LN_PAYMENT_METHOD);
-        model.getIsLNMethodAllowed().set(isLNSelected);
     }
 
     private void updateCanAddCustomFiatPaymentMethod() {

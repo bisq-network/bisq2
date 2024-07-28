@@ -48,7 +48,6 @@ public class TradeWizardPaymentMethodsModel implements Model {
     private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty canAddCustomFiatPaymentMethod = new SimpleBooleanProperty();
-    private final BooleanProperty isLNMethodAllowed = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {

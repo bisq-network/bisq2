@@ -30,12 +30,9 @@ import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +42,6 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
     private final Label fiatSubtitleLabel, bitcoinSubtitleLabel, nonFoundLabel;
     private final AddCustomPaymentMethodBox addCustomPaymentMethodBox;
-    private final CheckBox allowLNMethodSwitch;
     private final GridPane fiatMethodsGridPane, bitcoinMethodsGridPane;
 
     public TradeWizardPaymentMethodsView(TradeWizardPaymentMethodsModel model, TradeWizardPaymentMethodsController controller) {
@@ -85,14 +81,6 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         bitcoinMethodsGridPane.getStyleClass().add("bitcoin-methods-grid-pane");
         bitcoinMethodsGridPane.setAlignment(Pos.CENTER);
 
-        Label allowLNNetworkMethodLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.allowLN"), ImageUtil.getImageViewById("LN"));
-        allowLNNetworkMethodLabel.setContentDisplay(ContentDisplay.RIGHT);
-        allowLNNetworkMethodLabel.setGraphicTextGap(12);
-        allowLNMethodSwitch = new CheckBox();
-        HBox allowLNHBox = new HBox(10, allowLNMethodSwitch, allowLNNetworkMethodLabel);
-        allowLNHBox.getStyleClass().add("ln-checkbox");
-        allowLNHBox.setAlignment(Pos.CENTER);
-
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
         VBox.setMargin(fiatMethodsGridPane, new Insets(20, 60, 0, 60));
         VBox.setMargin(bitcoinMethodsGridPane, new Insets(20, 0, 40, 0));
@@ -114,7 +102,6 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
         fiatMethodsGridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
         fiatMethodsGridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        allowLNMethodSwitch.selectedProperty().bindBidirectional(model.getIsLNMethodAllowed());
 
         model.getFiatPaymentMethods().addListener(fiatPaymentMethodListener);
 
@@ -133,7 +120,6 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         nonFoundLabel.managedProperty().unbind();
         fiatMethodsGridPane.visibleProperty().unbind();
         fiatMethodsGridPane.managedProperty().unbind();
-        allowLNMethodSwitch.selectedProperty().unbindBidirectional(model.getIsLNMethodAllowed());
 
         fiatMethodsGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
