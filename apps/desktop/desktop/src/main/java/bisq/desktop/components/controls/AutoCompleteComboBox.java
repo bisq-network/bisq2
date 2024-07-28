@@ -255,7 +255,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     }
 
     protected void filterBy(String query) {
-        matchingList = (extendedList != null && query.length() > 0 ? extendedList : list)
+        matchingList = (extendedList != null && !query.isEmpty() ? extendedList : list)
                 .stream()
                 .filter(item -> asString(item).toLowerCase().contains(query.toLowerCase()))
                 .collect(Collectors.toList());
