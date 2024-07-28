@@ -66,7 +66,7 @@ as `JAVA_OPTS` to gradle sh installer scripts:
 ```sh
 JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
     -Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
-    -Dapplication.network.supportedTransportTypes.0=CLEAR \
+    -Dapplication.network.supportedTransportTypes.0=CLEAR" \
     apps/seed-node-app/build/install/seed-node-app/bin/seed-node-app
 ```
 
