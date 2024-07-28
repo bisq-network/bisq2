@@ -43,7 +43,7 @@
 To run the Bisq 2 desktop app with Gradle and the default settings (using the Tor network) use:
 
 ```sh
-./gradlew desktop:desktop-app:run
+./gradlew apps:desktop:desktop-app:run
 ```
 
 In that configuration the desktop app connects to the public seed nodes via the Tor network.
@@ -82,7 +82,7 @@ space (`Bisq\ 2`)._
 
 ### Supported program arguments
 
-Aditionally to the JVM options we support 2 program arguments:
+Additionally, to the JVM options we support 2 program arguments:
 
 `--app-name` and `--data-dir`. Option name and value is seperated with `=`.
 
@@ -157,7 +157,7 @@ JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
 ### Running a development desktop application with *JVM arguments*:
 
 First create the gradle installer script for the desktop-app:
-`./gradlew :desktop:desktop-app:installDist`
+`./gradlew :apps:desktop:desktop-app:installDist`
 
 Pass the JVM arguments to the installer script:
 ```sh
@@ -169,10 +169,12 @@ JAVA_OPTS="-Dapplication.appName=bisq2_Alice_clear \
 ```
 
 Optionally you can pass that data directory as *program argument* as follows:
-`apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=bisq2_Alice_clear`
+`apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=bisq2_Alice_tor`
+
+Note, that in that case it runs with the default config (using Tor).
 
 You likely want to run a second desktop application for testing the trade use case with 2 traders (e.g. Alice and Bob).
-Just change the `-Dapplication.appName` to something like `bisq2_Bob_clear` in the above configuration.
+Just change the `-Dapplication.appName` to something like `bisq2_Bob` in the above configuration.
 
 
 
