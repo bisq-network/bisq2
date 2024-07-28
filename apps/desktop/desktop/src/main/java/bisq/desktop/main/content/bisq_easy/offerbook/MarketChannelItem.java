@@ -53,7 +53,6 @@ public class MarketChannelItem {
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
-    @EqualsAndHashCode.Exclude
     private final StringProperty numMarketNotifications = new SimpleStringProperty();
     private Pin changedChatNotificationPin;
 
