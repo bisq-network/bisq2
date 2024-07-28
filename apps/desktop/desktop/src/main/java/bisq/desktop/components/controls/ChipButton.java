@@ -52,7 +52,6 @@ public class ChipButton extends HBox {
         toggleButton.setText(text);
         toggleButton.setMouseTransparent(true);
         toggleButton.setAlignment(Pos.CENTER_LEFT);
-        toggleButton.getStyleClass().add("toggle-button");
         HBox.setHgrow(toggleButton, Priority.ALWAYS);
         getChildren().add(toggleButton);
 
