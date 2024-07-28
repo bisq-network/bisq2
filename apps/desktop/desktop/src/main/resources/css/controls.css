@@ -327,13 +327,13 @@
 
 .chips-button {
     -fx-background-color: rgba(255, 255, 255, 0.1);
-    -fx-background-radius: 32;
+    -fx-background-radius: 9;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans";
     -fx-border-width: 0;
     -fx-cursor: hand;
-    -fx-padding: 5 10 5 6;
+    -fx-padding: 5 0 5 7;
 }
 
 .chips-button-hover {
@@ -364,7 +364,7 @@
 .chips-button > .toggle-button:disabled,
 .chips-button > .toggle-button:disabled:hover {
     -fx-background-color: transparent;
-    -fx-padding: 0 20 0 10;
+    -fx-padding: 0 0 0 10;
 }
 
 

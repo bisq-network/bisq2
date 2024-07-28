@@ -528,88 +528,97 @@
 /* Fiat payment methods based on enum names from FiatPaymentRailUtil */
 
 #SEPA {
-    -fx-image: url("/images/payment/SEPA.png");
+    -fx-image: url("/images/payment/sepa.png");
 }
 
 #SEPA_INSTANT {
-    -fx-image: url("/images/payment/SEPA.png");
+    -fx-image: url("/images/payment/sepa-instant.png");
 }
 
 #ZELLE {
-    -fx-image: url("/images/payment/Zelle.png");
+    -fx-image: url("/images/payment/zelle.png");
 }
 
 #REVOLUT {
-    -fx-image: url("/images/payment/Revolut.png");
+    -fx-image: url("/images/payment/revolut.png");
 }
 
 #WISE {
-    -fx-image: url("/images/payment/Wise.png");
+    -fx-image: url("/images/payment/wise.png");
 }
 
 #NATIONAL_BANK {
-    -fx-image: url("/images/payment/NationalBankTransfer.png");
+    -fx-image: url("/images/payment/national-bank-transfer.png");
 }
 
 #SWIFT {
-    -fx-image: url("/images/payment/NationalBankTransfer.png");
+    -fx-image: url("/images/payment/swift.png");
 }
 
 #F2F {
-    -fx-image: url("/images/payment/F2F.png");
+    -fx-image: url("/images/payment/f2f.png");
 }
 
 #ACH_TRANSFER {
-    -fx-image: url("/images/payment/ACH.png");
+    -fx-image: url("/images/payment/ach.png");
 }
 
 #PIX {
-    -fx-image: url("/images/payment/Pix.png");
+    -fx-image: url("/images/payment/pix.png");
 }
 
 #FASTER_PAYMENTS {
-    -fx-image: url("/images/payment/FasterPayments.png");
+    -fx-image: url("/images/payment/faster-payments.png");
 }
 
 #PAY_ID {
-    -fx-image: url("/images/payment/PayID.png");
+    -fx-image: url("/images/payment/pay-id.png");
 }
 
 #US_POSTAL_MONEY_ORDER {
-    -fx-image: url("/images/payment/USPostalMoneyOrder.png");
+    -fx-image: url("/images/payment/uspmo.png");
 }
 
 #CASH_BY_MAIL {
-    -fx-image: url("/images/payment/CashByMail.png");
+    -fx-image: url("/images/payment/cash-by-mail.png");
 }
 
 #STRIKE {
-    -fx-image: url("/images/payment/Strike.png");
+    -fx-image: url("/images/payment/strike.png");
 }
 
 #INTERAC_E_TRANSFER {
-    -fx-image: url("/images/payment/InteracETransfer.png");
+    -fx-image: url("/images/payment/interac-etransfer.png");
 }
 
 #AMAZON_GIFT_CARD {
-    -fx-image: url("/images/payment/Amazon.png");
+    -fx-image: url("/images/payment/amazon.png");
 }
 
 #CASH_DEPOSIT {
-    -fx-image: url("/images/payment/CashDeposit.png");
+    -fx-image: url("/images/payment/cash-deposit.png");
 }
 
 #UPI {
-    -fx-image: url("/images/payment/Upi.png");
+    -fx-image: url("/images/payment/upi.png");
 }
 
 #BIZUM {
-    -fx-image: url("/images/payment/Bizum.png");
+    -fx-image: url("/images/payment/bizum.png");
 }
 
 #CASH_APP {
-    -fx-image: url("/images/payment/CashApp.png");
+    -fx-image: url("/images/payment/cashapp.png");
 }
+
+#add-custom-green {
+    -fx-image: url("/images/payment/add-custom-green.png");
+}
+
+#add-custom-grey {
+    -fx-image: url("/images/payment/add-custom-grey.png");
+}
+
 
 /* Bitcoin payment method icons based on enum names from BitcoinPaymentRail */
 
