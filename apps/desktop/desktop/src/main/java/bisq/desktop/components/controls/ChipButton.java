@@ -31,6 +31,8 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -51,6 +53,7 @@ public class ChipButton extends HBox {
         toggleButton.setText(text);
         toggleButton.setMouseTransparent(true);
         toggleButton.setAlignment(Pos.CENTER_LEFT);
+        VBox.setVgrow(toggleButton, Priority.ALWAYS);
         getChildren().add(toggleButton);
 
         toggleButton.selectedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> {
@@ -86,7 +89,6 @@ public class ChipButton extends HBox {
                 getStyleClass().add("chips-button-selected");
             }
         });
-
     }
 
     private void removeStyles() {
@@ -121,14 +123,13 @@ public class ChipButton extends HBox {
     public ImageView setRightIcon(String iconId) {
         ImageView imageView = ImageUtil.getImageViewById(iconId);
         imageView.setCursor(Cursor.HAND);
-        HBox.setMargin(imageView, new Insets(0, -5, 0, 20));
+        HBox.setMargin(imageView, new Insets(0, 5, 0, 0));
         getChildren().addAll(Spacer.fillHBox(), imageView);
         return imageView;
     }
 
     public void setSelected(boolean value) {
         toggleButton.setSelected(value);
-
     }
 
     public boolean isSelected() {
