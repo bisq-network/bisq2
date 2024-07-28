@@ -412,9 +412,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
     private <M extends ChatMessage> ChatNotification createNotification(String id, ChatChannel<M> chatChannel, M chatMessage) {
-        Optional<UserProfile> senderUserProfile = chatMessage instanceof PrivateChatMessage ?
-                Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile()) :
-                userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
+        Optional<UserProfile> senderUserProfile = chatMessage instanceof PrivateChatMessage
+                ? Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile())
+                : userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         String title, message;
         if (chatMessage instanceof BisqEasyOpenTradeMessage &&
                 chatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {

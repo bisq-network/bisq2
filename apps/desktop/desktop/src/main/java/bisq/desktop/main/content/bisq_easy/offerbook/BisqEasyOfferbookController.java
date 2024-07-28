@@ -127,7 +127,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
         ObservableArray<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChannels.addObserver(() ->
-                model.getIsTradeChannelVisible().set(!bisqEasyOpenTradeChannels.isEmpty()));
+                UIThread.run(() -> model.getIsTradeChannelVisible().set(!bisqEasyOpenTradeChannels.isEmpty())));
 
         selectedChannelPin = FxBindings.subscribe(selectionService.getSelectedChannel(), this::selectedChannelChanged);
 

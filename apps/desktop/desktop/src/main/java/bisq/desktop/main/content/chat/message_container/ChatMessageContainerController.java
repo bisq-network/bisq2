@@ -283,12 +283,14 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
     private void maybeSwitchUserProfile() {
-        if (model.getUserProfileSelectionVisible().get()) {
-            List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
-            if (!myUserProfilesInChannel.isEmpty()) {
-                userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
+        UIThread.run(() -> {
+            if (model.getUserProfileSelectionVisible().get()) {
+                List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
+                if (!myUserProfilesInChannel.isEmpty()) {
+                    userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
+                }
             }
-        }
+        });
     }
 
     private List<UserIdentity> getMyUserProfilesInChannel() {
