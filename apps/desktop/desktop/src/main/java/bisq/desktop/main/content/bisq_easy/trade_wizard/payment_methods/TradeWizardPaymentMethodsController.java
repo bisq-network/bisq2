@@ -81,13 +81,18 @@ public class TradeWizardPaymentMethodsController implements Controller {
             return tryAddCustomFiatPaymentMethodAndNavigateNext();
         }
         if (model.getSelectedFiatPaymentMethods().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.noPaymentMethodSelected"))
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"))
                     .owner(owner)
                     .show();
             return false;
-        } else {
-            return true;
         }
+        if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"))
+                    .owner(owner)
+                    .show();
+            return false;
+        }
+        return true;
     }
 
     public boolean getCustomFiatPaymentMethodNameNotEmpty() {
