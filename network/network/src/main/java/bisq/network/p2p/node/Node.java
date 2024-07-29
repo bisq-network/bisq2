@@ -83,7 +83,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Node implements Connection.Handler {
     @Setter
-    public static int preferredVersion = 1;
+    public static int preferredVersion = 0;
 
     public enum State {
         NEW,
@@ -231,6 +231,7 @@ public class Node implements Connection.Handler {
                     break;
                 }
                 case STARTING: {
+                    // TODO Maybe we should add a sleep here and return once the node is running?
                     throw new IllegalStateException("Already starting. NetworkId=" + networkId + "; transportType=" + transportType);
                 }
                 case RUNNING: {
