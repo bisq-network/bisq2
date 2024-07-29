@@ -206,7 +206,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     public ObservableHashMap<String, UserProfile> getUserProfileById() {
-        return persistableStore.getUserProfileById();
+        synchronized (persistableStore) {
+            return persistableStore.getUserProfileById();
+        }
     }
 
 
