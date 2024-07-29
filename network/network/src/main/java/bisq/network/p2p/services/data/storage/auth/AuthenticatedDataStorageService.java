@@ -24,6 +24,7 @@ import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
@@ -31,6 +32,7 @@ import bisq.security.DigestUtil;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -97,8 +99,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (authenticatedSequentialData.isExpired()) {
-                log.info("Data is expired at add. request object={}",
-                        request.getAuthenticatedSequentialData().getAuthenticatedData().distributedData.getClass().getSimpleName());
+                DistributedData distributedData = authenticatedData.distributedData;
+                log.info("AddAuthenticatedDataRequest with {} is expired on {}",
+                        distributedData.getClass().getSimpleName(),
+                        new Date(authenticatedSequentialData.getCreated() + distributedData.getMetaData().getTtl())
+                );
                 log.debug("Data is expired at add. request={}", request);
                 return new DataStorageResult(false).expired();
             }

@@ -47,6 +47,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -214,15 +215,13 @@ public class OracleNodeService implements Service {
                     Optional.of(authorizedOracleNode),
                     staticPublicKeysProvided);
 
-            // TODO deactivate republishing until issues are resolved
-
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
-           /* startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
-                    .repeated(1, 10, TimeUnit.SECONDS, 3);
+            startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                    .repeated(10, 60, TimeUnit.SECONDS, 3);
 
             // We have 100 days TTL for the data, we republish after 50 days to ensure the data does not expire
             scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
-                    .periodically(50, TimeUnit.DAYS);*/
+                    .periodically(50, TimeUnit.DAYS);
         }
 
         authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
