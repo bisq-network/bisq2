@@ -32,7 +32,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -53,7 +52,7 @@ public class ChipButton extends HBox {
         toggleButton.setText(text);
         toggleButton.setMouseTransparent(true);
         toggleButton.setAlignment(Pos.CENTER_LEFT);
-        VBox.setVgrow(toggleButton, Priority.ALWAYS);
+        HBox.setHgrow(toggleButton, Priority.ALWAYS);
         getChildren().add(toggleButton);
 
         toggleButton.selectedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> {

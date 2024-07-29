@@ -34,23 +34,26 @@ public class TradeWizardPaymentMethodsModel implements Model {
     @Setter
     private Direction direction;
     @Setter
-    private String headline;
+    private String fiatSubtitleLabel;
+    @Setter
+    private String bitcoinSubtitleLabel;
     private final ObservableList<FiatPaymentMethod> fiatPaymentMethods = FXCollections.observableArrayList();
     private final SortedList<FiatPaymentMethod> sortedFiatPaymentMethods = new SortedList<>(fiatPaymentMethods);
     private final ObservableList<FiatPaymentMethod> selectedFiatPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<FiatPaymentMethod> addedCustomFiatPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = FXCollections.observableArrayList();
+    private final SortedList<BitcoinPaymentMethod> sortedBitcoinPaymentMethods = new SortedList<>(bitcoinPaymentMethods);
     private final ObservableList<BitcoinPaymentMethod> selectedBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<BitcoinPaymentMethod> addedCustomBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final StringProperty customFiatPaymentMethodName = new SimpleStringProperty("");
     private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty canAddCustomFiatPaymentMethod = new SimpleBooleanProperty();
-    private final BooleanProperty isLNMethodAllowed = new SimpleBooleanProperty();
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {
         direction = null;
-        headline = null;
+        fiatSubtitleLabel = null;
+        bitcoinSubtitleLabel = null;
         fiatPaymentMethods.clear();
         selectedFiatPaymentMethods.clear();
         addedCustomFiatPaymentMethods.clear();

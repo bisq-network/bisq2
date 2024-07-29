@@ -33,8 +33,6 @@ import javafx.collections.ObservableList;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -45,7 +43,6 @@ import java.util.stream.Stream;
 @Slf4j
 public class TradeWizardPaymentMethodsController implements Controller {
     private static final BitcoinPaymentMethod ON_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
-    private static final BitcoinPaymentMethod LN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.LN);
     private static final int MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS = 3;
     private static final int MAX_ALLOWED_SELECTED_FIAT_PAYMENTS = 4;
 
@@ -55,8 +52,6 @@ public class TradeWizardPaymentMethodsController implements Controller {
     private final SettingsService settingsService;
     private final Runnable onNextHandler;
     private final Region owner;
-    private Subscription isLNMethodAllowedPin;
-    private ListChangeListener<BitcoinPaymentMethod> selectedBitcoinPaymentMethodsListener;
     private ListChangeListener<FiatPaymentMethod> addedCustomFiatPaymentMethodsListener;
 
     public TradeWizardPaymentMethodsController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
@@ -81,13 +76,18 @@ public class TradeWizardPaymentMethodsController implements Controller {
             return tryAddCustomFiatPaymentMethodAndNavigateNext();
         }
         if (model.getSelectedFiatPaymentMethods().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.noPaymentMethodSelected"))
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"))
                     .owner(owner)
                     .show();
             return false;
-        } else {
-            return true;
         }
+        if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"))
+                    .owner(owner)
+                    .show();
+            return false;
+        }
+        return true;
     }
 
     public boolean getCustomFiatPaymentMethodNameNotEmpty() {
@@ -126,9 +126,12 @@ public class TradeWizardPaymentMethodsController implements Controller {
 
     @Override
     public void onActivate() {
-        model.setHeadline(model.getDirection().isBuy()
-                ? Res.get("bisqEasy.tradeWizard.paymentMethod.headline.buyer", model.getMarket().get().getQuoteCurrencyCode())
-                : Res.get("bisqEasy.tradeWizard.paymentMethod.headline.seller", model.getMarket().get().getQuoteCurrencyCode()));
+        model.setFiatSubtitleLabel(model.getDirection().isBuy()
+                ? Res.get("bisqEasy.tradeWizard.fiatPaymentMethods.subTitle.buyer", model.getMarket().get().getQuoteCurrencyCode())
+                : Res.get("bisqEasy.tradeWizard.fiatPaymentMethods.subTitle.seller", model.getMarket().get().getQuoteCurrencyCode()));
+        model.setBitcoinSubtitleLabel(model.getDirection().isBuy()
+                ? Res.get("bisqEasy.tradeWizard.bitcoinPaymentMethods.subTitle.buyer")
+                : Res.get("bisqEasy.tradeWizard.bitcoinPaymentMethods.subTitle.seller"));
         model.getCustomFiatPaymentMethodName().set("");
         model.getSortedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
 
@@ -136,11 +139,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
                 .map(BitcoinPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());
         model.getBitcoinPaymentMethods().setAll(paymentMethods);
-        model.getSelectedBitcoinPaymentMethods().setAll(ON_CHAIN_PAYMENT_METHOD); // By default, always allow on chain
-
-        selectedBitcoinPaymentMethodsListener = change -> updateIsLNMethodAllowed();
-        model.getSelectedBitcoinPaymentMethods().addListener(selectedBitcoinPaymentMethodsListener);
-        updateIsLNMethodAllowed();
+        model.getSortedBitcoinPaymentMethods().setComparator(Comparator.comparingInt(o -> o.getPaymentRail().ordinal()));
 
         addedCustomFiatPaymentMethodsListener = change -> updateCanAddCustomFiatPaymentMethod();
         model.getAddedCustomFiatPaymentMethods().addListener(addedCustomFiatPaymentMethodsListener);
@@ -173,16 +172,12 @@ public class TradeWizardPaymentMethodsController implements Controller {
                         maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
                     });
                 });
-
-        isLNMethodAllowedPin = EasyBind.subscribe(model.getIsLNMethodAllowed(), isLNAllowed ->
-           onToggleBitcoinPaymentMethod(LN_PAYMENT_METHOD, isLNAllowed));
+        maybeAddOnChainPaymentMethodAsSelected();
     }
 
     @Override
     public void onDeactivate() {
-        model.getSelectedBitcoinPaymentMethods().removeListener(selectedBitcoinPaymentMethodsListener);
         model.getAddedCustomFiatPaymentMethods().removeListener(addedCustomFiatPaymentMethodsListener);
-        isLNMethodAllowedPin.unsubscribe();
     }
 
     boolean onToggleFiatPaymentMethod(FiatPaymentMethod fiatPaymentMethod, boolean isSelected) {
@@ -278,7 +273,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
         return model.getMarket().get().getMarketCodes();
     }
 
-    private boolean onToggleBitcoinPaymentMethod(BitcoinPaymentMethod bitcoinPaymentMethod, boolean isSelected) {
+    boolean onToggleBitcoinPaymentMethod(BitcoinPaymentMethod bitcoinPaymentMethod, boolean isSelected) {
         if (isSelected) {
             if (model.getSelectedBitcoinPaymentMethods().size() >= 4) {
                 new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.maxMethodsReached")).show();
@@ -292,7 +287,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
         return true;
     }
 
-    private void onRemoveCustomBitcoinMethod(BitcoinPaymentMethod bitcoinPaymentMethod) {
+    void onRemoveCustomBitcoinMethod(BitcoinPaymentMethod bitcoinPaymentMethod) {
         model.getAddedCustomBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
         model.getSelectedBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
         model.getBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
@@ -322,12 +317,13 @@ public class TradeWizardPaymentMethodsController implements Controller {
         }
     }
 
-    private void updateIsLNMethodAllowed() {
-        boolean isLNSelected = model.getSelectedBitcoinPaymentMethods().contains(LN_PAYMENT_METHOD);
-        model.getIsLNMethodAllowed().set(isLNSelected);
-    }
-
     private void updateCanAddCustomFiatPaymentMethod() {
         model.getCanAddCustomFiatPaymentMethod().set(model.getAddedCustomFiatPaymentMethods().size() < MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS);
+    }
+
+    private void maybeAddOnChainPaymentMethodAsSelected() {
+        if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
+            model.getSelectedBitcoinPaymentMethods().add(ON_CHAIN_PAYMENT_METHOD);
+        }
     }
 }

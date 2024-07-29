@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.GridPaneUtil;
@@ -29,12 +30,10 @@ import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -42,49 +41,55 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPaymentMethodsModel, TradeWizardPaymentMethodsController> {
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
-    private final Label headlineLabel, nonFoundLabel;
+    private final Label fiatSubtitleLabel, bitcoinSubtitleLabel, nonFoundLabel;
     private final AddCustomPaymentMethodBox addCustomPaymentMethodBox;
-    private final CheckBox allowLNMethodSwitch;
-    private final GridPane fiatMethodsGridPane;
+    private final GridPane fiatMethodsGridPane, bitcoinMethodsGridPane;
 
     public TradeWizardPaymentMethodsView(TradeWizardPaymentMethodsModel model, TradeWizardPaymentMethodsController controller) {
-        super(new VBox(10), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setAlignment(Pos.TOP_CENTER);
+        root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-payment-methods-step");
 
-        headlineLabel = new Label();
+        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethod.subTitle"));
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().add("bisq-text-3");
-        subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(600);
+        fiatSubtitleLabel = new Label();
+        fiatSubtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        fiatSubtitleLabel.setAlignment(Pos.CENTER);
+        fiatSubtitleLabel.getStyleClass().add("bisq-text-3");
+        fiatSubtitleLabel.setWrapText(true);
+        fiatSubtitleLabel.setMaxWidth(600);
 
-        nonFoundLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethod.noneFound"));
+        nonFoundLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.noneFound"));
         nonFoundLabel.getStyleClass().add("bisq-text-6");
         nonFoundLabel.setAlignment(Pos.CENTER);
 
-        fiatMethodsGridPane = GridPaneUtil.getGridPane(10, 20, new Insets(0));
+        fiatMethodsGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
         fiatMethodsGridPane.getStyleClass().add("fiat-methods-grid-pane");
 
         addCustomPaymentMethodBox = new AddCustomPaymentMethodBox();
 
-        Label allowLNNetworkMethodLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethods.allowLN"), ImageUtil.getImageViewById("LN"));
-        allowLNNetworkMethodLabel.setContentDisplay(ContentDisplay.RIGHT);
-        allowLNNetworkMethodLabel.setGraphicTextGap(12);
-        allowLNMethodSwitch = new CheckBox();
-        HBox allowLNHBox = new HBox(10, allowLNMethodSwitch, allowLNNetworkMethodLabel);
-        allowLNHBox.getStyleClass().add("ln-checkbox");
-        allowLNHBox.setAlignment(Pos.CENTER);
+        bitcoinSubtitleLabel = new Label();
+        bitcoinSubtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        bitcoinSubtitleLabel.setAlignment(Pos.CENTER);
+        bitcoinSubtitleLabel.getStyleClass().add("bisq-text-3");
+        bitcoinSubtitleLabel.setWrapText(true);
+        bitcoinSubtitleLabel.setMaxWidth(600);
 
-        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(fiatMethodsGridPane, new Insets(20, 60, 0, 60));
-        VBox.setMargin(allowLNHBox, new Insets(0, 0, 40, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, nonFoundLabel, fiatMethodsGridPane,
-                Spacer.fillVBox(), allowLNHBox);
+        bitcoinMethodsGridPane = GridPaneUtil.getTwoColumnsGridPane(10, 10, new Insets(0));
+        bitcoinMethodsGridPane.getStyleClass().add("bitcoin-methods-grid-pane");
+        bitcoinMethodsGridPane.setAlignment(Pos.CENTER);
+
+        VBox fiatVBox = new VBox(20, fiatSubtitleLabel, nonFoundLabel, fiatMethodsGridPane);
+        fiatVBox.setAlignment(Pos.CENTER);
+        VBox btcVBox = new VBox(20, bitcoinSubtitleLabel, bitcoinMethodsGridPane);
+        btcVBox.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(headlineLabel, new Insets(0, 0, -5, 0));
+        VBox.setMargin(fiatMethodsGridPane, new Insets(0, 60, 0, 60));
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, Spacer.fillVBox(), fiatVBox, Spacer.fillVBox(),
+                btcVBox, Spacer.fillVBox());
 
         fiatPaymentMethodListener = c -> {
             c.next();
@@ -94,13 +99,13 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
 
     @Override
     protected void onViewAttached() {
-        headlineLabel.setText(model.getHeadline());
+        fiatSubtitleLabel.setText(model.getFiatSubtitleLabel());
+        bitcoinSubtitleLabel.setText(model.getBitcoinSubtitleLabel());
         addCustomPaymentMethodBox.getCustomPaymentMethodField().textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());
         fiatMethodsGridPane.visibleProperty().bind(model.getIsPaymentMethodsEmpty().not());
         fiatMethodsGridPane.managedProperty().bind(model.getIsPaymentMethodsEmpty().not());
-        allowLNMethodSwitch.selectedProperty().bindBidirectional(model.getIsLNMethodAllowed());
 
         model.getFiatPaymentMethods().addListener(fiatPaymentMethodListener);
 
@@ -109,6 +114,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         root.setOnMousePressed(e -> root.requestFocus());
 
         setUpAndFillFiatPaymentMethods();
+        setUpAndFillBitcoinPaymentMethods();
     }
 
     @Override
@@ -118,9 +124,12 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         nonFoundLabel.managedProperty().unbind();
         fiatMethodsGridPane.visibleProperty().unbind();
         fiatMethodsGridPane.managedProperty().unbind();
-        allowLNMethodSwitch.selectedProperty().unbindBidirectional(model.getIsLNMethodAllowed());
 
         fiatMethodsGridPane.getChildren().stream()
+                .filter(e -> e instanceof ChipButton)
+                .map(e -> (ChipButton) e)
+                .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
+        bitcoinMethodsGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipButton)
                 .map(e -> (ChipButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
@@ -181,6 +190,49 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
             col = i % numColumns;
             row = i / numColumns;
             fiatMethodsGridPane.add(addCustomPaymentMethodBox, col, row);
+        }
+    }
+
+    private void setUpAndFillBitcoinPaymentMethods() {
+        bitcoinMethodsGridPane.getChildren().clear();
+        bitcoinMethodsGridPane.getColumnConstraints().clear();
+        for (int i = 0; i < model.getSortedBitcoinPaymentMethods().size(); ++i) {
+            ColumnConstraints col = new ColumnConstraints();
+            col.setPercentWidth(20.5d);
+            bitcoinMethodsGridPane.getColumnConstraints().add(col);
+        }
+
+        int row = 0;
+        int col = 0;
+        for (BitcoinPaymentMethod bitcoinPaymentMethod : model.getSortedBitcoinPaymentMethods()) {
+            // enum name or custom name
+            ChipButton chipButton = new ChipButton(bitcoinPaymentMethod.getShortDisplayString());
+            if (!bitcoinPaymentMethod.getShortDisplayString().equals(bitcoinPaymentMethod.getDisplayString())) {
+                chipButton.setTooltip(new BisqTooltip(bitcoinPaymentMethod.getDisplayString()));
+            }
+            if (model.getSelectedBitcoinPaymentMethods().contains(bitcoinPaymentMethod)) {
+                chipButton.setSelected(true);
+            }
+            chipButton.setOnAction(() -> {
+                boolean wasAdded = controller.onToggleBitcoinPaymentMethod(bitcoinPaymentMethod, chipButton.isSelected());
+                if (!wasAdded) {
+                    UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
+                }
+            });
+            model.getAddedCustomBitcoinPaymentMethods().stream()
+                    .filter(customMethod -> customMethod.equals(bitcoinPaymentMethod))
+                    .findAny()
+                    .ifPresentOrElse(
+                            customMethod -> {
+                                ImageView closeIcon = chipButton.setRightIcon("remove-white");
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomBitcoinMethod(bitcoinPaymentMethod));
+                            },
+                            () -> {
+                                // Lookup for an image with the id of the enum name (REVOLUT)
+                                ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
+                                chipButton.setLeftIcon(icon);
+                            });
+            bitcoinMethodsGridPane.add(chipButton, col++, row);
         }
     }
 }
