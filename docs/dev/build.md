@@ -174,7 +174,7 @@ Optionally you can pass that data directory as *program argument* as follows:
 Note, that in that case it runs with the default config (using Tor).
 
 You likely want to run a second desktop application for testing the trade use case with 2 traders (e.g. Alice and Bob).
-Just change the `-Dapplication.appName` to something like `bisq2_Bob` in the above configuration.
+Just change the `-Dapplication.appName` to something like `bisq2_Bob_clear` in the above configuration.
 
 
 
