@@ -19,6 +19,7 @@ package bisq.identity;
 
 
 import bisq.common.application.Service;
+import bisq.network.NetworkIdService;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
@@ -52,6 +53,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private final KeyBundleService keyBundleService;
     private final NetworkService networkService;
     private final Object lock = new Object();
+    private final NetworkIdService networkIdService;
 
     public IdentityService(PersistenceService persistenceService,
                            KeyBundleService keyBundleService,
@@ -59,6 +61,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.keyBundleService = keyBundleService;
         this.networkService = networkService;
+        networkIdService = networkService.getNetworkIdService();
     }
 
 
@@ -137,7 +140,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      */
     public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(identityTag, keyPair);
-        NetworkId networkId = networkService.getOrCreateNetworkId(keyBundle, identityTag);
+        NetworkId networkId = networkIdService.getOrCreateNetworkId(keyBundle, identityTag);
         Identity identity = new Identity(identityTag, networkId, keyBundle);
 
         synchronized (lock) {
@@ -220,7 +223,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Identity createIdentity(String identityTag) {
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
         KeyBundle keyBundle = keyBundleService.getOrCreateKeyBundle(keyId);
-        NetworkId networkId = networkService.getOrCreateNetworkId(keyBundle, identityTag);
+        NetworkId networkId = networkIdService.getOrCreateNetworkId(keyBundle, identityTag);
         return new Identity(identityTag, networkId, keyBundle);
     }
 
