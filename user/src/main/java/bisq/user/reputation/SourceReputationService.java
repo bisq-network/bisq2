@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -96,10 +95,9 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
                 .ifPresent(data -> {
                     if (isAuthorized(authorizedData) && isValidVersion(data)) {
                         ByteArray providedHash = getDataKey(data);
-                        // To avoid ConcurrentModificationException
-                        Collection<UserProfile> values = userProfileService.getUserProfileById().values();
-                        List<UserProfile> userProfiles = new CopyOnWriteArrayList<>(values);
-                        userProfiles.stream()
+                        // Clone to avoid ConcurrentModificationException
+                        Collection<UserProfile> values = new ArrayList<>(userProfileService.getUserProfileById().values());
+                        values.stream()
                                 .filter(userProfile -> getUserProfileKey(userProfile).equals(providedHash))
                                 .forEach(userProfile -> {
                                     ByteArray hash = getUserProfileKey(userProfile);
