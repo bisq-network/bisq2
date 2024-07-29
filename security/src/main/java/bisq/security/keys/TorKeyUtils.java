@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 
@@ -22,6 +21,7 @@ public class TorKeyUtils {
         Path targetPath = Path.of(storageDir.toString(), tag);
         File torPrivateKeyDir = targetPath.toFile();
         try {
+            log.info("Store the torPrivateKey into {}", torPrivateKeyDir);
             FileUtils.makeDirs(torPrivateKeyDir);
             String dir = torPrivateKeyDir.getAbsolutePath();
 
@@ -30,7 +30,7 @@ public class TorKeyUtils {
 
             log.info("We persisted the tor private key in hex encoding for onionAddress {} for tag {} to {}.",
                     torKeyPair.getOnionAddress(), tag, dir);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Could not persist torIdentity", e);
         }
     }

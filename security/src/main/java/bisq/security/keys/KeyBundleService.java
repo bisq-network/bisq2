@@ -100,8 +100,9 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
 
                         // We write the key to the tor directory. This is used only for the default key, as that is the
                         // only supported use case (seed nodes, oracle nodes,...)
-                        TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), storagePath, tag);
-
+                        if (writeDefaultTorPrivateKeyToFile) {
+                            TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), storagePath, tag);
+                        }
                         return keyBundle;
                     })
                     .thenApply(Objects::nonNull);
