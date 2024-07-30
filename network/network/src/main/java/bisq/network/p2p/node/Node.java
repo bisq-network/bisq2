@@ -38,8 +38,6 @@ import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import dev.failsafe.Failsafe;
-import dev.failsafe.RetryPolicy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,14 +47,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.*;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -164,7 +159,6 @@ public class Node implements Connection.Handler {
     private final Map<Address, InboundConnection> inboundConnectionsByAddress = new ConcurrentHashMap<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
-    private final RetryPolicy<Boolean> retryPolicy;
     private Optional<Server> server = Optional.empty();
     private Optional<Capability> myCapability = Optional.empty();
     @Getter
@@ -174,6 +168,7 @@ public class Node implements Connection.Handler {
     @Getter
     public final NetworkLoadSnapshot networkLoadSnapshot;
     private final Config config;
+    private Optional<CountDownLatch> startingStateLatch = Optional.empty();
 
     public Node(NetworkId networkId,
                 boolean isDefaultNode,
@@ -196,20 +191,6 @@ public class Node implements Connection.Handler {
         this.transportService = transportService;
         this.authorizationService = authorizationService;
         this.networkLoadSnapshot = networkLoadSnapshot;
-
-        retryPolicy = RetryPolicy.<Boolean>builder()
-                .handle(IllegalStateException.class)
-                .handleResultIf(result -> state.get() == STARTING)
-                .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(20))
-                .withJitter(0.25)
-                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(20)
-                .onRetry(e -> log.info("Retry to call initializeServer. AttemptCount={}.", e.getAttemptCount()))
-                .onRetriesExceeded(e -> {
-                    log.warn("InitializeServer failed. Max retries exceeded. We shutdown the node.");
-                    shutdown();
-                })
-                .onSuccess(e -> log.debug("InitializeServer succeeded."))
-                .build();
     }
 
 
@@ -218,21 +199,33 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize() {
-        Failsafe.with(retryPolicy).run(this::doInitialize);  // blocking
-    }
-
-    private void doInitialize() {
+        if (startingStateLatch.isPresent() && startingStateLatch.get().getCount() > 0) {
+            try {
+                log.info("Our node is still starting up. We block the calling thread until state is RUNNING or a throw and exception after a timeout. Node: {}", getNodeInfo());
+                boolean success = startingStateLatch.get().await(120, TimeUnit.SECONDS); //hsUploadTimeout
+                if (!success) {
+                    String errorMessage = "State did not change from STARTING to RUNNING in 120 sec. Node: " + getNodeInfo();
+                    log.warn(errorMessage);
+                    throw new RuntimeException(new TimeoutException(errorMessage));
+                } else {
+                    log.debug("We are now in RUNNING state");
+                }
+            } catch (InterruptedException ignore) {
+            }
+        }
         synchronized (state) {
             switch (state.get()) {
                 case NEW: {
                     setState(STARTING);
+                    startingStateLatch = Optional.of(new CountDownLatch(1));
                     createServerAndListen();
+                    startingStateLatch.get().countDown();
                     setState(State.RUNNING);
                     break;
                 }
                 case STARTING: {
-                    // TODO Maybe we should add a sleep here and return once the node is running?
-                    throw new IllegalStateException("Already starting. NetworkId=" + networkId + "; transportType=" + transportType);
+                    throw new IllegalStateException("STARTING state should never be reached here as we use a " +
+                            "countDownLatch to block while in STARTING state. NetworkId=" + networkId + "; transportType=" + transportType);
                 }
                 case RUNNING: {
                     log.debug("Got called while already running. We ignore that call.");
