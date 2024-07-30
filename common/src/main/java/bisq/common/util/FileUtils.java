@@ -322,7 +322,9 @@ public class FileUtils {
         if (storageFile.exists()) {
             File corruptedBackupDir = new File(Paths.get(directory, backupFolderName).toString());
             makeDirs(corruptedBackupDir);
-            File target = new File(Paths.get(directory, backupFolderName, fileName).toString());
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            String newFileName = fileName + "_at_" + timestamp;
+            File target = new File(Paths.get(directory, backupFolderName, newFileName).toString());
             renameFile(storageFile, target);
         }
     }

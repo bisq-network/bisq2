@@ -23,7 +23,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.NetworkUtils;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
@@ -58,9 +57,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
-import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.keys.PubKey;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -98,7 +95,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Set<TransportType> supportedTransportTypes;
     @Getter
     private final Map<TransportType, Integer> defaultPortByTransportType;
-    private final KeyBundleService keyBundleService;
+    @Getter
+    private final NetworkIdService networkIdService;
     private final HttpClientsByTransport httpClientsByTransport;
     @Getter
     private final Optional<DataService> dataService;
@@ -125,9 +123,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
         defaultPortByTransportType = config.getDefaultPortByTransportType();
-        this.keyBundleService = keyBundleService;
         NetworkEnvelope.setNetworkVersion(config.getVersion());
 
+        networkIdService = new NetworkIdService(persistenceService, keyBundleService, supportedTransportTypes, defaultPortByTransportType);
         httpClientsByTransport = new HttpClientsByTransport();
 
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
@@ -172,14 +170,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.of(new NetworkLoadService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadSnapshot)) :
                 Optional.empty();
 
-        persistence = persistenceService.getOrCreatePersistence(this,
-                DbSubDirectory.CACHE,
-                persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
     }
 
     @Override
     public void onPersistedApplied(NetworkServiceStore persisted) {
         serviceNodesByTransport.addSeedNodes(persistableStore.getSeedNodes());
+        //noinspection deprecation
+        networkIdService.migrateFromDeprecatedStore(persisted.getNetworkIdByTag());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +187,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        NetworkId defaultNetworkId = getOrCreateDefaultNetworkId();
+        NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
         initializedDefaultNodeByTransport.putAll(serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId));
 
         // We use anyOf to complete as soon as we got at least one transport node initialized
@@ -455,70 +453,5 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         serviceNodesByTransport.removeSeedNode(seedNode);
         persistableStore.getSeedNodes().remove(seedNode);
         persist();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // NetworkId
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public NetworkId getOrCreateDefaultNetworkId() {
-        // keyBundleService creates the defaultKeyBundle at initialize, and is called before we get initialized
-        KeyBundle keyBundle = keyBundleService.findDefaultKeyBundle().orElseThrow();
-        return getOrCreateNetworkId(keyBundle, "default");
-    }
-
-    public NetworkId getOrCreateNetworkId(KeyBundle keyBundle, String tag) {
-        return persistableStore.findNetworkId(tag)
-                .orElseGet(() -> createNetworkId(keyBundle, tag));
-    }
-
-    private NetworkId createNetworkId(KeyBundle keyBundle, String tag) {
-        AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
-        supportedTransportTypes.forEach(transportType -> {
-            int port = getPortByTransport(tag, transportType);
-            Address address = getAddressByTransport(keyBundle, port, transportType);
-            addressByTransportTypeMap.put(transportType, address);
-        });
-
-        KeyPair keyPair = keyBundle.getKeyPair();
-        PubKey pubKey = new PubKey(keyPair.getPublic(), keyBundle.getKeyId());
-        NetworkId networkId = new NetworkId(addressByTransportTypeMap, pubKey);
-        persistableStore.getNetworkIdByTag().put(tag, networkId);
-        persist();
-        return networkId;
-    }
-
-    private int getPortByTransport(String tag, TransportType transportType) {
-        boolean isDefault = tag.equals("default");
-        switch (transportType) {
-            case TOR:
-                return isDefault ?
-                        defaultPortByTransportType.computeIfAbsent(TransportType.TOR, key -> NetworkUtils.selectRandomPort()) :
-                        NetworkUtils.selectRandomPort();
-            case I2P:
-                  /*  return isDefault ?
-                            defaultPorts.computeIfAbsent(TransportType.I2P, key-> NetworkUtils.selectRandomPort()) :
-                            NetworkUtils.selectRandomPort();*/
-                throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR:
-                return isDefault ?
-                        defaultPortByTransportType.computeIfAbsent(TransportType.CLEAR, key -> NetworkUtils.findFreeSystemPort()) :
-                        NetworkUtils.findFreeSystemPort();
-        }
-        throw new RuntimeException("getPortByTransport called with unsupported transportType " + transportType);
-    }
-
-    private Address getAddressByTransport(KeyBundle keyBundle, int port, TransportType transportType) {
-        switch (transportType) {
-            case TOR:
-                return new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P:
-                //return new Address(keyBundle.getI2pKeyPair().getDestination(), port);
-                throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR:
-                return Address.localHost(port);
-        }
-        throw new RuntimeException("getAddressByTransport called with unsupported transportType " + transportType);
     }
 }

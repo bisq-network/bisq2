@@ -35,6 +35,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
 import bisq.desktop.splash.SplashController;
+import bisq.identity.IdentityService;
 import bisq.settings.Cookie;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
@@ -78,6 +79,7 @@ public class DesktopController extends NavigationController {
     private final DontShowAgainService dontShowAgainService;
     private final PreventStandbyModeService preventStandbyModeService;
     private final RepublishUserProfileService republishUserProfileService;
+    private final IdentityService identityService;
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
@@ -99,6 +101,7 @@ public class DesktopController extends NavigationController {
         dontShowAgainService = serviceProvider.getDontShowAgainService();
         preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
         republishUserProfileService = serviceProvider.getUserService().getRepublishUserProfileService();
+        identityService = serviceProvider.getIdentityService();
     }
 
     public void init() {
@@ -120,6 +123,12 @@ public class DesktopController extends NavigationController {
         view.showStage();
 
         new OverlayController(serviceProvider, viewRoot);
+
+        identityService.getFatalException().addObserver(exception -> {
+            if (exception != null) {
+                UIThread.run(() -> new Popup().error(exception).hideCloseButton().useShutDownButton().show());
+            }
+        });
 
         EasyBind.subscribe(viewRoot.getScene().getWindow().focusedProperty(), chatNotificationService::setApplicationFocussed);
     }

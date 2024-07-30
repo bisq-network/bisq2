@@ -339,7 +339,11 @@ message DataStore {
 
 message NetworkServiceStore {
   repeated network.common.AddressByTransportTypeMap seedNodes = 1;
-  map<string, network.identity.NetworkId> networkIdByTag = 2;
+  map<string, network.identity.NetworkId> networkIdByTag = 2 [deprecated = true]; // Moved to NetworkIdStore
+}
+
+message NetworkIdStore {
+  map<string, network.identity.NetworkId> networkIdByTag = 1;
 }
 
 message MessageDeliveryStatusStore {
