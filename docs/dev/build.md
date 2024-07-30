@@ -146,7 +146,7 @@ JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
 Optionally you can run a second seed node at port 8001:
 
 ```sh
-JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
+JAVA_OPTS="-Dapplication.appName=bisq2_seed2 \
     -Dapplication.network.configByTransportType.clear.defaultNodePort=8001 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
