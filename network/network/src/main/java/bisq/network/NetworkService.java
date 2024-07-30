@@ -40,8 +40,10 @@ import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageData;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
@@ -260,11 +262,28 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
                                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        return anySuppliedInitializedNode(senderNetworkIdWithKeyPair.getNetworkId())
+        KeyPair senderKeyPair = senderNetworkIdWithKeyPair.getKeyPair();
+        NetworkId senderNetworkId = senderNetworkIdWithKeyPair.getNetworkId();
+        // Before sending, we might need to establish a new connection to the peer. As that could take soe time,
+        // we apply here already the CONNECTING MessageDeliveryStatus so that the UI can give visual feedback about
+        // the state.
+        if (envelopePayloadMessage instanceof AckRequestingMessage) {
+            AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
+            messageDeliveryStatusService.ifPresent(statusService ->
+                    statusService.onMessageSentStatus(ackRequestingMessage.getId(), MessageDeliveryStatus.CONNECTING));
+            resendMessageService.ifPresent(resendService -> resendService.handleResendMessageData(new ResendMessageData(ackRequestingMessage,
+                    receiverNetworkId,
+                    senderKeyPair,
+                    senderNetworkId,
+                    MessageDeliveryStatus.CONNECTING,
+                    System.currentTimeMillis())));
+        }
+
+        return anySuppliedInitializedNode(senderNetworkId)
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
-                                senderNetworkIdWithKeyPair.getKeyPair(),
-                                senderNetworkIdWithKeyPair.getNetworkId()),
+                                senderKeyPair,
+                                senderNetworkId),
                         NETWORK_IO_POOL));
     }
 

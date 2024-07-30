@@ -112,7 +112,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
     private Optional<ResendMessageService> resendMessageService;
-    private ImageView successfulDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
+    private ImageView successfulDeliveryIcon, connectingDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
     private BisqMenuItem tryAgainMenuItem;
 
     // Reactions
@@ -294,6 +294,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     private void initializeDeliveryStatusIcons() {
         successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
+        connectingDeliveryIcon = ImageUtil.getImageViewById("connecting-grey");
         pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
         addedToMailboxIcon = ImageUtil.getImageViewById("mailbox-grey");
         failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
@@ -345,6 +346,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                 break;
                             // Pending delivery
                             case CONNECTING:
+                                statusLabel.setGraphic(connectingDeliveryIcon);
+                                break;
                             case SENT:
                             case TRY_ADD_TO_MAILBOX:
                                 statusLabel.setGraphic(pendingDeliveryIcon);

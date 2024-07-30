@@ -81,6 +81,16 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     }
 
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
+        if (!pendingOnionServicePublishLatchMap.isEmpty()) {
+            pendingOnionServicePublishLatchMap.forEach((onionAddress, latch) -> {
+                try {
+                    log.info("A previous request for publishing {} has not completed yet.", onionAddress);
+                    boolean success = latch.await(hsUploadTimeout, TimeUnit.MILLISECONDS);
+                    log.info("A previous request for publishing {} has completed with success={}.", onionAddress, success);
+                } catch (InterruptedException ignore) {
+                }
+            });
+        }
         String onionAddress = torKeyPair.getOnionAddress();
         var onionServicePublishedLatch = new CountDownLatch(1);
         pendingOnionServicePublishLatchMap.put(onionAddress, onionServicePublishedLatch);
