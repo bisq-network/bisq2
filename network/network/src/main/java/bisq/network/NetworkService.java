@@ -40,6 +40,7 @@ import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
@@ -260,6 +261,15 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
                                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
+        // Before sending, we might need to establish a new connection to the peer. As that could take soe time,
+        // we apply here already the CONNECTING MessageDeliveryStatus so that the UI can give visual feedback about
+        // the state.
+        messageDeliveryStatusService.ifPresent(service -> {
+            if (envelopePayloadMessage instanceof AckRequestingMessage) {
+                AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
+                service.onMessageSentStatus(ackRequestingMessage.getId(), MessageDeliveryStatus.CONNECTING);
+            }
+        });
         return anySuppliedInitializedNode(senderNetworkIdWithKeyPair.getNetworkId())
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
