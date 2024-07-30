@@ -19,6 +19,7 @@ package bisq.network;
 
 
 import bisq.common.application.Service;
+import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
@@ -34,6 +35,8 @@ import bisq.security.keys.PubKey;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
@@ -115,6 +118,13 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
         }
     }
 
+    public void recoverInvalidNetworkIds(NetworkId networkIdFromIdentity, String tag) {
+        tryToBackupCorruptedStoreFile();
+        Map<String, NetworkId> persistedMap = persistableStore.getNetworkIdByTag();
+        persistedMap.put(tag, networkIdFromIdentity);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -167,5 +177,20 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
                 return Address.localHost(port);
         }
         throw new RuntimeException("getAddressByTransport called with unsupported transportType " + transportType);
+    }
+
+    private void tryToBackupCorruptedStoreFile() {
+        Path storeFilePath = persistence.getStorePath();
+        Path parentDirectoryPath = storeFilePath.getParent();
+        try {
+            FileUtils.backupCorruptedFile(
+                    parentDirectoryPath.toAbsolutePath().toString(),
+                    storeFilePath.toFile(),
+                    storeFilePath.getFileName().toString(),
+                    "corruptedNetworkId"
+            );
+        } catch (IOException e) {
+            log.error("Error trying to backup corrupted file {}", storeFilePath, e);
+        }
     }
 }

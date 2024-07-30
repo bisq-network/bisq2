@@ -65,6 +65,7 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Void> flush() {
+        //todo does not do anything...
         return CompletableFuture.runAsync(() -> Thread.currentThread().setName("Flush-Persistence.persist-" + storePath), executorService);
     }
 
