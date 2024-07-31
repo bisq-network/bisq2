@@ -38,12 +38,12 @@ import java.util.concurrent.TimeUnit;
 public class BootstrapService implements BootstrapEventListener {
     private final TorControlProtocol torControlProtocol;
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
-    private final int bootstrapTimeout; // in ms
+    private final long timeout;
     private final Observable<BootstrapEvent> bootstrapEvent;
 
-    public BootstrapService(TorControlProtocol torControlProtocol, int bootstrapTimeout, Observable<BootstrapEvent> bootstrapEvent) {
+    public BootstrapService(TorControlProtocol torControlProtocol, long timeout, Observable<BootstrapEvent> bootstrapEvent) {
         this.torControlProtocol = torControlProtocol;
-        this.bootstrapTimeout = bootstrapTimeout;
+        this.timeout = timeout;
         this.bootstrapEvent = bootstrapEvent;
     }
 
@@ -85,9 +85,9 @@ public class BootstrapService implements BootstrapEventListener {
 
     private void waitUntilBootstrapped() {
         try {
-            boolean isSuccess = countDownLatch.await(bootstrapTimeout, TimeUnit.MILLISECONDS);
+            boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
             if (!isSuccess) {
-                throw new TorBootstrapFailedException("Could not bootstrap Tor in " + bootstrapTimeout / 1000 + " seconds");
+                throw new TorBootstrapFailedException("Could not bootstrap Tor in " + timeout / 1000 + " seconds");
             }
         } catch (InterruptedException e) {
             throw new TorBootstrapFailedException(e);
@@ -98,7 +98,7 @@ public class BootstrapService implements BootstrapEventListener {
     private boolean isBootstrapTimeoutTriggered() {
         BootstrapEvent bootstrapEvent = this.bootstrapEvent.get();
         Instant timestamp = bootstrapEvent.getTimestamp();
-        Instant bootstrapTimeoutAgo = Instant.now().minus(bootstrapTimeout, ChronoUnit.MILLIS);
+        Instant bootstrapTimeoutAgo = Instant.now().minus(timeout, ChronoUnit.MILLIS);
         return bootstrapTimeoutAgo.isAfter(timestamp);
     }
 }

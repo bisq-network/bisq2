@@ -35,16 +35,18 @@ import java.util.concurrent.TimeUnit;
 public class OnionServiceOnlineStateService extends FilteredHsDescEventListener {
     private final TorControlProtocol torControlProtocol;
     private final String onionAddress;
+    private final long timeout;
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
     private boolean isOnline;
     @Getter
     private Optional<CompletableFuture<Boolean>> future = Optional.empty();
 
-    public OnionServiceOnlineStateService(TorControlProtocol torControlProtocol, String onionAddress) {
+    public OnionServiceOnlineStateService(TorControlProtocol torControlProtocol, String onionAddress, long timeout) {
         super(onionAddress, Set.of(HsDescEvent.Action.FAILED, HsDescEvent.Action.RECEIVED));
 
         this.torControlProtocol = torControlProtocol;
         this.onionAddress = onionAddress;
+        this.timeout = timeout;
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnline() {
@@ -54,10 +56,9 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
                     String serviceId = onionAddress.replace(".onion", "");
                     torControlProtocol.hsFetch(serviceId);
                     try {
-                        //todo set timeout
-                        boolean isSuccess = countDownLatch.await(120, TimeUnit.SECONDS);
+                        boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
                         if (!isSuccess) {
-                            throw new RuntimeException("Could not get onion address upload completed in " + 120000 / 1000 + " seconds");
+                            throw new RuntimeException("Could not get onion address upload completed in " + timeout / 1000 + " seconds");
                         }
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);

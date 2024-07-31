@@ -36,17 +36,17 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PublishOnionAddressService extends FilteredHsDescEventListener {
     private final TorControlProtocol torControlProtocol;
-    private final int hsUploadTimeout;
+    private final int timeout;
     private final TorKeyPair torKeyPair;
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
     @Getter
     private Optional<CompletableFuture<Void>> future = Optional.empty();
 
-    public PublishOnionAddressService(TorControlProtocol torControlProtocol, int hsUploadTimeout, TorKeyPair torKeyPair) {
+    public PublishOnionAddressService(TorControlProtocol torControlProtocol, int timeout, TorKeyPair torKeyPair) {
         super(torKeyPair.getOnionAddress(), Set.of(HsDescEvent.Action.UPLOAD));
 
         this.torControlProtocol = torControlProtocol;
-        this.hsUploadTimeout = hsUploadTimeout;
+        this.timeout = timeout;
         this.torKeyPair = torKeyPair;
     }
 
@@ -56,9 +56,9 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
                         subscribeToHsDescEvents();
                         torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
 
-                        boolean success = countDownLatch.await(hsUploadTimeout, TimeUnit.MILLISECONDS);
+                        boolean success = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
                         if (!success) {
-                            throw new HsDescUploadFailedException("Could not get onion address upload completed in " + hsUploadTimeout / 1000 + " seconds");
+                            throw new HsDescUploadFailedException("Could not get onion address upload completed in " + timeout / 1000 + " seconds");
                         }
                     } catch (Exception e) {
                         throw new HsDescUploadFailedException(e);

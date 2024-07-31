@@ -12,18 +12,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TorController {
     private final TorControlProtocol torControlProtocol = new TorControlProtocol();
-
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
+    private final long isOnlineTimeout = TimeUnit.SECONDS.toMillis(30); // in ms
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
-
     private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new HashMap<>();
     private final Map<String, OnionServiceOnlineStateService> onionServiceOnlineStateServiceMap = new HashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
@@ -89,7 +89,7 @@ public class TorController {
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
-        OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress);
+        OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress, isOnlineTimeout);
         CompletableFuture<Boolean> future;
         synchronized (onionServiceOnlineStateServiceMap) {
             if (onionServiceOnlineStateServiceMap.containsKey(onionAddress)) {
