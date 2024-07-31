@@ -17,6 +17,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -122,19 +123,6 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    public void setEvents(List<String> events) {
-        var stringBuilder = new StringBuffer("SETEVENTS");
-        events.forEach(event -> stringBuilder.append(" ").append(event));
-        stringBuilder.append("\r\n");
-
-        String command = stringBuilder.toString();
-        sendCommand(command);
-        String reply = receiveReply().findFirst().orElseThrow();
-        if (!reply.equals("250 OK")) {
-            throw new ControlCommandFailedException("Couldn't set events: " + events);
-        }
-    }
-
     public void takeOwnership() {
         String command = "TAKEOWNERSHIP\r\n";
         sendCommand(command);
@@ -145,19 +133,93 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     public void addBootstrapEventListener(BootstrapEventListener listener) {
+        Set<String> previous = getEventTypesOfBootstrapEventListeners();
         whonixTorControlReader.addBootstrapEventListener(listener);
+        String newEventType = listener.getEventType().name();
+        // If our listener has a new eventType we register for that event
+        if (!previous.contains(newEventType)) {
+            refreshEventRegistration();
+        } else {
+            log.debug("We are already for that event registered");
+        }
     }
 
     public void removeBootstrapEventListener(BootstrapEventListener listener) {
+        Set<String> previous = getEventTypesOfBootstrapEventListeners();
+        String newEventType = listener.getEventType().name();
+        if (!previous.contains(newEventType)) {
+            log.warn("Remove BootstrapEventListener but did not have eventType in listeners. " +
+                    "This could happen if removeBootstrapEventListener was called without addBootstrapEventListener before.");
+        }
         whonixTorControlReader.removeBootstrapEventListener(listener);
+        Set<String> current = getEventTypesOfBootstrapEventListeners();
+        // If your listener was the only listener with that eventType we unregister for that event
+        if (!current.contains(newEventType)) {
+            refreshEventRegistration();
+        } else {
+            log.debug("Event has been already removed from registration");
+        }
+    }
+
+    private Set<String> getEventTypesOfBootstrapEventListeners() {
+        return whonixTorControlReader.getBootstrapEventListeners().stream()
+                .map(listener -> listener.getEventType().name())
+                .collect(Collectors.toSet());
     }
 
     public void addHsDescEventListener(HsDescEventListener listener) {
+        Set<String> previous = getEventTypesOfHsDescEventListeners();
         whonixTorControlReader.addHsDescEventListener(listener);
+        String newEventType = listener.getEventType().name();
+        // If our listener has a new eventType we register for that event
+        if (!previous.contains(newEventType)) {
+            refreshEventRegistration();
+        } else {
+            log.debug("We are already for that event registered");
+        }
     }
 
     public void removeHsDescEventListener(HsDescEventListener listener) {
+        Set<String> previous = getEventTypesOfHsDescEventListeners();
+        String newEventType = listener.getEventType().name();
+        if (!previous.contains(newEventType)) {
+            log.warn("Remove HsDescEventListener but did not have eventType in listeners. " +
+                    "This could happen if removeHsDescEventListener was called without addHsDescEventListener before.");
+        }
         whonixTorControlReader.removeHsDescEventListener(listener);
+        Set<String> current = getEventTypesOfHsDescEventListeners();
+        // If your listener was the only listener with that eventType we unregister for that event
+        if (!current.contains(newEventType)) {
+            refreshEventRegistration();
+        } else {
+            log.debug("Event has been already removed from registration");
+        }
+    }
+
+    private Set<String> getEventTypesOfHsDescEventListeners() {
+        return whonixTorControlReader.getHsDescEventListeners().stream()
+                .map(listener -> listener.getEventType().name())
+                .collect(Collectors.toSet());
+    }
+
+    public void refreshEventRegistration() {
+        Set<String> allEvents = Stream.concat(getEventTypesOfBootstrapEventListeners().stream(), getEventTypesOfHsDescEventListeners().stream())
+                .collect(Collectors.toSet());
+        registerEvents(allEvents);
+    }
+
+    private void registerEvents(Set<String> events) {
+        log.error("registerEvents: {}", events);
+        var stringBuilder = new StringBuffer("SETEVENTS");
+        events.forEach(event -> stringBuilder.append(" ").append(event));
+        stringBuilder.append("\r\n");
+
+        String command = stringBuilder.toString();
+        sendCommand(command);
+        String reply = receiveReply().findFirst().orElseThrow();
+        if (!reply.equals("250 OK")) {
+            throw new ControlCommandFailedException("Couldn't set events: " + events);
+        }
     }
 
     private void connectToTor(int port) throws InterruptedException {

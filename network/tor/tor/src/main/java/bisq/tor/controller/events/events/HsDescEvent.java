@@ -8,7 +8,6 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @ToString
 public abstract class HsDescEvent {
-
     @Getter
     public enum Action {
         CREATED(7),

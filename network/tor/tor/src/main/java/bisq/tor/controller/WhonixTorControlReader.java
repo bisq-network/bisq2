@@ -4,6 +4,7 @@ import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescEventListener;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -20,7 +21,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Slf4j
 public class WhonixTorControlReader implements AutoCloseable {
     private final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
+    @Getter
     private final List<BootstrapEventListener> bootstrapEventListeners = new CopyOnWriteArrayList<>();
+    @Getter
     private final List<HsDescEventListener> hsDescEventListeners = new CopyOnWriteArrayList<>();
 
     private Optional<Thread> workerThread = Optional.empty();

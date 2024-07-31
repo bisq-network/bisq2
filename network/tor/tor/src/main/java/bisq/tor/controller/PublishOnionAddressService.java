@@ -19,14 +19,13 @@ package bisq.tor.controller;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.security.keys.TorKeyPair;
+import bisq.tor.controller.events.events.EventType;
 import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.listener.FilteredHsDescEventListener;
 import bisq.tor.controller.exceptions.HsDescUploadFailedException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -43,7 +42,7 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
     private Optional<CompletableFuture<Void>> future = Optional.empty();
 
     public PublishOnionAddressService(TorControlProtocol torControlProtocol, int timeout, TorKeyPair torKeyPair) {
-        super(torKeyPair.getOnionAddress(), Set.of(HsDescEvent.Action.UPLOAD));
+        super(EventType.HS_DESC, torKeyPair.getOnionAddress(), Set.of(HsDescEvent.Action.UPLOAD));
 
         this.torControlProtocol = torControlProtocol;
         this.timeout = timeout;
@@ -54,7 +53,6 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
         future = Optional.of(CompletableFuture.runAsync(() -> {
                     try {
                         torControlProtocol.addHsDescEventListener(this);
-                        torControlProtocol.setEvents(List.of("HS_DESC"));
 
                         torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
 
@@ -66,10 +64,8 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
                         throw new HsDescUploadFailedException(e);
                     }
                 }, ExecutorFactory.newSingleThreadExecutor("PublishOnionAddressService"))
-                .whenComplete((nil, throwable) -> {
-                    torControlProtocol.removeHsDescEventListener(this);
-                    torControlProtocol.setEvents(Collections.emptyList());
-                }));
+                .whenComplete((nil, throwable) ->
+                        torControlProtocol.removeHsDescEventListener(this)));
         return future.get();
     }
 

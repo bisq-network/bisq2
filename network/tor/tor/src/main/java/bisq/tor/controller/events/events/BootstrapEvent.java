@@ -27,7 +27,6 @@ import java.time.Instant;
 @Getter
 @ToString
 public class BootstrapEvent {
-
     private static final String DONE_TAG = "done";
 
     private final int progress;

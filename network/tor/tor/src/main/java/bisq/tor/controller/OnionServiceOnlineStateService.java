@@ -17,14 +17,13 @@
 
 package bisq.tor.controller;
 
+import bisq.tor.controller.events.events.EventType;
 import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.events.HsDescFailedEvent;
 import bisq.tor.controller.events.listener.FilteredHsDescEventListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +41,7 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
     private Optional<CompletableFuture<Boolean>> future = Optional.empty();
 
     public OnionServiceOnlineStateService(TorControlProtocol torControlProtocol, String onionAddress, long timeout) {
-        super(onionAddress, Set.of(HsDescEvent.Action.FAILED, HsDescEvent.Action.RECEIVED));
+        super(EventType.HS_DESC, onionAddress, Set.of(HsDescEvent.Action.FAILED, HsDescEvent.Action.RECEIVED));
 
         this.torControlProtocol = torControlProtocol;
         this.onionAddress = onionAddress;
@@ -52,7 +51,6 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
     public CompletableFuture<Boolean> isOnionServiceOnline() {
         future = Optional.of(CompletableFuture.supplyAsync(() -> {
                     torControlProtocol.addHsDescEventListener(this);
-                    torControlProtocol.setEvents(List.of("HS_DESC"));
 
                     String serviceId = onionAddress.replace(".onion", "");
                     torControlProtocol.hsFetch(serviceId);
@@ -66,10 +64,8 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
                     }
                     return isOnline;
                 })
-                .whenComplete((nil, throwable) -> {
-                    torControlProtocol.removeHsDescEventListener(this);
-                    torControlProtocol.setEvents(Collections.emptyList());
-                }));
+                .whenComplete((nil, throwable) ->
+                        torControlProtocol.removeHsDescEventListener(this)));
         return future.get();
     }
 

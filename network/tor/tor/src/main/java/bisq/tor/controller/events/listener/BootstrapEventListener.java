@@ -18,7 +18,18 @@
 package bisq.tor.controller.events.listener;
 
 import bisq.tor.controller.events.events.BootstrapEvent;
+import bisq.tor.controller.events.events.EventType;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public interface BootstrapEventListener {
-    void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent);
+@Slf4j
+public abstract class BootstrapEventListener {
+    @Getter
+    private final EventType eventType;
+
+    public BootstrapEventListener(EventType eventType) {
+        this.eventType = eventType;
+    }
+
+    abstract public void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent);
 }

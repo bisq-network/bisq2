@@ -20,6 +20,7 @@ package bisq.tor.controller;
 import bisq.common.observable.Observable;
 import bisq.tor.TorrcClientConfigFactory;
 import bisq.tor.controller.events.events.BootstrapEvent;
+import bisq.tor.controller.events.events.EventType;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.tor.process.NativeTorProcess;
@@ -28,20 +29,19 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class BootstrapService implements BootstrapEventListener {
+public class BootstrapService extends BootstrapEventListener {
     private final TorControlProtocol torControlProtocol;
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
     private final long timeout;
     private final Observable<BootstrapEvent> bootstrapEvent;
 
     public BootstrapService(TorControlProtocol torControlProtocol, long timeout, Observable<BootstrapEvent> bootstrapEvent) {
+        super(EventType.STATUS_CLIENT);
         this.torControlProtocol = torControlProtocol;
         this.timeout = timeout;
         this.bootstrapEvent = bootstrapEvent;
@@ -54,10 +54,8 @@ public class BootstrapService implements BootstrapEventListener {
                     enableNetworking();
                     waitUntilBootstrapped();
                 }, MoreExecutors.directExecutor())
-                .whenComplete((nil, throwable) -> {
-                    torControlProtocol.removeBootstrapEventListener(this);
-                    torControlProtocol.setEvents(Collections.emptyList());
-                });
+                .whenComplete((nil, throwable) ->
+                        torControlProtocol.removeBootstrapEventListener(this));
     }
 
     @Override
@@ -76,7 +74,6 @@ public class BootstrapService implements BootstrapEventListener {
 
     private void subscribeToBootstrapEvents() {
         torControlProtocol.addBootstrapEventListener(this);
-        torControlProtocol.setEvents(List.of("STATUS_CLIENT"));
     }
 
     private void enableNetworking() {

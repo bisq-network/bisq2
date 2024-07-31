@@ -17,21 +17,23 @@
 
 package bisq.tor.controller.events.listener;
 
+import bisq.tor.controller.events.events.EventType;
 import bisq.tor.controller.events.events.HsDescEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
 @Slf4j
-public abstract class FilteredHsDescEventListener implements HsDescEventListener {
+public abstract class FilteredHsDescEventListener extends HsDescEventListener {
     private final String serviceId;
     private final Set<HsDescEvent.Action> eventActions;
 
-    public FilteredHsDescEventListener(String onionAddress) {
-        this(onionAddress, Set.of(HsDescEvent.Action.values()));
+    public FilteredHsDescEventListener(EventType eventType, String onionAddress) {
+        this(eventType, onionAddress, Set.of(HsDescEvent.Action.values()));
     }
 
-    public FilteredHsDescEventListener(String onionAddress, Set<HsDescEvent.Action> eventActions) {
+    public FilteredHsDescEventListener(EventType eventType, String onionAddress, Set<HsDescEvent.Action> eventActions) {
+        super(eventType);
         this.serviceId = onionAddress.replace(".onion", "");
         this.eventActions = eventActions;
     }
