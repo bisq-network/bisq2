@@ -8,10 +8,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -24,8 +24,8 @@ public class TorController {
     private final long isOnlineTimeout = TimeUnit.SECONDS.toMillis(30); // in ms
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
-    private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new HashMap<>();
-    private final Map<String, OnionServiceOnlineStateService> onionServiceOnlineStateServiceMap = new HashMap<>();
+    private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new ConcurrentHashMap<>();
+    private final Map<String, OnionServiceOnlineStateService> onionServiceOnlineStateServiceMap = new ConcurrentHashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
 
     public TorController(int bootstrapTimeout, int hsUploadTimeout) {
@@ -72,37 +72,25 @@ public class TorController {
         String onionAddress = torKeyPair.getOnionAddress();
         PublishOnionAddressService publishOnionAddressService = new PublishOnionAddressService(torControlProtocol, hsUploadTimeout, torKeyPair);
         CompletableFuture<Void> future;
-        synchronized (publishOnionAddressServiceMap) {
-            if (publishOnionAddressServiceMap.containsKey(onionAddress)) {
-                return publishOnionAddressServiceMap.get(onionAddress).getFuture().orElseThrow();
-            }
-
-            future = publishOnionAddressService.publish(onionServicePort, localPort);
-            future.whenComplete((r, t) -> {
-                synchronized (publishOnionAddressServiceMap) {
-                    publishOnionAddressServiceMap.remove(onionAddress);
-                }
-            });
-            publishOnionAddressServiceMap.put(onionAddress, publishOnionAddressService);
+        if (publishOnionAddressServiceMap.containsKey(onionAddress)) {
+            return publishOnionAddressServiceMap.get(onionAddress).getFuture().orElseThrow();
         }
+
+        future = publishOnionAddressService.publish(onionServicePort, localPort);
+        future.whenComplete((r, t) -> publishOnionAddressServiceMap.remove(onionAddress));
+        publishOnionAddressServiceMap.put(onionAddress, publishOnionAddressService);
         return future;
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
         OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress, isOnlineTimeout);
         CompletableFuture<Boolean> future;
-        synchronized (onionServiceOnlineStateServiceMap) {
-            if (onionServiceOnlineStateServiceMap.containsKey(onionAddress)) {
-                return onionServiceOnlineStateServiceMap.get(onionAddress).getFuture().orElseThrow();
-            }
-            future = onionServiceOnlineStateService.isOnionServiceOnline();
-            future.whenComplete((r, t) -> {
-                synchronized (onionServiceOnlineStateServiceMap) {
-                    onionServiceOnlineStateServiceMap.remove(onionAddress);
-                }
-            });
-            onionServiceOnlineStateServiceMap.put(onionAddress, onionServiceOnlineStateService);
+        if (onionServiceOnlineStateServiceMap.containsKey(onionAddress)) {
+            return onionServiceOnlineStateServiceMap.get(onionAddress).getFuture().orElseThrow();
         }
+        future = onionServiceOnlineStateService.isOnionServiceOnline();
+        future.whenComplete((r, t) -> onionServiceOnlineStateServiceMap.remove(onionAddress));
+        onionServiceOnlineStateServiceMap.put(onionAddress, onionServiceOnlineStateService);
         return future;
     }
 
