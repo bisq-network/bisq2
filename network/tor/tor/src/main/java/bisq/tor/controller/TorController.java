@@ -6,7 +6,6 @@ import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.events.HsDescFailedEvent;
 import bisq.tor.controller.events.listener.HsDescEventListener;
-import bisq.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -33,7 +30,6 @@ public class TorController implements HsDescEventListener {
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
 
-    private final Map<String, CountDownLatch> pendingOnionServicePublishLatchMap = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Boolean>> pendingIsOnionServiceOnlineLookupFutureMap =
             new ConcurrentHashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
@@ -91,30 +87,8 @@ public class TorController implements HsDescEventListener {
     }
 
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
-        if (!pendingOnionServicePublishLatchMap.isEmpty()) {
-            pendingOnionServicePublishLatchMap.forEach((onionAddress, latch) -> {
-                try {
-                    log.info("A previous request for publishing {} has not completed yet.", onionAddress);
-                    boolean success = latch.await(hsUploadTimeout, TimeUnit.MILLISECONDS);
-                    log.info("A previous request for publishing {} has completed with success={}.", onionAddress, success);
-                } catch (InterruptedException ignore) {
-                }
-            });
-        }
-        String onionAddress = torKeyPair.getOnionAddress();
-        var onionServicePublishedLatch = new CountDownLatch(1);
-        pendingOnionServicePublishLatchMap.put(onionAddress, onionServicePublishedLatch);
-
-        subscribeToHsDescEvents();
-        torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
-
-        boolean isSuccess = onionServicePublishedLatch.await(hsUploadTimeout, TimeUnit.MILLISECONDS);
-        if (!isSuccess) {
-            throw new HsDescUploadFailedException("HS_DESC upload timer triggered.");
-        }
-
-        torControlProtocol.removeHsDescEventListener(this);
-        torControlProtocol.setEvents(Collections.emptyList());
+        PublishOnionAddressService publishOnionAddressService = new PublishOnionAddressService(torControlProtocol, hsUploadTimeout, torKeyPair);
+        publishOnionAddressService.publish(onionServicePort, localPort);
     }
 
     public int getSocksPort() {
@@ -159,11 +133,6 @@ public class TorController implements HsDescEventListener {
                 }
                 break;
             case UPLOADED:
-                CountDownLatch countDownLatch = pendingOnionServicePublishLatchMap.get(onionAddress);
-                if (countDownLatch != null) {
-                    countDownLatch.countDown();
-                    pendingOnionServicePublishLatchMap.remove(onionAddress);
-                }
                 break;
         }
     }
