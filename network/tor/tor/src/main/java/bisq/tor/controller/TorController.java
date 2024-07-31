@@ -21,10 +21,11 @@ public class TorController {
 
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
-
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
+
     private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new HashMap<>();
+    private final Map<String, OnionServiceOnlineStateService> onionServiceOnlineStateServiceMap = new HashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
 
     public TorController(int bootstrapTimeout, int hsUploadTimeout) {
@@ -63,11 +64,6 @@ public class TorController {
         return bootstrapService.get().bootstrap();
     }
 
-    public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
-        OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress);
-        return onionServiceOnlineStateService.isOnionServiceOnline();
-    }
-
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
         publishAsync(torKeyPair, onionServicePort, localPort).join();
     }
@@ -92,6 +88,24 @@ public class TorController {
         return future;
     }
 
+    public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
+        OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress);
+        CompletableFuture<Boolean> future;
+        synchronized (onionServiceOnlineStateServiceMap) {
+            if (onionServiceOnlineStateServiceMap.containsKey(onionAddress)) {
+                return onionServiceOnlineStateServiceMap.get(onionAddress).getFuture().orElseThrow();
+            }
+            future = onionServiceOnlineStateService.isOnionServiceOnline();
+            future.whenComplete((r, t) -> {
+                synchronized (onionServiceOnlineStateServiceMap) {
+                    onionServiceOnlineStateServiceMap.remove(onionAddress);
+                }
+            });
+            onionServiceOnlineStateServiceMap.put(onionAddress, onionServiceOnlineStateService);
+        }
+        return future;
+    }
+
     public int getSocksPort() {
         String socksListenersString = torControlProtocol.getInfo("net/listeners/socks");
         String socksListener;
@@ -107,7 +121,6 @@ public class TorController {
         String portString = socksListener.split(":")[1];
         return Integer.parseInt(portString);
     }
-
 
     private void initialize(int controlPort, Optional<PasswordDigest> hashedControlPassword) {
         torControlProtocol.initialize(controlPort);

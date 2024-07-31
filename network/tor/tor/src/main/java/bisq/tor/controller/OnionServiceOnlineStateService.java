@@ -19,53 +19,71 @@ package bisq.tor.controller;
 
 import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.events.HsDescFailedEvent;
-import bisq.tor.controller.events.listener.HsDescEventListener;
+import bisq.tor.controller.events.listener.FilteredHsDescEventListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class OnionServiceOnlineStateService implements HsDescEventListener {
+public class OnionServiceOnlineStateService extends FilteredHsDescEventListener {
     private final TorControlProtocol torControlProtocol;
     private final String onionAddress;
+    private final CountDownLatch countDownLatch = new CountDownLatch(1);
+    private boolean isOnline;
     @Getter
-    private final CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
+    private Optional<CompletableFuture<Boolean>> future = Optional.empty();
 
     public OnionServiceOnlineStateService(TorControlProtocol torControlProtocol, String onionAddress) {
+        super(onionAddress, Set.of(HsDescEvent.Action.FAILED, HsDescEvent.Action.RECEIVED));
+
         this.torControlProtocol = torControlProtocol;
         this.onionAddress = onionAddress;
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnline() {
-        subscribeToHsDescEvents();
+        future = Optional.of(CompletableFuture.supplyAsync(() -> {
+                    subscribeToHsDescEvents();
 
-        String serviceId = onionAddress.replace(".onion", "");
-        torControlProtocol.hsFetch(serviceId);
-
-        completableFuture.thenRun(() -> {
-            torControlProtocol.removeHsDescEventListener(this);
-            torControlProtocol.setEvents(Collections.emptyList());
-        });
-
-        return completableFuture;
+                    String serviceId = onionAddress.replace(".onion", "");
+                    torControlProtocol.hsFetch(serviceId);
+                    try {
+                        //todo set timeout
+                        boolean isSuccess = countDownLatch.await(120, TimeUnit.SECONDS);
+                        if (!isSuccess) {
+                            throw new RuntimeException("Could not get onion address upload completed in " + 120000 / 1000 + " seconds");
+                        }
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return isOnline;
+                })
+                .whenComplete((nil, throwable) -> {
+                    torControlProtocol.removeHsDescEventListener(this);
+                    torControlProtocol.setEvents(Collections.emptyList());
+                }));
+        return future.get();
     }
 
     @Override
-    public void onHsDescEvent(HsDescEvent hsDescEvent) {
-        log.info("Tor HS_DESC event: {}", hsDescEvent);
-
+    public void onFilteredEvent(HsDescEvent hsDescEvent) {
         switch (hsDescEvent.getAction()) {
             case FAILED:
                 HsDescFailedEvent hsDescFailedEvent = (HsDescFailedEvent) hsDescEvent;
                 if (hsDescFailedEvent.getReason().equals("REASON=NOT_FOUND")) {
-                    completableFuture.complete(false);
+                    log.debug("Received hsDescFailedEvent {}", hsDescFailedEvent);
+                    countDownLatch.countDown();
                 }
                 break;
             case RECEIVED:
-                completableFuture.complete(true);
+                isOnline = true;
+                countDownLatch.countDown();
                 break;
             case UPLOADED:
                 break;
