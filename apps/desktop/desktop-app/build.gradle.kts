@@ -1,6 +1,16 @@
 import bisq.gradle.common.getPlatform
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
+import java.util.Properties
+import java.io.File
+
+// Function to read properties from a file - TODO find a way to reuse this code instead of copying when needed
+fun readPropertiesFile(filePath: String): Properties {
+    val properties = Properties()
+    file(filePath).inputStream().use { properties.load(it) }
+    return properties
+}
+
 plugins {
     id("bisq.java-library")
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
@@ -13,7 +23,10 @@ application {
     mainClass.set("bisq.desktop_app.DesktopApp")
 }
 
-version = "2.1.0"
+val properties = readPropertiesFile("../../../gradle.properties")
+val rootVersion = properties.getProperty("version", "unspecified")
+version = rootVersion
+// println("version is ${version}")
 
 javafx {
     version = "22.0.1"
@@ -51,6 +64,9 @@ dependencies {
 tasks {
     named<Jar>("jar") {
         manifest {
+            // doFirst {
+            //     println("project version is ${project.version}");
+            // }
             attributes(
                     mapOf(
                             Pair("Implementation-Title", project.name),
