@@ -51,7 +51,8 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
 
     public CompletableFuture<Boolean> isOnionServiceOnline() {
         future = Optional.of(CompletableFuture.supplyAsync(() -> {
-                    subscribeToHsDescEvents();
+                    torControlProtocol.addHsDescEventListener(this);
+                    torControlProtocol.setEvents(List.of("HS_DESC"));
 
                     String serviceId = onionAddress.replace(".onion", "");
                     torControlProtocol.hsFetch(serviceId);
@@ -89,10 +90,5 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
             case UPLOADED:
                 break;
         }
-    }
-
-    private void subscribeToHsDescEvents() {
-        torControlProtocol.addHsDescEventListener(this);
-        torControlProtocol.setEvents(List.of("HS_DESC"));
     }
 }

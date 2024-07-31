@@ -53,7 +53,9 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
     public CompletableFuture<Void> publish(int onionServicePort, int localPort) throws InterruptedException {
         future = Optional.of(CompletableFuture.runAsync(() -> {
                     try {
-                        subscribeToHsDescEvents();
+                        torControlProtocol.addHsDescEventListener(this);
+                        torControlProtocol.setEvents(List.of("HS_DESC"));
+
                         torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
 
                         boolean success = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
@@ -75,10 +77,5 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
     public void onFilteredEvent(HsDescEvent hsDescEvent) {
         log.info("Publishing of onion address completed. Received UPLOADED event {}", hsDescEvent);
         countDownLatch.countDown();
-    }
-
-    private void subscribeToHsDescEvents() {
-        torControlProtocol.addHsDescEventListener(this);
-        torControlProtocol.setEvents(List.of("HS_DESC"));
     }
 }
