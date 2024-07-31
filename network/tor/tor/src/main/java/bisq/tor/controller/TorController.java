@@ -3,22 +3,20 @@ package bisq.tor.controller;
 import bisq.common.observable.Observable;
 import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.events.events.BootstrapEvent;
-import bisq.tor.controller.events.events.HsDescEvent;
-import bisq.tor.controller.events.events.HsDescFailedEvent;
-import bisq.tor.controller.events.listener.HsDescEventListener;
 import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class TorController implements HsDescEventListener {
+public class TorController {
     private final TorControlProtocol torControlProtocol = new TorControlProtocol();
 
     private final int bootstrapTimeout; // in ms
@@ -27,8 +25,6 @@ public class TorController implements HsDescEventListener {
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
     private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new HashMap<>();
-    private final Map<String, CompletableFuture<Boolean>> pendingIsOnionServiceOnlineLookupFutureMap =
-            new ConcurrentHashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
 
     public TorController(int bootstrapTimeout, int hsUploadTimeout) {
@@ -68,19 +64,8 @@ public class TorController implements HsDescEventListener {
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
-        var onionServiceLookupCompletableFuture = new CompletableFuture<Boolean>();
-        pendingIsOnionServiceOnlineLookupFutureMap.put(onionAddress, onionServiceLookupCompletableFuture);
-        subscribeToHsDescEvents();
-
-        String serviceId = onionAddress.replace(".onion", "");
-        torControlProtocol.hsFetch(serviceId);
-
-        onionServiceLookupCompletableFuture.thenRun(() -> {
-            torControlProtocol.removeHsDescEventListener(this);
-            torControlProtocol.setEvents(Collections.emptyList());
-        });
-
-        return onionServiceLookupCompletableFuture;
+        OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress);
+        return onionServiceOnlineStateService.isOnionServiceOnline();
     }
 
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
@@ -124,42 +109,8 @@ public class TorController implements HsDescEventListener {
     }
 
 
-    @Override
-    public void onHsDescEvent(HsDescEvent hsDescEvent) {
-        log.info("Tor HS_DESC event: {}", hsDescEvent);
-
-        String onionAddress = hsDescEvent.getHsAddress() + ".onion";
-        CompletableFuture<Boolean> completableFuture;
-        switch (hsDescEvent.getAction()) {
-            case FAILED:
-                HsDescFailedEvent hsDescFailedEvent = (HsDescFailedEvent) hsDescEvent;
-                if (hsDescFailedEvent.getReason().equals("REASON=NOT_FOUND")) {
-                    completableFuture = pendingIsOnionServiceOnlineLookupFutureMap.get(onionAddress);
-                    if (completableFuture != null) {
-                        completableFuture.complete(false);
-                        pendingIsOnionServiceOnlineLookupFutureMap.remove(onionAddress);
-                    }
-                }
-                break;
-            case RECEIVED:
-                completableFuture = pendingIsOnionServiceOnlineLookupFutureMap.get(onionAddress);
-                if (completableFuture != null) {
-                    completableFuture.complete(true);
-                    pendingIsOnionServiceOnlineLookupFutureMap.remove(onionAddress);
-                }
-                break;
-            case UPLOADED:
-                break;
-        }
-    }
-
     private void initialize(int controlPort, Optional<PasswordDigest> hashedControlPassword) {
         torControlProtocol.initialize(controlPort);
         hashedControlPassword.ifPresent(torControlProtocol::authenticate);
-    }
-
-    private void subscribeToHsDescEvents() {
-        torControlProtocol.addHsDescEventListener(this);
-        torControlProtocol.setEvents(List.of("HS_DESC"));
     }
 }
