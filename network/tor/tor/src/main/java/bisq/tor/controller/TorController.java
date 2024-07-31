@@ -11,10 +11,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,7 +26,7 @@ public class TorController implements HsDescEventListener {
 
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
-
+    private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new HashMap<>();
     private final Map<String, CompletableFuture<Boolean>> pendingIsOnionServiceOnlineLookupFutureMap =
             new ConcurrentHashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
@@ -87,8 +84,27 @@ public class TorController implements HsDescEventListener {
     }
 
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
+        publishAsync(torKeyPair, onionServicePort, localPort).join();
+    }
+
+    public CompletableFuture<Void> publishAsync(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
+        String onionAddress = torKeyPair.getOnionAddress();
         PublishOnionAddressService publishOnionAddressService = new PublishOnionAddressService(torControlProtocol, hsUploadTimeout, torKeyPair);
-        publishOnionAddressService.publish(onionServicePort, localPort);
+        CompletableFuture<Void> future;
+        synchronized (publishOnionAddressServiceMap) {
+            if (publishOnionAddressServiceMap.containsKey(onionAddress)) {
+                return publishOnionAddressServiceMap.get(onionAddress).getFuture().orElseThrow();
+            }
+
+            future = publishOnionAddressService.publish(onionServicePort, localPort);
+            future.whenComplete((r, t) -> {
+                synchronized (publishOnionAddressServiceMap) {
+                    publishOnionAddressServiceMap.remove(onionAddress);
+                }
+            });
+            publishOnionAddressServiceMap.put(onionAddress, publishOnionAddressService);
+        }
+        return future;
     }
 
     public int getSocksPort() {
