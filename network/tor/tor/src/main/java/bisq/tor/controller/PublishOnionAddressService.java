@@ -51,22 +51,30 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
 
     public CompletableFuture<Void> publish(int onionServicePort, int localPort) throws InterruptedException {
         future = Optional.of(CompletableFuture.runAsync(() -> {
+                    torControlProtocol.addHsDescEventListener(this);
+
+                    torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
+
+                    boolean isSuccess;
                     try {
-                        torControlProtocol.addHsDescEventListener(this);
-
-                        torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
-
-                        boolean success = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
-                        if (!success) {
-                            throw new HsDescUploadFailedException("Could not get onion address upload completed in " + timeout / 1000 + " seconds");
-                        }
+                        isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
                     } catch (Exception e) {
                         throw new HsDescUploadFailedException(e);
+                    }
+                    if (!isSuccess) {
+                        throw new HsDescUploadFailedException("Could not get onion address upload completed in " + timeout / 1000 + " seconds");
                     }
                 }, ExecutorFactory.newSingleThreadExecutor("PublishOnionAddressService"))
                 .whenComplete((nil, throwable) ->
                         torControlProtocol.removeHsDescEventListener(this)));
         return future.get();
+    }
+
+    public void shutdown() {
+        torControlProtocol.removeHsDescEventListener(this);
+        if (countDownLatch.getCount() > 0) {
+            countDownLatch.countDown();
+        }
     }
 
     @Override

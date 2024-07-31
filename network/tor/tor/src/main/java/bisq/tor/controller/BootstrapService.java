@@ -49,13 +49,31 @@ public class BootstrapService extends BootstrapEventListener {
 
     public CompletableFuture<Void> bootstrap() {
         return CompletableFuture.runAsync(() -> {
-                    bindToBisq();
-                    subscribeToBootstrapEvents();
-                    enableNetworking();
-                    waitUntilBootstrapped();
+                    torControlProtocol.takeOwnership();
+                    torControlProtocol.resetConf(NativeTorProcess.ARG_OWNER_PID);
+
+                    torControlProtocol.addBootstrapEventListener(this);
+
+                    torControlProtocol.setConfig(TorrcClientConfigFactory.DISABLE_NETWORK_CONFIG_KEY, "0");
+
+                    try {
+                        boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
+                        if (!isSuccess) {
+                            throw new TorBootstrapFailedException("Could not bootstrap Tor in " + timeout / 1000 + " seconds");
+                        }
+                    } catch (InterruptedException e) {
+                        throw new TorBootstrapFailedException(e);
+                    }
                 }, MoreExecutors.directExecutor())
                 .whenComplete((nil, throwable) ->
                         torControlProtocol.removeBootstrapEventListener(this));
+    }
+
+    public void shutdown() {
+        torControlProtocol.removeBootstrapEventListener(this);
+        if (countDownLatch.getCount() > 0) {
+            countDownLatch.countDown();
+        }
     }
 
     @Override
@@ -64,30 +82,6 @@ public class BootstrapService extends BootstrapEventListener {
         this.bootstrapEvent.set(bootstrapEvent);
         if (bootstrapEvent.isDoneEvent()) {
             countDownLatch.countDown();
-        }
-    }
-
-    private void bindToBisq() {
-        torControlProtocol.takeOwnership();
-        torControlProtocol.resetConf(NativeTorProcess.ARG_OWNER_PID);
-    }
-
-    private void subscribeToBootstrapEvents() {
-        torControlProtocol.addBootstrapEventListener(this);
-    }
-
-    private void enableNetworking() {
-        torControlProtocol.setConfig(TorrcClientConfigFactory.DISABLE_NETWORK_CONFIG_KEY, "0");
-    }
-
-    private void waitUntilBootstrapped() {
-        try {
-            boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
-            if (!isSuccess) {
-                throw new TorBootstrapFailedException("Could not bootstrap Tor in " + timeout / 1000 + " seconds");
-            }
-        } catch (InterruptedException e) {
-            throw new TorBootstrapFailedException(e);
         }
     }
 

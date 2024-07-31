@@ -42,6 +42,9 @@ public class TorController {
     }
 
     public void shutdown() {
+        bootstrapService.ifPresent(BootstrapService::shutdown);
+        publishOnionAddressServiceMap.values().forEach(PublishOnionAddressService::shutdown);
+        onionServiceOnlineStateServiceMap.values().forEach(OnionServiceOnlineStateService::shutdown);
         torControlProtocol.close();
     }
 

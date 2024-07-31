@@ -54,19 +54,29 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
 
                     String serviceId = onionAddress.replace(".onion", "");
                     torControlProtocol.hsFetch(serviceId);
+
+                    boolean isSuccess;
                     try {
-                        boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
-                        if (!isSuccess) {
-                            throw new RuntimeException("Could not get onion address upload completed in " + timeout / 1000 + " seconds");
-                        }
-                    } catch (InterruptedException e) {
+                        isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
+                    if (!isSuccess) {
+                        throw new RuntimeException("Could not get onion address upload completed in " + timeout / 1000 + " seconds");
+                    }
+
                     return isOnline;
                 })
                 .whenComplete((nil, throwable) ->
                         torControlProtocol.removeHsDescEventListener(this)));
         return future.get();
+    }
+
+    public void shutdown() {
+        torControlProtocol.removeHsDescEventListener(this);
+        if (countDownLatch.getCount() > 0) {
+            countDownLatch.countDown();
+        }
     }
 
     @Override
