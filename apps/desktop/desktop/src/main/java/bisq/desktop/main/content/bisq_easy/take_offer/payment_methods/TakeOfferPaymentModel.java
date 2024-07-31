@@ -37,8 +37,6 @@ public class TakeOfferPaymentModel implements Model {
     @Setter
     private boolean bitcoinMethodVisible;
     @Setter
-    private String bitcoinHeadline;
-    @Setter
     private Market market;
 
     private final ObservableList<FiatPaymentMethodSpec> offeredFiatPaymentMethodSpecs = FXCollections.observableArrayList();
@@ -47,5 +45,9 @@ public class TakeOfferPaymentModel implements Model {
     @Setter
     private boolean fiatMethodVisible;
     @Setter
-    private String fiatHeadline;
+    private String headline;
+    @Setter
+    private String fiatSubtitle;
+    @Setter
+    private String bitcoinSubtitle;
 }
