@@ -19,11 +19,11 @@ package bisq.desktop.main.content.bisq_easy.take_offer.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.ChipToggleButton;
-import bisq.i18n.Res;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import javafx.geometry.Insets;
@@ -31,14 +31,17 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, TakeOfferPaymentController> {
-    private final FlowPane fiatFlowPane, bitcoinFlowPane;
+    private static final double MULTIPLE_COLUMN_WIDTH = 21.30;
+    private static final double TWO_COLUMN_WIDTH = 20.75;
+
+    private final GridPane fiatGridPane, bitcoinGridPane;
     private final ToggleGroup bitcoinToggleGroup, fiatToggleGroup;
     private final Label headlineLabel, fiatSubtitleLabel, bitcoinSubtitleLabel;
     private final VBox fiatVBox, btcVBox;
@@ -57,14 +60,9 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         fiatSubtitleLabel.getStyleClass().addAll("bisq-text-3");
         fiatSubtitleLabel.setWrapText(true);
         fiatSubtitleLabel.setMaxWidth(600);
-
         fiatToggleGroup = new ToggleGroup();
-        bitcoinToggleGroup = new ToggleGroup();
-
-        fiatFlowPane = new FlowPane();
-        fiatFlowPane.setAlignment(Pos.CENTER);
-        fiatFlowPane.setVgap(20);
-        fiatFlowPane.setHgap(20);
+        fiatGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
+        fiatGridPane.setAlignment(Pos.CENTER);
 
         bitcoinSubtitleLabel = new Label();
         bitcoinSubtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -72,19 +70,17 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         bitcoinSubtitleLabel.getStyleClass().addAll("bisq-text-3");
         bitcoinSubtitleLabel.setWrapText(true);
         bitcoinSubtitleLabel.setMaxWidth(600);
+        bitcoinToggleGroup = new ToggleGroup();
+        bitcoinGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
+        bitcoinGridPane.setAlignment(Pos.CENTER);
 
-        bitcoinFlowPane = new FlowPane();
-        bitcoinFlowPane.setAlignment(Pos.CENTER);
-        bitcoinFlowPane.setVgap(20);
-        bitcoinFlowPane.setHgap(20);
-
-        fiatVBox = new VBox(25, fiatSubtitleLabel, fiatFlowPane);
+        fiatVBox = new VBox(25, fiatSubtitleLabel, fiatGridPane);
         fiatVBox.setAlignment(Pos.CENTER);
-        btcVBox = new VBox(25, bitcoinSubtitleLabel, bitcoinFlowPane);
+        btcVBox = new VBox(25, bitcoinSubtitleLabel, bitcoinGridPane);
         btcVBox.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, 40, 0));
-        VBox.setMargin(fiatFlowPane, new Insets(0, 60, 45, 60));
+        VBox.setMargin(fiatGridPane, new Insets(0, 0, 45, 0));
         root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, fiatVBox, btcVBox, Spacer.fillVBox());
 
         root.setOnMousePressed(e -> root.requestFocus());
@@ -98,6 +94,12 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         fiatVBox.setManaged(model.isFiatMethodVisible());
         if (model.isFiatMethodVisible()) {
             fiatSubtitleLabel.setText(model.getFiatSubtitle());
+            fiatGridPane.getChildren().clear();
+            fiatGridPane.getColumnConstraints().clear();
+            int numColumns = model.getSortedFiatPaymentMethodSpecs().size();
+            GridPaneUtil.setGridPaneMultiColumnsConstraints(fiatGridPane, numColumns, numColumns == 2 ? TWO_COLUMN_WIDTH : MULTIPLE_COLUMN_WIDTH);
+            int col = 0;
+            int row = 0;
             for (FiatPaymentMethodSpec spec : model.getSortedFiatPaymentMethodSpecs()) {
                 FiatPaymentMethod paymentMethod = spec.getPaymentMethod();
                 ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), fiatToggleGroup);
@@ -107,7 +109,7 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
                 }
                 chipToggleButton.setOnAction(() -> controller.onToggleFiatPaymentMethod(spec, chipToggleButton.isSelected()));
                 chipToggleButton.setSelected(spec.equals(model.getSelectedFiatPaymentMethodSpec().get()));
-                fiatFlowPane.getChildren().add(chipToggleButton);
+                fiatGridPane.add(chipToggleButton, col++, row);
             }
         }
 
@@ -115,6 +117,12 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         btcVBox.setManaged(model.isBitcoinMethodVisible());
         if (model.isBitcoinMethodVisible()) {
             bitcoinSubtitleLabel.setText(model.getBitcoinSubtitle());
+            bitcoinGridPane.getChildren().clear();
+            bitcoinGridPane.getColumnConstraints().clear();
+            int numColumns = model.getSortedBitcoinPaymentMethodSpecs().size();
+            GridPaneUtil.setGridPaneMultiColumnsConstraints(bitcoinGridPane, numColumns, numColumns == 2 ? TWO_COLUMN_WIDTH : MULTIPLE_COLUMN_WIDTH);
+            int col = 0;
+            int row = 0;
             for (BitcoinPaymentMethodSpec spec : model.getSortedBitcoinPaymentMethodSpecs()) {
                 BitcoinPaymentMethod paymentMethod = spec.getPaymentMethod();
                 ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), bitcoinToggleGroup);
@@ -124,20 +132,20 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
                 }
                 chipToggleButton.setOnAction(() -> controller.onToggleBitcoinPaymentMethod(spec, chipToggleButton.isSelected()));
                 chipToggleButton.setSelected(spec.equals(model.getSelectedBitcoinPaymentMethodSpec().get()));
-                bitcoinFlowPane.getChildren().add(chipToggleButton);
+                bitcoinGridPane.add(chipToggleButton, col++, row);
             }
         }
     }
 
     @Override
     protected void onViewDetached() {
-        fiatFlowPane.getChildren().clear();
-        fiatFlowPane.getChildren().stream()
+        fiatGridPane.getChildren().clear();
+        fiatGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipToggleButton)
                 .map(e -> (ChipToggleButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
-        bitcoinFlowPane.getChildren().clear();
-        bitcoinFlowPane.getChildren().stream()
+        bitcoinGridPane.getChildren().clear();
+        bitcoinGridPane.getChildren().stream()
                 .filter(e -> e instanceof ChipToggleButton)
                 .map(e -> (ChipToggleButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
