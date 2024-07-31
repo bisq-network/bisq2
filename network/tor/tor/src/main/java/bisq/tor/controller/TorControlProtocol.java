@@ -212,9 +212,28 @@ public class TorControlProtocol implements AutoCloseable {
         return multiLineReplyPattern.matcher(reply).matches();
     }
 
+    // TODO check if this change is correct
+    // We can receive 1 entry with "250 OK" or multiple entries starting with "250-" and the last entry with "250 OK"
+    // Multiple entries following a single entry have been observed when using multiple user profiles.
+    // E.g. [250 OK]
+    // [250-ServiceID=bedb3wpuybkuwvjat2zq5odtqbajq7x3ovllvh7l2kbxakbgkzgikqyd, 250 OK]
+    // [250-ServiceID=bedb3wpuybkuwvjat2zq5odtqbajq7x3ovllvh7l2kbxakbgkzgikqyd, 250-ServiceID=xjlwqzk6n4i5co574jrljsigelx6itzya32cfb7sfofqn7wueyhjj4id, 250 OK]
     private String validateReply(Stream<String> replyStream, String commandName) {
         List<String> replies = replyStream.collect(Collectors.toList());
-        if (replies.size() != 2) {
+
+        String OK250 = "250 OK";
+        boolean hasOK250 = replies.stream().anyMatch(e -> e.equals(OK250));
+        List<String> listOf250WithData = replies.stream().filter(e -> e.startsWith("250-")).collect(Collectors.toList());
+        if (!listOf250WithData.isEmpty()) {
+            // TODO are there use cases where we need all 250WithData entries?
+            return listOf250WithData.iterator().next();
+        } else if (hasOK250) {
+            return OK250;
+        } else {
+            throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
+        }
+
+       /* if (replies.size() != 2) {
             throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
         }
 
@@ -228,6 +247,6 @@ public class TorControlProtocol implements AutoCloseable {
             throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
         }
 
-        return firstLine;
+        return firstLine;*/
     }
 }
