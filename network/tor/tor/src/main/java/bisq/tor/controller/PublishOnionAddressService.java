@@ -18,6 +18,7 @@
 package bisq.tor.controller;
 
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.StringUtils;
 import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.events.events.EventType;
 import bisq.tor.controller.events.events.HsDescEvent;
@@ -79,7 +80,9 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
 
     @Override
     public void onFilteredEvent(HsDescEvent hsDescEvent) {
-        log.info("Publishing of onion address completed. Received UPLOADED event {}", hsDescEvent);
+        if (countDownLatch.getCount() > 0) {
+            log.info("Publishing of onion address completed. Event {}", StringUtils.truncate(hsDescEvent, 100));
+        }
         countDownLatch.countDown();
     }
 }

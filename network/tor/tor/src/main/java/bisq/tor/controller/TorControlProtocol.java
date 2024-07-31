@@ -209,7 +209,7 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private void registerEvents(Set<String> events) {
-        log.error("registerEvents: {}", events);
+        log.info("registerEvents: {}", events);
         var stringBuilder = new StringBuffer("SETEVENTS");
         events.forEach(event -> stringBuilder.append(" ").append(event));
         stringBuilder.append("\r\n");
