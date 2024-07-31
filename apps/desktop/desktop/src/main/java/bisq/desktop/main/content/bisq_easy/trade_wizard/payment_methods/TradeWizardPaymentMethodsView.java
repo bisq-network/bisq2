@@ -32,14 +32,17 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPaymentMethodsModel, TradeWizardPaymentMethodsController> {
+    private static final double TWO_COLUMN_WIDTH = 20.75;
+
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodListener;
     private final Label fiatSubtitleLabel, bitcoinSubtitleLabel, nonFoundLabel;
     private final AddCustomPaymentMethodBox addCustomPaymentMethodBox;
@@ -150,7 +153,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
 
         int i = 0;
         int col, row;
-        for (; i < paymentMethodsCount; i++) {
+        for (; i < paymentMethodsCount; ++i) {
             FiatPaymentMethod fiatPaymentMethod = model.getSortedFiatPaymentMethods().get(i);
 
             // enum name or custom name
@@ -196,11 +199,9 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
     private void setUpAndFillBitcoinPaymentMethods() {
         bitcoinMethodsGridPane.getChildren().clear();
         bitcoinMethodsGridPane.getColumnConstraints().clear();
-        for (int i = 0; i < model.getSortedBitcoinPaymentMethods().size(); ++i) {
-            ColumnConstraints col = new ColumnConstraints();
-            col.setPercentWidth(20.5d);
-            bitcoinMethodsGridPane.getColumnConstraints().add(col);
-        }
+        int numColumns = model.getSortedBitcoinPaymentMethods().size();
+        checkArgument(numColumns == 2, "Only 2 Btc settlement methods allowed for now.");
+        GridPaneUtil.setGridPaneMultiColumnsConstraints(bitcoinMethodsGridPane, numColumns, TWO_COLUMN_WIDTH);
 
         int row = 0;
         int col = 0;

@@ -39,7 +39,7 @@ public class AddCustomPaymentMethodBox extends HBox {
 
     public AddCustomPaymentMethodBox() {
         customPaymentMethodField = new TextField();
-        customPaymentMethodField.setPromptText(Res.get("bisqEasy.tradeWizard.paymentMethod.customMethod.prompt"));
+        customPaymentMethodField.setPromptText(Res.get("bisqEasy.tradeWizard.paymentMethods.customMethod.prompt"));
         customPaymentMethodField.setFocusTraversable(false);
         customPaymentMethodField.getStyleClass().add("custom-payment-method-text-field");
         focusedListener = (obs, oldValue, newValue) -> applyStyle(newValue);

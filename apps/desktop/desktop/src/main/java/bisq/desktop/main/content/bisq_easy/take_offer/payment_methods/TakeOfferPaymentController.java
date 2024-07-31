@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.take_offer.payment_method;
+package bisq.desktop.main.content.bisq_easy.take_offer.payment_methods;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
@@ -55,12 +55,12 @@ public class TakeOfferPaymentController implements Controller {
         model.setMarket(bisqEasyOffer.getMarket());
         model.getOfferedBitcoinPaymentMethodSpecs().setAll(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
         model.getOfferedFiatPaymentMethodSpecs().setAll(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        model.setBitcoinHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
-                Res.get("bisqEasy.takeOffer.paymentMethod.headline.bitcoin.buyer") :
-                Res.get("bisqEasy.takeOffer.paymentMethod.headline.bitcoin.seller"));
-        model.setFiatHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
-                Res.get("bisqEasy.takeOffer.paymentMethod.headline.fiat.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode()) :
-                Res.get("bisqEasy.takeOffer.paymentMethod.headline.fiat.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
+        model.setFiatSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
+                ? Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.fiat.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode())
+                : Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.fiat.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
+        model.setBitcoinSubtitle(bisqEasyOffer.getTakersDirection().isBuy()
+                ? Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.bitcoin.buyer")
+                : Res.get("bisqEasy.takeOffer.paymentMethods.subtitle.bitcoin.seller"));
     }
 
     public ReadOnlyObjectProperty<BitcoinPaymentMethodSpec> getSelectedBitcoinPaymentMethodSpec() {
@@ -76,7 +76,7 @@ public class TakeOfferPaymentController implements Controller {
     }
 
     public void handleInvalidInput() {
-        new Popup().invalid(Res.get("bisqEasy.takeOffer.paymentMethod.noneSelected"))
+        new Popup().invalid(Res.get("bisqEasy.takeOffer.paymentMethods.noneSelected"))
                 .owner((Region) view.getRoot().getParent().getParent())
                 .show();
     }
@@ -93,6 +93,11 @@ public class TakeOfferPaymentController implements Controller {
         if (model.getOfferedFiatPaymentMethodSpecs().size() == 1) {
             model.getSelectedFiatPaymentMethodSpec().set(model.getOfferedFiatPaymentMethodSpecs().get(0));
         }
+        model.setHeadline(model.isFiatMethodVisible() && model.isBitcoinMethodVisible()
+                ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiatAndBitcoin")
+                : model.isFiatMethodVisible()
+                    ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiat")
+                    : Res.get("bisqEasy.takeOffer.paymentMethods.headline.bitcoin"));
 
         settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_BITCOIN_METHOD)
                 .ifPresent(name -> {
