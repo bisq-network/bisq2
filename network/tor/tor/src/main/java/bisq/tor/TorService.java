@@ -99,7 +99,7 @@ public class TorService implements Service {
                     .parsePort()
                     .thenAccept(controlPort -> {
                         torController.initialize(controlPort, hashedControlPassword);
-                        torController.bootstrapTor();
+                        torController.bootstrap();
 
                         int port = torController.getSocksPort();
                         torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));

@@ -48,7 +48,7 @@ public class TorController {
         torControlProtocol.close();
     }
 
-    public void bootstrapTor() {
+    public void bootstrap() {
         checkArgument(bootstrapService.isEmpty(), "Bootstrap must be called only once");
         bootstrapAsync()
                 .exceptionally(throwable -> {
