@@ -50,7 +50,7 @@ public class BootstrapEvent {
     }
 
     public static boolean isBootstrapMessage(String type, String message) {
-        return type.equals("STATUS_CLIENT") && message.contains("BOOTSTRAP");
+        return type.equals(EventType.STATUS_CLIENT.name()) && message.contains("BOOTSTRAP");
     }
 
     public static BootstrapEvent fromEventMessage(String message) {

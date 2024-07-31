@@ -1,6 +1,7 @@
 package bisq.tor.controller;
 
 import bisq.tor.controller.events.events.BootstrapEvent;
+import bisq.tor.controller.events.events.EventType;
 import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescEventListener;
@@ -121,11 +122,11 @@ public class WhonixTorControlReader implements AutoCloseable {
 
     private static boolean isStatusClientEvent(String eventType) {
         // 650 STATUS_CLIENT NOTICE CIRCUIT_ESTABLISHED
-        return eventType.equals("STATUS_CLIENT");
+        return eventType.equals(EventType.STATUS_CLIENT.name());
     }
 
     private static boolean isHsDescEvent(String eventType) {
         // 650 HS_DESC CREATED <onion_address> UNKNOWN UNKNOWN <descriptor_id>
-        return eventType.equals("HS_DESC");
+        return eventType.equals(EventType.HS_DESC.name());
     }
 }
