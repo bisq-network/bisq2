@@ -7,6 +7,7 @@ import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.events.HsDescFailedEvent;
 import bisq.tor.controller.events.listener.HsDescEventListener;
 import bisq.tor.controller.exceptions.HsDescUploadFailedException;
+import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
@@ -19,6 +20,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TorController implements HsDescEventListener {
@@ -33,6 +36,7 @@ public class TorController implements HsDescEventListener {
     private final Map<String, CountDownLatch> pendingOnionServicePublishLatchMap = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Boolean>> pendingIsOnionServiceOnlineLookupFutureMap =
             new ConcurrentHashMap<>();
+    private Optional<BootstrapService> bootstrapService = Optional.empty();
 
     public TorController(int bootstrapTimeout, int hsUploadTimeout) {
         this.bootstrapTimeout = bootstrapTimeout;
@@ -52,8 +56,22 @@ public class TorController implements HsDescEventListener {
     }
 
     public void bootstrapTor() {
-        BootstrapTorService bootstrapTorService = new BootstrapTorService(torControlProtocol, bootstrapTimeout, bootstrapEvent);
-        bootstrapTorService.bootstrapTor();
+        checkArgument(bootstrapService.isEmpty(), "Bootstrap must be called only once");
+        bootstrapAsync()
+                .exceptionally(throwable -> {
+                    if (throwable instanceof TorBootstrapFailedException) {
+                        throw (TorBootstrapFailedException) throwable;
+                    } else {
+                        log.error("Error at bootstrap", throwable);
+                        throw new TorBootstrapFailedException(throwable);
+                    }
+                })
+                .join();
+    }
+
+    public CompletableFuture<Void> bootstrapAsync() {
+        bootstrapService = Optional.of(new BootstrapService(torControlProtocol, bootstrapTimeout, bootstrapEvent));
+        return bootstrapService.get().bootstrap();
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {

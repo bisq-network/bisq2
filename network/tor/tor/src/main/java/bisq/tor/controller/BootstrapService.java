@@ -23,33 +23,41 @@ import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.tor.process.NativeTorProcess;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class BootstrapTorService implements BootstrapEventListener {
+public class BootstrapService implements BootstrapEventListener {
     private final TorControlProtocol torControlProtocol;
-    private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
+    private final CountDownLatch countDownLatch = new CountDownLatch(1);
     private final int bootstrapTimeout; // in ms
     private final Observable<BootstrapEvent> bootstrapEvent;
 
-    public BootstrapTorService(TorControlProtocol torControlProtocol, int bootstrapTimeout, Observable<BootstrapEvent> bootstrapEvent) {
+    public BootstrapService(TorControlProtocol torControlProtocol, int bootstrapTimeout, Observable<BootstrapEvent> bootstrapEvent) {
         this.torControlProtocol = torControlProtocol;
         this.bootstrapTimeout = bootstrapTimeout;
         this.bootstrapEvent = bootstrapEvent;
     }
 
-    public void bootstrapTor() {
-        bindToBisq();
-        subscribeToBootstrapEvents();
-        enableNetworking();
-        waitUntilBootstrapped();
+    public CompletableFuture<Void> bootstrap() {
+        return CompletableFuture.runAsync(() -> {
+                    bindToBisq();
+                    subscribeToBootstrapEvents();
+                    enableNetworking();
+                    waitUntilBootstrapped();
+                }, MoreExecutors.directExecutor())
+                .whenComplete((nil, throwable) -> {
+                    torControlProtocol.removeBootstrapEventListener(this);
+                    torControlProtocol.setEvents(Collections.emptyList());
+                });
     }
 
     @Override
@@ -57,7 +65,7 @@ public class BootstrapTorService implements BootstrapEventListener {
         log.info("Tor bootstrap event: {}", bootstrapEvent);
         this.bootstrapEvent.set(bootstrapEvent);
         if (bootstrapEvent.isDoneEvent()) {
-            isBootstrappedCountdownLatch.countDown();
+            countDownLatch.countDown();
         }
     }
 
@@ -77,21 +85,16 @@ public class BootstrapTorService implements BootstrapEventListener {
 
     private void waitUntilBootstrapped() {
         try {
-            while (true) {
-                boolean isSuccess = isBootstrappedCountdownLatch.await(bootstrapTimeout, TimeUnit.MILLISECONDS);
-                if (isSuccess) {
-                    torControlProtocol.removeBootstrapEventListener(this);
-                    torControlProtocol.setEvents(Collections.emptyList());
-                    break;
-                } else if (isBootstrapTimeoutTriggered()) {
-                    throw new TorBootstrapFailedException("Tor bootstrap timeout triggered.");
-                }
+            boolean isSuccess = countDownLatch.await(bootstrapTimeout, TimeUnit.MILLISECONDS);
+            if (!isSuccess) {
+                throw new TorBootstrapFailedException("Could not bootstrap Tor in " + bootstrapTimeout / 1000 + " seconds");
             }
         } catch (InterruptedException e) {
             throw new TorBootstrapFailedException(e);
         }
     }
 
+    //todo Why do we check for the last timestamp at timeouts?
     private boolean isBootstrapTimeoutTriggered() {
         BootstrapEvent bootstrapEvent = this.bootstrapEvent.get();
         Instant timestamp = bootstrapEvent.getTimestamp();
