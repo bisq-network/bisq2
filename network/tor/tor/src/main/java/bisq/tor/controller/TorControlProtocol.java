@@ -6,6 +6,7 @@ import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescEventListener;
 import bisq.tor.controller.exceptions.CannotConnectWithTorException;
 import bisq.tor.controller.exceptions.CannotSendCommandToTorException;
+import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class TorControlProtocol implements AutoCloseable {
     private static final int MAX_CONNECTION_ATTEMPTS = 10;
 
@@ -83,14 +85,14 @@ public class TorControlProtocol implements AutoCloseable {
 
         sendCommand(command);
         Stream<String> replyStream = receiveReply();
-        assertTwoLineOkReply(replyStream, "ADD_ONION");
+        validateReply(replyStream, "ADD_ONION");
     }
 
     public String getInfo(String keyword) {
         String command = "GETINFO " + keyword + "\r\n";
         sendCommand(command);
         Stream<String> replyStream = receiveReply();
-        return assertTwoLineOkReply(replyStream, "GETINFO");
+        return validateReply(replyStream, "GETINFO");
     }
 
     public void hsFetch(String hsAddress) {
@@ -210,7 +212,7 @@ public class TorControlProtocol implements AutoCloseable {
         return multiLineReplyPattern.matcher(reply).matches();
     }
 
-    private String assertTwoLineOkReply(Stream<String> replyStream, String commandName) {
+    private String validateReply(Stream<String> replyStream, String commandName) {
         List<String> replies = replyStream.collect(Collectors.toList());
         if (replies.size() != 2) {
             throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
