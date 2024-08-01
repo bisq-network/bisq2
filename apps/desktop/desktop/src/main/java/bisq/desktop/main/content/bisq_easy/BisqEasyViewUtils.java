@@ -39,6 +39,7 @@ public class BisqEasyViewUtils {
         VBox vBox = new VBox(header, Layout.hLine(), content);
         vBox.setFillWidth(true);
         vBox.getStyleClass().add("bisq-easy-container");
+        vBox.setMinHeight(167);
 
         return new Triple<>(headlineLabel, header, vBox);
     }
