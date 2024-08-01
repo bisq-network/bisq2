@@ -104,8 +104,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         headerTitle.setAlignment(Pos.CENTER_LEFT);
 
         createOfferButton = createAndGetCreateOfferButton();
-        HBox.setHgrow(createOfferButton, Priority.ALWAYS);
-        titleHBox.getChildren().setAll(headerTitle, Spacer.fillHBox(), createOfferButton, headerDropdownMenu);
+        createOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
+
+        HBox.setHgrow(headerTitle, Priority.ALWAYS);
+        titleHBox.getChildren().setAll(headerTitle, createOfferButton, headerDropdownMenu);
     }
 
     @Override
