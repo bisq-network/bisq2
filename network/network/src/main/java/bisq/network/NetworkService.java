@@ -54,10 +54,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.persistence.DbSubDirectory;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
-import bisq.persistence.PersistenceService;
+import bisq.persistence.*;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
@@ -66,10 +63,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -306,13 +300,15 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // AuthenticatedData
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData,
+                                                                       KeyPair keyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
 
-    public CompletableFuture<BroadcastResult> removeAuthenticatedData(DistributedData distributedData, KeyPair ownerKeyPair) {
+    public CompletableFuture<BroadcastResult> removeAuthenticatedData(DistributedData distributedData,
+                                                                      KeyPair ownerKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
@@ -472,5 +468,16 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         serviceNodesByTransport.removeSeedNode(seedNode);
         persistableStore.getSeedNodes().remove(seedNode);
         persist();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Check peer's online state (In case of Tor it checks if the onionservice is published)
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Map<TransportType, Boolean>> isPeerOnline(NetworkId networkId,
+                                                                       AddressByTransportTypeMap peer) {
+        return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer),
+                NETWORK_IO_POOL);
     }
 }

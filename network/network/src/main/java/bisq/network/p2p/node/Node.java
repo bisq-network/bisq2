@@ -38,26 +38,19 @@ import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
-import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
-import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.*;
 import static bisq.network.p2p.node.Node.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -523,6 +516,11 @@ public class Node implements Connection.Handler {
     public int getNumConnections() {
         return (int) getAllActiveConnections().count();
     }
+
+    boolean isPeerOnline(Address address) {
+        return transportService.isPeerOnline(address);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Connection.Handler
