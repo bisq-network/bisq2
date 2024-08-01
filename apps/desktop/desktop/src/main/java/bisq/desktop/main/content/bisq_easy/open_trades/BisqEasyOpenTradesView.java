@@ -31,10 +31,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
-import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.DateTableItem;
+import bisq.desktop.components.table.*;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
@@ -373,8 +370,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
                 if (item != null && !empty) {
                     UserProfileIcon userProfileIcon = new UserProfileIcon();
-                    UserProfile userProfile = item.getChannel().getMyUserIdentity().getUserProfile();
-                    userProfileIcon.applyData(userProfile, item.getLastSeenAsString(), item.getLastSeen());
+                    userProfileIcon.applyData(item.getMyUserProfile(), item.getMyselfLastSeenAsString(), item.getMyselfLastSeen());
                     // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
                     setGraphic(new StackPane(userProfileIcon));
                 } else {
@@ -395,6 +391,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 if (item != null && !empty) {
                     UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
+                    userProfileDisplay.applyData(item.getPeersUserProfile(), item.getPeerLastSeenAsString(), item.getPeerLastSeen());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
@@ -487,21 +484,21 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         @EqualsAndHashCode.Include
         private final BisqEasyTrade trade;
         @EqualsAndHashCode.Include
-        private final UserProfile peersUserProfile;
+        private final UserProfile myUserProfile, peersUserProfile;
         private final String offerId, tradeId, shortTradeId, myUserName, direction, peersUserName, dateString, timeString,
                 market, priceString, baseAmountString, quoteAmountString, paymentMethod, myRole, bitcoinPaymentMethod,
-                fiatPaymentMethod, lastSeenAsString;
+                fiatPaymentMethod, myselfLastSeenAsString, peerLastSeenAsString;
         private final long date, price, baseAmount, quoteAmount;
         private final ChatNotificationService chatNotificationService;
         private final ReputationScore reputationScore;
         private final StringProperty peerNumNotificationsProperty = new SimpleStringProperty();
         private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
-        private long peerNumNotifications;
-        private long mediatorNumNotifications;
         private final Pin changedChatNotificationPin, isInMediationPin;
-        private final long lastSeen;
+        private final long myselfLastSeen, peerLastSeen;
         private final BitcoinPaymentRail bitcoinPaymentRail;
         private final FiatPaymentRail fiatPaymentRail;
+
+        private long peerNumNotifications, mediatorNumNotifications;
         private String mediatorUserName = "";
         private boolean isInMediation;
 
@@ -513,6 +510,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             this.channel = channel;
             this.trade = trade;
 
+            myUserProfile = channel.getMyUserIdentity().getUserProfile();
             peersUserProfile = channel.getPeer();
             this.chatNotificationService = chatNotificationService;
             peersUserName = peersUserProfile.getUserName();
@@ -542,8 +540,11 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
             reputationScore = reputationService.getReputationScore(peersUserProfile);
 
-            lastSeen = userProfileService.getLastSeen(peersUserProfile);
-            lastSeenAsString = TimeFormatter.formatAge(lastSeen);
+            myselfLastSeen = userProfileService.getLastSeen(myUserProfile);
+            myselfLastSeenAsString = TimeFormatter.formatAge(myselfLastSeen);
+
+            peerLastSeen = userProfileService.getLastSeen(peersUserProfile);
+            peerLastSeenAsString = TimeFormatter.formatAge(peerLastSeen);
 
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
                 UIThread.run(() -> {
