@@ -243,7 +243,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             bitcoinPaymentMethodsComboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(BitcoinPaymentMethod method) {
-                    return method != null ? method.getDisplayString() : "";
+                    return method != null ? method.getShortDisplayString() : "";
                 }
 
                 @Override
