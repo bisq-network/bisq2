@@ -46,18 +46,26 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.*;
+import java.net.ConnectException;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
-import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
-import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.*;
 import static bisq.network.p2p.node.Node.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -457,7 +465,7 @@ public class Node implements Connection.Handler {
 
             // As time passed we check again if connection is still not available
             if (outboundConnectionsByAddress.containsKey(address)) {
-                log.warn("Has already an OutboundConnection to {}. This can happen when a " +
+                log.info("Has already an OutboundConnection to {}. This can happen when a " +
                         "handshake was in progress while we started a new connection to that address and as the " +
                         "handshake was not completed we did not consider that as an available connection. " +
                         "We will close the socket of that new connection and use the existing instead.", address);
@@ -523,6 +531,11 @@ public class Node implements Connection.Handler {
     public int getNumConnections() {
         return (int) getAllActiveConnections().count();
     }
+
+    boolean isPeerOnline(Address address) {
+        return transportService.isPeerOnline(address);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Connection.Handler

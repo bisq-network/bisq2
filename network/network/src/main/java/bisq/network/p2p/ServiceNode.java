@@ -285,7 +285,7 @@ public class ServiceNode implements Node.Listener {
     }
 
     Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return getNodesById().send(senderNetworkId, envelopePayloadMessage, address);
+        return nodesById.send(senderNetworkId, envelopePayloadMessage, address);
     }
 
     void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
@@ -312,6 +312,10 @@ public class ServiceNode implements Node.Listener {
 
     Optional<Node> findNode(NetworkId networkId) {
         return nodesById.findNode(networkId);
+    }
+
+    boolean isPeerOnline(NetworkId networkId, Address address) {
+        return nodesById.isPeerOnline(networkId, address);
     }
 
     private void setState(State newState) {

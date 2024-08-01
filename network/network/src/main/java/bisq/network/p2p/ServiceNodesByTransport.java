@@ -50,7 +50,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -275,6 +280,19 @@ public class ServiceNodesByTransport {
         return map.values().stream()
                 .flatMap(serviceNode -> serviceNode.findNode(networkId).stream())
                 .collect(Collectors.toSet());
+    }
+
+    public Map<TransportType, Boolean> isPeerOnline(NetworkId networkId, AddressByTransportTypeMap peer) {
+        return peer.entrySet().stream().map(entry -> {
+                    TransportType transportType = entry.getKey();
+                    if (map.containsKey(transportType)) {
+                        return new Pair<>(transportType, map.get(transportType).isPeerOnline(networkId, entry.getValue()));
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
     }
 
     public Collection<ServiceNode> getAllServices() {

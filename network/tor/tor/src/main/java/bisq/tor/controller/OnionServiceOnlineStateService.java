@@ -85,11 +85,12 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
             case FAILED:
                 HsDescFailedEvent hsDescFailedEvent = (HsDescFailedEvent) hsDescEvent;
                 if (hsDescFailedEvent.getReason().equals("REASON=NOT_FOUND")) {
-                    log.debug("Received hsDescFailedEvent {}", hsDescFailedEvent);
+                    log.info("hsFetch request for {} failed with reason NOT_FOUND", onionAddress);
                     countDownLatch.countDown();
                 }
                 break;
             case RECEIVED:
+                log.info("hsFetch request for {} succeeded", onionAddress);
                 isOnline = true;
                 countDownLatch.countDown();
                 break;
