@@ -179,13 +179,18 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             AtomicBoolean peerDetectedOffline = new AtomicBoolean();
             runAsync(() -> {
                 // Takes about 3-5 sec.
-                boolean peerOffline = !nodesById.isPeerOnline(senderNetworkId, address);
-                log.info("Request for isPeerOnline resulted in {} and took {} ms", peerOffline, System.currentTimeMillis() - start);
-                if (peerOffline) {
+                boolean isPeerOnline = nodesById.isPeerOnline(senderNetworkId, address);
+                if (!isPeerOnline) {
+                    log.info("Peer is detected as offline. We store the message as mailbox message. Request for isPeerOnline completed after {} ms",
+                            System.currentTimeMillis() - start);
                     peerDetectedOffline.set(true);
                     if (countDownLatch.getCount() > 0) {
                         countDownLatch.countDown();
                     }
+                } else {
+                    log.info("Peer is not detected offline. We wait for the connection creation has been successful and try to send the message. " +
+                                    "Request for isPeerOnline completed after {} ms",
+                            System.currentTimeMillis() - start);
                 }
             }, NETWORK_IO_POOL);
 
