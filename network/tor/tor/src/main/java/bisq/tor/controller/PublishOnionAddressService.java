@@ -80,9 +80,9 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
 
     @Override
     public void onFilteredEvent(HsDescEvent hsDescEvent) {
-        log.info("Received HsDescEvent: {}", StringUtils.truncate(hsDescEvent, 100));
+        log.info("Received HsDescEvent: {}", StringUtils.truncate(hsDescEvent, 200));
         if (countDownLatch.getCount() > 0) {
-            log.info("Publishing of onion address completed. Event {}", StringUtils.truncate(hsDescEvent, 100));
+            log.info("Publishing of onion address completed. Event {}", StringUtils.truncate(hsDescEvent, 200));
         }
         countDownLatch.countDown();
     }
