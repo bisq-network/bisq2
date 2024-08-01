@@ -22,11 +22,11 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.MultiStyleLabelPane;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
+import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -35,19 +35,23 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOfferReviewController> {
+    public static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
+    public static final String VALUE_STYLE = "trade-wizard-review-value";
+    public static final String DETAILS_STYLE = "trade-wizard-review-details";
     private final static int FEEDBACK_WIDTH = 700;
 
     private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, takeOfferSuccess;
     private final Button takeOfferSuccessButton;
     private final Label priceDetails, bitcoinPaymentMethod, fiatPaymentMethod, fee, feeDetails;
     private final GridPane content;
-    private final MultiStyleLabelPane price;
+    private final TextFlow price;
     private Subscription takeOfferStatusPin;
     private WaitingAnimation takeOfferSendMessageWaitingAnimation;
     private boolean minWaitingTimePassed = false;
@@ -68,10 +72,6 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         ColumnConstraints col4 = new ColumnConstraints();
         col4.setPercentWidth(25);
         content.getColumnConstraints().addAll(col1, col2, col3, col4);
-
-        String descriptionStyle = "trade-wizard-review-description";
-        String valueStyle = "trade-wizard-review-value";
-        String detailsStyle = "trade-wizard-review-details";
 
         int rowIndex = 0;
         Label headline = new Label(Res.get("bisqEasy.takeOffer.review.headline"));
@@ -105,47 +105,47 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         rowIndex++;
         Label priceDescription = new Label(Res.get("bisqEasy.takeOffer.review.price.price"));
-        priceDescription.getStyleClass().add(descriptionStyle);
+        priceDescription.getStyleClass().add(DESCRIPTION_STYLE);
         content.add(priceDescription, 0, rowIndex);
 
-        price = new MultiStyleLabelPane();
-        price.getStyleClass().add(valueStyle);
+        price = new TextFlow();
+        price.getStyleClass().add(VALUE_STYLE);
         content.add(price, 1, rowIndex);
 
         priceDetails = new Label();
-        priceDetails.getStyleClass().add(detailsStyle);
+        priceDetails.getStyleClass().add(DETAILS_STYLE);
         GridPane.setColumnSpan(priceDetails, 2);
         content.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
         Label bitcoinPaymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method.bitcoin"));
-        bitcoinPaymentMethodDescription.getStyleClass().add(descriptionStyle);
+        bitcoinPaymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
         content.add(bitcoinPaymentMethodDescription, 0, rowIndex);
 
         bitcoinPaymentMethod = new Label();
-        bitcoinPaymentMethod.getStyleClass().add(valueStyle);
+        bitcoinPaymentMethod.getStyleClass().add(VALUE_STYLE);
         content.add(bitcoinPaymentMethod, 1, rowIndex);
 
         rowIndex++;
         Label fiatPaymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method.fiat"));
-        fiatPaymentMethodDescription.getStyleClass().add(descriptionStyle);
+        fiatPaymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
         content.add(fiatPaymentMethodDescription, 0, rowIndex);
 
         fiatPaymentMethod = new Label();
-        fiatPaymentMethod.getStyleClass().add(valueStyle);
+        fiatPaymentMethod.getStyleClass().add(VALUE_STYLE);
         content.add(fiatPaymentMethod, 1, rowIndex);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
-        feeInfoDescription.getStyleClass().add(descriptionStyle);
+        feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
         content.add(feeInfoDescription, 0, rowIndex);
 
         fee = new Label();
-        fee.getStyleClass().add(valueStyle);
+        fee.getStyleClass().add(VALUE_STYLE);
         content.add(fee, 1, rowIndex);
 
         feeDetails = new Label();
-        feeDetails.getStyleClass().add(detailsStyle);
+        feeDetails.getStyleClass().add(DETAILS_STYLE);
         GridPane.setColumnSpan(feeDetails, 2);
         content.add(feeDetails, 2, rowIndex);
 
@@ -172,7 +172,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     @Override
     protected void onViewAttached() {
-        price.setText(model.getPrice());
+        TextFlowUtils.updateTextFlow(price, model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
         fiatPaymentMethod.setText(model.getFiatPaymentMethod());
@@ -188,6 +188,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
         takeOfferStatusPin = EasyBind.subscribe(model.getTakeOfferStatus(), this::showTakeOfferStatusFeedback);
     }
+
 
     @Override
     protected void onViewDetached() {
