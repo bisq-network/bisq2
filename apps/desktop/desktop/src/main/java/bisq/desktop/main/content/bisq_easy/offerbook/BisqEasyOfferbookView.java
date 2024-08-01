@@ -38,10 +38,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -105,10 +102,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         channelHeaderIcon = new Label();
         HBox headerTitle = new HBox(10, channelHeaderIcon, titleAndDescription);
         headerTitle.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
         createOfferButton = createAndGetCreateOfferButton();
-        titleHBox.getChildren().setAll(headerTitle, createOfferButton, headerDropdownMenu);
+        HBox.setHgrow(createOfferButton, Priority.ALWAYS);
+        titleHBox.getChildren().setAll(headerTitle, Spacer.fillHBox(), createOfferButton, headerDropdownMenu);
     }
 
     @Override
