@@ -14,8 +14,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class TorController {
     private final TorControlProtocol torControlProtocol = new TorControlProtocol();
@@ -49,7 +47,6 @@ public class TorController {
     }
 
     public void bootstrap() {
-        checkArgument(bootstrapService.isEmpty(), "Bootstrap must be called only once");
         bootstrapAsync()
                 .exceptionally(throwable -> {
                     if (throwable instanceof TorBootstrapFailedException) {
@@ -63,8 +60,15 @@ public class TorController {
     }
 
     public CompletableFuture<Void> bootstrapAsync() {
-        bootstrapService = Optional.of(new BootstrapService(torControlProtocol, bootstrapTimeout, bootstrapEvent));
-        return bootstrapService.get().bootstrap();
+        if (bootstrapService.isPresent() && bootstrapService.get().getFuture().isPresent()) {
+            return bootstrapService.get().getFuture().get();
+        }
+
+        BootstrapService service = new BootstrapService(torControlProtocol, bootstrapTimeout, bootstrapEvent);
+        bootstrapService = Optional.of(service);
+        CompletableFuture<Void> future = service.bootstrap();
+        future.whenComplete((nil, throwable) -> bootstrapService = Optional.empty());
+        return future;
     }
 
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
@@ -73,25 +77,24 @@ public class TorController {
 
     public CompletableFuture<Void> publishAsync(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
         String onionAddress = torKeyPair.getOnionAddress();
-        PublishOnionAddressService publishOnionAddressService = new PublishOnionAddressService(torControlProtocol, hsUploadTimeout, torKeyPair);
-        CompletableFuture<Void> future;
-        if (publishOnionAddressServiceMap.containsKey(onionAddress)) {
-            return publishOnionAddressServiceMap.get(onionAddress).getFuture().orElseThrow();
+        if (publishOnionAddressServiceMap.containsKey(onionAddress) && publishOnionAddressServiceMap.get(onionAddress).getFuture().isPresent()) {
+            return publishOnionAddressServiceMap.get(onionAddress).getFuture().get();
         }
 
-        future = publishOnionAddressService.publish(onionServicePort, localPort);
-        future.whenComplete((r, t) -> publishOnionAddressServiceMap.remove(onionAddress));
+        PublishOnionAddressService publishOnionAddressService = new PublishOnionAddressService(torControlProtocol, hsUploadTimeout, torKeyPair);
+        CompletableFuture<Void> future = publishOnionAddressService.publish(onionServicePort, localPort);
+        future.whenComplete((nil, throwable) -> publishOnionAddressServiceMap.remove(onionAddress));
         publishOnionAddressServiceMap.put(onionAddress, publishOnionAddressService);
         return future;
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
-        OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress, isOnlineTimeout);
-        CompletableFuture<Boolean> future;
-        if (onionServiceOnlineStateServiceMap.containsKey(onionAddress)) {
-            return onionServiceOnlineStateServiceMap.get(onionAddress).getFuture().orElseThrow();
+        if (onionServiceOnlineStateServiceMap.containsKey(onionAddress) && onionServiceOnlineStateServiceMap.get(onionAddress).getFuture().isPresent()) {
+            return onionServiceOnlineStateServiceMap.get(onionAddress).getFuture().get();
         }
-        future = onionServiceOnlineStateService.isOnionServiceOnline();
+
+        OnionServiceOnlineStateService onionServiceOnlineStateService = new OnionServiceOnlineStateService(torControlProtocol, onionAddress, isOnlineTimeout);
+        CompletableFuture<Boolean> future = onionServiceOnlineStateService.isOnionServiceOnline();
         future.whenComplete((r, t) -> onionServiceOnlineStateServiceMap.remove(onionAddress));
         onionServiceOnlineStateServiceMap.put(onionAddress, onionServiceOnlineStateService);
         return future;

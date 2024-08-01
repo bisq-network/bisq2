@@ -25,10 +25,12 @@ import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.tor.process.NativeTorProcess;
 import com.google.common.util.concurrent.MoreExecutors;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +41,8 @@ public class BootstrapService extends BootstrapEventListener {
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
     private final long timeout;
     private final Observable<BootstrapEvent> bootstrapEvent;
+    @Getter
+    private Optional<CompletableFuture<Void>> future = Optional.empty();
 
     public BootstrapService(TorControlProtocol torControlProtocol, long timeout, Observable<BootstrapEvent> bootstrapEvent) {
         super(EventType.STATUS_CLIENT);
@@ -48,7 +52,7 @@ public class BootstrapService extends BootstrapEventListener {
     }
 
     public CompletableFuture<Void> bootstrap() {
-        return CompletableFuture.runAsync(() -> {
+        future = Optional.of(CompletableFuture.runAsync(() -> {
                     torControlProtocol.takeOwnership();
                     torControlProtocol.resetConf(NativeTorProcess.ARG_OWNER_PID);
 
@@ -66,7 +70,8 @@ public class BootstrapService extends BootstrapEventListener {
                     }
                 }, MoreExecutors.directExecutor())
                 .whenComplete((nil, throwable) ->
-                        torControlProtocol.removeBootstrapEventListener(this));
+                        torControlProtocol.removeBootstrapEventListener(this)));
+        return future.get();
     }
 
     public void shutdown() {
