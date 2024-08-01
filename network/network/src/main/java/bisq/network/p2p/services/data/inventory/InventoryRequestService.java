@@ -109,7 +109,7 @@ public class InventoryRequestService implements Node.Listener {
         requestInventory(connection)
                 .whenComplete((inventory, throwable) -> {
                     if (throwable != null) {
-                        log.error("Exception at inventory request to peer {}: {}",
+                        log.info("Exception at inventory request to peer {}: {}",
                                 connection.getPeerAddress().getFullAddress(), ExceptionUtil.getRootCauseMessage(throwable));
                     } else {
                         if (!allDataReceived.get()) {
