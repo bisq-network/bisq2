@@ -67,7 +67,11 @@ public final class NetworkId implements NetworkProto {
     }
 
     public String getInfo() {
-        return "ID: " + getId().substring(0, 8) + "; Addresses: " +
+        return "ID: " + getId().substring(0, 8) + "; " + getAddresses();
+    }
+
+    public String getAddresses() {
+        return "Addresses: " +
                 Joiner.on(", ").join(addressByTransportTypeMap.values());
     }
 
