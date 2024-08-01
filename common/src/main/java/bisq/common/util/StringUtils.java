@@ -32,8 +32,16 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class StringUtils {
+    public static String truncate(Object value) {
+        return truncate(value.toString());
+    }
+
     public static String truncate(String value) {
         return truncate(value, 32);
+    }
+
+    public static String truncate(Object value, int maxLength) {
+        return truncate(value.toString(), maxLength);
     }
 
     public static String truncate(String value, int maxLength) {

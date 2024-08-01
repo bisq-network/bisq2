@@ -6,6 +6,7 @@ import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescEventListener;
 import bisq.tor.controller.exceptions.CannotConnectWithTorException;
 import bisq.tor.controller.exceptions.CannotSendCommandToTorException;
+import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
@@ -16,10 +17,12 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class TorControlProtocol implements AutoCloseable {
     private static final int MAX_CONNECTION_ATTEMPTS = 10;
 
@@ -83,14 +86,14 @@ public class TorControlProtocol implements AutoCloseable {
 
         sendCommand(command);
         Stream<String> replyStream = receiveReply();
-        assertTwoLineOkReply(replyStream, "ADD_ONION");
+        validateReply(replyStream, "ADD_ONION");
     }
 
     public String getInfo(String keyword) {
         String command = "GETINFO " + keyword + "\r\n";
         sendCommand(command);
         Stream<String> replyStream = receiveReply();
-        return assertTwoLineOkReply(replyStream, "GETINFO");
+        return validateReply(replyStream, "GETINFO");
     }
 
     public void hsFetch(String hsAddress) {
@@ -120,19 +123,6 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    public void setEvents(List<String> events) {
-        var stringBuilder = new StringBuffer("SETEVENTS");
-        events.forEach(event -> stringBuilder.append(" ").append(event));
-        stringBuilder.append("\r\n");
-
-        String command = stringBuilder.toString();
-        sendCommand(command);
-        String reply = receiveReply().findFirst().orElseThrow();
-        if (!reply.equals("250 OK")) {
-            throw new ControlCommandFailedException("Couldn't set events: " + events);
-        }
-    }
-
     public void takeOwnership() {
         String command = "TAKEOWNERSHIP\r\n";
         sendCommand(command);
@@ -143,19 +133,93 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     public void addBootstrapEventListener(BootstrapEventListener listener) {
+        Set<String> previous = getEventTypesOfBootstrapEventListeners();
         whonixTorControlReader.addBootstrapEventListener(listener);
+        String newEventType = listener.getEventType().name();
+        // If our listener has a new eventType we register for that event
+        if (!previous.contains(newEventType)) {
+            refreshEventRegistration();
+        } else {
+            log.debug("We are already for that event registered");
+        }
     }
 
     public void removeBootstrapEventListener(BootstrapEventListener listener) {
+        Set<String> previous = getEventTypesOfBootstrapEventListeners();
+        String newEventType = listener.getEventType().name();
+        if (!previous.contains(newEventType)) {
+            log.warn("Remove BootstrapEventListener but did not have eventType in listeners. " +
+                    "This could happen if removeBootstrapEventListener was called without addBootstrapEventListener before.");
+        }
         whonixTorControlReader.removeBootstrapEventListener(listener);
+        Set<String> current = getEventTypesOfBootstrapEventListeners();
+        // If your listener was the only listener with that eventType we unregister for that event
+        if (!current.contains(newEventType)) {
+            refreshEventRegistration();
+        } else {
+            log.debug("Event has been already removed from registration");
+        }
+    }
+
+    private Set<String> getEventTypesOfBootstrapEventListeners() {
+        return whonixTorControlReader.getBootstrapEventListeners().stream()
+                .map(listener -> listener.getEventType().name())
+                .collect(Collectors.toSet());
     }
 
     public void addHsDescEventListener(HsDescEventListener listener) {
+        Set<String> previous = getEventTypesOfHsDescEventListeners();
         whonixTorControlReader.addHsDescEventListener(listener);
+        String newEventType = listener.getEventType().name();
+        // If our listener has a new eventType we register for that event
+        if (!previous.contains(newEventType)) {
+            refreshEventRegistration();
+        } else {
+            log.debug("We are already for that event registered");
+        }
     }
 
     public void removeHsDescEventListener(HsDescEventListener listener) {
+        Set<String> previous = getEventTypesOfHsDescEventListeners();
+        String newEventType = listener.getEventType().name();
+        if (!previous.contains(newEventType)) {
+            log.warn("Remove HsDescEventListener but did not have eventType in listeners. " +
+                    "This could happen if removeHsDescEventListener was called without addHsDescEventListener before.");
+        }
         whonixTorControlReader.removeHsDescEventListener(listener);
+        Set<String> current = getEventTypesOfHsDescEventListeners();
+        // If your listener was the only listener with that eventType we unregister for that event
+        if (!current.contains(newEventType)) {
+            refreshEventRegistration();
+        } else {
+            log.debug("Event has been already removed from registration");
+        }
+    }
+
+    private Set<String> getEventTypesOfHsDescEventListeners() {
+        return whonixTorControlReader.getHsDescEventListeners().stream()
+                .map(listener -> listener.getEventType().name())
+                .collect(Collectors.toSet());
+    }
+
+    public void refreshEventRegistration() {
+        Set<String> allEvents = Stream.concat(getEventTypesOfBootstrapEventListeners().stream(), getEventTypesOfHsDescEventListeners().stream())
+                .collect(Collectors.toSet());
+        registerEvents(allEvents);
+    }
+
+    private void registerEvents(Set<String> events) {
+        log.info("registerEvents: {}", events);
+        var stringBuilder = new StringBuffer("SETEVENTS");
+        events.forEach(event -> stringBuilder.append(" ").append(event));
+        stringBuilder.append("\r\n");
+
+        String command = stringBuilder.toString();
+        sendCommand(command);
+        String reply = receiveReply().findFirst().orElseThrow();
+        if (!reply.equals("250 OK")) {
+            throw new ControlCommandFailedException("Couldn't set events: " + events);
+        }
     }
 
     private void connectToTor(int port) throws InterruptedException {
@@ -210,9 +274,28 @@ public class TorControlProtocol implements AutoCloseable {
         return multiLineReplyPattern.matcher(reply).matches();
     }
 
-    private String assertTwoLineOkReply(Stream<String> replyStream, String commandName) {
+    // TODO check if this change is correct
+    // We can receive 1 entry with "250 OK" or multiple entries starting with "250-" and the last entry with "250 OK"
+    // Multiple entries following a single entry have been observed when using multiple user profiles.
+    // E.g. [250 OK]
+    // [250-ServiceID=bedb3wpuybkuwvjat2zq5odtqbajq7x3ovllvh7l2kbxakbgkzgikqyd, 250 OK]
+    // [250-ServiceID=bedb3wpuybkuwvjat2zq5odtqbajq7x3ovllvh7l2kbxakbgkzgikqyd, 250-ServiceID=xjlwqzk6n4i5co574jrljsigelx6itzya32cfb7sfofqn7wueyhjj4id, 250 OK]
+    private String validateReply(Stream<String> replyStream, String commandName) {
         List<String> replies = replyStream.collect(Collectors.toList());
-        if (replies.size() != 2) {
+
+        String OK250 = "250 OK";
+        boolean hasOK250 = replies.stream().anyMatch(e -> e.equals(OK250));
+        List<String> listOf250WithData = replies.stream().filter(e -> e.startsWith("250-")).collect(Collectors.toList());
+        if (!listOf250WithData.isEmpty()) {
+            // TODO are there use cases where we need all 250WithData entries?
+            return listOf250WithData.iterator().next();
+        } else if (hasOK250) {
+            return OK250;
+        } else {
+            throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
+        }
+
+       /* if (replies.size() != 2) {
             throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
         }
 
@@ -226,6 +309,6 @@ public class TorControlProtocol implements AutoCloseable {
             throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
         }
 
-        return firstLine;
+        return firstLine;*/
     }
 }
