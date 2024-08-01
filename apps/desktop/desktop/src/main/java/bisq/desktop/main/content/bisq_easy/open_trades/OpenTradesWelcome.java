@@ -84,7 +84,7 @@ public class OpenTradesWelcome {
 
             Label headlineLabel = new Label(Res.get("bisqEasy.openTrades.welcome.headline"));
             headlineLabel.setWrapText(true);
-            headlineLabel.getStyleClass().add("bisq-text-headline-4");
+            headlineLabel.getStyleClass().add("bisq-text-headline-5");
 
             Label infoHeadline = new Label(Res.get("bisqEasy.openTrades.welcome.info"));
             infoHeadline.setWrapText(true);
@@ -98,7 +98,7 @@ public class OpenTradesWelcome {
 
             button = new Button(Res.get("bisqEasy.tradeGuide.open"));
             button.setDefaultButton(true);
-            button.getStyleClass().add("super-large-button");
+            button.getStyleClass().add("medium-large-button");
             button.setMaxWidth(Double.MAX_VALUE);
 
             VBox.setVgrow(infoHeadline, Priority.ALWAYS);

@@ -272,8 +272,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getSearchText().set("");
                 resetSelectedChildTarget();
 
-                String description = channel.getDescription();
-                String channelTitle = description.replace("\n", " ").replaceAll("\\s*\\([^)]*\\)", "");
+                String channelTitle = channel.getShortDescription();
                 model.getChannelTitle().set(channelTitle);
 
                 String marketSpecs = channel.getDisplayString();

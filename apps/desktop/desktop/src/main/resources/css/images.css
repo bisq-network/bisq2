@@ -997,16 +997,8 @@
     -fx-image: url("/images/chat/reactions/party-20.png");
 }
 
-#connecting-green {
-    -fx-image: url("/images/chat/message-status/connecting-green.png");
-}
-
 #connecting-grey {
     -fx-image: url("/images/chat/message-status/connecting-grey.png");
-}
-
-#connecting-white {
-    -fx-image: url("/images/chat/message-status/connecting-white.png");
 }
 
 #received-check-green {

@@ -39,7 +39,9 @@ import java.util.Optional;
 public class BuyerStateLightning3b extends BaseState {
     private final Controller controller;
 
-    public BuyerStateLightning3b(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+    public BuyerStateLightning3b(ServiceProvider serviceProvider,
+                                 BisqEasyTrade bisqEasyTrade,
+                                 BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -48,7 +50,9 @@ public class BuyerStateLightning3b extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        private Controller(ServiceProvider serviceProvider,
+                           BisqEasyTrade bisqEasyTrade,
+                           BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
         }
 
@@ -107,8 +111,8 @@ public class BuyerStateLightning3b extends BaseState {
 
             button = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase3b.confirmButton.ln"));
             button.setDefaultButton(true);
-            VBox.setMargin(button, new Insets(15, 0, 5, 0));
 
+            VBox.setMargin(paymentProof, new Insets(15, 0, 5, 0));
             root.getChildren().addAll(waitingInfo, paymentProof, button);
         }
 

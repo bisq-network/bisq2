@@ -238,12 +238,12 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
                     {
                         userName.setId("chat-user-name");
-                        int size = 30;
+                        int size = 40;
                         catIcon.setFitWidth(size);
                         catIcon.setFitHeight(size);
-                        //StackPane catIconWithRing = ImageUtil.addRingToNode(catIcon, size, 1.5, "-bisq-dark-grey-50");
                         hBox = new HBox(10, catIcon, userName);
-                        hBox.setAlignment(Pos.CENTER);
+                        HBox.setMargin(catIcon, new Insets(0, 0, 0, 5));
+                        hBox.setAlignment(Pos.CENTER_LEFT);
                     }
 
                     @Override

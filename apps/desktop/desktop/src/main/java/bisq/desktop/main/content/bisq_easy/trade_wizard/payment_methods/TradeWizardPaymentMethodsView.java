@@ -200,7 +200,7 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
         bitcoinMethodsGridPane.getChildren().clear();
         bitcoinMethodsGridPane.getColumnConstraints().clear();
         int numColumns = model.getSortedBitcoinPaymentMethods().size();
-        checkArgument(numColumns == 2, "Only 2 Btc settlement methods allowed for now.");
+        checkArgument(numColumns == 2, "Only 2 Bitcoin payment methods allowed for now.");
         GridPaneUtil.setGridPaneMultiColumnsConstraints(bitcoinMethodsGridPane, numColumns, TWO_COLUMN_WIDTH);
 
         int row = 0;

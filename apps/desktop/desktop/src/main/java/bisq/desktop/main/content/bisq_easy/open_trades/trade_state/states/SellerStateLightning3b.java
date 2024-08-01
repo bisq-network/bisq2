@@ -96,7 +96,7 @@ public class SellerStateLightning3b extends BaseState {
 
             button = new Button(Res.get("bisqEasy.tradeState.info.seller.phase3b.confirmButton.ln"));
             button.setDefaultButton(true);
-            VBox.setMargin(button, new Insets(15, 0, 5, 0));
+            VBox.setMargin(button, new Insets(25, 0, 5, 0));
 
             root.getChildren().addAll(waitingInfo, button);
         }
