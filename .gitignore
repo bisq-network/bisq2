@@ -23,11 +23,18 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-# Bisq
+# Intellij
+/.idea
+!/.idea/fileTemplates/internal/AnnotationType.java
+!/.idea/fileTemplates/internal/Class.java
+!/.idea/fileTemplates/internal/Enum.java
+!/.idea/fileTemplates/includes/File Header.java
+!/.idea/fileTemplates/internal/Interface.java
+!/.idea/codeStyles/codeStyleConfig.xml
+!/.idea/codeStyles/Project.xml
+!/.idea/icon.svg
 
-.idea
-!.idea/copyright/bisq_Affero_GPLv3.xml
-!.idea/copyright/profiles_settings.xml
+# Bisq
 *.iml
 *.spvchain
 *.wallet
