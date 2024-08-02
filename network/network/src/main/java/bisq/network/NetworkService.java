@@ -54,7 +54,10 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.persistence.*;
+import bisq.persistence.DbSubDirectory;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
@@ -63,8 +66,15 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.*;
-import java.util.*;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
@@ -173,7 +183,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public void onPersistedApplied(NetworkServiceStore persisted) {
         serviceNodesByTransport.addSeedNodes(persistableStore.getSeedNodes());
         //noinspection deprecation
-        networkIdService.migrateFromDeprecatedStore(persisted.getNetworkIdByTag());
+        Map<String, NetworkId> networkIdByTag = persisted.getNetworkIdByTag();
+        if (!networkIdByTag.isEmpty()) {
+            networkIdService.migrateFromDeprecatedStore(networkIdByTag);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
