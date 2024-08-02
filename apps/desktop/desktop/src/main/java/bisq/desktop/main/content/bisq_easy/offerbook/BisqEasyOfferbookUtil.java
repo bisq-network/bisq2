@@ -16,7 +16,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -149,6 +153,8 @@ public class BisqEasyOfferbookUtil {
 
             {
                 setCursor(Cursor.HAND);
+                numMessagesBadge.getStyleClass().add("market-badge");
+                numMessagesBadge.getLabel().setStyle("-fx-text-fill: -bisq-dark-grey-10 !important; -fx-font-family: \"IBM Plex Sans SemiBold\";");
             }
 
             @Override

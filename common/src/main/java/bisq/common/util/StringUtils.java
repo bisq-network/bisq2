@@ -228,7 +228,15 @@ public class StringUtils {
         sec = sec % 60;
         long hours = min / 60;
         min = min % 60;
-        return String.format("%02d:%02d:%02.2f", hours, min, sec);
+        long days = hours / 24;
+        hours = hours % 24;
+        if (days == 0) {
+            return String.format("%02d:%02d:%02.2f", hours, min, sec);
+        } else if (days == 1) {
+            return String.format("1 day, %02d:%02d:%02.2f", hours, min, sec);
+        } else {
+            return String.format("%02d days, %02d:%02d:%02.2f", days, hours, min, sec);
+        }
     }
 
     public static String maskHomeDirectory(String string) {

@@ -216,15 +216,18 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
+        log.info("requestProofOfBurnTxs");
         return httpService.requestProofOfBurnTxs();
     }
 
     private CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
+        log.info("requestBondedReputations");
         return httpService.requestBondedReputations();
     }
 
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         // After v2.1.0 we can remove support for version 0 data
+        log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
         Stream<AuthorizedProofOfBurnData> oldVersions = proofOfBurnList.stream()
                 .map(dto -> new AuthorizedProofOfBurnData(
                         0,
@@ -250,6 +253,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
         // After v2.1.0 we can remove support for version 0 data
+        log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
         Stream<AuthorizedBondedReputationData> oldVersions = bondedReputationList.stream()
                 .map(dto -> new AuthorizedBondedReputationData(
                         0,
@@ -298,20 +302,27 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                             .filter(authorizedDistributedData -> authorizedDistributedData instanceof AuthorizedBondedRole)
                             .map(authorizedDistributedData -> (AuthorizedBondedRole) authorizedDistributedData)
                             .forEach(authorizedBondedRole -> {
-                                if (authorizedBondedRole.getAuthorizingOracleNode().isPresent() &&
-                                        authorizedBondedRole.getAuthorizingOracleNode().get().getProfileId().equals(authorizedOracleNode.getProfileId())) {
-                                    log.info("Republish AuthorizedBondedRole with bondUserName {}. authorizedOracleNode={}",
-                                            authorizedBondedRole.getBondUserName(), authorizedOracleNode.getBondUserName());
-                                    publishAuthorizedData(authorizedBondedRole);
+                                Optional<AuthorizedOracleNode> authorizingOracleNode = authorizedBondedRole.getAuthorizingOracleNode();
+                                String bondUserName = authorizedBondedRole.getBondUserName();
+                                if (authorizingOracleNode.isPresent()) {
+                                    if (authorizingOracleNode.get().getProfileId().equals(authorizedOracleNode.getProfileId())) {
+                                        log.info("Republish AuthorizedBondedRole with bondUserName {}. authorizedOracleNode={}",
+                                                bondUserName, authorizedOracleNode.getBondUserName());
+                                        publishAuthorizedData(authorizedBondedRole);
+                                    } else {
+                                        log.info("Cannot republish AuthorizedBondedRole with bondUserName {} because we are not the authorizedOracleNode for that data",
+                                                bondUserName);
+                                    }
                                 } else {
-                                    log.info("Cannot republish AuthorizedBondedRole with bondUserName {} because authorizedOracleNode is missing or not our",
-                                            authorizedBondedRole.getBondUserName());
+                                    log.info("Cannot republish AuthorizedBondedRole with bondUserName {} because authorizedOracleNode is missing",
+                                            bondUserName);
                                 }
                             });
                 });
     }
 
     private CompletableFuture<Boolean> requestDoaData() {
+        log.info("requestDoaData");
         return requestProofOfBurnTxs()
                 .thenCompose(this::publishProofOfBurnDtoSet)
                 .thenCompose(result -> requestBondedReputations())
