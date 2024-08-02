@@ -14,7 +14,7 @@ To help developers set up their environment, we provide a couple Gradle tasks.
 You can start Bisq 2 with 50 BTC by running:
 
 ```
-./gradlew :desktop:runWithBitcoindRegtestWallet
+./gradlew :apps:desktop:desktop:runWithBitcoindRegtestWallet
 ```
 
 This command starts Bitcoin-Qt, creates a new wallet, mines the initial regtest blocks (101), and starts Bisq 2 with the
@@ -33,7 +33,7 @@ Other tasks to make you life easier:
 You can start Bisq 2 with ~20 L-BTC by running:
 
 ```
-./gradlew :desktop:runWithElementsRegtestWallet
+./gradlew :apps:desktop:desktop:runWithElementsRegtestWallet
 ```
 
 This command starts Bitcoin-Qt, creates a new wallet, mines the initial regtest blocks (101), starts Elements-Qt, pegs
