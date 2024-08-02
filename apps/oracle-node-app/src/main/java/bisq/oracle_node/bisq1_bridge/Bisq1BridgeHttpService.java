@@ -106,7 +106,7 @@ public class Bisq1BridgeHttpService implements Service {
         return CompletableFuture.supplyAsync(() -> {
                     try {
                         String path = "api/v1/proof-of-burn/get-proof-of-burn/" + (lastRequestedProofOfBurnBlockHeight.get() + 1);
-                        log.info("Request Bisq DAO node: {}", path);
+                        log.info("Request Bisq DAO node: {}/{}", httpClient.getBaseUrl(), path);
                         String response = httpClient.get(path,
                                 Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
                         List<ProofOfBurnDto> dtoList = new ObjectMapper().readValue(response, new TypeReference<>() {
@@ -132,7 +132,7 @@ public class Bisq1BridgeHttpService implements Service {
         return CompletableFuture.supplyAsync(() -> {
                     try {
                         String path = "api/v1/bonded-reputation/get-bonded-reputation/" + (lastRequestedBondedReputationBlockHeight.get() + 1);
-                        log.info("Request Bisq DAO node: {}", path);
+                        log.info("Request Bisq DAO node: {}/{}", httpClient.getBaseUrl(), path);
                         String response = httpClient.get(path,
                                 Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
                         List<BondedReputationDto> dtoList = new ObjectMapper().readValue(response, new TypeReference<>() {
@@ -203,7 +203,7 @@ public class Bisq1BridgeHttpService implements Service {
                     roleType + "/" +
                     profileId + "/" +
                     signatureAsHex;
-            log.info("Request Bisq DAO node: {}", path);
+            log.info("Request Bisq DAO node: {}/{}", httpClient.getBaseUrl(), path);
             try {
                 String response = httpClient.get(path, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
                 TypeToken<BondedRoleVerificationDto> typeToken = new TypeToken<>() {
