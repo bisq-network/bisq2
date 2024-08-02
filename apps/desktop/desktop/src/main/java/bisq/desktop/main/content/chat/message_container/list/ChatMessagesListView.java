@@ -66,7 +66,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         super(new CustomStackPane(), model, controller);
 
         listView = new ListView<>(model.getSortedChatMessages());
-        listView.getStyleClass().add("chat-messages-list-view");
+        listView.getStyleClass().addAll("chat-messages-list-view", "force-hide-horizontal-scrollbar");
 
         VBox placeholder = ChatUtil.createEmptyChatPlaceholder(placeholderTitle, placeholderDescription);
         listView.setPlaceholder(placeholder);
