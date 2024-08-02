@@ -19,7 +19,7 @@ BISQ_REPO_TAG_OR_BRANCH=main
 
 update-clean-install-oracle () {
   echo "[*] Building Bisq Oracle from source"
-  sudo -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradlew clean :oracle-node:oracle-node-app:installDist -x test"
+  sudo -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradlew clean :apps:oracle-node-app:installDist -x test --no-daemon"
 }
 
 # Takes 1 argument (BISQ_REMOTE_NAME)
