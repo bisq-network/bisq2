@@ -24,12 +24,12 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.MultiStyleLabelPane;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
+import bisq.desktop.components.controls.TextFlowUtils;
 import bisq.i18n.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -39,6 +39,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -57,7 +58,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane gridPane;
     private final StackPane bitcoinPaymentMethodValuePane, fiatPaymentMethodValuePane;
-    private final MultiStyleLabelPane price;
+    private final TextFlow price;
     private final HBox reviewDataDisplay;
     @Nullable
     private ComboBox<BitcoinPaymentMethod> bitcoinPaymentMethodsComboBox;
@@ -124,7 +125,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         priceDescription.getStyleClass().add(descriptionStyle);
         gridPane.add(priceDescription, 0, rowIndex);
 
-        price = new MultiStyleLabelPane();
+        price = new TextFlow();
         price.getStyleClass().add(valueStyle);
         gridPane.add(price, 1, rowIndex);
 
@@ -204,7 +205,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         detailsHeadline.setText(model.getDetailsHeadline());
 
         priceDescription.setText(model.getPriceDescription());
-        price.setText(model.getPrice());
+        TextFlowUtils.updateTextFlow(price, model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
         bitcoinPaymentMethodDescription.setText(model.getBitcoinPaymentMethodDescription());
