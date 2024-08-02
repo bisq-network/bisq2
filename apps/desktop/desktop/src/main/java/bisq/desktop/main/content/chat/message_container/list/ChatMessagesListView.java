@@ -104,7 +104,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
 
     @Override
     protected void onViewAttached() {
-        ListViewUtil.findScrollbarAsync(listView, Orientation.VERTICAL, 1000).whenComplete((scrollBar, throwable) -> {
+        ListViewUtil.findScrollbarAsync(listView, Orientation.VERTICAL, 3000).whenComplete((scrollBar, throwable) -> {
             if (throwable != null) {
                 log.error("Find scrollbar failed", throwable);
                 return;
