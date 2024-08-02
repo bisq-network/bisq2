@@ -90,13 +90,7 @@ public class Badge extends StackPane {
         getChildren().add(badge);
         getStyleClass().add("bisq-badge");
 
-        // For unknown reasons the color of the style class is not applied in certain context (when used in list items)
-        // when applying the styleClass.
-        // Setting the style via `setStyle` works (taken from `.bisq-badge .badge-pane .label`).
-        label.setStyle("-fx-font-size: 0.85em; " +
-                "-fx-text-fill: -fx-light-text-color !important; " +
-                "-fx-font-family: \"IBM Plex Sans SemiBold\";");
-
+        setLabelColor("-fx-light-text-color");
         setPosition(position);
         setControl(control);
 
@@ -109,9 +103,23 @@ public class Badge extends StackPane {
         });
     }
 
+    // For unknown reasons the color of the style class is not applied in certain context (when used in list items)
+    // when applying the styleClass.
+    // Setting the style via `setStyle` works (taken from `.bisq-badge .badge-pane .label`).
+    public void setLabelColor(String color) {
+        label.setStyle("-fx-font-size: 0.85em; " +
+                "-fx-text-fill: " + color + " !important; " +
+                "-fx-font-family: \"IBM Plex Sans SemiBold\";");
+    }
+
+    public void setLabelStyle(String style) {
+        label.setStyle(style);
+    }
+
     private void refreshBadge() {
         int textLength = text.get() != null ? text.get().length() : 0;
-        boolean show = enabled && textLength > 0;
+        boolean hasDisplay = label.getGraphic() != null || textLength > 0;
+        boolean show = enabled && hasDisplay;
         badge.setVisible(show);
         badge.setManaged(show);
         if (show) {

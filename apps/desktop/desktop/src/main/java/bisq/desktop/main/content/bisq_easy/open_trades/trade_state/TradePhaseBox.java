@@ -33,12 +33,18 @@ import bisq.desktop.components.controls.Badge;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -127,14 +133,14 @@ class TradePhaseBox {
 
                         case TAKER_SENT_TAKE_OFFER_REQUEST:
 
-                        // Seller
+                            // Seller
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
                         case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                        // Buyer
+                            // Buyer
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_:
@@ -158,7 +164,7 @@ class TradePhaseBox {
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                         case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                        // Buyer
+                            // Buyer
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
                         case BUYER_SENT_FIAT_SENT_CONFIRMATION:
@@ -279,7 +285,7 @@ class TradePhaseBox {
             Triple<HBox, Label, Badge> phaseItem1 = getPhaseItem(1);
             Triple<HBox, Label, Badge> phaseItem2 = getPhaseItem(2);
             Triple<HBox, Label, Badge> phaseItem3 = getPhaseItem(3);
-            Triple<HBox, Label, Badge> phaseItem4 = getPhaseItem(4, true);
+            Triple<HBox, Label, Badge> phaseItem4 = getPhaseItem(4);
 
             HBox phase1HBox = phaseItem1.getFirst();
             HBox phase2HBox = phaseItem2.getFirst();
@@ -372,12 +378,24 @@ class TradePhaseBox {
                 badge.getStyleClass().clear();
                 label.getStyleClass().clear();
                 badge.getStyleClass().add("bisq-easy-trade-state-phase-badge");
-                if (i <= phaseIndex.intValue()) {
-                    badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-active");
-                    label.getStyleClass().add("bisq-easy-trade-state-phase-active");
+                if (i < phaseIndex.intValue()) {
+                    // completed
+                    ImageView checkMark = ImageUtil.getImageViewById("check-white");
+                    checkMark.setOpacity(0.75);
+                    badge.getLabel().setGraphic(checkMark);
+                    badge.setText("");
+                    badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-completed");
+                    label.getStyleClass().add("bisq-easy-trade-state-phase-completed");
+                } else if (i == phaseIndex.intValue()) {
+                    // current
+                    badge.setLabelStyle("-fx-text-fill: white; -fx-font-family: \"IBM Plex Sans Bold\"");
+                    badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-current");
+                    label.getStyleClass().add("bisq-easy-trade-state-phase-current");
                 } else {
-                    badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-inactive");
-                    label.getStyleClass().add("bisq-easy-trade-state-phase-inactive");
+                    // open
+                    badge.setLabelStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans\"");
+                    badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-open");
+                    label.getStyleClass().add("bisq-easy-trade-state-phase-open");
                 }
             }
         }
@@ -395,18 +413,6 @@ class TradePhaseBox {
             label.getStyleClass().add("bisq-easy-trade-state-phase");
             Badge badge = new Badge();
             badge.setText(String.valueOf(index));
-            badge.setPrefSize(20, 20);
-            HBox hBox = new HBox(7.5, badge, label);
-            hBox.setAlignment(Pos.CENTER_LEFT);
-            return new Triple<>(hBox, label, badge);
-        }
-
-        private static Triple<HBox, Label, Badge> getPhaseItem(int index, boolean isFinalStep) {
-            Label label = new Label();
-            label.getStyleClass().add("bisq-easy-trade-state-phase");
-            Badge badge = new Badge();
-            badge.setText(isFinalStep ? "\u2713" : String.valueOf(index));
-            badge.setPrefSize(20, 20);
             HBox hBox = new HBox(7.5, badge, label);
             hBox.setAlignment(Pos.CENTER_LEFT);
             return new Triple<>(hBox, label, badge);
