@@ -390,7 +390,10 @@ public class PeerGroupManager implements Node.Listener {
         if (!outDated.isEmpty()) {
             log.info("Remove {} persisted peers: {}",
                     outDated.size(),
-                    outDated.stream().sorted().map(e -> "Age: " + StringUtils.formatTime(e.getAge())).collect(Collectors.toList()));
+                    outDated.stream()
+                            .sorted()
+                            .map(e -> "Age: " + StringUtils.formatTime(e.getAge()))
+                            .collect(Collectors.toList()));
             peerGroupService.removePersistedPeers(outDated);
         }
     }
