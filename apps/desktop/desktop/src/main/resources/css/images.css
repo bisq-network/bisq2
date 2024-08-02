@@ -620,7 +620,7 @@
 }
 
 
-/* Bitcoin payment method icons based on enum names from BitcoinPaymentRail */
+/* Bitcoin settlement method icons based on enum names from BitcoinPaymentRail */
 
 #MAIN_CHAIN {
     -fx-image: url("/images/bitcoin_rails/bitcoin.png");

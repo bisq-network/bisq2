@@ -17,7 +17,13 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
-import bisq.account.payment_method.*;
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodUtil;
+import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethodUtil;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -72,6 +78,13 @@ public class TradeWizardPaymentMethodsController implements Controller {
     }
 
     public boolean validate() {
+        if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"))
+                    .owner(owner)
+                    .show();
+            return false;
+        }
+
         if (getCustomFiatPaymentMethodNameNotEmpty()) {
             return tryAddCustomFiatPaymentMethodAndNavigateNext();
         }
@@ -81,12 +94,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
                     .show();
             return false;
         }
-        if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"))
-                    .owner(owner)
-                    .show();
-            return false;
-        }
+
         return true;
     }
 

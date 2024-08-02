@@ -76,9 +76,15 @@ public class TakeOfferPaymentController implements Controller {
     }
 
     public void handleInvalidInput() {
-        new Popup().invalid(Res.get("bisqEasy.takeOffer.paymentMethods.noneSelected"))
-                .owner((Region) view.getRoot().getParent().getParent())
-                .show();
+        if (model.getSelectedFiatPaymentMethodSpec().get() == null) {
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noFiatPaymentMethodSelected"))
+                    .owner((Region) view.getRoot().getParent().getParent())
+                    .show();
+        } else if (model.getSelectedBitcoinPaymentMethodSpec().get() == null) {
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.noBtcSettlementMethodSelected"))
+                    .owner((Region) view.getRoot().getParent().getParent())
+                    .show();
+        }
     }
 
     @Override
@@ -96,8 +102,8 @@ public class TakeOfferPaymentController implements Controller {
         model.setHeadline(model.isFiatMethodVisible() && model.isBitcoinMethodVisible()
                 ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiatAndBitcoin")
                 : model.isFiatMethodVisible()
-                    ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiat")
-                    : Res.get("bisqEasy.takeOffer.paymentMethods.headline.bitcoin"));
+                ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiat")
+                : Res.get("bisqEasy.takeOffer.paymentMethods.headline.bitcoin"));
 
         settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_BITCOIN_METHOD)
                 .ifPresent(name -> {
