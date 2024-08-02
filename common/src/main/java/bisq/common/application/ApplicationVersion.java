@@ -17,10 +17,7 @@
 
 package bisq.common.application;
 
-import bisq.common.util.FileUtils;
 import bisq.common.util.Version;
-
-import java.io.IOException;
 
 public class ApplicationVersion {
     private static Version version;
@@ -28,9 +25,8 @@ public class ApplicationVersion {
     public static Version getVersion() {
         if (version == null) {
             try {
-                String versionString = FileUtils.readStringFromResource("version.txt");
-                version = new Version(versionString);
-            } catch (IOException e) {
+                version = new Version(BuildVersion.VERSION);
+            } catch (IllegalArgumentException e) {
                 throw new RuntimeException(e);
             }
         }
