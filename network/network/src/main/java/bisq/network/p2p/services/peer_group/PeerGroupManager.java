@@ -37,7 +37,11 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -45,8 +49,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 
 @Slf4j
 public class PeerGroupManager implements Node.Listener {
@@ -387,7 +390,7 @@ public class PeerGroupManager implements Node.Listener {
         if (!outDated.isEmpty()) {
             log.info("Remove {} persisted peers: {}",
                     outDated.size(),
-                    outDated.stream().sorted().map(e -> StringUtils.formatTime(e.getAge())).collect(Collectors.toList()));
+                    outDated.stream().sorted().map(e -> "Age: " + StringUtils.formatTime(e.getAge())).collect(Collectors.toList()));
             peerGroupService.removePersistedPeers(outDated);
         }
     }
