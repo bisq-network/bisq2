@@ -139,7 +139,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             log.debug("We are not the receiver of that mailbox message");
                         }
                     } else {
-                        throwable.printStackTrace();
+                        log.error("Error at onMailboxDataAdded", throwable);
                     }
                 });
     }
@@ -155,12 +155,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
-        // Set connecting state
         SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.CONNECTING);
         String receiverAddress = receiverNetworkId.getAddresses();
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
-            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData(ackRequestingMessage,
+            resendMessageService.ifPresent(service -> service.registerResendMessageData(new ResendMessageData(ackRequestingMessage,
                     receiverNetworkId,
                     senderKeyPair,
                     senderNetworkId,
@@ -255,7 +254,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
             MessageDeliveryStatus messageDeliveryStatus = result.getMessageDeliveryStatus();
-            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData(ackRequestingMessage,
+            resendMessageService.ifPresent(service -> service.registerResendMessageData(new ResendMessageData(ackRequestingMessage,
                     receiverNetworkId,
                     senderKeyPair,
                     senderNetworkId,
@@ -267,6 +266,32 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         return result;
 
     }
+
+    public Optional<SendConfidentialMessageResult> flushPendingMessagesToMailboxAtShutdown(ResendMessageData pendingMessage,
+                                                                                           KeyPair senderKeyPair) {
+        EnvelopePayloadMessage envelopePayloadMessage = pendingMessage.getEnvelopePayloadMessage();
+        if (envelopePayloadMessage instanceof MailboxMessage) {
+            PubKey receiverPubKey = pendingMessage.getReceiverNetworkId().getPubKey();
+            ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+            return Optional.of(storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
+                    confidentialMessage, receiverPubKey, senderKeyPair));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private SendConfidentialMessageResult storeInMailbox(EnvelopePayloadMessage envelopePayloadMessage,
                                                          PubKey receiverPubKey,
@@ -285,20 +310,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
         return result;
     }
-
-
-    public void addListener(Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleResult(EnvelopePayloadMessage envelopePayloadMessage, SendConfidentialMessageResult result) {
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
