@@ -273,8 +273,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         if (envelopePayloadMessage instanceof MailboxMessage) {
             PubKey receiverPubKey = pendingMessage.getReceiverNetworkId().getPubKey();
             ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
-            return Optional.of(storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
+            Optional<SendConfidentialMessageResult> sendConfidentialMessageResult = Optional.of(storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
                     confidentialMessage, receiverPubKey, senderKeyPair));
+            sendConfidentialMessageResult.ifPresent(result -> handleResult(envelopePayloadMessage, result));
+            return sendConfidentialMessageResult;
         } else {
             return Optional.empty();
         }
@@ -322,8 +324,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                     CompletableFutureUtils.anyOf(result.getMailboxFuture().orElseThrow())
                             .whenComplete((broadcastResult, throwable) -> {
                                 if (throwable != null || broadcastResult.getNumSuccess() == 0) {
+                                    log.warn("mailboxFuture completed and resulted in MessageDeliveryStatus.FAILED");
                                     service.onMessageSentStatus(messageId, MessageDeliveryStatus.FAILED);
                                 } else {
+                                    log.info("mailboxFuture completed and resulted in MessageDeliveryStatus.ADDED_TO_MAILBOX");
                                     service.onMessageSentStatus(messageId, MessageDeliveryStatus.ADDED_TO_MAILBOX);
                                 }
                             });

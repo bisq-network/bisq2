@@ -149,6 +149,7 @@ public class BisqEasyService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         if (difficultyAdjustmentFactorPin != null) {
             difficultyAdjustmentFactorPin.unbind();
             ignoreDiffAdjustmentFromSecManagerPin.unbind();
