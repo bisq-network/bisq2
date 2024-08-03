@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
@@ -61,6 +62,8 @@ public class OfferMessageItem {
     private final String lastSeenAsString;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final List<FiatPaymentMethod> fiatPaymentMethods;
+    private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
+    private final String bitcoinPaymentMethodsAsString;
     private long totalScore;
     private double priceSpecAsPercent;
     private Pin marketPriceByCurrencyMapPin, reputationChangedPin;
@@ -76,6 +79,8 @@ public class OfferMessageItem {
         this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
         this.fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
+        this.bitcoinPaymentMethods = retrieveAndSortBitcoinPaymentMethods();
+        this.bitcoinPaymentMethodsAsString = createBitcoinPaymentMethodsAsString();
         userNickname = userProfile.getNickName();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
@@ -129,5 +134,21 @@ public class OfferMessageItem {
         paymentMethods.sort(Comparator.comparing(FiatPaymentMethod::isCustomPaymentMethod)
                 .thenComparing(FiatPaymentMethod::getDisplayString));
         return paymentMethods;
+    }
+
+    private List<BitcoinPaymentMethod> retrieveAndSortBitcoinPaymentMethods() {
+        List<BitcoinPaymentMethod> paymentMethods =
+                PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
+        paymentMethods.sort(Comparator.comparing(BitcoinPaymentMethod::getDisplayString).reversed());
+        return paymentMethods;
+    }
+
+    private String createBitcoinPaymentMethodsAsString() {
+        StringBuilder builder = new StringBuilder();
+        for (BitcoinPaymentMethod bitcoinPaymentMethod : bitcoinPaymentMethods) {
+            builder.append(bitcoinPaymentMethod.getDisplayString());
+            builder.append(", ");
+        }
+        return builder.toString();
     }
 }

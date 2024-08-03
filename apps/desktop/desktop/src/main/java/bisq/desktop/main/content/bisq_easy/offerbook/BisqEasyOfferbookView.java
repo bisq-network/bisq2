@@ -52,7 +52,7 @@ import static bisq.bisq_easy.BisqEasyMarketFilter.*;
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private static final String BUY_FROM_MENU_ITEM_STYLE_CLASS = "buy-from-offers";
     private static final String SELL_TO_MENU_ITEM_STYLE_CLASS = "sell-to-offers";
-    private static final double EXPANDED_OFFER_LIST_WIDTH = 558;
+    private static final double EXPANDED_OFFER_LIST_WIDTH = 678;
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
     private static final double COLLAPSED_LIST_WIDTH = 40;
 
@@ -691,12 +691,22 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .isSortable(false)
                 .build();
 
+        BisqTableColumn<OfferMessageItem> settlementTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
+                .title(Res.get("bisqEasy.offerbook.offerList.table.columns.settlementMethod"))
+                .left()
+                .fixWidth(120)
+                .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageSettlementCellFactory())
+                .comparator(Comparator.comparing(OfferMessageItem::getBitcoinPaymentMethodsAsString))
+                .isSortable(true)
+                .build();
+
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(userProfileTableColumn);
         tableView.getColumns().add(priceTableColumn);
         tableView.getColumns().add(spacerColumn);
         tableView.getColumns().add(fiatAmountTableColumn);
         tableView.getColumns().add(paymentTableColumn);
+        tableView.getColumns().add(settlementTableColumn);
 
         tableView.getSortOrder().add(userProfileTableColumn);
     }

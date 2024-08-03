@@ -1,5 +1,6 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -294,6 +295,33 @@ public class BisqEasyOfferbookUtil {
                         BisqTooltip tooltip = new BisqTooltip();
                         tooltip.getStyleClass().add("medium-dark-tooltip");
                         tooltip.setText(fiatPaymentMethod.getDisplayString());
+                        Tooltip.install(label, tooltip);
+                        hbox.getChildren().add(label);
+                    }
+                    setGraphic(hbox);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageSettlementCellFactory() {
+        return column -> new TableCell<>() {
+            @Override
+            protected void updateItem(OfferMessageItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    HBox hbox = new HBox(5);
+                    hbox.setAlignment(Pos.CENTER_LEFT);
+                    for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBitcoinPaymentMethods()) {
+                        Label label = new Label();
+                        label.setGraphic(ImageUtil.getImageViewById(bitcoinPaymentMethod.getName()));
+                        BisqTooltip tooltip = new BisqTooltip();
+                        tooltip.getStyleClass().add("medium-dark-tooltip");
+                        tooltip.setText(bitcoinPaymentMethod.getDisplayString());
                         Tooltip.install(label, tooltip);
                         hbox.getChildren().add(label);
                     }
