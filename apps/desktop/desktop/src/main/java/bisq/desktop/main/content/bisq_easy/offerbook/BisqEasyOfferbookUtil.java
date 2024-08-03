@@ -1,7 +1,9 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
@@ -22,6 +24,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -270,6 +273,33 @@ public class BisqEasyOfferbookUtil {
                 if (item != null && !empty) {
                     fiatAmountLabel.setText(item.getMinMaxAmountAsString());
                     setGraphic(fiatAmountLabel);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessagePaymentCellFactory() {
+        return column -> new TableCell<>() {
+            @Override
+            protected void updateItem(OfferMessageItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    HBox hbox = new HBox(5);
+                    hbox.setAlignment(Pos.CENTER_LEFT);
+                    for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
+                        Label label = new Label();
+                        label.setGraphic(ImageUtil.getImageViewById(fiatPaymentMethod.getName()));
+                        BisqTooltip tooltip = new BisqTooltip();
+                        tooltip.getStyleClass().add("medium-dark-tooltip");
+                        tooltip.setText(fiatPaymentMethod.getDisplayString());
+                        Tooltip.install(label, tooltip);
+                        hbox.getChildren().add(label);
+                    }
+                    setGraphic(hbox);
                 } else {
                     setGraphic(null);
                 }

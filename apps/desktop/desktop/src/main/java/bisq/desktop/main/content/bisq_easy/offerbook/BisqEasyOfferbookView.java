@@ -52,7 +52,7 @@ import static bisq.bisq_easy.BisqEasyMarketFilter.*;
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private static final String BUY_FROM_MENU_ITEM_STYLE_CLASS = "buy-from-offers";
     private static final String SELL_TO_MENU_ITEM_STYLE_CLASS = "sell-to-offers";
-    private static final double EXPANDED_OFFER_LIST_WIDTH = 438;
+    private static final double EXPANDED_OFFER_LIST_WIDTH = 600;//438;
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
     private static final double COLLAPSED_LIST_WIDTH = 40;
 
@@ -132,6 +132,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         favouritesTableView.initialize();
         marketsTableView.initialize();
+        offerListTableView.initialize();
 
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().bind(getModel().getMarketPrice());
@@ -241,6 +242,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketsTableView.dispose();
         favouritesTableView.dispose();
+        offerListTableView.dispose();
 
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().unbind();
@@ -683,11 +685,20 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .isSortable(true)
                 .build();
 
+        BisqTableColumn<OfferMessageItem> paymentTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
+                .title(Res.get("bisqEasy.offerbook.offerList.table.columns.paymentMethod"))
+                .left()
+                .fixWidth(120)
+                .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePaymentCellFactory())
+                .isSortable(false)
+                .build();
+
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(userProfileTableColumn);
         tableView.getColumns().add(priceTableColumn);
         tableView.getColumns().add(spacerColumn);
         tableView.getColumns().add(fiatAmountTableColumn);
+        tableView.getColumns().add(paymentTableColumn);
 
         tableView.getSortOrder().add(userProfileTableColumn);
     }

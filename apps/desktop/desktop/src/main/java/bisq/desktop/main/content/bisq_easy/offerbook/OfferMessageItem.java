@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.data.Pair;
@@ -27,6 +28,7 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
@@ -38,6 +40,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Slf4j
 @Getter
@@ -55,6 +59,7 @@ public class OfferMessageItem {
     private final long lastSeen;
     private final String lastSeenAsString;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
+    private final List<FiatPaymentMethod> fiatPaymentMethods;
     private long totalScore;
     private double priceSpecAsPercent;
     private Pin marketPriceByCurrencyMapPin, reputationChangedPin;
@@ -69,6 +74,7 @@ public class OfferMessageItem {
         this.userProfile = userProfile;
         this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
+        this.fiatPaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
         userNickname = userProfile.getNickName();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
