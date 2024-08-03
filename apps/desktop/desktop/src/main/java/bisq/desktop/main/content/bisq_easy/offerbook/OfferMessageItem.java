@@ -74,13 +74,13 @@ public class OfferMessageItem {
                      MarketPriceService marketPriceService,
                      UserProfileService userProfileService) {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
-        this.bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
+        bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         this.userProfile = userProfile;
         this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
-        this.fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
-        this.bitcoinPaymentMethods = retrieveAndSortBitcoinPaymentMethods();
-        this.bitcoinPaymentMethodsAsString = createBitcoinPaymentMethodsAsString();
+        fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
+        bitcoinPaymentMethods = retrieveAndSortBitcoinPaymentMethods();
+        bitcoinPaymentMethodsAsString = createBitcoinPaymentMethodsAsString();
         userNickname = userProfile.getNickName();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
