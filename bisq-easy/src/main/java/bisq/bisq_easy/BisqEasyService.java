@@ -184,10 +184,15 @@ public class BisqEasyService implements Service {
                 .orTimeout(20, TimeUnit.SECONDS)
                 .handle((broadcastResultList, throwable) -> {
                     if (throwable != null) {
-                        log.error("flushPendingMessagesToMailboxAtShutdown failed", throwable);
+                        log.warn("flushPendingMessagesToMailboxAtShutdown failed", throwable);
                         return false;
                     } else {
-                        log.error("All broadcast futures at getStorePendingMessagesInMailboxFuture completed");
+                        log.info("All broadcast futures at getStorePendingMessagesInMailboxFuture completed. broadcastResultList={}", broadcastResultList);
+                        try {
+                            // We delay a bit before continuing shutdown process. Usually we only have 1 pending message...
+                            Thread.sleep(100 + broadcastResultList.size() * 500L);
+                        } catch (InterruptedException ignore) {
+                        }
                         return true;
                     }
                 });
