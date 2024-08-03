@@ -24,6 +24,9 @@ public enum MessageDeliveryStatus implements ProtoEnum {
         this.received = received;
     }
 
+    public boolean isPending() {
+        return this == CONNECTING || this == SENT || this == TRY_ADD_TO_MAILBOX;
+    }
 
     @Override
     public bisq.network.protobuf.MessageDeliveryStatus toProtoEnum() {
