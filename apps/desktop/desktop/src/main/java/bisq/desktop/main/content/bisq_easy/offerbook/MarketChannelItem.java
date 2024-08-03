@@ -44,6 +44,7 @@ import java.lang.ref.WeakReference;
 public class MarketChannelItem {
     private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
     private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
+    public static final String ASTERISK_SYMBOL = "\u002A"; // Unicode for "＊"
 
     @EqualsAndHashCode.Include
     private final BisqEasyOfferbookChannel channel;
@@ -101,7 +102,7 @@ public class MarketChannelItem {
         if (numNotifications > 9) {
             // We don't have enough space for 2-digit numbers, so we show an asterix. Standard asterix would not be
             // centered, thus we use the `full width asterisk` taken from https://www.piliapp.com/symbol/asterisk/
-            value = "＊";
+            value = ASTERISK_SYMBOL;
         } else if (numNotifications > 0) {
             value = String.valueOf(numNotifications);
         }
