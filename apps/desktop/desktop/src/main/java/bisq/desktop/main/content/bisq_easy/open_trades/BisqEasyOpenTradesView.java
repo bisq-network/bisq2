@@ -57,7 +57,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
@@ -85,6 +84,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     private final VBox tradeWelcomeViewRoot, tradeStateViewRoot, chatVBox;
     private final BisqTableView<ListItem> tableView;
     private final Button toggleChatWindowButton;
+    private final VBox tableViewVBox;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
             selectedModelItemPin, chatWindowPin, isAnyTradeInMediationPin;
     private BisqTableColumn<ListItem> mediatorColumn;
@@ -103,14 +103,14 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
         // Table view
         tableView = new BisqTableView<>(getModel().getSortedList());
-        tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
+        tableView.getStyleClass().addAll("bisq-easy-open-trades");
+        tableView.hideHorizontalScrollbar();
+        tableView.allowVerticalScrollbar();
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         configTableView();
 
-        ScrollPane scrollPane = new ScrollPane(tableView);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
-        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), scrollPane);
-        VBox tableViewVBox = triple.getThird();
+        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
+        tableViewVBox = triple.getThird();
 
         // ChatBox
         toggleChatWindowButton = new Button();
@@ -163,6 +163,9 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         chatVBox.visibleProperty().bind(model.getChatVisible());
         chatVBox.managedProperty().bind(model.getChatVisible());
 
+        tableViewVBox.minHeightProperty().bind(tableView.heightProperty().add(78));
+        tableViewVBox.maxHeightProperty().bind(tableView.heightProperty().add(78));
+
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
 
@@ -192,9 +195,10 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                         tableView.getStyleClass().add("empty-table");
                     } else {
                         tableView.setPlaceholder(null);
-                        tableView.adjustHeightToNumRows();
-                        tableView.hideVerticalScrollbar();
                         tableView.getStyleClass().remove("empty-table");
+                        // Hack to trigger a re-rendering as otherwise the scrollbar is not shown after leaving screen and coming back
+                        tableView.adjustHeightToNumRows(0);
+                        tableView.adjustHeightToNumRows(3);
                     }
                 });
 
@@ -229,6 +233,9 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tradeStateViewRoot.managedProperty().unbind();
         chatVBox.visibleProperty().unbind();
         chatVBox.managedProperty().unbind();
+
+        tableViewVBox.minHeightProperty().unbind();
+        tableViewVBox.maxHeightProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
         if (tableViewSelectionPin != null) {

@@ -24,7 +24,13 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumnBase;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.util.Callback;
 import lombok.Getter;
 import lombok.Setter;
@@ -103,28 +109,28 @@ public class BisqTableView<T> extends TableView<T> {
     }
 
     public void adjustHeightToNumRows() {
-        adjustHeightToNumRows(TABLE_SCROLLBAR_HEIGHT,
-                TABLE_HEADER_HEIGHT,
-                TABLE_ROW_HEIGHT);
+        adjustHeightToNumRows(Integer.MAX_VALUE);
     }
 
-    public void adjustHeightToNumRows(double scrollbarHeight,
-                                      double headerHeight,
-                                      double rowHeight) {
+    public void adjustHeightToNumRows(int maxNumItems) {
+        adjustHeightToNumRows(TABLE_SCROLLBAR_HEIGHT, TABLE_HEADER_HEIGHT, TABLE_ROW_HEIGHT, maxNumItems);
+    }
+
+    public void adjustHeightToNumRows(double scrollbarHeight, double headerHeight, double rowHeight, int maxNumItems) {
         removeListeners();
         listChangeListener = c -> {
-            adjustHeight(scrollbarHeight, headerHeight, rowHeight);
-            UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight));
+            adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems);
+            UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems));
         };
         getItems().addListener(listChangeListener);
 
         widthChangeListener = (observable, oldValue, newValue) -> {
-            adjustHeight(scrollbarHeight, headerHeight, rowHeight);
-            UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight));
+            adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems);
+            UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems));
         };
         widthProperty().addListener(widthChangeListener);
 
-        adjustHeight(scrollbarHeight, headerHeight, rowHeight);
+        adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems);
     }
 
     public void hideVerticalScrollbar() {
@@ -155,8 +161,14 @@ public class BisqTableView<T> extends TableView<T> {
         }
     }
 
-    private void adjustHeight(double scrollbarHeight, double headerHeight, double rowHeight) {
-        int numItems = getItems().size();
+    private void adjustHeight(double scrollbarHeight, double headerHeight, double rowHeight, int maxNumItems) {
+        int size = getItems().size();
+        int numItems = Math.min(maxNumItems, size);
+        if (size > numItems) {
+            allowVerticalScrollbar();
+        } else {
+            hideVerticalScrollbar();
+        }
         if (numItems == 0) {
             return;
         }
