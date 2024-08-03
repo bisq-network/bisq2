@@ -598,10 +598,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
                 UIThread.run(() -> {
                     if (notification == null) {
-                        mediatorNumNotifications = 0;
-                        peerNumNotifications = 0;
-                        mediatorNumNotificationsProperty.set("");
-                        peerNumNotificationsProperty.set("");
                         return;
                     }
                     if (!notification.getChatChannelId().equals(channel.getId())) {
