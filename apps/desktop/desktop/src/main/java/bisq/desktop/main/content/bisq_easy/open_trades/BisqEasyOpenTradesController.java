@@ -80,11 +80,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
     }
 
     @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return Optional.empty();
-    }
-
-    @Override
     public BisqEasyOpenTradesModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
         return new BisqEasyOpenTradesModel(chatChannelDomain);
     }

@@ -362,8 +362,14 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
                 .minWidth(130)
-                .comparator(Comparator.comparing(ListItem::getPaymentMethod))
+                .comparator(Comparator.comparing(ListItem::getFiatPaymentMethod))
                 .setCellFactory(getPaymentMethodCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("bisqEasy.openTrades.table.settlementMethod"))
+                .minWidth(130)
+                .comparator(Comparator.comparing(ListItem::getBitcoinSettlementMethod))
+                .setCellFactory(getSettlementMethodCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.makerTakerRole"))
@@ -469,12 +475,40 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    StackPane overlappedIconsPane = ImageUtil.getOverlappedIconsPane(item.getBitcoinPaymentRail().name(),
-                            item.getFiatPaymentRail().name());
+                    Label label = new Label(item.getFiatPaymentMethod().toUpperCase(),
+                            ImageUtil.getImageViewById(item.getFiatPaymentRail().name()));
+                    label.setGraphicTextGap(10);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.paymentMethod.tooltip",
-                            item.getBitcoinPaymentMethod(), item.getFiatPaymentMethod()));
-                    Tooltip.install(overlappedIconsPane, tooltip);
-                    setGraphic(new StackPane(overlappedIconsPane));
+                            item.getFiatPaymentMethod()));
+                    Tooltip.install(label, tooltip);
+                    setGraphic(label);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSettlementMethodCellFactory() {
+        return column -> new TableCell<>() {
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            {
+                tooltip.getStyleClass().add("medium-dark-tooltip");
+            }
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    Label label = new Label(item.getBitcoinSettlementMethod().toUpperCase(),
+                            ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name()));
+                    label.setGraphicTextGap(10);
+                    tooltip.setText(Res.get("bisqEasy.openTrades.table.settlementMethod.tooltip",
+                            item.getBitcoinSettlementMethod()));
+                    Tooltip.install(label, tooltip);
+                    setGraphic(label);
                 } else {
                     setGraphic(null);
                 }
@@ -500,7 +534,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         @EqualsAndHashCode.Include
         private final UserProfile myUserProfile, peersUserProfile;
         private final String offerId, tradeId, shortTradeId, myUserName, direction, peersUserName, dateString, timeString,
-                market, priceString, baseAmountString, quoteAmountString, paymentMethod, myRole, bitcoinPaymentMethod,
+                market, priceString, baseAmountString, quoteAmountString, myRole, bitcoinSettlementMethod,
                 fiatPaymentMethod, myselfLastSeenAsString, peerLastSeenAsString;
         private final long date, price, baseAmount, quoteAmount;
         private final ChatNotificationService chatNotificationService;
@@ -547,9 +581,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
             bitcoinPaymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
             fiatPaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
-            bitcoinPaymentMethod = contract.getBaseSidePaymentMethodSpec().getShortDisplayString();
+            bitcoinSettlementMethod = contract.getBaseSidePaymentMethodSpec().getShortDisplayString();
             fiatPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
-            paymentMethod = bitcoinPaymentMethod + "/" + fiatPaymentMethod;
 
             myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
             reputationScore = reputationService.getReputationScore(peersUserProfile);
