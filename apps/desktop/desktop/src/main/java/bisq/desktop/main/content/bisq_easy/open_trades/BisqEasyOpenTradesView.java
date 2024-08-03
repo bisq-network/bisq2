@@ -54,6 +54,7 @@ import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -481,8 +482,10 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    ImageView icon = ImageUtil.getImageViewById(item.getFiatPaymentRail().name());
-                    StackPane pane = new StackPane(icon);
+                    Node paymentMethodIcon = !item.isFiatPaymentMethodCustom()
+                            ? ImageUtil.getImageViewById(item.getFiatPaymentRail().name())
+                            : BisqEasyViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod().toUpperCase());
+                    StackPane pane = new StackPane(paymentMethodIcon);
                     pane.setAlignment(Pos.CENTER_RIGHT);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.paymentMethod.tooltip",
                             item.getFiatPaymentMethod()));
@@ -552,6 +555,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         private final long myselfLastSeen, peerLastSeen;
         private final BitcoinPaymentRail bitcoinPaymentRail;
         private final FiatPaymentRail fiatPaymentRail;
+        private final boolean isFiatPaymentMethodCustom;
 
         private long peerNumNotifications, mediatorNumNotifications;
         private String mediatorUserName = "";
@@ -590,6 +594,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             fiatPaymentRail = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
             bitcoinSettlementMethod = contract.getBaseSidePaymentMethodSpec().getShortDisplayString();
             fiatPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
+            isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
 
             myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
             reputationScore = reputationService.getReputationScore(peersUserProfile);

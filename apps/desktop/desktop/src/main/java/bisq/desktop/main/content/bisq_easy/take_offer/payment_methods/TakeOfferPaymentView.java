@@ -24,14 +24,17 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.ChipToggleButton;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -103,10 +106,10 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
             for (FiatPaymentMethodSpec spec : model.getSortedFiatPaymentMethodSpecs()) {
                 FiatPaymentMethod paymentMethod = spec.getPaymentMethod();
                 ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), fiatToggleGroup);
-                if (!paymentMethod.isCustomPaymentMethod()) {
-                    ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
-                    chipToggleButton.setLeftIcon(icon);
-                }
+                Node icon = !paymentMethod.isCustomPaymentMethod()
+                        ? ImageUtil.getImageViewById(paymentMethod.getName())
+                        : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
+                chipToggleButton.setLeftIcon(icon);
                 chipToggleButton.setOnAction(() -> controller.onToggleFiatPaymentMethod(spec, chipToggleButton.isSelected()));
                 chipToggleButton.setSelected(spec.equals(model.getSelectedFiatPaymentMethodSpec().get()));
                 fiatGridPane.add(chipToggleButton, col++, row);

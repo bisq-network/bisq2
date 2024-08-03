@@ -8,6 +8,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
@@ -291,7 +292,10 @@ public class BisqEasyOfferbookUtil {
                     hbox.setAlignment(Pos.CENTER_LEFT);
                     for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
                         Label label = new Label();
-                        label.setGraphic(ImageUtil.getImageViewById(fiatPaymentMethod.getName()));
+                        Node paymentMethodIcon = !fiatPaymentMethod.isCustomPaymentMethod()
+                                ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
+                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString().toUpperCase());
+                        label.setGraphic(paymentMethodIcon);
                         BisqTooltip tooltip = new BisqTooltip();
                         tooltip.getStyleClass().add("medium-dark-tooltip");
                         tooltip.setText(fiatPaymentMethod.getDisplayString());

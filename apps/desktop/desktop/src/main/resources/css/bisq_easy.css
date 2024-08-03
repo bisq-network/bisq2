@@ -1154,6 +1154,13 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.bisq-easy-custom-payment-icon .text {
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Bold";
+    -fx-text-fill: -fx-dark-text-color !important;
+    -fx-fill: -fx-dark-text-color !important;
+}
+
 
 /*******************************************************************************
  *                                                                             *

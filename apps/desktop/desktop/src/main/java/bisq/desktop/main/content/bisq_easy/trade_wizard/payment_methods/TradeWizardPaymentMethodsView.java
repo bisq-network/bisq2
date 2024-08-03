@@ -26,6 +26,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
@@ -33,6 +34,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -177,6 +179,8 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
                             customMethod -> {
                                 ImageView closeIcon = chipButton.setRightIcon("remove-white");
                                 closeIcon.setOnMousePressed(e -> controller.onRemoveFiatCustomMethod(fiatPaymentMethod));
+                                StackPane icon = BisqEasyViewUtils.getCustomPaymentMethodIcon(customMethod.getDisplayString());
+                                chipButton.setLeftIcon(icon);
                             },
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
