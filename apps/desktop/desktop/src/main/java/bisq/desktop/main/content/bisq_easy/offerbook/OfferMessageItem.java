@@ -41,6 +41,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -74,7 +75,7 @@ public class OfferMessageItem {
         this.userProfile = userProfile;
         this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
-        this.fiatPaymentMethods = PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        this.fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
         userNickname = userProfile.getNickName();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
@@ -120,5 +121,13 @@ public class OfferMessageItem {
     private void updateReputationScore() {
         reputationScore.set(reputationService.getReputationScore(userProfile));
         totalScore = reputationScore.get().getTotalScore();
+    }
+
+    private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
+        List<FiatPaymentMethod> paymentMethods =
+                PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        paymentMethods.sort(Comparator.comparing(FiatPaymentMethod::isCustomPaymentMethod)
+                .thenComparing(FiatPaymentMethod::getDisplayString));
+        return paymentMethods;
     }
 }

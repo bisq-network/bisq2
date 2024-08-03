@@ -52,7 +52,7 @@ import static bisq.bisq_easy.BisqEasyMarketFilter.*;
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private static final String BUY_FROM_MENU_ITEM_STYLE_CLASS = "buy-from-offers";
     private static final String SELL_TO_MENU_ITEM_STYLE_CLASS = "sell-to-offers";
-    private static final double EXPANDED_OFFER_LIST_WIDTH = 600;//438;
+    private static final double EXPANDED_OFFER_LIST_WIDTH = 558;
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
     private static final double COLLAPSED_LIST_WIDTH = 40;
 
@@ -132,7 +132,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         favouritesTableView.initialize();
         marketsTableView.initialize();
-        offerListTableView.initialize();
 
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().bind(getModel().getMarketPrice());
@@ -242,7 +241,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketsTableView.dispose();
         favouritesTableView.dispose();
-        offerListTableView.dispose();
 
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().unbind();
