@@ -17,7 +17,13 @@
 
 package bisq.chat.notifications;
 
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
+import bisq.chat.ChatUtil;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
@@ -177,7 +183,8 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                         .orElse(true));
     }
 
-    public Stream<ChatNotification> getNotConsumedNotifications(ChatChannelDomain chatChannelDomain, String chatChannelId) {
+    public Stream<ChatNotification> getNotConsumedNotifications(ChatChannelDomain chatChannelDomain,
+                                                                String chatChannelId) {
         // We filter early for the channelId to avoid unnecessary calls on the predicates
         return getNotConsumedNotifications()
                 .filter(chatNotification -> chatNotification.getChatChannelId().equals(chatChannelId))
@@ -419,7 +426,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }
     }
 
-    private <M extends ChatMessage> ChatNotification createNotification(String id, ChatChannel<M> chatChannel, M chatMessage) {
+    private <M extends ChatMessage> ChatNotification createNotification(String id,
+                                                                        ChatChannel<M> chatChannel,
+                                                                        M chatMessage) {
         Optional<UserProfile> senderUserProfile = chatMessage instanceof PrivateChatMessage
                 ? Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile())
                 : userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
@@ -437,7 +446,13 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             String userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
             String channelInfo = ChatUtil.getChannelNavigationPath(chatChannel);
             title = StringUtils.truncate(userName, 20) + " (" + channelInfo + ")";
-            message = StringUtils.truncate(chatMessage.getText(), 210);
+            String text = chatMessage.getText();
+            if (chatMessage instanceof BisqEasyOpenTradeMessage &&
+                    chatMessage.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE) {
+                // We have encoded the i18n key so that we can show log messages in the users language.
+                text = Res.decode(text);
+            }
+            message = StringUtils.truncate(text, 210);
         }
         return new ChatNotification(id,
                 title,

@@ -57,7 +57,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
@@ -85,6 +84,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     private final VBox tradeWelcomeViewRoot, tradeStateViewRoot, chatVBox;
     private final BisqTableView<ListItem> tableView;
     private final Button toggleChatWindowButton;
+    private final VBox tableViewVBox;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
             selectedModelItemPin, chatWindowPin, isAnyTradeInMediationPin;
     private BisqTableColumn<ListItem> mediatorColumn;
@@ -103,14 +103,14 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
         // Table view
         tableView = new BisqTableView<>(getModel().getSortedList());
-        tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
+        tableView.getStyleClass().addAll("bisq-easy-open-trades");
+        tableView.hideHorizontalScrollbar();
+        tableView.allowVerticalScrollbar();
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         configTableView();
 
-        ScrollPane scrollPane = new ScrollPane(tableView);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
-        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), scrollPane);
-        VBox tableViewVBox = triple.getThird();
+        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
+        tableViewVBox = triple.getThird();
 
         // ChatBox
         toggleChatWindowButton = new Button();
@@ -163,6 +163,9 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         chatVBox.visibleProperty().bind(model.getChatVisible());
         chatVBox.managedProperty().bind(model.getChatVisible());
 
+        tableViewVBox.minHeightProperty().bind(tableView.heightProperty().add(78));
+        tableViewVBox.maxHeightProperty().bind(tableView.heightProperty().add(78));
+
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
 
@@ -192,9 +195,10 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                         tableView.getStyleClass().add("empty-table");
                     } else {
                         tableView.setPlaceholder(null);
-                        tableView.adjustHeightToNumRows();
-                        tableView.hideVerticalScrollbar();
                         tableView.getStyleClass().remove("empty-table");
+                        // Hack to trigger a re-rendering as otherwise the scrollbar is not shown after leaving screen and coming back
+                        tableView.adjustHeightToNumRows(0);
+                        tableView.adjustHeightToNumRows(3);
                     }
                 });
 
@@ -229,6 +233,9 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tradeStateViewRoot.managedProperty().unbind();
         chatVBox.visibleProperty().unbind();
         chatVBox.managedProperty().unbind();
+
+        tableViewVBox.minHeightProperty().unbind();
+        tableViewVBox.maxHeightProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
         if (tableViewSelectionPin != null) {
@@ -361,20 +368,18 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .valueSupplier(ListItem::getPriceString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
-                .minWidth(130)
+                .fixWidth(30)
                 .comparator(Comparator.comparing(ListItem::getFiatPaymentMethod))
                 .setCellFactory(getPaymentMethodCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.settlementMethod"))
-                .minWidth(130)
+                .fixWidth(30)
                 .comparator(Comparator.comparing(ListItem::getBitcoinSettlementMethod))
                 .setCellFactory(getSettlementMethodCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.makerTakerRole"))
-                .minWidth(80)
+                .minWidth(85)
                 .right()
                 .comparator(Comparator.comparing(ListItem::getMyRole))
                 .valueSupplier(ListItem::getMyRole)
@@ -476,13 +481,13 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    Label label = new Label(item.getFiatPaymentMethod().toUpperCase(),
-                            ImageUtil.getImageViewById(item.getFiatPaymentRail().name()));
-                    label.setGraphicTextGap(10);
+                    ImageView icon = ImageUtil.getImageViewById(item.getFiatPaymentRail().name());
+                    StackPane pane = new StackPane(icon);
+                    pane.setAlignment(Pos.CENTER_RIGHT);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.paymentMethod.tooltip",
                             item.getFiatPaymentMethod()));
-                    Tooltip.install(label, tooltip);
-                    setGraphic(label);
+                    Tooltip.install(pane, tooltip);
+                    setGraphic(pane);
                 } else {
                     setGraphic(null);
                 }
@@ -503,13 +508,13 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    Label label = new Label(item.getBitcoinSettlementMethod().toUpperCase(),
-                            ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name()));
-                    label.setGraphicTextGap(10);
+                    ImageView icon = ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name());
+                    StackPane pane = new StackPane(icon);
+                    pane.setAlignment(Pos.CENTER_LEFT);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.settlementMethod.tooltip",
                             item.getBitcoinSettlementMethod()));
-                    Tooltip.install(label, tooltip);
-                    setGraphic(label);
+                    Tooltip.install(pane, tooltip);
+                    setGraphic(pane);
                 } else {
                     setGraphic(null);
                 }
@@ -598,10 +603,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
                 UIThread.run(() -> {
                     if (notification == null) {
-                        mediatorNumNotifications = 0;
-                        peerNumNotifications = 0;
-                        mediatorNumNotificationsProperty.set("");
-                        peerNumNotificationsProperty.set("");
                         return;
                     }
                     if (!notification.getChatChannelId().equals(channel.getId())) {
