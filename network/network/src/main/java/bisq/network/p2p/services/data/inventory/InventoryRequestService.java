@@ -66,6 +66,7 @@ public class InventoryRequestService implements Node.Listener {
     private final Observable<Boolean> allDataReceived = new Observable<>(false);
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private Optional<Scheduler> periodicRequestScheduler = Optional.empty();
+    private volatile boolean shutdownInProgress;
 
     public InventoryRequestService(Node node,
                                    PeerGroupManager peerGroupManager,
@@ -82,6 +83,7 @@ public class InventoryRequestService implements Node.Listener {
     }
 
     public void shutdown() {
+        shutdownInProgress = true;
         node.removeListener(this);
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
         periodicRequestScheduler.ifPresent(Scheduler::stop);
@@ -109,8 +111,10 @@ public class InventoryRequestService implements Node.Listener {
         requestInventory(connection)
                 .whenComplete((inventory, throwable) -> {
                     if (throwable != null) {
-                        log.info("Exception at inventory request to peer {}: {}",
-                                connection.getPeerAddress().getFullAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        if (!shutdownInProgress) {
+                            log.info("Exception at inventory request to peer {}: {}",
+                                    connection.getPeerAddress().getFullAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        }
                     } else {
                         if (!allDataReceived.get()) {
                             if (inventory.allDataReceived()) {

@@ -88,8 +88,8 @@ public class WebcamProcessLauncher {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("Process shutdown. runningProcess={}", runningProcess);
         return CompletableFuture.supplyAsync(() -> runningProcess.map(process -> {
+            log.info("Process shutdown. runningProcess={}", runningProcess);
             process.destroy();
             boolean terminatedGraceFully = false;
             try {

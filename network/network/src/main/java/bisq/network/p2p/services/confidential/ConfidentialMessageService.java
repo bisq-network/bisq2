@@ -76,6 +76,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final Optional<ResendMessageService> resendMessageService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<EnvelopePayloadMessage> processedEnvelopePayloadMessages = new HashSet<>();
+    private volatile boolean isShutdownInProgress;
 
     public ConfidentialMessageService(NodesById nodesById,
                                       KeyBundleService keyBundleService,
@@ -93,6 +94,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     public void shutdown() {
+        isShutdownInProgress = true;
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
         listeners.clear();
@@ -210,6 +212,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             log.info("We had detected that the peer is offline, but we succeeded to create a connection and send the message. receiverAddress={}", receiverAddress);
                         }
                     } catch (Exception exception) {
+                        if (isShutdownInProgress) {
+                            // We have stored in mailbox when shutdown started. The pending message can be ignored.
+                            altResult.set(new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED));
+                        }
                         if (countDownLatch.getCount() == 1) {
                             SendConfidentialMessageResult storeMailBoxMessageResult = storeInMailbox(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
                             log.info("Stored message to mailbox {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
@@ -220,7 +226,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         }
                     }
                 } catch (Exception exception) {
-                    log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline.get());
+                    if (!isShutdownInProgress) {
+                        log.info("Creating connection to {} failed. peerDetectedOffline={}", receiverAddress, peerDetectedOffline.get());
+                    }
                 }
                 if (countDownLatch.getCount() > 0) {
                     countDownLatch.countDown();
@@ -245,6 +253,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 throw new RuntimeException("Could not create connection. receiverAddress=" + receiverAddress);
             }
         } catch (Exception exception) {
+            if (isShutdownInProgress) {
+                // We have stored in mailbox when shutdown started. The pending message can be ignored.
+                return new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED);
+            }
             // If peer is detected offline, or we got a ConnectionException we store in mailbox
             ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
             result = storeInMailbox(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
@@ -301,6 +313,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                          Exception exception,
                                                          ConfidentialMessage confidentialMessage) {
         SendConfidentialMessageResult result;
+        if (isShutdownInProgress) {
+            log.warn("We started already the shutdown process when storeInMailbox is called and ignore that message. Message {}", envelopePayloadMessage);
+            return new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED);
+        }
         if (envelopePayloadMessage instanceof MailboxMessage) {
             log.info("Message could not be sent because of {}.\n" +
                     "We send the message as mailbox message.", exception.getMessage());

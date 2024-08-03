@@ -33,6 +33,7 @@ public class TorControlProtocol implements AutoCloseable {
     // MidReplyLine = StatusCode "-" ReplyLine
     // DataReplyLine = StatusCode "+" ReplyLine CmdData
     private final Pattern multiLineReplyPattern = Pattern.compile("^\\d+[-+].+");
+    private volatile boolean closeInProgress;
 
     public TorControlProtocol() {
         controlSocket = new Socket();
@@ -51,6 +52,7 @@ public class TorControlProtocol implements AutoCloseable {
 
     @Override
     public void close() {
+        closeInProgress = true;
         try {
             controlSocket.close();
         } catch (IOException e) {
@@ -182,7 +184,7 @@ public class TorControlProtocol implements AutoCloseable {
     public void removeHsDescEventListener(HsDescEventListener listener) {
         Set<String> previous = getEventTypesOfHsDescEventListeners();
         String newEventType = listener.getEventType().name();
-        if (!previous.contains(newEventType)) {
+        if (!previous.contains(newEventType) && !closeInProgress) {
             log.warn("Remove HsDescEventListener but did not have eventType in listeners. " +
                     "This could happen if removeHsDescEventListener was called without addHsDescEventListener before.");
         }
@@ -209,7 +211,11 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private void registerEvents(Set<String> events) {
-        log.info("registerEvents: {}", events);
+        if (events.isEmpty()) {
+            log.info("Clear registered Events");
+        } else {
+            log.info("Register events {}", events);
+        }
         var stringBuilder = new StringBuffer("SETEVENTS");
         events.forEach(event -> stringBuilder.append(" ").append(event));
         stringBuilder.append("\r\n");

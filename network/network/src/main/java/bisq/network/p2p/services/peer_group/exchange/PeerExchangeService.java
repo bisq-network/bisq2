@@ -30,7 +30,12 @@ import bisq.network.p2p.services.peer_group.Peer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -54,7 +59,7 @@ public class PeerExchangeService implements Node.Listener {
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private int peerExchangeDelaySec = 1;
-    private volatile boolean isStopped;
+    private volatile boolean isShutdownInProgress;
     private volatile boolean initialPeerExchangeCompleted;
     private Optional<Scheduler> peerExchangeScheduler = Optional.empty();
 
@@ -65,7 +70,7 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     public void shutdown() {
-        isStopped = true;
+        isShutdownInProgress = true;
         peerExchangeScheduler.ifPresent(Scheduler::stop);
         requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
         requestHandlerMap.clear();
@@ -122,7 +127,7 @@ public class PeerExchangeService implements Node.Listener {
 
     private void doPeerExchange(List<Address> candidates, int minSuccess) {
         checkArgument(minSuccess > 0, "minSuccess must be > 0");
-        if (isStopped) {
+        if (isShutdownInProgress) {
             return;
         }
 
@@ -144,6 +149,9 @@ public class PeerExchangeService implements Node.Listener {
                 .map(this::doPeerExchangeAsync)
                 .forEach(future -> {
                     future.whenComplete((nil, throwable) -> {
+                        if (isShutdownInProgress) {
+                            return;
+                        }
                         if (throwable == null) {
                             numSuccess.incrementAndGet();
                         } else {
@@ -218,7 +226,9 @@ public class PeerExchangeService implements Node.Listener {
                 log.info("Peer exchange with {} completed", peerAddress);
                 return null;
             } catch (Exception exception) {
-                log.info("Peer exchange with {} failed", peerAddress);
+                if (!isShutdownInProgress) {
+                    log.info("Peer exchange with {} failed", peerAddress);
+                }
                 if (connectionId != null) {
                     if (requestHandlerMap.containsKey(connectionId)) {
                         requestHandlerMap.get(connectionId).dispose();
