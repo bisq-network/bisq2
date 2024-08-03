@@ -154,7 +154,7 @@ public class BisqEasyOfferbookUtil {
             {
                 setCursor(Cursor.HAND);
                 numMessagesBadge.getStyleClass().add("market-badge");
-                numMessagesBadge.getLabel().setStyle("-fx-text-fill: -bisq-dark-grey-10 !important; -fx-font-family: \"IBM Plex Sans SemiBold\";");
+                numMessagesBadge.getLabel().setStyle("-fx-text-fill: -fx-dark-text-color !important; -fx-font-family: \"IBM Plex Sans SemiBold\";");
             }
 
             @Override

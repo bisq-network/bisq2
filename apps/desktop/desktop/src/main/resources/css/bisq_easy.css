@@ -145,7 +145,7 @@
 }
 
 .market-badge.bisq-badge .badge-pane {
-    -fx-background-color: -bisq-light-grey-50;
+    -fx-background-color: -bisq-mid-grey-30;
 }
 
 .offerbook-search-box {
