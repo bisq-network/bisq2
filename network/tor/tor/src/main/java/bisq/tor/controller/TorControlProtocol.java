@@ -27,7 +27,7 @@ public class TorControlProtocol implements AutoCloseable {
     private static final int MAX_CONNECTION_ATTEMPTS = 10;
 
     private final Socket controlSocket;
-    private final WhonixTorControlReader whonixTorControlReader;
+    private final TorControlReader torControlReader;
     private Optional<OutputStream> outputStream = Optional.empty();
 
     // MidReplyLine = StatusCode "-" ReplyLine
@@ -37,13 +37,13 @@ public class TorControlProtocol implements AutoCloseable {
 
     public TorControlProtocol() {
         controlSocket = new Socket();
-        whonixTorControlReader = new WhonixTorControlReader();
+        torControlReader = new TorControlReader();
     }
 
     public void initialize(int port) {
         try {
             connectToTor(port);
-            whonixTorControlReader.start(controlSocket.getInputStream());
+            torControlReader.start(controlSocket.getInputStream());
             outputStream = Optional.of(controlSocket.getOutputStream());
         } catch (IOException | InterruptedException e) {
             throw new CannotConnectWithTorException(e);
@@ -59,7 +59,7 @@ public class TorControlProtocol implements AutoCloseable {
             throw new RuntimeException(e);
         }
         try {
-            whonixTorControlReader.close();
+            torControlReader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -136,7 +136,7 @@ public class TorControlProtocol implements AutoCloseable {
 
     public void addBootstrapEventListener(BootstrapEventListener listener) {
         Set<String> previous = getEventTypesOfBootstrapEventListeners();
-        whonixTorControlReader.addBootstrapEventListener(listener);
+        torControlReader.addBootstrapEventListener(listener);
         String newEventType = listener.getEventType().name();
         // If our listener has a new eventType we register for that event
         if (!previous.contains(newEventType)) {
@@ -153,7 +153,7 @@ public class TorControlProtocol implements AutoCloseable {
             log.warn("Remove BootstrapEventListener but did not have eventType in listeners. " +
                     "This could happen if removeBootstrapEventListener was called without addBootstrapEventListener before.");
         }
-        whonixTorControlReader.removeBootstrapEventListener(listener);
+        torControlReader.removeBootstrapEventListener(listener);
         Set<String> current = getEventTypesOfBootstrapEventListeners();
         // If your listener was the only listener with that eventType we unregister for that event
         if (!current.contains(newEventType)) {
@@ -164,14 +164,14 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private Set<String> getEventTypesOfBootstrapEventListeners() {
-        return whonixTorControlReader.getBootstrapEventListeners().stream()
+        return torControlReader.getBootstrapEventListeners().stream()
                 .map(listener -> listener.getEventType().name())
                 .collect(Collectors.toSet());
     }
 
     public void addHsDescEventListener(HsDescEventListener listener) {
         Set<String> previous = getEventTypesOfHsDescEventListeners();
-        whonixTorControlReader.addHsDescEventListener(listener);
+        torControlReader.addHsDescEventListener(listener);
         String newEventType = listener.getEventType().name();
         // If our listener has a new eventType we register for that event
         if (!previous.contains(newEventType)) {
@@ -188,7 +188,7 @@ public class TorControlProtocol implements AutoCloseable {
             log.warn("Remove HsDescEventListener but did not have eventType in listeners. " +
                     "This could happen if removeHsDescEventListener was called without addHsDescEventListener before.");
         }
-        whonixTorControlReader.removeHsDescEventListener(listener);
+        torControlReader.removeHsDescEventListener(listener);
         Set<String> current = getEventTypesOfHsDescEventListeners();
         // If your listener was the only listener with that eventType we unregister for that event
         if (!current.contains(newEventType)) {
@@ -199,7 +199,7 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private Set<String> getEventTypesOfHsDescEventListeners() {
-        return whonixTorControlReader.getHsDescEventListeners().stream()
+        return torControlReader.getHsDescEventListeners().stream()
                 .map(listener -> listener.getEventType().name())
                 .collect(Collectors.toSet());
     }
@@ -269,7 +269,7 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private String tryReadNextReply() {
-        String reply = whonixTorControlReader.readLine();
+        String reply = torControlReader.readLine();
         if (reply.equals("510 Command filtered")) {
             throw new TorCommandFilteredException();
         }

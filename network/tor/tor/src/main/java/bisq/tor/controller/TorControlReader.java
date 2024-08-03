@@ -20,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
-public class WhonixTorControlReader implements AutoCloseable {
+public class TorControlReader implements AutoCloseable {
     private final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
     @Getter
     private final List<BootstrapEventListener> bootstrapEventListeners = new CopyOnWriteArrayList<>();
