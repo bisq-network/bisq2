@@ -73,6 +73,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -524,6 +525,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         return (BisqEasyOpenTradesController) controller;
     }
 
+    @ToString
     @Getter
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     static class ListItem implements DateTableItem {

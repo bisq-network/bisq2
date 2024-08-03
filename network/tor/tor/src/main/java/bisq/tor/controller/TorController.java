@@ -25,6 +25,7 @@ public class TorController {
     private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new ConcurrentHashMap<>();
     private final Map<String, OnionServiceOnlineStateService> onionServiceOnlineStateServiceMap = new ConcurrentHashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
+    private volatile boolean isShutdownInProgress;
 
     public TorController(int bootstrapTimeout, int hsUploadTimeout) {
         this.bootstrapTimeout = bootstrapTimeout;
@@ -40,6 +41,7 @@ public class TorController {
     }
 
     public void shutdown() {
+        isShutdownInProgress = true;
         bootstrapService.ifPresent(BootstrapService::shutdown);
         publishOnionAddressServiceMap.values().forEach(PublishOnionAddressService::shutdown);
         onionServiceOnlineStateServiceMap.values().forEach(OnionServiceOnlineStateService::shutdown);
@@ -47,6 +49,9 @@ public class TorController {
     }
 
     public void bootstrap() {
+        if (isShutdownInProgress) {
+            return;
+        }
         bootstrapAsync()
                 .exceptionally(throwable -> {
                     if (throwable instanceof TorBootstrapFailedException) {
@@ -72,10 +77,15 @@ public class TorController {
     }
 
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
+        if (isShutdownInProgress) {
+            return;
+        }
         publishAsync(torKeyPair, onionServicePort, localPort).join();
     }
 
-    public CompletableFuture<Void> publishAsync(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
+    public CompletableFuture<Void> publishAsync(TorKeyPair torKeyPair,
+                                                int onionServicePort,
+                                                int localPort) throws InterruptedException {
         String onionAddress = torKeyPair.getOnionAddress();
         if (publishOnionAddressServiceMap.containsKey(onionAddress) && publishOnionAddressServiceMap.get(onionAddress).getFuture().isPresent()) {
             return publishOnionAddressServiceMap.get(onionAddress).getFuture().get();
@@ -89,6 +99,9 @@ public class TorController {
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) {
+        if (isShutdownInProgress) {
+            return CompletableFuture.completedFuture(false);
+        }
         if (onionServiceOnlineStateServiceMap.containsKey(onionAddress) && onionServiceOnlineStateServiceMap.get(onionAddress).getFuture().isPresent()) {
             return onionServiceOnlineStateServiceMap.get(onionAddress).getFuture().get();
         }

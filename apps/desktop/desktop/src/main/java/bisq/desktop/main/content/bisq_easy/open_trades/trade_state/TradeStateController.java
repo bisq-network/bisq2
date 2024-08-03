@@ -32,7 +32,21 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState2a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState2b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState3a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState4;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerStateLightning3b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerStateOnchain3b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState1;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState2a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState2b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState3a;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState4;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerStateLightning3b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerStateOnchain3b;
 import bisq.i18n.Res;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.DontShowAgainService;
@@ -219,7 +233,11 @@ public class TradeStateController implements Controller {
                 .show();
     }
 
-    void doInterruptTrade() {
+    void onRejectPrice() {
+        doInterruptTrade();
+    }
+
+    private void doInterruptTrade() {
         BisqEasyTrade trade = model.getBisqEasyTrade().get();
         String encoded;
         BisqEasyOpenTradeChannel channel = model.getChannel().get();
@@ -243,12 +261,17 @@ public class TradeStateController implements Controller {
     void onCloseTrade() {
         new Popup().warning(Res.get("bisqEasy.openTrades.closeTrade.warning.interrupted"))
                 .actionButtonText(Res.get("confirmation.yes"))
-                .onAction(() -> {
-                    bisqEasyTradeService.removeTrade(model.getBisqEasyTrade().get());
-                    leavePrivateChatManager.leaveChannel(model.getChannel().get());
-                })
+                .onAction(this::doCloseTrade)
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
+    }
+
+    private void doCloseTrade() {
+        // We need to pin the chatChannel to close as the one in the model would get updated after
+        // bisqEasyTradeService.removeTrade, and then we would close the wrong channel.
+        BisqEasyOpenTradeChannel chatChannel = model.getChannel().get();
+        bisqEasyTradeService.removeTrade(model.getBisqEasyTrade().get());
+        leavePrivateChatManager.leaveChannel(chatChannel);
     }
 
     void onExportTrade() {

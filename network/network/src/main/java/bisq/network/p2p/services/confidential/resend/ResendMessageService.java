@@ -33,7 +33,13 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -130,22 +136,23 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void handleResendMessageData(ResendMessageData resendMessageData) {
+    public void registerResendMessageData(ResendMessageData resendMessageData) {
         if (isShutdown) {
             return;
         }
         MessageDeliveryStatus messageDeliveryStatus = resendMessageData.getMessageDeliveryStatus();
         String messageId = resendMessageData.getId();
+        Map<String, ResendMessageData> resendMessageDataByMessageId = persistableStore.getResendMessageDataByMessageId();
         switch (messageDeliveryStatus) {
             case CONNECTING:
             case SENT:
             case TRY_ADD_TO_MAILBOX:
-                persistableStore.getResendMessageDataByMessageId().put(messageId, resendMessageData);
+                resendMessageDataByMessageId.put(messageId, resendMessageData);
                 persist();
                 restartResendTimer(resendMessageData, RESEND_INTERVAL);
                 break;
             case FAILED:
-                persistableStore.getResendMessageDataByMessageId().put(messageId, resendMessageData);
+                resendMessageDataByMessageId.put(messageId, resendMessageData);
                 persist();
                 restartResendTimer(resendMessageData, TimeUnit.SECONDS.toMillis(15));
                 break;
@@ -154,7 +161,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
             case ACK_RECEIVED:
             case ADDED_TO_MAILBOX:
             case MAILBOX_MSG_RECEIVED:
-                persistableStore.getResendMessageDataByMessageId().remove(messageId);
+                resendMessageDataByMessageId.remove(messageId);
                 persistableStore.getNumResendsByMessageId().remove(messageId);
                 if (messageDeliveryStatusPinByMessageId.containsKey(messageId)) {
                     messageDeliveryStatusPinByMessageId.get(messageId).unbind();
@@ -181,6 +188,12 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                 findResendMessageData(messageId).isPresent();
     }
 
+    public Set<ResendMessageData> getPendingResendMessageDataSet() {
+        return persistableStore.getResendMessageDataByMessageId().values().stream()
+                .filter(e -> e.getMessageDeliveryStatus().isPending())
+                .collect(Collectors.toSet());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -205,7 +218,8 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                 senderNetworkIdWithKeyPair);
     }
 
-    private void handleMessageDeliveryStatusUpdate(String messageId, Observable<MessageDeliveryStatus> messageDeliveryStatus) {
+    private void handleMessageDeliveryStatusUpdate(String messageId,
+                                                   Observable<MessageDeliveryStatus> messageDeliveryStatus) {
         findResendMessageData(messageId).ifPresent(resendMessageData -> {
             Optional.ofNullable(messageDeliveryStatusPinByMessageId.get(messageId)).ifPresent(Pin::unbind);
             Pin pin = messageDeliveryStatus.addObserver(status -> {

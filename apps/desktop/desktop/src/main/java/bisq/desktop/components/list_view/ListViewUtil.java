@@ -59,7 +59,6 @@ public class ListViewUtil {
                                                AtomicInteger numRecursions,
                                                AtomicInteger delay) {
         UIScheduler.run(() -> {
-            log.error("delayedScrollbarLookup {} {}", numRecursions, delay);
             Optional<ScrollBar> scrollbar = findScrollbar(listView, orientation);
             if (scrollbar.isPresent()) {
                 future.complete(scrollbar);

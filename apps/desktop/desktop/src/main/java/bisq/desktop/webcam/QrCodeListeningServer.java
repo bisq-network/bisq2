@@ -68,13 +68,13 @@ public class QrCodeListeningServer {
     }
 
     public void stopServer() {
-        log.info("stopServer");
         if (isStopped) {
             return;
         }
 
         isStopped = true;
         serverSocket.ifPresent(serverSocket -> {
+            log.info("stopServer");
             try {
                 serverSocket.close();
             } catch (IOException ignore) {

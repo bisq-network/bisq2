@@ -25,9 +25,11 @@ import bisq.common.application.Service;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageData;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
@@ -44,8 +46,12 @@ import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 @Slf4j
 @Getter
@@ -143,6 +149,7 @@ public class BisqEasyService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         if (difficultyAdjustmentFactorPin != null) {
             difficultyAdjustmentFactorPin.unbind();
             ignoreDiffAdjustmentFromSecManagerPin.unbind();
@@ -152,7 +159,9 @@ public class BisqEasyService implements Service {
             mostRecentMinRequiredReputationScoreOrDefaultPin.unbind();
             selectedMarketPin.unbind();
         }
-        return bisqEasyNotificationsService.shutdown();
+
+        return getStorePendingMessagesInMailboxFuture()
+                .thenCompose(e -> bisqEasyNotificationsService.shutdown());
     }
 
     public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {
@@ -165,6 +174,43 @@ public class BisqEasyService implements Service {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted"));
         }
         return userIdentityService.deleteUserIdentity(userIdentity);
+    }
+
+
+    // At shutdown, we store all pending messages (CONNECT, SENT or TRY_ADD_TO_MAILBOX state) in the mailbox.
+    // We wait until all broadcast futures are completed or timeout if it takes longer as expected.
+    private CompletableFuture<Boolean> getStorePendingMessagesInMailboxFuture() {
+        return CompletableFutureUtils.allOf(getStorePendingMessagesInMailboxFutures())
+                .orTimeout(20, TimeUnit.SECONDS)
+                .handle((broadcastResultList, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("flushPendingMessagesToMailboxAtShutdown failed", throwable);
+                        return false;
+                    } else {
+                        log.info("All broadcast futures at getStorePendingMessagesInMailboxFuture completed. broadcastResultList={}", broadcastResultList);
+                        try {
+                            // We delay a bit before continuing shutdown process. Usually we only have 1 pending message...
+                            Thread.sleep(100 + broadcastResultList.size() * 500L);
+                        } catch (InterruptedException ignore) {
+                        }
+                        return true;
+                    }
+                });
+    }
+
+    private Stream<CompletableFuture<bisq.network.p2p.services.data.broadcast.BroadcastResult>> getStorePendingMessagesInMailboxFutures() {
+        Set<ResendMessageData> pendingResendMessageDataSet = networkService.getPendingResendMessageDataSet();
+        return networkService.getConfidentialMessageServices().stream()
+                .flatMap(confidentialMessageService ->
+                        pendingResendMessageDataSet.stream()
+                                .flatMap(resendMessageData ->
+                                        userIdentityService.findUserIdentity(resendMessageData.getSenderNetworkId().getId())
+                                                .map(userIdentity -> userIdentity.getNetworkIdWithKeyPair().getKeyPair())
+                                                .flatMap(senderKeyPair -> confidentialMessageService.flushPendingMessagesToMailboxAtShutdown(resendMessageData, senderKeyPair)).stream()
+                                )
+                )
+                .flatMap(sendConfidentialMessageResult -> sendConfidentialMessageResult.getMailboxFuture().stream())
+                .flatMap(Collection::stream);
     }
 
     private void applyDifficultyAdjustmentFactor() {

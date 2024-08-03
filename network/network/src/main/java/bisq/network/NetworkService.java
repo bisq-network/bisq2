@@ -71,6 +71,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -78,6 +79,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static bisq.network.common.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.Listener;
@@ -278,7 +280,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
             AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
             messageDeliveryStatusService.ifPresent(statusService ->
                     statusService.onMessageSentStatus(ackRequestingMessage.getId(), MessageDeliveryStatus.CONNECTING));
-            resendMessageService.ifPresent(resendService -> resendService.handleResendMessageData(new ResendMessageData(ackRequestingMessage,
+            resendMessageService.ifPresent(resendService -> resendService.registerResendMessageData(new ResendMessageData(ackRequestingMessage,
                     receiverNetworkId,
                     senderKeyPair,
                     senderNetworkId,
@@ -492,5 +494,21 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                                                        AddressByTransportTypeMap peer) {
         return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer),
                 NETWORK_IO_POOL);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Expose pending ResendMessageData and ConfidentialMessageService for higher level services
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Set<ResendMessageData> getPendingResendMessageDataSet() {
+        return resendMessageService.map(ResendMessageService::getPendingResendMessageDataSet).orElse(new HashSet<>());
+    }
+
+    public Set<ConfidentialMessageService> getConfidentialMessageServices() {
+        return serviceNodesByTransport.getAllServices().stream()
+                .filter(serviceNode -> serviceNode.getConfidentialMessageService().isPresent())
+                .map(serviceNode -> serviceNode.getConfidentialMessageService().get())
+                .collect(Collectors.toSet());
     }
 }
