@@ -81,10 +81,6 @@ public class UserProfileDisplay extends HBox {
         applyTooltip();
     }
 
-    public void setLastSeenAsString(String lastSeen) {
-        userProfileIcon.setLastSeenAsString(lastSeen);
-        applyTooltip();
-    }
 
     public void setLastSeen(long lastSeen) {
         userProfileIcon.setLastLivenessSignal(lastSeen);

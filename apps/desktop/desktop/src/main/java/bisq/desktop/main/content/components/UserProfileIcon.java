@@ -65,11 +65,6 @@ public class UserProfileIcon extends StackPane {
         setUserProfile(userProfile);
     }
 
-    public void setLastSeenAsString(@Nullable String lastSeenAsString) {
-        livenessIndicator.setLastLivenessSignalAsString(lastSeenAsString);
-        applyTooltipText();
-    }
-
     public void setUserProfile(@Nullable UserProfile userProfile) {
         this.userProfile = userProfile;
         if (userProfile != null) {
@@ -127,5 +122,4 @@ public class UserProfileIcon extends StackPane {
     public void setLastLivenessSignal(long lastLivenessSignal) {
         livenessIndicator.setLastLivenessSignal(lastLivenessSignal);
     }
-
 }
