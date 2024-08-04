@@ -20,7 +20,6 @@ package bisq.desktop.main.content.components;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
-import bisq.user.RepublishUserProfileService;
 import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -31,7 +30,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_ICON_SIZE;
 
@@ -39,41 +37,36 @@ import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_IC
 public class UserProfileIcon extends StackPane {
     @Getter
     private final BisqTooltip tooltip = new BisqTooltip();
-    @Nullable
-    private String lastSeenAsString;
+    private final LivenessIndicator livenessIndicator;
     @Nullable
     @Getter
     private String tooltipText;
     @Nullable
     private UserProfile userProfile;
     private final ImageView userProfileIcon = new ImageView();
-    private final ImageView lastSeenDot = new ImageView();
-    private double size;
-    private long lastSeen;
 
     public UserProfileIcon() {
         this(DEFAULT_ICON_SIZE);
     }
 
     public UserProfileIcon(double size) {
+        livenessIndicator = new LivenessIndicator();
+
         setAlignment(Pos.CENTER);
-        getChildren().addAll(userProfileIcon, lastSeenDot);
+        getChildren().addAll(userProfileIcon, livenessIndicator);
         setSize(size);
     }
 
-    public void applyData(@Nullable UserProfile userProfile, @Nullable String lastSeenAsString, long lastSeen) {
-        this.lastSeenAsString = lastSeenAsString;
-        setLastSeen(lastSeen);
+    public void applyData(@Nullable UserProfile userProfile,
+                          @Nullable String lastLivenessSignalAsString,
+                          long lastLivenessSignal) {
+        livenessIndicator.setLastLivenessSignal(lastLivenessSignal);
+        livenessIndicator.setLastLivenessSignalAsString(lastLivenessSignalAsString);
         setUserProfile(userProfile);
     }
 
-    public void setLastSeen(long lastSeen) {
-        this.lastSeen = lastSeen;
-        updateLastSeenDot();
-    }
-
     public void setLastSeenAsString(@Nullable String lastSeenAsString) {
-        this.lastSeenAsString = lastSeenAsString;
+        livenessIndicator.setLastLivenessSignalAsString(lastSeenAsString);
         applyTooltipText();
     }
 
@@ -94,49 +87,27 @@ public class UserProfileIcon extends StackPane {
         if (tooltip != null) {
             Tooltip.uninstall(this, tooltip);
         }
+        livenessIndicator.dispose();
     }
 
     public void setSize(double size) {
-        this.size = size;
+        livenessIndicator.setSize(size);
         userProfileIcon.setFitWidth(size);
         userProfileIcon.setFitHeight(size);
-        updateLastSeenDot();
 
         // We want to keep it centered, so we apply it to both sides with inverted numbers
-        double adjustMent = size * 0.9;
-        double right = -adjustMent / 2;
-        double bottom = -adjustMent / 2;
-        double top = adjustMent / 2;
-        double left = adjustMent / 2;
-        StackPane.setMargin(lastSeenDot, new Insets(top, right, bottom, left));
-    }
-
-    public void hideLastSeenDot() {
-        lastSeenDot.setVisible(false);
-        lastSeenDot.setManaged(false);
-    }
-
-    private void updateLastSeenDot() {
-        boolean wasActiveRecently = lastSeen > 0 && lastSeen < TimeUnit.HOURS.toMillis(1);
-        String color;
-        if (wasActiveRecently) {
-            boolean wasActive = lastSeen < RepublishUserProfileService.MIN_PAUSE_TO_NEXT_REPUBLISH * 2;
-            if (wasActive) {
-                color = "green";
-            } else {
-                color = "yellow";
-            }
-        } else {
-            color = "grey";
-        }
-        String sizePostFix = size < 60 ? "-small-dot" : "-dot";
-        String id = color + sizePostFix;
-        lastSeenDot.setId(id);
+        double adjustment = size * 0.9;
+        double right = -adjustment / 2;
+        double bottom = -adjustment / 2;
+        double top = adjustment / 2;
+        double left = adjustment / 2;
+        StackPane.setMargin(livenessIndicator, new Insets(top, right, bottom, left));
     }
 
     private void applyTooltipText() {
         if (userProfile != null && tooltip != null) {
             String tooltipString = userProfile.getTooltipString();
+            String lastSeenAsString = livenessIndicator.getLastLivenessSignalAsString();
             String lastSeenString = lastSeenAsString != null ? "\n" + Res.get("user.userProfile.lastSeenAgo", lastSeenAsString) : "";
             String version = userProfile.getApplicationVersion();
             if (version.isEmpty()) {
@@ -147,4 +118,14 @@ public class UserProfileIcon extends StackPane {
             tooltip.setText(tooltipText);
         }
     }
+
+    // Delegate livenessIndicator
+    public void hideLivenessIndicator() {
+        livenessIndicator.hide();
+    }
+
+    public void setLastLivenessSignal(long lastLivenessSignal) {
+        livenessIndicator.setLastLivenessSignal(lastLivenessSignal);
+    }
+
 }

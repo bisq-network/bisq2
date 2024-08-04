@@ -168,7 +168,7 @@ public class ReactionUsersPopup extends PopupControl {
 
                         if (item != null && !empty) {
                             userProfileIcon.setUserProfile(item);
-                            userProfileIcon.hideLastSeenDot();
+                            userProfileIcon.hideLivenessIndicator();
                             userNickname.setText(StringUtils.truncate(item.getNickName(), 15));
                             hBox.getChildren().setAll(userProfileIcon, userNickname);
                             setGraphic(hBox);

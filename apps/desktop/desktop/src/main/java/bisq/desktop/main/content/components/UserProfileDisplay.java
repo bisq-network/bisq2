@@ -87,7 +87,7 @@ public class UserProfileDisplay extends HBox {
     }
 
     public void setLastSeen(long lastSeen) {
-        userProfileIcon.setLastSeen(lastSeen);
+        userProfileIcon.setLastLivenessSignal(lastSeen);
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile) {
