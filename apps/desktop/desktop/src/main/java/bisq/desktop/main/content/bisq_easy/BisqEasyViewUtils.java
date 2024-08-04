@@ -19,14 +19,22 @@ package bisq.desktop.main.content.bisq_easy;
 
 import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.utils.ImageUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import java.util.Random;
+
 public class BisqEasyViewUtils {
+    private static final String[] customPaymentIconIds = {"CUSTOM_PAYMENT_1", "CUSTOM_PAYMENT_2", "CUSTOM_PAYMENT_3"};
+    private static final Random random = new Random();
+
     public static Triple<Label, HBox, VBox> getContainer(String headline, Node content) {
         Label headlineLabel = new Label(headline);
         headlineLabel.getStyleClass().add("bisq-easy-container-headline");
@@ -42,5 +50,19 @@ public class BisqEasyViewUtils {
         vBox.setMinHeight(167);
 
         return new Triple<>(headlineLabel, header, vBox);
+    }
+
+    public static StackPane getCustomPaymentMethodIcon(String customPaymentMethod) {
+        char initial = customPaymentMethod.charAt(0);
+
+        Label initialLabel = new Label(String.valueOf(initial));
+        initialLabel.getStyleClass().add("bisq-easy-custom-payment-icon");
+
+        int iconIndex = random.nextInt(customPaymentIconIds.length);
+        ImageView customPaymentIcon = ImageUtil.getImageViewById(customPaymentIconIds[iconIndex]);
+
+        StackPane stackPane = new StackPane(customPaymentIcon, initialLabel);
+        stackPane.setAlignment(Pos.CENTER);
+        return stackPane;
     }
 }

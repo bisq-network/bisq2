@@ -611,6 +611,18 @@
     -fx-image: url("/images/payment/cashapp-.png");
 }
 
+#CUSTOM_PAYMENT_1 {
+    -fx-image: url("/images/payment/custom-payment-1.png");
+}
+
+#CUSTOM_PAYMENT_2 {
+    -fx-image: url("/images/payment/custom-payment-2.png");
+}
+
+#CUSTOM_PAYMENT_3 {
+    -fx-image: url("/images/payment/custom-payment-3.png");
+}
+
 #add-custom-green {
     -fx-image: url("/images/payment/add-custom-green.png");
 }
