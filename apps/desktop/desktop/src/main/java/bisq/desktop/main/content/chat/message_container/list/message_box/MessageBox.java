@@ -22,5 +22,5 @@ import javafx.scene.layout.VBox;
 public abstract class MessageBox extends VBox {
     protected final static double CHAT_BOX_MAX_WIDTH = 1160;
 
-    public abstract void cleanup();
+    public abstract void dispose();
 }

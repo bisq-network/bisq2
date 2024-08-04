@@ -131,8 +131,8 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    public void cleanup() {
-        super.cleanup();
+    public void dispose() {
+        super.dispose();
 
         message.maxWidthProperty().unbind();
 

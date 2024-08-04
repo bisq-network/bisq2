@@ -179,7 +179,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     @Override
-    public void cleanup() {
+    public void dispose() {
         setOnMouseEntered(null);
         setOnMouseExited(null);
 

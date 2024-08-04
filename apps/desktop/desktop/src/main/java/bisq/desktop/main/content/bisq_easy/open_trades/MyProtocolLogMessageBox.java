@@ -62,7 +62,7 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
     }
 
     @Override
-    public void cleanup() {
+    public void dispose() {
         shouldShowTryAgainPin.unsubscribe();
         messageDeliveryStatusNodePin.unsubscribe();
     }

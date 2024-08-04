@@ -68,6 +68,6 @@ public class PeerProtocolLogMessageBox extends MessageBox {
     }
 
     @Override
-    public void cleanup() {
+    public void dispose() {
     }
 }

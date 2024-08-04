@@ -22,7 +22,13 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.*;
+import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.MyOfferMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.MyTextMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.PeerLeftMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.PeerOfferMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.PeerTextMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.TradePeerLefMessageBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -86,7 +92,7 @@ final class ChatMessageListCellFactory
 
             private void cleanup() {
                 if (messageBox != null) {
-                    messageBox.cleanup();
+                    messageBox.dispose();
                 }
 
                 if (listWidthPropertyPin != null) {
