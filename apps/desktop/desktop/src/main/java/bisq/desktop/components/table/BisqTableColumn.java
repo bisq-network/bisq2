@@ -26,7 +26,13 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBase;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.Getter;
@@ -106,8 +112,12 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                 titleProperty.ifPresent(tableColumn::applyTitleProperty);
             }
             tableColumn.isVisibleFunction = isVisibleFunction;
+
             minWidth.ifPresent(tableColumn::setMinWidth);
+            // We set prefWidth to the minWidth
+            minWidth.ifPresent(tableColumn::setPrefWidth);
             maxWidth.ifPresent(tableColumn::setMaxWidth);
+
             tableColumn.value = value;
             tableColumn.valueSupplier = valueSupplier;
             tableColumn.tooltipSupplier = tooltipSupplier;
