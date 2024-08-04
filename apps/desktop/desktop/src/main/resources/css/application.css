@@ -310,10 +310,31 @@
  * QR code                                                              *
  ******************************************************************************/
 
-.qr-code-display {
+.qr-code-display-bg {
+    -fx-background-color: white;
+}
+
+.qr-code-display-text {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
-    -fx-background-color: white;
+    -fx-font-size: 1.1em;
+}
+
+.qr-code-window {
+    -fx-background-color: -bisq-popup-bg-grey;
+}
+
+.qr-code-window-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.7em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.qr-code-window-data {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.1em;
 }
 
