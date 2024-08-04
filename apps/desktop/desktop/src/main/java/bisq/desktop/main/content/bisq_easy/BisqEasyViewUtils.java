@@ -31,11 +31,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.math.BigInteger;
-import java.util.Random;
 
 public class BisqEasyViewUtils {
-    private static final String[] customPaymentIconIds = {"CUSTOM_PAYMENT_1", "CUSTOM_PAYMENT_2", "CUSTOM_PAYMENT_3"};
-    private static final Random random = new Random();
+    private static final String[] customPaymentIconIds = {
+            "CUSTOM_PAYMENT_1", "CUSTOM_PAYMENT_2", "CUSTOM_PAYMENT_3",
+            "CUSTOM_PAYMENT_4", "CUSTOM_PAYMENT_5", "CUSTOM_PAYMENT_6"};
 
     public static Triple<Label, HBox, VBox> getContainer(String headline, Node content) {
         Label headlineLabel = new Label(headline);

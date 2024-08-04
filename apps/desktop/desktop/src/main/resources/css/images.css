@@ -623,6 +623,18 @@
     -fx-image: url("/images/payment/custom-payment-3.png");
 }
 
+#CUSTOM_PAYMENT_4 {
+    -fx-image: url("/images/payment/custom-payment-4.png");
+}
+
+#CUSTOM_PAYMENT_5 {
+    -fx-image: url("/images/payment/custom-payment-5.png");
+}
+
+#CUSTOM_PAYMENT_6 {
+    -fx-image: url("/images/payment/custom-payment-6.png");
+}
+
 #add-custom-green {
     -fx-image: url("/images/payment/add-custom-green.png");
 }
