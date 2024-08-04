@@ -228,7 +228,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         userProfileIcon.setOnMouseClicked(null);
 
         editInputField.setOnKeyPressed(null);
-        userProfileIcon.releaseResources();
+        userProfileIcon.dispose();
 
         if (shouldShowTryAgainPin != null) {
             shouldShowTryAgainPin.unsubscribe();

@@ -73,11 +73,11 @@ public class UserProfileIcon extends StackPane {
             Tooltip.install(this, tooltip);
             userProfileIcon.setImage(CatHash.getImage(userProfile));
         } else {
-            releaseResources();
+            dispose();
         }
     }
 
-    public void releaseResources() {
+    public void dispose() {
         userProfileIcon.setImage(null);
         if (tooltip != null) {
             Tooltip.uninstall(this, tooltip);

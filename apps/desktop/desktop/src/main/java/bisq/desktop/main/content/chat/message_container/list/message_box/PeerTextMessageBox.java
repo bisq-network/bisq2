@@ -145,7 +145,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         ignoreUserMenuItem.setOnAction(null);
         reportUserMenuItem.setOnAction(null);
 
-        userProfileIcon.releaseResources();
+        userProfileIcon.dispose();
 
         isMenuShowingPin.unsubscribe();
     }
