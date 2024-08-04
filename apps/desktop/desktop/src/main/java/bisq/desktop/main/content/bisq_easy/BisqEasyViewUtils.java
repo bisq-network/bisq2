@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy;
 import bisq.common.data.Triple;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.security.DigestUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -29,6 +30,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import java.math.BigInteger;
 import java.util.Random;
 
 public class BisqEasyViewUtils {
@@ -58,7 +60,8 @@ public class BisqEasyViewUtils {
         Label initialLabel = new Label(String.valueOf(initial));
         initialLabel.getStyleClass().add("bisq-easy-custom-payment-icon");
 
-        int iconIndex = random.nextInt(customPaymentIconIds.length);
+        int deterministicInt = Math.abs(new BigInteger(DigestUtil.sha256(customPaymentMethod.getBytes())).intValue());
+        int iconIndex = deterministicInt % customPaymentIconIds.length;
         ImageView customPaymentIcon = ImageUtil.getImageViewById(customPaymentIconIds[iconIndex]);
 
         StackPane stackPane = new StackPane(customPaymentIcon, initialLabel);
