@@ -17,6 +17,8 @@
 
 package bisq.desktop.components.table;
 
+import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
@@ -44,7 +46,9 @@ import java.util.Optional;
 public class BisqTableView<T> extends TableView<T> {
     private final static double TABLE_HEADER_HEIGHT = 36;
     private final static double TABLE_ROW_HEIGHT = 54;
-    private final static double TABLE_SCROLLBAR_HEIGHT = 16;
+    private final static double TABLE_H_SCROLLBAR_HEIGHT = 16;
+    private final static double TABLE_V_SCROLLBAR_WIDTH = 16;
+
     @Getter
     private final SortedList<T> sortedList;
     private ListChangeListener<T> listChangeListener;
@@ -53,6 +57,13 @@ public class BisqTableView<T> extends TableView<T> {
     // If set we use the sum of the minWidth values of all visible columns to set the minWidth of the tableView.
     @Setter
     private boolean deriveMinWidthFromColumns = true;
+
+    @Getter
+    private final Observable<ScrollBar> horizontalScrollbar = new Observable<>();
+    @Getter
+    private final Observable<ScrollBar> verticalScrollbar = new Observable<>();
+    private Subscription verticalScrollbarVisiblePin;
+    private Pin verticalScrollbarPin;
 
     public BisqTableView(ObservableList<T> list) {
         this(new SortedList<>(list));
@@ -84,10 +95,25 @@ public class BisqTableView<T> extends TableView<T> {
             sortedList.comparatorProperty().bind(this.comparatorProperty());
 
             if (deriveMinWidthFromColumns) {
-                setMinWidth(getColumns().stream()
-                        .filter(TableColumnBase::isVisible)
-                        .mapToDouble(TableColumnBase::getMinWidth)
-                        .sum());
+                adjustMinWidth();
+
+                if (verticalScrollbarPin != null) {
+                    verticalScrollbarPin.unbind();
+                }
+                verticalScrollbarPin = verticalScrollbar.addObserver(scrollBar -> {
+                    if (scrollBar != null) {
+                        UIThread.run(() -> {
+                            if (verticalScrollbarVisiblePin != null) {
+                                verticalScrollbarVisiblePin.unsubscribe();
+                            }
+                            verticalScrollbarVisiblePin = EasyBind.subscribe(scrollBar.visibleProperty(), scrollBarVisible -> {
+                                if (scrollBarVisible != null) {
+                                    adjustMinWidth();
+                                }
+                            });
+                        });
+                    }
+                });
             }
         }
     }
@@ -97,6 +123,8 @@ public class BisqTableView<T> extends TableView<T> {
             sortedList.comparatorProperty().unbind();
         }
         removeListeners();
+        horizontalScrollbar.set(null);
+        verticalScrollbar.set(null);
     }
 
     public void setPlaceholderText(String placeHolderText) {
@@ -113,7 +141,7 @@ public class BisqTableView<T> extends TableView<T> {
     }
 
     public void adjustHeightToNumRows(int maxNumItems) {
-        adjustHeightToNumRows(TABLE_SCROLLBAR_HEIGHT, TABLE_HEADER_HEIGHT, TABLE_ROW_HEIGHT, maxNumItems);
+        adjustHeightToNumRows(TABLE_H_SCROLLBAR_HEIGHT, TABLE_HEADER_HEIGHT, TABLE_ROW_HEIGHT, maxNumItems);
     }
 
     public void adjustHeightToNumRows(double scrollbarHeight, double headerHeight, double rowHeight, int maxNumItems) {
@@ -159,6 +187,24 @@ public class BisqTableView<T> extends TableView<T> {
             widthProperty().removeListener(widthChangeListener);
             widthChangeListener = null;
         }
+        if (verticalScrollbarPin != null) {
+            verticalScrollbarPin.unbind();
+        }
+        if (verticalScrollbarVisiblePin != null) {
+            verticalScrollbarVisiblePin.unsubscribe();
+        }
+    }
+
+    private void adjustMinWidth() {
+        double sumOfColumns = getColumns().stream()
+                .filter(TableColumnBase::isVisible)
+                .mapToDouble(TableColumnBase::getMinWidth)
+                .sum();
+        double scrollbarWidth = findScrollbar(this, Orientation.VERTICAL)
+                .filter(Node::isVisible)
+                .map(s -> TABLE_V_SCROLLBAR_WIDTH)
+                .orElse(0d);
+        setMinWidth(sumOfColumns + scrollbarWidth);
     }
 
     private void adjustHeight(double scrollbarHeight, double headerHeight, double rowHeight, int maxNumItems) {
@@ -211,12 +257,25 @@ public class BisqTableView<T> extends TableView<T> {
         };
     }
 
-    public static Optional<ScrollBar> findScrollbar(TableView<?> tableView, Orientation orientation) {
-        return tableView.lookupAll(".scroll-bar").stream()
+    public static Optional<ScrollBar> findScrollbar(BisqTableView<?> tableView, Orientation orientation) {
+        Observable<ScrollBar> cachedScrollbar = orientation == Orientation.HORIZONTAL
+                ? tableView.getHorizontalScrollbar()
+                : tableView.getVerticalScrollbar();
+        if (cachedScrollbar.get() != null) {
+            return Optional.of(cachedScrollbar.get());
+        }
+
+        Optional<ScrollBar> scrollbar = tableView.lookupAll(".scroll-bar").stream()
                 .filter(node -> node instanceof ScrollBar)
                 .map(node -> (ScrollBar) node)
                 .filter(scrollBar -> scrollBar.getOrientation().equals(orientation))
                 .filter(Node::isVisible)
                 .findAny();
+        scrollbar.ifPresent(cachedScrollbar::set);
+
+        // Must be mapped to another render frame otherwise we would get a recursion!
+        UIThread.runOnNextRenderFrame(tableView::adjustMinWidth);
+
+        return scrollbar;
     }
 }

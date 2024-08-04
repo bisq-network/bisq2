@@ -21,9 +21,6 @@ public class ListViewUtil {
                     // and cause an IllegalAccessError on Apple Silicon macs.
                     // VirtualScrollBar inherits from ScrollBar which is in the 
                     // accessible `javafx.scene.control package`.
-                    // We still wrap it with an exception handler as it is not tested yet with 
-                    // Apple Silicon macs.
-                    // See https://github.com/bisq-network/bisq2/issues/1697
                     try {
                         return node instanceof ScrollBar;
                     } catch (IllegalAccessError e) {

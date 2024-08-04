@@ -369,12 +369,14 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .valueSupplier(ListItem::getPriceString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .fixWidth(30)
+                .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
+                .minWidth(45)
                 .comparator(Comparator.comparing(ListItem::getFiatPaymentMethod))
                 .setCellFactory(getPaymentMethodCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .fixWidth(30)
+                .title(Res.get("bisqEasy.openTrades.table.settlementMethod"))
+                .minWidth(45)
                 .comparator(Comparator.comparing(ListItem::getBitcoinSettlementMethod))
                 .setCellFactory(getSettlementMethodCellFactory())
                 .build());
@@ -484,9 +486,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 if (item != null && !empty) {
                     Node paymentMethodIcon = !item.isFiatPaymentMethodCustom()
                             ? ImageUtil.getImageViewById(item.getFiatPaymentRail().name())
-                            : BisqEasyViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod().toUpperCase());
+                            : BisqEasyViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod());
                     StackPane pane = new StackPane(paymentMethodIcon);
-                    pane.setAlignment(Pos.CENTER_RIGHT);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.paymentMethod.tooltip",
                             item.getFiatPaymentMethod()));
                     Tooltip.install(pane, tooltip);
@@ -513,7 +514,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 if (item != null && !empty) {
                     ImageView icon = ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name());
                     StackPane pane = new StackPane(icon);
-                    pane.setAlignment(Pos.CENTER_LEFT);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.settlementMethod.tooltip",
                             item.getBitcoinSettlementMethod()));
                     Tooltip.install(pane, tooltip);

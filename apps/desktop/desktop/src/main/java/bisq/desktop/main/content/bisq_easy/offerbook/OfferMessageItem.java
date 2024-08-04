@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.data.Pair;
@@ -36,6 +37,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import com.google.common.base.Joiner;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.EqualsAndHashCode;
@@ -44,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -55,15 +58,12 @@ public class OfferMessageItem {
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
     private final UserProfile userProfile;
-    private final String userNickname;
+    private final String userNickname, minMaxAmountAsString, lastSeenAsString, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
     private final Pair<Monetary, Monetary> minMaxAmount;
-    private final String minMaxAmountAsString;
     private final long lastSeen;
-    private final String lastSeenAsString;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
-    private final String bitcoinPaymentMethodsAsString;
     private long totalScore;
     private double priceSpecAsPercent;
     private Pin marketPriceByCurrencyMapPin, reputationChangedPin;
@@ -80,7 +80,8 @@ public class OfferMessageItem {
         this.marketPriceService = marketPriceService;
         fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
         bitcoinPaymentMethods = retrieveAndSortBitcoinPaymentMethods();
-        bitcoinPaymentMethodsAsString = createBitcoinPaymentMethodsAsString();
+        fiatPaymentMethodsAsString = Joiner.on(", ").join(fiatPaymentMethods.stream().map(PaymentMethod::getDisplayString).collect(Collectors.toList()));
+        bitcoinPaymentMethodsAsString = Joiner.on(", ").join(bitcoinPaymentMethods.stream().map(PaymentMethod::getDisplayString).collect(Collectors.toList()));
         userNickname = userProfile.getNickName();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
@@ -141,14 +142,5 @@ public class OfferMessageItem {
                 PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
         paymentMethods.sort(Comparator.comparing(BitcoinPaymentMethod::getDisplayString).reversed());
         return paymentMethods;
-    }
-
-    private String createBitcoinPaymentMethodsAsString() {
-        StringBuilder builder = new StringBuilder();
-        for (BitcoinPaymentMethod bitcoinPaymentMethod : bitcoinPaymentMethods) {
-            builder.append(bitcoinPaymentMethod.getDisplayString());
-            builder.append(", ");
-        }
-        return builder.toString();
     }
 }

@@ -22,7 +22,11 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.*;
+import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownTitleMenuItem;
+import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
@@ -38,7 +42,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -659,7 +666,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .fixWidth(170)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageUserProfileCellFactory())
                 .comparator(userProfileComparator)
-                .isSortable(true)
                 .build();
 
         BisqTableColumn<OfferMessageItem> priceTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
@@ -668,7 +674,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .fixWidth(75)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePriceCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getPriceSpecAsPercent))
-                .isSortable(true)
                 .build();
 
         BisqTableColumn<OfferMessageItem> spacerColumn = new BisqTableColumn.Builder<OfferMessageItem>()
@@ -680,7 +685,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .right()
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageFiatAmountCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getMinAmount))
-                .isSortable(true)
                 .build();
 
         BisqTableColumn<OfferMessageItem> paymentTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
@@ -688,7 +692,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .left()
                 .fixWidth(120)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePaymentCellFactory())
-                .isSortable(false)
+                .comparator(Comparator.comparing(OfferMessageItem::getFiatPaymentMethodsAsString))
                 .build();
 
         BisqTableColumn<OfferMessageItem> settlementTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
@@ -697,7 +701,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .fixWidth(120)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageSettlementCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getBitcoinPaymentMethodsAsString))
-                .isSortable(true)
                 .build();
 
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
