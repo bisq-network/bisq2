@@ -57,7 +57,7 @@ public class BisqEasyViewUtils {
     public static StackPane getCustomPaymentMethodIcon(String customPaymentMethod) {
         char initial = customPaymentMethod.charAt(0);
 
-        Label initialLabel = new Label(String.valueOf(initial));
+        Label initialLabel = new Label(String.valueOf(initial).toUpperCase());
         initialLabel.getStyleClass().add("bisq-easy-custom-payment-icon");
 
         int deterministicInt = Math.abs(new BigInteger(DigestUtil.sha256(customPaymentMethod.getBytes())).intValue());

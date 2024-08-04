@@ -84,10 +84,12 @@ public class BisqTableView<T> extends TableView<T> {
             sortedList.comparatorProperty().bind(this.comparatorProperty());
 
             if (deriveMinWidthFromColumns) {
-                setMinWidth(getColumns().stream()
-                        .filter(TableColumnBase::isVisible)
-                        .mapToDouble(TableColumnBase::getMinWidth)
-                        .sum());
+                UIThread.run(() -> {
+                    setMinWidth(getColumns().stream()
+                            .filter(TableColumnBase::isVisible)
+                            .mapToDouble(TableColumnBase::getMinWidth)
+                            .sum());
+                });
             }
         }
     }

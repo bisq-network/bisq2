@@ -294,7 +294,7 @@ public class BisqEasyOfferbookUtil {
                         Label label = new Label();
                         Node paymentMethodIcon = !fiatPaymentMethod.isCustomPaymentMethod()
                                 ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
-                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString().toUpperCase());
+                                : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString());
                         label.setGraphic(paymentMethodIcon);
                         BisqTooltip tooltip = new BisqTooltip();
                         tooltip.getStyleClass().add("medium-dark-tooltip");
