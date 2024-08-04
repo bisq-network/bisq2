@@ -27,7 +27,6 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -108,7 +107,6 @@ public class TradeDataHeader {
                 model.getReputationScore().set(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
                 long lastSeen = userProfileService.getLastSeen(peerUserProfile);
                 model.setPeerLastSeen(lastSeen);
-                model.setPeerLastSeenAsString(TimeFormatter.formatAge(lastSeen));
                 model.getPeersUserProfile().set(peerUserProfile);
                 model.getTradeId().set(bisqEasyTrade.getShortId());
 
@@ -161,8 +159,6 @@ public class TradeDataHeader {
         private final StringProperty rightAmount = new SimpleStringProperty();
         private final StringProperty rightCode = new SimpleStringProperty();
         private final StringProperty tradeId = new SimpleStringProperty();
-        @Setter
-        private String peerLastSeenAsString;
         @Setter
         private long peerLastSeen;
 
@@ -225,7 +221,7 @@ public class TradeDataHeader {
             tradeId.getSecond().textProperty().bind(model.getTradeId());
 
             userProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), peersUserProfile -> {
-                peersUserProfileDisplay.applyData(peersUserProfile, model.getPeerLastSeenAsString(), model.getPeerLastSeen());
+                peersUserProfileDisplay.applyData(peersUserProfile, model.getPeerLastSeen());
             });
             reputationScorePin = EasyBind.subscribe(model.getReputationScore(), peersUserProfileDisplay::setReputationScore);
         }

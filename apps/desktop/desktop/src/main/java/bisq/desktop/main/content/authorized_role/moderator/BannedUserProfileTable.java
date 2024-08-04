@@ -31,7 +31,6 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.moderator.ModeratorService;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
@@ -216,7 +215,7 @@ public class BannedUserProfileTable {
 
                     if (item != null && !empty) {
                         userName.setText(item.getUserName());
-                        userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
+                        userProfileIcon.applyData(item.getUserProfile(), item.getLastSeen());
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
@@ -271,14 +270,12 @@ public class BannedUserProfileTable {
             private final UserProfile userProfile;
             private final String userName;
             private final long lastSeen;
-            private final String lastSeenAsString;
 
             private ListItem(BannedUserProfileData bannedUserProfileData, UserProfileService userProfileService) {
                 this.bannedUserProfileData = bannedUserProfileData;
                 userProfile = bannedUserProfileData.getUserProfile();
                 userName = userProfile.getUserName();
                 lastSeen = userProfileService.getLastSeen(userProfile);
-                lastSeenAsString = TimeFormatter.formatAge(lastSeen);
             }
         }
     }

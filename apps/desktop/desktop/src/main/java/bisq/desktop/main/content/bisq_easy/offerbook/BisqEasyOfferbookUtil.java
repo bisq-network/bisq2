@@ -227,7 +227,7 @@ public class BisqEasyOfferbookUtil {
                 if (item != null && !empty) {
                     userNameLabel.setText(item.getUserNickname());
                     reputationScorePin = EasyBind.subscribe(item.getReputationScore(), reputationScoreDisplay::setReputationScore);
-                    userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
+                    userProfileIcon.applyData(item.getUserProfile(), item.getLastSeen());
                     setGraphic(userProfileBox);
                 } else {
                     if (reputationScorePin != null) {

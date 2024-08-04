@@ -59,10 +59,8 @@ public class UserProfileIcon extends StackPane {
     }
 
     public void applyData(@Nullable UserProfile userProfile,
-                          @Nullable String lastLivenessSignalAsString,
                           long lastLivenessSignal) {
         livenessIndicator.setLastLivenessSignal(lastLivenessSignal);
-        livenessIndicator.setLastLivenessSignalAsString(lastLivenessSignalAsString);
         setUserProfile(userProfile);
     }
 

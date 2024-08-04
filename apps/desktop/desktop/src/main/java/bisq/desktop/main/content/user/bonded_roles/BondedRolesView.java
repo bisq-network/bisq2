@@ -109,7 +109,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                     }
 
                     item.getUserProfile().ifPresent(userProfile ->
-                            userProfileIcon.applyData(userProfile, item.getLastSeenAsString(), item.getLastSeen()));
+                            userProfileIcon.applyData(userProfile, item.getLastSeen()));
                     setGraphic(hBox);
                 } else {
                     setGraphic(null);

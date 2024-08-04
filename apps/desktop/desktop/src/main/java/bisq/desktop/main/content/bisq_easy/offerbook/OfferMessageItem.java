@@ -32,7 +32,6 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -58,7 +57,7 @@ public class OfferMessageItem {
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
     private final UserProfile userProfile;
-    private final String userNickname, minMaxAmountAsString, lastSeenAsString, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
+    private final String userNickname, minMaxAmountAsString, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final long lastSeen;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
@@ -86,7 +85,6 @@ public class OfferMessageItem {
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
         lastSeen = userProfileService.getLastSeen(userProfile);
-        lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
         initialize();
     }

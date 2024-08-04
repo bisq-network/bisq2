@@ -72,12 +72,12 @@ public class UserProfileDisplay extends HBox {
         }
     }
 
-    public void applyData(@Nullable UserProfile userProfile, @Nullable String lastSeenAsString, long lastSeen) {
+    public void applyData(@Nullable UserProfile userProfile, long lastSeen) {
         if (userProfile != null) {
             this.userProfile = userProfile;
             userName.setText(userProfile.getUserName());
         }
-        userProfileIcon.applyData(userProfile, lastSeenAsString, lastSeen);
+        userProfileIcon.applyData(userProfile, lastSeen);
         applyTooltip();
     }
 
@@ -89,6 +89,14 @@ public class UserProfileDisplay extends HBox {
         userName.setText(userProfile.getUserName());
         userProfileIcon.setUserProfile(userProfile);
         applyTooltip();
+    }
+
+    public void dispose() {
+        //todo
+        //   makerProfileDisplay.applyData(null, -1);
+        //                    makerProfileDisplay.setReputationScore(null);
+        //                    makerProfileDisplay.getTooltip().setText(null);
+        userProfileIcon.dispose();
     }
 
     private void applyTooltip() {

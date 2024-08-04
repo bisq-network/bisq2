@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.components;
 
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.RepublishUserProfileService;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
-import lombok.Setter;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +31,6 @@ public class LivenessIndicator extends ImageView {
 
     @Nullable
     @Getter
-    @Setter
     private String lastLivenessSignalAsString;
     private long lastLivenessSignal;
     private double size;
@@ -41,6 +40,7 @@ public class LivenessIndicator extends ImageView {
 
     public void setLastLivenessSignal(long lastLivenessSignal) {
         this.lastLivenessSignal = lastLivenessSignal;
+        lastLivenessSignalAsString = TimeFormatter.formatAge(lastLivenessSignal);
         update();
     }
 
