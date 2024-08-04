@@ -81,11 +81,6 @@ public class UserProfileDisplay extends HBox {
         applyTooltip();
     }
 
-
-    public void setLastSeen(long lastSeen) {
-        userProfileIcon.setLastLivenessSignal(lastSeen);
-    }
-
     public void setUserProfile(@Nullable UserProfile userProfile) {
         if (userProfile == null) {
             return;

@@ -47,6 +47,7 @@ public class LivenessIndicator extends ImageView {
     public void hide() {
         setVisible(false);
         setManaged(false);
+        dispose();
     }
 
     public void setSize(double size) {

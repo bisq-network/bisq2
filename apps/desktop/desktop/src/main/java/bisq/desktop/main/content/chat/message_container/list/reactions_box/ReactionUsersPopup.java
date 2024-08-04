@@ -157,9 +157,11 @@ public class ReactionUsersPopup extends PopupControl {
                     final HBox hBox = new HBox(10);
 
                     {
+                        userProfileIcon.hideLivenessIndicator();
+                        userNickname.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
                         hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.setFillHeight(true);
-                        userNickname.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
+                        hBox.getChildren().setAll(userProfileIcon, userNickname);
                     }
 
                     @Override
@@ -168,11 +170,10 @@ public class ReactionUsersPopup extends PopupControl {
 
                         if (item != null && !empty) {
                             userProfileIcon.setUserProfile(item);
-                            userProfileIcon.hideLivenessIndicator();
                             userNickname.setText(StringUtils.truncate(item.getNickName(), 15));
-                            hBox.getChildren().setAll(userProfileIcon, userNickname);
                             setGraphic(hBox);
                         } else {
+                            userProfileIcon.dispose();
                             setGraphic(null);
                         }
                     }

@@ -52,6 +52,7 @@ public class UserProfileIcon extends StackPane {
     public UserProfileIcon(double size) {
         livenessIndicator = new LivenessIndicator();
 
+        tooltip.getStyleClass().add("medium-dark-tooltip");
         setAlignment(Pos.CENTER);
         getChildren().addAll(userProfileIcon, livenessIndicator);
         setSize(size);
@@ -68,9 +69,8 @@ public class UserProfileIcon extends StackPane {
     public void setUserProfile(@Nullable UserProfile userProfile) {
         this.userProfile = userProfile;
         if (userProfile != null) {
-            applyTooltipText();
-            tooltip.getStyleClass().add("medium-dark-tooltip");
             Tooltip.install(this, tooltip);
+            applyTooltipText();
             userProfileIcon.setImage(CatHash.getImage(userProfile));
         } else {
             dispose();
@@ -78,11 +78,13 @@ public class UserProfileIcon extends StackPane {
     }
 
     public void dispose() {
+        livenessIndicator.dispose();
+
         userProfileIcon.setImage(null);
+        userProfile = null;
         if (tooltip != null) {
             Tooltip.uninstall(this, tooltip);
         }
-        livenessIndicator.dispose();
     }
 
     public void setSize(double size) {
@@ -99,6 +101,10 @@ public class UserProfileIcon extends StackPane {
         StackPane.setMargin(livenessIndicator, new Insets(top, right, bottom, left));
     }
 
+    public void hideLivenessIndicator() {
+        livenessIndicator.hide();
+    }
+
     private void applyTooltipText() {
         if (userProfile != null && tooltip != null) {
             String tooltipString = userProfile.getTooltipString();
@@ -112,14 +118,5 @@ public class UserProfileIcon extends StackPane {
             tooltipText = tooltipString + lastSeenString + versionString;
             tooltip.setText(tooltipText);
         }
-    }
-
-    // Delegate livenessIndicator
-    public void hideLivenessIndicator() {
-        livenessIndicator.hide();
-    }
-
-    public void setLastLivenessSignal(long lastLivenessSignal) {
-        livenessIndicator.setLastLivenessSignal(lastLivenessSignal);
     }
 }
