@@ -37,7 +37,6 @@ public class UserProfileDisplay extends HBox {
     private final ReputationScoreDisplay reputationScoreDisplay;
     @Getter
     private final Label userName;
-    private UserProfile userProfile;
 
     public UserProfileDisplay() {
         this(null, DEFAULT_ICON_SIZE);
@@ -74,7 +73,6 @@ public class UserProfileDisplay extends HBox {
 
     public void applyData(@Nullable UserProfile userProfile, long lastSeen) {
         if (userProfile != null) {
-            this.userProfile = userProfile;
             userName.setText(userProfile.getUserName());
         }
         userProfileIcon.applyData(userProfile, lastSeen);
@@ -85,18 +83,14 @@ public class UserProfileDisplay extends HBox {
         if (userProfile == null) {
             return;
         }
-        this.userProfile = userProfile;
         userName.setText(userProfile.getUserName());
         userProfileIcon.setUserProfile(userProfile);
         applyTooltip();
     }
 
     public void dispose() {
-        //todo
-        //   makerProfileDisplay.applyData(null, -1);
-        //                    makerProfileDisplay.setReputationScore(null);
-        //                    makerProfileDisplay.getTooltip().setText(null);
         userProfileIcon.dispose();
+        setReputationScore(null);
     }
 
     private void applyTooltip() {
@@ -108,14 +102,6 @@ public class UserProfileDisplay extends HBox {
                 "\n" + reputationScoreDisplay.getTooltipString() :
                 "";
         return userProfileIcon.getTooltipText() + reputationTooltip;
-    }
-
-    public void setReputationScoreScale(double scale) {
-        reputationScoreDisplay.setScale(scale);
-    }
-
-    public void setIconSize(double size) {
-        userProfileIcon.setSize(size);
     }
 
     public void setReputationScore(@Nullable ReputationScore reputationScore) {
