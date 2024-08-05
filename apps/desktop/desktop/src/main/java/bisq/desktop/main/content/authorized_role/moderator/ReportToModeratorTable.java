@@ -266,6 +266,7 @@ public class ReportToModeratorTable {
                         button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), reporterUserProfile, true));
                         setGraphic(hBox);
                     } else {
+                        userProfileIcon.dispose();
                         button.setOnAction(null);
                         setGraphic(null);
                     }
@@ -301,6 +302,7 @@ public class ReportToModeratorTable {
                         button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), accusedUserProfile, false));
                         setGraphic(hBox);
                     } else {
+                        userProfileIcon.dispose();
                         button.setOnAction(null);
                         setGraphic(null);
                     }

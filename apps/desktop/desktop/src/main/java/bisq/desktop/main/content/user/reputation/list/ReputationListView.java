@@ -244,6 +244,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
                 } else {
+                    userProfileIcon.dispose();
                     setGraphic(null);
                 }
             }

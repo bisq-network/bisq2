@@ -382,16 +382,19 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMyUserCellFactory() {
         return column -> new TableCell<>() {
 
+            private UserProfileIcon userProfileIcon;
+
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    UserProfileIcon userProfileIcon = new UserProfileIcon();
+                    userProfileIcon = new UserProfileIcon();
                     userProfileIcon.setUserProfile(item.getMyUserProfile());
                     // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
                     setGraphic(new StackPane(userProfileIcon));
                 } else {
+                    userProfileIcon.dispose();
                     setGraphic(null);
                 }
             }

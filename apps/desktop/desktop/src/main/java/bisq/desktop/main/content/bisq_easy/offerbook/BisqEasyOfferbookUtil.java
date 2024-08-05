@@ -226,6 +226,7 @@ public class BisqEasyOfferbookUtil {
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(userProfileBox);
                 } else {
+                    userProfileIcon.dispose();
                     if (reputationScorePin != null) {
                         reputationScorePin.unsubscribe();
                     }

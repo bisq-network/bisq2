@@ -37,7 +37,7 @@ import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_IC
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Slf4j
-public class UserProfileIcon extends StackPane implements LivenessUpdateScheduler.LivenessFormattedAgeConsumer {
+public class UserProfileIcon extends StackPane implements LivenessScheduler.FormattedAgeConsumer {
     // As we are used in a hashSet we want to be sure to have a controlled EqualsAndHashCode
     @EqualsAndHashCode.Include
     private final String id = UUID.randomUUID().toString();
@@ -77,7 +77,7 @@ public class UserProfileIcon extends StackPane implements LivenessUpdateSchedule
     public void setUserProfile(@Nullable UserProfile userProfile) {
         this.userProfile = userProfile;
         if (userProfile != null) {
-            LivenessUpdateScheduler.addObserver(userProfile, livenessIndicator, this);
+            LivenessScheduler.addObserver(userProfile, livenessIndicator, this);
 
             userProfileIcon.setImage(CatHash.getImage(userProfile));
 
@@ -97,10 +97,12 @@ public class UserProfileIcon extends StackPane implements LivenessUpdateSchedule
     }
 
     public void dispose() {
-        LivenessUpdateScheduler.removeObserver(userProfile, livenessIndicator, this);
+        if (userProfile != null) {
+            LivenessScheduler.removeObserver(userProfile, livenessIndicator, this);
+            userProfileIcon.setImage(null);
+            userProfile = null;
+        }
 
-        userProfileIcon.setImage(null);
-        userProfile = null;
         if (tooltip != null) {
             Tooltip.uninstall(this, tooltip);
         }

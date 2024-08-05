@@ -188,6 +188,7 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         activeReactionsDisplayHBox.dispose();
         reactMenuBox.dispose();
+        userProfileIcon.dispose();
     }
 
     private void showDateTimeAndActionsMenu(boolean shouldShow) {

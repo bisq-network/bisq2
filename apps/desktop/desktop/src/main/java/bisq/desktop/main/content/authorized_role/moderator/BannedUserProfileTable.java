@@ -218,6 +218,7 @@ public class BannedUserProfileTable {
                         userProfileIcon.setUserProfile(item.getUserProfile());
                         setGraphic(hBox);
                     } else {
+                        userProfileIcon.dispose();
                         setGraphic(null);
                     }
                 }

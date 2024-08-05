@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-class LivenessIndicator extends ImageView implements LivenessUpdateScheduler.LivenessAgeConsumer {
+class LivenessIndicator extends ImageView implements LivenessScheduler.AgeConsumer {
     private static final long MOST_RECENT = TimeUnit.SECONDS.toMillis(3);
     private static final long RECENT = TimeUnit.SECONDS.toMillis(5);
 
@@ -68,5 +68,10 @@ class LivenessIndicator extends ImageView implements LivenessUpdateScheduler.Liv
         String sizePostFix = size < 60 ? "-small-dot" : "-dot";
         String id = color + sizePostFix;
         setId(id);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
     }
 }

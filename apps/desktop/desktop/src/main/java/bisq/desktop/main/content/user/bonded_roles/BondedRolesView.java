@@ -112,6 +112,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                             userProfileIcon.setUserProfile(userProfile));
                     setGraphic(hBox);
                 } else {
+                    userProfileIcon.dispose();
                     setGraphic(null);
                 }
             }

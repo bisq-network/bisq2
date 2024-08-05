@@ -147,6 +147,7 @@ public class ReputationListController implements Controller {
             reputationDetailsPopup = null;
         }
         model.getListItems().forEach(ReputationListView.ListItem::dispose);
+        model.getListItems().clear();
     }
 
     void onShowDetails(ReputationListView.ListItem item) {
