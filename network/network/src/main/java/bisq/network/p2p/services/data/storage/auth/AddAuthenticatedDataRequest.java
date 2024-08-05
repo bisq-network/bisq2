@@ -194,6 +194,10 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         return authenticatedSequentialData.isExpired();
     }
 
+    public DistributedData getDistributedData() {
+        return authenticatedSequentialData.getAuthenticatedData().getDistributedData();
+    }
+
     @Override
     public String toString() {
         return "AddAuthenticatedDataRequest{" +
