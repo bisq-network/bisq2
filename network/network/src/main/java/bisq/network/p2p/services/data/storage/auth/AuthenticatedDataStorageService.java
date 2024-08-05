@@ -26,6 +26,7 @@ import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -67,6 +68,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
         maybeLogMapState("onPersistedApplied", persisted);
         pruneInvalidAuthorizedData();
+        handlePersistedPublishDateAware(persisted);
     }
 
     @Override
@@ -80,6 +82,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         maybeLogMapState("add", persistableStore);
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
+        DistributedData distributedData = authenticatedData.distributedData;
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
@@ -99,7 +102,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (authenticatedSequentialData.isExpired()) {
-                DistributedData distributedData = authenticatedData.distributedData;
                 log.info("AddAuthenticatedDataRequest with {} is expired on {}",
                         distributedData.getClass().getSimpleName(),
                         new Date(authenticatedSequentialData.getCreated() + distributedData.getMetaData().getTtl())
@@ -130,6 +132,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.warn("Signature is invalid at add. request={}", request);
                 return new DataStorageResult(false).signatureInvalid();
             }
+
+            if (distributedData instanceof PublishDateAware publishDateAware) {
+                publishDateAware.setPublishDate(authenticatedSequentialData.getCreated());
+            }
+
             map.put(byteArray, request);
 
             // In case we only updated the seq number we still want to broadcast and update the listeners.
@@ -275,6 +282,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     addRequestFromMap.getSignature(),
                     addRequestFromMap.getOwnerPublicKey());
 
+            DistributedData distributedData = dataFromMap.getAuthenticatedData().getDistributedData();
+            if (distributedData instanceof PublishDateAware publishDateAware) {
+                publishDateAware.setPublishDate(addRequestFromMap.getCreated());
+            }
+
             map.put(byteArray, updatedRequest);
         }
         persist();
@@ -355,6 +367,20 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             });
             persist();
         }
+    }
+
+    private void handlePersistedPublishDateAware(DataStore<AuthenticatedDataRequest> persisted) {
+        persisted.getMap().values().forEach(authenticatedDataRequest -> {
+            // We do not handle RefreshAuthenticatedDataRequest as we would receive a new
+            // AddAuthenticatedDataRequest from inventoryRequest anyway as RefreshAuthenticatedDataRequests are
+            // not included in inventoryRequests.
+            if (authenticatedDataRequest instanceof AddAuthenticatedDataRequest request) {
+                DistributedData distributedData = request.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData();
+                if (distributedData instanceof PublishDateAware publishDateAware) {
+                    publishDateAware.setPublishDate(authenticatedDataRequest.getCreated());
+                }
+            }
+        });
     }
 
     // Useful for debugging state of the store
