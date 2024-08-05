@@ -21,12 +21,7 @@ import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
-import bisq.network.p2p.services.data.storage.DataStorageResult;
-import bisq.network.p2p.services.data.storage.DataStorageService;
-import bisq.network.p2p.services.data.storage.DataStore;
-import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.*;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -115,8 +110,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).dataInvalid();
             }
 
-            if (authenticatedData instanceof AuthorizedData) {
-                AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
+            if (authenticatedData instanceof AuthorizedData authorizedData) {
                 if (authorizedData.isNotAuthorized()) {
                     log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 500));
                     return new DataStorageResult(false).isNotAuthorized();
@@ -348,11 +342,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         Map<ByteArray, AuthenticatedDataRequest> invalidAuthorizedData = persistableStore.getMap().entrySet().stream()
                 .filter(entry -> {
                     AuthenticatedDataRequest request = entry.getValue();
-                    if (request instanceof AddAuthenticatedDataRequest) {
-                        AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) request;
+                    if (request instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
                         AuthenticatedData authenticatedData = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData();
-                        if (authenticatedData instanceof AuthorizedData) {
-                            AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
+                        if (authenticatedData instanceof AuthorizedData authorizedData) {
                             return authorizedData.isNotAuthorized();
                         }
                     }
@@ -390,12 +382,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(e -> e.getDistributedData().getClass().getSimpleName())
-                    .collect(Collectors.toList());
+                    .toList();
             var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (RemoveAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(RemoveAuthenticatedDataRequest::getClassName)
-                    .collect(Collectors.toList());
+                    .toList();
             var className = Stream.concat(added.stream(), removed.stream())
                     .findAny().orElse(persistence.getFileName().replace("Store", "")); // Remove trailing Store postfix
             log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
