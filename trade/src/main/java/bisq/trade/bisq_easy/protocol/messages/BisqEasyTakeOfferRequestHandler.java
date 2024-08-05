@@ -43,8 +43,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 @Slf4j
 public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferRequest> implements TradeMessageSender<BisqEasyTrade> {
@@ -129,6 +128,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match. " +
                 "mediator=" + mediator + ", takersContract.getMediator()=" +
                 takersContract.getMediator());
+
+        log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         try {
