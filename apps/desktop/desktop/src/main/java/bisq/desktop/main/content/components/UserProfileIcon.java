@@ -21,8 +21,10 @@ import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -53,16 +55,65 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     private String userProfileInfo = "";
     private String lastSeen = "";
     private String versionInfo = "";
+    private final LivenessScheduler livenessScheduler;
+    private final ChangeListener<Scene> sceneChangeListener;
 
     public UserProfileIcon() {
         this(DEFAULT_ICON_SIZE);
     }
 
     public UserProfileIcon(double size) {
+        livenessScheduler = new LivenessScheduler(livenessIndicator, this);
+        setSize(size);
+
         tooltip.getStyleClass().add("medium-dark-tooltip");
         setAlignment(Pos.CENTER);
         getChildren().addAll(userProfileIcon, livenessIndicator);
-        setSize(size);
+        sceneChangeListener = (ov, oldValue, newScene) -> handleSceneChange(oldValue, newScene);
+    }
+
+    private void handleSceneChange(Scene oldValue, Scene newScene) {
+        if (oldValue == null && newScene != null) {
+            livenessScheduler.start(userProfile);
+        } else if (oldValue != null && newScene == null) {
+            dispose();
+            sceneProperty().removeListener(sceneChangeListener);
+        }
+    }
+
+    public void setUserProfile(@Nullable UserProfile userProfile) {
+        this.userProfile = userProfile;
+
+        if (userProfile == null) {
+            dispose();
+            return;
+        }
+
+        // Is cached in CatHash
+        userProfileIcon.setImage(CatHash.getImage(userProfile));
+
+        userProfileInfo = userProfile.getTooltipString();
+        String version = userProfile.getApplicationVersion();
+        if (version.isEmpty()) {
+            version = Res.get("data.na");
+        }
+        versionInfo = Res.get("user.userProfile.version", version);
+        updateTooltipText();
+
+        Tooltip.install(this, tooltip);
+
+        if (getScene() == null) {
+            sceneProperty().addListener(sceneChangeListener);
+        } else {
+            livenessScheduler.start(userProfile);
+        }
+    }
+
+    public void dispose() {
+        livenessScheduler.dispose();
+        userProfileIcon.setImage(null);
+        userProfile = null;
+        Tooltip.uninstall(this, tooltip);
     }
 
     @Override
@@ -70,42 +121,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         if (formattedAge != null) {
             lastSeen = "\n" + Res.get("user.userProfile.lastSeenAgo", formattedAge) + "\n";
         }
-        tooltipText = userProfileInfo + lastSeen + versionInfo;
-        tooltip.setText(tooltipText);
-    }
-
-    public void setUserProfile(@Nullable UserProfile userProfile) {
-        this.userProfile = userProfile;
-        if (userProfile != null) {
-            LivenessScheduler.addObserver(userProfile, livenessIndicator, this);
-
-            userProfileIcon.setImage(CatHash.getImage(userProfile));
-
-            userProfileInfo = userProfile.getTooltipString();
-            String version = userProfile.getApplicationVersion();
-            if (version.isEmpty()) {
-                version = Res.get("data.na");
-            }
-            versionInfo = Res.get("user.userProfile.version", version);
-            tooltipText = userProfileInfo + lastSeen + versionInfo;
-            tooltip.setText(tooltipText);
-
-            Tooltip.install(this, tooltip);
-        } else {
-            dispose();
-        }
-    }
-
-    public void dispose() {
-        if (userProfile != null) {
-            LivenessScheduler.removeObserver(userProfile, livenessIndicator, this);
-            userProfileIcon.setImage(null);
-            userProfile = null;
-        }
-
-        if (tooltip != null) {
-            Tooltip.uninstall(this, tooltip);
-        }
+        updateTooltipText();
     }
 
     public void setSize(double size) {
@@ -124,5 +140,11 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
     public void hideLivenessIndicator() {
         livenessIndicator.hide();
+        livenessScheduler.disable();
+    }
+
+    private void updateTooltipText() {
+        tooltipText = userProfileInfo + lastSeen + versionInfo;
+        tooltip.setText(tooltipText);
     }
 }

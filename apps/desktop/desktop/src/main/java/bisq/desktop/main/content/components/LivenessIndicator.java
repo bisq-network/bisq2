@@ -34,15 +34,15 @@ class LivenessIndicator extends ImageView implements LivenessScheduler.AgeConsum
     @EqualsAndHashCode.Include
     private final String id = UUID.randomUUID().toString();
     private double size;
-    private long age;
+    private Long age;
 
     LivenessIndicator() {
     }
 
     @Override
-    public void setAge(long age) {
+    public void setAge(Long age) {
         this.age = age;
-        update();
+        updateId();
     }
 
     void hide() {
@@ -52,12 +52,12 @@ class LivenessIndicator extends ImageView implements LivenessScheduler.AgeConsum
 
     void setSize(double size) {
         this.size = size;
-        update();
+        updateId();
     }
 
-    private void update() {
+    private void updateId() {
         String color;
-        if (age == 0 || age > RECENT) {
+        if (age == null || age > RECENT) {
             color = "grey";
         } else if (age > MOST_RECENT) {
             color = "yellow";

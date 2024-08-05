@@ -23,10 +23,6 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,68 +33,72 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public class LivenessScheduler {
     interface AgeConsumer {
-        void setAge(long age);
+        void setAge(Long age);
     }
 
     interface FormattedAgeConsumer {
         void setFormattedAge(String formattedAge);
     }
 
-    private static final Map<UserProfile, LivenessScheduler> schedulerByUserProfile = new HashMap<>();
+    private UIScheduler scheduler;
+    private UserProfile userProfile;
+    private final AgeConsumer ageConsumer;
+    private final FormattedAgeConsumer formattedAgeConsumer;
+    private boolean disabled;
 
-    static LivenessScheduler addObserver(UserProfile userProfile,
-                                         AgeConsumer age,
-                                         FormattedAgeConsumer formattedAgeConsumer) {
-        log.error("addObserver {} {} {}", userProfile.getNickName(), age, formattedAgeConsumer);
-        LivenessScheduler livenessScheduler = schedulerByUserProfile.computeIfAbsent(userProfile, key -> new LivenessScheduler(userProfile));
-        livenessScheduler.addObserver(age, formattedAgeConsumer);
-        return livenessScheduler;
+    LivenessScheduler(AgeConsumer ageConsumer, FormattedAgeConsumer formattedAgeConsumer) {
+        this.ageConsumer = ageConsumer;
+        this.formattedAgeConsumer = formattedAgeConsumer;
     }
 
-    static void removeObserver(UserProfile userProfile,
-                               AgeConsumer ageConsumer,
-                               FormattedAgeConsumer formattedAgeConsumer) {
-        log.error("removeObserver {} {} {}", userProfile.getNickName(), ageConsumer, formattedAgeConsumer);
-        LivenessScheduler livenessScheduler = schedulerByUserProfile.get(userProfile);
-        if (livenessScheduler != null) {
-            boolean hasObservers = livenessScheduler.removeObserver(ageConsumer, formattedAgeConsumer);
-            if (!hasObservers) {
-                // We are the last client, so we can remove the LivenessUpdateScheduler
-                schedulerByUserProfile.remove(userProfile);
-            }
+    void start(UserProfile userProfile) {
+        if (disabled) {
+            return;
         }
-    }
+        if (userProfile == null) {
+            this.userProfile = null;
+            dispose();
+            return;
+        }
+        // PublishDate is transient and thus not included in the equals check
+        if (userProfile.equals(this.userProfile) && userProfile.getPublishDate() == this.userProfile.getPublishDate()) {
+            return;
+        }
 
-    private final UIScheduler scheduler;
-    private final Set<FormattedAgeConsumer> formattedAgeConsumers = new HashSet<>();
-    private final Set<AgeConsumer> ageConsumers = new HashSet<>();
-
-    private LivenessScheduler(UserProfile userProfile) {
+        dispose();
         scheduler = UIScheduler.run(() -> {
-            log.error("TICK {} {} {}", userProfile.getNickName(), ageConsumers, formattedAgeConsumers);
-            long age = System.currentTimeMillis() - userProfile.getPublishDate();
-            ageConsumers.forEach(observer -> observer.setAge(age));
-            String formattedAge = TimeFormatter.formatAge(age);
-            formattedAgeConsumers.forEach(observer -> observer.setFormattedAge(formattedAge));
+            long publishDate = userProfile.getPublishDate();
+            if (publishDate == 0) {
+                ageConsumer.setAge(null);
+                formattedAgeConsumer.setFormattedAge(null);
+            } else {
+                long age = Math.max(0, System.currentTimeMillis() - publishDate);
+                ageConsumer.setAge(age);
+                String formattedAge = TimeFormatter.formatAge(age);
+                formattedAgeConsumer.setFormattedAge(formattedAge);
+                //log.error("UIScheduler {} {}", userProfile.getNickName(), formattedAge);
+            }
         }).periodically(1, TimeUnit.SECONDS);
     }
 
-    private void addObserver(AgeConsumer ageConsumer, FormattedAgeConsumer formattedAgeConsumer) {
-        ageConsumers.add(ageConsumer);
-        formattedAgeConsumers.add(formattedAgeConsumer);
-    }
-
-    private boolean removeObserver(AgeConsumer age, FormattedAgeConsumer formattedAgeConsumer) {
-        ageConsumers.remove(age);
-        formattedAgeConsumers.remove(formattedAgeConsumer);
-        if (ageConsumers.isEmpty()) {
-            dispose();
-            return false;
+    void dispose() {
+        if (scheduler != null) {
+            scheduler.stop();
+            scheduler = null;
         }
-        return true;
     }
 
-    private void dispose() {
-        scheduler.stop();
+    public void disable() {
+        disabled = true;
+        dispose();
+    }
+
+    public void enable() {
+        disabled = false;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
     }
 }
