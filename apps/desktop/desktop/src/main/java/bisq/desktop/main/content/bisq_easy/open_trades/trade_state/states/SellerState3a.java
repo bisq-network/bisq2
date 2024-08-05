@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
+import bisq.common.validation.BitcoinDataValidation;
 import bisq.common.util.MathUtils;
 import bisq.desktop.CssConfig;
 import bisq.desktop.ServiceProvider;
@@ -31,6 +32,9 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.validator.BitcoinDataValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
@@ -154,11 +158,26 @@ public class SellerState3a extends BaseState {
             String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
             String proof = Res.get("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.paymentProof." + name);
             String userName = model.getChannel().getMyUserIdentity().getUserName();
-            if (model.getPaymentProof().get() == null) {
+            String txId = model.getPaymentProof().get();
+            if (txId == null) {
+                sellerConfirmedBtcSent(null, userName, proof);
+            } else {
+                if (BitcoinDataValidation.validateTransactionId(txId)) {
+                    sellerConfirmedBtcSent(txId, userName, proof);
+                } else {
+                    new Popup().warning(Res.get("bisqEasy.tradeState.info.seller.phase3a.txId.warning"))
+                            .actionButtonText(Res.get("bisqEasy.tradeState.info.seller.phase3a.txId.warning.proceed"))
+                            .onAction(() -> { sellerConfirmedBtcSent(txId, userName, proof); }).show();
+                }
+            }
+        }
+
+        private void sellerConfirmedBtcSent(String txId, String userName, String proof) {
+            if (txId == null) {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.noProofProvided", userName));
             } else {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
-                        userName, proof, model.getPaymentProof().get()));
+                        userName, proof, txId));
             }
             bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), Optional.ofNullable(model.getPaymentProof().get()));
         }
@@ -236,6 +255,7 @@ public class SellerState3a extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private static final Interpolator INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
+        private final BitcoinDataValidator txIdValidator;
         private final Button sentButton;
         private final MaterialTextField paymentProof;
         private final WrappingText sendBtcHeadline, fiatReceiptConfirmed;
@@ -249,6 +269,18 @@ public class SellerState3a extends BaseState {
 
         private View(Model model, Controller controller) {
             super(model, controller);
+
+            txIdValidator = new BitcoinDataValidator() {
+                @Override
+                protected String getData() {
+                    return paymentProof.getText();
+                }
+
+                @Override
+                protected BitcoinDataType getType() {
+                    return BitcoinDataType.TX_ID;
+                }
+            };
 
             Pair<WrappingText, HBox> confirmPair = FormUtils.getConfirmInfo();
             fiatReceiptConfirmed = confirmPair.getFirst();
@@ -319,6 +351,7 @@ public class SellerState3a extends BaseState {
             qrCodeImageView.setImage(model.getSmallQrCodeImage());
 
             paymentProof.textProperty().bindBidirectional(model.getPaymentProof());
+            paymentProof.setValidators(txIdValidator);
             sentButton.disableProperty().bind(model.getBtcSentButtonDisabled());
             openQrCodeWindowIcon.disableProperty().bind(model.getQrCodeWindow().isNotNull());
 

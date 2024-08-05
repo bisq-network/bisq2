@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Pin;
+import bisq.common.validation.BitcoinDataValidation;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -32,7 +33,10 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.validator.BitcoinDataValidator;
 import bisq.desktop.components.controls.validator.SettableErrorValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.webcam.WebcamAppModel;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.i18n.Res;
@@ -138,12 +142,23 @@ public class BuyerState1a extends BaseState {
         }
 
         private void onSend() {
-            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
-            String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + name;
-            sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), model.getBitcoinPaymentData().get()));
-            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), model.getBitcoinPaymentData().get());
+            String btcAddress = model.getBitcoinPaymentData().get();
+            if (BitcoinDataValidation.validateWalletAddressHash(btcAddress)) {
+                send(btcAddress);
+            } else {
+                new Popup().warning(Res.get("bisqEasy.takeOffer.btcAddress.warning"))
+                        .actionButtonText(Res.get("bisqEasy.takeOffer.btcAddress.warning.proceed"))
+                        .onAction(() -> send(btcAddress))
+                        .show();
+            }
         }
 
+        private void send(String btcAddress) {
+            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+            String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + name;
+            sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), btcAddress));
+            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), btcAddress);
+        }
         void onOpenWalletHelp() {
             Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
@@ -290,6 +305,7 @@ public class BuyerState1a extends BaseState {
         private final Timeline webcamStateAnimationTimeline;
         private final Region webcamStateMarkerLine;
         private final SettableErrorValidator webcamStateValidator;
+        private final BitcoinDataValidator walletAddressValidator;
         private Subscription qrCodeDetectedFromWebcamPin, webcamStateVisiblePin;
 
         private View(Model model, Controller controller) {
@@ -315,6 +331,17 @@ public class BuyerState1a extends BaseState {
 
             webcamStateMaterialTextField = new MaterialTextField(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.description"));
             webcamStateValidator = new SettableErrorValidator();
+            walletAddressValidator = new BitcoinDataValidator() {
+                @Override
+                protected String getData() {
+                    return model.getBitcoinPaymentData().get();
+                }
+
+                @Override
+                protected BitcoinDataType getType() {
+                    return BitcoinDataType.WALLET_ADDRESS;
+                }
+            };
             webcamStateMaterialTextField.setValidators(webcamStateValidator);
             webcamStateMaterialTextField.getTextInputControl().setEditable(true);
             webcamStateMaterialTextField.showIcon();
@@ -357,6 +384,7 @@ public class BuyerState1a extends BaseState {
             bitcoinPayment.setDescription(model.getBitcoinPaymentDescription());
             bitcoinPayment.setPromptText(model.getBitcoinPaymentPrompt());
             bitcoinPayment.setHelpText(model.getBitcoinPaymentHelp());
+            bitcoinPayment.setValidators(walletAddressValidator);
 
             bitcoinPayment.textProperty().bindBidirectional(model.getBitcoinPaymentData());
             scanQrCodeButton.visibleProperty().bind(model.getScanQrCodeButtonVisible());
