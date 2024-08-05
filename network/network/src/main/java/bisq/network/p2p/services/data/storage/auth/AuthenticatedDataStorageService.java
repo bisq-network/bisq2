@@ -282,7 +282,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     addRequestFromMap.getSignature(),
                     addRequestFromMap.getOwnerPublicKey());
 
-            DistributedData distributedData = dataFromMap.getAuthenticatedData().getDistributedData();
+            DistributedData distributedData = dataFromMap.getDistributedData();
             if (distributedData instanceof PublishDateAware publishDateAware) {
                 publishDateAware.setPublishDate(addRequestFromMap.getCreated());
             }

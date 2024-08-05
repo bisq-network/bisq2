@@ -139,7 +139,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public double getCostFactor() {
-        DistributedData distributedData = authenticatedSequentialData.getAuthenticatedData().getDistributedData();
+        DistributedData distributedData = authenticatedSequentialData.getDistributedData();
         double metaDataImpact = distributedData.getMetaData().getCostFactor();
         double dataImpact = distributedData.getCostFactor();
         double impact = metaDataImpact + dataImpact;
@@ -195,7 +195,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     public DistributedData getDistributedData() {
-        return authenticatedSequentialData.getAuthenticatedData().getDistributedData();
+        return authenticatedSequentialData.getDistributedData();
     }
 
     @Override
