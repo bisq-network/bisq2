@@ -29,11 +29,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.Switch;
-import bisq.desktop.components.table.ActivatableTableItem;
-import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
-import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.DateTableItem;
+import bisq.desktop.components.table.*;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
@@ -296,7 +292,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                                                boolean isRequester,
                                                ListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
-        userProfileDisplay.applyData(trader.getUserProfile(), trader.getLastSeen());
+        userProfileDisplay.setUserProfile(trader.getUserProfile());
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");
         }
@@ -416,7 +412,6 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             private final String profileAgeString;
             private final ReputationScore reputationScore;
             private final long totalReputationScore, profileAge;
-            private final long lastSeen;
 
             Trader(UserProfile userProfile, ReputationService reputationService, UserProfileService userProfileService) {
                 this.userProfile = userProfile;
@@ -431,8 +426,6 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 profileAgeString = optionalProfileAge
                         .map(TimeFormatter::formatAgeInDays)
                         .orElse(Res.get("data.na"));
-
-                lastSeen = userProfileService.getLastSeen(userProfile);
             }
         }
     }

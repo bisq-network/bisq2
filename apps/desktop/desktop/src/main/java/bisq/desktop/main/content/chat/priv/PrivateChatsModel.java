@@ -47,10 +47,6 @@ public abstract class PrivateChatsModel extends ChatModel {
     private ReputationScore peersReputationScore;
     @Setter
     private ReputationScore myUserReputationScore;
-    @Setter
-    private long peerLastSeen;
-    @Setter
-    private long myselfLastSeen;
     public PrivateChatsModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

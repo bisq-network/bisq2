@@ -113,13 +113,9 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                 TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(channel);
                 UserProfile peer = channel.getPeer();
-                long peerLastSeen = userProfileService.getLastSeen(peer);
-                model.setPeerLastSeen(peerLastSeen);
                 model.getPeersUserProfile().set(peer);
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
                 UserProfile myProfile = channel.getMyUserIdentity().getUserProfile();
-                long myselfLastSeen = userProfileService.getLastSeen(myProfile);
-                model.setMyselfLastSeen(myselfLastSeen);
                 model.getMyUserProfile().set(myProfile);
                 model.setMyUserReputationScore(reputationService.getReputationScore(myProfile));
                 model.getListItems().stream()

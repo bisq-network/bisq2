@@ -59,7 +59,6 @@ public class OfferMessageItem {
     private final UserProfile userProfile;
     private final String userNickname, minMaxAmountAsString, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
     private final Pair<Monetary, Monetary> minMaxAmount;
-    private final long lastSeen;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
@@ -84,7 +83,6 @@ public class OfferMessageItem {
         userNickname = userProfile.getNickName();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
-        lastSeen = userProfileService.getLastSeen(userProfile);
 
         initialize();
     }

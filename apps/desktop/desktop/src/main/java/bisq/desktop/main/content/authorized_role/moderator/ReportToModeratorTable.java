@@ -261,7 +261,7 @@ public class ReportToModeratorTable {
                         String reporterUserName = item.getReporterUserName();
                         userNameLabel.setText(reporterUserName);
                         UserProfile reporterUserProfile = item.getReporterUserProfile().get();
-                        userProfileIcon.applyData(reporterUserProfile, item.getReporterUserLastSeen());
+                        userProfileIcon.setUserProfile(reporterUserProfile);
                         button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(reporterUserName, 8));
                         button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), reporterUserProfile, true));
                         setGraphic(hBox);
@@ -296,7 +296,7 @@ public class ReportToModeratorTable {
                         String accusedUserName = item.getAccusedUserName();
                         userNameLabel.setText(accusedUserName);
                         UserProfile accusedUserProfile = item.getAccusedUserProfile();
-                        userProfileIcon.applyData(accusedUserProfile, item.getAccusedUserLastSeen());
+                        userProfileIcon.setUserProfile(accusedUserProfile);
                         button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(accusedUserName, 8));
                         button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), accusedUserProfile, false));
                         setGraphic(hBox);
@@ -392,7 +392,6 @@ public class ReportToModeratorTable {
             private final String dateString, timeString, message, reporterUserName, accusedUserName, chatChannelDomain;
             private final Optional<UserProfile> reporterUserProfile;
             private final UserProfile accusedUserProfile;
-            private final long reporterUserLastSeen, accusedUserLastSeen;
 
             private ReportListItem(ReportToModeratorMessage reportToModeratorMessage, ServiceProvider serviceProvider) {
                 UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
@@ -410,9 +409,6 @@ public class ReportToModeratorTable {
                 dateString = DateFormatter.formatDate(date);
                 timeString = DateFormatter.formatTime(date);
                 message = reportToModeratorMessage.getMessage();
-
-                reporterUserLastSeen = reporterUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
-                accusedUserLastSeen = userProfileService.getLastSeen(accusedUserProfile);
             }
         }
     }

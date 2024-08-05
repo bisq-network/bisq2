@@ -62,7 +62,6 @@ public class BondedRolesListItem {
     private final boolean staticPublicKeysProvided;
     private final boolean isRootNode;
     private final boolean isRootSeedNode;
-    private final long lastSeen;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService, NetworkService networkService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
@@ -75,8 +74,6 @@ public class BondedRolesListItem {
         signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
-
-        lastSeen = userProfile.map(userProfileService::getLastSeen).orElse(-1L);
 
         Optional<AddressByTransportTypeMap> addressByTransportTypeMap = authorizedBondedRoleData.getAddressByTransportTypeMap();
         if (addressByTransportTypeMap.isPresent()) {

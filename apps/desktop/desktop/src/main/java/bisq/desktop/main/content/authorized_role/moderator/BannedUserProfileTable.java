@@ -215,7 +215,7 @@ public class BannedUserProfileTable {
 
                     if (item != null && !empty) {
                         userName.setText(item.getUserName());
-                        userProfileIcon.applyData(item.getUserProfile(), item.getLastSeen());
+                        userProfileIcon.setUserProfile(item.getUserProfile());
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
@@ -269,13 +269,11 @@ public class BannedUserProfileTable {
             private final BannedUserProfileData bannedUserProfileData;
             private final UserProfile userProfile;
             private final String userName;
-            private final long lastSeen;
 
             private ListItem(BannedUserProfileData bannedUserProfileData, UserProfileService userProfileService) {
                 this.bannedUserProfileData = bannedUserProfileData;
                 userProfile = bannedUserProfileData.getUserProfile();
                 userName = userProfile.getUserName();
-                lastSeen = userProfileService.getLastSeen(userProfile);
             }
         }
     }

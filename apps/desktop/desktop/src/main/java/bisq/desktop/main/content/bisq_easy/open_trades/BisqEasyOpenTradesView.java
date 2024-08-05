@@ -55,18 +55,9 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -397,7 +388,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
                 if (item != null && !empty) {
                     UserProfileIcon userProfileIcon = new UserProfileIcon();
-                    userProfileIcon.applyData(item.getMyUserProfile(), item.getMyselfLastSeen());
+                    userProfileIcon.setUserProfile(item.getMyUserProfile());
                     // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
                     setGraphic(new StackPane(userProfileIcon));
                 } else {
@@ -418,7 +409,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 if (item != null && !empty) {
                     UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
-                    userProfileDisplay.applyData(item.getPeersUserProfile(), item.getPeerLastSeen());
+                    userProfileDisplay.setUserProfile(item.getPeersUserProfile());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
@@ -551,7 +542,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         private final StringProperty peerNumNotificationsProperty = new SimpleStringProperty();
         private final StringProperty mediatorNumNotificationsProperty = new SimpleStringProperty();
         private final Pin changedChatNotificationPin, isInMediationPin;
-        private final long myselfLastSeen, peerLastSeen;
         private final BitcoinPaymentRail bitcoinPaymentRail;
         private final FiatPaymentRail fiatPaymentRail;
         private final boolean isFiatPaymentMethodCustom;
@@ -597,10 +587,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
             myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
             reputationScore = reputationService.getReputationScore(peersUserProfile);
-
-            myselfLastSeen = userProfileService.getLastSeen(myUserProfile);
-
-            peerLastSeen = userProfileService.getLastSeen(peersUserProfile);
 
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
                 UIThread.run(() -> {

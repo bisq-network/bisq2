@@ -192,7 +192,7 @@ public class MediationCaseHeader {
         protected void onViewAttached() {
             mediationCaseListItemPin = EasyBind.subscribe(model.getMediationCaseListItem(), item -> {
                 if (item != null) {
-                    makerProfileDisplay.applyData(item.getMaker().getUserProfile(), item.getMaker().getLastSeen());
+                    makerProfileDisplay.setUserProfile(item.getMaker().getUserProfile());
                     makerProfileDisplay.setReputationScore(item.getMaker().getReputationScore());
                     boolean isMakerRequester = item.isMakerRequester();
                     if (isMakerRequester) {
@@ -205,7 +205,7 @@ public class MediationCaseHeader {
 
                     direction.setText(item.getDirection());
 
-                    takerProfileDisplay.applyData(item.getTaker().getUserProfile(), item.getTaker().getLastSeen());
+                    takerProfileDisplay.setUserProfile(item.getTaker().getUserProfile());
                     takerProfileDisplay.setReputationScore(item.getTaker().getReputationScore());
                     if (!isMakerRequester) {
                         takerProfileDisplay.getStyleClass().add("mediator-header-requester");

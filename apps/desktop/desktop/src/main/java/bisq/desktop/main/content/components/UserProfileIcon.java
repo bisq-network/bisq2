@@ -123,23 +123,4 @@ public class UserProfileIcon extends StackPane implements LivenessUpdateSchedule
     public void hideLivenessIndicator() {
         livenessIndicator.hide();
     }
-
-    public void applyData(@Nullable UserProfile userProfile,
-                          long lastLivenessSignal) {
-        setUserProfile(userProfile);
-    }
-   /* private void applyTooltipText() {
-        if (userProfile != null && tooltip != null) {
-            String tooltipString = userProfile.getTooltipString();
-            String lastSeenAsString = livenessIndicator.getLastLivenessSignalAsString();
-            String lastSeenString = lastSeenAsString != null ? "\n" + Res.get("user.userProfile.lastSeenAgo", lastSeenAsString) : "";
-            String version = userProfile.getApplicationVersion();
-            if (version.isEmpty()) {
-                version = Res.get("data.na");
-            }
-            String versionString = lastSeenAsString != null ? "\n" + Res.get("user.userProfile.version", version) : "";
-            tooltipText = tooltipString + lastSeenString + versionString;
-            tooltip.setText(tooltipText);
-        }
-    }*/
 }

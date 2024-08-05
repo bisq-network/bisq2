@@ -35,20 +35,11 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
-import bisq.user.reputation.data.AuthorizedAccountAgeData;
-import bisq.user.reputation.data.AuthorizedBondedReputationData;
-import bisq.user.reputation.data.AuthorizedProofOfBurnData;
-import bisq.user.reputation.data.AuthorizedSignedWitnessData;
-import bisq.user.reputation.data.AuthorizedTimestampData;
+import bisq.user.reputation.data.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -59,13 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -256,7 +241,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
-                    userProfileIcon.applyData(item.getUserProfile(), item.getLastSeen());
+                    userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
                 } else {
                     setGraphic(null);

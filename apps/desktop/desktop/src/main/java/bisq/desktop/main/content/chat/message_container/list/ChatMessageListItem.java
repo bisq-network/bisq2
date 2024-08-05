@@ -68,15 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.text.DateFormat;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -104,7 +96,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final ReputationScore reputationScore;
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean offerAlreadyTaken;
-    private final long lastSeen;
     @Nullable
     private String messageId;
     private final MarketPriceService marketPriceService;
@@ -174,8 +165,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             message = chatMessage.getText() + editPostFix;
             offerAlreadyTaken = false;
         }
-
-        lastSeen = senderUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
 
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::onUserIdentity));
 

@@ -71,21 +71,12 @@ public class UserProfileDisplay extends HBox {
         }
     }
 
-    public void applyData(@Nullable UserProfile userProfile, long lastSeen) {
+    public void setUserProfile(@Nullable UserProfile userProfile) {
+        userProfileIcon.setUserProfile(userProfile);
+        applyTooltip();
         if (userProfile != null) {
             userName.setText(userProfile.getUserName());
         }
-        userProfileIcon.applyData(userProfile, lastSeen);
-        applyTooltip();
-    }
-
-    public void setUserProfile(@Nullable UserProfile userProfile) {
-        if (userProfile == null) {
-            return;
-        }
-        userName.setText(userProfile.getUserName());
-        userProfileIcon.setUserProfile(userProfile);
-        applyTooltip();
     }
 
     public void dispose() {

@@ -19,11 +19,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -227,7 +223,7 @@ public class BisqEasyOfferbookUtil {
                 if (item != null && !empty) {
                     userNameLabel.setText(item.getUserNickname());
                     reputationScorePin = EasyBind.subscribe(item.getReputationScore(), reputationScoreDisplay::setReputationScore);
-                    userProfileIcon.applyData(item.getUserProfile(), item.getLastSeen());
+                    userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(userProfileBox);
                 } else {
                     if (reputationScorePin != null) {
