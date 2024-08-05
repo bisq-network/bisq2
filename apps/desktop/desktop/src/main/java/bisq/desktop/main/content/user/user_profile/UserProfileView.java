@@ -48,8 +48,7 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-import static bisq.user.profile.UserProfile.MAX_LENGTH_STATEMENT;
-import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
+import static bisq.user.profile.UserProfile.*;
 
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
@@ -64,7 +63,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
-    private final MaterialTextField nymId, profileId, profileAge, lastSeen, reputationScoreField, statement;
+    private final MaterialTextField nymId, profileId, profileAge, livenessState, reputationScoreField, statement;
     private final ImageView catIconImageView;
     private final MaterialTextArea terms;
     private final VBox formVBox;
@@ -122,8 +121,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         profileAge = addField(Res.get("user.userProfile.profileAge"));
         profileAge.setIconTooltip(Res.get("user.userProfile.profileAge.tooltip"));
 
-        lastSeen = addField(Res.get("user.userProfile.lastSeen"));
-        lastSeen.setIconTooltip(Res.get("user.userProfile.lastSeen.tooltip"));
+        livenessState = addField(Res.get("user.userProfile.livenessState.description"));
+        livenessState.setIconTooltip(Res.get("user.userProfile.livenessState.tooltip"));
 
         reputationScoreField = addField(Res.get("user.userProfile.reputation"));
 
@@ -156,7 +155,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         nymId.textProperty().bind(model.getNymId());
         profileId.textProperty().bind(model.getProfileId());
         profileAge.textProperty().bind(model.getProfileAge());
-        lastSeen.textProperty().bind(model.getLastSeen());
+        livenessState.textProperty().bind(model.getLivenessState());
         reputationScoreField.textProperty().bind(model.getReputationScoreValue());
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
@@ -201,7 +200,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         nymId.textProperty().unbind();
         profileId.textProperty().unbind();
         profileAge.textProperty().unbind();
-        lastSeen.textProperty().unbind();
+        livenessState.textProperty().unbind();
         reputationScoreField.textProperty().unbind();
         statement.textProperty().unbindBidirectional(model.getStatement());
         terms.textProperty().unbindBidirectional(model.getTerms());

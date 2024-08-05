@@ -72,7 +72,6 @@ public class LivenessScheduler {
                 ageConsumer.setAge(age);
                 String formattedAge = TimeFormatter.formatAge(age);
                 formattedAgeConsumer.setFormattedAge(formattedAge);
-                log.error("UIScheduler {} {}", userProfile.getNickName(), formattedAge);
             }
         }).periodically(0, 1, TimeUnit.SECONDS);
     }

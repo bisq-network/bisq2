@@ -101,11 +101,11 @@ public class UserProfileController implements Controller {
                         livenessUpateScheduler = UIScheduler.run(() -> {
                                     long publishDate = userProfile.getPublishDate();
                                     if (publishDate == 0) {
-                                        model.getLastSeen().set(Res.get("data.na"));
+                                        model.getLivenessState().set(Res.get("data.na"));
                                     } else {
                                         long age = Math.max(0, System.currentTimeMillis() - publishDate);
                                         String formattedAge = TimeFormatter.formatAge(age);
-                                        model.getLastSeen().set(formattedAge);
+                                        model.getLivenessState().set(Res.get("user.userProfile.livenessState.ageDisplay", formattedAge));
                                     }
                                 })
                                 .periodically(0, 1, TimeUnit.SECONDS);
