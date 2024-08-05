@@ -101,6 +101,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return Optional.ofNullable(getUserProfileById().get(id));
     }
 
+    // We update the publishDate in our managed userProfiles. Only if the userProfile is not found we return
+    // the one used for requesting
+    public UserProfile getManagedUserProfile(UserProfile userProfile) {
+        return findUserProfile(userProfile.getId()).orElse(userProfile);
+    }
+
     public List<UserProfile> getUserProfiles() {
         return new ArrayList<>(getUserProfileById().values());
     }
