@@ -25,6 +25,7 @@ import bisq.chat.ChatService;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
@@ -58,6 +59,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -101,6 +103,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ReputationService reputationService;
         private final Runnable closeHandler;
         private final BannedUserService bannedUserService;
+        private UIScheduler livenessUpateScheduler;
 
         private Controller(ServiceProvider serviceProvider,
                            UserProfile userProfile,
@@ -139,7 +142,22 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na")));
 
-            model.lastSeen.set(TimeFormatter.formatAge(userProfileService.getLastSeen(userProfile)));
+            if (livenessUpateScheduler != null) {
+                livenessUpateScheduler.stop();
+                livenessUpateScheduler = null;
+            }
+            livenessUpateScheduler = UIScheduler.run(() -> {
+                        long publishDate = userProfile.getPublishDate();
+                        if (publishDate == 0) {
+                            model.getLastSeen().set(Res.get("data.na"));
+                        } else {
+                            long age = Math.max(0, System.currentTimeMillis() - publishDate);
+                            String formattedAge = TimeFormatter.formatAge(age);
+                            model.getLastSeen().set(formattedAge);
+                        }
+                    })
+                    .periodically(0, 1, TimeUnit.SECONDS);
+
             String version = userProfile.getApplicationVersion();
             if (version.isEmpty()) {
                 version = Res.get("data.na");
@@ -152,6 +170,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
         @Override
         public void onDeactivate() {
+            if (livenessUpateScheduler != null) {
+                livenessUpateScheduler.stop();
+                livenessUpateScheduler = null;
+            }
         }
 
         void onSendPrivateMessage() {
@@ -208,7 +230,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
         private final BooleanProperty isPeer = new SimpleBooleanProperty();
 
-        private Model(ChatService chatService, UserProfile userProfile, ChatChannel<? extends ChatMessage> selectedChannel) {
+        private Model(ChatService chatService,
+                      UserProfile userProfile,
+                      ChatChannel<? extends ChatMessage> selectedChannel) {
             this.chatService = chatService;
             this.userProfile = userProfile;
             this.selectedChannel = selectedChannel;

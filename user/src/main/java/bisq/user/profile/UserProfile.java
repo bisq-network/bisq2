@@ -29,6 +29,7 @@ import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
@@ -51,7 +52,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public final class UserProfile implements DistributedData {
+public final class UserProfile implements DistributedData, PublishDateAware {
     public static final int VERSION = 1;
     public static final int MAX_LENGTH_NICK_NAME = 100;
     public static final int MAX_LENGTH_TERMS = 500;
@@ -103,6 +104,7 @@ public final class UserProfile implements DistributedData {
     private transient String nym;
     private transient ByteArray proofOfBurnHash;
     private transient ByteArray bondedReputationHash;
+    private transient long publishDate;
 
     private UserProfile(String nickName,
                         ProofOfWork proofOfWork,
@@ -187,6 +189,11 @@ public final class UserProfile implements DistributedData {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public void setPublishDate(long publishDate) {
+        this.publishDate = publishDate;
     }
 
     @Override

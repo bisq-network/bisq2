@@ -37,7 +37,6 @@ public class UserProfileDisplay extends HBox {
     private final ReputationScoreDisplay reputationScoreDisplay;
     @Getter
     private final Label userName;
-    private UserProfile userProfile;
 
     public UserProfileDisplay() {
         this(null, DEFAULT_ICON_SIZE);
@@ -72,32 +71,17 @@ public class UserProfileDisplay extends HBox {
         }
     }
 
-    public void applyData(@Nullable UserProfile userProfile, @Nullable String lastSeenAsString, long lastSeen) {
-        if (userProfile != null) {
-            this.userProfile = userProfile;
-            userName.setText(userProfile.getUserName());
-        }
-        userProfileIcon.applyData(userProfile, lastSeenAsString, lastSeen);
-        applyTooltip();
-    }
-
-    public void setLastSeenAsString(String lastSeen) {
-        userProfileIcon.setLastSeenAsString(lastSeen);
-        applyTooltip();
-    }
-
-    public void setLastSeen(long lastSeen) {
-        userProfileIcon.setLastSeen(lastSeen);
-    }
-
     public void setUserProfile(@Nullable UserProfile userProfile) {
-        if (userProfile == null) {
-            return;
-        }
-        this.userProfile = userProfile;
-        userName.setText(userProfile.getUserName());
         userProfileIcon.setUserProfile(userProfile);
         applyTooltip();
+        if (userProfile != null) {
+            userName.setText(userProfile.getUserName());
+        }
+    }
+
+    public void dispose() {
+        userProfileIcon.dispose();
+        setReputationScore(null);
     }
 
     private void applyTooltip() {
@@ -109,14 +93,6 @@ public class UserProfileDisplay extends HBox {
                 "\n" + reputationScoreDisplay.getTooltipString() :
                 "";
         return userProfileIcon.getTooltipText() + reputationTooltip;
-    }
-
-    public void setReputationScoreScale(double scale) {
-        reputationScoreDisplay.setScale(scale);
-    }
-
-    public void setIconSize(double size) {
-        userProfileIcon.setSize(size);
     }
 
     public void setReputationScore(@Nullable ReputationScore reputationScore) {

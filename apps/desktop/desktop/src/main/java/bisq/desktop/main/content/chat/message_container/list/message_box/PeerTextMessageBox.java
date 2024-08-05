@@ -131,8 +131,8 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    public void cleanup() {
-        super.cleanup();
+    public void dispose() {
+        super.dispose();
 
         message.maxWidthProperty().unbind();
 
@@ -145,7 +145,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         ignoreUserMenuItem.setOnAction(null);
         reportUserMenuItem.setOnAction(null);
 
-        userProfileIcon.releaseResources();
+        userProfileIcon.dispose();
 
         isMenuShowingPin.unsubscribe();
     }

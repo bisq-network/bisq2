@@ -25,6 +25,9 @@ import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -47,7 +50,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service {
+public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service, DataService.Listener {
     public final static int MINT_NYM_DIFFICULTY = 65536;  // Math.pow(2, 16) = 65536;
 
     @Getter
@@ -74,11 +77,29 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof UserProfile userProfile) {
+            findUserIdentity(userProfile.getId())
+                    .map(UserIdentity::getUserProfile)
+                    .filter(myUserProfile -> userProfile.getPublishDate() > myUserProfile.getPublishDate())
+                    .ifPresent(myUserProfile -> myUserProfile.setPublishDate(userProfile.getPublishDate()));
+        }
     }
 
 
@@ -162,7 +183,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
     }
 
-    public CompletableFuture<BroadcastResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String statement) {
+    public CompletableFuture<BroadcastResult> editUserProfile(UserIdentity oldUserIdentity,
+                                                              String terms,
+                                                              String statement) {
         Identity oldIdentity = oldUserIdentity.getIdentity();
         UserProfile oldUserProfile = oldUserIdentity.getUserProfile();
         UserProfile newUserProfile = UserProfile.forEdit(oldUserProfile, terms, statement);

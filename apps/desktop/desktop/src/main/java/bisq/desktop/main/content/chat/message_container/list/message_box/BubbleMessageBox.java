@@ -131,7 +131,7 @@ public abstract class BubbleMessageBox extends MessageBox {
             userName.setText(author.getUserName());
             userName.setOnMouseClicked(e -> controller.onMention(author));
 
-            userProfileIcon.applyData(author, item.getLastSeenAsString(), item.getLastSeen());
+            userProfileIcon.setUserProfile(author);
             userProfileIcon.setCursor(Cursor.HAND);
             userProfileIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
         });
@@ -179,7 +179,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     @Override
-    public void cleanup() {
+    public void dispose() {
         setOnMouseEntered(null);
         setOnMouseExited(null);
 
@@ -188,6 +188,7 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         activeReactionsDisplayHBox.dispose();
         reactMenuBox.dispose();
+        userProfileIcon.dispose();
     }
 
     private void showDateTimeAndActionsMenu(boolean shouldShow) {

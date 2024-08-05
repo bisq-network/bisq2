@@ -24,7 +24,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -63,8 +62,6 @@ public class BondedRolesListItem {
     private final boolean staticPublicKeysProvided;
     private final boolean isRootNode;
     private final boolean isRootSeedNode;
-    private final long lastSeen;
-    private final String lastSeenAsString;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService, NetworkService networkService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
@@ -77,9 +74,6 @@ public class BondedRolesListItem {
         signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
-
-        lastSeen = userProfile.map(userProfileService::getLastSeen).orElse(-1L);
-        lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
         Optional<AddressByTransportTypeMap> addressByTransportTypeMap = authorizedBondedRoleData.getAddressByTransportTypeMap();
         if (addressByTransportTypeMap.isPresent()) {

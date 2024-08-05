@@ -122,8 +122,8 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
     }
 
     @Override
-    public void cleanup() {
-        super.cleanup();
+    public void dispose() {
+        super.dispose();
 
         takeOfferButton.setOnAction(null);
         peerNickName.setOnMouseClicked(null);

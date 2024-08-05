@@ -48,7 +48,6 @@ import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
@@ -73,8 +72,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static bisq.chat.ChatMessageType.LEAVE;
-import static bisq.chat.ChatMessageType.PROTOCOL_LOG_MESSAGE;
+import static bisq.chat.ChatMessageType.*;
 import static bisq.desktop.main.content.chat.message_container.ChatMessageContainerView.EDITED_POST_FIX;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -98,8 +96,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final ReputationScore reputationScore;
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean offerAlreadyTaken;
-    private final long lastSeen;
-    private final String lastSeenAsString;
     @Nullable
     private String messageId;
     private final MarketPriceService marketPriceService;
@@ -111,7 +107,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final Set<Pin> statusPins = new HashSet<>();
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
-    private Optional<ResendMessageService> resendMessageService;
+    private final Optional<ResendMessageService> resendMessageService;
     private ImageView successfulDeliveryIcon, connectingDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
     private BisqMenuItem tryAgainMenuItem;
 
@@ -135,8 +131,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         this.userIdentityService = userIdentityService;
         this.resendMessageService = resendMessageService;
 
-        if (chatMessage instanceof PrivateChatMessage) {
-            senderUserProfile = Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile());
+        if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
+            senderUserProfile = Optional.of(userProfileService.getManagedUserProfile(privateChatMessage.getSenderUserProfile()));
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         }
@@ -169,9 +165,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             message = chatMessage.getText() + editPostFix;
             offerAlreadyTaken = false;
         }
-
-        lastSeen = senderUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
-        lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::onUserIdentity));
 
@@ -270,7 +263,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return false;
     }
 
-    private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage, String separator, Function<String, String> toStringFunction) {
+    private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage,
+                                             String separator,
+                                             Function<String, String> toStringFunction) {
         return chatMessage.getBisqEasyOffer()
                 .map(BisqEasyOffer::getSupportedLanguageCodes)
                 .map(supportedLanguageCodes -> Joiner.on(separator)
@@ -385,12 +380,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 Reaction reaction = getReactionFromOrdinal(element.getReactionId());
                 UIThread.run(() -> {
                     if (userReactions.containsKey(reaction)) {
-                        Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
-                        userProfile.ifPresent(profile -> {
-                            if (!userProfileService.isChatUserIgnored(profile)) {
-                                userReactions.get(reaction).addUser(element, profile);
-                            }
-                        });
+                        userProfileService.findUserProfile(element.getUserProfileId())
+                                .filter(profile -> !userProfileService.isChatUserIgnored(profile))
+                                .ifPresent(profile -> userReactions.get(reaction).addUser(element, profile));
                     }
                 });
             }
@@ -401,8 +393,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
                 UIThread.run(() -> {
                     if (userReactions.containsKey(reaction)) {
-                        Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
-                        userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
+                        userProfileService.findUserProfile(chatMessageReaction.getUserProfileId())
+                                .ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
                     }
                 });
             }

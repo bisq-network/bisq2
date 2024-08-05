@@ -45,7 +45,9 @@ import java.util.Optional;
 @EqualsAndHashCode
 @Slf4j
 public final class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
-    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
+    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
+                                                   AuthenticatedData authenticatedData,
+                                                   KeyPair keyPair)
             throws GeneralSecurityException {
 
         byte[] hashForStoreMap = DigestUtil.hash(authenticatedData.serializeForHash());
@@ -73,7 +75,9 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final PublicKey ownerPublicKey;
 
-    public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData, byte[] signature, PublicKey ownerPublicKey) {
+    public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
+                                       byte[] signature,
+                                       PublicKey ownerPublicKey) {
         this(authenticatedSequentialData,
                 signature,
                 ownerPublicKey.getEncoded(),
@@ -135,7 +139,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public double getCostFactor() {
-        DistributedData distributedData = authenticatedSequentialData.getAuthenticatedData().getDistributedData();
+        DistributedData distributedData = authenticatedSequentialData.getDistributedData();
         double metaDataImpact = distributedData.getMetaData().getCostFactor();
         double dataImpact = distributedData.getCostFactor();
         double impact = metaDataImpact + dataImpact;
@@ -188,6 +192,10 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Override
     public boolean isExpired() {
         return authenticatedSequentialData.isExpired();
+    }
+
+    public DistributedData getDistributedData() {
+        return authenticatedSequentialData.getDistributedData();
     }
 
     @Override

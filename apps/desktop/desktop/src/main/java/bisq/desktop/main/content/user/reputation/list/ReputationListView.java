@@ -138,7 +138,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                             .collect(Collectors.toList()));
 
                     // Add lastSeen plain value
-                    cellDataInRow.add(String.valueOf(item.getLastSeen()));
+                    cellDataInRow.add(String.valueOf(item.getPublishDate()));
 
                     // Add plain values (for better filter/sorting)
                     cellDataInRow.addAll(item.getValuePairBySource().entrySet().stream()
@@ -182,15 +182,15 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.profileAge"))
                 .left()
-                .comparator(Comparator.comparing(ListItem::getProfileAge))
+                .comparator(Comparator.comparing(ListItem::getProfileAge).reversed())
                 .valueSupplier(ListItem::getProfileAgeString)
                 .includeForCsv(false)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.lastSeen"))
-                .left()
-                .comparator(Comparator.comparing(ListItem::getLastSeen))
-                .valueSupplier(ListItem::getLastSeenAsString)
+                .right()
+                .comparator(Comparator.comparing(ListItem::getPublishDate).reversed())
+                .setCellFactory(getLivenessCellFactory())
                 .build());
 
         scoreColumn = new BisqTableColumn.Builder<ListItem>()
@@ -241,9 +241,46 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
-                    userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
+                    userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
                 } else {
+                    userProfileIcon.dispose();
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getLivenessCellFactory() {
+        return column -> new TableCell<>() {
+            // This is a bit of a hack, but we do not want to add a UIScheduler to the ListItems as the list is large,
+            // and it would consume too much resources. When we add it the cell factory we have no guarantee that it
+            // will get stopped as the updateItem is not called when the view gets removed from stage.
+
+            // As a hack we use the Liveness scheduler in UserProfileIcon as UserProfileIcon handles the cleanup of the scheduler
+            // by using a scene listener to detect once we got removed from stage.
+            // We need to add the userProfileIcon to stage here to make it work, but we set it invisible.
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon(40);
+            private final Label age = new Label();
+            private final HBox hBox = new HBox(age, userProfileIcon);
+
+            {
+                hBox.setAlignment(Pos.CENTER_LEFT);
+                userProfileIcon.setManaged(false);
+                userProfileIcon.setVisible(false);
+            }
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    age.textProperty().bind(userProfileIcon.getFormattedAge());
+                    userProfileIcon.setUserProfile(item.getUserProfile());
+                    setGraphic(hBox);
+                } else {
+                    age.textProperty().unbind();
+                    userProfileIcon.dispose();
                     setGraphic(null);
                 }
             }
@@ -304,9 +341,6 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         private long value;
         private final StringProperty valueAsStringProperty = new SimpleStringProperty();
         private final Set<ReputationSource> reputationSources = new HashSet<>();
-        private final long lastSeen;
-        private final String lastSeenAsString;
-
         private final ToggleGroup toggleGroup;
         private final ReputationListController controller;
         private final ReputationService reputationService;
@@ -332,9 +366,10 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                     .orElse(Res.get("data.na"));
 
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
+        }
 
-            lastSeen = userProfileService.getLastSeen(userProfile);
-            lastSeenAsString = TimeFormatter.formatAge(lastSeen);
+        long getPublishDate() {
+            return userProfile.getPublishDate();
         }
 
         public void dispose() {

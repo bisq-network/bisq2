@@ -19,11 +19,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -209,7 +205,7 @@ public class BisqEasyOfferbookUtil {
             private final Label userNameLabel = new Label();
             private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
             private final VBox nameAndReputationBox = new VBox(userNameLabel, reputationScoreDisplay);
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon();
             private final HBox userProfileBox = new HBox(10, userProfileIcon, nameAndReputationBox);
             private Subscription reputationScorePin;
 
@@ -227,9 +223,10 @@ public class BisqEasyOfferbookUtil {
                 if (item != null && !empty) {
                     userNameLabel.setText(item.getUserNickname());
                     reputationScorePin = EasyBind.subscribe(item.getReputationScore(), reputationScoreDisplay::setReputationScore);
-                    userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
+                    userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(userProfileBox);
                 } else {
+                    userProfileIcon.dispose();
                     if (reputationScorePin != null) {
                         reputationScorePin.unsubscribe();
                     }

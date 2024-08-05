@@ -31,7 +31,6 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.moderator.ModeratorService;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
@@ -202,7 +201,7 @@ public class BannedUserProfileTable {
         private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userName = new Label();
-                private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+                private final UserProfileIcon userProfileIcon = new UserProfileIcon();
                 private final HBox hBox = new HBox(10, userProfileIcon, userName);
 
                 {
@@ -216,9 +215,10 @@ public class BannedUserProfileTable {
 
                     if (item != null && !empty) {
                         userName.setText(item.getUserName());
-                        userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
+                        userProfileIcon.setUserProfile(item.getUserProfile());
                         setGraphic(hBox);
                     } else {
+                        userProfileIcon.dispose();
                         setGraphic(null);
                     }
                 }
@@ -270,15 +270,11 @@ public class BannedUserProfileTable {
             private final BannedUserProfileData bannedUserProfileData;
             private final UserProfile userProfile;
             private final String userName;
-            private final long lastSeen;
-            private final String lastSeenAsString;
 
             private ListItem(BannedUserProfileData bannedUserProfileData, UserProfileService userProfileService) {
                 this.bannedUserProfileData = bannedUserProfileData;
                 userProfile = bannedUserProfileData.getUserProfile();
                 userName = userProfile.getUserName();
-                lastSeen = userProfileService.getLastSeen(userProfile);
-                lastSeenAsString = TimeFormatter.formatAge(lastSeen);
             }
         }
     }

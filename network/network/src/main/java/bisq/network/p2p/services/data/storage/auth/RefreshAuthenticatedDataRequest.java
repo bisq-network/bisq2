@@ -21,7 +21,6 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -39,7 +38,7 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public final class RefreshAuthenticatedDataRequest implements DataRequest {
+public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataRequest {
     private static final int VERSION = 1;
 
     public static RefreshAuthenticatedDataRequest from(AuthenticatedDataStorageService store,

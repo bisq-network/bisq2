@@ -15,12 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.message_container.list.message_box;
+package bisq.network.p2p.services.data.storage;
 
-import javafx.scene.layout.VBox;
-
-public abstract class MessageBox extends VBox {
-    protected final static double CHAT_BOX_MAX_WIDTH = 1160;
-
-    public abstract void dispose();
+public interface PublishDateAware {
+    void setPublishDate(long publishDate);
 }

@@ -101,6 +101,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return Optional.ofNullable(getUserProfileById().get(id));
     }
 
+    // We update the publishDate in our managed userProfiles. Only if the userProfile is not found we return
+    // the one used for requesting
+    public UserProfile getManagedUserProfile(UserProfile userProfile) {
+        return findUserProfile(userProfile.getId()).orElse(userProfile);
+    }
+
     public List<UserProfile> getUserProfiles() {
         return new ArrayList<>(getUserProfileById().values());
     }
@@ -140,18 +146,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
     }
 
-    public Optional<Long> findUserProfileLastRepublishDate(UserProfile userProfile) {
-        return networkService.findCreationDate(userProfile,
-                distributedData -> distributedData instanceof UserProfile && distributedData.equals(userProfile));
-    }
-
-    public long getLastSeen(UserProfile userProfile) {
-        return findUserProfileLastRepublishDate(userProfile).map(date -> System.currentTimeMillis() - date).orElse(-1L);
-    }
-
     private void processUserProfileAdded(UserProfile userProfile) {
-        Optional<UserProfile> optionalUserProfile = findUserProfile(userProfile.getId());
-        if (optionalUserProfile.isEmpty() || !optionalUserProfile.get().equals(userProfile)) {
+        Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
+        if (existingUserProfile.isEmpty() || !existingUserProfile.get().equals(userProfile)) {
             if (verifyUserProfile(userProfile)) {
                 ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
                 synchronized (persistableStore) {
@@ -168,6 +165,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                 if (updated >= 0.5) {
                     Node.setPreferredVersion(1);
                 }
+            }
+        } else {
+            if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
+                existingUserProfile.get().setPublishDate(userProfile.getPublishDate());
             }
         }
     }

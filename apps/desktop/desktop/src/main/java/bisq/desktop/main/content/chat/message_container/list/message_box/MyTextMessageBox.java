@@ -212,8 +212,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    public void cleanup() {
-        super.cleanup();
+    public void dispose() {
+        super.dispose();
 
         message.maxWidthProperty().unbind();
         editInputField.maxWidthProperty().unbind();
@@ -228,7 +228,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         userProfileIcon.setOnMouseClicked(null);
 
         editInputField.setOnKeyPressed(null);
-        userProfileIcon.releaseResources();
+        userProfileIcon.dispose();
 
         if (shouldShowTryAgainPin != null) {
             shouldShowTryAgainPin.unsubscribe();

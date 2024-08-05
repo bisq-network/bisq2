@@ -112,7 +112,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    public void cleanup() {
+    public void dispose() {
         copyAction.setOnAction(null);
         removeOffer.setOnAction(null);
     }

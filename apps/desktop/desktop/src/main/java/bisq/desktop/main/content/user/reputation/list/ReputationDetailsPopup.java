@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 
 public class ReputationDetailsPopup extends VBox {
     private final BisqTableView<ListItem> tableView;
+    private final UserProfileIcon userProfileIcon;
 
     public ReputationDetailsPopup(UserProfile userProfile,
                                   ReputationScore reputationScore,
@@ -103,7 +104,7 @@ public class ReputationDetailsPopup extends VBox {
         setPrefWidth(1000);
         configTableView();
 
-        UserProfileIcon userProfileIcon = new UserProfileIcon(40);
+        userProfileIcon = new UserProfileIcon(40);
         userProfileIcon.setUserProfile(userProfile);
 
         Label userName = new Label(userProfile.getNickName());
@@ -140,6 +141,7 @@ public class ReputationDetailsPopup extends VBox {
 
     public void dispose() {
         tableView.dispose();
+        userProfileIcon.dispose();
     }
 
     private void configTableView() {
