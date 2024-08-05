@@ -201,7 +201,7 @@ public class BannedUserProfileTable {
         private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userName = new Label();
-                private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+                private final UserProfileIcon userProfileIcon = new UserProfileIcon();
                 private final HBox hBox = new HBox(10, userProfileIcon, userName);
 
                 {

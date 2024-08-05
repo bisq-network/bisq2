@@ -148,6 +148,15 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         tableView.visibleProperty().unbind();
         tableView.managedProperty().unbind();
+
+        if (chatMyUserProfileDisplay != null) {
+            chatMyUserProfileDisplay.dispose();
+            chatMyUserProfileDisplay = null;
+        }
+        if (chatPeerUserProfileDisplay != null) {
+            chatPeerUserProfileDisplay.dispose();
+            chatPeerUserProfileDisplay = null;
+        }
     }
 
     @Override
@@ -212,6 +221,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
+            private UserProfileDisplay userProfileDisplay;
             private final HBox hBox = new HBox(5);
 
             @Override
@@ -219,13 +229,17 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
+                    userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     getStyleClass().add("user-profile-table-cell");
                     hBox.getChildren().setAll(userProfileDisplay, Spacer.fillHBox(), item.getNumMessagesBadge());
 
                     setGraphic(hBox);
                 } else {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     setGraphic(null);
                 }
             }

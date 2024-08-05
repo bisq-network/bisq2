@@ -85,7 +85,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
     protected Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem, BondedRolesListItem>> getUserProfileCellFactory() {
         return column -> new TableCell<>() {
             private final Label userName = new Label();
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon();
             private final HBox hBox = new HBox(10, userProfileIcon, userName);
             private final BisqTooltip tooltip = new BisqTooltip(Res.get("user.bondedRoles.table.columns.userProfile.defaultNode"), true);
 
@@ -108,8 +108,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                         userName.setStyle("-fx-text-fill: -fx-light-text-color;");
                     }
 
-                    item.getUserProfile().ifPresent(userProfile ->
-                            userProfileIcon.setUserProfile(userProfile));
+                    item.getUserProfile().ifPresent(userProfileIcon::setUserProfile);
                     setGraphic(hBox);
                 } else {
                     userProfileIcon.dispose();

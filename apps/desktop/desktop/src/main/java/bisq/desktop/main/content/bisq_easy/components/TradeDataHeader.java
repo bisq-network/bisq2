@@ -232,6 +232,8 @@ public class TradeDataHeader {
 
             userProfilePin.unsubscribe();
             reputationScorePin.unsubscribe();
+
+            peersUserProfileDisplay.dispose();
         }
 
         private Triple<Text, Text, VBox> getElements() {

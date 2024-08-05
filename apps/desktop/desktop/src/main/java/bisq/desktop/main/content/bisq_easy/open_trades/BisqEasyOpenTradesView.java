@@ -382,14 +382,13 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMyUserCellFactory() {
         return column -> new TableCell<>() {
 
-            private UserProfileIcon userProfileIcon;
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon();
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileIcon = new UserProfileIcon();
                     userProfileIcon.setUserProfile(item.getMyUserProfile());
                     // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
                     setGraphic(new StackPane(userProfileIcon));
@@ -403,6 +402,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
+            private UserProfileDisplay userProfileDisplay;
             private Badge badge;
 
             @Override
@@ -410,7 +410,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
+                    userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     userProfileDisplay.setUserProfile(item.getPeersUserProfile());
 
@@ -424,6 +424,10 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                     badge.getLabel().setStyle("-fx-text-fill: black !important;");
                     setGraphic(badge);
                 } else {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     if (badge != null) {
                         badge.textProperty().unbind();
                     }
@@ -435,6 +439,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMediatorCellFactory() {
         return column -> new TableCell<>() {
+            private UserProfileDisplay userProfileDisplay;
             private Badge badge;
 
             @Override
@@ -443,7 +448,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
                     UserProfile mediator = item.getChannel().getMediator().get();
-                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(mediator);
+                    userProfileDisplay = new UserProfileDisplay(mediator);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
 
                     badge = new Badge(userProfileDisplay);
@@ -455,6 +460,10 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                     badge.getLabel().setStyle("-fx-text-fill: black !important;");
                     setGraphic(badge);
                 } else {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     if (badge != null) {
                         badge.textProperty().unbind();
                     }

@@ -257,13 +257,19 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             TableCell<ListItem, ListItem>> getMakerCellFactory() {
         return column -> new TableCell<>() {
 
+            private UserProfileDisplay userProfileDisplay;
+
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    applyTraderToTableCell(this, item, item.isMakerRequester(), item.getMaker());
+                    userProfileDisplay = applyTraderToTableCell(this, item, item.isMakerRequester(), item.getMaker());
                 } else {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     setGraphic(null);
                 }
             }
@@ -274,23 +280,29 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             TableCell<ListItem, ListItem>> getTakerCellFactory() {
         return column -> new TableCell<>() {
 
+            private UserProfileDisplay userProfileDisplay;
+
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    applyTraderToTableCell(this, item, !item.isMakerRequester(), item.getTaker());
+                    userProfileDisplay = applyTraderToTableCell(this, item, !item.isMakerRequester(), item.getTaker());
                 } else {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     setGraphic(null);
                 }
             }
         };
     }
 
-    private static void applyTraderToTableCell(TableCell<ListItem, ListItem> tableCell,
-                                               ListItem item,
-                                               boolean isRequester,
-                                               ListItem.Trader trader) {
+    private static UserProfileDisplay applyTraderToTableCell(TableCell<ListItem, ListItem> tableCell,
+                                                             ListItem item,
+                                                             boolean isRequester,
+                                                             ListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
         userProfileDisplay.setUserProfile(trader.getUserProfile());
         if (isRequester) {
@@ -308,6 +320,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         // Label color does not get applied from badge style when in a list cell even we use '!important' in the css.
         badge.getLabel().setStyle("-fx-text-fill: black !important;");
         tableCell.setGraphic(badge);
+        return userProfileDisplay;
     }
 
     @Slf4j
@@ -413,7 +426,9 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             private final ReputationScore reputationScore;
             private final long totalReputationScore, profileAge;
 
-            Trader(UserProfile userProfile, ReputationService reputationService, UserProfileService userProfileService) {
+            Trader(UserProfile userProfile,
+                   ReputationService reputationService,
+                   UserProfileService userProfileService) {
                 this.userProfile = userProfile;
                 userName = userProfile.getUserName();
 

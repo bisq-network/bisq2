@@ -245,6 +245,9 @@ public class MediationCaseHeader {
             showClosedCasesPin.unsubscribe();
             openCloseButton.setOnAction(null);
             leaveButton.setOnAction(null);
+
+            makerProfileDisplay.dispose();
+            takerProfileDisplay.dispose();
         }
 
         private Triple<Text, UserProfileDisplay, VBox> getUserProfileElements(@Nullable String description) {

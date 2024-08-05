@@ -205,7 +205,7 @@ public class BisqEasyOfferbookUtil {
             private final Label userNameLabel = new Label();
             private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
             private final VBox nameAndReputationBox = new VBox(userNameLabel, reputationScoreDisplay);
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon();
             private final HBox userProfileBox = new HBox(10, userProfileIcon, nameAndReputationBox);
             private Subscription reputationScorePin;
 
