@@ -32,6 +32,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -131,6 +132,9 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
                 ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), bitcoinToggleGroup);
                 if (!paymentMethod.isCustomPaymentMethod()) {
                     ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
+                    ColorAdjust colorAdjust = new ColorAdjust();
+                    colorAdjust.setBrightness(-0.2);
+                    icon.setEffect(colorAdjust);
                     chipToggleButton.setLeftIcon(icon);
                 }
                 chipToggleButton.setOnAction(() -> controller.onToggleBitcoinPaymentMethod(spec, chipToggleButton.isSelected()));

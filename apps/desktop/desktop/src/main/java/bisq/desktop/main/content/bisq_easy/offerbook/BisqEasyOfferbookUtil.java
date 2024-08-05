@@ -20,6 +20,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -318,8 +319,12 @@ public class BisqEasyOfferbookUtil {
                     HBox hbox = new HBox(5);
                     hbox.setAlignment(Pos.CENTER_LEFT);
                     for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBitcoinPaymentMethods()) {
+                        ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
+                        ColorAdjust colorAdjust = new ColorAdjust();
+                        colorAdjust.setBrightness(-0.2);
+                        icon.setEffect(colorAdjust);
                         Label label = new Label();
-                        label.setGraphic(ImageUtil.getImageViewById(bitcoinPaymentMethod.getName()));
+                        label.setGraphic(icon);
                         BisqTooltip tooltip = new BisqTooltip();
                         tooltip.getStyleClass().add("medium-dark-tooltip");
                         tooltip.setText(bitcoinPaymentMethod.getDisplayString());

@@ -32,6 +32,7 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -235,6 +236,9 @@ public class TradeWizardPaymentMethodsView extends View<VBox, TradeWizardPayment
                             () -> {
                                 // Lookup for an image with the id of the enum name (REVOLUT)
                                 ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
+                                ColorAdjust colorAdjust = new ColorAdjust();
+                                colorAdjust.setBrightness(-0.2);
+                                icon.setEffect(colorAdjust);
                                 chipButton.setLeftIcon(icon);
                             });
             bitcoinMethodsGridPane.add(chipButton, col++, row);
