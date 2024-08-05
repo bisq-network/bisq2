@@ -189,7 +189,6 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.lastSeen"))
                 .left()
-                .sortType(TableColumn.SortType.DESCENDING)
                 .comparator(Comparator.comparing(ListItem::getPublishDate))
                 .setCellFactory(getLivenessCellFactory())
                 .build());

@@ -30,22 +30,15 @@ import javafx.scene.Scene;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.UUID;
 
 import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_ICON_SIZE;
 
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Slf4j
 public class UserProfileIcon extends StackPane implements LivenessScheduler.FormattedAgeConsumer {
-    // As we are used in a hashSet we want to be sure to have a controlled EqualsAndHashCode
-    @EqualsAndHashCode.Include
-    private final String id = UUID.randomUUID().toString();
-
     private final LivenessIndicator livenessIndicator = new LivenessIndicator();
     @Getter
     private final BisqTooltip tooltip = new BisqTooltip();

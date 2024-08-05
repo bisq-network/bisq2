@@ -25,10 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Manages LivenessScheduler per UserProfile to avoid to have too many UIScheduler running in case we have
- * multiple UserProfileIcon with the same UserProfile.
- */
 @Slf4j
 @Getter
 public class LivenessScheduler {
@@ -76,7 +72,7 @@ public class LivenessScheduler {
                 ageConsumer.setAge(age);
                 String formattedAge = TimeFormatter.formatAge(age);
                 formattedAgeConsumer.setFormattedAge(formattedAge);
-                //log.error("UIScheduler {} {}", userProfile.getNickName(), formattedAge);
+                log.error("UIScheduler {} {}", userProfile.getNickName(), formattedAge);
             }
         }).periodically(0, 1, TimeUnit.SECONDS);
     }
@@ -95,10 +91,5 @@ public class LivenessScheduler {
 
     public void enable() {
         disabled = false;
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
     }
 }

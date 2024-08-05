@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class RepublishUserProfileService implements Service {
-    // public static final long MIN_PAUSE_TO_NEXT_REPUBLISH = TimeUnit.SECONDS.toMillis(8);
     public static final long MIN_PAUSE_TO_NEXT_REPUBLISH = TimeUnit.MINUTES.toMillis(5);
 
     private final UserIdentityService userIdentityService;
@@ -48,8 +47,6 @@ public class RepublishUserProfileService implements Service {
                 userActivityDetected();
             }
         });
-
-        //  Scheduler.run(this::userActivityDetected).periodically(500);
         return CompletableFuture.completedFuture(true);
     }
 

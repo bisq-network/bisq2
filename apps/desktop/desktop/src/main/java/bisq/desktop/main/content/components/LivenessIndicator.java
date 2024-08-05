@@ -18,21 +18,15 @@
 package bisq.desktop.main.content.components;
 
 import javafx.scene.image.ImageView;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 class LivenessIndicator extends ImageView implements LivenessScheduler.AgeConsumer {
-    private static final long MOST_RECENT = TimeUnit.SECONDS.toMillis(3);
-    private static final long RECENT = TimeUnit.SECONDS.toMillis(5);
+    private static final long LAST_MINUTES = TimeUnit.MINUTES.toMillis(10);
+    private static final long LAST_HOUR = TimeUnit.HOURS.toMillis(1);
 
-    // As we are used in a hashSet we want to be sure to have a controlled EqualsAndHashCode
-    @EqualsAndHashCode.Include
-    private final String id = UUID.randomUUID().toString();
     private double size;
     private Long age;
 
@@ -57,9 +51,9 @@ class LivenessIndicator extends ImageView implements LivenessScheduler.AgeConsum
 
     private void updateId() {
         String color;
-        if (age == null || age > RECENT) {
+        if (age == null || age > LAST_HOUR) {
             color = "grey";
-        } else if (age > MOST_RECENT) {
+        } else if (age > LAST_MINUTES) {
             color = "yellow";
         } else {
             color = "green";
@@ -68,10 +62,5 @@ class LivenessIndicator extends ImageView implements LivenessScheduler.AgeConsum
         String sizePostFix = size < 60 ? "-small-dot" : "-dot";
         String id = color + sizePostFix;
         setId(id);
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
     }
 }
