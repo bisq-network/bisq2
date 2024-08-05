@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -90,6 +91,10 @@ public final class AuthenticatedSequentialData implements NetworkProto {
 
     public boolean isSequenceNrInvalid(long seqNumberFromMap) {
         return sequenceNumber <= seqNumberFromMap;
+    }
+
+    public DistributedData getDistributedData() {
+        return authenticatedData.getDistributedData();
     }
 
     @Override
