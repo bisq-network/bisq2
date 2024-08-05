@@ -259,14 +259,14 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     "requestFromMap expected be type of AddAuthenticatedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
-            if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
+            AuthenticatedSequentialData sequentialData = addRequestFromMap.getAuthenticatedSequentialData();
+            if (request.isSequenceNrInvalid(sequentialData.getSequenceNumber())) {
                 log.warn("SequenceNr is invalid at refresh. request={}", request);
                 // Sequence number has not increased
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyInvalid(dataFromMap)) {
+            if (request.isPublicKeyInvalid(sequentialData)) {
                 log.warn("PublicKey is invalid at refresh. request={}", request);
                 // Hash of pubKey of data does not match provided one
                 return new DataStorageResult(false).publicKeyHashInvalid();
@@ -277,12 +277,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).signatureInvalid();
             }
 
-            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(dataFromMap, request.getSequenceNumber());
+            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(sequentialData, request.getSequenceNumber());
             updatedRequest = new AddAuthenticatedDataRequest(updatedData,
                     addRequestFromMap.getSignature(),
                     addRequestFromMap.getOwnerPublicKey());
 
-            DistributedData distributedData = dataFromMap.getDistributedData();
+            DistributedData distributedData = sequentialData.getDistributedData();
             if (distributedData instanceof PublishDateAware publishDateAware) {
                 publishDateAware.setPublishDate(addRequestFromMap.getCreated());
             }
