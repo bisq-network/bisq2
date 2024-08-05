@@ -182,14 +182,14 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.profileAge"))
                 .left()
-                .comparator(Comparator.comparing(ListItem::getProfileAge))
+                .comparator(Comparator.comparing(ListItem::getProfileAge).reversed())
                 .valueSupplier(ListItem::getProfileAgeString)
                 .includeForCsv(false)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.lastSeen"))
-                .left()
-                .comparator(Comparator.comparing(ListItem::getPublishDate))
+                .right()
+                .comparator(Comparator.comparing(ListItem::getPublishDate).reversed())
                 .setCellFactory(getLivenessCellFactory())
                 .build());
 

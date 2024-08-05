@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.components;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
@@ -115,7 +116,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
     @Override
     public void setFormattedAge(String formattedAge) {
-        this.formattedAge.set(formattedAge);
+        this.formattedAge.set(StringUtils.isEmpty(formattedAge) ? Res.get("data.na") : formattedAge);
         if (formattedAge != null) {
             lastSeen = "\n" + Res.get("user.userProfile.lastSeenAgo", formattedAge) + "\n";
         }
