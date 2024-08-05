@@ -47,6 +47,8 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     private final LivenessIndicator livenessIndicator = new LivenessIndicator();
     @Getter
     private final BisqTooltip tooltip = new BisqTooltip();
+    @Getter
+    private String formattedAge = "";
     private final ImageView userProfileIcon = new ImageView();
     @Nullable
     private UserProfile userProfile;
@@ -118,6 +120,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
     @Override
     public void setFormattedAge(String formattedAge) {
+        this.formattedAge = formattedAge;
         if (formattedAge != null) {
             lastSeen = "\n" + Res.get("user.userProfile.lastSeenAgo", formattedAge) + "\n";
         }

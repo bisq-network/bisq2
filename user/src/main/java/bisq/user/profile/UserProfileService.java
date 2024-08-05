@@ -35,13 +35,7 @@ import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -144,15 +138,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         } else {
             return nickName + SEPARATOR_START + nym + SEPARATOR_END;
         }
-    }
-
-    public Optional<Long> findUserProfileLastRepublishDate(UserProfile userProfile) {
-        return networkService.findCreationDate(userProfile,
-                distributedData -> distributedData instanceof UserProfile && distributedData.equals(userProfile));
-    }
-
-    public long getLastSeen(UserProfile userProfile) {
-        return findUserProfileLastRepublishDate(userProfile).map(date -> System.currentTimeMillis() - date).orElse(-1L);
     }
 
     private void processUserProfileAdded(UserProfile userProfile) {

@@ -138,7 +138,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                             .collect(Collectors.toList()));
 
                     // Add lastSeen plain value
-                    cellDataInRow.add(String.valueOf(item.getLastSeen()));
+                    cellDataInRow.add(String.valueOf(item.getPublishDate()));
 
                     // Add plain values (for better filter/sorting)
                     cellDataInRow.addAll(item.getValuePairBySource().entrySet().stream()
@@ -189,8 +189,9 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.lastSeen"))
                 .left()
-                .comparator(Comparator.comparing(ListItem::getLastSeen))
-                .valueSupplier(ListItem::getLastSeenAsString)
+                .sortType(TableColumn.SortType.DESCENDING)
+                .comparator(Comparator.comparing(ListItem::getPublishDate))
+                .setCellFactory(getLivenessCellFactory())
                 .build());
 
         scoreColumn = new BisqTableColumn.Builder<ListItem>()
@@ -243,6 +244,28 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                     userName.setText(item.getUserName());
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
+                } else {
+                    userProfileIcon.dispose();
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getLivenessCellFactory() {
+        return column -> new TableCell<>() {
+            // We use the Liveness scheduler in UserProfileIcon as UserProfileIcon handles the cleanup of the scheduler
+            // by using a scene listener to detect once we got removed from stage. The updateItem method is not called
+            // when the view gets removed, thus the dispose call here will not work.
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon(40);
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    userProfileIcon.setUserProfile(item.getUserProfile());
+                    setText(userProfileIcon.getFormattedAge());
                 } else {
                     userProfileIcon.dispose();
                     setGraphic(null);
@@ -305,8 +328,6 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         private long value;
         private final StringProperty valueAsStringProperty = new SimpleStringProperty();
         private final Set<ReputationSource> reputationSources = new HashSet<>();
-        private final long lastSeen;
-        private final String lastSeenAsString;
         private final ToggleGroup toggleGroup;
         private final ReputationListController controller;
         private final ReputationService reputationService;
@@ -332,9 +353,10 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                     .orElse(Res.get("data.na"));
 
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
+        }
 
-            lastSeen = userProfileService.getLastSeen(userProfile);
-            lastSeenAsString = TimeFormatter.formatAge(lastSeen);
+        long getPublishDate() {
+            return userProfile.getPublishDate();
         }
 
         public void dispose() {

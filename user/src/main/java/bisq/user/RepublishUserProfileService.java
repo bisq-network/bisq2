@@ -18,6 +18,7 @@
 package bisq.user;
 
 import bisq.common.application.Service;
+import bisq.common.timer.Scheduler;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -29,8 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class RepublishUserProfileService implements Service {
-    //public static final long MIN_PAUSE_TO_NEXT_REPUBLISH = TimeUnit.SECONDS.toMillis(5);
-    public static final long MIN_PAUSE_TO_NEXT_REPUBLISH = TimeUnit.MINUTES.toMillis(5);
+    public static final long MIN_PAUSE_TO_NEXT_REPUBLISH = TimeUnit.SECONDS.toMillis(8);
+    // public static final long MIN_PAUSE_TO_NEXT_REPUBLISH = TimeUnit.MINUTES.toMillis(5);
 
     private final UserIdentityService userIdentityService;
     private UserIdentity selectedUserIdentity;
@@ -49,7 +50,7 @@ public class RepublishUserProfileService implements Service {
             }
         });
 
-        // Scheduler.run(this::userActivityDetected).periodically(500);
+        Scheduler.run(this::userActivityDetected).periodically(500);
         return CompletableFuture.completedFuture(true);
     }
 
