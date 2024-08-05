@@ -51,7 +51,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     @Getter
     private String tooltipText = "";
     private String userProfileInfo = "";
-    private String lastSeen = "";
+    private String livenessState = "";
     private String versionInfo = "";
     private final LivenessScheduler livenessScheduler;
     private final ChangeListener<Scene> sceneChangeListener;
@@ -118,7 +118,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     public void setFormattedAge(String formattedAge) {
         this.formattedAge.set(StringUtils.isEmpty(formattedAge) ? Res.get("data.na") : formattedAge);
         if (formattedAge != null) {
-            lastSeen = "\n" + Res.get("user.userProfile.lastSeenAgo", formattedAge) + "\n";
+            livenessState = "\n" + Res.get("user.userProfile.livenessState", formattedAge) + "\n";
         }
         updateTooltipText();
     }
@@ -143,7 +143,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     }
 
     private void updateTooltipText() {
-        tooltipText = userProfileInfo + lastSeen + versionInfo;
+        tooltipText = userProfileInfo + livenessState + versionInfo;
         tooltip.setText(tooltipText);
     }
 }

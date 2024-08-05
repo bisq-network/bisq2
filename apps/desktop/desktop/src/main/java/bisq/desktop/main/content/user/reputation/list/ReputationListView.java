@@ -114,11 +114,11 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         csvHeaders.add(Res.get("user.reputation.ranking").toUpperCase());
         csvHeaders.addAll(Stream.of(ReputationSource.values())
                 .map(reputationSource -> reputationSource.getDisplayString().toUpperCase())
-                .collect(Collectors.toList()));
-        csvHeaders.add(Res.get("component.standardTable.csv.plainValue", Res.get("user.reputation.table.columns.lastSeen").toUpperCase()));
+                .toList());
+        csvHeaders.add(Res.get("component.standardTable.csv.plainValue", Res.get("user.reputation.table.columns.livenessState").toUpperCase()));
         csvHeaders.addAll(Stream.of(ReputationSource.values())
                 .map(reputationSource -> Res.get("component.standardTable.csv.plainValue", reputationSource.getDisplayString().toUpperCase()))
-                .collect(Collectors.toList()));
+                .toList());
         standardTable.setCsvHeaders(Optional.of(csvHeaders));
 
         List<List<String>> csvData = tableView.getItems().stream()
@@ -135,17 +135,17 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                             .sorted(Comparator.comparingLong(o -> o.getKey().ordinal()))
                             .map(Map.Entry::getValue)
                             .map(Pair::getSecond)
-                            .collect(Collectors.toList()));
+                            .toList());
 
-                    // Add lastSeen plain value
-                    cellDataInRow.add(String.valueOf(item.getPublishDate()));
+                    // Add livenessState
+                    cellDataInRow.add(String.valueOf(TimeFormatter.formatAge(System.currentTimeMillis() - item.getPublishDate())));
 
                     // Add plain values (for better filter/sorting)
                     cellDataInRow.addAll(item.getValuePairBySource().entrySet().stream()
                             .sorted(Comparator.comparingLong(o -> o.getKey().ordinal()))
                             .map(Map.Entry::getValue)
                             .map(e -> String.valueOf(e.getFirst()))
-                            .collect(Collectors.toList()));
+                            .toList());
                     return cellDataInRow;
                 })
                 .collect(Collectors.toList());
@@ -187,7 +187,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .includeForCsv(false)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.reputation.table.columns.lastSeen"))
+                .title(Res.get("user.reputation.table.columns.livenessState"))
                 .right()
                 .comparator(Comparator.comparing(ListItem::getPublishDate).reversed())
                 .setCellFactory(getLivenessCellFactory())
@@ -265,7 +265,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             private final HBox hBox = new HBox(age, userProfileIcon);
 
             {
-                hBox.setAlignment(Pos.CENTER_LEFT);
+                hBox.setAlignment(Pos.CENTER_RIGHT);
                 userProfileIcon.setManaged(false);
                 userProfileIcon.setVisible(false);
             }
