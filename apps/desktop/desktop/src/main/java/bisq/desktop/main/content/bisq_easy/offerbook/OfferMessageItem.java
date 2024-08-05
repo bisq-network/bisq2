@@ -33,7 +33,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
@@ -69,8 +68,7 @@ public class OfferMessageItem {
     OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                      UserProfile userProfile,
                      ReputationService reputationService,
-                     MarketPriceService marketPriceService,
-                     UserProfileService userProfileService) {
+                     MarketPriceService marketPriceService) {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
         bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         this.userProfile = userProfile;

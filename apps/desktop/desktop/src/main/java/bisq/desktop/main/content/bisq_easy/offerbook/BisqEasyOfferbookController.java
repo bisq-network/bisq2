@@ -403,8 +403,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                             OfferMessageItem item = new OfferMessageItem(bisqEasyOfferbookMessage,
                                     userProfile.get(),
                                     reputationService,
-                                    marketPriceService,
-                                    userProfileService);
+                                    marketPriceService);
                             model.getOfferMessageItems().add(item);
                         }
                     });
