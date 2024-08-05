@@ -67,7 +67,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         // We access the (model.getListItems() in selectedChannelChanged triggered by the super call,
         // thus we set up the binding before the super call
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, PrivateChatsView.ListItem>bind(model.getListItems())
-                .map(channel -> new PrivateChatsView.ListItem(channel, reputationService))
+                .map(channel -> new PrivateChatsView.ListItem(channel, reputationService, userProfileService))
                 .to(channelService.getChannels());
 
         super.onActivate();
@@ -109,13 +109,12 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                 maybeSelectFirst();
             }
 
-            if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-                TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
+            if (chatChannel instanceof TwoPartyPrivateChatChannel channel) {
                 applyPeersIcon(channel);
-                UserProfile peer = channel.getPeer();
+                UserProfile peer = userProfileService.getManagedUserProfile(channel.getPeer());
                 model.getPeersUserProfile().set(peer);
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
-                UserProfile myProfile = channel.getMyUserIdentity().getUserProfile();
+                UserProfile myProfile = userProfileService.getManagedUserProfile(channel.getMyUserIdentity().getUserProfile());
                 model.getMyUserProfile().set(myProfile);
                 model.setMyUserReputationScore(reputationService.getReputationScore(myProfile));
                 model.getListItems().stream()

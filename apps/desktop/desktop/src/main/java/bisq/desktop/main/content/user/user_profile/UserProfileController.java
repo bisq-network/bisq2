@@ -108,7 +108,7 @@ public class UserProfileController implements Controller {
                                         model.getLastSeen().set(formattedAge);
                                     }
                                 })
-                                .periodically(1, TimeUnit.SECONDS);
+                                .periodically(0, 1, TimeUnit.SECONDS);
 
                     });
                 }

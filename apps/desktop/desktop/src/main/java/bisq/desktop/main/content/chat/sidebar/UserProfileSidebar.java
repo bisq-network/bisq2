@@ -156,7 +156,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                             model.getLastSeen().set(formattedAge);
                         }
                     })
-                    .periodically(1, TimeUnit.SECONDS);
+                    .periodically(0, 1, TimeUnit.SECONDS);
 
             String version = userProfile.getApplicationVersion();
             if (version.isEmpty()) {

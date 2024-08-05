@@ -254,19 +254,33 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getLivenessCellFactory() {
         return column -> new TableCell<>() {
-            // We use the Liveness scheduler in UserProfileIcon as UserProfileIcon handles the cleanup of the scheduler
-            // by using a scene listener to detect once we got removed from stage. The updateItem method is not called
-            // when the view gets removed, thus the dispose call here will not work.
+            // This is a bit of a hack, but we do not want to add a UIScheduler to the ListItems as the list is large,
+            // and it would consume too much resources. When we add it the cell factory we have no guarantee that it
+            // will get stopped as the updateItem is not called when the view gets removed from stage.
+
+            // As a hack we use the Liveness scheduler in UserProfileIcon as UserProfileIcon handles the cleanup of the scheduler
+            // by using a scene listener to detect once we got removed from stage.
+            // We need to add the userProfileIcon to stage here to make it work, but we set it invisible.
             private final UserProfileIcon userProfileIcon = new UserProfileIcon(40);
+            private final Label age = new Label();
+            private final HBox hBox = new HBox(age, userProfileIcon);
+
+            {
+                hBox.setAlignment(Pos.CENTER_LEFT);
+                userProfileIcon.setManaged(false);
+                userProfileIcon.setVisible(false);
+            }
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+                    age.textProperty().bind(userProfileIcon.getFormattedAge());
                     userProfileIcon.setUserProfile(item.getUserProfile());
-                    setText(userProfileIcon.getFormattedAge());
+                    setGraphic(hBox);
                 } else {
+                    age.textProperty().unbind();
                     userProfileIcon.dispose();
                     setGraphic(null);
                 }

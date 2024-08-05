@@ -107,7 +107,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final Set<Pin> statusPins = new HashSet<>();
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
-    private Optional<ResendMessageService> resendMessageService;
+    private final Optional<ResendMessageService> resendMessageService;
     private ImageView successfulDeliveryIcon, connectingDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
     private BisqMenuItem tryAgainMenuItem;
 
@@ -131,8 +131,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         this.userIdentityService = userIdentityService;
         this.resendMessageService = resendMessageService;
 
-        if (chatMessage instanceof PrivateChatMessage) {
-            senderUserProfile = Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile());
+        if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
+            senderUserProfile = Optional.of(userProfileService.getManagedUserProfile(privateChatMessage.getSenderUserProfile()));
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         }
@@ -263,7 +263,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return false;
     }
 
-    private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage, String separator, Function<String, String> toStringFunction) {
+    private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage,
+                                             String separator,
+                                             Function<String, String> toStringFunction) {
         return chatMessage.getBisqEasyOffer()
                 .map(BisqEasyOffer::getSupportedLanguageCodes)
                 .map(supportedLanguageCodes -> Joiner.on(separator)
@@ -378,12 +380,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 Reaction reaction = getReactionFromOrdinal(element.getReactionId());
                 UIThread.run(() -> {
                     if (userReactions.containsKey(reaction)) {
-                        Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
-                        userProfile.ifPresent(profile -> {
-                            if (!userProfileService.isChatUserIgnored(profile)) {
-                                userReactions.get(reaction).addUser(element, profile);
-                            }
-                        });
+                        userProfileService.findUserProfile(element.getUserProfileId())
+                                .filter(profile -> !userProfileService.isChatUserIgnored(profile))
+                                .ifPresent(profile -> userReactions.get(reaction).addUser(element, profile));
                     }
                 });
             }
@@ -394,8 +393,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
                 UIThread.run(() -> {
                     if (userReactions.containsKey(reaction)) {
-                        Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
-                        userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
+                        userProfileService.findUserProfile(chatMessageReaction.getUserProfileId())
+                                .ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
                     }
                 });
             }

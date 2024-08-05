@@ -30,8 +30,11 @@ import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -221,25 +224,28 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
-            private UserProfileDisplay userProfileDisplay;
+            private final UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
             private final HBox hBox = new HBox(5);
+            private final Badge badge = new Badge(Pos.CENTER_RIGHT);
+
+            {
+                getStyleClass().add("user-profile-table-cell");
+                hBox.getChildren().setAll(userProfileDisplay, Spacer.fillHBox(), badge);
+            }
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
+                    userProfileDisplay.setUserProfile(item.getPeersUserProfile());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
-                    getStyleClass().add("user-profile-table-cell");
-                    hBox.getChildren().setAll(userProfileDisplay, Spacer.fillHBox(), item.getNumMessagesBadge());
+                    badge.textProperty().bind(item.getNumNotificationsString());
 
                     setGraphic(hBox);
                 } else {
-                    if (userProfileDisplay != null) {
-                        userProfileDisplay.dispose();
-                        userProfileDisplay = null;
-                    }
+                    badge.textProperty().unbind();
+                    userProfileDisplay.dispose();
                     setGraphic(null);
                 }
             }
@@ -290,38 +296,39 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
     @Getter
     @ToString
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     static class ListItem {
+        @EqualsAndHashCode.Include
         private final TwoPartyPrivateChatChannel channel;
+        private final UserProfile peersUserProfile;
         private final String peersUserName, myUserName;
         private final long totalReputationScore, profileAge;
         private final String totalReputationScoreString, profileAgeString;
         private final ReputationScore reputationScore;
-        @EqualsAndHashCode.Exclude
-        private final Badge numMessagesBadge;
+        private final StringProperty numNotificationsString = new SimpleStringProperty();
 
-        public ListItem(TwoPartyPrivateChatChannel channel, ReputationService reputationService) {
+        public ListItem(TwoPartyPrivateChatChannel channel,
+                        ReputationService reputationService,
+                        UserProfileService userProfileService) {
             this.channel = channel;
+            peersUserProfile = userProfileService.getManagedUserProfile(channel.getPeer());
 
-            UserProfile userProfile = channel.getPeer();
-            peersUserName = userProfile.getUserName();
+            peersUserName = peersUserProfile.getUserName();
             myUserName = channel.getMyUserIdentity().getUserName();
 
-            reputationScore = reputationService.getReputationScore(userProfile);
+            reputationScore = reputationService.getReputationScore(peersUserProfile);
             totalReputationScore = reputationScore.getTotalScore();
             totalReputationScoreString = String.valueOf(totalReputationScore);
 
-            Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
+            Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(peersUserProfile);
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na"));
-
-            numMessagesBadge = new Badge(Pos.CENTER_RIGHT);
         }
 
         public void setNumNotifications(long numNotifications) {
-            numMessagesBadge.setText(numNotifications == 0 ? "" : String.valueOf(numNotifications));
+            numNotificationsString.set(numNotifications == 0 ? "" : String.valueOf(numNotifications));
         }
     }
 }

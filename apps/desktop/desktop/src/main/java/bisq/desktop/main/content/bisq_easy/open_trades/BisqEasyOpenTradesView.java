@@ -570,8 +570,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             this.channel = channel;
             this.trade = trade;
 
-            myUserProfile = userProfileService.findUserProfile(channel.getMyUserIdentity().getId()).orElseThrow();
-            peersUserProfile = userProfileService.findUserProfile(channel.getPeer().getId()).orElseThrow();
+            myUserProfile = userProfileService.getManagedUserProfile(channel.getMyUserIdentity().getUserProfile());
+            peersUserProfile = userProfileService.getManagedUserProfile(channel.getPeer());
             this.chatNotificationService = chatNotificationService;
             peersUserName = peersUserProfile.getUserName();
             myUserName = channel.getMyUserIdentity().getUserName();

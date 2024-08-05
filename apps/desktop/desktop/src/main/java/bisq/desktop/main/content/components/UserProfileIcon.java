@@ -21,6 +21,8 @@ import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -48,7 +50,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     @Getter
     private final BisqTooltip tooltip = new BisqTooltip();
     @Getter
-    private String formattedAge = "";
+    private final StringProperty formattedAge = new SimpleStringProperty("");
     private final ImageView userProfileIcon = new ImageView();
     @Nullable
     private UserProfile userProfile;
@@ -120,7 +122,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
     @Override
     public void setFormattedAge(String formattedAge) {
-        this.formattedAge = formattedAge;
+        this.formattedAge.set(formattedAge);
         if (formattedAge != null) {
             lastSeen = "\n" + Res.get("user.userProfile.lastSeenAgo", formattedAge) + "\n";
         }
