@@ -35,7 +35,13 @@ import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -150,8 +156,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     private void processUserProfileAdded(UserProfile userProfile) {
-        Optional<UserProfile> optionalUserProfile = findUserProfile(userProfile.getId());
-        if (optionalUserProfile.isEmpty() || !optionalUserProfile.get().equals(userProfile)) {
+        Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
+        if (existingUserProfile.isEmpty() || !existingUserProfile.get().equals(userProfile)) {
             if (verifyUserProfile(userProfile)) {
                 ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
                 synchronized (persistableStore) {
@@ -168,6 +174,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                 if (updated >= 0.5) {
                     Node.setPreferredVersion(1);
                 }
+            }
+        } else {
+            if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
+                existingUserProfile.get().setPublishDate(userProfile.getPublishDate());
             }
         }
     }
