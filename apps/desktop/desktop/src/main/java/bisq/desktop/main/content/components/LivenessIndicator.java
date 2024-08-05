@@ -17,67 +17,56 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.presentation.formatters.TimeFormatter;
-import bisq.user.RepublishUserProfileService;
 import javafx.scene.image.ImageView;
-import lombok.Getter;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-public class LivenessIndicator extends ImageView {
-    private static final long RECENTLY_ACTIVE_TIME_SPAN = TimeUnit.HOURS.toMillis(1);
-    private static final long ACTIVE_TIME_SPAN = RepublishUserProfileService.MIN_PAUSE_TO_NEXT_REPUBLISH * 2;
+@Slf4j
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+class LivenessIndicator extends ImageView implements LivenessUpdateScheduler.LivenessAgeConsumer {
+    private static final long MOST_RECENT = TimeUnit.SECONDS.toMillis(3);
+    private static final long RECENT = TimeUnit.SECONDS.toMillis(5);
 
-    @Nullable
-    @Getter
-    private String lastLivenessSignalAsString;
-    private long lastLivenessSignal;
+    // As we are used in a hashSet we want to be sure to have a controlled EqualsAndHashCode
+    @EqualsAndHashCode.Include
+    private final String id = UUID.randomUUID().toString();
     private double size;
+    private long age;
 
-    public LivenessIndicator() {
+    LivenessIndicator() {
     }
 
-    public void setLastLivenessSignal(long lastLivenessSignal) {
-        this.lastLivenessSignal = lastLivenessSignal;
-        lastLivenessSignalAsString = TimeFormatter.formatAge(lastLivenessSignal);
+    @Override
+    public void setAge(long age) {
+        this.age = age;
         update();
     }
 
-    public void hide() {
+    void hide() {
         setVisible(false);
         setManaged(false);
-        dispose();
     }
 
-    public void setSize(double size) {
+    void setSize(double size) {
         this.size = size;
         update();
     }
 
-    void update() {
+    private void update() {
         String color;
-        if (wasActive()) {
-            color = "green";
-        } else if (wasRecentlyActive()) {
+        if (age == 0 || age > RECENT) {
+            color = "grey";
+        } else if (age > MOST_RECENT) {
             color = "yellow";
         } else {
-            color = "grey";
+            color = "green";
         }
+
         String sizePostFix = size < 60 ? "-small-dot" : "-dot";
         String id = color + sizePostFix;
         setId(id);
-    }
-
-    private boolean wasActive() {
-        return lastLivenessSignal > 0 && lastLivenessSignal < ACTIVE_TIME_SPAN;
-    }
-
-    private boolean wasRecentlyActive() {
-        return lastLivenessSignal > 0 && lastLivenessSignal < RECENTLY_ACTIVE_TIME_SPAN;
-    }
-
-    public void dispose() {
-
     }
 }

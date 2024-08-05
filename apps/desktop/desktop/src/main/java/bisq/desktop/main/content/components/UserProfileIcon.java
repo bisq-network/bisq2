@@ -26,57 +26,78 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_ICON_SIZE;
 
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Slf4j
-public class UserProfileIcon extends StackPane {
+public class UserProfileIcon extends StackPane implements LivenessUpdateScheduler.LivenessFormattedAgeConsumer {
+    // As we are used in a hashSet we want to be sure to have a controlled EqualsAndHashCode
+    @EqualsAndHashCode.Include
+    private final String id = UUID.randomUUID().toString();
+
+    private final LivenessIndicator livenessIndicator = new LivenessIndicator();
     @Getter
     private final BisqTooltip tooltip = new BisqTooltip();
-    private final LivenessIndicator livenessIndicator;
-    @Nullable
-    @Getter
-    private String tooltipText;
+    private final ImageView userProfileIcon = new ImageView();
     @Nullable
     private UserProfile userProfile;
-    private final ImageView userProfileIcon = new ImageView();
+    @Getter
+    private String tooltipText = "";
+    private String userProfileInfo = "";
+    private String lastSeen = "";
+    private String versionInfo = "";
 
     public UserProfileIcon() {
         this(DEFAULT_ICON_SIZE);
     }
 
     public UserProfileIcon(double size) {
-        livenessIndicator = new LivenessIndicator();
-
         tooltip.getStyleClass().add("medium-dark-tooltip");
         setAlignment(Pos.CENTER);
         getChildren().addAll(userProfileIcon, livenessIndicator);
         setSize(size);
     }
 
-    public void applyData(@Nullable UserProfile userProfile,
-                          long lastLivenessSignal) {
-        livenessIndicator.setLastLivenessSignal(lastLivenessSignal);
-        setUserProfile(userProfile);
+    @Override
+    public void setFormattedAge(String formattedAge) {
+        if (formattedAge != null) {
+            lastSeen = "\n" + Res.get("user.userProfile.lastSeenAgo", formattedAge) + "\n";
+        }
+        tooltipText = userProfileInfo + lastSeen + versionInfo;
+        tooltip.setText(tooltipText);
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile) {
         this.userProfile = userProfile;
         if (userProfile != null) {
-            Tooltip.install(this, tooltip);
-            applyTooltipText();
+            LivenessUpdateScheduler.addObserver(userProfile, livenessIndicator, this);
+
             userProfileIcon.setImage(CatHash.getImage(userProfile));
+
+            userProfileInfo = userProfile.getTooltipString();
+            String version = userProfile.getApplicationVersion();
+            if (version.isEmpty()) {
+                version = Res.get("data.na");
+            }
+            versionInfo = Res.get("user.userProfile.version", version);
+            tooltipText = userProfileInfo + lastSeen + versionInfo;
+            tooltip.setText(tooltipText);
+
+            Tooltip.install(this, tooltip);
         } else {
             dispose();
         }
     }
 
     public void dispose() {
-        livenessIndicator.dispose();
+        LivenessUpdateScheduler.removeObserver(userProfile, livenessIndicator, this);
 
         userProfileIcon.setImage(null);
         userProfile = null;
@@ -103,7 +124,11 @@ public class UserProfileIcon extends StackPane {
         livenessIndicator.hide();
     }
 
-    private void applyTooltipText() {
+    public void applyData(@Nullable UserProfile userProfile,
+                          long lastLivenessSignal) {
+        setUserProfile(userProfile);
+    }
+   /* private void applyTooltipText() {
         if (userProfile != null && tooltip != null) {
             String tooltipString = userProfile.getTooltipString();
             String lastSeenAsString = livenessIndicator.getLastLivenessSignalAsString();
@@ -116,5 +141,5 @@ public class UserProfileIcon extends StackPane {
             tooltipText = tooltipString + lastSeenString + versionString;
             tooltip.setText(tooltipText);
         }
-    }
+    }*/
 }
