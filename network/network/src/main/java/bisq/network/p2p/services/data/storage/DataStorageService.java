@@ -105,7 +105,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                     .map(dataRequest -> {
                         if (dataRequest instanceof AddAuthenticatedDataRequest) {
                             AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                            return addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
+                            return addRequest.getDistributedData().getClass().getSimpleName();
                         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
                             RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
                             return removeRequest.getClassName();
@@ -134,7 +134,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                     .map(dataRequest -> {
                         if (dataRequest instanceof AddAuthenticatedDataRequest) {
                             AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                            return addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
+                            return addRequest.getDistributedData().getClass().getSimpleName();
                         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
                             RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
                             return removeRequest.getClassName();

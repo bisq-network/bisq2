@@ -375,7 +375,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // AddAuthenticatedDataRequest from inventoryRequest anyway as RefreshAuthenticatedDataRequests are
             // not included in inventoryRequests.
             if (authenticatedDataRequest instanceof AddAuthenticatedDataRequest request) {
-                DistributedData distributedData = request.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData();
+                DistributedData distributedData = request.getDistributedData();
                 if (distributedData instanceof PublishDateAware publishDateAware) {
                     publishDateAware.setPublishDate(authenticatedDataRequest.getCreated());
                 }
@@ -389,7 +389,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             var added = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
-                    .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName())
+                    .map(e -> e.getDistributedData().getClass().getSimpleName())
                     .collect(Collectors.toList());
             var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveAuthenticatedDataRequest)

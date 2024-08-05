@@ -92,7 +92,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                         AuthenticatedDataRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddAuthenticatedDataRequest) {
                             AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) dataRequest;
-                            DistributedData distributedData = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData();
+                            DistributedData distributedData = addAuthenticatedDataRequest.getDistributedData();
                             if (predicate.test(distributedData.getVersion())) {
                                 addRequests.add(addAuthenticatedDataRequest);
                             }
@@ -107,8 +107,8 @@ public abstract class FilterService<T extends InventoryFilter> {
                 });
 
         List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getMetaData().getPriority(),
-                        o1.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getMetaData().getPriority()))
+                .sorted((o1, o2) -> Integer.compare(o2.getDistributedData().getMetaData().getPriority(),
+                        o1.getDistributedData().getMetaData().getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
                         maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);

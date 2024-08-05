@@ -99,7 +99,7 @@ class InventoryHandler implements Connection.Listener {
                     String payloadName = dataRequest.getClass().getSimpleName();
                     if (dataRequest instanceof AddAuthenticatedDataRequest) {
                         AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                        payloadName = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
+                        payloadName = addRequest.getDistributedData().getClass().getSimpleName();
                     } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
                         RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
                         payloadName = removeRequest.getClassName();
