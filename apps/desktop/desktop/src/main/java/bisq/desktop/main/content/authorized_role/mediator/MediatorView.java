@@ -174,7 +174,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     }
 
     private void numListItemsChanged() {
-        double height = tableView.calculateTableHeight(3);
+        double height = tableView.calculateTableHeight(Integer.MAX_VALUE);
         tableViewAnchorPane.setMinHeight(height + 1);
         tableViewAnchorPane.setMaxHeight(height + 1);
         UIThread.runOnNextRenderFrame(() -> {
