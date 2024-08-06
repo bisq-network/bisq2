@@ -56,6 +56,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
@@ -515,6 +516,9 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
                 if (item != null && !empty) {
                     ImageView icon = ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name());
+                    ColorAdjust colorAdjust = new ColorAdjust();
+                    colorAdjust.setBrightness(-0.2);
+                    icon.setEffect(colorAdjust);
                     StackPane pane = new StackPane(icon);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.settlementMethod.tooltip",
                             item.getBitcoinSettlementMethod()));
