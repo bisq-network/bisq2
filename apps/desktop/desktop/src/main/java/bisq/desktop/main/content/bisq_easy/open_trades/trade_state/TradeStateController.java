@@ -32,21 +32,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1a;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1b;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState2a;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState2b;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState3a;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState4;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerStateLightning3b;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerStateOnchain3b;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState1;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState2a;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState2b;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState3a;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerState4;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerStateLightning3b;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.SellerStateOnchain3b;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.DontShowAgainService;
@@ -174,6 +160,7 @@ public class TradeStateController implements Controller {
                     hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
             updateShouldShowSellerPriceApprovalOverlay();
 
+            //todo move to View
             VBox vBox = new VBox(
                     new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
                             BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec()))),
@@ -193,9 +180,11 @@ public class TradeStateController implements Controller {
         }
         if (errorMessagePin != null) {
             errorMessagePin.unbind();
+            errorMessagePin = null;
         }
         if (peersErrorMessagePin != null) {
             peersErrorMessagePin.unbind();
+            peersErrorMessagePin = null;
         }
         if (isInMediationPin != null) {
             isInMediationPin.unbind();
@@ -203,6 +192,7 @@ public class TradeStateController implements Controller {
         }
         if (hasBuyerAcceptedPriceSpecPin != null) {
             hasBuyerAcceptedPriceSpecPin.unsubscribe();
+            hasBuyerAcceptedPriceSpecPin = null;
         }
         model.resetAll();
     }

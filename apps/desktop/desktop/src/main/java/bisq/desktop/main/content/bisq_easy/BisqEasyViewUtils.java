@@ -17,18 +17,16 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
-import bisq.common.data.Triple;
+import bisq.common.data.Quadruple;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.table.BisqTableView;
 import bisq.security.DigestUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 
 import java.math.BigInteger;
 
@@ -37,7 +35,8 @@ public class BisqEasyViewUtils {
             "CUSTOM_PAYMENT_1", "CUSTOM_PAYMENT_2", "CUSTOM_PAYMENT_3",
             "CUSTOM_PAYMENT_4", "CUSTOM_PAYMENT_5", "CUSTOM_PAYMENT_6"};
 
-    public static Triple<Label, HBox, VBox> getContainer(String headline, Node content) {
+    public static Quadruple<Label, HBox, AnchorPane, VBox> getTableViewContainer(String headline,
+                                                                                 BisqTableView<?> tableView) {
         Label headlineLabel = new Label(headline);
         headlineLabel.getStyleClass().add("bisq-easy-container-headline");
         HBox header = new HBox(10, headlineLabel);
@@ -45,13 +44,16 @@ public class BisqEasyViewUtils {
         header.setPadding(new Insets(15, 30, 15, 30));
         header.getStyleClass().add("chat-container-header");
 
-        VBox.setMargin(content, new Insets(0, 30, 15, 30));
-        VBox vBox = new VBox(header, Layout.hLine(), content);
+        AnchorPane tableViewAnchorPane = new AnchorPane(tableView);
+        Layout.pinToAnchorPane(tableView, 0, 0, 0, 0);
+
+        VBox.setMargin(tableViewAnchorPane, new Insets(0, 30, 15, 30));
+        VBox.setVgrow(tableViewAnchorPane, Priority.ALWAYS);
+        VBox vBox = new VBox(header, Layout.hLine(), tableViewAnchorPane);
         vBox.setFillWidth(true);
         vBox.getStyleClass().add("bisq-easy-container");
-        vBox.setMinHeight(167);
 
-        return new Triple<>(headlineLabel, header, vBox);
+        return new Quadruple<>(headlineLabel, header, tableViewAnchorPane, vBox);
     }
 
     public static StackPane getCustomPaymentMethodIcon(String customPaymentMethod) {

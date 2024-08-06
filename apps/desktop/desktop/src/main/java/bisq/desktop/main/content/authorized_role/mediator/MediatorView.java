@@ -19,7 +19,7 @@ package bisq.desktop.main.content.authorized_role.mediator;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotificationService;
-import bisq.common.data.Triple;
+import bisq.common.data.Quadruple;
 import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
@@ -43,16 +43,14 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.InvalidationListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -68,11 +66,11 @@ import java.util.Optional;
 
 @Slf4j
 public class MediatorView extends View<ScrollPane, MediatorModel, MediatorController> {
-    private final Pane chatMessagesComponent;
-    private final VBox centerVBox = new VBox();
     private final Switch showClosedCasesSwitch;
     private final VBox chatVBox;
     private final BisqTableView<ListItem> tableView;
+    private final AnchorPane tableViewAnchorPane;
+    private final InvalidationListener listItemListener;
     private Subscription noOpenCasesPin, tableViewSelectionPin, selectedModelItemPin, showClosedCasesPin;
 
     public MediatorView(MediatorModel model,
@@ -82,22 +80,23 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
         super(new ScrollPane(), model, controller);
 
-        this.chatMessagesComponent = chatMessagesComponent;
-
         tableView = new BisqTableView<>(model.getListItems().getSortedList());
         tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
         configTableView();
 
-        VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
-        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("authorizedRole.mediator.table.headline"), tableView);
 
-        HBox header = triple.getSecond();
+        Quadruple<Label, HBox, AnchorPane, VBox> quadruple = BisqEasyViewUtils.getTableViewContainer(Res.get("authorizedRole.mediator.table.headline"), tableView);
+        HBox header = quadruple.getSecond();
+        tableViewAnchorPane = quadruple.getThird();
+        VBox container = quadruple.getForth();
+
+        VBox.setMargin(tableViewAnchorPane, new Insets(10, 0, 0, 0));
+
         showClosedCasesSwitch = new Switch(Res.get("authorizedRole.mediator.showClosedCases"));
         header.getChildren().addAll(Spacer.fillHBox(), showClosedCasesSwitch);
 
-        VBox container = triple.getThird();
-
         VBox.setMargin(container, new Insets(0, 0, 10, 0));
+        VBox centerVBox = new VBox();
         centerVBox.getChildren().add(container);
 
         chatMessagesComponent.setMinHeight(200);
@@ -118,11 +117,14 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
+
+        listItemListener = o -> numListItemsChanged();
     }
 
     @Override
     protected void onViewAttached() {
         tableView.initialize();
+        tableView.getItems().addListener(listItemListener);
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(),
                 selected -> tableView.getSelectionModel().select(selected));
 
@@ -136,7 +138,6 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         noOpenCasesPin = EasyBind.subscribe(model.getNoOpenCases(), noOpenCases -> {
             if (noOpenCases) {
                 tableView.removeListeners();
-                tableView.allowVerticalScrollbar();
                 tableView.setFixHeight(150);
                 tableView.getStyleClass().add("empty-table");
                 tableView.setPlaceholderText(model.getShowClosedCases().get() ?
@@ -144,8 +145,6 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                         Res.get("authorizedRole.mediator.noOpenCases"));
             } else {
                 tableView.setPlaceholder(null);
-                tableView.adjustHeightToNumRows();
-                tableView.hideVerticalScrollbar();
                 tableView.getStyleClass().remove("empty-table");
             }
             chatVBox.setVisible(!noOpenCases);
@@ -164,6 +163,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
     @Override
     protected void onViewDetached() {
+        tableView.getItems().removeListener(listItemListener);
         tableView.dispose();
 
         selectedModelItemPin.unsubscribe();
@@ -171,6 +171,20 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         noOpenCasesPin.unsubscribe();
         showClosedCasesPin.unsubscribe();
         showClosedCasesSwitch.setOnAction(null);
+    }
+
+    private void numListItemsChanged() {
+        double height = tableView.calculateTableHeight(3);
+        tableViewAnchorPane.setMinHeight(height + 1);
+        tableViewAnchorPane.setMaxHeight(height + 1);
+        UIThread.runOnNextRenderFrame(() -> {
+            tableViewAnchorPane.setMinHeight(height);
+            tableViewAnchorPane.setMaxHeight(height);
+            UIThread.runOnNextRenderFrame(() -> {
+                // Delay call as otherwise the width does not take the scrollbar width correctly into account
+                tableView.adjustMinWidth();
+            });
+        });
     }
 
     private void configTableView() {

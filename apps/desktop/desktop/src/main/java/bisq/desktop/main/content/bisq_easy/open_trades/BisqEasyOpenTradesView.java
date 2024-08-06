@@ -21,7 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotificationService;
-import bisq.common.data.Triple;
+import bisq.common.data.Quadruple;
 import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.CssConfig;
@@ -48,6 +48,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -76,10 +77,11 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     private final VBox tradeWelcomeViewRoot, tradeStateViewRoot, chatVBox;
     private final BisqTableView<ListItem> tableView;
     private final Button toggleChatWindowButton;
-    private final VBox tableViewVBox;
+    private final AnchorPane tableViewAnchorPane;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
             selectedModelItemPin, chatWindowPin, isAnyTradeInMediationPin;
     private BisqTableColumn<ListItem> mediatorColumn;
+    private final InvalidationListener listItemListener;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
@@ -96,13 +98,11 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         // Table view
         tableView = new BisqTableView<>(getModel().getSortedList());
         tableView.getStyleClass().addAll("bisq-easy-open-trades");
-        tableView.hideHorizontalScrollbar();
-        tableView.allowVerticalScrollbar();
-        VBox.setVgrow(tableView, Priority.ALWAYS);
         configTableView();
 
-        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
-        tableViewVBox = triple.getThird();
+        Quadruple<Label, HBox, AnchorPane, VBox> quadruple = BisqEasyViewUtils.getTableViewContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
+        tableViewAnchorPane = quadruple.getThird();
+        VBox tableViewVBox = quadruple.getForth();
 
         // ChatBox
         toggleChatWindowButton = new Button();
@@ -127,7 +127,10 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         VBox.setMargin(tradeStateViewRoot, new Insets(0, 0, 10, 0));
         VBox.setVgrow(tradeStateViewRoot, Priority.ALWAYS);
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
+        VBox.setVgrow(tableViewVBox, Priority.NEVER);
         centerVBox.getChildren().addAll(tradeWelcomeViewRoot, tableViewVBox, tradeStateViewRoot, chatVBox);
+
+        listItemListener = o -> numListItemsChanged();
     }
 
     @Override
@@ -144,6 +147,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     protected void onViewAttached() {
         super.onViewAttached();
 
+        tableView.getItems().addListener(listItemListener);
+
         tableView.initialize();
 
         BisqEasyOpenTradesModel model = getModel();
@@ -154,9 +159,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tradeStateViewRoot.managedProperty().bind(model.getTradeStateVisible());
         chatVBox.visibleProperty().bind(model.getChatVisible());
         chatVBox.managedProperty().bind(model.getChatVisible());
-
-        tableViewVBox.minHeightProperty().bind(tableView.heightProperty().add(78));
-        tableViewVBox.maxHeightProperty().bind(tableView.heightProperty().add(78));
 
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
@@ -188,9 +190,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                     } else {
                         tableView.setPlaceholder(null);
                         tableView.getStyleClass().remove("empty-table");
-                        // Hack to trigger a re-rendering as otherwise the scrollbar is not shown after leaving screen and coming back
-                        tableView.adjustHeightToNumRows(0);
-                        tableView.adjustHeightToNumRows(3);
                     }
                 });
 
@@ -208,6 +207,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         });
 
         toggleChatWindowButton.setOnAction(e -> getController().onToggleChatWindow());
+        numListItemsChanged();
     }
 
     @Override
@@ -217,6 +217,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         // TODO would be nice to keep it open or allow multiple windows... but for now keep it simple...
         getController().onCloseChatWindow();
 
+        tableView.getItems().removeListener(listItemListener);
         tableView.dispose();
 
         tradeWelcomeViewRoot.visibleProperty().unbind();
@@ -225,9 +226,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tradeStateViewRoot.managedProperty().unbind();
         chatVBox.visibleProperty().unbind();
         chatVBox.managedProperty().unbind();
-
-        tableViewVBox.minHeightProperty().unbind();
-        tableViewVBox.maxHeightProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
         if (tableViewSelectionPin != null) {
@@ -240,6 +238,20 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
         toggleChatWindowButton.setOnAction(null);
         tableView.setOnMouseClicked(null);
+    }
+
+    private void numListItemsChanged() {
+        double height = tableView.calculateTableHeight(3);
+        tableViewAnchorPane.setMinHeight(height + 1);
+        tableViewAnchorPane.setMaxHeight(height + 1);
+        UIThread.runOnNextRenderFrame(() -> {
+            tableViewAnchorPane.setMinHeight(height);
+            tableViewAnchorPane.setMaxHeight(height);
+            UIThread.runOnNextRenderFrame(() -> {
+                // Delay call as otherwise the width does not take the scrollbar width correctly into account
+                tableView.adjustMinWidth();
+            });
+        });
     }
 
     private void chatWindowChanged(Stage chatWindow) {
