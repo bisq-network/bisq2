@@ -18,22 +18,13 @@
 package bisq.desktop.components.table;
 
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.threading.UIThread;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumnBase;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.util.Callback;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,15 +37,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class BisqTableView<T> extends TableView<T> {
-    private final static double TABLE_HEADER_HEIGHT = 36;
-    private final static double TABLE_ROW_HEIGHT = 54;
-    private final static double TABLE_H_SCROLLBAR_HEIGHT = 16;
-    private final static double TABLE_V_SCROLLBAR_WIDTH = 16;
+    public final static double TABLE_HEADER_HEIGHT = 36;
+    public final static double TABLE_ROW_HEIGHT = 54;
+    public final static double TABLE_H_SCROLLBAR_HEIGHT = 16;
+    public final static double TABLE_V_SCROLLBAR_WIDTH = 16;
 
     @Getter
     private final SortedList<T> sortedList;
-    private ListChangeListener<T> listChangeListener;
-    private ChangeListener<Number> widthChangeListener;
     private final boolean useComparatorBinding;
     // If set we use the sum of the minWidth values of all visible columns to set the minWidth of the tableView.
     @Setter
@@ -99,7 +88,6 @@ public class BisqTableView<T> extends TableView<T> {
             if (deriveMinWidthFromColumns) {
                 verticalScrollbarPin = EasyBind.subscribe(verticalScrollbar, scrollBar -> {
                     if (scrollBar != null) {
-
                         verticalScrollbarVisiblePin = EasyBind.subscribe(scrollBar.visibleProperty(), scrollBarVisible -> {
                             if (scrollBarVisible != null) {
                                 adjustMinWidth();
@@ -115,14 +103,6 @@ public class BisqTableView<T> extends TableView<T> {
     }
 
     public void removeListeners() {
-        if (listChangeListener != null) {
-            getItems().removeListener(listChangeListener);
-            listChangeListener = null;
-        }
-        if (widthChangeListener != null) {
-            widthProperty().removeListener(widthChangeListener);
-            widthChangeListener = null;
-        }
         if (verticalScrollbarPin != null) {
             verticalScrollbarPin.unsubscribe();
         }
@@ -150,36 +130,24 @@ public class BisqTableView<T> extends TableView<T> {
         setMaxHeight(value);
     }
 
-    public void adjustHeightToNumRows() {
-        adjustHeightToNumRows(Integer.MAX_VALUE);
+    public double calculateTableHeight(int maxNumItems) {
+        return calculateTableHeight(getItems().size(), maxNumItems, TABLE_H_SCROLLBAR_HEIGHT, TABLE_HEADER_HEIGHT, TABLE_ROW_HEIGHT);
     }
 
-    public void adjustHeightToNumRows(int maxNumItems) {
-        adjustHeightToNumRows(TABLE_H_SCROLLBAR_HEIGHT, TABLE_HEADER_HEIGHT, TABLE_ROW_HEIGHT, maxNumItems);
-    }
-
-    public void adjustHeightToNumRows(double scrollbarHeight, double headerHeight, double rowHeight, int maxNumItems) {
-        if (listChangeListener != null) {
-            getItems().removeListener(listChangeListener);
-            listChangeListener = null;
+    public double calculateTableHeight(int numItems,
+                                       int maxNumItems,
+                                       double scrollbarHeight,
+                                       double headerHeight,
+                                       double rowHeight) {
+        if (getItems().isEmpty()) {
+            return 0;
         }
-        if (widthChangeListener != null) {
-            widthProperty().removeListener(widthChangeListener);
-            widthChangeListener = null;
-        }
-        listChangeListener = c -> {
-            adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems);
-            UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems));
-        };
-        getItems().addListener(listChangeListener);
-
-        widthChangeListener = (observable, oldValue, newValue) -> {
-            adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems);
-            UIThread.runOnNextRenderFrame(() -> adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems));
-        };
-        widthProperty().addListener(widthChangeListener);
-
-        adjustHeight(scrollbarHeight, headerHeight, rowHeight, maxNumItems);
+        int boundedNumItems = Math.min(maxNumItems, numItems);
+        double realScrollbarHeight = findScrollbar(BisqTableView.this, Orientation.HORIZONTAL)
+                .filter(Node::isVisible)
+                .map(e -> scrollbarHeight)
+                .orElse(0d);
+        return headerHeight + boundedNumItems * rowHeight + realScrollbarHeight;
     }
 
     public void hideVerticalScrollbar() {
@@ -199,9 +167,10 @@ public class BisqTableView<T> extends TableView<T> {
         getStyleClass().remove("force-hide-horizontal-scrollbar");
     }
 
-
-    private void adjustMinWidth() {
-        setMinWidth(sumOfColumns() + scrollbarWidth());
+    public void adjustMinWidth() {
+        double value = sumOfColumns() + scrollbarWidth();
+        // FIXME not always triggering a layout update.
+        setMinWidth(value);
     }
 
     private Double scrollbarWidth() {
@@ -218,24 +187,6 @@ public class BisqTableView<T> extends TableView<T> {
                 .sum();
     }
 
-    private void adjustHeight(double scrollbarHeight, double headerHeight, double rowHeight, int maxNumItems) {
-        int size = getItems().size();
-        int numItems = Math.min(maxNumItems, size);
-        if (size > numItems) {
-            allowVerticalScrollbar();
-        } else {
-            hideVerticalScrollbar();
-        }
-        UIThread.runOnNextRenderFrame(this::adjustMinWidth);
-        if (numItems == 0) {
-            return;
-        }
-        double realScrollbarHeight = findScrollbar(BisqTableView.this, Orientation.HORIZONTAL)
-                .map(e -> scrollbarHeight)
-                .orElse(0d);
-        double height = headerHeight + numItems * rowHeight + realScrollbarHeight;
-        setFixHeight(height);
-    }
 
     public BisqTableColumn<T> getSelectionMarkerColumn() {
         return new BisqTableColumn.Builder<T>()
