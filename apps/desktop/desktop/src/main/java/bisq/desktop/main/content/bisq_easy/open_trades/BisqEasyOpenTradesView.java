@@ -184,7 +184,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                         tableView.removeListeners();
                         tableView.setPlaceholderText(Res.get("bisqEasy.openTrades.noTrades"));
                         tableView.allowVerticalScrollbar();
-                        tableView.setFixHeight(150);
+                        tableViewAnchorPane.setMinHeight(150);
+                        tableViewAnchorPane.setMaxHeight(150);
                         tableView.setMinWidth(500);
                         tableView.getStyleClass().add("empty-table");
                     } else {
@@ -241,6 +242,9 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     }
 
     private void numListItemsChanged() {
+        if (tableView.getItems().isEmpty()) {
+            return;
+        }
         double height = tableView.calculateTableHeight(3);
         tableViewAnchorPane.setMinHeight(height + 1);
         tableViewAnchorPane.setMaxHeight(height + 1);

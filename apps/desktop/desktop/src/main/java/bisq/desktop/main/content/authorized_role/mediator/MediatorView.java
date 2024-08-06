@@ -125,6 +125,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     protected void onViewAttached() {
         tableView.initialize();
         tableView.getItems().addListener(listItemListener);
+
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(),
                 selected -> tableView.getSelectionModel().select(selected));
 
@@ -138,11 +139,13 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         noOpenCasesPin = EasyBind.subscribe(model.getNoOpenCases(), noOpenCases -> {
             if (noOpenCases) {
                 tableView.removeListeners();
-                tableView.setFixHeight(150);
                 tableView.getStyleClass().add("empty-table");
                 tableView.setPlaceholderText(model.getShowClosedCases().get() ?
                         Res.get("authorizedRole.mediator.noClosedCases") :
                         Res.get("authorizedRole.mediator.noOpenCases"));
+
+                tableViewAnchorPane.setMinHeight(150);
+                tableViewAnchorPane.setMaxHeight(150);
             } else {
                 tableView.setPlaceholder(null);
                 tableView.getStyleClass().remove("empty-table");
@@ -153,12 +156,13 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
         showClosedCasesPin = EasyBind.subscribe(model.getShowClosedCases(), showClosedCases -> {
             showClosedCasesSwitch.setSelected(showClosedCases);
-
             tableView.setPlaceholderText(showClosedCases ?
                     Res.get("authorizedRole.mediator.noClosedCases") :
                     Res.get("authorizedRole.mediator.noOpenCases"));
         });
         showClosedCasesSwitch.setOnAction(e -> controller.onToggleClosedCases());
+
+        numListItemsChanged();
     }
 
     @Override
@@ -174,7 +178,10 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     }
 
     private void numListItemsChanged() {
-        double height = tableView.calculateTableHeight(Integer.MAX_VALUE);
+        if (tableView.getItems().isEmpty()) {
+            return;
+        }
+        double height = tableView.calculateTableHeight(5);
         tableViewAnchorPane.setMinHeight(height + 1);
         tableViewAnchorPane.setMaxHeight(height + 1);
         UIThread.runOnNextRenderFrame(() -> {
