@@ -40,6 +40,8 @@ import javafx.scene.layout.VBox;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class PeerOfferMessageBox extends PeerTextMessageBox {
+    private static final double OFFER_MESSAGE_BOX_MIN_WIDTH = 310;
+
     private Button takeOfferButton;
     private Label peerNickName;
 
@@ -58,19 +60,23 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
     protected void setUpPeerMessage() {
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
-        userProfileIconVbox.getChildren().add(item.getReputationScoreDisplay());
+        userProfileIconVbox.getChildren().addAll(item.getReputationScoreDisplay(), Spacer.fillVBox(), supportedLanguagesHBox);
+        supportedLanguagesHBox.setAlignment(Pos.CENTER);
         userProfileIconVbox.setSpacing(10);
+        userProfileIconVbox.setAlignment(Pos.CENTER);
         item.getReputationScoreDisplay().setScale(0.8);
+        item.getReputationScoreDisplay().setAlignment(Pos.CENTER);
 
         Pair<HBox, Button> takeOfferLabelAndButton = createAndGetTakeOfferTitleBoxAndButton();
         HBox takeOfferTitle = takeOfferLabelAndButton.getFirst();
         takeOfferButton = takeOfferLabelAndButton.getSecond();
 
         // Offer content
-        HBox methodsAndTakeOfferButtonBox = new HBox(paymentAndSettlementMethodsBox, Spacer.fillHBox(), takeOfferButton);
-        VBox offerMessage = new VBox(10, takeOfferTitle, amountAndPriceBox, supportedLanguagesHBox, methodsAndTakeOfferButtonBox);
+        paymentAndSettlementMethodsBox.setAlignment(Pos.BOTTOM_LEFT);
+        paymentAndSettlementMethodsBox.setPadding(new Insets(0, 0, 2, 0));
+        HBox methodsAndTakeOfferButtonBox = new HBox(10, paymentAndSettlementMethodsBox, Spacer.fillHBox(), takeOfferButton);
+        VBox offerMessage = new VBox(10, takeOfferTitle, amountAndPriceBox, Spacer.fillVBox(), methodsAndTakeOfferButtonBox);
         offerMessage.setMinWidth(OFFER_MESSAGE_BOX_MIN_WIDTH);
-        VBox.setMargin(methodsAndTakeOfferButtonBox, new Insets(3, 0, 0, 0));
         VBox.setMargin(offerMessage, new Insets(0, 0, 0, 7));
 
         Region separator = new Region();

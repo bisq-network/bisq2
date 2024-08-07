@@ -64,12 +64,11 @@ import java.util.Optional;
 public abstract class BubbleMessageBox extends MessageBox {
     private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
-    protected static final double OFFER_MESSAGE_BOX_MIN_WIDTH = 310;
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 50;
     protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
     private static final List<Reaction> REACTIONS_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
-    private static final int MAX_NUM_SUPPORTED_LANGUAGES = 7;
+    private static final int MAX_NUM_SUPPORTED_LANGUAGES = 5;
 
     private final Subscription showHighlightedPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
@@ -222,9 +221,11 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private HBox createAndGetSupportedLanguagesBox() {
-        HBox hBox = new HBox(5);
+        HBox hBox = new HBox(3);
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
             Label iconLabel = new Label(":", ImageUtil.getImageViewById("language-grey"));
+            iconLabel.setGraphicTextGap(3);
+            iconLabel.setTooltip(new BisqTooltip(Res.get("chat.message.supportedLanguages.Tooltip")));
             hBox.getChildren().add(iconLabel);
             BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
             if (chatMessage.getBisqEasyOffer().isPresent()) {
@@ -232,7 +233,7 @@ public abstract class BubbleMessageBox extends MessageBox {
                 int codesCount = Math.min(offer.getSupportedLanguageCodes().size(), MAX_NUM_SUPPORTED_LANGUAGES);
                 for (int i = 0; i < codesCount; i++) {
                     String languageCode = offer.getSupportedLanguageCodes().get(i).toUpperCase();
-                    Label codeLabel = (i == codesCount - 1) ? new Label(languageCode) : new Label(languageCode + ", ");
+                    Label codeLabel = (i == codesCount - 1) ? new Label(languageCode) : new Label(languageCode + ",");
                     codeLabel.setTooltip(new BisqTooltip(LanguageRepository.getDisplayString(languageCode)));
                     hBox.getChildren().add(codeLabel);
                 }
@@ -258,7 +259,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private HBox createAndGetPaymentAndSettlementMethodsBox() {
-        HBox hBox = new HBox(5);
+        HBox hBox = new HBox(8);
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
             for (FiatPaymentMethod fiatPaymentMethod : item.getBisqEasyOfferPaymentMethods()) {
                 hBox.getChildren().add(createMethodLabel(fiatPaymentMethod));
