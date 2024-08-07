@@ -40,6 +40,7 @@ public class ReputationScoreDisplay extends HBox {
     private static final String DEFAULT_ACCEPT_STAR_ID = "star-green";
     private static final String DEFAULT_ACCEPT_HALF_STAR_ID = "star-half-hollow-green";
     private static final int STAR_SYSTEM = 5; // 5-star system
+    private static final String STYLE_CLASS = "reputation-score-display";
 
     private final List<ImageView> stars = IntStream.range(0, STAR_SYSTEM).mapToObj(i -> getDefaultStar()).collect(Collectors.toList());
     private final Tooltip tooltip = new BisqTooltip();
@@ -61,6 +62,7 @@ public class ReputationScoreDisplay extends HBox {
         tooltip.setWrapText(true);
         Tooltip.install(this, tooltip);
 
+        getStyleClass().add(STYLE_CLASS);
         getChildren().addAll(stars);
     }
 

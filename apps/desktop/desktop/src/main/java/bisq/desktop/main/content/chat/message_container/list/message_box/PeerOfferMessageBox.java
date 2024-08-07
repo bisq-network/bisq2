@@ -58,12 +58,9 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
     protected void setUpPeerMessage() {
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
-
-        // Reputation
-        Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
-        VBox reputationVBox = new VBox(4, reputationLabel, item.getReputationScoreDisplay());
-        reputationVBox.setAlignment(Pos.CENTER);
-        reputationVBox.getStyleClass().add("reputation");
+        userProfileIconVbox.getChildren().add(item.getReputationScoreDisplay());
+        userProfileIconVbox.setSpacing(10);
+        item.getReputationScoreDisplay().setScale(0.8);
 
         // Take offer title and button
         Pair<HBox, Button> takeOfferLabelAndButton = createAndGetTakeOfferTitleBoxAndButton();
@@ -77,9 +74,9 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         VBox offerMessage = new VBox(10, takeOfferTitle, message, takeOfferButton);
         Region separator = new Region();
         separator.getStyleClass().add("take-offer-vLine");
-        HBox offerContent = new HBox(15, userProfileIconVbox, reputationVBox, separator, offerMessage);
-        userProfileIconVbox.setAlignment(Pos.CENTER);
-        reputationVBox.setAlignment(Pos.CENTER);
+        HBox offerContent = new HBox(15, userProfileIconVbox, separator, offerMessage);
+        userProfileIconVbox.setAlignment(Pos.TOP_CENTER);
+//        reputationVBox.setAlignment(Pos.CENTER);
         offerContent.setAlignment(Pos.CENTER);
 
         // Message background

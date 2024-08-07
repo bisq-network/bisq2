@@ -54,7 +54,7 @@ import java.util.Optional;
 public abstract class BubbleMessageBox extends MessageBox {
     private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
-    protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
+    protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 55;
     protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
     private static final List<Reaction> REACTIONS_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
