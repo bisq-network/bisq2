@@ -87,6 +87,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final M chatMessage;
     @EqualsAndHashCode.Include
     private final C chatChannel;
+
     private final String message;
     private final String date;
     private final Optional<Citation> citation;

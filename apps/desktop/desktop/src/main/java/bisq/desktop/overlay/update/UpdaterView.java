@@ -267,16 +267,19 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
     }
 
     @Getter
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     static class ListItem {
-        private final String fileName;
+        @EqualsAndHashCode.Include
         private final DownloadItem downloadItem;
+
+        private final String fileName;
         private final DoubleProperty progress = new SimpleDoubleProperty();
         private final BooleanProperty showVerified = new SimpleBooleanProperty(true);
 
         ListItem(DownloadItem downloadItem) {
-            fileName = downloadItem.getDestinationFile().getName();
             this.downloadItem = downloadItem;
+
+            fileName = downloadItem.getDestinationFile().getName();
             FxBindings.bind(progress).to(downloadItem.getProgress());
             showVerified.set(UpdaterUtils.isDownloadedFile(downloadItem.getSourceFileName()));
         }

@@ -46,12 +46,11 @@ import java.util.stream.Collectors;
 @ToString
 public class BondedRolesListItem {
     @EqualsAndHashCode.Include
+    private final BondedRole bondedRole;
+
     private final Optional<UserProfile> userProfile;
-    @EqualsAndHashCode.Include
     private final String roleTypeString;
-    @EqualsAndHashCode.Include
     private final BondedRoleType bondedRoleType;
-    @EqualsAndHashCode.Include
     private final String bondUserName;
     private final String userProfileId;
     private final String signature;
@@ -64,6 +63,8 @@ public class BondedRolesListItem {
     private final boolean isRootSeedNode;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService, NetworkService networkService) {
+        this.bondedRole = bondedRole;
+
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
         isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
         UserProfileService userProfileService = userService.getUserProfileService();

@@ -35,7 +35,6 @@ import bisq.support.moderator.ModeratorService;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -74,12 +73,10 @@ public class BannedUserProfileTable {
         private final Model model;
         private final BannedUserService bannedUserService;
         private final ModeratorService moderatorService;
-        private final UserProfileService userProfileService;
         private Pin bannedUserListItemsPin;
 
         private Controller(ServiceProvider serviceProvider) {
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
-            userProfileService = serviceProvider.getUserService().getUserProfileService();
             moderatorService = serviceProvider.getSupportService().getModeratorService();
 
             model = new Model();
@@ -89,7 +86,7 @@ public class BannedUserProfileTable {
         @Override
         public void onActivate() {
             bannedUserListItemsPin = FxBindings.<BannedUserProfileData, View.ListItem>bind(model.getListItems())
-                    .map(bannedUserProfileData -> new View.ListItem(bannedUserProfileData, userProfileService))
+                    .map(View.ListItem::new)
                     .to(bannedUserService.getBannedUserProfileDataSet());
         }
 
@@ -268,11 +265,13 @@ public class BannedUserProfileTable {
         private static class ListItem {
             @EqualsAndHashCode.Include
             private final BannedUserProfileData bannedUserProfileData;
+
             private final UserProfile userProfile;
             private final String userName;
 
-            private ListItem(BannedUserProfileData bannedUserProfileData, UserProfileService userProfileService) {
+            private ListItem(BannedUserProfileData bannedUserProfileData) {
                 this.bannedUserProfileData = bannedUserProfileData;
+
                 userProfile = bannedUserProfileData.getUserProfile();
                 userName = userProfile.getUserName();
             }
