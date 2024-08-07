@@ -17,7 +17,7 @@
 
 package bisq.common.threading;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -91,7 +91,7 @@ public class ExecutorFactory {
      * Used when queuing is desired.
      */
     public static ExecutorService newFixedThreadPool(String name) {
-        return newFixedThreadPool(name, OsUtils.availableProcessors());
+        return newFixedThreadPool(name, PlatformUtils.availableProcessors());
     }
 
     public static ExecutorService newFixedThreadPool(String name, int numThreads) {

@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.settings.utils;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.common.file.FileUtils;
 import bisq.common.observable.Pin;
-import bisq.common.util.FileUtils;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -81,21 +81,21 @@ public class UtilsController implements Controller {
     }
 
     void onOpenLogFile() {
-        OsUtils.open(Path.of(baseDir, "bisq.log").toFile());
+        PlatformUtils.open(Path.of(baseDir, "bisq.log").toFile());
     }
 
     void onOpenTorLogFile() {
-        OsUtils.open(Path.of(baseDir, "tor", "debug.log").toFile());
+        PlatformUtils.open(Path.of(baseDir, "tor", "debug.log").toFile());
     }
 
     void onOpenDataDir() {
-        OsUtils.open(baseDir);
+        PlatformUtils.open(baseDir);
     }
 
     void onSetBackupLocation() {
         String path = model.getBackupLocation().get();
         if (StringUtils.isEmpty(path)) {
-            path = OsUtils.getHomeDirectory();
+            path = PlatformUtils.getHomeDirectory();
         }
         String title = Res.get("settings.utils.backup.selectLocation");
         FileChooserUtil.chooseDirectory(getView().getRoot().getScene(), path, title)

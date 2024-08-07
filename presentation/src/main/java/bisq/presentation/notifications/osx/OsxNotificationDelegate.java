@@ -17,7 +17,7 @@
 package bisq.presentation.notifications.osx;
 
 import bisq.common.platform.OS;
-import bisq.common.util.Version;
+import bisq.common.platform.Version;
 import bisq.presentation.notifications.SystemNotificationDelegate;
 import bisq.presentation.notifications.osx.foundation.Foundation;
 import bisq.presentation.notifications.osx.foundation.ID;

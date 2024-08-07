@@ -15,10 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.util;
+package bisq.common.platform;
 
-import bisq.common.platform.LinuxDistribution;
-import bisq.common.platform.OS;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -30,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class OsUtils {
+public class PlatformUtils {
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
 

@@ -16,7 +16,7 @@
  */
 package bisq.presentation.notifications.linux;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.presentation.notifications.SystemNotificationDelegate;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;

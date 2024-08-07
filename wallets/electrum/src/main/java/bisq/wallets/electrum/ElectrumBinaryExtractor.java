@@ -18,8 +18,8 @@
 package bisq.wallets.electrum;
 
 import bisq.common.archive.ZipFileExtractor;
+import bisq.common.file.FileUtils;
 import bisq.common.platform.OS;
-import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;

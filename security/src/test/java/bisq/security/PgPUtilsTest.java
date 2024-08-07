@@ -17,7 +17,7 @@
 
 package bisq.security;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;

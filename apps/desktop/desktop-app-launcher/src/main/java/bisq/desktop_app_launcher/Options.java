@@ -17,7 +17,7 @@
 
 package bisq.desktop_app_launcher;
 
-import bisq.common.util.JvmUtils;
+import bisq.common.jvm.JvmUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

@@ -17,7 +17,7 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum TradeProtocolType implements ProtocolType {
     BISQ_EASY,

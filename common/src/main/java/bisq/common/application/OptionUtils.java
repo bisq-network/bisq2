@@ -15,13 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.webcam;
+package bisq.common.application;
 
-public enum ControlSignals {
-    HEART_BEAT,
-    IMAGE_RECOGNIZED,
-    QR_CODE_PREFIX,
-    ERROR_MESSAGE_PREFIX,
-    RESTART,
-    SHUTDOWN
+import java.util.Optional;
+import java.util.stream.Stream;
+
+public class OptionUtils {
+    public static Optional<String> findOptionValue(String[] args, String optionKey) {
+        return Stream.of(args)
+                .filter(arg -> arg.startsWith(optionKey))
+                .map(arg -> arg.split("=")[1])
+                .findFirst();
+    }
 }

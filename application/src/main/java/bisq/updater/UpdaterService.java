@@ -22,14 +22,14 @@ import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
+import bisq.common.file.FileUtils;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.platform.PlatformUtils;
+import bisq.common.platform.Version;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.FileUtils;
-import bisq.common.util.OsUtils;
-import bisq.common.util.Version;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import com.google.common.annotations.VisibleForTesting;
@@ -46,8 +46,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.updater.UpdaterUtils.UPDATES_DIR;
-import static bisq.updater.UpdaterUtils.VERSION_FILE_NAME;
+import static bisq.updater.UpdaterUtils.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -135,7 +134,7 @@ public class UpdaterService implements Service {
         checkArgument(!keyIds.isEmpty());
 
         String downloadFileName = UpdaterUtils.getDownloadFileName(version, isLauncherUpdate);
-        String destinationDirectory = isLauncherUpdate ? OsUtils.getDownloadOfHomeDir() :
+        String destinationDirectory = isLauncherUpdate ? PlatformUtils.getDownloadOfHomeDir() :
                 Path.of(baseDir, UPDATES_DIR, version).toString();
         FileUtils.makeDirs(new File(destinationDirectory));
         downloadItemList.setAll(DownloadItem.createDescriptorList(version, destinationDirectory, downloadFileName, keyIds));

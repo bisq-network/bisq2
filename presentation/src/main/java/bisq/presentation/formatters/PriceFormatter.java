@@ -17,9 +17,9 @@
 
 package bisq.presentation.formatters;
 
+import bisq.common.formatter.DecimalFormatter;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.monetary.PriceQuote;
-import bisq.common.util.DecimalFormatters;
 
 import java.util.Locale;
 
@@ -52,8 +52,10 @@ public class PriceFormatter {
         return getDecimalFormat(priceQuote, locale, useLowPrecision).format(priceQuote.asDouble());
     }
 
-    private static DecimalFormatters.Format getDecimalFormat(PriceQuote priceQuote, Locale locale, boolean useLowPrecision) {
+    private static DecimalFormatter.Format getDecimalFormat(PriceQuote priceQuote,
+                                                            Locale locale,
+                                                            boolean useLowPrecision) {
         int precision = useLowPrecision ? priceQuote.getLowPrecision() : priceQuote.getPrecision();
-        return DecimalFormatters.getDecimalFormat(locale, precision);
+        return DecimalFormatter.getDecimalFormat(locale, precision);
     }
 }

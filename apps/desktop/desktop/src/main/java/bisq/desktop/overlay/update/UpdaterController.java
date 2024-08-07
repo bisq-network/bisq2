@@ -18,7 +18,7 @@
 package bisq.desktop.overlay.update;
 
 import bisq.common.observable.Pin;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
@@ -129,7 +129,7 @@ public class UpdaterController implements Controller {
 
     void onShutdown() {
         if (updaterService.getReleaseNotification().get().isLauncherUpdate()) {
-            OsUtils.open(OsUtils.getDownloadOfHomeDir());
+            PlatformUtils.open(PlatformUtils.getDownloadOfHomeDir());
         }
          serviceProvider.getShutDownHandler().shutdown();
     }

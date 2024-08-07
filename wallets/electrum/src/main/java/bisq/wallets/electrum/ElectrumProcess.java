@@ -18,7 +18,7 @@
 package bisq.wallets.electrum;
 
 import bisq.common.platform.OS;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.process.BisqProcess;
@@ -51,7 +51,7 @@ public class ElectrumProcess implements BisqProcess {
         if (!binaryPath.toFile().exists()) {
             unpackArchive();
             if (OS.isLinux()) {
-                OsUtils.makeBinaryExecutable(binaryPath);
+                PlatformUtils.makeBinaryExecutable(binaryPath);
             }
         }
         createAndStartProcess();

@@ -17,7 +17,7 @@
 
 package bisq.common.application;
 
-import bisq.common.util.Version;
+import bisq.common.platform.Version;
 
 public class ApplicationVersion {
     private static Version version;

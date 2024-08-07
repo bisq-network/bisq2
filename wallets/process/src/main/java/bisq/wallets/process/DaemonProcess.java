@@ -17,8 +17,8 @@
 
 package bisq.wallets.process;
 
-import bisq.common.scanner.LogScanner;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
+import bisq.common.file.LogScanner;
 import bisq.wallets.core.exceptions.WalletShutdownFailedException;
 import bisq.wallets.core.exceptions.WalletStartupFailedException;
 import lombok.Getter;

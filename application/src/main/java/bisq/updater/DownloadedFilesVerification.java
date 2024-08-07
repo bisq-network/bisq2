@@ -17,7 +17,7 @@
 
 package bisq.updater;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.security.PgPUtils;
 import lombok.extern.slf4j.Slf4j;
 

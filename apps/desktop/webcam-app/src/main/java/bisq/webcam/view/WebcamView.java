@@ -17,7 +17,7 @@
 
 package bisq.webcam.view;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.i18n.Res;
 import bisq.webcam.service.VideoSize;
 import javafx.beans.binding.BooleanBinding;

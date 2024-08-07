@@ -17,7 +17,7 @@
 
 package bisq.desktop.common.utils;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.scene.Scene;
@@ -73,7 +73,7 @@ public class FileChooserUtil {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         String directory = initialDirectory
                 .orElse(SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
-                        .orElse(OsUtils.getDownloadOfHomeDir()));
+                        .orElse(PlatformUtils.getDownloadOfHomeDir()));
         File initDir = new File(directory);
         if (initDir.isDirectory()) {
             directoryChooser.setInitialDirectory(initDir);
@@ -88,7 +88,7 @@ public class FileChooserUtil {
         FileChooser fileChooser = new FileChooser();
         initialFileName.ifPresent(fileChooser::setInitialFileName);
         String initialDirectory = SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
-                .orElse(OsUtils.getDownloadOfHomeDir());
+                .orElse(PlatformUtils.getDownloadOfHomeDir());
         File initDir = new File(initialDirectory);
         if (initDir.isDirectory()) {
             fileChooser.setInitialDirectory(initDir);

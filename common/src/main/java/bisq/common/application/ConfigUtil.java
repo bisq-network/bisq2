@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.util;
+package bisq.common.application;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;

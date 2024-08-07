@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.util;
+package bisq.common.formatter;
 
 import bisq.common.data.Pair;
 import com.google.common.cache.CacheBuilder;
@@ -28,7 +28,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-public class DecimalFormatters {
+public class DecimalFormatter {
     @EqualsAndHashCode
     @ToString
     public static final class Format {
@@ -54,7 +54,7 @@ public class DecimalFormatters {
      * Caches formatters which have the same parameters. We use formatters as stateless immutable objects.
      */
     private static final LoadingCache<Pair<Locale, Integer>, Format> decimalFormatCache = CacheBuilder.newBuilder()
-            .build(CacheLoader.from(DecimalFormatters::getDecimalFormat));
+            .build(CacheLoader.from(DecimalFormatter::getDecimalFormat));
 
     /**
      * @param locale    The locale to be used

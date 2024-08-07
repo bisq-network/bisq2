@@ -1,7 +1,7 @@
 package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
 

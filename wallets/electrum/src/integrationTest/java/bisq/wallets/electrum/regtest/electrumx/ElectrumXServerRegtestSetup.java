@@ -17,7 +17,7 @@
 
 package bisq.wallets.electrum.regtest.electrumx;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.AbstractRegtestSetup;

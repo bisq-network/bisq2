@@ -15,28 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.scanner;
+package bisq.common.data;
 
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.InputStream;
-import java.util.Scanner;
-import java.util.Set;
-
-@Slf4j
-public class InputStreamScanner extends LogScanner {
-
-    private final InputStream inputStream;
-
-    public InputStreamScanner(Set<String> linesToMatch, InputStream inputStream) {
-        super(linesToMatch);
-        this.inputStream = inputStream;
-    }
-
-    @Override
-    public boolean waitUntilLogContainsLines() {
-        try (Scanner scanner = new Scanner(inputStream)) {
-            return waitUntilScannerContainsLines(scanner);
-        }
-    }
+public enum WebcamControlSignals {
+    HEART_BEAT,
+    IMAGE_RECOGNIZED,
+    QR_CODE_PREFIX,
+    ERROR_MESSAGE_PREFIX,
+    RESTART,
+    SHUTDOWN
 }

@@ -20,7 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.proto.NetworkProto;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;

@@ -17,7 +17,7 @@
 
 package bisq.network;
 
-import bisq.common.util.ConfigUtil;
+import bisq.common.application.ConfigUtil;
 import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;

@@ -15,41 +15,39 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.scanner;
+package bisq.common.file;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public abstract class LogScanner {
+@Slf4j
+public class FileScanner extends LogScanner {
 
-    private final Set<String> linesToMatch;
-    private final Set<String> matchedLines = new HashSet<>();
+    private final Future<Path> logFilePath;
 
-    public LogScanner(Set<String> linesToMatch) {
-        this.linesToMatch = linesToMatch;
+    public FileScanner(Set<String> linesToMatch, Future<Path> logFilePath) {
+        super(linesToMatch);
+        this.logFilePath = logFilePath;
     }
 
-    public abstract boolean waitUntilLogContainsLines() throws IOException, ExecutionException, InterruptedException, TimeoutException;
-
-    protected boolean waitUntilScannerContainsLines(Scanner scanner) {
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-
-            for (String lineToMatch : linesToMatch) {
-                if (line.contains(lineToMatch)) {
-                    matchedLines.add(lineToMatch);
-
-                    if (matchedLines.size() == linesToMatch.size()) {
-                        return true;
-                    }
+    @Override
+    public boolean waitUntilLogContainsLines() throws IOException, ExecutionException, InterruptedException, TimeoutException {
+        while (true) {
+            Path logFilePath = this.logFilePath.get(1, TimeUnit.MINUTES);
+            try (Scanner scanner = new Scanner(logFilePath)) {
+                boolean foundAllLines = waitUntilScannerContainsLines(scanner);
+                if (foundAllLines) {
+                    return true;
                 }
             }
         }
-
-        return false;
     }
 }

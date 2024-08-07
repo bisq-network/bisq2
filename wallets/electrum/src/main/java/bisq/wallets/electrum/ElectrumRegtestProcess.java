@@ -17,10 +17,10 @@
 
 package bisq.wallets.electrum;
 
-import bisq.common.FileCreationWatcher;
-import bisq.common.scanner.FileScanner;
-import bisq.common.scanner.LogScanner;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileCreationWatcher;
+import bisq.common.file.FileScanner;
+import bisq.common.file.FileUtils;
+import bisq.common.file.LogScanner;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.json_rpc.JsonRpcClient;

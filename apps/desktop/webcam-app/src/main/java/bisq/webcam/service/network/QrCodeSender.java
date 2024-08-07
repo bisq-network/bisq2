@@ -17,9 +17,9 @@
 
 package bisq.webcam.service.network;
 
+import bisq.common.data.WebcamControlSignals;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
-import bisq.common.webcam.ControlSignals;
 import bisq.webcam.service.ErrorCode;
 import bisq.webcam.service.WebcamException;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ public class QrCodeSender {
 
     public void startSendingHeartBeat() {
         // Send a heart beat every second to avoid triggering server socket timeout
-        heartBeatScheduler = Optional.of(Scheduler.run(() -> send(ControlSignals.HEART_BEAT))
+        heartBeatScheduler = Optional.of(Scheduler.run(() -> send(WebcamControlSignals.HEART_BEAT))
                 .periodically(SEND_HEART_BEAT_INTERVAL));
     }
 
@@ -59,11 +59,11 @@ public class QrCodeSender {
         executorService.shutdownNow();
     }
 
-    public CompletableFuture<Void> send(ControlSignals controlSignal) {
+    public CompletableFuture<Void> send(WebcamControlSignals controlSignal) {
         return doSend(UNIT_SEPARATOR.getNonPrintingChar() + controlSignal.name());
     }
 
-    public CompletableFuture<Void> send(ControlSignals controlSignal, String message) {
+    public CompletableFuture<Void> send(WebcamControlSignals controlSignal, String message) {
         return doSend(UNIT_SEPARATOR.getNonPrintingChar() + controlSignal.name() + UNIT_SEPARATOR.getNonPrintingChar() + message);
     }
 

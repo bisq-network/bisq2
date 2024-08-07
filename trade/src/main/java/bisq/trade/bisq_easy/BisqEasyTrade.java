@@ -19,7 +19,7 @@ package bisq.trade.bisq_easy;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;

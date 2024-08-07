@@ -19,8 +19,8 @@ package bisq.desktop_app_launcher;
 
 import bisq.common.application.BuildVersion;
 import bisq.common.logging.LogSetup;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
 import bisq.updater.DownloadedFilesVerification;
 import bisq.updater.UpdaterUtils;
@@ -37,8 +37,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-import static bisq.updater.UpdaterUtils.UPDATES_DIR;
-import static bisq.updater.UpdaterUtils.readVersionFromVersionFile;
+import static bisq.updater.UpdaterUtils.*;
 
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.
@@ -82,7 +81,7 @@ public class DesktopAppLauncher {
     private DesktopAppLauncher(String[] args) throws Exception {
         options = new Options(args);
         String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
-        String appDataDir = OsUtils.getUserDataDir().resolve(appName).toAbsolutePath().toString();
+        String appDataDir = PlatformUtils.getUserDataDir().resolve(appName).toAbsolutePath().toString();
         LogSetup.setup(Paths.get(appDataDir, "bisq").toString());
         String version = UpdaterUtils.readVersionFromVersionFile(appDataDir)
                 .or(options::getVersion)

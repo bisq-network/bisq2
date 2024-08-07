@@ -19,7 +19,7 @@ package bisq.network;
 
 
 import bisq.common.application.Service;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;

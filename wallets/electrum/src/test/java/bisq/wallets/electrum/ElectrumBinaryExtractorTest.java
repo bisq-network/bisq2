@@ -17,7 +17,7 @@
 
 package bisq.wallets.electrum;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

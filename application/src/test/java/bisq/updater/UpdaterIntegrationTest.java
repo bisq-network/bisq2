@@ -17,8 +17,8 @@
 
 package bisq.updater;
 
+import bisq.common.file.FileUtils;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,8 +32,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.updater.UpdaterUtils.UPDATES_DIR;
-import static bisq.updater.UpdaterUtils.readVersionFromVersionFile;
+import static bisq.updater.UpdaterUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 // Tests deactivated as they fail on CI due FileNotFoundException probably related to the srcBaseDir location.

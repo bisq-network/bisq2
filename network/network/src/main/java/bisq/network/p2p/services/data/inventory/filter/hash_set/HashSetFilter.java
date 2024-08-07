@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
 
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.EqualsAndHashCode;

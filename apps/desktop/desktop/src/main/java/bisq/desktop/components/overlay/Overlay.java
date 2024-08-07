@@ -19,11 +19,11 @@ package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.platform.Platform;
-import bisq.common.util.FileUtils;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -948,7 +948,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     private void addReportErrorButtons() {
         Button logButton = new Button(Res.get("popup.reportError.log"));
-        logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
+        logButton.setOnAction(event -> PlatformUtils.open(new File(baseDir, "bisq.log")));
 
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
         zipLogButton.setOnAction(event -> {
@@ -985,7 +985,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                                     }
                                 }
                             });
-                            OsUtils.open(zipDirectory);
+                            PlatformUtils.open(zipDirectory);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }

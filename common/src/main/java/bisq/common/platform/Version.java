@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bisq.common.util;
+
+package bisq.common.platform;
 
 import lombok.Getter;
 

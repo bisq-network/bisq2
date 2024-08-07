@@ -20,7 +20,7 @@ package bisq.desktop.main.content.authorized_role.release_manager;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.observable.Pin;
-import bisq.common.util.Version;
+import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;

@@ -18,10 +18,10 @@
 package bisq.webcam;
 
 
+import bisq.common.data.WebcamControlSignals;
+import bisq.common.file.FileUtils;
 import bisq.common.logging.LogSetup;
-import bisq.common.util.FileUtils;
-import bisq.common.util.OsUtils;
-import bisq.common.webcam.ControlSignals;
+import bisq.common.platform.PlatformUtils;
 import bisq.i18n.Res;
 import bisq.webcam.service.VideoSize;
 import bisq.webcam.service.WebcamException;
@@ -42,7 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
-import static bisq.common.webcam.ControlSignals.*;
+import static bisq.common.data.WebcamControlSignals.*;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
@@ -70,7 +70,7 @@ public class WebcamApp extends Application {
                 port = Integer.parseInt(portParam);
             }
 
-            String logFile = OsUtils.getUserDataDir().resolve("Bisq-webcam-app").toAbsolutePath() + FileUtils.FILE_SEP + "webcam-app";
+            String logFile = PlatformUtils.getUserDataDir().resolve("Bisq-webcam-app").toAbsolutePath() + FileUtils.FILE_SEP + "webcam-app";
             String logFileParam = parameters.getNamed().get("logFile");
             if (logFileParam != null) {
                 logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);
@@ -101,7 +101,7 @@ public class WebcamApp extends Application {
     }
 
     private void shutdown() {
-        qrCodeSender.send(ControlSignals.SHUTDOWN)
+        qrCodeSender.send(WebcamControlSignals.SHUTDOWN)
                 .whenComplete((nil, throwable) -> {
                     qrCodeSender.shutdown();
                     webcamService.shutdown()
