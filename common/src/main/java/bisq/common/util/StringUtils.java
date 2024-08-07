@@ -18,6 +18,7 @@
 package bisq.common.util;
 
 import bisq.common.data.Pair;
+import bisq.common.platform.PlatformUtils;
 import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
 
@@ -240,6 +241,6 @@ public class StringUtils {
     }
 
     public static String maskHomeDirectory(String string) {
-        return string.replace(OsUtils.getHomeDirectory(), "<HOME_DIR>");
+        return string.replace(PlatformUtils.getHomeDirectory(), "<HOME_DIR>");
     }
 }

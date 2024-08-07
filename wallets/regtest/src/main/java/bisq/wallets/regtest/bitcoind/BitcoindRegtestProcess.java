@@ -17,8 +17,8 @@
 
 package bisq.wallets.regtest.bitcoind;
 
-import bisq.common.scanner.InputStreamScanner;
-import bisq.common.scanner.LogScanner;
+import bisq.common.file.InputStreamScanner;
+import bisq.common.file.LogScanner;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.json_rpc.JsonRpcClient;

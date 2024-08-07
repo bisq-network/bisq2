@@ -18,7 +18,7 @@
 package bisq.contract;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum Role implements ProtoEnum {
     MAKER,

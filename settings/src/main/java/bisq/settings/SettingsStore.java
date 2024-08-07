@@ -22,9 +22,9 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.OsUtils;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -83,7 +83,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 false,
                 false,
-                OsUtils.getHomeDirectory());
+                PlatformUtils.getHomeDirectory());
     }
 
     public SettingsStore(Cookie cookie,

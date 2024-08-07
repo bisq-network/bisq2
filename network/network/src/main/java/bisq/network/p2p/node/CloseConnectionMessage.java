@@ -1,6 +1,6 @@
 package bisq.network.p2p.node;
 
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -19,14 +19,18 @@ package bisq.application;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
+import bisq.common.application.OptionUtils;
 import bisq.common.application.Service;
 import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.file.FileUtils;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
-import bisq.common.util.*;
+import bisq.common.platform.MemoryReport;
+import bisq.common.platform.PlatformUtils;
+import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import com.typesafe.config.ConfigFactory;
@@ -73,7 +77,7 @@ public abstract class ApplicationService implements Service {
             String appName = resolveAppName(args, config);
             Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
                     .map(Path::of)
-                    .orElse(OsUtils.getUserDataDir().resolve(appName));
+                    .orElse(PlatformUtils.getUserDataDir().resolve(appName));
             return new Config(appDataDir,
                     appName,
                     config.getBoolean("devMode"),
@@ -122,7 +126,7 @@ public abstract class ApplicationService implements Service {
         String appName = resolveAppName(args, defaultTypesafeConfig.getConfig("application"));
         Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
                 .map(Path::of)
-                .orElse(OsUtils.getUserDataDir().resolve(appName));
+                .orElse(PlatformUtils.getUserDataDir().resolve(appName));
         File customConfigFile = Path.of(appDataDir.toString(), "bisq.conf").toFile();
         com.typesafe.config.Config typesafeConfig;
         boolean customConfigProvided = customConfigFile.exists();

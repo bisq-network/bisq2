@@ -17,7 +17,7 @@
 
 package bisq.desktop.common;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.overlay.Popup;
@@ -92,7 +92,7 @@ public class Browser {
             log.info("Error at opening {} with hostServices.showDocument. We try to open it via OsUtils.browse.", url, e);
 
             try {
-                OsUtils.browse(url);
+                PlatformUtils.browse(url);
             } catch (Exception e2) {
                 log.error("Error at opening {} with OsUtils.browse.", url, e);
             }

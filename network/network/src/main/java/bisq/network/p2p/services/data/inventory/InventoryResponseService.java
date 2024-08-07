@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;

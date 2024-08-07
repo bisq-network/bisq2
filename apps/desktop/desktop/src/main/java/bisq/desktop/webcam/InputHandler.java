@@ -17,15 +17,15 @@
 
 package bisq.desktop.webcam;
 
-import bisq.common.webcam.ControlSignals;
+import bisq.common.data.WebcamControlSignals;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
+import static bisq.common.data.WebcamControlSignals.*;
 import static bisq.common.encoding.NonPrintingCharacters.UNIT_SEPARATOR;
-import static bisq.common.webcam.ControlSignals.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -72,7 +72,7 @@ public class InputHandler {
                 throw new IllegalArgumentException("Not recognized message type. Message=" + message);
             }
         } else {
-            if (ControlSignals.SHUTDOWN.name().equals(message)) {
+            if (WebcamControlSignals.SHUTDOWN.name().equals(message)) {
                 model.getIsShutdownSignalReceived().set(true);
             } else if (RESTART.name().equals(message)) {
                 model.getRestartSignalReceived().set(true);

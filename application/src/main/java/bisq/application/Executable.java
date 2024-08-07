@@ -1,6 +1,6 @@
 package bisq.application;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
 
     protected void exitJvm() {
         log.info("Exiting JVM");
-        System.exit(OsUtils.EXIT_SUCCESS);
+        System.exit(PlatformUtils.EXIT_SUCCESS);
     }
 
     @Override

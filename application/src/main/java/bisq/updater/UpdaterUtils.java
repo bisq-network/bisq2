@@ -17,9 +17,9 @@
 
 package bisq.updater;
 
+import bisq.common.file.FileUtils;
 import bisq.common.platform.Platform;
-import bisq.common.util.FileUtils;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class UpdaterUtils {
     }
 
     public static String getInstallerFileName(String version) {
-        return "Bisq-" + version + OsUtils.getInstallerExtension();
+        return "Bisq-" + version + PlatformUtils.getInstallerExtension();
     }
 
     public static String getJarFileName(String version) {
@@ -63,6 +63,6 @@ public class UpdaterUtils {
     }
 
     public static boolean isDownloadedFile(String fileName) {
-        return fileName.endsWith("-all.jar") || fileName.endsWith(OsUtils.getInstallerExtension());
+        return fileName.endsWith("-all.jar") || fileName.endsWith(PlatformUtils.getInstallerExtension());
     }
 }

@@ -18,7 +18,7 @@
 package bisq.trade;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import lombok.Getter;
 
 @Getter

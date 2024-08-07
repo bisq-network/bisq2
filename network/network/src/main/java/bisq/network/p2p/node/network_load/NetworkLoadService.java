@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.node.network_load;
 
+import bisq.common.data.ByteUnit;
 import bisq.common.proto.Proto;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.ByteUnit;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.node.Connection;

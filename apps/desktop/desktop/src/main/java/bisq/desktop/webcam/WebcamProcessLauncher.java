@@ -19,10 +19,10 @@ package bisq.desktop.webcam;
 
 import bisq.common.application.DevMode;
 import bisq.common.archive.ZipFileExtractor;
+import bisq.common.file.FileUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;

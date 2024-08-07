@@ -19,7 +19,7 @@ package bisq.trade.bisq_musig;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;

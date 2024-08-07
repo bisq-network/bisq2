@@ -17,7 +17,7 @@
 
 package bisq.tor.installer;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;

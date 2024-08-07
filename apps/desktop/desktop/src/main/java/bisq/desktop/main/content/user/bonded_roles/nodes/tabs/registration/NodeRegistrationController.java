@@ -19,7 +19,7 @@ package bisq.desktop.main.content.user.bonded_roles.nodes.tabs.registration;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.encoding.Hex;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.FileChooserUtil;

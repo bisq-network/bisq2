@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter;
 
 import bisq.common.data.ByteArray;
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.storage.DistributedData;

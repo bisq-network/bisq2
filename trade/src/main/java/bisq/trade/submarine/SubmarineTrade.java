@@ -19,7 +19,7 @@ package bisq.trade.submarine;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;

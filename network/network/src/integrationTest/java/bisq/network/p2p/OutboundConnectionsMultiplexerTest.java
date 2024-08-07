@@ -18,7 +18,7 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
@@ -43,8 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 @Slf4j

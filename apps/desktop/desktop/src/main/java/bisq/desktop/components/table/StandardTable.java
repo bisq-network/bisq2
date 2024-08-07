@@ -1,7 +1,7 @@
 package bisq.desktop.components.table;
 
 import bisq.common.encoding.Csv;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;

@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.util;
+package bisq.common.file;
 
+import bisq.common.jvm.DeleteOnExitHook;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import com.google.common.base.Charsets;

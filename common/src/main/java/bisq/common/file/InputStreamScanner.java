@@ -15,16 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.util;
+package bisq.common.file;
 
-import java.util.Optional;
-import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 
-public class OptionUtils {
-    public static Optional<String> findOptionValue(String[] args, String optionKey) {
-        return Stream.of(args)
-                .filter(arg -> arg.startsWith(optionKey))
-                .map(arg -> arg.split("=")[1])
-                .findFirst();
+import java.io.InputStream;
+import java.util.Scanner;
+import java.util.Set;
+
+@Slf4j
+public class InputStreamScanner extends LogScanner {
+
+    private final InputStream inputStream;
+
+    public InputStreamScanner(Set<String> linesToMatch, InputStream inputStream) {
+        super(linesToMatch);
+        this.inputStream = inputStream;
+    }
+
+    @Override
+    public boolean waitUntilLogContainsLines() {
+        try (Scanner scanner = new Scanner(inputStream)) {
+            return waitUntilScannerContainsLines(scanner);
+        }
     }
 }

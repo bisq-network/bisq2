@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
 

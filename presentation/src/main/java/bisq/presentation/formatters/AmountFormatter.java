@@ -17,9 +17,9 @@
 
 package bisq.presentation.formatters;
 
+import bisq.common.formatter.DecimalFormatter;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.monetary.Monetary;
-import bisq.common.util.DecimalFormatters;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormatSymbols;
@@ -87,9 +87,9 @@ public class AmountFormatter {
                 .orElse("");
     }
 
-    private static DecimalFormatters.Format getDecimalFormat(Monetary amount, Locale locale, boolean useLowPrecision) {
+    private static DecimalFormatter.Format getDecimalFormat(Monetary amount, Locale locale, boolean useLowPrecision) {
         return useLowPrecision ?
-                DecimalFormatters.getDecimalFormat(locale, amount.getLowPrecision()) :
-                DecimalFormatters.getDecimalFormat(locale, amount.getPrecision());
+                DecimalFormatter.getDecimalFormat(locale, amount.getLowPrecision()) :
+                DecimalFormatter.getDecimalFormat(locale, amount.getPrecision());
     }
 }

@@ -41,7 +41,7 @@
  * questions.
  */
 
-package bisq.common.util;
+package bisq.common.jvm;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +61,7 @@ import java.util.List;
  * A set is used both to prevent double-insertion of the same file and offer quick removal.
  */
 @Slf4j
-class DeleteOnExitHook {
+public class DeleteOnExitHook {
     private static LinkedHashSet<String> files = new LinkedHashSet<>();
     @Getter
     private static volatile boolean shutdownInProgress;

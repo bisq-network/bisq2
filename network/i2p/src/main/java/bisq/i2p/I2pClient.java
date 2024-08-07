@@ -17,7 +17,7 @@
 
 package bisq.i2p;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PAppContext;
 import net.i2p.I2PException;

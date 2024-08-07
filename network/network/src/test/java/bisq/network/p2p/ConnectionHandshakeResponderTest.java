@@ -18,7 +18,7 @@
 package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -42,10 +42,8 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class ConnectionHandshakeResponderTest {
 
