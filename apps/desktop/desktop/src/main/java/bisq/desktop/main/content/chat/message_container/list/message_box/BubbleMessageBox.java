@@ -17,6 +17,9 @@
 
 package bisq.desktop.main.content.chat.message_container.list.message_box;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
@@ -29,6 +32,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ActiveReactionsDisplayBox;
@@ -40,8 +44,10 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -74,7 +80,8 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected ReactMenuBox reactMenuBox;
     protected Label userName, dateTime, message;
-    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox, supportedLanguagesHBox, amountAndPriceBox;
+    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox, supportedLanguagesHBox, amountAndPriceBox,
+            paymentAndSettlementMethodsBox;
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
@@ -95,6 +102,7 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         supportedLanguagesHBox = createAndGetSupportedLanguagesBox();
         amountAndPriceBox = createAndGetAmountAndPriceBox();
+        paymentAndSettlementMethodsBox = createAndGetPaymentAndSettlementMethodsBox();
         quotedMessageVBox = createAndGetQuotedMessageBox();
         handleQuoteMessageBox();
         message = createAndGetMessage();
@@ -212,10 +220,10 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private HBox createAndGetSupportedLanguagesBox() {
-        HBox hbox = new HBox(5);
+        HBox hBox = new HBox(5);
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
             Label iconLabel = new Label(":", ImageUtil.getImageViewById("language-grey"));
-            hbox.getChildren().add(iconLabel);
+            hBox.getChildren().add(iconLabel);
             BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
             if (chatMessage.getBisqEasyOffer().isPresent()) {
                 BisqEasyOffer offer = chatMessage.getBisqEasyOffer().get();
@@ -224,15 +232,15 @@ public abstract class BubbleMessageBox extends MessageBox {
                     String languageCode = offer.getSupportedLanguageCodes().get(i).toUpperCase();
                     Label codeLabel = (i == codesCount - 1) ? new Label(languageCode) : new Label(languageCode + ", ");
                     codeLabel.setTooltip(new BisqTooltip(LanguageRepository.getDisplayString(languageCode)));
-                    hbox.getChildren().add(codeLabel);
+                    hBox.getChildren().add(codeLabel);
                 }
             }
         }
-        return hbox;
+        return hBox;
     }
 
     private HBox createAndGetAmountAndPriceBox() {
-        HBox amountAndPriceBox = new HBox(5);
+        HBox hBox = new HBox(5);
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
             Optional<Pair<String, String>> amountAndPriceSpec = item.getBisqEasyOfferAmountAndPriceSpec();
             if (amountAndPriceSpec.isPresent()) {
@@ -241,10 +249,35 @@ public abstract class BubbleMessageBox extends MessageBox {
                 Label price = new Label(amountAndPriceSpec.get().getSecond());
                 price.getStyleClass().add("text-fill-white");
                 Label connector = new Label("@");
-                amountAndPriceBox.getChildren().addAll(amount, connector, price);
+                hBox.getChildren().addAll(amount, connector, price);
             }
         }
-        return amountAndPriceBox;
+        return hBox;
+    }
+
+    private HBox createAndGetPaymentAndSettlementMethodsBox() {
+        HBox hBox = new HBox(5);
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            for (FiatPaymentMethod fiatPaymentMethod : item.getBisqEasyOfferPaymentMethods()) {
+                hBox.getChildren().add(createMethodLabel(fiatPaymentMethod));
+            }
+            // TODO: Add icon
+            // hBox.getChildren().add();
+            for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBisqEasyOfferSettlementMethods()) {
+                hBox.getChildren().add(createMethodLabel(bitcoinPaymentMethod));
+            }
+        }
+        return hBox;
+    }
+
+    private Label createMethodLabel(PaymentMethod<?> paymentMethod) {
+        Node icon = !paymentMethod.isCustomPaymentMethod()
+                ? ImageUtil.getImageViewById(paymentMethod.getName())
+                : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
+        Label label = new Label();
+        label.setGraphic(icon);
+        label.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
+        return label;
     }
 
     private VBox createAndGetQuotedMessageBox() {

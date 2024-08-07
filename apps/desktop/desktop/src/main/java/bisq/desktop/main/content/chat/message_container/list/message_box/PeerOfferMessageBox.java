@@ -67,11 +67,10 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         takeOfferButton = takeOfferLabelAndButton.getSecond();
 
         // Offer content
-        VBox.setMargin(takeOfferTitle, new Insets(0, 0, 0, 7));
-        VBox.setMargin(amountAndPriceBox, new Insets(0, 0, 0, 7));
-        VBox.setMargin(supportedLanguagesHBox, new Insets(0, 0, 0, 7));
-        VBox.setMargin(takeOfferButton, new Insets(10, 0, 0, 7));
-        VBox offerMessage = new VBox(10, takeOfferTitle, amountAndPriceBox, supportedLanguagesHBox, takeOfferButton);
+        VBox offerMessage = new VBox(10, takeOfferTitle, amountAndPriceBox, supportedLanguagesHBox,
+                paymentAndSettlementMethodsBox, takeOfferButton);
+        VBox.setMargin(takeOfferButton, new Insets(10, 0, 0, 0));
+        VBox.setMargin(offerMessage, new Insets(0, 0, 0, 7));
 
         Region separator = new Region();
         separator.getStyleClass().add("take-offer-vLine");

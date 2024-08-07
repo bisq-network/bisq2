@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.chat.message_container.list;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -52,6 +54,7 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
+import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.Trade;
@@ -272,6 +275,22 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             return Optional.of(new Pair<>(quoteAmountAsString, priceSpecAsString));
         }
         return Optional.empty();
+    }
+
+    public List<FiatPaymentMethod> getBisqEasyOfferPaymentMethods() {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOffer offer = ((BisqEasyOfferbookMessage) chatMessage).getBisqEasyOffer().orElseThrow();
+            return PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs());
+        }
+        return Collections.emptyList();
+    }
+
+    public List<BitcoinPaymentMethod> getBisqEasyOfferSettlementMethods() {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOffer offer = ((BisqEasyOfferbookMessage) chatMessage).getBisqEasyOffer().orElseThrow();
+            return PaymentMethodSpecUtil.getPaymentMethods(offer.getBaseSidePaymentMethodSpecs());
+        }
+        return Collections.emptyList();
     }
 
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
