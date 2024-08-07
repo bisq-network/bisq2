@@ -37,6 +37,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.util.Optional;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class PeerOfferMessageBox extends PeerTextMessageBox {
@@ -62,21 +64,18 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         userProfileIconVbox.setSpacing(10);
         item.getReputationScoreDisplay().setScale(0.8);
 
-        // Take offer title and button
         Pair<HBox, Button> takeOfferLabelAndButton = createAndGetTakeOfferTitleBoxAndButton();
         HBox takeOfferTitle = takeOfferLabelAndButton.getFirst();
         takeOfferButton = takeOfferLabelAndButton.getSecond();
 
-        // Message
-        message.getStyleClass().add("chat-peer-offer-message");
+        HBox amountAndPriceBox = createAndGetAmountAndPriceBox();
 
         // Offer content
-        VBox offerMessage = new VBox(10, takeOfferTitle, message, takeOfferButton);
+        VBox offerMessage = new VBox(10, takeOfferTitle, amountAndPriceBox, takeOfferButton);
         Region separator = new Region();
         separator.getStyleClass().add("take-offer-vLine");
         HBox offerContent = new HBox(15, userProfileIconVbox, separator, offerMessage);
         userProfileIconVbox.setAlignment(Pos.TOP_CENTER);
-//        reputationVBox.setAlignment(Pos.CENTER);
         offerContent.setAlignment(Pos.CENTER);
 
         // Message background
@@ -116,6 +115,21 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         VBox.setMargin(button, new Insets(10, 0, 0, 7));
 
         return new Pair<>(messageTitleBox, button);
+    }
+
+    private HBox createAndGetAmountAndPriceBox() {
+        Optional<Pair<String, String>> amountAndPriceSpec = item.getBisqEasyOfferAmountAndPriceSpec();
+        HBox amountAndPriceBox = new HBox(5);
+        if (amountAndPriceSpec.isPresent()) {
+            Label amount = new Label(amountAndPriceSpec.get().getFirst());
+            amount.getStyleClass().add("text-fill-white");
+            Label price = new Label(amountAndPriceSpec.get().getSecond());
+            price.getStyleClass().add("text-fill-white");
+            Label connector = new Label("@");
+            amountAndPriceBox.getChildren().addAll(amount, connector, price);
+            VBox.setMargin(amountAndPriceBox, new Insets(0, 0, 0, 7));
+        }
+        return amountAndPriceBox;
     }
 
     @Override

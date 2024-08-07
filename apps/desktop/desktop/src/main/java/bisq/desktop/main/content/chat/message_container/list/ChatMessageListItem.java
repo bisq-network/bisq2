@@ -27,6 +27,8 @@ import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
+import bisq.common.currency.Market;
+import bisq.common.data.Pair;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -45,8 +47,12 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.Direction;
+import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -252,6 +258,20 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     public double getReputationStarCount() {
         return reputationScoreDisplay.getNumberOfStars();
+    }
+
+    public Optional<Pair<String, String>> getBisqEasyOfferAmountAndPriceSpec() {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOffer offer = ((BisqEasyOfferbookMessage) chatMessage).getBisqEasyOffer().orElseThrow();
+            AmountSpec amountSpec = offer.getAmountSpec();
+            PriceSpec priceSpec = offer.getPriceSpec();
+            boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
+            Market market = offer.getMarket();
+            String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
+            String priceSpecAsString = BisqEasyServiceUtil.getFormattedPriceSpec(priceSpec);
+            return Optional.of(new Pair<>(quoteAmountAsString, priceSpecAsString));
+        }
+        return Optional.empty();
     }
 
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
