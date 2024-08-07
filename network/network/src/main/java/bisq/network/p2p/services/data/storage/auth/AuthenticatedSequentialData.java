@@ -26,6 +26,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
+
 /**
  * Data which ensures that the sequence of add or remove request is maintained correctly.
  * The data gets hashed and signed and need to be deterministic.
@@ -35,10 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public final class AuthenticatedSequentialData implements NetworkProto {
     public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
-        return new AuthenticatedSequentialData(data.getAuthenticatedData(),
-                sequenceNumber,
-                data.getPubKeyHash(),
-                data.getCreated());
+        return from(data, sequenceNumber, data.getCreated());
+    }
+
+    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber, long created) {
+        return new AuthenticatedSequentialData(data.getAuthenticatedData(), sequenceNumber, data.getPubKeyHash(), created);
     }
 
     private final AuthenticatedData authenticatedData;
@@ -101,7 +104,7 @@ public final class AuthenticatedSequentialData implements NetworkProto {
     public String toString() {
         return "AuthenticatedSequentialData{" +
                 "\r\n          sequenceNumber=" + sequenceNumber +
-                ",\r\n          created=" + created +
+                ",\r\n          created=" + new Date(created) + " (" + created + ")" +
                 ",\r\n          pubKeyHash=" + Hex.encode(pubKeyHash) +
                 ",\r\n          authenticatedData=" + authenticatedData +
                 "\r\n}";

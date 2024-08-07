@@ -27,6 +27,7 @@ import lombok.Getter;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Date;
 
 @Getter
 @EqualsAndHashCode
@@ -141,7 +142,7 @@ public final class MailboxSequentialData implements NetworkProto {
     public String toString() {
         return "MailboxSequentialData{" +
                 "sequenceNumber=" + sequenceNumber +
-                ", created=" + created +
+                ", created=" + new Date(created) + " (" + created + ")" +
                 ", senderPublicKeyHash=" + Hex.encode(senderPublicKeyHash) +
                 ", receiversPublicKeyHash=" + Hex.encode(receiversPublicKeyHash) +
                 ", receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +

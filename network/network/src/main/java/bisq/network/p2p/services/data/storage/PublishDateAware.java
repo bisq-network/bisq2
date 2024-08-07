@@ -19,4 +19,6 @@ package bisq.network.p2p.services.data.storage;
 
 public interface PublishDateAware {
     void setPublishDate(long publishDate);
+
+    long getPublishDate();
 }

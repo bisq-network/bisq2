@@ -271,18 +271,18 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).signatureInvalid();
             }
 
-            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(sequentialData, request.getSequenceNumber());
+            long refreshDate = request.getCreated();
+            if (sequentialData.getDistributedData() instanceof PublishDateAware publishDateAware) {
+                publishDateAware.setPublishDate(refreshDate);
+            }
+            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(sequentialData, request.getSequenceNumber(), refreshDate);
             updatedRequest = new AddAuthenticatedDataRequest(updatedData,
                     addRequestFromMap.getSignature(),
                     addRequestFromMap.getOwnerPublicKey());
 
-            DistributedData distributedData = sequentialData.getDistributedData();
-            if (distributedData instanceof PublishDateAware publishDateAware) {
-                publishDateAware.setPublishDate(addRequestFromMap.getCreated());
-            }
-
             map.put(byteArray, updatedRequest);
         }
+
         persist();
         listeners.forEach(listener -> {
             try {

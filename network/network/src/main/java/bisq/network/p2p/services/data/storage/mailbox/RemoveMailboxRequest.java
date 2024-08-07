@@ -36,6 +36,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
@@ -219,7 +220,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 ", hash=" + Hex.encode(hash) +
                 ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +
                 ", signature=" + Hex.encode(signature) +
-                ", created=" + created +
+                ", created=" + new Date(created) + " (" + created + ")" +
                 ", receiverPublicKey=" + receiverPublicKey +
                 '}';
     }

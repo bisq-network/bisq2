@@ -24,7 +24,6 @@ import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -80,16 +79,23 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof UserProfile) {
-            processUserProfileAdded((UserProfile) distributedData);
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            processUserProfileAddedOrRefreshed(userProfile);
         }
     }
 
-
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        processUserProfileRemoved(authenticatedData);
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            processUserProfileRemoved(userProfile);
+        }
+    }
+
+    @Override
+    public void onAuthenticatedDataRefreshed(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            processUserProfileAddedOrRefreshed(userProfile);
+        }
     }
 
 
@@ -146,7 +152,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
     }
 
-    private void processUserProfileAdded(UserProfile userProfile) {
+    private void processUserProfileAddedOrRefreshed(UserProfile userProfile) {
         Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
         if (existingUserProfile.isEmpty() || !existingUserProfile.get().equals(userProfile)) {
             if (verifyUserProfile(userProfile)) {
@@ -173,18 +179,14 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
     }
 
-    private void processUserProfileRemoved(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof UserProfile) {
-            UserProfile userProfile = (UserProfile) distributedData;
-            ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
-            synchronized (persistableStore) {
-                removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
-                userProfileById.remove(userProfile.getId());
-            }
-            numUserProfiles.set(userProfileById.values().size());
-            persist();
+    private void processUserProfileRemoved(UserProfile userProfile) {
+        ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
+        synchronized (persistableStore) {
+            removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
+            userProfileById.remove(userProfile.getId());
         }
+        numUserProfiles.set(userProfileById.values().size());
+        persist();
     }
 
     private boolean verifyUserProfile(UserProfile userProfile) {
@@ -201,7 +203,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return true;
     }
 
-
     private Map<String, Set<String>> getNymsByNickName() {
         return persistableStore.getNymsByNickName();
     }
@@ -211,7 +212,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
             return persistableStore.getUserProfileById();
         }
     }
-
 
     private void addNymToNickNameHashMap(String nym, String nickName) {
         Map<String, Set<String>> nymsByNickName = getNymsByNickName();

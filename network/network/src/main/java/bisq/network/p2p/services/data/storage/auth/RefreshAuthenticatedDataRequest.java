@@ -34,6 +34,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Date;
 
 @Getter
 @EqualsAndHashCode
@@ -55,7 +56,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 publicKey.getEncoded(),
                 publicKey,
                 newSequenceNumber,
-                signature);
+                signature,
+                System.currentTimeMillis());
     }
 
 
@@ -72,6 +74,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     transient private final PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;         // 47 bytes
+    private final long created;
 
     private RefreshAuthenticatedDataRequest(int version,
                                             MetaData metaData,
@@ -79,7 +82,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                                             byte[] ownerPublicKeyBytes,
                                             PublicKey ownerPublicKey,
                                             int sequenceNumber,
-                                            byte[] signature) {
+                                            byte[] signature,
+                                            long created) {
         this.version = version;
         this.metaData = metaData;
         this.hash = hash;
@@ -87,6 +91,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         this.ownerPublicKey = ownerPublicKey;
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
+        this.created = created;
 
         verify();
     }
@@ -116,7 +121,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 .setHash(ByteString.copyFrom(hash))
                 .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
                 .setSequenceNumber(sequenceNumber)
-                .setSignature(ByteString.copyFrom(signature));
+                .setSignature(ByteString.copyFrom(signature))
+                .setCreated(created);
     }
 
     public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto) {
@@ -130,7 +136,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                     ownerPublicKeyBytes,
                     ownerPublicKey,
                     proto.getSequenceNumber(),
-                    proto.getSignature().toByteArray()
+                    proto.getSignature().toByteArray(),
+                    proto.getCreated()
             );
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
@@ -171,12 +178,6 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
     @Override
-    public long getCreated() {
-        // Not used as not stored in map and no pruning applied
-        return 0;
-    }
-
-    @Override
     public int getMaxMapSize() {
         return metaData.getMaxMapSize();
     }
@@ -194,6 +195,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     signature=" + Hex.encode(signature) +
+                ",\r\n     created=" + new Date(created) + " (" + created + ")" +
                 "\r\n}";
     }
 }
