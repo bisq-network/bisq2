@@ -26,12 +26,17 @@ import bisq.common.data.Pair;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
+import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.presentation.formatters.PercentageFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -61,9 +66,11 @@ public class OfferMessageItem {
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
+    private final boolean isFixPrice;
     private long totalScore;
     private double priceSpecAsPercent;
     private Pin marketPriceByCurrencyMapPin, reputationChangedPin;
+    private String formattedPercentagePrice, priceTooltip;
 
     OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                      UserProfile userProfile,
@@ -81,7 +88,7 @@ public class OfferMessageItem {
         userNickname = userProfile.getNickName();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
-
+        isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
         initialize();
     }
 
@@ -116,6 +123,15 @@ public class OfferMessageItem {
 
     private void updatePriceSpecAsPercent() {
         priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
+        formattedPercentagePrice = PercentageFormatter.formatToPercentWithSymbol(priceSpecAsPercent);
+        String price = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer);
+        if (bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec) {
+            priceTooltip = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.fixPrice", price, formattedPercentagePrice);
+        } else if (bisqEasyOffer.getPriceSpec() instanceof FloatPriceSpec) {
+            priceTooltip = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.floatPrice", formattedPercentagePrice, price);
+        } else {
+            priceTooltip = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.marketPrice", price);
+        }
     }
 
     private void updateReputationScore() {
