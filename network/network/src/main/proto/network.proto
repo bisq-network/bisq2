@@ -252,6 +252,7 @@ message RefreshAuthenticatedDataRequest {
   sint32 sequenceNumber = 4;
   bytes signature = 5;
   sint32 version = 6;
+  sint64 created = 7;
 }
 
 message MailboxData {

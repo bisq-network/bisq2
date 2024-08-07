@@ -70,12 +70,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
@@ -317,14 +312,21 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData,
                                                                        KeyPair keyPair) {
-        checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+        checkArgument(dataService.isPresent(), "DataService must be supported when publishAuthenticatedData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
 
+    public CompletableFuture<BroadcastResult> refreshAuthenticatedData(DistributedData distributedData,
+                                                                       KeyPair keyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when refreshAuthenticatedData is called.");
+        DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
+        return dataService.get().refreshAuthenticatedData(authenticatedData, keyPair);
+    }
+
     public CompletableFuture<BroadcastResult> removeAuthenticatedData(DistributedData distributedData,
                                                                       KeyPair ownerKeyPair) {
-        checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
+        checkArgument(dataService.isPresent(), "DataService must be supported when removeAuthenticatedData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
     }

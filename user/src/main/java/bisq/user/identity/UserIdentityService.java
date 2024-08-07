@@ -26,7 +26,6 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -93,12 +92,15 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof UserProfile userProfile) {
-            findUserIdentity(userProfile.getId())
-                    .map(UserIdentity::getUserProfile)
-                    .filter(myUserProfile -> userProfile.getPublishDate() > myUserProfile.getPublishDate())
-                    .ifPresent(myUserProfile -> myUserProfile.setPublishDate(userProfile.getPublishDate()));
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            processUserProfileAddedOrRefreshed(userProfile);
+        }
+    }
+
+    @Override
+    public void onAuthenticatedDataRefreshed(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            processUserProfileAddedOrRefreshed(userProfile);
         }
     }
 
@@ -262,6 +264,13 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 .thenCompose(e -> networkService.publishAuthenticatedData(userProfile, keyPair));
     }
 
+    public CompletableFuture<BroadcastResult> refreshUserProfile(UserProfile userProfile, KeyPair keyPair) {
+        log.info("refreshUserProfile {}", userProfile.getUserName());
+        persist();
+
+        return networkService.refreshAuthenticatedData(userProfile, keyPair);
+    }
+
     private UserIdentity createUserIdentity(String nickName,
                                             ProofOfWork proofOfWork,
                                             int avatarVersion,
@@ -281,5 +290,12 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         newlyCreatedUserIdentity.set(userIdentity);
         persist();
         return userIdentity;
+    }
+
+    private void processUserProfileAddedOrRefreshed(UserProfile userProfile) {
+        findUserIdentity(userProfile.getId())
+                .map(UserIdentity::getUserProfile)
+                .filter(myUserProfile -> userProfile.getPublishDate() > myUserProfile.getPublishDate())
+                .ifPresent(myUserProfile -> myUserProfile.setPublishDate(userProfile.getPublishDate()));
     }
 }

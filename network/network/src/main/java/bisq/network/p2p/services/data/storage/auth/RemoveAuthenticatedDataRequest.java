@@ -37,6 +37,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Optional;
 
 @Getter
@@ -236,7 +237,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 ",\r\n     ownerPublicKey=" + ownerPublicKey +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     signature=" + Hex.encode(signature) +
-                ",\r\n     created=" + created +
+                ",\r\n     created=" + new Date(created) + " (" + created + ")" +
                 "\r\n}";
     }
 }

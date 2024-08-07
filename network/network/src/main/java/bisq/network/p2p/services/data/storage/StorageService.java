@@ -56,6 +56,8 @@ public class StorageService {
         void onAdded(StorageData storageData);
 
         void onRemoved(StorageData storageData);
+
+        void onRefreshed(StorageData storageData);
     }
 
     final Map<String, AuthenticatedDataStorageService> authenticatedDataStores = new ConcurrentHashMap<>();
@@ -96,6 +98,17 @@ public class StorageService {
                                             listener.onRemoved(authenticatedData);
                                         } catch (Exception e) {
                                             log.error("Calling onRemoved at listener {} failed", listener, e);
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onRefreshed(AuthenticatedData authenticatedData) {
+                                    listeners.forEach(listener -> {
+                                        try {
+                                            listener.onRefreshed(authenticatedData);
+                                        } catch (Exception e) {
+                                            log.error("Calling onRefresh at listener {} failed", listener, e);
                                         }
                                     });
                                 }
@@ -404,7 +417,8 @@ public class StorageService {
         }
     }
 
-    public <T extends AuthorizedDistributedData> void cleanupMap(String storeKey, Function<AuthorizedDistributedData, Optional<T>> typeFilter) {
+    public <T extends AuthorizedDistributedData> void cleanupMap(String storeKey,
+                                                                 Function<AuthorizedDistributedData, Optional<T>> typeFilter) {
         try {
             AuthenticatedDataStorageService authenticatedDataStorageService = getOrCreateAuthenticatedDataStore(storeKey).join();
             Map<ByteArray, AuthenticatedDataRequest> map = authenticatedDataStorageService.getPersistableStore().getMap();

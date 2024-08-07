@@ -18,6 +18,7 @@
 package bisq.user;
 
 import bisq.common.application.Service;
+import bisq.common.timer.Scheduler;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -34,6 +35,7 @@ public class RepublishUserProfileService implements Service {
     private final UserIdentityService userIdentityService;
     private UserIdentity selectedUserIdentity;
     private long lastPublished;
+    private long republishCounter;
 
     public RepublishUserProfileService(UserIdentityService userIdentityService) {
         this.userIdentityService = userIdentityService;
@@ -47,6 +49,11 @@ public class RepublishUserProfileService implements Service {
                 userActivityDetected();
             }
         });
+        Scheduler.run(() -> {
+            KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
+            UserProfile userProfile = selectedUserIdentity.getUserProfile();
+            userIdentityService.publishUserProfile(userProfile, keyPair);
+        }).after(1, TimeUnit.MINUTES);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -63,6 +70,14 @@ public class RepublishUserProfileService implements Service {
         lastPublished = now;
         KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
         UserProfile userProfile = selectedUserIdentity.getUserProfile();
-        userIdentityService.publishUserProfile(userProfile, keyPair);
+
+        // Every 10 times we publish instead of refresh for more resilience in case the data has not reached the whole network.
+        republishCounter++;
+        log.error("republishCounter = {} {}", republishCounter, republishCounter % 10);
+        if (republishCounter % 10 == 0) {
+            userIdentityService.publishUserProfile(userProfile, keyPair);
+        } else {
+            userIdentityService.refreshUserProfile(userProfile, keyPair);
+        }
     }
 }

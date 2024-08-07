@@ -25,6 +25,7 @@ import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
@@ -56,10 +57,16 @@ public class DataService implements StorageService.Listener {
         default void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
         }
 
+        default void onAuthorizedDataRefreshed(AuthenticatedData authenticatedData) {
+        }
+
         default void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         }
 
         default void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        }
+
+        default void onAuthenticatedDataRefreshed(AuthenticatedData authenticatedData) {
         }
 
         default void onAppendOnlyDataAdded(AppendOnlyData appendOnlyData) {
@@ -160,6 +167,27 @@ public class DataService implements StorageService.Listener {
         }
     }
 
+    @Override
+    public void onRefreshed(StorageData storageData) {
+        if (storageData instanceof AuthorizedData) {
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAuthorizedDataRefreshed((AuthorizedData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onAuthorizedDataRefreshed at listener {} failed", listener, e);
+                }
+            });
+        } else if (storageData instanceof AuthenticatedData) {
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAuthenticatedDataRefreshed((AuthenticatedData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onAuthenticatedDataRefreshed at listener {} failed", listener, e);
+                }
+            });
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Get data
@@ -184,7 +212,8 @@ public class DataService implements StorageService.Listener {
     // Add data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadcastResult> addAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> addAuthenticatedData(AuthenticatedData authenticatedData,
+                                                                   KeyPair keyPair) {
         return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
                 .thenApply(store -> {
                     try {
@@ -235,7 +264,33 @@ public class DataService implements StorageService.Listener {
                         } else {
                             return new BroadcastResult();
                         }
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                        throw new CompletionException(e);
+                    }
+                });
+    }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Refresh data
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<BroadcastResult> refreshAuthenticatedData(AuthenticatedData authenticatedData,
+                                                                       KeyPair keyPair) {
+        return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
+                .thenApply(store -> {
+                    try {
+                        RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
+                        DataStorageResult dataStorageResult = store.refresh(request);
+                        if (dataStorageResult.isSuccess()) {
+                            return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
+                        } else {
+                            if (dataStorageResult.isSevereFailure()) {
+                                log.warn("refreshAuthenticatedData failed with severe error. Result={}", dataStorageResult);
+                            }
+                            return new BroadcastResult();
+                        }
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();
                         throw new CompletionException(e);
@@ -248,7 +303,8 @@ public class DataService implements StorageService.Listener {
     // Remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadcastResult> removeAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> removeAuthenticatedData(AuthenticatedData authenticatedData,
+                                                                      KeyPair keyPair) {
         return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
                 .thenApply(store -> {
                     try {
