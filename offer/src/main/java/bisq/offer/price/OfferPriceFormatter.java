@@ -26,11 +26,11 @@ import bisq.presentation.formatters.PriceFormatter;
 import java.util.function.Function;
 
 public class OfferPriceFormatter {
-    public static String formatQuote(MarketPriceService marketPriceService, Offer offer) {
+    public static String formatQuote(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return formatQuote(marketPriceService, offer, true);
     }
 
-    public static String formatQuote(MarketPriceService marketPriceService, Offer offer, boolean showCode) {
+    public static String formatQuote(MarketPriceService marketPriceService, Offer<?, ?> offer, boolean showCode) {
         return PriceUtil.findQuote(marketPriceService, offer).map(getFormatFunction(showCode)).orElse(Res.get("data.na"));
     }
 
