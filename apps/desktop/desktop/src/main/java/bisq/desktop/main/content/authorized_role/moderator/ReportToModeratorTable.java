@@ -156,7 +156,6 @@ public class ReportToModeratorTable {
     private static class Model implements bisq.desktop.common.view.Model {
         private BondedRole bondedRole;
         private final ObservableList<View.ReportListItem> listItems = FXCollections.observableArrayList();
-
     }
 
     @Slf4j
@@ -346,6 +345,10 @@ public class ReportToModeratorTable {
             return column -> new TableCell<>() {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.table.ban"));
 
+                {
+                    button.setDefaultButton(true);
+                }
+
                 @Override
                 public void updateItem(final ReportListItem item, boolean empty) {
                     super.updateItem(item, empty);
@@ -390,15 +393,17 @@ public class ReportToModeratorTable {
         private static class ReportListItem implements DateTableItem {
             @EqualsAndHashCode.Include
             private final ReportToModeratorMessage reportToModeratorMessage;
+
             private final long date;
             private final String dateString, timeString, message, reporterUserName, accusedUserName, chatChannelDomain;
             private final Optional<UserProfile> reporterUserProfile;
             private final UserProfile accusedUserProfile;
 
-            private ReportListItem(ReportToModeratorMessage reportToModeratorMessage, ServiceProvider serviceProvider) {
-                UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
+            private ReportListItem(ReportToModeratorMessage reportToModeratorMessage,
+                                   ServiceProvider serviceProvider) {
                 this.reportToModeratorMessage = reportToModeratorMessage;
 
+                UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
                 String reporterUserProfileId = reportToModeratorMessage.getReporterUserProfileId();
                 reporterUserProfile = userProfileService.findUserProfile(reporterUserProfileId);
                 reporterUserName = reporterUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));

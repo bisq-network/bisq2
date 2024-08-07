@@ -31,21 +31,25 @@ import lombok.Setter;
 @Getter
 public class ChannelTabButtonModel {
     @EqualsAndHashCode.Include
+    private final ChatChannel<?> chatChannel;
+    @EqualsAndHashCode.Include
+    private final NavigationTarget navigationTarget;
+
     private final String channelId;
     private final ChatChannelDomain chatChannelDomain;
-    private final ChatChannel<?> chatChannel;
-    private final NavigationTarget navigationTarget;
     private final String channelTitle;
     private final String iconId;
     @Setter
     private boolean isSelected;
 
-    ChannelTabButtonModel(CommonPublicChatChannel chatChannel, CommonPublicChatChannelService chatChannelService,
-                          NavigationTarget navigationTarget) {
+    ChannelTabButtonModel(CommonPublicChatChannel chatChannel,
+                          NavigationTarget navigationTarget,
+                          CommonPublicChatChannelService chatChannelService) {
         this.chatChannel = chatChannel;
         this.navigationTarget = navigationTarget;
-        chatChannelDomain = chatChannel.getChatChannelDomain();
+
         channelId = chatChannel.getId();
+        chatChannelDomain = chatChannel.getChatChannelDomain();
         channelTitle = chatChannelService.getChannelTitle(chatChannel);
         iconId = ChatUtil.getChannelIconId(channelId);
     }

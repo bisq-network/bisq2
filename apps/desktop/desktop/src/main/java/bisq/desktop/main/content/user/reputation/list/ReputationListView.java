@@ -331,6 +331,12 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
     public static class ListItem {
         @EqualsAndHashCode.Include
         private final UserProfile userProfile;
+
+        private final ReputationService reputationService;
+        private final UserProfileService userProfileService;
+        private final ToggleGroup toggleGroup;
+        private final ReputationListController controller;
+
         private final String userName;
         private ReputationScore reputationScore;
         private final String profileAgeString;
@@ -341,11 +347,6 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         private long value;
         private final StringProperty valueAsStringProperty = new SimpleStringProperty();
         private final Set<ReputationSource> reputationSources = new HashSet<>();
-        private final ToggleGroup toggleGroup;
-        private final ReputationListController controller;
-        private final ReputationService reputationService;
-        private final UserProfileService userProfileService;
-
         private final Subscription selectedTogglePin;
 
         ListItem(UserProfile userProfile,
@@ -353,12 +354,13 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                  ReputationListController controller,
                  ToggleGroup toggleGroup,
                  UserProfileService userProfileService) {
-            this.reputationService = reputationService;
             this.userProfile = userProfile;
-            userName = userProfile.getUserName();
+            this.reputationService = reputationService;
+            this.userProfileService = userProfileService;
             this.controller = controller;
             this.toggleGroup = toggleGroup;
-            this.userProfileService = userProfileService;
+
+            userName = userProfile.getUserName();
             applyReputationScore(userProfile.getId());
             profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile).orElse(0L);
             profileAgeString = reputationService.getProfileAgeService().getProfileAge(userProfile)

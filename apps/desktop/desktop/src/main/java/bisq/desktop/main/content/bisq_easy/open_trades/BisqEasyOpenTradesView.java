@@ -563,7 +563,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         private final BisqEasyOpenTradeChannel channel;
         @EqualsAndHashCode.Include
         private final BisqEasyTrade trade;
-        @EqualsAndHashCode.Include
+
         private final UserProfile myUserProfile, peersUserProfile;
         private final String offerId, tradeId, shortTradeId, myUserName, direction, peersUserName, dateString, timeString,
                 market, priceString, baseAmountString, quoteAmountString, myRole, bitcoinSettlementMethod,

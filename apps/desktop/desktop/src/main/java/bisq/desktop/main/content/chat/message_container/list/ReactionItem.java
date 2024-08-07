@@ -33,22 +33,28 @@ import java.util.TreeSet;
 
 @Slf4j
 @Getter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ReactionItem {
+    @EqualsAndHashCode.Include
     private final Reaction reaction;
-    private final String iconId;
+    @EqualsAndHashCode.Include
     private final boolean isMyMessage;
+    @EqualsAndHashCode.Include
+    private UserProfile selectedUserProfile;
+
+    private final String iconId;
     private final SimpleIntegerProperty count = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
     private final HashMap<UserProfile, UserWithReactionDate> users = new HashMap<>();
     private final TreeSet<UserWithReactionDate> usersByReactionDate = new TreeSet<>();
     private long firstAdded;
-    private UserProfile selectedUserProfile;
 
     ReactionItem(Reaction reaction, UserProfile selectedUserProfile, boolean isMyMessage) {
         this.reaction = reaction;
         this.selectedUserProfile = selectedUserProfile;
-        this.iconId = reaction.toString().replace("_", "").toLowerCase();
         this.isMyMessage = isMyMessage;
+
+        this.iconId = reaction.toString().replace("_", "").toLowerCase();
     }
 
     public boolean hasActiveReactions() {

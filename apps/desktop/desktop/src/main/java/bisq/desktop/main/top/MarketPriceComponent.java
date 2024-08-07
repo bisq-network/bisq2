@@ -38,7 +38,6 @@ import bisq.network.identity.NetworkId;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.user.profile.UserProfileService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -81,12 +80,10 @@ public class MarketPriceComponent {
         @Getter
         private final View view;
         private final MarketPriceService marketPriceService;
-        private final UserProfileService userProfileService;
         private Pin selectedMarketPin, marketPricePin;
 
         private Controller(ServiceProvider serviceProvider) {
             marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-            userProfileService = serviceProvider.getUserService().getUserProfileService();
 
             model = new Model();
             view = new View(model, this);
@@ -98,7 +95,7 @@ public class MarketPriceComponent {
                     UIThread.run(() -> {
                         List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
                                 .flatMap(market -> marketPriceService.findMarketPrice(market).stream())
-                                .map(marketPrice -> new ListItem(marketPrice, marketPriceService, userProfileService))
+                                .map(marketPrice -> new ListItem(marketPrice, marketPriceService))
                                 .collect(Collectors.toList());
                         model.items.setAll(list);
 
@@ -307,24 +304,23 @@ public class MarketPriceComponent {
     }
 
     @Slf4j
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class ListItem {
+        @EqualsAndHashCode.Include
         private final MarketPrice marketPrice;
+
         private final String price;
         private final String codes;
-        private final String provider;
         private final String date;
         private final MarketPriceService marketPriceService;
-        private final UserProfileService userProfileService;
 
-        private ListItem(MarketPrice marketPrice, MarketPriceService marketPriceService, UserProfileService userProfileService) {
+        private ListItem(MarketPrice marketPrice, MarketPriceService marketPriceService) {
             this.marketPrice = marketPrice;
+            this.marketPriceService = marketPriceService;
+
             codes = marketPrice.getMarket().getMarketCodes();
             price = PriceFormatter.format(marketPrice.getPriceQuote(), true);
-            provider = marketPrice.getProviderName();
             date = DateFormatter.formatDateTime(marketPrice.getTimestamp());
-            this.marketPriceService = marketPriceService;
-            this.userProfileService = userProfileService;
         }
 
         public boolean isStale() {

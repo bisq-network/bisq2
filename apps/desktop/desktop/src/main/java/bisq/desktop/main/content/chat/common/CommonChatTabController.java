@@ -77,14 +77,13 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     }
 
     private ChannelTabButtonModel findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof CommonPublicChatChannel) {
-            CommonPublicChatChannel commonChannel = (CommonPublicChatChannel) chatChannel;
+        if (chatChannel instanceof CommonPublicChatChannel commonChannel) {
             if (model.channelTabButtonModelByChannelId.containsKey(chatChannel.getId())) {
                 return model.channelTabButtonModelByChannelId.get(chatChannel.getId());
             } else {
                 String targetName = channelDomain.toString() + "_" + commonChannel.getChannelTitle().toUpperCase();
                 try {
-                    return new ChannelTabButtonModel(commonChannel, commonPublicChatChannelService, NavigationTarget.valueOf(targetName));
+                    return new ChannelTabButtonModel(commonChannel, NavigationTarget.valueOf(targetName), commonPublicChatChannelService);
                 } catch (IllegalArgumentException e) {
                     log.info("Couldn't find navigation target " + targetName + " in channel domain " + channelDomain);
                 }

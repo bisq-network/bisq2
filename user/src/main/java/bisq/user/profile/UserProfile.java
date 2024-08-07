@@ -49,7 +49,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 /**
  * Publicly shared user profile (from other peers or mine).
  */
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
 public final class UserProfile implements DistributedData, PublishDateAware {
@@ -86,18 +86,23 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_15_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+
+    @EqualsAndHashCode.Include
     private final String nickName;
-    // We need the proofOfWork for verification of the nym and cathash icon
+    // We need the proofOfWork for verification of the nym and catHash icon
+    @EqualsAndHashCode.Include
     private final ProofOfWork proofOfWork;
+    @EqualsAndHashCode.Include
+    private final NetworkId networkId;
+    @EqualsAndHashCode.Include
+    private final String terms;
+    @EqualsAndHashCode.Include
+    private final String statement;
+
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final int avatarVersion;
-    private final NetworkId networkId;
-    private final String terms;
-    private final String statement;
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
-    @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String applicationVersion;
 

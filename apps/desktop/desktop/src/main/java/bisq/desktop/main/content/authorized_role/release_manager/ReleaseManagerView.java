@@ -182,11 +182,13 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     public static class ReleaseNotificationListItem implements DateTableItem {
         @EqualsAndHashCode.Include
         private final ReleaseNotification releaseNotification;
+
         private final String dateString, timeString, isLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
         private final long date;
 
         public ReleaseNotificationListItem(ReleaseNotification releaseNotification) {
             this.releaseNotification = releaseNotification;
+
             date = releaseNotification.getDate();
             dateString = DateFormatter.formatDate(date);
             timeString = DateFormatter.formatTime(date);

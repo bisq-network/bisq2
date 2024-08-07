@@ -300,6 +300,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     static class ListItem {
         @EqualsAndHashCode.Include
         private final TwoPartyPrivateChatChannel channel;
+
         private final UserProfile peersUserProfile;
         private final String peersUserName, myUserName;
         private final long totalReputationScore, profileAge;
@@ -311,6 +312,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
                         ReputationService reputationService,
                         UserProfileService userProfileService) {
             this.channel = channel;
+
             peersUserProfile = userProfileService.getManagedUserProfile(channel.getPeer());
 
             peersUserName = peersUserProfile.getUserName();

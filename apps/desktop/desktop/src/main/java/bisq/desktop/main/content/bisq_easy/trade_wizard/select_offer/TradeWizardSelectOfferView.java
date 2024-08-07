@@ -299,16 +299,16 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
     }
 
     @ToString
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     static class ListItem {
+        @EqualsAndHashCode.Include
+        private final BisqEasyOffer bisqEasyOffer;
+
         private final Optional<UserProfile> authorUserProfile;
         private final String makerUserName, baseAmountDisplayString, priceDisplayString;
         private final long priceAsLong, baseAmountAsLong;
-        @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
-        private final BisqEasyOffer bisqEasyOffer;
-
 
         public ListItem(BisqEasyOffer bisqEasyOffer,
                         TradeWizardSelectOfferModel model,
@@ -316,6 +316,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         ReputationService reputationService,
                         MarketPriceService marketPriceService) {
             this.bisqEasyOffer = bisqEasyOffer;
+
             authorUserProfile = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId());
             makerUserName = authorUserProfile.map(UserProfile::getUserName).orElse("");
             priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(PriceQuote::getValue).orElse(0L);

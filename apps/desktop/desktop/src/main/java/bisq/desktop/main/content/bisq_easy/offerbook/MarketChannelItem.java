@@ -48,6 +48,7 @@ public class MarketChannelItem {
 
     @EqualsAndHashCode.Include
     private final BisqEasyOfferbookChannel channel;
+
     private final FavouriteMarketsService favouriteMarketsService;
     private final ChatNotificationService chatNotificationService;
     private final Market market;
@@ -61,6 +62,7 @@ public class MarketChannelItem {
                       FavouriteMarketsService favouriteMarketsService,
                       ChatNotificationService chatNotificationService) {
         this.channel = channel;
+
         this.favouriteMarketsService = favouriteMarketsService;
         this.chatNotificationService = chatNotificationService;
         market = channel.getMarket();

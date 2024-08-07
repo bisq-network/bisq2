@@ -28,19 +28,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ProtocolListItem {
+    @EqualsAndHashCode.Include
     private final TradeAppsAttributes.Type tradeAppsAttributesType;
+    @EqualsAndHashCode.Include
     private final NavigationTarget navigationTarget;
+    @EqualsAndHashCode.Include
     private final TradeProtocolType tradeProtocolType;
+    @EqualsAndHashCode.Include
+    private final Pair<Long, Long> tradeLimits;
+    @EqualsAndHashCode.Include
+    private final String releaseDate;
+
     private final String protocolsName;
     private final String basicInfo;
     private final String markets;
     private final String securityInfo;
-    private final Pair<Long, Long> tradeLimits;
     private final String privacyInfo;
     private final String convenienceInfo;
-    private final String releaseDate;
     private final String iconId;
 
     ProtocolListItem(TradeAppsAttributes.Type tradeAppsAttributesType,
@@ -51,16 +57,16 @@ public class ProtocolListItem {
         this.tradeAppsAttributesType = tradeAppsAttributesType;
         this.navigationTarget = navigationTarget;
         this.tradeProtocolType = tradeProtocolType;
+        this.tradeLimits = tradeLimits;
+        this.releaseDate = releaseDate;
+
         String name = tradeAppsAttributesType.name();
+        this.privacyInfo = Res.get("tradeApps.overview.privacy." + name);
         protocolsName = Res.get("tradeApps." + name);
         this.basicInfo = Res.get("tradeApps.overview." + name);
         this.markets = Res.get("tradeApps.overview.markets." + name);
         this.securityInfo = Res.get("tradeApps.overview.security." + name);
-        this.tradeLimits = tradeLimits;
-        this.privacyInfo = Res.get("tradeApps.overview.privacy." + name);
         this.convenienceInfo = Res.get("tradeApps.overview.convenience." + name);
-        this.releaseDate = releaseDate;
-
         this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(name.toLowerCase());
     }
 }

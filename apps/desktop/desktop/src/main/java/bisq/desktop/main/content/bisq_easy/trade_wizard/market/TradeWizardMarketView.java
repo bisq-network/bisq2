@@ -172,25 +172,32 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         };
     }
 
-    @EqualsAndHashCode
+
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     static class MarketListItem {
+        @EqualsAndHashCode.Include
         private final Market market;
-        private final String quoteCurrencyDisplayName;
+        @EqualsAndHashCode.Include
         private final int numOffersAsInteger;
+        @EqualsAndHashCode.Include
         private final int numUsersAsInteger;
+
+        private final String quoteCurrencyDisplayName;
         private final String numOffers;
         private final String numUsers;
-        @EqualsAndHashCode.Exclude
+
+        //TOD move to cell
         private final Node marketLogo;
 
         MarketListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
             this.market = market;
-            quoteCurrencyDisplayName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
-            this.numOffers = String.valueOf(numOffersAsInteger);
             this.numOffersAsInteger = numOffersAsInteger;
-            this.numUsers = String.valueOf(numUsersAsInteger);
             this.numUsersAsInteger = numUsersAsInteger;
+
+            this.numOffers = String.valueOf(numOffersAsInteger);
+            quoteCurrencyDisplayName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
+            this.numUsers = String.valueOf(numUsersAsInteger);
             marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
             marketLogo.setCache(true);
             marketLogo.setCacheHint(CacheHint.SPEED);

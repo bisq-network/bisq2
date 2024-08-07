@@ -182,6 +182,7 @@ public class ReputationDetailsPopup extends VBox {
         private final ReputationSource reputationSource;
         @EqualsAndHashCode.Include
         private final long date, score, amount, lockTime;
+
         private final long age;
         private final String dateString, timeString, sourceString, ageString, amountString, scoreString, lockTimeString;
 
@@ -200,11 +201,12 @@ public class ReputationDetailsPopup extends VBox {
                         Optional<Long> optionalLockTime) {
             this.reputationSource = reputationSource;
             this.date = blockTime;
+            this.score = score;
+            this.amount = optionalAmount.orElse(0L);
+            this.lockTime = optionalLockTime.orElse(0L);
+
             dateString = DateFormatter.formatDate(blockTime);
             timeString = DateFormatter.formatTime(blockTime);
-            this.amount = optionalAmount.orElse(0L);
-            this.score = score;
-            this.lockTime = optionalLockTime.orElse(0L);
             age = TimeFormatter.getAgeInDays(blockTime);
             sourceString = reputationSource.getDisplayString();
             ageString = TimeFormatter.formatAgeInDays(blockTime);
