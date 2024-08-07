@@ -48,16 +48,17 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
 
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
+        userProfileIconVbox.getChildren().add(item.getReputationScoreDisplay());
+        userProfileIconVbox.setSpacing(10);
+        item.getReputationScoreDisplay().setScale(0.8);
 
-        // My offer title
         myOfferTitle = createAndGetMyOfferTitle();
 
-        // Message
-        message.getStyleClass().add("chat-my-offer-message");
-
         // Offer content
-        VBox offerMessage = new VBox(10, myOfferTitle, message);
-        HBox messageContent = new HBox(15, offerMessage, userProfileIconVbox);
+        VBox offerMessage = new VBox(10, myOfferTitle, amountAndPriceBox, supportedLanguagesHBox, paymentAndSettlementMethodsBox);
+        offerMessage.setMinWidth(OFFER_MESSAGE_BOX_MIN_WIDTH);
+        HBox messageContent = new HBox(30, offerMessage, userProfileIconVbox);
+        VBox.setMargin(paymentAndSettlementMethodsBox, new Insets(3, 0, 0, 0));
 
         // Message background
         messageBgHBox.getStyleClass().add("chat-my-offer-message-bg");
