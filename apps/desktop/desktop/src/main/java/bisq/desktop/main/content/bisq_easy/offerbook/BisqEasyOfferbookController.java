@@ -25,7 +25,6 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
@@ -37,6 +36,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.components.MarketImageComposition;
@@ -45,8 +45,6 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
-import bisq.user.profile.UserProfile;
-import bisq.user.reputation.ReputationService;
 import javafx.collections.ListChangeListener;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
@@ -66,18 +64,16 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
-    private final ReputationService reputationService;
     private final FavouriteMarketsService favouriteMarketsService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final ChatNotificationService chatNotificationService;
     private final Predicate<MarketChannelItem> marketChannelItemsPredicate;
     private final Predicate<MarketChannelItem> favouriteMarketChannelItemsPredicate;
-    private OfferbookList offerbookList;
+    private OfferbookListController offerbookListController;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
-            favouriteMarketsPin, offerMessagesPin, showBuyOffersPin, showOfferListExpandedSettingsPin,
+            favouriteMarketsPin, showBuyOffersPin, showOfferListExpandedSettingsPin,
             showMarketSelectionListCollapsedSettingsPin;
-    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin,
-            showBuyOffersFromModelPin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -85,7 +81,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
-        reputationService = serviceProvider.getUserService().getReputationService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
 
@@ -110,10 +105,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         BisqEasyOfferbookModel model = new BisqEasyOfferbookModel(chatChannelDomain);
 
         // As we pass some data from the model we cannot create it in the createDependencies method.
-        offerbookList = new OfferbookList(serviceProvider, chatMessageContainerController,
-                model.getFilteredOfferbookListItems(),
-                model.getSortedOfferbookListItems(),
-                model.getShowOfferListExpanded());
+        offerbookListController = new OfferbookListController(serviceProvider, chatMessageContainerController, model.getShowOfferListExpanded());
 
         return model;
     }
@@ -124,7 +116,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 this,
                 chatMessageContainerController.getView().getRoot(),
                 channelSidebar.getRoot(),
-                offerbookList.getRoot());
+                offerbookListController.getView().getRoot());
     }
 
     @Override
@@ -182,9 +174,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 (ListChangeListener<? super MarketChannelItem>) c -> updateFilteredMarketChannelItems()
         ).get());
 
-        showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers ->
-                model.getFilteredOfferbookListItems().setPredicate(item -> showBuyOffers == item.isBuyOffer()));
-
         MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MARKET_SORT_TYPE).map(name ->
                         ProtobufUtils.enumFromProto(MarketSortType.class, name, MarketSortType.NUM_OFFERS))
                 .orElse(MarketSortType.NUM_OFFERS);
@@ -239,11 +228,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public void onDeactivate() {
         super.onDeactivate();
 
-        if (offerMessagesPin != null) {
-            offerMessagesPin.unbind();
-        }
+
         model.getMarketChannelItems().forEach(MarketChannelItem::onDeactivate);
-        model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
 
         showBuyOffersPin.unbind();
         showOfferListExpandedSettingsPin.unbind();
@@ -255,7 +241,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
         favouriteMarketsPin.unbind();
-        showBuyOffersFromModelPin.unsubscribe();
 
         resetSelectedChildTarget();
     }
@@ -295,7 +280,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount", channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
 
                 updateMarketPrice();
-                bindOfferMessages(channel);
+
+                offerbookListController.setSelectedChannel(channel);
             }
         });
     }
@@ -373,7 +359,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 .findFirst();
     }
 
-
+/*
     private void bindOfferMessages(BisqEasyOfferbookChannel channel) {
         model.getOfferbookListItems().clear();
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
@@ -421,5 +407,5 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 });
             }
         });
-    }
+    }*/
 }

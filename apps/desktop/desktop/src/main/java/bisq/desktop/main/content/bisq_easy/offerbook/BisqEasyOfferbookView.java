@@ -52,8 +52,8 @@ import static bisq.bisq_easy.BisqEasyMarketFilter.*;
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
-    static final double COLLAPSED_LIST_WIDTH = 40;
-    static final double LIST_CELL_HEIGHT = 53;
+    public static final double COLLAPSED_LIST_WIDTH = 40;
+    public static final double LIST_CELL_HEIGHT = 53;
 
     private final ListChangeListener<MarketChannelItem> listChangeListener;
     private SearchBox marketSelectorSearchBox;
