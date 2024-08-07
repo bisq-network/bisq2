@@ -37,8 +37,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-import java.util.Optional;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class PeerOfferMessageBox extends PeerTextMessageBox {
@@ -67,8 +65,6 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         Pair<HBox, Button> takeOfferLabelAndButton = createAndGetTakeOfferTitleBoxAndButton();
         HBox takeOfferTitle = takeOfferLabelAndButton.getFirst();
         takeOfferButton = takeOfferLabelAndButton.getSecond();
-
-        HBox amountAndPriceBox = createAndGetAmountAndPriceBox();
 
         // Offer content
         VBox.setMargin(takeOfferTitle, new Insets(0, 0, 0, 7));
@@ -118,20 +114,6 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         button.setDefaultButton(!item.isOfferAlreadyTaken());
 
         return new Pair<>(messageTitleBox, button);
-    }
-
-    private HBox createAndGetAmountAndPriceBox() {
-        Optional<Pair<String, String>> amountAndPriceSpec = item.getBisqEasyOfferAmountAndPriceSpec();
-        HBox amountAndPriceBox = new HBox(5);
-        if (amountAndPriceSpec.isPresent()) {
-            Label amount = new Label(amountAndPriceSpec.get().getFirst());
-            amount.getStyleClass().add("text-fill-white");
-            Label price = new Label(amountAndPriceSpec.get().getSecond());
-            price.getStyleClass().add("text-fill-white");
-            Label connector = new Label("@");
-            amountAndPriceBox.getChildren().addAll(amount, connector, price);
-        }
-        return amountAndPriceBox;
     }
 
     @Override

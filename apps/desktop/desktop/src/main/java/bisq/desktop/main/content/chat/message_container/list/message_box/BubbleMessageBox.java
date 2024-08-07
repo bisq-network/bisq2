@@ -22,6 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.reactions.Reaction;
+import bisq.common.data.Pair;
 import bisq.common.locale.LanguageRepository;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
@@ -73,7 +74,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected ReactMenuBox reactMenuBox;
     protected Label userName, dateTime, message;
-    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox, supportedLanguagesHBox;
+    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox, supportedLanguagesHBox, amountAndPriceBox;
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
@@ -92,8 +93,9 @@ public abstract class BubbleMessageBox extends MessageBox {
         addActionsHandlers();
         addOnMouseEventHandlers();
 
-        supportedLanguagesHBox = createAndGetSupportedLanguagesLabel();
-        quotedMessageVBox = createAndGetQuotedMessageVBox();
+        supportedLanguagesHBox = createAndGetSupportedLanguagesBox();
+        amountAndPriceBox = createAndGetAmountAndPriceBox();
+        quotedMessageVBox = createAndGetQuotedMessageBox();
         handleQuoteMessageBox();
         message = createAndGetMessage();
         messageBgHBox = createAndGetMessageBackground();
@@ -209,7 +211,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         }
     }
 
-    private HBox createAndGetSupportedLanguagesLabel() {
+    private HBox createAndGetSupportedLanguagesBox() {
         HBox hbox = new HBox(5);
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
             Label iconLabel = new Label(":", ImageUtil.getImageViewById("language-grey"));
@@ -229,7 +231,23 @@ public abstract class BubbleMessageBox extends MessageBox {
         return hbox;
     }
 
-    private VBox createAndGetQuotedMessageVBox() {
+    private HBox createAndGetAmountAndPriceBox() {
+        HBox amountAndPriceBox = new HBox(5);
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            Optional<Pair<String, String>> amountAndPriceSpec = item.getBisqEasyOfferAmountAndPriceSpec();
+            if (amountAndPriceSpec.isPresent()) {
+                Label amount = new Label(amountAndPriceSpec.get().getFirst());
+                amount.getStyleClass().add("text-fill-white");
+                Label price = new Label(amountAndPriceSpec.get().getSecond());
+                price.getStyleClass().add("text-fill-white");
+                Label connector = new Label("@");
+                amountAndPriceBox.getChildren().addAll(amount, connector, price);
+            }
+        }
+        return amountAndPriceBox;
+    }
+
+    private VBox createAndGetQuotedMessageBox() {
         VBox vBox = new VBox(5);
         vBox.setVisible(false);
         vBox.setManaged(false);
