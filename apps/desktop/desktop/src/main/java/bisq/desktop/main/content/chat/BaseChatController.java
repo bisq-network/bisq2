@@ -71,7 +71,9 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final ChatMessageContainerController chatMessageContainerController;
     protected Subscription searchTextPin;
 
-    public BaseChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+    public BaseChatController(ServiceProvider serviceProvider,
+                              ChatChannelDomain chatChannelDomain,
+                              NavigationTarget host) {
         super(host);
 
         this.serviceProvider = serviceProvider;
@@ -82,6 +84,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider,
                 chatChannelDomain,
                 this::openUserProfileSidebar);
+
         channelSidebar = new ChannelSidebar(serviceProvider,
                 () -> {
                     doCloseSideBar();

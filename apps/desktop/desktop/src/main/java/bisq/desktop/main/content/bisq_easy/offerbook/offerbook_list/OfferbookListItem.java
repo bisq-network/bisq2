@@ -15,14 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.offerbook;
+package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.data.Pair;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
@@ -41,8 +40,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,71 +51,63 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class OfferMessageItem {
+public class OfferbookListItem {
     @EqualsAndHashCode.Include
     private final BisqEasyOfferbookMessage bisqEasyOfferbookMessage;
+
     private final BisqEasyOffer bisqEasyOffer;
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
     private final UserProfile userProfile;
+
     private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
-    private final Pair<Monetary, Monetary> minMaxAmount;
-    private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
+    private final ReputationScore reputationScore;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
     private final boolean isFixPrice;
-    private long totalScore;
+    private final Monetary quoteSideMinAmount;
+    private final long totalScore;
     private double priceSpecAsPercent;
-    private Pin marketPriceByCurrencyMapPin, reputationChangedPin;
     private String formattedPercentagePrice, priceTooltipText;
+    private final Pin marketPriceByCurrencyMapPin;
 
-    OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
-                     UserProfile userProfile,
-                     ReputationService reputationService,
-                     MarketPriceService marketPriceService) {
+    OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
+                      UserProfile userProfile,
+                      ReputationService reputationService,
+                      MarketPriceService marketPriceService) {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
+
         bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         this.userProfile = userProfile;
         this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
         fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
         bitcoinPaymentMethods = retrieveAndSortBitcoinPaymentMethods();
-        fiatPaymentMethodsAsString = Joiner.on(", ").join(fiatPaymentMethods.stream().map(PaymentMethod::getDisplayString).collect(Collectors.toList()));
-        bitcoinPaymentMethodsAsString = Joiner.on(", ").join(bitcoinPaymentMethods.stream().map(PaymentMethod::getDisplayString).collect(Collectors.toList()));
+        fiatPaymentMethodsAsString = Joiner.on(", ").join(fiatPaymentMethods.stream()
+                .map(PaymentMethod::getDisplayString)
+                .collect(Collectors.toList()));
+        bitcoinPaymentMethodsAsString = Joiner.on(", ").join(bitcoinPaymentMethods.stream()
+                .map(PaymentMethod::getDisplayString)
+                .collect(Collectors.toList()));
         userNickname = userProfile.getNickName();
-        minMaxAmount = retrieveMinMaxAmount();
+        quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
         formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
-        initialize();
+
+        reputationScore = reputationService.getReputationScore(userProfile);
+        totalScore = reputationScore.getTotalScore();
+
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
+                UIThread.run(this::updatePriceSpecAsPercent));
+        updatePriceSpecAsPercent();
     }
 
     void dispose() {
         marketPriceByCurrencyMapPin.unbind();
-        reputationChangedPin.unbind();
-    }
-
-    Monetary getMinAmount() {
-        return minMaxAmount.getFirst();
     }
 
     boolean isBuyOffer() {
         return bisqEasyOffer.getDirection() == Direction.BUY;
-    }
-
-    private void initialize() {
-        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
-                UIThread.run(this::updatePriceSpecAsPercent));
-        updatePriceSpecAsPercent();
-
-        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId ->
-                UIThread.run(this::updateReputationScore));
-        updateReputationScore();
-    }
-
-    private Pair<Monetary, Monetary> retrieveMinMaxAmount() {
-        Monetary minAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
-        Monetary maxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
-        return new Pair<>(minAmount, maxAmount);
     }
 
     private void updatePriceSpecAsPercent() {
@@ -134,10 +123,6 @@ public class OfferMessageItem {
         }
     }
 
-    private void updateReputationScore() {
-        reputationScore.set(reputationService.getReputationScore(userProfile));
-        totalScore = reputationScore.get().getTotalScore();
-    }
 
     private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
         List<FiatPaymentMethod> paymentMethods =
