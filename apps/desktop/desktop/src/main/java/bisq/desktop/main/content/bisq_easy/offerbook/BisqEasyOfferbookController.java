@@ -243,6 +243,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             offerMessagesPin.unbind();
         }
         model.getMarketChannelItems().forEach(MarketChannelItem::onDeactivate);
+        model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
 
         showBuyOffersPin.unbind();
         showOfferListExpandedSettingsPin.unbind();

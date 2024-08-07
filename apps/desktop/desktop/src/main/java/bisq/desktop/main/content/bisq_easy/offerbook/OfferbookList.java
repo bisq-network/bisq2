@@ -329,7 +329,7 @@ public final class OfferbookList {
                     .right()
                     .fixWidth(120)
                     .setCellFactory(getFiatAmountCellFactory())
-                    .comparator(Comparator.comparing(OfferbookListItem::getMinAmount))
+                    .comparator(Comparator.comparing(OfferbookListItem::getQuoteSideMinAmount))
                     .build());
 
             tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
@@ -372,7 +372,7 @@ public final class OfferbookList {
 
                     if (item != null && !empty) {
                         userNameLabel.setText(item.getUserNickname());
-                        reputationScoreDisplay.setReputationScore(item.getReputationScore().get());
+                        reputationScoreDisplay.setReputationScore(item.getReputationScore());
                         userProfileIcon.setUserProfile(item.getUserProfile());
                         setGraphic(userProfileBox);
                     } else {
@@ -449,7 +449,7 @@ public final class OfferbookList {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-
+                        hbox.getChildren().clear();
                         for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
                             Node icon = !fiatPaymentMethod.isCustomPaymentMethod()
                                     ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
@@ -485,6 +485,7 @@ public final class OfferbookList {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
+                        hbox.getChildren().clear();
                         for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBitcoinPaymentMethods()) {
                             ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
                             ColorAdjust colorAdjust = new ColorAdjust();
