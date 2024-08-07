@@ -26,13 +26,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBase;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.Getter;
@@ -396,9 +390,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     }
 
                                     if (tooltipSupplier.isPresent()) {
-                                        setTooltip(new BisqTooltip(tooltipSupplier.get().apply(item), true));
+                                        setTooltip(new BisqTooltip(tooltipSupplier.get().apply(item), BisqTooltip.Style.DARK));
                                     } else if (tooltipPropertySupplier.isPresent()) {
-                                        BisqTooltip tooltip = new BisqTooltip(true);
+                                        BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
                                         tooltipPropertySupplier.ifPresent(supplier ->
                                                 tooltip.textProperty().bind(supplier.apply(item)));
                                         setTooltip(tooltip);

@@ -62,7 +62,8 @@ public class PriceUtil {
         return MathUtils.roundDouble(priceQuote.getValue() / (double) marketPrice.getValue() - 1, 4);
     }
 
-    public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService,
+                                                              Offer<?, ?> offer) {
         return findPercentFromMarketPrice(marketPriceService, offer.getPriceSpec(), offer.getMarket());
     }
 
@@ -87,7 +88,7 @@ public class PriceUtil {
     // Quote
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findQuote(marketPriceService, offer.getPriceSpec(), offer.getMarket());
     }
 

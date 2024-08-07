@@ -2,6 +2,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.utils.ImageUtil;
@@ -12,7 +13,7 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.PercentageFormatter;
+import com.google.common.base.Joiner;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringExpression;
 import javafx.geometry.Insets;
@@ -90,12 +91,10 @@ public class BisqEasyOfferbookUtil {
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 vBox.setAlignment(Pos.CENTER_LEFT);
                 Tooltip.install(vBox, marketDetailsTooltip);
-                marketDetailsTooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
 
                 favouriteTooltip.textProperty().set(isFavouritesTableView
                         ? Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.removeFromFavourites")
                         : Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.addToFavourites"));
-                favouriteTooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
                 star = ImageUtil.getImageViewById(isFavouritesTableView
                         ? "star-yellow"
                         : "star-grey-hollow");
@@ -208,7 +207,6 @@ public class BisqEasyOfferbookUtil {
             private final VBox nameAndReputationBox = new VBox(userNameLabel, reputationScoreDisplay);
             private final UserProfileIcon userProfileIcon = new UserProfileIcon();
             private final HBox userProfileBox = new HBox(10, userProfileIcon, nameAndReputationBox);
-            private Subscription reputationScorePin;
 
             {
                 userNameLabel.setId("chat-user-name");
@@ -223,14 +221,13 @@ public class BisqEasyOfferbookUtil {
 
                 if (item != null && !empty) {
                     userNameLabel.setText(item.getUserNickname());
-                    reputationScorePin = EasyBind.subscribe(item.getReputationScore(), reputationScoreDisplay::setReputationScore);
+                    reputationScoreDisplay.setReputationScore(item.getReputationScore().get());
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(userProfileBox);
                 } else {
+                    userNameLabel.setText("");
+                    reputationScoreDisplay.setReputationScore(null);
                     userProfileIcon.dispose();
-                    if (reputationScorePin != null) {
-                        reputationScorePin.unsubscribe();
-                    }
                     setGraphic(null);
                 }
             }
@@ -240,19 +237,22 @@ public class BisqEasyOfferbookUtil {
     static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
             TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessagePriceCellFactory() {
         return column -> new TableCell<>() {
-            private final Label priceSpecAsPercentLabel = new Label();
+            private final Label percentagePriceLabel = new Label();
+            private final BisqTooltip tooltip = new BisqTooltip();
 
             @Override
             protected void updateItem(OfferMessageItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    StringExpression priceSpecAsPercent = Bindings.createStringBinding(() ->
-                            PercentageFormatter.formatToPercentWithSymbol(item.getPriceSpecAsPercent()));
-                    priceSpecAsPercentLabel.textProperty().bind(priceSpecAsPercent);
-                    setGraphic(priceSpecAsPercentLabel);
+                    percentagePriceLabel.setText(item.getFormattedPercentagePrice());
+                    percentagePriceLabel.setOpacity(item.isFixPrice() ? 0.5 : 1);
+                    tooltip.setText(item.getPriceTooltipText());
+                    percentagePriceLabel.setTooltip(tooltip);
+                    setGraphic(percentagePriceLabel);
                 } else {
-                    priceSpecAsPercentLabel.textProperty().unbind();
+                    percentagePriceLabel.setText("");
+                    percentagePriceLabel.setTooltip(null);
                     setGraphic(null);
                 }
             }
@@ -263,15 +263,20 @@ public class BisqEasyOfferbookUtil {
             TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageFiatAmountCellFactory() {
         return column -> new TableCell<>() {
             private final Label fiatAmountLabel = new Label();
+            private final BisqTooltip tooltip = new BisqTooltip();
 
             @Override
             protected void updateItem(OfferMessageItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    fiatAmountLabel.setText(item.getMinMaxAmountAsString());
+                    fiatAmountLabel.setText(item.getFormattedRangeQuoteAmount());
+                    tooltip.setText(item.getFormattedRangeQuoteAmount());
+                    fiatAmountLabel.setTooltip(tooltip);
                     setGraphic(fiatAmountLabel);
                 } else {
+                    fiatAmountLabel.setText("");
+                    fiatAmountLabel.setTooltip(null);
                     setGraphic(null);
                 }
             }
@@ -281,27 +286,33 @@ public class BisqEasyOfferbookUtil {
     static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
             TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessagePaymentCellFactory() {
         return column -> new TableCell<>() {
+            private final HBox hbox = new HBox(5);
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            {
+                hbox.setAlignment(Pos.CENTER_RIGHT);
+            }
+
             @Override
             protected void updateItem(OfferMessageItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    HBox hbox = new HBox(5);
-                    hbox.setAlignment(Pos.CENTER_LEFT);
+
                     for (FiatPaymentMethod fiatPaymentMethod : item.getFiatPaymentMethods()) {
-                        Label label = new Label();
-                        Node paymentMethodIcon = !fiatPaymentMethod.isCustomPaymentMethod()
+                        Node icon = !fiatPaymentMethod.isCustomPaymentMethod()
                                 ? ImageUtil.getImageViewById(fiatPaymentMethod.getName())
                                 : BisqEasyViewUtils.getCustomPaymentMethodIcon(fiatPaymentMethod.getDisplayString());
-                        label.setGraphic(paymentMethodIcon);
-                        BisqTooltip tooltip = new BisqTooltip();
-                        tooltip.getStyleClass().add("medium-dark-tooltip");
-                        tooltip.setText(fiatPaymentMethod.getDisplayString());
-                        Tooltip.install(label, tooltip);
-                        hbox.getChildren().add(label);
+                        hbox.getChildren().add(icon);
                     }
+                    tooltip.setText(Joiner.on("\n").join(item.getFiatPaymentMethods().stream()
+                            .map(PaymentMethod::getDisplayString)
+                            .toList()));
+                    Tooltip.install(hbox, tooltip);
                     setGraphic(hbox);
                 } else {
+                    Tooltip.uninstall(hbox, tooltip);
+                    hbox.getChildren().clear();
                     setGraphic(null);
                 }
             }
@@ -311,28 +322,33 @@ public class BisqEasyOfferbookUtil {
     static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
             TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageSettlementCellFactory() {
         return column -> new TableCell<>() {
+            private final HBox hbox = new HBox(5);
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            {
+                hbox.setAlignment(Pos.CENTER_LEFT);
+            }
+
             @Override
             protected void updateItem(OfferMessageItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    HBox hbox = new HBox(5);
-                    hbox.setAlignment(Pos.CENTER_LEFT);
                     for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBitcoinPaymentMethods()) {
                         ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
                         ColorAdjust colorAdjust = new ColorAdjust();
                         colorAdjust.setBrightness(-0.2);
                         icon.setEffect(colorAdjust);
-                        Label label = new Label();
-                        label.setGraphic(icon);
-                        BisqTooltip tooltip = new BisqTooltip();
-                        tooltip.getStyleClass().add("medium-dark-tooltip");
-                        tooltip.setText(bitcoinPaymentMethod.getDisplayString());
-                        Tooltip.install(label, tooltip);
-                        hbox.getChildren().add(label);
+                        hbox.getChildren().add(icon);
                     }
+                    tooltip.setText(Joiner.on("\n").join(item.getBitcoinPaymentMethods().stream()
+                            .map(PaymentMethod::getDisplayString)
+                            .toList()));
+                    Tooltip.install(hbox, tooltip);
                     setGraphic(hbox);
                 } else {
+                    Tooltip.uninstall(hbox, tooltip);
+                    hbox.getChildren().clear();
                     setGraphic(null);
                 }
             }

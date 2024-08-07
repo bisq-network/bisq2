@@ -397,7 +397,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()
                         && userProfile.isPresent();
                 if (shouldAddOfferMessage) {
-                    UIThread.run(() -> {
+                    UIThread.runOnNextRenderFrame(() -> {
                         if (model.getOfferMessageItems().stream()
                                 .noneMatch(item -> item.getBisqEasyOfferbookMessage().equals(bisqEasyOfferbookMessage))) {
                             OfferMessageItem item = new OfferMessageItem(bisqEasyOfferbookMessage,
@@ -413,7 +413,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             @Override
             public void remove(Object element) {
                 if (element instanceof BisqEasyOfferbookMessage && ((BisqEasyOfferbookMessage) element).hasBisqEasyOffer()) {
-                    UIThread.run(() -> {
+                    UIThread.runOnNextRenderFrame(() -> {
                         BisqEasyOfferbookMessage offerMessage = (BisqEasyOfferbookMessage) element;
                         Optional<OfferMessageItem> toRemove = model.getOfferMessageItems().stream()
                                 .filter(item -> item.getBisqEasyOfferbookMessage().getId().equals(offerMessage.getId()))
@@ -428,7 +428,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
             @Override
             public void clear() {
-                UIThread.run(() -> {
+                UIThread.runOnNextRenderFrame(() -> {
                     model.getOfferMessageItems().forEach(OfferMessageItem::dispose);
                     model.getOfferMessageItems().clear();
                 });

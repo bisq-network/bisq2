@@ -22,11 +22,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
-import bisq.desktop.components.controls.DropdownTitleMenuItem;
-import bisq.desktop.components.controls.SearchBox;
+import bisq.desktop.components.controls.*;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
@@ -59,7 +55,7 @@ import static bisq.bisq_easy.BisqEasyMarketFilter.*;
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private static final String BUY_FROM_MENU_ITEM_STYLE_CLASS = "buy-from-offers";
     private static final String SELL_TO_MENU_ITEM_STYLE_CLASS = "sell-to-offers";
-    private static final double EXPANDED_OFFER_LIST_WIDTH = 678;
+    private static final double EXPANDED_OFFER_LIST_WIDTH = 543;
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
     private static final double COLLAPSED_LIST_WIDTH = 40;
 
@@ -663,7 +659,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         BisqTableColumn<OfferMessageItem> userProfileTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
                 .left()
-                .fixWidth(170)
+                .fixWidth(150)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageUserProfileCellFactory())
                 .comparator(userProfileComparator)
                 .build();
@@ -671,26 +667,23 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         BisqTableColumn<OfferMessageItem> priceTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.price"))
                 .right()
-                .fixWidth(75)
+                .fixWidth(70)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePriceCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getPriceSpecAsPercent))
-                .build();
-
-        BisqTableColumn<OfferMessageItem> spacerColumn = new BisqTableColumn.Builder<OfferMessageItem>()
-                .fixWidth(20)
                 .build();
 
         BisqTableColumn<OfferMessageItem> fiatAmountTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .titleProperty(getModel().getFiatAmountTitle())
                 .right()
+                .fixWidth(120)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageFiatAmountCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getMinAmount))
                 .build();
 
         BisqTableColumn<OfferMessageItem> paymentTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.paymentMethod"))
-                .left()
-                .fixWidth(120)
+                .right()
+                .fixWidth(105)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePaymentCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getFiatPaymentMethodsAsString))
                 .build();
@@ -698,7 +691,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         BisqTableColumn<OfferMessageItem> settlementTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.settlementMethod"))
                 .left()
-                .fixWidth(120)
+                .fixWidth(95)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageSettlementCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getBitcoinPaymentMethodsAsString))
                 .build();
@@ -706,7 +699,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(userProfileTableColumn);
         tableView.getColumns().add(priceTableColumn);
-        tableView.getColumns().add(spacerColumn);
         tableView.getColumns().add(fiatAmountTableColumn);
         tableView.getColumns().add(paymentTableColumn);
         tableView.getColumns().add(settlementTableColumn);

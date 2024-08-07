@@ -64,7 +64,6 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         livenessScheduler = new LivenessScheduler(livenessIndicator, this);
         setSize(size);
 
-        tooltip.getStyleClass().add("medium-dark-tooltip");
         setAlignment(Pos.CENTER);
         getChildren().addAll(userProfileIcon, livenessIndicator);
         sceneChangeListener = (ov, oldValue, newScene) -> handleSceneChange(oldValue, newScene);

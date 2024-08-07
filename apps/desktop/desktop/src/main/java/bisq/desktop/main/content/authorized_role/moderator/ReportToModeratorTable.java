@@ -329,7 +329,7 @@ public class ReportToModeratorTable {
                     if (item != null && !empty) {
                         message.setText(item.getMessage());
                         message.setMaxHeight(30);
-                        message.setTooltip(new BisqTooltip(item.getMessage(), true));
+                        message.setTooltip(new BisqTooltip(item.getMessage(), BisqTooltip.Style.DARK));
 
                         icon.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getMessage()));
                         setGraphic(hBox);

@@ -722,24 +722,25 @@
     -fx-hide-delay: 100ms;
     -fx-show-duration: 20000ms;
     -fx-background: -bisq-light-grey-10;
-    -fx-text-fill: -fx-dark-text-color;
+    -fx-text-fill: -fx-dark-text-color !important;;
     -fx-background-color: -bisq-light-grey-10;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 0, 3);
     -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 .tooltip .dark-tooltip {
-    -fx-text-fill: -bisq-light-grey-10;
+    -fx-text-fill: -bisq-light-grey-10 !important;;
     -fx-background-color: -bisq-dark-grey-20;
     -fx-font-size: 0.85em;
 }
 
 .tooltip .medium-dark-tooltip {
     -fx-background: -bisq-dark-grey-50;
-    -fx-text-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color !important;
     -fx-background-color: -bisq-dark-grey-50;
     -fx-font-size: 0.85em;
 }

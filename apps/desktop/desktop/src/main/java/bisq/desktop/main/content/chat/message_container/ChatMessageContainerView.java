@@ -147,7 +147,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         HBox.setMargin(sendButton, new Insets(0, 0, 5, 0));
         sendButton.setMinWidth(30);
         sendButton.setMaxWidth(30);
-        sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), true));
+        sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), BisqTooltip.Style.DARK));
 
         HBox sendMessageBox = new HBox(inputField, sendButton);
         sendMessageBox.getStyleClass().add("chat-send-message-box");

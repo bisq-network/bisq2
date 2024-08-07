@@ -492,11 +492,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getPaymentMethodCellFactory() {
         return column -> new TableCell<>() {
-            private final BisqTooltip tooltip = new BisqTooltip();
-
-            {
-                tooltip.getStyleClass().add("medium-dark-tooltip");
-            }
+            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
@@ -520,11 +516,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSettlementMethodCellFactory() {
         return column -> new TableCell<>() {
-            private final BisqTooltip tooltip = new BisqTooltip();
-
-            {
-                tooltip.getStyleClass().add("medium-dark-tooltip");
-            }
+            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
