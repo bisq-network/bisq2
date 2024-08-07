@@ -54,13 +54,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class OfferMessageItem {
+public class OfferbookListItem {
     @EqualsAndHashCode.Include
     private final BisqEasyOfferbookMessage bisqEasyOfferbookMessage;
+
     private final BisqEasyOffer bisqEasyOffer;
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
     private final UserProfile userProfile;
+
     private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
@@ -72,11 +74,12 @@ public class OfferMessageItem {
     private Pin marketPriceByCurrencyMapPin, reputationChangedPin;
     private String formattedPercentagePrice, priceTooltipText;
 
-    OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
-                     UserProfile userProfile,
-                     ReputationService reputationService,
-                     MarketPriceService marketPriceService) {
+    OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
+                      UserProfile userProfile,
+                      ReputationService reputationService,
+                      MarketPriceService marketPriceService) {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
+
         bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         this.userProfile = userProfile;
         this.reputationService = reputationService;

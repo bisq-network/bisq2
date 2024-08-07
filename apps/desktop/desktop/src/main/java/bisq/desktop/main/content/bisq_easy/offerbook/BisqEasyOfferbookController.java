@@ -111,8 +111,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
         // As we pass some data from the model we cannot create it in the createDependencies method.
         offerbookList = new OfferbookList(serviceProvider, chatMessageContainerController,
-                model.getFilteredOfferMessageItems(),
-                model.getSortedOfferMessageItems(),
+                model.getFilteredOfferbookListItems(),
+                model.getSortedOfferbookListItems(),
                 model.getShowOfferListExpanded());
 
         return model;
@@ -183,7 +183,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         ).get());
 
         showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers ->
-                model.getFilteredOfferMessageItems().setPredicate(item -> showBuyOffers == item.isBuyOffer()));
+                model.getFilteredOfferbookListItems().setPredicate(item -> showBuyOffers == item.isBuyOffer()));
 
         MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MARKET_SORT_TYPE).map(name ->
                         ProtobufUtils.enumFromProto(MarketSortType.class, name, MarketSortType.NUM_OFFERS))
@@ -374,7 +374,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
 
     private void bindOfferMessages(BisqEasyOfferbookChannel channel) {
-        model.getOfferMessageItems().clear();
+        model.getOfferbookListItems().clear();
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
@@ -384,13 +384,13 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         && userProfile.isPresent();
                 if (shouldAddOfferMessage) {
                     UIThread.runOnNextRenderFrame(() -> {
-                        if (model.getOfferMessageItems().stream()
+                        if (model.getOfferbookListItems().stream()
                                 .noneMatch(item -> item.getBisqEasyOfferbookMessage().equals(bisqEasyOfferbookMessage))) {
-                            OfferMessageItem item = new OfferMessageItem(bisqEasyOfferbookMessage,
+                            OfferbookListItem item = new OfferbookListItem(bisqEasyOfferbookMessage,
                                     userProfile.get(),
                                     reputationService,
                                     marketPriceService);
-                            model.getOfferMessageItems().add(item);
+                            model.getOfferbookListItems().add(item);
                         }
                     });
                 }
@@ -401,12 +401,12 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 if (element instanceof BisqEasyOfferbookMessage && ((BisqEasyOfferbookMessage) element).hasBisqEasyOffer()) {
                     UIThread.runOnNextRenderFrame(() -> {
                         BisqEasyOfferbookMessage offerMessage = (BisqEasyOfferbookMessage) element;
-                        Optional<OfferMessageItem> toRemove = model.getOfferMessageItems().stream()
+                        Optional<OfferbookListItem> toRemove = model.getOfferbookListItems().stream()
                                 .filter(item -> item.getBisqEasyOfferbookMessage().getId().equals(offerMessage.getId()))
                                 .findAny();
                         toRemove.ifPresent(item -> {
                             item.dispose();
-                            model.getOfferMessageItems().remove(item);
+                            model.getOfferbookListItems().remove(item);
                         });
                     });
                 }
@@ -415,8 +415,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             @Override
             public void clear() {
                 UIThread.runOnNextRenderFrame(() -> {
-                    model.getOfferMessageItems().forEach(OfferMessageItem::dispose);
-                    model.getOfferMessageItems().clear();
+                    model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
+                    model.getOfferbookListItems().clear();
                 });
             }
         });

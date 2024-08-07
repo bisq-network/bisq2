@@ -77,13 +77,13 @@ public final class OfferbookList {
 
     public OfferbookList(ServiceProvider serviceProvider,
                          ChatMessageContainerController chatMessageContainerController,
-                         FilteredList<OfferMessageItem> filteredOfferMessageItems,
-                         SortedList<OfferMessageItem> sortedOfferMessageItems,
+                         FilteredList<OfferbookListItem> filteredOfferbookListItems,
+                         SortedList<OfferbookListItem> sortedOfferbookListItems,
                          BooleanProperty showOfferListExpanded) {
         controller = new OfferbookList.Controller(serviceProvider,
                 chatMessageContainerController,
-                filteredOfferMessageItems,
-                sortedOfferMessageItems,
+                filteredOfferbookListItems,
+                sortedOfferbookListItems,
                 showOfferListExpanded);
     }
 
@@ -102,12 +102,12 @@ public final class OfferbookList {
 
         private Controller(ServiceProvider serviceProvider,
                            ChatMessageContainerController chatMessageContainerController,
-                           FilteredList<OfferMessageItem> filteredOfferMessageItems,
-                           SortedList<OfferMessageItem> sortedOfferMessageItems,
+                           FilteredList<OfferbookListItem> filteredOfferbookListItems,
+                           SortedList<OfferbookListItem> sortedOfferbookListItems,
                            BooleanProperty showOfferListExpanded) {
             this.chatMessageContainerController = chatMessageContainerController;
             settingsService = serviceProvider.getSettingsService();
-            model = new OfferbookList.Model(filteredOfferMessageItems, sortedOfferMessageItems, showOfferListExpanded);
+            model = new OfferbookList.Model(filteredOfferbookListItems, sortedOfferbookListItems, showOfferListExpanded);
             view = new OfferbookList.View(model, this);
         }
 
@@ -115,7 +115,7 @@ public final class OfferbookList {
         public void onActivate() {
             showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
             showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> {
-                model.getFilteredOfferMessageItems().setPredicate(item ->
+                model.getFilteredOfferbookListItems().setPredicate(item ->
                         showBuyOffers == item.isBuyOffer()
                 );
             });
@@ -131,7 +131,7 @@ public final class OfferbookList {
             model.getShowOfferListExpanded().set(!model.getShowOfferListExpanded().get());
         }
 
-        void onSelectOfferMessageItem(OfferMessageItem item) {
+        void onSelectOfferMessageItem(OfferbookListItem item) {
             chatMessageContainerController.highlightOfferChatMessage(item == null ? null : item.getBisqEasyOfferbookMessage());
         }
 
@@ -146,17 +146,17 @@ public final class OfferbookList {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final FilteredList<OfferMessageItem> filteredOfferMessageItems;
-        private final SortedList<OfferMessageItem> sortedOfferMessageItems;
+        private final FilteredList<OfferbookListItem> filteredOfferbookListItems;
+        private final SortedList<OfferbookListItem> sortedOfferbookListItems;
         private final StringProperty fiatAmountTitle = new SimpleStringProperty();
         private final BooleanProperty showOfferListExpanded;
         private final BooleanProperty showBuyOffers = new SimpleBooleanProperty();
 
-        private Model(FilteredList<OfferMessageItem> filteredOfferMessageItems,
-                      SortedList<OfferMessageItem> sortedOfferMessageItems,
+        private Model(FilteredList<OfferbookListItem> filteredOfferbookListItems,
+                      SortedList<OfferbookListItem> sortedOfferbookListItems,
                       BooleanProperty showOfferListExpanded) {
-            this.filteredOfferMessageItems = filteredOfferMessageItems;
-            this.sortedOfferMessageItems = sortedOfferMessageItems;
+            this.filteredOfferbookListItems = filteredOfferbookListItems;
+            this.sortedOfferbookListItems = sortedOfferbookListItems;
             this.showOfferListExpanded = showOfferListExpanded;
         }
     }
@@ -169,7 +169,7 @@ public final class OfferbookList {
         private static final double LIST_CELL_HEIGHT = BisqEasyOfferbookView.LIST_CELL_HEIGHT;
 
         private final Label title, offerListByDirectionFilter;
-        private final BisqTableView<OfferMessageItem> tableView;
+        private final BisqTableView<OfferbookListItem> tableView;
         private final BisqTooltip titleTooltip;
         private final HBox header;
         private final ImageView offerListWhiteIcon, offerListGreyIcon, offerListGreenIcon;
@@ -209,7 +209,7 @@ public final class OfferbookList {
             subheader.getStyleClass().add("offer-list-subheader");
             subheader.getChildren().add(filterDropdownMenu);
 
-            tableView = new BisqTableView<>(model.getSortedOfferMessageItems());
+            tableView = new BisqTableView<>(model.getSortedOfferbookListItems());
             tableView.getStyleClass().add("offers-list");
             tableView.allowVerticalScrollbar();
             tableView.hideHorizontalScrollbar();
@@ -304,54 +304,54 @@ public final class OfferbookList {
         private void configOffersTableView() {
             tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
-            BisqTableColumn<OfferMessageItem> userProfileColumn = new BisqTableColumn.Builder<OfferMessageItem>()
+            BisqTableColumn<OfferbookListItem> userProfileColumn = new BisqTableColumn.Builder<OfferbookListItem>()
                     .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
                     .left()
                     .fixWidth(150)
                     .setCellFactory(getUserProfileCellFactory())
                     .comparator(Comparator
-                            .comparingLong(OfferMessageItem::getTotalScore).reversed()
-                            .thenComparing(OfferMessageItem::getUserNickname))
+                            .comparingLong(OfferbookListItem::getTotalScore).reversed()
+                            .thenComparing(OfferbookListItem::getUserNickname))
                     .build();
             tableView.getColumns().add(userProfileColumn);
             tableView.getSortOrder().add(userProfileColumn);
 
-            tableView.getColumns().add(new BisqTableColumn.Builder<OfferMessageItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                     .title(Res.get("bisqEasy.offerbook.offerList.table.columns.price"))
                     .right()
                     .fixWidth(70)
                     .setCellFactory(getPriceCellFactory())
-                    .comparator(Comparator.comparing(OfferMessageItem::getPriceSpecAsPercent))
+                    .comparator(Comparator.comparing(OfferbookListItem::getPriceSpecAsPercent))
                     .build());
 
-            tableView.getColumns().add(new BisqTableColumn.Builder<OfferMessageItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                     .titleProperty(model.getFiatAmountTitle())
                     .right()
                     .fixWidth(120)
                     .setCellFactory(getFiatAmountCellFactory())
-                    .comparator(Comparator.comparing(OfferMessageItem::getMinAmount))
+                    .comparator(Comparator.comparing(OfferbookListItem::getMinAmount))
                     .build());
 
-            tableView.getColumns().add(new BisqTableColumn.Builder<OfferMessageItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                     .title(Res.get("bisqEasy.offerbook.offerList.table.columns.paymentMethod"))
                     .right()
                     .fixWidth(105)
                     .setCellFactory(getPaymentCellFactory())
-                    .comparator(Comparator.comparing(OfferMessageItem::getFiatPaymentMethodsAsString))
+                    .comparator(Comparator.comparing(OfferbookListItem::getFiatPaymentMethodsAsString))
                     .build());
 
-            tableView.getColumns().add(new BisqTableColumn.Builder<OfferMessageItem>()
+            tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                     .title(Res.get("bisqEasy.offerbook.offerList.table.columns.settlementMethod"))
                     .left()
                     .fixWidth(95)
                     .setCellFactory(getSettlementCellFactory())
-                    .comparator(Comparator.comparing(OfferMessageItem::getBitcoinPaymentMethodsAsString))
+                    .comparator(Comparator.comparing(OfferbookListItem::getBitcoinPaymentMethodsAsString))
                     .build());
         }
 
 
-        private Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
-                TableCell<OfferMessageItem, OfferMessageItem>> getUserProfileCellFactory() {
+        private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+                TableCell<OfferbookListItem, OfferbookListItem>> getUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userNameLabel = new Label();
                 private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
@@ -367,7 +367,7 @@ public final class OfferbookList {
                 }
 
                 @Override
-                protected void updateItem(OfferMessageItem item, boolean empty) {
+                protected void updateItem(OfferbookListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -385,14 +385,14 @@ public final class OfferbookList {
             };
         }
 
-        private Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
-                TableCell<OfferMessageItem, OfferMessageItem>> getPriceCellFactory() {
+        private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+                TableCell<OfferbookListItem, OfferbookListItem>> getPriceCellFactory() {
             return column -> new TableCell<>() {
                 private final Label percentagePriceLabel = new Label();
                 private final BisqTooltip tooltip = new BisqTooltip();
 
                 @Override
-                protected void updateItem(OfferMessageItem item, boolean empty) {
+                protected void updateItem(OfferbookListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -410,14 +410,14 @@ public final class OfferbookList {
             };
         }
 
-        private Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
-                TableCell<OfferMessageItem, OfferMessageItem>> getFiatAmountCellFactory() {
+        private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+                TableCell<OfferbookListItem, OfferbookListItem>> getFiatAmountCellFactory() {
             return column -> new TableCell<>() {
                 private final Label fiatAmountLabel = new Label();
                 private final BisqTooltip tooltip = new BisqTooltip();
 
                 @Override
-                protected void updateItem(OfferMessageItem item, boolean empty) {
+                protected void updateItem(OfferbookListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -434,8 +434,8 @@ public final class OfferbookList {
             };
         }
 
-        private Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
-                TableCell<OfferMessageItem, OfferMessageItem>> getPaymentCellFactory() {
+        private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+                TableCell<OfferbookListItem, OfferbookListItem>> getPaymentCellFactory() {
             return column -> new TableCell<>() {
                 private final HBox hbox = new HBox(5);
                 private final BisqTooltip tooltip = new BisqTooltip();
@@ -445,7 +445,7 @@ public final class OfferbookList {
                 }
 
                 @Override
-                protected void updateItem(OfferMessageItem item, boolean empty) {
+                protected void updateItem(OfferbookListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -470,8 +470,8 @@ public final class OfferbookList {
             };
         }
 
-        private Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
-                TableCell<OfferMessageItem, OfferMessageItem>> getSettlementCellFactory() {
+        private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+                TableCell<OfferbookListItem, OfferbookListItem>> getSettlementCellFactory() {
             return column -> new TableCell<>() {
                 private final HBox hbox = new HBox(5);
                 private final BisqTooltip tooltip = new BisqTooltip();
@@ -481,7 +481,7 @@ public final class OfferbookList {
                 }
 
                 @Override
-                protected void updateItem(OfferMessageItem item, boolean empty) {
+                protected void updateItem(OfferbookListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
