@@ -22,6 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.reactions.Reaction;
+import bisq.common.locale.LanguageRepository;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -34,6 +35,7 @@ import bisq.desktop.main.content.chat.message_container.list.reactions_box.React
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ToggleReaction;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -58,6 +60,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
     private static final List<Reaction> REACTIONS_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
+    private static final int MAX_NUM_SUPPORTED_LANGUAGES = 7;
 
     private final Subscription showHighlightedPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
@@ -69,8 +72,8 @@ public abstract class BubbleMessageBox extends MessageBox {
     private Subscription reactMenuPin;
     protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected ReactMenuBox reactMenuBox;
-    protected Label supportedLanguages, userName, dateTime, message;
-    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
+    protected Label userName, dateTime, message;
+    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox, supportedLanguagesHBox;
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
@@ -89,7 +92,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         addActionsHandlers();
         addOnMouseEventHandlers();
 
-        supportedLanguages = createAndGetSupportedLanguagesLabel();
+        supportedLanguagesHBox = createAndGetSupportedLanguagesLabel();
         quotedMessageVBox = createAndGetQuotedMessageVBox();
         handleQuoteMessageBox();
         message = createAndGetMessage();
@@ -206,15 +209,24 @@ public abstract class BubbleMessageBox extends MessageBox {
         }
     }
 
-    private Label createAndGetSupportedLanguagesLabel() {
-        Label label = new Label();
+    private HBox createAndGetSupportedLanguagesLabel() {
+        HBox hbox = new HBox(5);
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
-            label.setGraphic(ImageUtil.getImageViewById("language-grey"));
+            Label iconLabel = new Label(":", ImageUtil.getImageViewById("language-grey"));
+            hbox.getChildren().add(iconLabel);
             BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
-            label.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(chatMessage)));
+            if (chatMessage.getBisqEasyOffer().isPresent()) {
+                BisqEasyOffer offer = chatMessage.getBisqEasyOffer().get();
+                int codesCount = Math.min(offer.getSupportedLanguageCodes().size(), MAX_NUM_SUPPORTED_LANGUAGES);
+                for (int i = 0; i < codesCount; i++) {
+                    String languageCode = offer.getSupportedLanguageCodes().get(i).toUpperCase();
+                    Label codeLabel = (i == codesCount - 1) ? new Label(languageCode) : new Label(languageCode + ", ");
+                    codeLabel.setTooltip(new BisqTooltip(LanguageRepository.getDisplayString(languageCode)));
+                    hbox.getChildren().add(codeLabel);
+                }
+            }
         }
-        HBox.setMargin(label, new Insets(9, 0, -9, 0));
-        return label;
+        return hbox;
     }
 
     private VBox createAndGetQuotedMessageVBox() {

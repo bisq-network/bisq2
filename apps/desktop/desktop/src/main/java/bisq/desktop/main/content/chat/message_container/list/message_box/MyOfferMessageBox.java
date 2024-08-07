@@ -65,7 +65,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
         // Actions
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyAction, removeOffer);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), copyAction, removeOffer);
 
         contentVBox.setAlignment(Pos.CENTER_RIGHT);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);

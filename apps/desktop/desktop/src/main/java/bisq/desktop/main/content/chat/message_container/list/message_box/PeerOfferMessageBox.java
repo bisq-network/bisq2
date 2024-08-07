@@ -50,7 +50,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
                                ChatMessagesListController controller) {
         super(item, list, controller);
 
-        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, supportedLanguages, moreActionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, moreActionsMenu, Spacer.fillHBox());
 
         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
@@ -71,7 +71,12 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         HBox amountAndPriceBox = createAndGetAmountAndPriceBox();
 
         // Offer content
-        VBox offerMessage = new VBox(10, takeOfferTitle, amountAndPriceBox, takeOfferButton);
+        VBox.setMargin(takeOfferTitle, new Insets(0, 0, 0, 7));
+        VBox.setMargin(amountAndPriceBox, new Insets(0, 0, 0, 7));
+        VBox.setMargin(supportedLanguagesHBox, new Insets(0, 0, 0, 7));
+        VBox.setMargin(takeOfferButton, new Insets(10, 0, 0, 7));
+        VBox offerMessage = new VBox(10, takeOfferTitle, amountAndPriceBox, supportedLanguagesHBox, takeOfferButton);
+
         Region separator = new Region();
         separator.getStyleClass().add("take-offer-vLine");
         HBox offerContent = new HBox(15, userProfileIconVbox, separator, offerMessage);
@@ -98,7 +103,6 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
                 : Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessageTitle.buy");
         Label messageTitle = new Label(title);
         messageTitle.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
-        messageTitle.setPadding(new Insets(0, 0, 0, 7));
         peerNickName = new Label(StringUtils.truncate(item.getNickName(), 28));
         peerNickName.getStyleClass().addAll("code-block", "offerbook-peer-name", "hand-cursor");
         peerNickName.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
@@ -112,7 +116,6 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         button.getStyleClass().add(isBuy ? "sell-btc-button" : "buy-btc-button");
         button.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
         button.setDefaultButton(!item.isOfferAlreadyTaken());
-        VBox.setMargin(button, new Insets(10, 0, 0, 7));
 
         return new Pair<>(messageTitleBox, button);
     }
@@ -127,7 +130,6 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
             price.getStyleClass().add("text-fill-white");
             Label connector = new Label("@");
             amountAndPriceBox.getChildren().addAll(amount, connector, price);
-            VBox.setMargin(amountAndPriceBox, new Insets(0, 0, 0, 7));
         }
         return amountAndPriceBox;
     }
