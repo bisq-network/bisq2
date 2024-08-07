@@ -47,6 +47,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -261,8 +262,8 @@ public abstract class BubbleMessageBox extends MessageBox {
             for (FiatPaymentMethod fiatPaymentMethod : item.getBisqEasyOfferPaymentMethods()) {
                 hBox.getChildren().add(createMethodLabel(fiatPaymentMethod));
             }
-            // TODO: Add icon
-            // hBox.getChildren().add();
+            ImageView icon = ImageUtil.getImageViewById("interchangeable-grey");
+            hBox.getChildren().add(icon);
             for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBisqEasyOfferSettlementMethods()) {
                 hBox.getChildren().add(createMethodLabel(bitcoinPaymentMethod));
             }
