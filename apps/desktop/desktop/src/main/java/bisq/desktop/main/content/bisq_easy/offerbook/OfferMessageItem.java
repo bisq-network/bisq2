@@ -61,7 +61,7 @@ public class OfferMessageItem {
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
     private final UserProfile userProfile;
-    private final String userNickname, minMaxAmountAsString, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
+    private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final List<FiatPaymentMethod> fiatPaymentMethods;
@@ -87,7 +87,7 @@ public class OfferMessageItem {
         bitcoinPaymentMethodsAsString = Joiner.on(", ").join(bitcoinPaymentMethods.stream().map(PaymentMethod::getDisplayString).collect(Collectors.toList()));
         userNickname = userProfile.getNickName();
         minMaxAmount = retrieveMinMaxAmount();
-        minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
+        formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
         initialize();
     }

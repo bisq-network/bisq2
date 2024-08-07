@@ -270,8 +270,8 @@ public class BisqEasyOfferbookUtil {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    fiatAmountLabel.setText(item.getMinMaxAmountAsString());
-                    tooltip.setText(item.getMinMaxAmountAsString());
+                    fiatAmountLabel.setText(item.getFormattedRangeQuoteAmount());
+                    tooltip.setText(item.getFormattedRangeQuoteAmount());
                     fiatAmountLabel.setTooltip(tooltip);
                     setGraphic(fiatAmountLabel);
                 } else {
