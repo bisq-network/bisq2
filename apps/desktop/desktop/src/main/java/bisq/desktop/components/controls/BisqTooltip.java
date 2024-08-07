@@ -22,31 +22,50 @@ import javafx.util.Duration;
 
 // Setting show delay by css does not work
 public class BisqTooltip extends Tooltip {
+    public enum Style {
+        DEFAULT,
+        MEDIUM_DARK,
+        DARK
+    }
+
     public BisqTooltip() {
-        this(null, false);
+        this(null, Style.DEFAULT);
     }
 
     public BisqTooltip(String text) {
-        this(text, false);
+        this(text, Style.DEFAULT);
     }
 
-    public BisqTooltip(boolean useDarkStyle) {
-        this(null, useDarkStyle);
+    public BisqTooltip(Style style) {
+        this(null, style);
     }
 
-    public BisqTooltip(String text, boolean useDarkStyle) {
+    public BisqTooltip(String text, Style style) {
         super(text);
         setShowDelay(Duration.millis(100));
         setHideDelay(Duration.millis(100));
-        useDarkStyle(useDarkStyle);
+        useStyle(style);
 
         setMaxWidth(800);
         setWrapText(true);
     }
 
-    public void useDarkStyle(boolean useDarkStyle) {
-        if (useDarkStyle) {
-            getStyleClass().add("dark-tooltip");
+    public void useStyle(Style style) {
+        switch (style) {
+            case DEFAULT -> {
+                // Force font color as color from css gets shadowed by parent
+                setStyle("-fx-text-fill: -fx-dark-text-color !important;");
+            }
+            case MEDIUM_DARK -> {
+                getStyleClass().add("medium-dark-tooltip");
+                // Force font color as color from css gets shadowed by parent
+                setStyle("-fx-text-fill: -bisq-light-grey-10 !important;");
+            }
+            case DARK -> {
+                getStyleClass().add("dark-tooltip");
+                // Force font color as color from css gets shadowed by parent
+                setStyle("-fx-text-fill: -fx-light-text-color !important;");
+            }
         }
     }
 }

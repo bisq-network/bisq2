@@ -143,8 +143,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         deleteButton = new Button(Res.get("user.userProfile.deleteProfile"));
         deleteWrapper = new SplitPane(deleteButton);
-        deleteTooltip = new BisqTooltip(Res.get("user.userProfile.deleteProfile.cannotDelete"));
-        deleteTooltip.getStyleClass().add("medium-dark-tooltip");
+        deleteTooltip = new BisqTooltip(Res.get("user.userProfile.deleteProfile.cannotDelete"), BisqTooltip.Style.MEDIUM_DARK);
 
         HBox buttonsHBox = new HBox(20, saveButton, deleteWrapper);
         formVBox.getChildren().add(buttonsHBox);

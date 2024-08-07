@@ -109,8 +109,7 @@ public class ReputationDetailsPopup extends VBox {
 
         Label userName = new Label(userProfile.getNickName());
         userName.setId("chat-user-name");
-        Tooltip tooltip = new BisqTooltip(userProfile.getUserName());
-        tooltip.getStyleClass().add("medium-dark-tooltip");
+        Tooltip tooltip = new BisqTooltip(userProfile.getUserName(), BisqTooltip.Style.MEDIUM_DARK);
         userName.setTooltip(tooltip);
 
         HBox row1 = new HBox(20, userProfileIcon, userName);

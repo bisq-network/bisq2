@@ -243,7 +243,7 @@ public class BisqEasyOfferbookUtil {
             private final BisqTooltip tooltip = new BisqTooltip();
 
             {
-                tooltip.getStyleClass().add("medium-dark-tooltip");
+                tooltip.useStyle(BisqTooltip.Style.DEFAULT);
             }
 
             @Override
@@ -293,7 +293,7 @@ public class BisqEasyOfferbookUtil {
 
             {
                 hbox.setAlignment(Pos.CENTER_RIGHT);
-                tooltip.getStyleClass().add("medium-dark-tooltip");
+                tooltip.useStyle(BisqTooltip.Style.DEFAULT);
             }
 
             @Override
@@ -329,7 +329,7 @@ public class BisqEasyOfferbookUtil {
 
             {
                 hbox.setAlignment(Pos.CENTER_RIGHT);
-                tooltip.getStyleClass().add("medium-dark-tooltip");
+                tooltip.useStyle(BisqTooltip.Style.DEFAULT);
             }
 
             @Override

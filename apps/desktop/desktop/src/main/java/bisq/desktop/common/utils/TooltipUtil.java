@@ -40,7 +40,7 @@ public class TooltipUtil {
 
                     // Force tooltip to use color, as it takes in some cases the color of the parent label
                     // and can't be overridden by class or nodeId
-                    tooltip.setStyle("-fx-text-fill: -bs-rd-tooltip-truncated;");
+                    tooltip.setStyle("-fx-text-fill: red !important;");
                     labeled.setTooltip(tooltip);
                 }
             }

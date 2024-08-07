@@ -87,7 +87,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             private final Label userName = new Label();
             private final UserProfileIcon userProfileIcon = new UserProfileIcon();
             private final HBox hBox = new HBox(10, userProfileIcon, userName);
-            private final BisqTooltip tooltip = new BisqTooltip(Res.get("user.bondedRoles.table.columns.userProfile.defaultNode"), true);
+            private final BisqTooltip tooltip = new BisqTooltip(Res.get("user.bondedRoles.table.columns.userProfile.defaultNode"), BisqTooltip.Style.DARK);
 
             {
                 userName.setId("chat-user-name");
@@ -137,10 +137,10 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     userProfileId.setText(item.getUserProfileId());
-                    userProfileId.setTooltip(new BisqTooltip(item.getUserProfileId(), true));
+                    userProfileId.setTooltip(new BisqTooltip(item.getUserProfileId(), BisqTooltip.Style.DARK));
 
                     icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getUserProfileId()));
-                    icon.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard"), true));
+                    icon.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard"), BisqTooltip.Style.DARK));
                     setGraphic(hBox);
                 } else {
                     icon.setOnAction(null);
@@ -169,7 +169,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     signature.setText(item.getSignature());
-                    signature.setTooltip(new BisqTooltip(item.getSignature(), true));
+                    signature.setTooltip(new BisqTooltip(item.getSignature(), BisqTooltip.Style.DARK));
 
                     icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getSignature()));
                     setGraphic(hBox);

@@ -158,8 +158,6 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
                     label.setText(quoteCurrencyName);
                     if (quoteCurrencyName.length() > 20) {
                         Tooltip tooltip = new BisqTooltip(quoteCurrencyName);
-                        // Force font color as color from css gets shadowed by parent
-                        tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
                         label.setTooltip(tooltip);
                     }
 
