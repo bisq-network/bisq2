@@ -47,10 +47,10 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
     private final StringProperty marketPrice = new SimpleStringProperty();
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
-    private final BooleanProperty showBuyOffers = new SimpleBooleanProperty();
-    private final BooleanProperty showOfferListExpanded = new SimpleBooleanProperty();
     private final BooleanProperty showMarketSelectionListCollapsed = new SimpleBooleanProperty();
 
+    @Setter
+    private ReadOnlyBooleanProperty showOfferListExpanded;
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;
     @Setter

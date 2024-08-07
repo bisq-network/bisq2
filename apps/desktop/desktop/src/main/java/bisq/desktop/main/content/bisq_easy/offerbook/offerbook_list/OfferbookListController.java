@@ -30,7 +30,7 @@ import bisq.settings.SettingsService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
-import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -46,30 +46,32 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final UserProfileService userProfileService;
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
-    private Pin showBuyOffersPin;
+    private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin;
     private Subscription showBuyOffersFromModelPin;
-    private Pin offerMessagesPin;
 
     public OfferbookListController(ServiceProvider serviceProvider,
-                                   ChatMessageContainerController chatMessageContainerController,
-                                   BooleanProperty showOfferListExpanded) {
+                                   ChatMessageContainerController chatMessageContainerController) {
         this.chatMessageContainerController = chatMessageContainerController;
         settingsService = serviceProvider.getSettingsService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        model = new OfferbookListModel(showOfferListExpanded);
+        model = new OfferbookListModel();
         view = new OfferbookListView(model, this);
+    }
+
+    public ReadOnlyBooleanProperty getShowOfferListExpanded() {
+        return model.getShowOfferListExpanded();
     }
 
     @Override
     public void onActivate() {
         showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
-        showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> {
-            model.getFilteredOfferbookListItems().setPredicate(item -> showBuyOffers == item.isBuyOffer()
-            );
-        });
-
+        showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
+        showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers ->
+                model.getFilteredOfferbookListItems().setPredicate(item ->
+                        showBuyOffers == item.isBuyOffer()
+                ));
     }
 
     @Override
@@ -77,6 +79,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         model.getOfferbookListItems().forEach(OfferbookListItem::dispose);
 
         showBuyOffersPin.unbind();
+        showOfferListExpandedSettingsPin.unbind();
         showBuyOffersFromModelPin.unsubscribe();
         if (offerMessagesPin != null) {
             offerMessagesPin.unbind();

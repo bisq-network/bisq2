@@ -32,12 +32,10 @@ class OfferbookListModel implements bisq.desktop.common.view.Model {
     private final ObservableList<OfferbookListItem> offerbookListItems = FXCollections.observableArrayList();
     private final FilteredList<OfferbookListItem> filteredOfferbookListItems = new FilteredList<>(offerbookListItems);
     private final SortedList<OfferbookListItem> sortedOfferbookListItems = new SortedList<>(filteredOfferbookListItems);
-
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
-    private final BooleanProperty showOfferListExpanded;
     private final BooleanProperty showBuyOffers = new SimpleBooleanProperty();
+    private final BooleanProperty showOfferListExpanded = new SimpleBooleanProperty();
 
-    OfferbookListModel(BooleanProperty showOfferListExpanded) {
-        this.showOfferListExpanded = showOfferListExpanded;
+    OfferbookListModel() {
     }
 }

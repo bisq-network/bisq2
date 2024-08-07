@@ -71,8 +71,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final Predicate<MarketChannelItem> favouriteMarketChannelItemsPredicate;
     private OfferbookListController offerbookListController;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
-            favouriteMarketsPin, showBuyOffersPin, showOfferListExpandedSettingsPin,
-            showMarketSelectionListCollapsedSettingsPin;
+            favouriteMarketsPin, showMarketSelectionListCollapsedSettingsPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
@@ -105,8 +104,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         BisqEasyOfferbookModel model = new BisqEasyOfferbookModel(chatChannelDomain);
 
         // As we pass some data from the model we cannot create it in the createDependencies method.
-        offerbookListController = new OfferbookListController(serviceProvider, chatMessageContainerController, model.getShowOfferListExpanded());
-
+        offerbookListController = new OfferbookListController(serviceProvider, chatMessageContainerController);
+        model.setShowOfferListExpanded(offerbookListController.getShowOfferListExpanded());
         return model;
     }
 
@@ -125,8 +124,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
         model.getMarketSelectorSearchText().set("");
 
-        showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
-        showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
         showMarketSelectionListCollapsedSettingsPin = FxBindings.bindBiDir(model.getShowMarketSelectionListCollapsed())
                 .to(settingsService.getShowMarketSelectionListCollapsed());
 
@@ -228,11 +225,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public void onDeactivate() {
         super.onDeactivate();
 
-
         model.getMarketChannelItems().forEach(MarketChannelItem::onDeactivate);
 
-        showBuyOffersPin.unbind();
-        showOfferListExpandedSettingsPin.unbind();
         showMarketSelectionListCollapsedSettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
         selectedChannelPin.unbind();
