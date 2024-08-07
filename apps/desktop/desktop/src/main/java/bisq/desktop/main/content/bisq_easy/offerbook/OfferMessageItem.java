@@ -70,7 +70,7 @@ public class OfferMessageItem {
     private long totalScore;
     private double priceSpecAsPercent;
     private Pin marketPriceByCurrencyMapPin, reputationChangedPin;
-    private String formattedPercentagePrice, priceTooltip;
+    private String formattedPercentagePrice, priceTooltipText;
 
     OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                      UserProfile userProfile,
@@ -126,11 +126,11 @@ public class OfferMessageItem {
         formattedPercentagePrice = PercentageFormatter.formatToPercentWithSymbol(priceSpecAsPercent);
         String price = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer);
         if (bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec) {
-            priceTooltip = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.fixPrice", price, formattedPercentagePrice);
+            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.fixPrice", price, formattedPercentagePrice);
         } else if (bisqEasyOffer.getPriceSpec() instanceof FloatPriceSpec) {
-            priceTooltip = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.floatPrice", formattedPercentagePrice, price);
+            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.floatPrice", formattedPercentagePrice, price);
         } else {
-            priceTooltip = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.marketPrice", price);
+            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.marketPrice", price);
         }
     }
 

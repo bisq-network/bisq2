@@ -91,12 +91,10 @@ public class BisqEasyOfferbookUtil {
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 vBox.setAlignment(Pos.CENTER_LEFT);
                 Tooltip.install(vBox, marketDetailsTooltip);
-                marketDetailsTooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
 
                 favouriteTooltip.textProperty().set(isFavouritesTableView
                         ? Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.removeFromFavourites")
                         : Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.addToFavourites"));
-                favouriteTooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
                 star = ImageUtil.getImageViewById(isFavouritesTableView
                         ? "star-yellow"
                         : "star-grey-hollow");
@@ -242,10 +240,6 @@ public class BisqEasyOfferbookUtil {
             private final Label percentagePriceLabel = new Label();
             private final BisqTooltip tooltip = new BisqTooltip();
 
-            {
-                tooltip.useStyle(BisqTooltip.Style.DEFAULT);
-            }
-
             @Override
             protected void updateItem(OfferMessageItem item, boolean empty) {
                 super.updateItem(item, empty);
@@ -253,7 +247,7 @@ public class BisqEasyOfferbookUtil {
                 if (item != null && !empty) {
                     percentagePriceLabel.setText(item.getFormattedPercentagePrice());
                     percentagePriceLabel.setOpacity(item.isFixPrice() ? 0.5 : 1);
-                    tooltip.setText(item.getPriceTooltip());
+                    tooltip.setText(item.getPriceTooltipText());
                     percentagePriceLabel.setTooltip(tooltip);
                     setGraphic(percentagePriceLabel);
                 } else {
@@ -266,9 +260,10 @@ public class BisqEasyOfferbookUtil {
     }
 
     static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
-            TableCell<OfferMessageItem, OfferMessageItem>> getMessagePriceFiatAmountCellFactory() {
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageFiatAmountCellFactory() {
         return column -> new TableCell<>() {
             private final Label fiatAmountLabel = new Label();
+            private final BisqTooltip tooltip = new BisqTooltip();
 
             @Override
             protected void updateItem(OfferMessageItem item, boolean empty) {
@@ -276,9 +271,12 @@ public class BisqEasyOfferbookUtil {
 
                 if (item != null && !empty) {
                     fiatAmountLabel.setText(item.getMinMaxAmountAsString());
+                    tooltip.setText(item.getMinMaxAmountAsString());
+                    fiatAmountLabel.setTooltip(tooltip);
                     setGraphic(fiatAmountLabel);
                 } else {
                     fiatAmountLabel.setText("");
+                    fiatAmountLabel.setTooltip(null);
                     setGraphic(null);
                 }
             }
@@ -286,14 +284,13 @@ public class BisqEasyOfferbookUtil {
     }
 
     static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
-            TableCell<OfferMessageItem, OfferMessageItem>> getMessagePricePaymentCellFactory() {
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessagePaymentCellFactory() {
         return column -> new TableCell<>() {
             private final HBox hbox = new HBox(5);
             private final BisqTooltip tooltip = new BisqTooltip();
 
             {
                 hbox.setAlignment(Pos.CENTER_RIGHT);
-                tooltip.useStyle(BisqTooltip.Style.DEFAULT);
             }
 
             @Override
@@ -315,6 +312,7 @@ public class BisqEasyOfferbookUtil {
                     setGraphic(hbox);
                 } else {
                     Tooltip.uninstall(hbox, tooltip);
+                    hbox.getChildren().clear();
                     setGraphic(null);
                 }
             }
@@ -322,14 +320,13 @@ public class BisqEasyOfferbookUtil {
     }
 
     static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
-            TableCell<OfferMessageItem, OfferMessageItem>> getMessagePriceSettlementCellFactory() {
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageSettlementCellFactory() {
         return column -> new TableCell<>() {
             private final HBox hbox = new HBox(5);
             private final BisqTooltip tooltip = new BisqTooltip();
 
             {
-                hbox.setAlignment(Pos.CENTER_RIGHT);
-                tooltip.useStyle(BisqTooltip.Style.DEFAULT);
+                hbox.setAlignment(Pos.CENTER_LEFT);
             }
 
             @Override
@@ -351,6 +348,7 @@ public class BisqEasyOfferbookUtil {
                     setGraphic(hbox);
                 } else {
                     Tooltip.uninstall(hbox, tooltip);
+                    hbox.getChildren().clear();
                     setGraphic(null);
                 }
             }

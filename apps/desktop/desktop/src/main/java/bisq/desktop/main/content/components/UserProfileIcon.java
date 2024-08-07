@@ -42,7 +42,7 @@ import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_IC
 public class UserProfileIcon extends StackPane implements LivenessScheduler.FormattedAgeConsumer {
     private final LivenessIndicator livenessIndicator = new LivenessIndicator();
     @Getter
-    private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
+    private final BisqTooltip tooltip = new BisqTooltip();
     @Getter
     private final StringProperty formattedAge = new SimpleStringProperty("");
     private final ImageView userProfileIcon = new ImageView();

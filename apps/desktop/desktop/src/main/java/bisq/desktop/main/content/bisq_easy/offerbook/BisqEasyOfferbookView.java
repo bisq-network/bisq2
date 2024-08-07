@@ -676,7 +676,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .titleProperty(getModel().getFiatAmountTitle())
                 .right()
                 .fixWidth(120)
-                .setCellFactory(BisqEasyOfferbookUtil.getMessagePriceFiatAmountCellFactory())
+                .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageFiatAmountCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getMinAmount))
                 .build();
 
@@ -684,15 +684,15 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.paymentMethod"))
                 .right()
                 .fixWidth(105)
-                .setCellFactory(BisqEasyOfferbookUtil.getMessagePricePaymentCellFactory())
+                .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePaymentCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getFiatPaymentMethodsAsString))
                 .build();
 
         BisqTableColumn<OfferMessageItem> settlementTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.settlementMethod"))
-                .right()
+                .left()
                 .fixWidth(95)
-                .setCellFactory(BisqEasyOfferbookUtil.getMessagePriceSettlementCellFactory())
+                .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageSettlementCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getBitcoinPaymentMethodsAsString))
                 .build();
 
