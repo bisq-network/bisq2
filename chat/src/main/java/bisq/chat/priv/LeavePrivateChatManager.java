@@ -20,6 +20,7 @@ package bisq.chat.priv;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
@@ -58,12 +59,19 @@ public class LeavePrivateChatManager {
         if (selectionService.getSelectedChannel().get() == null) {
             log.warn("selectionService.selectedChannel is null at leaveChatChannel. chatChannel={}", chatChannel);
         }
-        selectionService.selectChannel(channelService.getChannels().stream().findFirst().orElse(null));
+
+        // We do not select first channel if it is a BisqEasyOpenTradeChannel as it might be that there is no matching
+        // trade for that. We leave selection to higher level domains.
+        selectionService.selectChannel(channelService.getChannels().stream()
+                .filter(channel -> !(channel instanceof BisqEasyOpenTradeChannel))
+                .findFirst()
+                .orElse(null));
 
         chatNotificationService.consume(chatChannel);
     }
 
-    private PrivateChatChannelService<?, ? extends PrivateChatMessage<?>, ? extends PrivateChatChannel<?>, ?> findChannelService(ChatChannelDomain chatChannelDomain) {
+    private PrivateChatChannelService<?, ? extends PrivateChatMessage<?>, ? extends PrivateChatChannel<?>, ?> findChannelService(
+            ChatChannelDomain chatChannelDomain) {
         switch (chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK:
                 throw new IllegalArgumentException("BISQ_EASY_OFFERBOOK is not supported at LeavePrivateChatChannelService");

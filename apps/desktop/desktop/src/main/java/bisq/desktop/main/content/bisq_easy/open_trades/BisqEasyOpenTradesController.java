@@ -30,6 +30,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
@@ -170,44 +171,41 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         super.selectedChannelChanged(chatChannel);
 
         UIThread.run(() -> {
-            if (chatChannel == null) {
+            if (!hasTradeForChannel(chatChannel)) {
                 model.getSelectedItem().set(null);
                 tradeStateController.setSelectedChannel(null);
                 tradeDataHeader.setSelectedChannel(null);
                 maybeSelectFirst();
+                return;
             }
-
-            if (chatChannel instanceof BisqEasyOpenTradeChannel) {
-                BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
-                applyPeersIcon(channel);
-                UserProfile peerUserProfile = ((BisqEasyOpenTradeChannel) chatChannel).getPeer();
+            if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
+                applyPeersIcon(tradeChannel);
+                UserProfile peerUserProfile = tradeChannel.getPeer();
                 String peerUserName = peerUserProfile.getUserName();
 
-                String shortTradeId = channel.getTradeId().substring(0, 8);
+                String shortTradeId = tradeChannel.getTradeId().substring(0, 8);
                 model.getChatWindowTitle().set(Res.get("bisqEasy.openTrades.chat.window.title",
                         serviceProvider.getConfig().getAppName(), peerUserName, shortTradeId));
 
                 model.getListItems().stream()
-                        .filter(item -> item.getChannel().equals(channel))
+                        .filter(item -> item.getChannel().equals(tradeChannel))
                         .findAny()
                         .ifPresent(item -> model.getSelectedItem().set(item));
 
-                tradeStateController.setSelectedChannel(channel);
-                tradeDataHeader.setSelectedChannel(channel);
+                tradeStateController.setSelectedChannel(tradeChannel);
+                tradeDataHeader.setSelectedChannel(tradeChannel);
             }
         });
     }
 
     void onSelectItem(BisqEasyOpenTradesView.ListItem item) {
-        if (item == null) {
+        if (item == null || !hasTradeForChannel(item.getChannel())) {
             selectionService.selectChannel(null);
         } else {
             onShowTradeRulesAcceptedWarning();
             BisqEasyOpenTradeChannel channel = item.getChannel();
-            if (!channel.equals(selectionService.getSelectedChannel().get())) {
-                selectionService.selectChannel(channel);
-                updateVisibility();
-            }
+            selectionService.selectChannel(channel);
+            updateVisibility();
         }
     }
 
@@ -376,10 +374,9 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
     }
 
     private void maybeSelectFirst() {
-        if (selectionService.getSelectedChannel().get() == null &&
-                !channelService.getChannels().isEmpty() &&
+        if (!hasTradeForChannel(selectionService.getSelectedChannel().get()) &&
                 !model.getSortedList().isEmpty()) {
-            selectionService.getSelectedChannel().set(model.getSortedList().get(0).getChannel());
+            selectionService.selectChannel(model.getSortedList().getFirst().getChannel());
         }
     }
 
@@ -411,5 +408,10 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         return model.getListItems().stream()
                 .filter(e -> e.getTrade().getId().equals(tradeId))
                 .findAny();
+    }
+
+    private boolean hasTradeForChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        return chatChannel instanceof BisqEasyOpenTradeChannel channel &&
+                BisqEasyServiceUtil.findTradeFromChannel(serviceProvider, channel).isPresent();
     }
 }

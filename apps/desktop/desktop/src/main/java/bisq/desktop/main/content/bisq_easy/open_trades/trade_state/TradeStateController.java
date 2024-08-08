@@ -158,7 +158,6 @@ public class TradeStateController implements Controller {
 
             hasBuyerAcceptedPriceSpecPin = EasyBind.subscribe(model.getHasBuyerAcceptedSellersPriceSpec(),
                     hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
-            updateShouldShowSellerPriceApprovalOverlay();
 
             //todo move to View
             VBox vBox = new VBox(
