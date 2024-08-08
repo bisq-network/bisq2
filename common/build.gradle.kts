@@ -17,11 +17,18 @@ val generateVersionClass by tasks.registering {
         outputDir.mkdirs()
         versionFile.parentFile.mkdirs()
 
+        val gitCommitVersion = try {
+            val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD").start()
+            process.inputStream.bufferedReader().use { it.readText().trim() }
+        } catch (e: Exception) {
+            "unknown"
+        }
         versionFile.writeText("""
             package bisq.common.application;
 
             public final class BuildVersion {
                 public static final String VERSION = "${project.version}";
+                public static final String COMMIT_SHORT_HASH = "$gitCommitVersion";
             }
         """.trimIndent())
     }
