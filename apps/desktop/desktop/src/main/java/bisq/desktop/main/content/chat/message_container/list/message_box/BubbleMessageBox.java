@@ -264,8 +264,13 @@ public abstract class BubbleMessageBox extends MessageBox {
             for (FiatPaymentMethod fiatPaymentMethod : item.getBisqEasyOfferPaymentMethods()) {
                 hBox.getChildren().add(createMethodLabel(fiatPaymentMethod));
             }
+
             ImageView icon = ImageUtil.getImageViewById("interchangeable-grey");
-            hBox.getChildren().add(icon);
+            Label interchangeableIcon = new Label();
+            interchangeableIcon.setGraphic(icon);
+            interchangeableIcon.setPadding(new Insets(0, 0, 1, 0));
+            hBox.getChildren().add(interchangeableIcon);
+
             for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBisqEasyOfferSettlementMethods()) {
                 Label label = createMethodLabel(bitcoinPaymentMethod);
                 ColorAdjust colorAdjust = new ColorAdjust();
@@ -274,6 +279,7 @@ public abstract class BubbleMessageBox extends MessageBox {
                 hBox.getChildren().add(label);
             }
         }
+        hBox.setAlignment(Pos.BOTTOM_LEFT);
         return hBox;
     }
 
