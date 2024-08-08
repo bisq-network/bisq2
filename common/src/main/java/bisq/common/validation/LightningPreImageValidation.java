@@ -19,9 +19,12 @@ package bisq.common.validation;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.regex.Pattern;
+
 public class LightningPreImageValidation {
+    private static final Pattern HEX64_PATTERN = Pattern.compile("^[a-fA-F0-9]{64}$");
+
     public static boolean validatePreImage(@NotNull String preImage) {
-        // todo implement
-        return true;
+        return HEX64_PATTERN.matcher(preImage).matches();
     }
 }
