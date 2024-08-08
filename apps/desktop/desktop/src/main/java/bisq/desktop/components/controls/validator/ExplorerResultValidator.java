@@ -15,25 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.application;
+package bisq.desktop.components.controls.validator;
 
-import bisq.common.platform.Version;
+public class ExplorerResultValidator extends ValidatorBase {
 
-public class ApplicationVersion {
-    private static Version version;
-
-    public static Version getVersion() {
-        if (version == null) {
-            try {
-                version = new Version(BuildVersion.VERSION);
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return version;
+    public ExplorerResultValidator() {
+        super();
     }
 
-    public static String getBuildCommitShortHash() {
-        return BuildVersion.COMMIT_SHORT_HASH;
+    @Override
+    protected void eval() {
+        hasErrors.set(getMessage() != null);
     }
 }

@@ -172,7 +172,8 @@ public class SellerState3a extends BaseState {
             } else {
                 new Popup().warning(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.warning." + name))
                         .actionButtonText(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.warning.proceed"))
-                        .onAction(() -> confirmedBtcSent(paymentProof, userName, proof)).show();
+                        .onAction(() -> confirmedBtcSent(paymentProof, userName, proof))
+                        .show();
             }
         }
 

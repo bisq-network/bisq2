@@ -22,7 +22,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Pattern;
 
 public class LightningInvoiceValidation {
-    private static final Pattern LN_BECH32_PATTERN = Pattern.compile("^(lnbc)[a-z0-9]{1,83}$");
+    // There is no hard upper size limit, but 4096 seems to be common impl. limit
+    // Min length is about 200-300 chars
+    // Here about 190 chars are considered min lenght
+    // https://bitcoin.stackexchange.com/questions/107930/what-are-the-minimum-and-maximum-lengths-of-a-lightning-invoice-address
+    private static final Pattern LN_BECH32_PATTERN = Pattern.compile("^(lnbc)[a-z0-9]{150,4096}$");
 
     public static boolean validateInvoice(@NotNull String invoice) {
         return LN_BECH32_PATTERN.matcher(invoice).matches();

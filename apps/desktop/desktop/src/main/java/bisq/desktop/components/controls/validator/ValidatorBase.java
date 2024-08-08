@@ -84,7 +84,9 @@ public abstract class ValidatorBase {
     protected void onEval() {
         Node control = getSrcControl();
         boolean invalid = hasErrors.get();
-        control.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, invalid);
+        if (control != null) {
+            control.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, invalid);
+        }
     }
 
     public boolean validateAndGet() {

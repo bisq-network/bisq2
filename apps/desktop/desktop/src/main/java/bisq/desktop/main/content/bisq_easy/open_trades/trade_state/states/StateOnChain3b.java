@@ -29,6 +29,9 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
+import bisq.desktop.components.controls.validator.ExplorerResultValidator;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
@@ -48,23 +51,26 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class SellerStateOnchain3b extends BaseState {
-    private final Controller controller;
+public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> extends BaseState {
+    protected final C controller;
 
-    public SellerStateOnchain3b(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-        controller = new Controller(serviceProvider, bisqEasyTrade, channel);
+    protected StateOnChain3b(ServiceProvider serviceProvider,
+                             BisqEasyTrade bisqEasyTrade,
+                             BisqEasyOpenTradeChannel channel) {
+        controller = getController(serviceProvider, bisqEasyTrade, channel);
     }
 
-    public View getView() {
-        return controller.getView();
-    }
+    protected abstract C getController(ServiceProvider serviceProvider,
+                                       BisqEasyTrade bisqEasyTrade,
+                                       BisqEasyOpenTradeChannel channel);
 
-    private static class Controller extends BaseState.Controller<Model, View> {
+    protected static abstract class Controller<M extends StateOnChain3b.Model, V extends StateOnChain3b.View<?, ?>> extends BaseState.Controller<M, V> {
         private final static Map<String, Tx> CONFIRMED_TX_CACHE = new HashMap<>();
 
         private final ExplorerService explorerService;
@@ -73,20 +79,12 @@ public class SellerStateOnchain3b extends BaseState {
         @Nullable
         private CompletableFuture<Tx> requestFuture;
 
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        protected Controller(ServiceProvider serviceProvider,
+                             BisqEasyTrade bisqEasyTrade,
+                             BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
-        }
-
-        @Override
-        protected Model createModel(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
-            return new Model(bisqEasyTrade, channel);
-        }
-
-        @Override
-        protected View createView() {
-            return new View(model, this);
         }
 
         @Override
@@ -127,7 +125,23 @@ public class SellerStateOnchain3b extends BaseState {
             Browser.open(url);
         }
 
-        private void onButtonClicked() {
+        void onCompleteTrade() {
+            if (model.getExplorerResultValidator().isHasErrors()) {
+                String address = model.getBitcoinPaymentData();
+                String txId = model.getPaymentProof();
+                String txValue = model.getBtcBalance().get();
+                String tradeAmount = getFormattedAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
+                new Popup().warning(Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching",
+                                address, txId, txValue, tradeAmount))
+                        .actionButtonText(Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching.resolved"))
+                        .onAction(this::doCompleteTrade)
+                        .show();
+            } else {
+                doCompleteTrade();
+            }
+        }
+
+        private void doCompleteTrade() {
             // todo should we send a system message? if so we should change the text
             //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
             bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
@@ -137,14 +151,7 @@ public class SellerStateOnchain3b extends BaseState {
             String paymentProof = model.getPaymentProof();
             if (CONFIRMED_TX_CACHE.containsKey(paymentProof)) {
                 Tx tx = CONFIRMED_TX_CACHE.get(paymentProof);
-                model.getBtcBalance().set(
-                        tx.getOutputs().stream()
-                                .filter(output -> model.getBitcoinPaymentData().equals(output.getAddress()))
-                                .map(Output::getValue)
-                                .map(Coin::asBtcFromValue)
-                                .map(e -> AmountFormatter.formatAmountWithCode(e, false))
-                                .findAny()
-                                .orElse(""));
+                handleTxBalance(tx);
                 model.getIsConfirmed().set(tx.getStatus().isConfirmed());
                 model.getConfirmationState().set(Model.ConfirmationState.CONFIRMED);
                 model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
@@ -164,14 +171,7 @@ public class SellerStateOnchain3b extends BaseState {
                                 scheduler.stop();
                             }
                             if (throwable == null) {
-                                model.getBtcBalance().set(
-                                        tx.getOutputs().stream()
-                                                .filter(output -> model.getBitcoinPaymentData().equals(output.getAddress()))
-                                                .map(Output::getValue)
-                                                .map(Coin::asBtcFromValue)
-                                                .map(e -> AmountFormatter.formatAmountWithCode(e, false))
-                                                .findAny()
-                                                .orElse(""));
+                                handleTxBalance(tx);
                                 model.getIsConfirmed().set(tx.getStatus().isConfirmed());
                                 if (tx.getStatus().isConfirmed()) {
                                     CONFIRMED_TX_CACHE.put(paymentProof, tx);
@@ -197,10 +197,42 @@ public class SellerStateOnchain3b extends BaseState {
                         });
                     });
         }
+
+        private void handleTxBalance(Tx tx) {
+            model.getBtcBalance().set("");
+            ExplorerResultValidator explorerResultValidator = model.getExplorerResultValidator();
+            explorerResultValidator.setMessage(null);
+            List<Long> txOutputValuesForAddress = findTxOutputValuesForAddress(tx, model.getBitcoinPaymentData());
+            if (txOutputValuesForAddress.isEmpty()) {
+                explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.noOutputsForAddress"));
+            } else if (txOutputValuesForAddress.size() == 1) {
+                long outputValue = txOutputValuesForAddress.getFirst();
+                model.getBtcBalance().set(getFormattedAmount(outputValue));
+                long tradeAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
+                if (outputValue != tradeAmount) {
+                    explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.amountNotMatching"));
+                }
+            } else {
+                // Not expected use case and not further handled. User should look up in explorer to validate tx
+                explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.multipleOutputsForAddress"));
+            }
+            UIThread.runOnNextRenderFrame(explorerResultValidator::validate);
+        }
+
+        private static String getFormattedAmount(long value) {
+            return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
+        }
+
+        private List<Long> findTxOutputValuesForAddress(Tx tx, String address) {
+            return tx.getOutputs().stream()
+                    .filter(output -> address.equals(output.getAddress()))
+                    .map(Output::getValue)
+                    .toList();
+        }
     }
 
     @Getter
-    private static class Model extends BaseState.Model {
+    protected abstract static class Model extends BaseState.Model {
         enum ConfirmationState {
             REQUEST_STARTED,
             IN_MEMPOOL,
@@ -212,40 +244,51 @@ public class SellerStateOnchain3b extends BaseState {
         protected String bitcoinPaymentData;
         @Setter
         protected String paymentProof;
+        @Setter
+        private long txOutputValueForAddress;
+        @Setter
+        private String role;
+
         private final StringProperty btcBalance = new SimpleStringProperty();
         private final StringProperty confirmationInfo = new SimpleStringProperty();
         private final StringProperty buttonText = new SimpleStringProperty();
         private final BooleanProperty isConfirmed = new SimpleBooleanProperty();
         private final ObjectProperty<ConfirmationState> confirmationState = new SimpleObjectProperty<>();
+        private final ExplorerResultValidator explorerResultValidator = new ExplorerResultValidator();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
+            role = this instanceof BuyerStateOnChain3b.Model ? "buyer" : "seller";
         }
     }
 
-    public static class View extends BaseState.View<Model, Controller> {
+    public static abstract class View<M extends StateOnChain3b.Model, C extends StateOnChain3b.Controller<?, ?>> extends BaseState.View<M, C> {
         private final Button button;
         private final MaterialTextField paymentProof, btcBalance;
         private final WaitingAnimation waitingAnimation;
         private Subscription confirmationStatePin;
 
-        private View(Model model, Controller controller) {
+        protected View(M model, C controller) {
             super(model, controller);
 
             paymentProof = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase3b.txId"), "", false);
             paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
             paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase3b.txId.tooltip"));
-            btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3b.balance"), "", false);
+            paymentProof.setValidator(new BitcoinTransactionValidator());
+
+            String role = model.getRole();
+            btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.balance"), "", false);
             btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
-            btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase3b.balance.prompt"));
+            btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.balance.prompt"));
             btcBalance.filterMouseEventOnNonEditableText();
+            btcBalance.setValidator(model.getExplorerResultValidator());
 
             button = new Button();
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
 
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase3b.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase3b.info"));
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.headline.onChain"));
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.info.onChain"));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
             root.getChildren().addAll(waitingInfo, paymentProof, btcBalance, button);
@@ -258,11 +301,10 @@ public class SellerStateOnchain3b extends BaseState {
             paymentProof.setText(model.getPaymentProof());
             paymentProof.validate();
 
-            button.defaultButtonProperty().bind(model.isConfirmed);
+            button.defaultButtonProperty().bind(model.getIsConfirmed());
             button.textProperty().bind(model.getButtonText());
             btcBalance.textProperty().bind(model.getBtcBalance());
             btcBalance.helpProperty().bind(model.getConfirmationInfo());
-            btcBalance.validate();
 
             confirmationStatePin = EasyBind.subscribe(model.getConfirmationState(), confirmationState -> {
                 if (confirmationState != null) {
@@ -285,7 +327,7 @@ public class SellerStateOnchain3b extends BaseState {
                 }
             });
 
-            button.setOnAction(e -> controller.onButtonClicked());
+            button.setOnAction(e -> controller.onCompleteTrade());
             paymentProof.getIconButton().setOnAction(e -> controller.openExplorer());
 
             waitingAnimation.play();
@@ -303,6 +345,9 @@ public class SellerStateOnchain3b extends BaseState {
 
             button.setOnAction(null);
             paymentProof.getIconButton().setOnAction(null);
+
+            paymentProof.resetValidation();
+            btcBalance.resetValidation();
 
             waitingAnimation.stop();
         }
