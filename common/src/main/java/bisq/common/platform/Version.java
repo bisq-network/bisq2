@@ -103,7 +103,6 @@ public class Version implements Comparable<Version> {
         return compareTo((Version) that) == 0;
     }
 
-
     @Override
     public String toString() {
         return versionAsString;

@@ -155,7 +155,7 @@ public abstract class ApplicationService implements Service {
         LogSetup.setup(dataDir.resolve("bisq").toString());
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", config.getBaseDir());
-        log.info("Version: {}", ApplicationVersion.getVersion());
+        log.info("Version: {}", ApplicationVersion.getVersionAndCommitHash());
         if (customConfigProvided) {
             log.info("Using custom config file");
         }

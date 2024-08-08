@@ -427,7 +427,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         processMessage(Res.get("popup.reportError"));
 
-        String version = ApplicationVersion.getVersion().getVersionAsString();
+        String version = ApplicationVersion.getVersionAndCommitHash();
         String platformDetails = Platform.getDetails();
         String errorReport = Res.get("popup.reportBug.report", version, platformDetails, message);
         TextArea errorReportTextArea = new TextArea(errorReport);

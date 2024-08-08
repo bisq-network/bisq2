@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.settings.network;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -37,7 +38,7 @@ import java.util.Optional;
 @Slf4j
 public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> {
     private final Accordion accordion;
-    private final HBox versionsHBox;
+    private final HBox versionDistributionHBox;
 
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller,
                            Optional<Node> clear,
@@ -50,11 +51,15 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
 
         root.setFillWidth(true);
 
-        versionsHBox = new HBox(20);
+        versionDistributionHBox = new HBox(20);
+        Label myVersionAndCommitHash = new Label(Res.get("settings.network.myVersionAndCommitHash",
+                ApplicationVersion.getVersion().getVersionAsString(),
+                ApplicationVersion.getBuildCommitShortHash()));
+        VBox versionsVBox = new VBox(15, versionDistributionHBox, myVersionAndCommitHash);
 
         accordion = new Accordion();
 
-        accordion.getPanes().add(new TitledPane(Res.get("settings.network.versions.headline"), versionsHBox));
+        accordion.getPanes().add(new TitledPane(Res.get("settings.network.versions.headline"), versionsVBox));
 
         clear.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.clearNet"), childRoot)));
         tor.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.tor"), childRoot)));
@@ -66,7 +71,7 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
 
     @Override
     protected void onViewAttached() {
-        versionsHBox.getChildren().clear();
+        versionDistributionHBox.getChildren().clear();
         model.getVersionDistribution().forEach(pair -> addVersion(pair.getFirst(), pair.getSecond()));
 
         if (accordion.getPanes().size() > 1) {
@@ -92,6 +97,6 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
         vBox.setAlignment(Pos.CENTER);
         vBox.getStyleClass().add("bisq-box-1");
         vBox.setPadding(new Insets(10));
-        versionsHBox.getChildren().add(vBox);
+        versionDistributionHBox.getChildren().add(vBox);
     }
 }
