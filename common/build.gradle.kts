@@ -5,6 +5,10 @@ plugins {
     id("bisq.protobuf")
 }
 
+dependencies {
+    // TODO figure out why this is needed (it shouldn't, the custom proguard plugin already has the dependency..)
+    implementation("com.guardsquare:proguard-gradle:7.5.0")
+}
 
 val torVersion: String? = project.findProperty("tor.version") as String?
 if (torVersion == null) {

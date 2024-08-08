@@ -78,8 +78,18 @@ tasks {
     }
 
     named<ShadowJar>("shadowJar") {
+        // Directory where the JARs are located
+        val inputDir = file("${project.layout.buildDirectory.get()}/install/desktop-app/lib")
+
+        // Configure the task to include only JARs that do not have `-unobfuscated` in their names
+        from(fileTree(inputDir).matching {
+            include("*.jar")
+            exclude { file ->
+                file.name.contains("-unobfuscated")
+            }
+        })
         val platformName = getPlatform().platformName
-        archiveClassifier.set(platformName + "-all")
+        archiveClassifier.set("$platformName-all")
     }
 
     distZip {

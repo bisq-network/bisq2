@@ -34,7 +34,9 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val installDistTask: TaskProvider<Sync> = project.tasks.named("installDist", Sync::class.java)
 
         val generateHashesTask = project.tasks.register<Sha256HashTask>("generateHashes") {
-            inputDirFile.set(installDistTask.map { File(it.destinationDir, "lib") })
+            inputFiles.set(installDistTask.map { File(it.destinationDir, "lib").listFiles()?.filter { file ->
+                !file.name.contains("unobfuscated")
+            }?.toList() ?: emptyList() })
             outputFile.set(getHashFileForOs(project, extension))
         }
 

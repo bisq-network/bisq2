@@ -5,7 +5,7 @@
 # Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
-annotations-lib = { strictly = '23.0.0' }
+annotations-lib = { strictly = '24.0.0' }
 
 apache-commons-lang-lib = { strictly = '3.14.0' }
 apache-httpcomponents-core-lib = { strictly = '4.4.13' }
@@ -52,7 +52,7 @@ mockito-lib = { strictly = '4.11.0' }
 openjfx-plugin = { strictly = '0.0.13' }
 openjfx-monocle-lib = { strictly = 'jdk-12.0.1+2'}
 
-protobuf-java-lib = { strictly = '3.19.4' }
+protobuf-java-lib = { strictly = '4.27.3' }
 protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 
 sarxos-lib = { strictly = '0.3.12' }

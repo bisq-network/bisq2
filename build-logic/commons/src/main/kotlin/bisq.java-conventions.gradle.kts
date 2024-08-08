@@ -38,6 +38,8 @@ dependencies {
         testAnnotationProcessor(it)
         testCompileOnly(it)
     }
+    // needed for proguard
+    implementation("org.projectlombok:lombok:1.18.34")
 
     versionCatalog.findLibrary("slf4j-api").ifPresent {
         implementation(it)
