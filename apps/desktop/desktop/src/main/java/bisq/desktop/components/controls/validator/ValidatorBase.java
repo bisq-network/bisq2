@@ -87,6 +87,12 @@ public abstract class ValidatorBase {
         control.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, invalid);
     }
 
+    public boolean validateAndGet() {
+        validate();
+        return !isHasErrors();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////
     // Properties
     ///////////////////////////////////////////////////////////////////////////

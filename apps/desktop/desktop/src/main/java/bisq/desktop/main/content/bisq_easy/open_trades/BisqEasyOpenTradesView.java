@@ -400,6 +400,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         return column -> new TableCell<>() {
 
             private final UserProfileIcon userProfileIcon = new UserProfileIcon();
+            private final StackPane stackPane = new StackPane(userProfileIcon);
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
@@ -408,7 +409,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 if (item != null && !empty) {
                     userProfileIcon.setUserProfile(item.getMyUserProfile());
                     // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
-                    setGraphic(new StackPane(userProfileIcon));
+                    setGraphic(stackPane);
                 } else {
                     userProfileIcon.dispose();
                     setGraphic(null);
