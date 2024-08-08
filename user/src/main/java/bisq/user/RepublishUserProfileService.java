@@ -73,7 +73,6 @@ public class RepublishUserProfileService implements Service {
 
         // Every 10 times we publish instead of refresh for more resilience in case the data has not reached the whole network.
         republishCounter++;
-        log.error("republishCounter = {} {}", republishCounter, republishCounter % 10);
         if (republishCounter % 10 == 0) {
             userIdentityService.publishUserProfile(userProfile, keyPair);
         } else {

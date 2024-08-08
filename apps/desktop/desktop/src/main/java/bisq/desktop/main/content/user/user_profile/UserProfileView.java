@@ -26,7 +26,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
@@ -53,9 +52,9 @@ import static bisq.user.profile.UserProfile.*;
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
 
-    private static final ValidatorBase TERMS_MAX_LENGTH_VALIDATOR =
+    private static final TextMaxLengthValidator TERMS_MAX_LENGTH_VALIDATOR =
             new TextMaxLengthValidator(MAX_LENGTH_TERMS, Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS));
-    private static final ValidatorBase STATEMENT_MAX_LENGTH_VALIDATOR =
+    private static final TextMaxLengthValidator STATEMENT_MAX_LENGTH_VALIDATOR =
             new TextMaxLengthValidator(MAX_LENGTH_STATEMENT, Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT));
 
     private static final String STATEMENT_PROMPT = Res.get("user.userProfile.statement.prompt");

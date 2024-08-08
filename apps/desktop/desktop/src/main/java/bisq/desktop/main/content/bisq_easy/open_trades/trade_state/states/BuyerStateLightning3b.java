@@ -21,6 +21,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.validator.LightningPreImageValidator;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
@@ -108,6 +109,7 @@ public class BuyerStateLightning3b extends BaseState {
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
             paymentProof = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase3b.lightning.preimage"), "", false);
+            paymentProof.setValidator(new LightningPreImageValidator());
 
             button = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase3b.confirmButton.ln"));
             button.setDefaultButton(true);
@@ -136,6 +138,7 @@ public class BuyerStateLightning3b extends BaseState {
         protected void onViewDetached() {
             super.onViewDetached();
 
+            paymentProof.resetValidation();
             button.setOnAction(null);
             waitingAnimation.stop();
         }

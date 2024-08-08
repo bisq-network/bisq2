@@ -29,6 +29,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
@@ -235,6 +236,8 @@ public class BuyerStateOnchain3b extends BaseState {
             paymentProof = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase3b.txId"), "", false);
             paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
             paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase3b.txId.tooltip"));
+            paymentProof.setValidator(new BitcoinTransactionValidator());
+
             btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase3b.balance"), "", false);
             btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
             btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.balance.prompt"));
@@ -303,6 +306,7 @@ public class BuyerStateOnchain3b extends BaseState {
 
             button.setOnAction(null);
             paymentProof.getIconButton().setOnAction(null);
+            paymentProof.resetValidation();
 
             waitingAnimation.stop();
         }

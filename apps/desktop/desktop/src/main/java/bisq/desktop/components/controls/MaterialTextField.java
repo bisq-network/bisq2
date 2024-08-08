@@ -404,6 +404,7 @@ public class MaterialTextField extends Pane {
 
     protected void onInputTextFieldFocus(boolean focus) {
         if (focus && textInputControl.isEditable()) {
+            resetValidation();
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
             Transitions.animateWidth(selectionLine, getWidth());
