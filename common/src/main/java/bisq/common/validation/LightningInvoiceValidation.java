@@ -17,9 +17,14 @@
 
 package bisq.common.validation;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.util.regex.Pattern;
+
 public class LightningInvoiceValidation {
-    public static boolean validateInvoice(String invoice) {
-        // todo implement
-        return true;
+    private static final Pattern LN_BECH32_PATTERN = Pattern.compile("^(lnbc)[a-z0-9]{1,83}$");
+
+    public static boolean validateInvoice(@NotNull String invoice) {
+        return LN_BECH32_PATTERN.matcher(invoice).matches();
     }
 }
