@@ -66,8 +66,12 @@ public class LeftNavController implements Controller {
 
         NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
         model = new LeftNavModel(serviceProvider.getWalletService().isPresent());
-        model.setVersion("v" + ApplicationVersion.getVersion().toString());
+        model.setVersion(buildVersionString());
         view = new LeftNavView(model, this, networkInfo.getRoot());
+    }
+
+    private static String buildVersionString() {
+        return "v" + ApplicationVersion.getVersion().toString() + " (" + ApplicationVersion.getBuildCommitShortHash() + ")";
     }
 
     @Override

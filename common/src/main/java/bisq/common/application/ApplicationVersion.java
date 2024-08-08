@@ -32,4 +32,8 @@ public class ApplicationVersion {
         }
         return version;
     }
+
+    public static String getBuildCommitShortHash() {
+        return BuildVersion.COMMIT_SHORT_HASH;
+    }
 }
