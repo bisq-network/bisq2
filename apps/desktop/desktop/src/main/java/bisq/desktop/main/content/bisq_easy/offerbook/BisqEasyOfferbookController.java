@@ -334,8 +334,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         // Thus, we trigger a change of the predicate to force a refresh.
         model.getFavouriteMarketChannelItems().setPredicate(null);
         model.getFavouriteMarketChannelItems().setPredicate(favouriteMarketChannelItemsPredicate);
-        model.getFavouritesTableViewHeightChanged().set(true);
         model.getFavouritesTableViewHeightChanged().set(false);
+        model.getFavouritesTableViewHeightChanged().set(true);
         model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
     }
 
