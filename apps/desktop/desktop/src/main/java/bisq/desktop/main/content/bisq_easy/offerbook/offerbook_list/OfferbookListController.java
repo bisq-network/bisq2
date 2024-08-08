@@ -26,6 +26,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
+import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -91,6 +92,10 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         if (offerMessagesPin != null) {
             offerMessagesPin.unbind();
         }
+
+        model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount",
+                channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
+
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
