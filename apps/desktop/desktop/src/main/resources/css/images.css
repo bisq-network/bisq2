@@ -876,6 +876,18 @@
     -fx-image: url("/images/icons/webcam-state-connecting.png");
 }
 
+#interchangeable-grey {
+    -fx-image: url("/images/icons/interchangeable-grey.png");
+}
+
+#interchangeable-white {
+    -fx-image: url("/images/icons/interchangeable-white.png");
+}
+
+#interchangeable-green {
+    -fx-image: url("/images/icons/interchangeable-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */

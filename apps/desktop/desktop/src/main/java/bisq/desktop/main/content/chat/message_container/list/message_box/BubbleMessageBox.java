@@ -17,16 +17,22 @@
 
 package bisq.desktop.main.content.chat.message_container.list.message_box;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.reactions.Reaction;
+import bisq.common.data.Pair;
+import bisq.common.locale.LanguageRepository;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ActiveReactionsDisplayBox;
@@ -34,11 +40,15 @@ import bisq.desktop.main.content.chat.message_container.list.reactions_box.React
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ToggleReaction;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -54,10 +64,11 @@ import java.util.Optional;
 public abstract class BubbleMessageBox extends MessageBox {
     private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
-    protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
+    protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 50;
     protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
     private static final List<Reaction> REACTIONS_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
+    private static final int MAX_NUM_SUPPORTED_LANGUAGES = 5;
 
     private final Subscription showHighlightedPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
@@ -69,8 +80,9 @@ public abstract class BubbleMessageBox extends MessageBox {
     private Subscription reactMenuPin;
     protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected ReactMenuBox reactMenuBox;
-    protected Label supportedLanguages, userName, dateTime, message;
-    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
+    protected Label userName, dateTime, message;
+    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox, supportedLanguagesHBox, amountAndPriceBox,
+            paymentAndSettlementMethodsBox;
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
@@ -89,8 +101,10 @@ public abstract class BubbleMessageBox extends MessageBox {
         addActionsHandlers();
         addOnMouseEventHandlers();
 
-        supportedLanguages = createAndGetSupportedLanguagesLabel();
-        quotedMessageVBox = createAndGetQuotedMessageVBox();
+        supportedLanguagesHBox = createAndGetSupportedLanguagesBox();
+        amountAndPriceBox = createAndGetAmountAndPriceBox();
+        paymentAndSettlementMethodsBox = createAndGetPaymentAndSettlementMethodsBox();
+        quotedMessageVBox = createAndGetQuotedMessageBox();
         handleQuoteMessageBox();
         message = createAndGetMessage();
         messageBgHBox = createAndGetMessageBackground();
@@ -206,18 +220,74 @@ public abstract class BubbleMessageBox extends MessageBox {
         }
     }
 
-    private Label createAndGetSupportedLanguagesLabel() {
-        Label label = new Label();
+    private HBox createAndGetSupportedLanguagesBox() {
+        HBox hBox = new HBox(3);
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
-            label.setGraphic(ImageUtil.getImageViewById("language-grey"));
+            Label iconLabel = new Label(":", ImageUtil.getImageViewById("language-grey"));
+            iconLabel.setGraphicTextGap(3);
+            iconLabel.setTooltip(new BisqTooltip(Res.get("chat.message.supportedLanguages.Tooltip")));
+            hBox.getChildren().add(iconLabel);
             BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
-            label.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(chatMessage)));
+            if (chatMessage.getBisqEasyOffer().isPresent()) {
+                BisqEasyOffer offer = chatMessage.getBisqEasyOffer().get();
+                int codesCount = Math.min(offer.getSupportedLanguageCodes().size(), MAX_NUM_SUPPORTED_LANGUAGES);
+                for (int i = 0; i < codesCount; i++) {
+                    String languageCode = offer.getSupportedLanguageCodes().get(i).toUpperCase();
+                    Label codeLabel = (i == codesCount - 1) ? new Label(languageCode) : new Label(languageCode + ",");
+                    codeLabel.setTooltip(new BisqTooltip(LanguageRepository.getDisplayString(languageCode)));
+                    hBox.getChildren().add(codeLabel);
+                }
+            }
         }
-        HBox.setMargin(label, new Insets(9, 0, -9, 0));
+        return hBox;
+    }
+
+    private HBox createAndGetAmountAndPriceBox() {
+        HBox hBox = new HBox(5);
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            Optional<Pair<String, String>> amountAndPriceSpec = item.getBisqEasyOfferAmountAndPriceSpec();
+            if (amountAndPriceSpec.isPresent()) {
+                Label amount = new Label(amountAndPriceSpec.get().getFirst());
+                amount.getStyleClass().add("text-fill-white");
+                Label price = new Label(amountAndPriceSpec.get().getSecond());
+                price.getStyleClass().add("text-fill-white");
+                Label connector = new Label("@");
+                hBox.getChildren().addAll(amount, connector, price);
+            }
+        }
+        return hBox;
+    }
+
+    private HBox createAndGetPaymentAndSettlementMethodsBox() {
+        HBox hBox = new HBox(8);
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            for (FiatPaymentMethod fiatPaymentMethod : item.getBisqEasyOfferPaymentMethods()) {
+                hBox.getChildren().add(createMethodLabel(fiatPaymentMethod));
+            }
+            ImageView icon = ImageUtil.getImageViewById("interchangeable-grey");
+            hBox.getChildren().add(icon);
+            for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBisqEasyOfferSettlementMethods()) {
+                Label label = createMethodLabel(bitcoinPaymentMethod);
+                ColorAdjust colorAdjust = new ColorAdjust();
+                colorAdjust.setBrightness(-0.2);
+                label.setEffect(colorAdjust);
+                hBox.getChildren().add(label);
+            }
+        }
+        return hBox;
+    }
+
+    private Label createMethodLabel(PaymentMethod<?> paymentMethod) {
+        Node icon = !paymentMethod.isCustomPaymentMethod()
+                ? ImageUtil.getImageViewById(paymentMethod.getName())
+                : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
+        Label label = new Label();
+        label.setGraphic(icon);
+        label.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
         return label;
     }
 
-    private VBox createAndGetQuotedMessageVBox() {
+    private VBox createAndGetQuotedMessageBox() {
         VBox vBox = new VBox(5);
         vBox.setVisible(false);
         vBox.setManaged(false);

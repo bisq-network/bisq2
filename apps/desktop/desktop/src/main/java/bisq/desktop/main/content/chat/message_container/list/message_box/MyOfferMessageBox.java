@@ -48,16 +48,19 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
 
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
+        userProfileIconVbox.getChildren().addAll(item.getReputationScoreDisplay(), Spacer.fillVBox(), supportedLanguagesHBox);
+        supportedLanguagesHBox.setAlignment(Pos.CENTER);
+        userProfileIconVbox.setSpacing(10);
+        userProfileIconVbox.setAlignment(Pos.CENTER);
+        item.getReputationScoreDisplay().setScale(0.8);
+        item.getReputationScoreDisplay().setAlignment(Pos.CENTER);
 
-        // My offer title
         myOfferTitle = createAndGetMyOfferTitle();
 
-        // Message
-        message.getStyleClass().add("chat-my-offer-message");
-
         // Offer content
-        VBox offerMessage = new VBox(10, myOfferTitle, message);
-        HBox messageContent = new HBox(15, offerMessage, userProfileIconVbox);
+        VBox offerMessage = new VBox(10, myOfferTitle, amountAndPriceBox, Spacer.fillVBox(), paymentAndSettlementMethodsBox);
+        HBox messageContent = new HBox(30, offerMessage, userProfileIconVbox);
+        VBox.setMargin(paymentAndSettlementMethodsBox, new Insets(3, 0, 0, 0));
 
         // Message background
         messageBgHBox.getStyleClass().add("chat-my-offer-message-bg");
@@ -65,7 +68,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
         // Actions
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyAction, removeOffer);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), copyAction, removeOffer);
 
         contentVBox.setAlignment(Pos.CENTER_RIGHT);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
