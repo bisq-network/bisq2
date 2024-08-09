@@ -524,6 +524,10 @@
     -fx-text-fill: -bisq2-yellow !important;
 }
 
+.bisq-text-yellow-dim {
+    -fx-text-fill: -bisq2-yellow-dim-10 !important;
+}
+
 .bisq-text-error {
     -fx-text-fill: -bisq-error !important;
 }

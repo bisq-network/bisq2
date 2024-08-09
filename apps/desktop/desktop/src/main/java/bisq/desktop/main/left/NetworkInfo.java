@@ -20,16 +20,23 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.inventory.InventoryRequestService;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +67,8 @@ public class NetworkInfo {
         private Pin numPendingRequestsPin, allDataReceivedPin;
         private UIScheduler inventoryRequestAnimation;
 
-        public Controller(ServiceProvider serviceProvider, Consumer<NavigationTarget> onNavigationTargetSelectedHandler) {
+        public Controller(ServiceProvider serviceProvider,
+                          Consumer<NavigationTarget> onNavigationTargetSelectedHandler) {
             this.onNavigationTargetSelectedHandler = onNavigationTargetSelectedHandler;
             networkService = serviceProvider.getNetworkService();
             model = new Model();
@@ -105,7 +113,7 @@ public class NetworkInfo {
                                 allDataReceivedPin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
                                     if (allDataReceived != null) {
                                         UIThread.run(() -> {
-                                            model.setAllInventoryDataReceived(allDataReceived);
+                                            model.getAllInventoryDataReceived().set(allDataReceived);
 
                                             if (allDataReceived) {
                                                 if (inventoryRequestAnimation != null) {
@@ -139,7 +147,9 @@ public class NetworkInfo {
                             Node defaultNode = serviceNode.getDefaultNode();
                             defaultNode.addListener(new Node.Listener() {
                                 @Override
-                                public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+                                public void onMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                                      Connection connection,
+                                                      NetworkId networkId) {
                                 }
 
                                 @Override
@@ -216,12 +226,11 @@ public class NetworkInfo {
         private String inventoryRequestsInfo;
         @Setter
         private String maxInventoryRequests;
-        @Setter
-        private boolean allInventoryDataReceived;
         private final StringProperty clearNetNumConnections = new SimpleStringProperty("0");
         private final StringProperty torNumConnections = new SimpleStringProperty("0");
         private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
         private final BooleanProperty inventoryDataChangeFlag = new SimpleBooleanProperty();
+        private final BooleanProperty allInventoryDataReceived = new SimpleBooleanProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
@@ -229,7 +238,7 @@ public class NetworkInfo {
         private final Triple<Label, Label, ImageView> clearNetTriple, torTriple, i2pTriple;
         private final Pair<Label, ImageView> inventoryRequestsPair;
         private final BisqTooltip clearNetTooltip, torTooltip, i2pTooltip, inventoryRequestsTooltip;
-        private Subscription clearNetNumConnectionsPin, torNumConnectionsPin, i2pNumConnectionsPin, inventoryDataChangeFlagPin;
+        private Subscription clearNetNumConnectionsPin, torNumConnectionsPin, i2pNumConnectionsPin, allInventoryDataReceivedPin, inventoryDataChangeFlagPin;
 
         public View(Model model, Controller controller) {
             super(new VBox(8), model, controller);
@@ -277,7 +286,8 @@ public class NetworkInfo {
             i2pHBox.setManaged(model.isI2pEnabled());
             i2pTriple.getSecond().setText(model.getI2pNumTargetConnections());
 
-            inventoryRequestsPair.getFirst().setText(model.getMaxInventoryRequests());
+            Label inventoryRequestsLabel = inventoryRequestsPair.getFirst();
+            inventoryRequestsLabel.setText(model.getMaxInventoryRequests());
 
             clearNetNumConnectionsPin = EasyBind.subscribe(model.getClearNetNumConnections(), numConnections -> {
                 if (numConnections != null) {
@@ -303,18 +313,53 @@ public class NetworkInfo {
                 }
             });
 
+            allInventoryDataReceivedPin = EasyBind.subscribe(model.getAllInventoryDataReceived(), allInventoryDataReceived -> {
+                log.error("allInventoryDataReceived {}", allInventoryDataReceived);
+                if (allInventoryDataReceived) {
+                    inventoryRequestsLabel.getStyleClass().remove("bisq-text-yellow-dim");
+                    inventoryRequestsLabel.getStyleClass().add("bisq-text-green");
+
+                    ImageView inventoryRequestsIcon = inventoryRequestsPair.getSecond();
+                    inventoryRequestsIcon.setId("check-green");
+
+                    // We use the parent hBox
+                    Parent node = inventoryRequestsIcon.getParent();
+                    node.setOpacity(1);
+                    Timeline fadeIn = new Timeline();
+                    ObservableList<KeyFrame> fadeInKeyFrames = fadeIn.getKeyFrames();
+                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(4000), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(5000), new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT)));
+                    fadeIn.setOnFinished(e -> {
+                        inventoryRequestsLabel.getStyleClass().remove("bisq-text-green");
+                        inventoryRequestsLabel.getStyleClass().add("bisq-text-grey-9");
+                        inventoryRequestsIcon.setId("check-grey");
+
+                        Timeline fadeOut = new Timeline();
+                        ObservableList<KeyFrame> fadeOutKeyFrames = fadeOut.getKeyFrames();
+                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(1000), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(3000), new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT)));
+                        fadeOut.play();
+                    });
+                    fadeIn.play();
+                } else {
+                    inventoryRequestsLabel.getStyleClass().add("bisq-text-yellow-dim");
+                }
+            });
             inventoryDataChangeFlagPin = EasyBind.subscribe(model.getInventoryDataChangeFlag(), inventoryDataChangeFlag -> {
                 if (inventoryDataChangeFlag != null) {
-                    inventoryRequestsPair.getFirst().setText(model.getInventoryRequestsInfo());
-                    boolean allInventoryDataReceived = model.isAllInventoryDataReceived();
+                    inventoryRequestsLabel.setText(model.getInventoryRequestsInfo());
+                    boolean allInventoryDataReceived = model.getAllInventoryDataReceived().get();
                     String allReceived = allInventoryDataReceived ? Res.get("confirmation.yes") : Res.get("confirmation.no");
                     inventoryRequestsTooltip.setText(
                             Res.get("navigation.network.info.inventoryRequests.tooltip",
                                     model.getPendingInventoryRequests(),
                                     model.getMaxInventoryRequests(),
                                     allReceived));
-                    inventoryRequestsPair.getSecond().setVisible(allInventoryDataReceived);
-                    inventoryRequestsPair.getSecond().setManaged(allInventoryDataReceived);
+                    ImageView inventoryRequestsIcon = inventoryRequestsPair.getSecond();
+                    inventoryRequestsIcon.setVisible(allInventoryDataReceived);
+                    inventoryRequestsIcon.setManaged(allInventoryDataReceived);
                 }
             });
 
@@ -327,6 +372,7 @@ public class NetworkInfo {
             torNumConnectionsPin.unsubscribe();
             i2pNumConnectionsPin.unsubscribe();
             inventoryDataChangeFlagPin.unsubscribe();
+            allInventoryDataReceivedPin.unsubscribe();
 
             root.setOnMouseClicked(null);
         }
@@ -359,7 +405,7 @@ public class NetworkInfo {
             Label info = new Label();
             info.getStyleClass().add("bisq-smaller-dimmed-label");
 
-            ImageView icon = ImageUtil.getImageViewById("inventory-completed");
+            ImageView icon = ImageUtil.getImageViewById("check-white");
             HBox.setMargin(icon, new Insets(0, 0, 0, 2));
 
             HBox hBox = new HBox(5, info, icon);
