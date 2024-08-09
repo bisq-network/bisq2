@@ -305,6 +305,7 @@ public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> 
             button.textProperty().bind(model.getButtonText());
             btcBalance.textProperty().bind(model.getBtcBalance());
             btcBalance.helpProperty().bind(model.getConfirmationInfo());
+            btcBalance.validate();
 
             confirmationStatePin = EasyBind.subscribe(model.getConfirmationState(), confirmationState -> {
                 if (confirmationState != null) {
