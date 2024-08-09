@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.encoding.BitcoinURIScheme;
 import bisq.common.observable.Pin;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
@@ -180,7 +181,14 @@ public class BuyerState1a extends BaseState {
                     UIThread.run(() -> {
                         model.getQrCodeDetectedFromWebcam().set(qrCode != null);
                         if (qrCode != null) {
-                            model.getBitcoinPaymentData().set(qrCode);
+                            // QR code is more efficient with uppercase, thus many wallets provide it uppercase.
+                            // As lower case is the common display style and bitcoin addresses and LN invoices are
+                            // case-insensitive, we convert it to lowercase.
+                            String payload = qrCode.toLowerCase();
+                            if (BitcoinURIScheme.isBitcoinUriScheme(payload)) {
+                                payload = BitcoinURIScheme.extractBitcoinAddress(payload);
+                            }
+                            model.getBitcoinPaymentData().set(payload);
                         }
                     });
                 });
@@ -250,10 +258,7 @@ public class BuyerState1a extends BaseState {
 
                 restartSignalReceivedPin = webcamAppServiceModel.getRestartSignalReceived().addObserver(restartSignalReceived -> {
                     if (restartSignalReceived != null && restartSignalReceived) {
-                        UIScheduler.run(() -> {
-                                    onScanQrCode();
-                                }
-                        ).after(1000);
+                        UIScheduler.run(this::onScanQrCode).after(1000);
                     }
                 });
 

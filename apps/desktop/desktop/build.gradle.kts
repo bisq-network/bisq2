@@ -19,6 +19,7 @@ sourceSets {
 dependencies {
     implementation("bisq:persistence")
     implementation("bisq:i18n")
+    implementation("bisq:common")
     implementation("bisq:security")
     implementation("bisq:identity")
     implementation("bisq:account")
