@@ -22,10 +22,6 @@
     -fx-image: url("/images/i2p.png");
 }
 
-#inventory-completed {
-    -fx-image: url("/images/icons/check-white.png");
-}
-
 #info {
     -fx-image: url("/images/info.png");
 }
@@ -216,6 +212,10 @@
 
 #check-grey {
     -fx-image: url("/images/icons/check-grey.png");
+}
+
+#check-green {
+    -fx-image: url("/images/icons/check-green.png");
 }
 
 #bisq-broadcast-white {
