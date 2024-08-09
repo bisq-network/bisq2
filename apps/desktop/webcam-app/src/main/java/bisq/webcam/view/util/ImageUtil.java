@@ -18,7 +18,6 @@
 package bisq.webcam.view.util;
 
 import javafx.scene.image.Image;
-import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
@@ -38,14 +37,5 @@ public class ImageUtil {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    public static void addAppIcons(Stage stage) {
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_512.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_256.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_128.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_64.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_32.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_16.png"));
     }
 }
