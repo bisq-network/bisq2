@@ -68,7 +68,7 @@ public class WebcamApp extends Application {
 
         // Taskbar is only supported on mac
         if (OS.isMacOs()) {
-            ImageIcon image = new ImageIcon(Objects.requireNonNull(WebcamApp.class.getResource("/images/app_window/macos_icon_512.png")));
+            ImageIcon image = new ImageIcon(Objects.requireNonNull(WebcamApp.class.getResource("/images/webcam-app-icon.png")));
             Taskbar.getTaskbar().setIconImage(image.getImage());
         }
     }
@@ -134,7 +134,7 @@ public class WebcamApp extends Application {
             event.consume();
             shutdown();
         });
-        ImageUtil.addAppIcons(primaryStage);
+        primaryStage.getIcons().add(WebcamApp.getImageByPath("images/webcam-app-icon.png"));
 
         primaryStage.show();
 
