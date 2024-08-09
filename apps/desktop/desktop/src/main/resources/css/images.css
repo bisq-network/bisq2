@@ -1215,19 +1215,19 @@
 }
 
 #delete-t-green {
-    -fx-image: url("/images/chat/message-actions/delete-t/delete-t-green.png");
+    -fx-image: url("/images/chat/message-actions/delete-trash/delete-trash-green.png");
 }
 
 #delete-t-grey {
-    -fx-image: url("/images/chat/message-actions/delete-t/delete-t-grey.png");
+    -fx-image: url("/images/chat/message-actions/delete-trash/delete-trash-grey.png");
 }
 
 #delete-t-white {
-    -fx-image: url("/images/chat/message-actions/delete-t/delete-t-white.png");
+    -fx-image: url("/images/chat/message-actions/delete-trash/delete-trash-white.png");
 }
 
 #delete-t-red {
-    -fx-image: url("/images/chat/message-actions/delete-t/delete-t-red.png");
+    -fx-image: url("/images/chat/message-actions/delete-trash/delete-trash-red.png");
 }
 
 
