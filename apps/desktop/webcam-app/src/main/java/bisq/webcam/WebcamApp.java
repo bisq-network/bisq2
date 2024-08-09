@@ -29,10 +29,12 @@ import bisq.webcam.service.WebcamException;
 import bisq.webcam.service.WebcamService;
 import bisq.webcam.service.network.QrCodeSender;
 import bisq.webcam.view.WebcamView;
+import bisq.webcam.view.util.ImageUtil;
 import bisq.webcam.view.util.KeyHandlerUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
@@ -40,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.ImageIcon;
 import java.awt.Taskbar;
+import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -63,9 +66,11 @@ public class WebcamApp extends Application {
         webcamService = new WebcamService();
         webcamService.setVideoSize(VIDEO_SIZE);
 
-        String imageName = OS.isMacOs() ? "macos_icon_512.png" : "icon_512.png";
-        ImageIcon image = new ImageIcon(Objects.requireNonNull(WebcamApp.class.getResource("/images/" + imageName)));
-        Taskbar.getTaskbar().setIconImage(image.getImage());
+        // Taskbar is only supported on mac
+        if (OS.isMacOs()) {
+            ImageIcon image = new ImageIcon(Objects.requireNonNull(WebcamApp.class.getResource("/images/app_window/macos_icon_512.png")));
+            Taskbar.getTaskbar().setIconImage(image.getImage());
+        }
     }
 
     @Override
@@ -129,10 +134,25 @@ public class WebcamApp extends Application {
             event.consume();
             shutdown();
         });
+        ImageUtil.addAppIcons(primaryStage);
+
         primaryStage.show();
 
         scene.addEventHandler(KeyEvent.KEY_PRESSED,
                 event -> KeyHandlerUtil.handleShutDownKeyEvent(event, this::shutdown));
+    }
+
+    public static Image getImageByPath(String path) {
+        try (InputStream resourceAsStream = ImageUtil.class.getClassLoader().getResourceAsStream(path)) {
+            if (resourceAsStream == null) {
+                return null;
+            }
+            return new Image(Objects.requireNonNull(resourceAsStream));
+        } catch (Exception e) {
+            log.error("Loading image failed: path={}", path);
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     private void onRety() {
