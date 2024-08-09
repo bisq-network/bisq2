@@ -647,11 +647,11 @@
 /* Bitcoin settlement method icons based on enum names from BitcoinPaymentRail */
 
 #MAIN_CHAIN {
-    -fx-image: url("/images/bitcoin_rails/bitcoin.png");
+    -fx-image: url("/images/bitcoin_rails/on-chain.png");
 }
 
 #LN {
-    -fx-image: url("/images/bitcoin_rails/ln.png");
+    -fx-image: url("/images/bitcoin_rails/ln-orange.png");
 }
 
 #LBTC {
