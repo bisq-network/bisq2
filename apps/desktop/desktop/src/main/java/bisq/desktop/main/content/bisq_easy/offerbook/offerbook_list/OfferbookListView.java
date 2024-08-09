@@ -291,7 +291,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
                 if (item != null && !empty) {
                     percentagePriceLabel.setText(item.getFormattedPercentagePrice());
-                    percentagePriceLabel.setOpacity(item.isFixPrice() ? 0.5 : 1);
+                    percentagePriceLabel.setStyle(item.isFixPrice() ? "-fx-text-fill: -bisq2-green-lit-20" : "");
                     tooltip.setText(item.getPriceTooltipText());
                     percentagePriceLabel.setTooltip(tooltip);
                     setGraphic(percentagePriceLabel);
