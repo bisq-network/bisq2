@@ -525,9 +525,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
                 if (item != null && !empty) {
                     ImageView icon = ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name());
-                    ColorAdjust colorAdjust = new ColorAdjust();
-                    colorAdjust.setBrightness(-0.2);
-                    icon.setEffect(colorAdjust);
                     StackPane pane = new StackPane(icon);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.settlementMethod.tooltip",
                             item.getBitcoinSettlementMethod()));

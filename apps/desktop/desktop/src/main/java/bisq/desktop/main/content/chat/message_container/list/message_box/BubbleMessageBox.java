@@ -47,7 +47,6 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -273,9 +272,6 @@ public abstract class BubbleMessageBox extends MessageBox {
 
             for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBisqEasyOfferSettlementMethods()) {
                 Label label = createMethodLabel(bitcoinPaymentMethod);
-                ColorAdjust colorAdjust = new ColorAdjust();
-                colorAdjust.setBrightness(-0.2);
-                label.setEffect(colorAdjust);
                 hBox.getChildren().add(label);
             }
         }

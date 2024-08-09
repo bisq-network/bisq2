@@ -43,7 +43,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -382,9 +381,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                     hbox.getChildren().clear();
                     for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBitcoinPaymentMethods()) {
                         ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
-                        ColorAdjust colorAdjust = new ColorAdjust();
-                        colorAdjust.setBrightness(-0.2);
-                        icon.setEffect(colorAdjust);
                         hbox.getChildren().add(icon);
                     }
                     tooltip.setText(Joiner.on("\n").join(item.getBitcoinPaymentMethods().stream()

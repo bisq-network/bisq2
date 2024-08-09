@@ -345,15 +345,15 @@
 }
 
 .chips-button-selected {
-    -fx-background-color: -fx-default-button;
+    -fx-background-color: -bisq2-green-dim-40;
 }
 
 .chips-button-selected-pressed {
-    -fx-background-color: -bisq-green-pressed;
+    -fx-background-color: -bisq2-green-dim-50;
 }
 
 .chips-button-selected-hover {
-    -fx-background-color: -bisq-green-hover;
+    -fx-background-color: -bisq2-green-dim-30;
 }
 
 .chips-button > .toggle-button,
