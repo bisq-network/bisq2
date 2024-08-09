@@ -158,6 +158,11 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         }
     }
 
+    public void clearPersistedPeers() {
+        getPersistedPeersByAddress().clear();
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Reported peers
@@ -183,6 +188,10 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
     public void removeReportedPeers(Collection<Peer> peers) {
         peers.forEach(peer -> reportedPeersByAddress.remove(peer.getAddress()));
+    }
+
+    public void clearReportedPeers() {
+        reportedPeersByAddress.clear();
     }
 
 

@@ -128,6 +128,14 @@ public class PeerExchangeStrategy {
         return peerGroupService.getAllConnectedPeers(node).count() < peerGroupService.getTargetNumConnectedPeers();
     }
 
+    public void clearPersistedPeers() {
+        peerGroupService.clearPersistedPeers();
+    }
+
+    public void clearReportedPeers() {
+        peerGroupService.clearReportedPeers();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Reporting

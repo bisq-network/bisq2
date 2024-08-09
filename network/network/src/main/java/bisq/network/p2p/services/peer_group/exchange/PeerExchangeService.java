@@ -30,12 +30,7 @@ import bisq.network.p2p.services.peer_group.Peer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -46,7 +41,7 @@ import java.util.stream.Collectors;
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Responsible for executing the peer exchange protocol with set of peers.
@@ -192,11 +187,13 @@ public class PeerExchangeService implements Node.Listener {
                     });
                 });
         try {
-            boolean await = latch.await(2, MINUTES);
-            checkArgument(await, "CountDownLatch not completed in 2 minutes");
+            boolean await = latch.await(30, SECONDS);
+            checkArgument(await, "CountDownLatch not completed in 30 seconds");
         } catch (Exception e) {
-            log.info("Error at CountDownLatch.await: {}. Repeat initial peer exchange after {} sec.",
+            log.warn("Error at CountDownLatch.await: {}. Repeat initial peer exchange with cleared persisted and reported peers after {} sec.",
                     ExceptionUtil.getRootCauseMessage(e), peerExchangeDelaySec);
+            peerExchangeStrategy.clearPersistedPeers();
+            peerExchangeStrategy.clearReportedPeers();
             peerExchangeScheduler.ifPresent(Scheduler::stop);
             peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
                     .after(peerExchangeDelaySec, TimeUnit.SECONDS)
