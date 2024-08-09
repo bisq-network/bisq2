@@ -23,6 +23,7 @@ import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
@@ -127,12 +128,18 @@ public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> 
 
         void onCompleteTrade() {
             if (model.getExplorerResultValidator().isHasErrors()) {
-                String address = model.getBitcoinPaymentData();
-                String txId = model.getPaymentProof();
                 String txValue = model.getBtcBalance().get();
-                String tradeAmount = getFormattedAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
-                new Popup().warning(Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching",
-                                address, txId, txValue, tradeAmount))
+                String warning;
+                if (StringUtils.isEmpty(txValue)) {
+                    warning = Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress");
+                } else {
+                    String address = model.getBitcoinPaymentData();
+                    String txId = model.getPaymentProof();
+                    String tradeAmount = getFormattedAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
+                    warning = Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching",
+                            address, txId, txValue, tradeAmount);
+                }
+                new Popup().warning(warning)
                         .actionButtonText(Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching.resolved"))
                         .onAction(this::doCompleteTrade)
                         .show();
