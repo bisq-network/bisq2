@@ -314,7 +314,6 @@ public class NetworkInfo {
             });
 
             allInventoryDataReceivedPin = EasyBind.subscribe(model.getAllInventoryDataReceived(), allInventoryDataReceived -> {
-                log.error("allInventoryDataReceived {}", allInventoryDataReceived);
                 if (allInventoryDataReceived) {
                     inventoryRequestsLabel.getStyleClass().remove("bisq-text-yellow-dim");
                     inventoryRequestsLabel.getStyleClass().add("bisq-text-green");

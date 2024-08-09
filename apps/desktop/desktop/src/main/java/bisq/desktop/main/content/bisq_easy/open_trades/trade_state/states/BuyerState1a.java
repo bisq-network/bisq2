@@ -173,7 +173,7 @@ public class BuyerState1a extends BaseState {
 
         void onScanQrCode() {
             if (webcamAppService.isIdle()) {
-                reset();
+                resetWebcamData();
 
                 WebcamAppModel webcamAppServiceModel = webcamAppService.getModel();
                 qrCodePin = webcamAppServiceModel.getQrCode().addObserver(qrCode -> {
@@ -261,7 +261,7 @@ public class BuyerState1a extends BaseState {
             }
         }
 
-        private void reset() {
+        private void resetWebcamData() {
             model.getQrCodeDetectedFromWebcam().set(false);
             model.getImageRecognizedFromWebcam().set(false);
             model.getWebcamErrorMessage().set(null);
@@ -270,7 +270,6 @@ public class BuyerState1a extends BaseState {
             model.getIsConnectingWebcam().set(false);
             model.getWebcamStateIconId().set(null);
             model.getScanQrCodeButtonVisible().set(webcamAppService.isIdle());
-            model.setBitcoinPaymentValidator(null);
             unBindQrCodePins();
         }
 
