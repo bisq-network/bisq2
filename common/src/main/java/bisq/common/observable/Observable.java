@@ -57,8 +57,6 @@ public class Observable<S> implements ReadOnlyObservable<S> {
 
     @Override
     public String toString() {
-        return "Observable{" +
-                "\r\n     value=" + value +
-                "\r\n}";
+        return "Observable{value=" + value + '}';
     }
 }

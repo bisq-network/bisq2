@@ -157,19 +157,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
-        SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.CONNECTING);
+        SendConfidentialMessageResult result;
         String receiverAddress = receiverNetworkId.getAddresses();
-        if (envelopePayloadMessage instanceof AckRequestingMessage) {
-            AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
-            resendMessageService.ifPresent(service -> service.registerResendMessageData(new ResendMessageData(ackRequestingMessage,
-                    receiverNetworkId,
-                    senderKeyPair,
-                    senderNetworkId,
-                    MessageDeliveryStatus.CONNECTING,
-                    System.currentTimeMillis())));
-        }
-
-        handleResult(envelopePayloadMessage, result);
         long start = System.currentTimeMillis();
 
         // Node gets initialized at higher level services
@@ -263,17 +252,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             log.info("Stored message to {} in mailbox after {} ms", receiverAddress, System.currentTimeMillis() - start);
         }
 
-        if (envelopePayloadMessage instanceof AckRequestingMessage) {
-            AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
-            MessageDeliveryStatus messageDeliveryStatus = result.getMessageDeliveryStatus();
-            resendMessageService.ifPresent(service -> service.registerResendMessageData(new ResendMessageData(ackRequestingMessage,
-                    receiverNetworkId,
-                    senderKeyPair,
-                    senderNetworkId,
-                    messageDeliveryStatus,
-                    System.currentTimeMillis())));
-        }
-
         handleResult(envelopePayloadMessage, result);
         return result;
 
@@ -333,7 +311,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             messageDeliveryStatusService.ifPresent(service -> {
                 String messageId = ((AckRequestingMessage) envelopePayloadMessage).getId();
-                service.onMessageSentStatus(messageId, result.getMessageDeliveryStatus());
+                service.applyMessageDeliveryStatus(messageId, result.getMessageDeliveryStatus());
 
                 // If we tried to store in mailbox we check if at least one successful broadcast happened
                 if (result.getMessageDeliveryStatus() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX) {
@@ -341,10 +319,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             .whenComplete((broadcastResult, throwable) -> {
                                 if (throwable != null || broadcastResult.getNumSuccess() == 0) {
                                     log.warn("mailboxFuture completed and resulted in MessageDeliveryStatus.FAILED");
-                                    service.onMessageSentStatus(messageId, MessageDeliveryStatus.FAILED);
+                                    service.applyMessageDeliveryStatus(messageId, MessageDeliveryStatus.FAILED);
                                 } else {
                                     log.info("mailboxFuture completed and resulted in MessageDeliveryStatus.ADDED_TO_MAILBOX");
-                                    service.onMessageSentStatus(messageId, MessageDeliveryStatus.ADDED_TO_MAILBOX);
+                                    service.applyMessageDeliveryStatus(messageId, MessageDeliveryStatus.ADDED_TO_MAILBOX);
                                 }
                             });
                 }
