@@ -271,16 +271,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         // Before sending, we might need to establish a new connection to the peer. As that could take soe time,
         // we apply here already the CONNECTING MessageDeliveryStatus so that the UI can give visual feedback about
         // the state.
-        if (envelopePayloadMessage instanceof AckRequestingMessage) {
-            AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
-            messageDeliveryStatusService.ifPresent(statusService ->
-                    statusService.onMessageSentStatus(ackRequestingMessage.getId(), MessageDeliveryStatus.CONNECTING));
-            resendMessageService.ifPresent(resendService -> resendService.registerResendMessageData(new ResendMessageData(ackRequestingMessage,
-                    receiverNetworkId,
-                    senderKeyPair,
-                    senderNetworkId,
-                    MessageDeliveryStatus.CONNECTING,
-                    System.currentTimeMillis())));
+        if (envelopePayloadMessage instanceof AckRequestingMessage ackRequestingMessage) {
+            resendMessageService.ifPresent(resendService ->
+                    resendService.registerResendMessageData(new ResendMessageData(ackRequestingMessage,
+                            receiverNetworkId,
+                            senderKeyPair,
+                            senderNetworkId,
+                            MessageDeliveryStatus.CONNECTING,
+                            System.currentTimeMillis())));
         }
 
         return anySuppliedInitializedNode(senderNetworkId)
