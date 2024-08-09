@@ -21,6 +21,7 @@ package bisq.webcam;
 import bisq.common.data.WebcamControlSignals;
 import bisq.common.file.FileUtils;
 import bisq.common.logging.LogSetup;
+import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
 import bisq.i18n.Res;
 import bisq.webcam.service.VideoSize;
@@ -37,8 +38,11 @@ import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.swing.ImageIcon;
+import java.awt.Taskbar;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
@@ -58,6 +62,10 @@ public class WebcamApp extends Application {
     public WebcamApp() {
         webcamService = new WebcamService();
         webcamService.setVideoSize(VIDEO_SIZE);
+
+        String imageName = OS.isMacOs() ? "macos_icon_512.png" : "icon_512.png";
+        ImageIcon image = new ImageIcon(Objects.requireNonNull(WebcamApp.class.getResource("/images/" + imageName)));
+        Taskbar.getTaskbar().setIconImage(image.getImage());
     }
 
     @Override

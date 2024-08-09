@@ -20,6 +20,7 @@ package bisq.desktop;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
+import bisq.common.platform.OS;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.application.JavaFxApplicationData;
@@ -52,6 +53,9 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
+import javax.swing.ImageIcon;
+import java.awt.Taskbar;
+import java.util.Objects;
 import java.util.Optional;
 
 import static bisq.settings.DontShowAgainKey.WELCOME;
@@ -102,6 +106,10 @@ public class DesktopController extends NavigationController {
         preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
         republishUserProfileService = serviceProvider.getUserService().getRepublishUserProfileService();
         identityService = serviceProvider.getIdentityService();
+
+        String imageName = OS.isMacOs() ? "macos_icon_512.png" : "icon_512.png";
+        ImageIcon image = new ImageIcon(Objects.requireNonNull(DesktopController.class.getResource("/images/app_window/" + imageName)));
+        Taskbar.getTaskbar().setIconImage(image.getImage());
     }
 
     public void init() {
