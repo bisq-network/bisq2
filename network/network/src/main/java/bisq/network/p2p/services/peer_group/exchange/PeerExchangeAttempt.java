@@ -19,18 +19,17 @@ package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.observable.Observable;
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
-import bisq.network.identity.NetworkId;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.Peer;
+import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -46,7 +45,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 @Getter
-public class PeerExchangeAttempt implements Node.Listener {
+public class PeerExchangeAttempt {
     private static final int TIMEOUT_SEC = 90;
 
     private final Node node;
@@ -58,7 +57,7 @@ public class PeerExchangeAttempt implements Node.Listener {
     private final AtomicInteger numFailures = new AtomicInteger();
     private final CountDownLatch timoutLatch = new CountDownLatch(1);
     private final CompletableFuture<Void> peerExchangeFuture = new CompletableFuture<>();
-    private final AtomicBoolean requireRetry = new AtomicBoolean();
+    private final AtomicBoolean requireRetry = new AtomicBoolean(true);
     private final AtomicReference<Observable<Boolean>> minSuccessReached = new AtomicReference<>(new Observable<>(false));
     private final AtomicReference<Observable<Boolean>> completed = new AtomicReference<>(new Observable<>(false));
     private final AtomicBoolean isShutdownInProgress = new AtomicBoolean();
@@ -67,31 +66,6 @@ public class PeerExchangeAttempt implements Node.Listener {
         this.node = node;
         this.peerExchangeStrategy = peerExchangeStrategy;
         this.name = name;
-        this.node.addListener(this);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Node.Listener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof PeerExchangeRequest request) {
-            Address peerAddress = connection.getPeerAddress();
-            List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
-            peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
-            NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
-            log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
-        }
-    }
-
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
 
@@ -105,12 +79,8 @@ public class PeerExchangeAttempt implements Node.Listener {
         checkArgument(minSuccess > 0, "minSuccess must be > 0");
         checkArgument(!candidates.isEmpty(), "Candidates must not be empty");
 
-        log.info("{} candidates for peerExchange {}. At instance: {}",
-                candidates.size(),
-                StringUtils.truncate(candidates.stream()
-                        .map(Address::toString)
-                        .toList()
-                        .toString(), 2000), this);
+        log.info("Do peer exchange with {} candidates at instance: {}\n{}",
+                candidates.size(), this, Joiner.on("\n").join(candidates));
 
         AtomicInteger numMinSuccess = new AtomicInteger(Math.min(minSuccess, candidates.size()));
         candidates.stream()
@@ -120,11 +90,13 @@ public class PeerExchangeAttempt implements Node.Listener {
             boolean hadTimeout = !timoutLatch.await(TIMEOUT_SEC, SECONDS);
             if (hadTimeout) {
                 log.warn("Peer exchange not completed in {} seconds. At instance: {}", TIMEOUT_SEC, this);
+                requireRetry.set(true);
                 peerExchangeFuture.completeExceptionally(new TimeoutException("Peer exchange not completed in " + TIMEOUT_SEC + " seconds."));
                 shutdown();
             }
         } catch (Exception e) {
             log.warn("timoutLatch.await failed. {}. At instance: {}", ExceptionUtil.getRootCauseMessage(e), this);
+            requireRetry.set(true);
             peerExchangeFuture.completeExceptionally(new RuntimeException("timoutLatch.await failed.", e));
             shutdown();
         }
@@ -137,7 +109,7 @@ public class PeerExchangeAttempt implements Node.Listener {
         if (isShutdownInProgress.get()) {
             return;
         }
-        this.node.removeListener(this);
+
         isShutdownInProgress.set(true);
         requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
         requestHandlerMap.clear();
@@ -194,6 +166,7 @@ public class PeerExchangeAttempt implements Node.Listener {
                     log.warn("Require retry of peer exchange because of: needsMoreReportedPeers. At instance: {}", this);
                 }
             } else {
+                requireRetry.set(false);
                 log.info("We stop our peer exchange as we have sufficient connections established. At instance: {}", this);
             }
 
@@ -225,7 +198,7 @@ public class PeerExchangeAttempt implements Node.Listener {
 
                 // We request and wait blocking for response
                 Set<Peer> reportedPeers = handler.request(myPeers).join();
-                log.debug("Completed peer exchange with {} and received {} reportedPeers. At instance: {}", peerAddress, reportedPeers.size(), this);
+                log.info("Completed peer exchange with {} and received {} reportedPeers. At instance: {}", peerAddress, reportedPeers.size(), this);
                 peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
                 requestHandlerMap.remove(connectionId);
                 return null;
