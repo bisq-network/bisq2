@@ -80,11 +80,9 @@ public class PeerExchangeService implements Node.Listener {
             retryExchangePin.unbind();
             retryExchangePin = null;
         }
-        if (!isInitialPeerExchangeCompleted()) {
-            initialPeerExchangeAttempt.shutdown();
-        }
-        extendPeerGroupPeerExchangeAttempt.get().filter(attempt -> !attempt.getCompleted().get().get()).ifPresent(PeerExchangeAttempt::shutdown);
-        retryPeerExchangeAttempt.get().filter(attempt -> !attempt.getCompleted().get().get()).ifPresent(PeerExchangeAttempt::shutdown);
+        initialPeerExchangeAttempt.shutdown();
+        extendPeerGroupPeerExchangeAttempt.get().ifPresent(PeerExchangeAttempt::shutdown);
+        retryPeerExchangeAttempt.get().ifPresent(PeerExchangeAttempt::shutdown);
     }
 
 
@@ -155,10 +153,6 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     private void extendPeerGroup() {
-        if (!isInitialPeerExchangeCompleted()) {
-            log.info("initialPeerExchangeAttempt is not completed yet. We ignore the extendPeerGroup call.");
-            return;
-        }
         if (extendPeerGroupPeerExchangeAttempt.get().isPresent()) {
             log.info("We have a pending extendPeerGroupPeerExchangeAttempt. We ignore the extendPeerGroup call.");
             return;
@@ -230,9 +224,5 @@ public class PeerExchangeService implements Node.Listener {
                 NETWORK_IO_POOL.submit(() -> retryPeerExchange(-1));
             }
         }
-    }
-
-    private boolean isInitialPeerExchangeCompleted() {
-        return initialPeerExchangeAttempt.getCompleted().get().get();
     }
 }
