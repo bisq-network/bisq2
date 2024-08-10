@@ -29,14 +29,14 @@ public class MemoryReport {
     private static Scheduler scheduler;
 
     public static void printPeriodically() {
-        printPeriodically(3, TimeUnit.MINUTES);
+        printPeriodically(60, TimeUnit.SECONDS);
     }
 
     public static void printPeriodically(long delay, TimeUnit timeUnit) {
         if (scheduler != null) {
             scheduler.stop();
         }
-        scheduler = Scheduler.run(MemoryReport::logReport).periodically(0, delay, timeUnit);
+        scheduler = Scheduler.run(MemoryReport::logReport).periodically(10, delay, timeUnit);
     }
 
     public static void logReport() {
