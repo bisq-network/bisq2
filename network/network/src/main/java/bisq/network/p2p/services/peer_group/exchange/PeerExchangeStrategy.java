@@ -98,6 +98,20 @@ public class PeerExchangeStrategy {
         return candidates;
     }
 
+    List<Address> getAddressesForRetryPeerExchange() {
+        List<Address> candidates = getCandidates(getPriorityListForRetryPeerExchange());
+        if (candidates.isEmpty()) {
+            // It can be that we don't have peers anymore which we have not already connected in the past.
+            // We reset the usedAddresses and try again. It is likely that some peers have different peers to
+            // send now.
+            log.info("We reset the usedAddresses and try again to connect to peers we tried in the past.");
+            usedAddresses.clear();
+            candidates = getCandidates(getPriorityListForRetryPeerExchange());
+        }
+        usedAddresses.addAll(candidates);
+        return candidates;
+    }
+
     // After bootstrap, we might want to add more connections and use the peer exchange protocol for that.
     // We do not want to use seed nodes or already existing connections in that case.
     List<Address> getAddressesForExtendingPeerGroup() {
@@ -206,6 +220,13 @@ public class PeerExchangeStrategy {
         List<Address> priorityList = new ArrayList<>(getSeedAddresses());
         priorityList.addAll(getReportedPeerAddresses());
         priorityList.addAll(getPersistedAddresses());
+        priorityList.addAll(getAllConnectedPeerAddresses());
+        return priorityList;
+    }
+
+    private List<Address> getPriorityListForRetryPeerExchange() {
+        List<Address> priorityList = new ArrayList<>(getSeedAddresses());
+        priorityList.addAll(getReportedPeerAddresses());
         priorityList.addAll(getAllConnectedPeerAddresses());
         return priorityList;
     }

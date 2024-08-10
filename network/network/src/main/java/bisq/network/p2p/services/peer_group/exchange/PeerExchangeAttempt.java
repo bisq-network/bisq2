@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
-import bisq.common.timer.Scheduler;
+import bisq.common.observable.Observable;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
@@ -34,9 +34,10 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -46,25 +47,27 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 @Getter
 public class PeerExchangeAttempt implements Node.Listener {
+    private static final int TIMEOUT_SEC = 90;
+
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
-    private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private final AtomicInteger peerExchangeDelaySec = new AtomicInteger(1);
-    private final AtomicBoolean isShutdownInProgress = new AtomicBoolean();
-    private final AtomicBoolean initialPeerExchangeCompleted = new AtomicBoolean();
-    private Optional<Scheduler> peerExchangeScheduler = Optional.empty();
+    private final String name;
 
-    public PeerExchangeAttempt(Node node, PeerExchangeStrategy peerExchangeStrategy) {
+    private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
+    private final AtomicInteger numSuccess = new AtomicInteger();
+    private final AtomicInteger numFailures = new AtomicInteger();
+    private final CountDownLatch timoutLatch = new CountDownLatch(1);
+    private final CompletableFuture<Void> peerExchangeFuture = new CompletableFuture<>();
+    private final AtomicBoolean requireRetry = new AtomicBoolean();
+    private final AtomicReference<Observable<Boolean>> minSuccessReached = new AtomicReference<>(new Observable<>(false));
+    private final AtomicReference<Observable<Boolean>> completed = new AtomicReference<>(new Observable<>(false));
+    private final AtomicBoolean isShutdownInProgress = new AtomicBoolean();
+
+    public PeerExchangeAttempt(Node node, PeerExchangeStrategy peerExchangeStrategy, String name) {
         this.node = node;
         this.peerExchangeStrategy = peerExchangeStrategy;
+        this.name = name;
         this.node.addListener(this);
-    }
-
-    public void shutdown() {
-        isShutdownInProgress.set(true);
-        peerExchangeScheduler.ifPresent(Scheduler::stop);
-        requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
-        requestHandlerMap.clear();
     }
 
 
@@ -75,7 +78,6 @@ public class PeerExchangeAttempt implements Node.Listener {
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof PeerExchangeRequest request) {
-            //log.debug("{} received PeerExchangeRequest with myPeers {}", node, request.peers());
             Address peerAddress = connection.getPeerAddress();
             List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
             peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
@@ -97,112 +99,115 @@ public class PeerExchangeAttempt implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void startInitialPeerExchange(int minSuccess) {
-        if (initialPeerExchangeCompleted.get()) {
-            return;
-        }
-        log.info("startInitialPeerExchange");
-        List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
-        doPeerExchange(candidates, minSuccess);
-    }
-
-    public void extendPeerGroup() {
-        if (!initialPeerExchangeCompleted.get()) {
-            return;
-        }
-        log.info("extendPeerGroup");
-        List<Address> candidates = peerExchangeStrategy.getAddressesForExtendingPeerGroup();
-        doPeerExchange(candidates, 1);
-    }
-
-    private void retryInitialPeerExchange(int minSuccess) {
-        if (initialPeerExchangeCompleted.get()) {
-            return;
-        }
-        log.info("retryInitialPeerExchange");
-        List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
-        doPeerExchange(candidates, minSuccess);
-    }
-
-    private void doPeerExchange(List<Address> candidates, int minSuccess) {
+    public CompletableFuture<Void> start(int minSuccess, List<Address> candidates) {
+        checkArgument(!completed.get().get(), "Already completed");
+        checkArgument(!isShutdownInProgress.get(), "Already shutdown");
         checkArgument(minSuccess > 0, "minSuccess must be > 0");
-        if (isShutdownInProgress.get()) {
-            return;
-        }
+        checkArgument(!candidates.isEmpty(), "Candidates must not be empty");
 
-        if (candidates.isEmpty()) {
-            return;
-        }
-
-        log.info("{} candidates for doPeerExchange {}",
+        log.info("{} candidates for peerExchange {}. At instance: {}",
                 candidates.size(),
                 StringUtils.truncate(candidates.stream()
                         .map(Address::toString)
                         .toList()
-                        .toString(), 2000));
+                        .toString(), 2000), this);
 
         AtomicInteger numMinSuccess = new AtomicInteger(Math.min(minSuccess, candidates.size()));
-        AtomicInteger numSuccess = new AtomicInteger();
-        AtomicInteger numFailures = new AtomicInteger();
-        CountDownLatch latch = new CountDownLatch(1);
         candidates.stream()
                 .map(this::doPeerExchangeAsync)
-                .forEach(future -> {
-                    future.whenComplete((nil, throwable) -> {
-                        if (isShutdownInProgress.get()) {
-                            return;
-                        }
-                        if (throwable == null) {
-                            numSuccess.incrementAndGet();
-                        } else {
-                            numFailures.incrementAndGet();
-                        }
-
-                        boolean allCompleted = numFailures.get() + numSuccess.get() == candidates.size();
-                        if (allCompleted || numSuccess.get() == numMinSuccess.get()) {
-                            log.info("Peer exchange completed. numSuccess={}; numFailures={}",
-                                    numSuccess.get(), numFailures.get());
-                            latch.countDown();
-                        }
-
-                        if (allCompleted) {
-                            boolean tooManyFailures = peerExchangeStrategy.tooManyFailures(numSuccess.get(), numFailures.get());
-                            boolean needsMoreConnections = peerExchangeStrategy.needsMoreConnections();
-                            boolean needsMoreReportedPeers = peerExchangeStrategy.needsMoreReportedPeers();
-                            if (tooManyFailures || needsMoreConnections || needsMoreReportedPeers) {
-                                if (tooManyFailures) {
-                                    log.info("Repeat initial peer exchange after {} sec. Reason: tooManyFailures", peerExchangeDelaySec.get());
-                                } else if (needsMoreConnections) {
-                                    log.info("Repeat initial peer exchange after {} sec. Reason: needsMoreConnections", peerExchangeDelaySec.get());
-                                } else {
-                                    log.info("Repeat initial peer exchange after {} sec. Reason: needsMoreReportedPeers", peerExchangeDelaySec.get());
-                                }
-                                peerExchangeScheduler.ifPresent(Scheduler::stop);
-                                peerExchangeScheduler = Optional.of(Scheduler.run(() -> retryInitialPeerExchange(minSuccess))
-                                        .after(peerExchangeDelaySec.get(), TimeUnit.SECONDS)
-                                        .name("PeerExchangeService.scheduler"));
-                                peerExchangeDelaySec.set(Math.min(20, peerExchangeDelaySec.get() * 2));
-                            } else {
-                                log.info("We stop our peer exchange as we have sufficient connections established.");
-                                initialPeerExchangeCompleted.set(true);
-                                peerExchangeScheduler.ifPresent(Scheduler::stop);
-                                peerExchangeScheduler = Optional.empty();
-                            }
-                        }
-                    });
-                });
+                .forEach(future -> future.whenComplete((nil, throwable) -> onFutureComplete(throwable, numMinSuccess, candidates.size())));
         try {
-            boolean await = latch.await(90, SECONDS);
-            checkArgument(await, "CountDownLatch not completed in 30 seconds");
+            boolean hadTimeout = !timoutLatch.await(TIMEOUT_SEC, SECONDS);
+            if (hadTimeout) {
+                log.warn("Peer exchange not completed in {} seconds. At instance: {}", TIMEOUT_SEC, this);
+                peerExchangeFuture.completeExceptionally(new TimeoutException("Peer exchange not completed in " + TIMEOUT_SEC + " seconds."));
+                shutdown();
+            }
         } catch (Exception e) {
-            log.warn("Error at CountDownLatch.await: {}. Repeat initial peer exchange with cleared persisted and reported peers after {} sec.",
-                    ExceptionUtil.getRootCauseMessage(e), peerExchangeDelaySec.get());
-            peerExchangeStrategy.clearPersistedPeers();
-            peerExchangeScheduler.ifPresent(Scheduler::stop);
-            peerExchangeScheduler = Optional.of(Scheduler.run(() -> retryInitialPeerExchange(minSuccess))
-                    .after(peerExchangeDelaySec.get(), TimeUnit.SECONDS)
-                    .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
-            peerExchangeDelaySec.set(Math.min(20, peerExchangeDelaySec.get() * 2));
+            log.warn("timoutLatch.await failed. {}. At instance: {}", ExceptionUtil.getRootCauseMessage(e), this);
+            peerExchangeFuture.completeExceptionally(new RuntimeException("timoutLatch.await failed.", e));
+            shutdown();
+        }
+
+        return peerExchangeFuture;
+    }
+
+    public void shutdown() {
+        log.debug("shutdown at instance: {}", this);
+        if (isShutdownInProgress.get()) {
+            return;
+        }
+        this.node.removeListener(this);
+        isShutdownInProgress.set(true);
+        requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
+        requestHandlerMap.clear();
+        if (timoutLatch.getCount() > 0) {
+            timoutLatch.countDown();
+        }
+        if (!peerExchangeFuture.isDone()) {
+            peerExchangeFuture.cancel(true);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onFutureComplete(Throwable throwable, AtomicInteger numMinSuccess, int candidatesSize) {
+        if (isShutdownInProgress.get()) {
+            return;
+        }
+        if (throwable == null) {
+            numSuccess.incrementAndGet();
+        } else {
+            numFailures.incrementAndGet();
+        }
+
+        boolean isMinSuccessReached = numSuccess.get() >= numMinSuccess.get();
+        if (!minSuccessReached.get().get()) {
+            minSuccessReached.get().set(isMinSuccessReached);
+            if (isMinSuccessReached && timoutLatch.getCount() > 0) {
+                log.info("Min. success reached at initial peer exchange.\nnumSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}. At instance: {}",
+                        numSuccess.get(), numFailures.get(), numMinSuccess.get(), candidatesSize, this);
+                timoutLatch.countDown();
+                // Min success reached, we set the result at the peerExchangeFuture
+                peerExchangeFuture.complete(null);
+            }
+        }
+
+        boolean allCompleted = numFailures.get() + numSuccess.get() == candidatesSize;
+        if (allCompleted) {
+            log.info("Peer exchange completed. numSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}. At instance: {}",
+                    numSuccess.get(), numFailures.get(), numMinSuccess.get(), candidatesSize, this);
+
+            boolean tooManyFailures = peerExchangeStrategy.tooManyFailures(numSuccess.get(), numFailures.get());
+            boolean needsMoreConnections = peerExchangeStrategy.needsMoreConnections();
+            boolean needsMoreReportedPeers = peerExchangeStrategy.needsMoreReportedPeers();
+            if (tooManyFailures || needsMoreConnections || needsMoreReportedPeers) {
+                requireRetry.set(true);
+                if (tooManyFailures) {
+                    log.warn("Require retry of peer exchange because of: tooManyFailures. At instance: {}", this);
+                } else if (needsMoreConnections) {
+                    log.warn("Require retry of peer exchange because of: needsMoreConnections. At instance: {}", this);
+                } else {
+                    log.warn("Require retry of peer exchange because of: needsMoreReportedPeers. At instance: {}", this);
+                }
+            } else {
+                log.info("We stop our peer exchange as we have sufficient connections established. At instance: {}", this);
+            }
+
+            if (!isMinSuccessReached) {
+                log.warn("All peer exchange completed but minSuccessReached not reached.\nnumSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}. At instance: {}",
+                        numSuccess.get(), numFailures.get(), numMinSuccess.get(), candidatesSize, this);
+                requireRetry.set(true);
+                peerExchangeFuture.completeExceptionally(new RuntimeException("All peer exchange completed but minSuccessReached not reached."));
+            }
+
+            if (!completed.get().get()) {
+                completed.get().set(true);
+                shutdown();
+            }
         }
     }
 
@@ -218,17 +223,15 @@ public class PeerExchangeAttempt implements Node.Listener {
                 requestHandlerMap.put(connectionId, handler);
                 Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
 
-                // We request and wait for response
+                // We request and wait blocking for response
                 Set<Peer> reportedPeers = handler.request(myPeers).join();
-                log.info("Completed peer exchange with {} and received {} reportedPeers.",
-                        peerAddress, reportedPeers.size());
+                log.debug("Completed peer exchange with {} and received {} reportedPeers. At instance: {}", peerAddress, reportedPeers.size(), this);
                 peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
                 requestHandlerMap.remove(connectionId);
-                log.info("Peer exchange with {} completed", peerAddress);
                 return null;
             } catch (Exception exception) {
                 if (!isShutdownInProgress.get()) {
-                    log.info("Peer exchange with {} failed", peerAddress);
+                    log.warn("Peer exchange with {} failed. {}. At instance: {}", peerAddress, ExceptionUtil.getRootCauseMessage(exception), this);
                 }
                 if (connectionId != null) {
                     if (requestHandlerMap.containsKey(connectionId)) {
@@ -239,5 +242,10 @@ public class PeerExchangeAttempt implements Node.Listener {
                 throw exception;
             }
         }, NETWORK_IO_POOL);
+    }
+
+    @Override
+    public String toString() {
+        return name + " " + "@" + Integer.toHexString(hashCode());
     }
 }
