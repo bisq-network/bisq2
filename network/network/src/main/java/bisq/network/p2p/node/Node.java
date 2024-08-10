@@ -19,6 +19,7 @@ package bisq.network.p2p.node;
 
 
 import bisq.common.observable.Observable;
+import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
@@ -46,21 +47,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -382,6 +374,18 @@ public class Node implements Connection.Handler {
         }
     }
 
+    public boolean hasConnection(Address address) {
+        return outboundConnectionsByAddress.containsKey(address) || inboundConnectionsByAddress.containsKey(address);
+    }
+
+    public Optional<Connection> findConnection(Connection connection) {
+        if (connection instanceof OutboundConnection) {
+            return Optional.ofNullable(outboundConnectionsByAddress.get(connection.getPeerAddress()));
+        } else {
+            return Optional.ofNullable(inboundConnectionsByAddress.get(connection.getPeerAddress()));
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // OutboundConnection
@@ -550,6 +554,20 @@ public class Node implements Connection.Handler {
         }
         maybeSimulateDelay();
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
+        if (findConnection(connection).isEmpty()) {
+            // TODO for now we delay the shutdown call to not introduce a bigger change in behaviour.
+            //  We need to test more to see if that case happens and why, and if there might be valid listeners.
+            log.error("""
+                            We got handleNetworkMessage called from an orphaned connection which is not managed by our \
+                            outboundConnectionsByAddress or inboundConnectionsByAddress maps. \
+                            We close after a short delay that connection to avoid memory leaks. \
+                            We still notify listeners as its is unclear yet if there are valid listeners in that case.\
+                                                
+                            envelopePayloadMessage={}
+                            connection={}""",
+                    envelopePayloadMessage, connection);
+            Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION)).after(100);
+        }
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
                 networkLoadSnapshot.getCurrentNetworkLoad(),
@@ -557,8 +575,7 @@ public class Node implements Connection.Handler {
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
-            if (envelopePayloadMessage instanceof CloseConnectionMessage) {
-                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
+            if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
                 log.debug("Received CloseConnectionMessage from {} with reason: {}",
                         connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
@@ -574,6 +591,7 @@ public class Node implements Connection.Handler {
                 });
             }
         } else {
+            // TODO should we shutdown the connection?
             //todo (Critical) should we add the connection to the ban list in that case or close the connection?
             log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }

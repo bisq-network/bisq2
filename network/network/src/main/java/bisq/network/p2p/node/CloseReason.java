@@ -40,6 +40,7 @@ public enum CloseReason {
     TOO_MANY_INBOUND_CONNECTIONS(true),
     TOO_MANY_CONNECTIONS(true),
     BANNED(false),
+    ORPHANED_CONNECTION(false),
     EXCEPTION(false);
 
     private final boolean isGraceful;

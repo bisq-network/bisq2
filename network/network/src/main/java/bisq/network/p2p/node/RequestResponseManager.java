@@ -63,7 +63,7 @@ public class RequestResponseManager {
         maybeRemoveExpired();
     }
 
-    void onClosed() {
+    void dispose() {
         pendingRequests.clear();
     }
 
