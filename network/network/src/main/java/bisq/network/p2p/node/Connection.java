@@ -151,7 +151,7 @@ public abstract class Connection {
                 }
             } catch (Exception exception) {
                 //todo (deferred) StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
-                if (isInputStreamActive()) {
+                if (!shutdownStarted) {
                     log.debug("Exception at input handler on {}", this, exception);
                     shutdown(CloseReason.EXCEPTION.exception(exception));
 
