@@ -206,8 +206,8 @@ public class PeerGroupManager implements Node.Listener {
                 setState(PeerGroupManager.State.STARTING);
                 // blocking
                 peerExchangeService.startInitialPeerExchange();
-                log.info("Completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
-                        config.getHouseKeepingInterval());
+                log.info("Completed startInitialPeerExchange. Start periodic tasks with interval: {} sec",
+                        config.getHouseKeepingInterval() / 1000);
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
                         .periodically(config.getHouseKeepingInterval())
                         .name("PeerGroupService.scheduler-" + nodeInfo));
@@ -362,9 +362,9 @@ public class PeerGroupManager implements Node.Listener {
 
         // We use the peer exchange protocol for establishing new connections.
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
-        log.info("We have not sufficient connections and call peerExchangeService.doFurtherPeerExchange");
+        log.info("We have not sufficient connections and call peerExchangeService.extendPeerGroup");
         // It is an async call. We do not wait for the result.
-        peerExchangeService.extendPeerGroup();
+        peerExchangeService.extendPeerGroupAsync();
     }
 
     private void maybeRemoveReportedPeers() {

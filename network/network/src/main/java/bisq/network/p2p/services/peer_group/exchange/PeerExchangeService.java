@@ -20,12 +20,21 @@ package bisq.network.p2p.services.peer_group.exchange;
 import bisq.common.observable.Pin;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.common.Address;
+import bisq.network.identity.NetworkId;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.peer_group.Peer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -37,7 +46,7 @@ import static bisq.network.NetworkService.NETWORK_IO_POOL;
  */
 @Slf4j
 @Getter
-public class PeerExchangeService {
+public class PeerExchangeService implements Node.Listener {
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
 
@@ -46,12 +55,13 @@ public class PeerExchangeService {
     private final AtomicReference<Optional<PeerExchangeAttempt>> retryPeerExchangeAttempt = new AtomicReference<>(Optional.empty());
     private final AtomicInteger numRetryAttempts = new AtomicInteger();
     private volatile boolean isShutdownInProgress;
-    private Pin initialPeerExchangeCompletedPin;
+    private Pin initialExchangePin, retryExchangePin;
 
     public PeerExchangeService(Node node, PeerExchangeStrategy peerExchangeStrategy) {
         this.node = node;
         this.peerExchangeStrategy = peerExchangeStrategy;
 
+        node.addListener(this);
         initialPeerExchangeAttempt = new PeerExchangeAttempt(node, peerExchangeStrategy, "initialPeerExchangeAttempt");
     }
 
@@ -59,11 +69,16 @@ public class PeerExchangeService {
         if (isShutdownInProgress) {
             return;
         }
-        isShutdownInProgress = true;
 
-        if (initialPeerExchangeCompletedPin != null) {
-            initialPeerExchangeCompletedPin.unbind();
-            initialPeerExchangeCompletedPin = null;
+        isShutdownInProgress = true;
+        node.removeListener(this);
+        if (initialExchangePin != null) {
+            initialExchangePin.unbind();
+            initialExchangePin = null;
+        }
+        if (retryExchangePin != null) {
+            retryExchangePin.unbind();
+            retryExchangePin = null;
         }
         if (!isInitialPeerExchangeCompleted()) {
             initialPeerExchangeAttempt.shutdown();
@@ -74,20 +89,45 @@ public class PeerExchangeService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Node.Listener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+        if (envelopePayloadMessage instanceof PeerExchangeRequest request) {
+            Address peerAddress = connection.getPeerAddress();
+            List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
+            peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
+            NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
+            log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
+        }
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void startInitialPeerExchange() {
         log.info("Start initial peer exchange");
-        if (initialPeerExchangeCompletedPin != null) {
-            initialPeerExchangeCompletedPin.unbind();
+        if (initialExchangePin != null) {
+            initialExchangePin.unbind();
         }
-        initialPeerExchangeCompletedPin = initialPeerExchangeAttempt.getCompleted().get().addObserver(completed -> {
+        initialExchangePin = initialPeerExchangeAttempt.getCompleted().get().addObserver(completed -> {
             if (completed != null && completed) {
-                initialPeerExchangeCompletedPin.unbind();
-                initialPeerExchangeCompletedPin = null;
+                initialExchangePin.unbind();
+                initialExchangePin = null;
                 if (initialPeerExchangeAttempt.getRequireRetry().get()) {
-                    NETWORK_IO_POOL.submit(this::retryPeerExchange);
+                    // We use here a blocking call to retry, so that peer manager does not continue before we got at least one peer exchange successful
+                    retryPeerExchange(1);
                 }
             }
         });
@@ -95,20 +135,32 @@ public class PeerExchangeService {
         // We block until at least 1 peer exchange succeeded
         List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
         try {
-            initialPeerExchangeAttempt.start(2, candidates).join();
+            initialPeerExchangeAttempt.start(1, candidates).join();
+            log.info("Initial peer exchange succeeded with 1 exchange. " +
+                    "We start a parallel peerExchangeAttempt for faster connection establishment.");
+
+            NETWORK_IO_POOL.submit(() -> retryPeerExchange(-1));
         } catch (Exception e) {
-            log.warn("Initial peer exchange failed {}", ExceptionUtil.getRootCauseMessage(e));
-            NETWORK_IO_POOL.submit(this::retryPeerExchange);
+            log.warn("Initial peer exchange failed. {}", ExceptionUtil.getRootCauseMessage(e));
+            if (initialExchangePin != null) {
+                initialExchangePin.unbind();
+            }
+            // We use here a blocking call to retry, so that peer manager does not continue before we got at least one peer exchange successful
+            retryPeerExchange(1);
         }
     }
 
-    public void extendPeerGroup() {
+    public Future<Void> extendPeerGroupAsync() {
+        return CompletableFuture.runAsync(this::extendPeerGroup, NETWORK_IO_POOL);
+    }
+
+    private void extendPeerGroup() {
         if (!isInitialPeerExchangeCompleted()) {
-            log.debug("initialPeerExchangeAttempt is not completed yet. We ignore the extendPeerGroup call.");
+            log.info("initialPeerExchangeAttempt is not completed yet. We ignore the extendPeerGroup call.");
             return;
         }
         if (extendPeerGroupPeerExchangeAttempt.get().isPresent()) {
-            log.debug("We have a pending extendPeerGroupPeerExchangeAttempt. We ignore the extendPeerGroup call.");
+            log.info("We have a pending extendPeerGroupPeerExchangeAttempt. We ignore the extendPeerGroup call.");
             return;
         }
         log.info("Extend peer group");
@@ -118,22 +170,22 @@ public class PeerExchangeService {
         try {
             attempt.start(candidates.size(), candidates).join();
         } catch (Exception e) {
-            log.warn("extendPeerGroupPeerExchangeAttempt failed {}", ExceptionUtil.getRootCauseMessage(e));
+            log.warn("extendPeerGroupPeerExchangeAttempt failed. {}", ExceptionUtil.getRootCauseMessage(e));
         } finally {
             extendPeerGroupPeerExchangeAttempt.set(Optional.empty());
         }
     }
 
-    private void retryPeerExchange() {
-        if (!isInitialPeerExchangeCompleted()) {
-            log.debug("initialPeerExchangeAttempt is not completed yet. We ignore the retryPeerExchange call.");
-            return;
-        }
+    private void retryPeerExchange(int minSuccess) {
         if (retryPeerExchangeAttempt.get().isPresent()) {
-            log.debug("We have a pending retryPeerExchangeAttempt. We ignore the retryPeerExchange call.");
+            log.info("We have a pending retryPeerExchangeAttempt. We ignore the retryPeerExchange call.");
             return;
         }
-        long delay = 10L * numRetryAttempts.get();
+        if (numRetryAttempts.get() > 10) {
+            log.warn("We have retried the peer exchange 10 times without success and give up.");
+            return;
+        }
+        long delay = 1000L * numRetryAttempts.get() * numRetryAttempts.get();
         if (delay > 0) {
             try {
                 log.info("Retry peer exchange after {} sec.", delay / 1000);
@@ -148,15 +200,34 @@ public class PeerExchangeService {
         PeerExchangeAttempt attempt = new PeerExchangeAttempt(node, peerExchangeStrategy, "retryPeerExchangeAttempt");
         retryPeerExchangeAttempt.set(Optional.of(attempt));
         List<Address> candidates = peerExchangeStrategy.getAddressesForRetryPeerExchange();
+
+        if (retryExchangePin != null) {
+            retryExchangePin.unbind();
+        }
+        retryExchangePin = attempt.getCompleted().get().addObserver(completed -> {
+            if (completed != null && completed) {
+                retryExchangePin.unbind();
+                retryExchangePin = null;
+
+                retryPeerExchangeAttempt.set(Optional.empty());
+                if (attempt.getRequireRetry().get()) {
+                    NETWORK_IO_POOL.submit(() -> retryPeerExchange(-1));
+                }
+            }
+        });
+
         try {
-            attempt.start(candidates.size(), candidates).join();
+            int numMinSuccess = minSuccess > 0 ? minSuccess : candidates.size();
+            attempt.start(numMinSuccess, candidates).join();
         } catch (Exception e) {
-            log.warn("retryPeerExchangeAttempt failed {}", ExceptionUtil.getRootCauseMessage(e));
-        } finally {
-            boolean requireRetry = attempt.getRequireRetry().get();
+            log.warn("retryPeerExchangeAttempt failed. {}", ExceptionUtil.getRootCauseMessage(e));
+
+            if (retryExchangePin != null) {
+                retryExchangePin.unbind();
+            }
             retryPeerExchangeAttempt.set(Optional.empty());
-            if (requireRetry) {
-                NETWORK_IO_POOL.submit(this::retryPeerExchange);
+            if (attempt.getRequireRetry().get()) {
+                NETWORK_IO_POOL.submit(() -> retryPeerExchange(-1));
             }
         }
     }

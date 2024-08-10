@@ -91,7 +91,7 @@ public class NetworkLoadExchangeService implements Node.Listener {
         if (envelopePayloadMessage instanceof NetworkLoadExchangeRequest) {
             NetworkLoadExchangeRequest request = (NetworkLoadExchangeRequest) envelopePayloadMessage;
             NetworkLoad peersNetworkLoad = request.getNetworkLoad();
-            log.info("Received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
+            log.debug("Received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
                     request.getNonce(), peersNetworkLoad, connection.getPeerAddress());
             connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
             NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
@@ -99,7 +99,7 @@ public class NetworkLoadExchangeService implements Node.Listener {
                     myNetworkLoad);
             NetworkService.NETWORK_IO_POOL.submit(() ->
                     node.send(response, connection));
-            log.info("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
+            log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
                     request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
         }
     }
