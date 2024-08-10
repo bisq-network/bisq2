@@ -376,7 +376,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
     private void maybeSelectFirst() {
         if (!hasTradeForChannel(selectionService.getSelectedChannel().get()) &&
                 !model.getSortedList().isEmpty()) {
-            selectionService.selectChannel(model.getSortedList().getFirst().getChannel());
+            UIThread.runOnNextRenderFrame(() -> selectionService.selectChannel(model.getSortedList().getFirst().getChannel()));
         }
     }
 
