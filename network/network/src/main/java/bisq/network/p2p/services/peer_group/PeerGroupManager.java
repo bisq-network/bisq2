@@ -37,11 +37,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -209,7 +205,7 @@ public class PeerGroupManager implements Node.Listener {
             case NEW:
                 setState(PeerGroupManager.State.STARTING);
                 // blocking
-                peerExchangeService.startInitialPeerExchange(1);
+                peerExchangeService.startInitialPeerExchange();
                 log.info("Completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
                         config.getHouseKeepingInterval());
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
