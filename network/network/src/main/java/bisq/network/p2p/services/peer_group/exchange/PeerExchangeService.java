@@ -36,7 +36,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -113,6 +112,7 @@ public class PeerExchangeService implements Node.Listener {
 
     public void extendPeerGroup() {
         if (!initialPeerExchangeCompleted) {
+            log.warn("extendPeerGroup called but initialPeerExchange not completed yet. We ignore the call.");
             return;
         }
         log.info("extendPeerGroup");
@@ -133,7 +133,7 @@ public class PeerExchangeService implements Node.Listener {
         log.info("candidates for doPeerExchange {}",
                 StringUtils.truncate(candidates.stream()
                         .map(Address::toString)
-                        .collect(Collectors.toList())
+                        .toList()
                         .toString(), 2000));
 
         AtomicInteger numMinSuccess = new AtomicInteger(Math.min(minSuccess, candidates.size()));
@@ -155,12 +155,10 @@ public class PeerExchangeService implements Node.Listener {
 
                         boolean allCompleted = numFailures.get() + numSuccess.get() == candidates.size();
                         if (allCompleted || numSuccess.get() == numMinSuccess.get()) {
-                            log.info("Peer exchange completed. numSuccess={}; numFailures={}",
-                                    numSuccess.get(), numFailures.get());
+                            log.info("Peer exchange completed. numSuccess={}; numFailures={}; numMinSuccess.get()={}; candidates.size()={}",
+                                    numSuccess.get(), numFailures.get(), numMinSuccess.get(), candidates.size());
                             latch.countDown();
-                        }
 
-                        if (allCompleted) {
                             boolean tooManyFailures = peerExchangeStrategy.tooManyFailures(numSuccess.get(), numFailures.get());
                             boolean needsMoreConnections = peerExchangeStrategy.needsMoreConnections();
                             boolean needsMoreReportedPeers = peerExchangeStrategy.needsMoreReportedPeers();

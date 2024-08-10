@@ -37,11 +37,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -366,7 +362,7 @@ public class PeerGroupManager implements Node.Listener {
 
         // We use the peer exchange protocol for establishing new connections.
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
-        log.info("We have not sufficient connections and call peerExchangeService.doFurtherPeerExchange");
+        log.info("We have not sufficient connections and call peerExchangeService.extendPeerGroup");
         // It is an async call. We do not wait for the result.
         peerExchangeService.extendPeerGroup();
     }
