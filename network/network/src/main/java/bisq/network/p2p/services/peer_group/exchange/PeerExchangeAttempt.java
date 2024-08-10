@@ -35,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
@@ -49,8 +50,8 @@ public class PeerExchangeAttempt implements Node.Listener {
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final AtomicInteger peerExchangeDelaySec = new AtomicInteger(1);
-    private volatile boolean isShutdownInProgress;
-    private volatile boolean initialPeerExchangeCompleted;
+    private final AtomicBoolean isShutdownInProgress = new AtomicBoolean();
+    private final AtomicBoolean initialPeerExchangeCompleted = new AtomicBoolean();
     private Optional<Scheduler> peerExchangeScheduler = Optional.empty();
 
     public PeerExchangeAttempt(Node node, PeerExchangeStrategy peerExchangeStrategy) {
@@ -60,7 +61,7 @@ public class PeerExchangeAttempt implements Node.Listener {
     }
 
     public void shutdown() {
-        isShutdownInProgress = true;
+        isShutdownInProgress.set(true);
         peerExchangeScheduler.ifPresent(Scheduler::stop);
         requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
         requestHandlerMap.clear();
@@ -97,7 +98,7 @@ public class PeerExchangeAttempt implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void startInitialPeerExchange(int minSuccess) {
-        if (initialPeerExchangeCompleted) {
+        if (initialPeerExchangeCompleted.get()) {
             return;
         }
         log.info("startInitialPeerExchange");
@@ -106,7 +107,7 @@ public class PeerExchangeAttempt implements Node.Listener {
     }
 
     public void extendPeerGroup() {
-        if (!initialPeerExchangeCompleted) {
+        if (!initialPeerExchangeCompleted.get()) {
             return;
         }
         log.info("extendPeerGroup");
@@ -114,9 +115,18 @@ public class PeerExchangeAttempt implements Node.Listener {
         doPeerExchange(candidates, 1);
     }
 
+    private void retryInitialPeerExchange(int minSuccess) {
+        if (initialPeerExchangeCompleted.get()) {
+            return;
+        }
+        log.info("retryInitialPeerExchange");
+        List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
+        doPeerExchange(candidates, minSuccess);
+    }
+
     private void doPeerExchange(List<Address> candidates, int minSuccess) {
         checkArgument(minSuccess > 0, "minSuccess must be > 0");
-        if (isShutdownInProgress) {
+        if (isShutdownInProgress.get()) {
             return;
         }
 
@@ -124,7 +134,8 @@ public class PeerExchangeAttempt implements Node.Listener {
             return;
         }
 
-        log.info("candidates for doPeerExchange {}",
+        log.info("{} candidates for doPeerExchange {}",
+                candidates.size(),
                 StringUtils.truncate(candidates.stream()
                         .map(Address::toString)
                         .toList()
@@ -138,7 +149,7 @@ public class PeerExchangeAttempt implements Node.Listener {
                 .map(this::doPeerExchangeAsync)
                 .forEach(future -> {
                     future.whenComplete((nil, throwable) -> {
-                        if (isShutdownInProgress) {
+                        if (isShutdownInProgress.get()) {
                             return;
                         }
                         if (throwable == null) {
@@ -167,13 +178,13 @@ public class PeerExchangeAttempt implements Node.Listener {
                                     log.info("Repeat initial peer exchange after {} sec. Reason: needsMoreReportedPeers", peerExchangeDelaySec.get());
                                 }
                                 peerExchangeScheduler.ifPresent(Scheduler::stop);
-                                peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
+                                peerExchangeScheduler = Optional.of(Scheduler.run(() -> retryInitialPeerExchange(minSuccess))
                                         .after(peerExchangeDelaySec.get(), TimeUnit.SECONDS)
                                         .name("PeerExchangeService.scheduler"));
                                 peerExchangeDelaySec.set(Math.min(20, peerExchangeDelaySec.get() * 2));
                             } else {
                                 log.info("We stop our peer exchange as we have sufficient connections established.");
-                                initialPeerExchangeCompleted = true;
+                                initialPeerExchangeCompleted.set(true);
                                 peerExchangeScheduler.ifPresent(Scheduler::stop);
                                 peerExchangeScheduler = Optional.empty();
                             }
@@ -188,7 +199,7 @@ public class PeerExchangeAttempt implements Node.Listener {
                     ExceptionUtil.getRootCauseMessage(e), peerExchangeDelaySec.get());
             peerExchangeStrategy.clearPersistedPeers();
             peerExchangeScheduler.ifPresent(Scheduler::stop);
-            peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
+            peerExchangeScheduler = Optional.of(Scheduler.run(() -> retryInitialPeerExchange(minSuccess))
                     .after(peerExchangeDelaySec.get(), TimeUnit.SECONDS)
                     .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
             peerExchangeDelaySec.set(Math.min(20, peerExchangeDelaySec.get() * 2));
@@ -216,7 +227,7 @@ public class PeerExchangeAttempt implements Node.Listener {
                 log.info("Peer exchange with {} completed", peerAddress);
                 return null;
             } catch (Exception exception) {
-                if (!isShutdownInProgress) {
+                if (!isShutdownInProgress.get()) {
                     log.info("Peer exchange with {} failed", peerAddress);
                 }
                 if (connectionId != null) {
