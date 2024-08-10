@@ -272,7 +272,8 @@ public abstract class Connection {
         }
         log.info("Close {}; \ncloseReason: {}", this, closeReason);
         shutdownStarted = true;
-        requestResponseManager.onClosed();
+        requestResponseManager.dispose();
+        connectionMetrics.clear();
         if (inputHandlerFuture != null) {
             inputHandlerFuture.cancel(true);
         }

@@ -45,7 +45,7 @@ public class ConnectionThrottle {
     private static final long MAX_LOG_FREQUENCY = TimeUnit.SECONDS.toMillis(30);
 
     // We apply the log throttle globally, so we use static fields
-    private static AtomicLong lastLoggedTs = new AtomicLong();
+    private static final AtomicLong lastLoggedTs = new AtomicLong();
     private static final List<String> LAST_LOGS = new CopyOnWriteArrayList<>();
 
     private final NetworkLoadSnapshot peersNetworkLoadSnapshot;

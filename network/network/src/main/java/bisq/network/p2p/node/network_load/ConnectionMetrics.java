@@ -175,6 +175,18 @@ public class ConnectionMetrics {
         return sumOfLastMinute(deserializeTimePerMinute, lastMinutes);
     }
 
+    public void clear() {
+        numMessagesSentPerMinute.clear();
+        sentBytesPerMinute.clear();
+        spentSendMessageTimePerMinute.clear();
+        deserializeTimePerMinute.clear();
+        numMessagesReceivedPerMinute.clear();
+        receivedBytesPerMinute.clear();
+        numSentMessagesByMessageClassName.clear();
+        numReceivedMessagesByMessageClassName.clear();
+        rrtList.clear();
+    }
+
     private long sumOf(TreeMap<Integer, AtomicLong> treeMap) {
         return treeMap.values().stream().mapToLong(AtomicLong::get).sum();
     }
