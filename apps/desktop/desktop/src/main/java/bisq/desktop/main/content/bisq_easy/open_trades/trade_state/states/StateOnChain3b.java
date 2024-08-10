@@ -128,24 +128,31 @@ public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> 
 
         void onCompleteTrade() {
             if (model.getExplorerResultValidator().isHasErrors()) {
-                String txValue = model.getBtcBalance().get();
-                String warning;
-                if (StringUtils.isEmpty(txValue)) {
-                    warning = Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress");
-                } else {
-                    String address = model.getBitcoinPaymentData();
-                    String txId = model.getPaymentProof();
-                    String tradeAmount = getFormattedAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
-                    warning = Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching",
-                            address, txId, txValue, tradeAmount);
-                }
-                new Popup().warning(warning)
-                        .actionButtonText(Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching.resolved"))
-                        .onAction(this::doCompleteTrade)
-                        .show();
+                String warning = createWarningMessage();
+                showWarningPopup(warning);
             } else {
                 doCompleteTrade();
             }
+        }
+
+        private String createWarningMessage() {
+            String txValue = model.getBtcBalance().get();
+            String address = model.getBitcoinPaymentData();
+            String txId = model.getPaymentProof();
+
+            if (StringUtils.isEmpty(txValue)) {
+                return Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress", address, txId);
+            } else {
+                String tradeAmount = getFormattedAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
+                return Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching", address, txId, txValue, tradeAmount);
+            }
+        }
+
+        private void showWarningPopup(String warning) {
+            new Popup().warning(warning)
+                    .actionButtonText(Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching.resolved"))
+                    .onAction(this::doCompleteTrade)
+                    .show();
         }
 
         private void doCompleteTrade() {
