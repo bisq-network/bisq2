@@ -129,12 +129,13 @@ public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> 
         void onCompleteTrade() {
             if (model.getExplorerResultValidator().isHasErrors()) {
                 String txValue = model.getBtcBalance().get();
+                String address = model.getBitcoinPaymentData();
+                String txId = model.getPaymentProof();
                 String warning;
                 if (StringUtils.isEmpty(txValue)) {
-                    warning = Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress");
+                    warning = Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress",
+                            address, txId);
                 } else {
-                    String address = model.getBitcoinPaymentData();
-                    String txId = model.getPaymentProof();
                     String tradeAmount = getFormattedAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
                     warning = Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching",
                             address, txId, txValue, tradeAmount);
