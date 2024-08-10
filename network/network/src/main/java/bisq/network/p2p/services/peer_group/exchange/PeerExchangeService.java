@@ -193,7 +193,6 @@ public class PeerExchangeService implements Node.Listener {
             log.warn("Error at CountDownLatch.await: {}. Repeat initial peer exchange with cleared persisted and reported peers after {} sec.",
                     ExceptionUtil.getRootCauseMessage(e), peerExchangeDelaySec);
             peerExchangeStrategy.clearPersistedPeers();
-            peerExchangeStrategy.clearReportedPeers();
             peerExchangeScheduler.ifPresent(Scheduler::stop);
             peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
                     .after(peerExchangeDelaySec, TimeUnit.SECONDS)
