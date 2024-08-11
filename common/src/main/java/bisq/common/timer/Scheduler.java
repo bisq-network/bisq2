@@ -18,6 +18,7 @@
 package bisq.common.timer;
 
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +49,7 @@ public class Scheduler implements TaskScheduler {
     }
 
     public Scheduler name(String threadName) {
-        this.threadName = Optional.of(threadName);
+        this.threadName = Optional.of(StringUtils.truncate(threadName, 10));
         return this;
     }
 
