@@ -126,8 +126,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
                 .selectMediator(takersOffer.getMakersUserProfileId(), trade.getTaker().getNetworkId().getId());
         checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match. " +
-                "mediator=" + mediator + ", takersContract.getMediator()=" +
-                takersContract.getMediator());
+                "\nmediator=" + mediator +
+                "\ntakersContract.getMediator()=" + takersContract.getMediator());
 
         log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
@@ -139,7 +139,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         }
     }
 
-    private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
+    private void commitToModel(ContractSignatureData takersContractSignatureData,
+                               ContractSignatureData makersContractSignatureData) {
         trade.getTaker().getContractSignatureData().set(takersContractSignatureData);
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }

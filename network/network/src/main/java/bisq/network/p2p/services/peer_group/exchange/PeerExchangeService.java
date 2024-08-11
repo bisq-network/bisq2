@@ -127,7 +127,6 @@ public class PeerExchangeService implements Node.Listener {
             minSuccessReachedPin.unbind();
         }
         minSuccessReachedPin = initialPeerExchangeAttempt.getMinSuccessReached().get().addObserver(minSuccessReached -> {
-            log.error("minSuccessReachedPin {}", minSuccessReachedPin);
             if (minSuccessReached) {
                 minSuccessReachedPin.unbind();
                 minSuccessReachedPin = null;
