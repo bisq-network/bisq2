@@ -146,7 +146,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                         MemoryReport.logReport();
                         log.info("Completed republishAuthorizedBondedRoles");
                         log.info("Start request and publish DaoData");
-                        requestDaoData().join();
+                        requestDaoData().join(); // takes about 6 minutes for 500 items
                         MemoryReport.logReport();
                         log.info("Completed request and publish DaoData");
                         periodicRequestDoaDataScheduler = Scheduler.run(() -> {
