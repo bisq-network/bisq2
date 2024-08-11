@@ -147,6 +147,11 @@ public class PeerExchangeService implements Node.Listener {
                     if (throwable != null || !success) {
                         log.info("Initial peer exchange completed. " +
                                 "We start a parallel peerExchangeAttempt for faster connection establishment.");
+
+                        // We release the block in case the minSuccessReached was never reached
+                        if (minSuccessReachedLatch.getCount() > 0) {
+                            minSuccessReachedLatch.countDown();
+                        }
                         retryPeerExchangeAsync();
                     }
                 });
@@ -182,7 +187,7 @@ public class PeerExchangeService implements Node.Listener {
         extendPeerGroupPeerExchangeAttempt.set(Optional.of(attempt));
         List<Address> candidates = peerExchangeStrategy.getAddressesForExtendingPeerGroup();
         try {
-            boolean success = attempt.startAsync(candidates.size(), candidates).get();
+            boolean success = attempt.startAsync(candidates.size() / 2, candidates).get();
             if (!success) {
                 log.warn("extendPeerGroupPeerExchangeAttempt completed unsuccessful.");
             }
@@ -224,7 +229,7 @@ public class PeerExchangeService implements Node.Listener {
         retryPeerExchangeAttempt.set(Optional.of(attempt));
         List<Address> candidates = peerExchangeStrategy.getAddressesForRetryPeerExchange();
         try {
-            boolean success = attempt.startAsync(candidates.size(), candidates).get();
+            boolean success = attempt.startAsync(candidates.size() / 2, candidates).get();
             if (!success) {
                 log.warn("retryPeerExchangeAttempt completed unsuccessful.");
                 retryPeerExchangeAttempt.set(Optional.empty());

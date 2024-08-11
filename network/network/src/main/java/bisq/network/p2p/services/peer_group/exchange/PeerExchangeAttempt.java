@@ -71,7 +71,6 @@ public class PeerExchangeAttempt {
     public CompletableFuture<Boolean> startAsync(int minSuccess, List<Address> candidates) {
         checkArgument(!peerExchangeFuture.isDone(), "peerExchangeFuture already done");
         checkArgument(!isShutdownInProgress.get(), "Already shutdown");
-        checkArgument(minSuccess > 0, "minSuccess must be > 0");
         checkArgument(!candidates.isEmpty(), "Candidates must not be empty");
 
         log.info("Do peer exchange with {} candidates at instance: {}\n{}",
