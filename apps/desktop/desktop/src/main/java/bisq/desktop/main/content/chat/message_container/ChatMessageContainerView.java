@@ -9,6 +9,7 @@ import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -26,11 +27,14 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.stream.Collectors;
 
+import static javafx.scene.input.KeyEvent.KEY_PRESSED;
+
 @Slf4j
 public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox, ChatMessageContainerModel, ChatMessageContainerController> {
     private final static double CHAT_BOX_MAX_WIDTH = 1200;
     public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
     private final BisqTextArea inputField = new BisqTextArea();
+    private final EventHandler<KeyEvent> enterKeyPressedHandler = this::processEnterKeyPressed;
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
@@ -72,17 +76,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
 
-        inputField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
-            if (keyEvent.getCode() == KeyCode.ENTER) {
-                keyEvent.consume();
-                if (keyEvent.isShiftDown()) {
-                    inputField.appendText(System.lineSeparator());
-                } else if (!inputField.getText().isEmpty()) {
-                    controller.onSendMessage(inputField.getText().trim());
-                    inputField.clear();
-                }
-            }
-        });
+        inputField.addEventFilter(KEY_PRESSED, enterKeyPressedHandler);
 
         sendButton.setOnAction(event -> {
             controller.onSendMessage(inputField.getText().trim());
@@ -115,6 +109,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         removeChatDialogEnabledSubscription();
 
         inputField.setOnKeyPressed(null);
+        inputField.removeEventFilter(KEY_PRESSED, enterKeyPressedHandler);
         sendButton.setOnAction(null);
         userMentionPopup.cleanup();
     }
@@ -199,5 +194,17 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         messagesListView.visibleProperty().unbind();
         messagesListView.managedProperty().unbind();
         userProfileSelectionRoot.disableProperty().unbind();
+    }
+
+    private void processEnterKeyPressed(KeyEvent keyEvent) {
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            keyEvent.consume();
+            if (keyEvent.isShiftDown()) {
+                inputField.appendText(System.lineSeparator());
+            } else if (!inputField.getText().isEmpty()) {
+                controller.onSendMessage(inputField.getText().trim());
+                inputField.clear();
+            }
+        }
     }
 }
