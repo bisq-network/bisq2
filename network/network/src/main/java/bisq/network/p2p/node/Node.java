@@ -557,7 +557,7 @@ public class Node implements Connection.Handler {
         if (findConnection(connection).isEmpty()) {
             // TODO for now we delay the shutdown call to not introduce a bigger change in behaviour.
             //  We need to test more to see if that case happens and why, and if there might be valid listeners.
-            log.error("""
+            log.warn("""
                             We got handleNetworkMessage called from an orphaned connection which is not managed by our \
                             outboundConnectionsByAddress or inboundConnectionsByAddress maps. \
                             We close after a short delay that connection to avoid memory leaks. \
@@ -565,7 +565,7 @@ public class Node implements Connection.Handler {
                                                 
                             envelopePayloadMessage={}
                             connection={}""",
-                    envelopePayloadMessage, connection);
+                    StringUtils.truncate(envelopePayloadMessage), connection);
             Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION)).after(100);
         }
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
