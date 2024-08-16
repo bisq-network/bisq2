@@ -198,6 +198,9 @@ message EnvelopePayloadMessage {
 
     // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
     ExternalNetworkMessage externalNetworkMessage = 15;
+
+    StorageReportingRequest storageReportingRequest = 16;
+    StorageReportingResponse storageReportingResponse = 17;
   }
 }
 
@@ -368,5 +371,22 @@ message ResendMessageStore {
 
 message PeerGroupStore {
   repeated Peer persistedPeers = 1;
+}
+
+
+////////////////////////////////////////////////////////////////////
+// StorageReporting
+////////////////////////////////////////////////////////////////////
+
+message StorageReport {
+}
+
+message StorageReportingRequest {
+  string requestId = 1;
+}
+
+message StorageReportingResponse {
+  string requestId = 1;
+  StorageReport storageReport = 2;
 }
     

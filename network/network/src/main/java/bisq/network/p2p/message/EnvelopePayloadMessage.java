@@ -26,6 +26,8 @@ import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
+import bisq.network.p2p.services.data.reporting.StorageReportingRequest;
+import bisq.network.p2p.services.data.reporting.StorageReportingResponse;
 import bisq.network.p2p.services.peer_group.exchange.PeerExchangeRequest;
 import bisq.network.p2p.services.peer_group.exchange.PeerExchangeResponse;
 import bisq.network.p2p.services.peer_group.keep_alive.Ping;
@@ -114,6 +116,12 @@ public interface EnvelopePayloadMessage extends NetworkProto {
             case EXTERNALNETWORKMESSAGE: {
                 // Externally defined messages
                 return ExternalNetworkMessage.fromProto(proto.getExternalNetworkMessage());
+            }
+            case STORAGEREPORTINGREQUEST: {
+                return StorageReportingRequest.fromProto(proto.getStorageReportingRequest());
+            }
+            case STORAGEREPORTINGRESPONSE: {
+                return StorageReportingResponse.fromProto(proto.getStorageReportingResponse());
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
