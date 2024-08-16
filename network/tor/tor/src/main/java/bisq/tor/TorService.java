@@ -35,6 +35,8 @@ import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -128,11 +130,13 @@ public class TorService implements Service {
         log.info("Start hidden service with port {}", port);
         long ts = System.currentTimeMillis();
         try {
-            var localServerSocket = new ServerSocket(RANDOM_PORT);
-            int localPort = localServerSocket.getLocalPort();
+            InetAddress bindAddress = !LinuxDistribution.isWhonix() ? Inet4Address.getLoopbackAddress()
+                    : Inet4Address.getByName("0.0.0.0");
+            var localServerSocket =  new ServerSocket(RANDOM_PORT, 50, bindAddress);
 
             String onionAddress = torKeyPair.getOnionAddress();
             if (!publishedOnionServices.contains(onionAddress)) {
+                int localPort = localServerSocket.getLocalPort();
                 torController.publish(torKeyPair, port, localPort);
                 publishedOnionServices.add(onionAddress);
             }
