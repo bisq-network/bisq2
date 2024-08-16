@@ -53,7 +53,7 @@ If you are a developer check out the [dev guide](./docs/dev/dev-guide.md).
 **Why work on Bisq 2?**
 
 - Compensated Contributions: Unique in open-source, contributors are rewarded for their work.
-- Technological Edge: [P2P network](network.md), Bitcoin, Cryptography,...
+- Technological Edge: [P2P network](./docs/dev/network.md), Bitcoin, Cryptography,...
 - Complex, Rewarding Challenges: Dive into a sophisticated architecture that rewards ingenuity.
 
 
