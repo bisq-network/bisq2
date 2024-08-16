@@ -129,25 +129,33 @@ public abstract class Connection {
                 while (isInputStreamActive()) {
                     var proto = networkEnvelopeSocket.receiveNextEnvelope();
                     // parsing might need some time wo we check again if connection is still active
-                    if (isInputStreamActive()) {
-                        checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
-
-                        connectionThrottle.throttleReceiveMessage();
-
-                        long ts = System.currentTimeMillis();
-                        NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
-                        long deserializeTime = System.currentTimeMillis() - ts;
-                        networkEnvelope.verifyVersion();
-                        connectionMetrics.onReceived(networkEnvelope, deserializeTime);
-
-                        EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
-                        log.debug("Received message: {} at: {}",
-                                StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-                        requestResponseManager.onReceived(envelopePayloadMessage);
-                        NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(envelopePayloadMessage,
-                                networkEnvelope.getAuthorizationToken(),
-                                this));
+                    if (!isInputStreamActive()) {
+                        return;
                     }
+                    checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
+
+                    connectionThrottle.throttleReceiveMessage();
+                    // ThrottleReceiveMessage can cause a delay by Thread.sleep
+                    if (!isInputStreamActive()) {
+                        return;
+                    }
+                    long ts = System.currentTimeMillis();
+                    NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
+                    long deserializeTime = System.currentTimeMillis() - ts;
+                    networkEnvelope.verifyVersion();
+                    connectionMetrics.onReceived(networkEnvelope, deserializeTime);
+
+                    EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
+                    log.debug("Received message: {} at: {}",
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
+                    requestResponseManager.onReceived(envelopePayloadMessage);
+                    NetworkService.DISPATCHER.submit(() -> {
+                        if (isInputStreamActive()) {
+                            handler.handleNetworkMessage(envelopePayloadMessage,
+                                    networkEnvelope.getAuthorizationToken(),
+                                    this);
+                        }
+                    });
                 }
             } catch (Exception exception) {
                 //todo (deferred) StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down

@@ -115,6 +115,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         csvHeaders.addAll(Stream.of(ReputationSource.values())
                 .map(reputationSource -> reputationSource.getDisplayString().toUpperCase())
                 .toList());
+        csvHeaders.add(Res.get("user.reputation.table.columns.livenessState").toUpperCase());
         csvHeaders.add(Res.get("component.standardTable.csv.plainValue", Res.get("user.reputation.table.columns.livenessState").toUpperCase()));
         csvHeaders.addAll(Stream.of(ReputationSource.values())
                 .map(reputationSource -> Res.get("component.standardTable.csv.plainValue", reputationSource.getDisplayString().toUpperCase()))
@@ -138,7 +139,9 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                             .toList());
 
                     // Add livenessState
-                    cellDataInRow.add(String.valueOf(TimeFormatter.formatAge(System.currentTimeMillis() - item.getPublishDate())));
+                    long livenessAge = System.currentTimeMillis() - item.getPublishDate();
+                    cellDataInRow.add(String.valueOf(TimeFormatter.formatAge(livenessAge)));
+                    cellDataInRow.add(String.valueOf(livenessAge));
 
                     // Add plain values (for better filter/sorting)
                     cellDataInRow.addAll(item.getValuePairBySource().entrySet().stream()
