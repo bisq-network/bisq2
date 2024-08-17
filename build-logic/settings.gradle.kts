@@ -7,6 +7,7 @@ dependencyResolutionManagement {
 }
 
 include("commons")
+include("bitcoin-core-binaries")
 include("desktop-regtest")
 include("gradle-tasks")
 include("electrum-binaries")
