@@ -99,6 +99,18 @@ public final class Address implements NetworkProto, Comparable<Address> {
         return !isClearNetAddress() && !isTorAddress();
     }
 
+    public TransportType getTransportType() {
+        if (isClearNetAddress()) {
+            return TransportType.CLEAR;
+        } else if (isTorAddress()) {
+            return TransportType.TOR;
+        } else if (isI2pAddress()) {
+            return TransportType.I2P;
+        } else {
+            throw new IllegalArgumentException("Could not derive TransportType from address: " + getFullAddress());
+        }
+    }
+
     public String getFullAddress() {
         return host + ":" + port;
     }
