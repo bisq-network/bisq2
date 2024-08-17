@@ -385,7 +385,7 @@ message Report {
   sint32 numConnections = 4;
   sint32 memoryUsed = 5;
   sint32 numThreads = 6;
-  sint32 nodeLoad = 7;
+  double nodeLoad = 7;
 }
 message ReportRequest {
   string requestId = 1;

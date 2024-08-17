@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.reporting;
 
+import bisq.common.platform.MemoryReport;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -39,12 +40,14 @@ public class ReportResponseService implements Node.Listener {
 
     private final Node node;
     private final DataService dataService;
+    private final NetworkLoadSnapshot networkLoadSnapshot;
 
     public ReportResponseService(Node node,
                                  DataService dataService,
                                  NetworkLoadSnapshot networkLoadSnapshot) {
         this.node = node;
         this.dataService = dataService;
+        this.networkLoadSnapshot = networkLoadSnapshot;
 
         initialize();
     }
@@ -103,8 +106,15 @@ public class ReportResponseService implements Node.Listener {
             String className = data.getClassName();
             mailboxDataPerClassName.put(className, mailboxDataPerClassName.getOrDefault(className, 0) + 1);
         });
+
+
+        int numConnections = node.getNumConnections();
+        int memoryUsed = (int) MemoryReport.getUsedMemoryInMB();
+        int numThreads = Thread.activeCount();
+        double nodeLoad = networkLoadSnapshot.getCurrentNetworkLoad().getLoad();
+
         return new Report(authorizedDataPerClassName,
                 authenticatedDataPerClassName,
-                mailboxDataPerClassName, 0, 0, 0, 0);
+                mailboxDataPerClassName, numConnections, memoryUsed, numThreads, nodeLoad);
     }
 }

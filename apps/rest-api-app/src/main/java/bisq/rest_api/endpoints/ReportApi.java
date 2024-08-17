@@ -66,7 +66,7 @@ public class ReportApi {
         CompletableFuture<Report> future = networkService.requestReport(Address.fromFullAddress(address));
         try {
             Report report = future.get();
-            log.error(report.toString());
+            log.info(report.toString());
             return ReportDto.from(report);
         } catch (Exception e) {
             throw new RuntimeException(e);

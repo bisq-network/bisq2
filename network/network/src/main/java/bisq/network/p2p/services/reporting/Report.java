@@ -36,7 +36,7 @@ public final class Report implements NetworkProto {
     private final int numConnections;
     private final int memoryUsed;
     private final int numThreads;
-    private final int nodeLoad;
+    private final double nodeLoad;
 
 
     public Report(TreeMap<String, Integer> authorizedDataPerClassName,
@@ -45,7 +45,7 @@ public final class Report implements NetworkProto {
                   int numConnections,
                   int memoryUsed,
                   int numThreads,
-                  int nodeLoad) {
+                  double nodeLoad) {
         this.authorizedDataPerClassName = authorizedDataPerClassName;
         this.authenticatedDataPerClassName = authenticatedDataPerClassName;
         this.mailboxDataPerClassName = mailboxDataPerClassName;
