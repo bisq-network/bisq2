@@ -4,5 +4,6 @@ enum class PackageFormat(val fileExtension: String) {
     DEB("deb"),
     DMG("dmg"),
     EXE("exe"),
+    MSI("msi"),
     RPM("rpm")
 }
