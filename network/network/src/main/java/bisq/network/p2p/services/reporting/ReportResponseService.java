@@ -26,6 +26,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.TreeMap;
@@ -96,10 +97,12 @@ public class ReportResponseService implements Node.Listener {
         });
 
         TreeMap<String, Integer> authenticatedDataPerClassName = new TreeMap<>();
-        dataService.getAuthenticatedData().forEach(data -> {
-            String className = data.getClassName();
-            authenticatedDataPerClassName.put(className, authenticatedDataPerClassName.getOrDefault(className, 0) + 1);
-        });
+        dataService.getAuthenticatedData()
+                .filter(data -> !(data instanceof AuthorizedData))
+                .forEach(data -> {
+                    String className = data.getClassName();
+                    authenticatedDataPerClassName.put(className, authenticatedDataPerClassName.getOrDefault(className, 0) + 1);
+                });
 
         TreeMap<String, Integer> mailboxDataPerClassName = new TreeMap<>();
         dataService.getMailboxData().forEach(data -> {
