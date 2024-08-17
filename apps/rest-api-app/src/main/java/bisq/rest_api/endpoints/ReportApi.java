@@ -17,6 +17,8 @@
 
 package bisq.rest_api.endpoints;
 
+import bisq.common.util.CollectionUtil;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.p2p.services.reporting.Report;
@@ -38,6 +40,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -68,6 +71,29 @@ public class ReportApi {
             Report report = future.get();
             log.info(report.toString());
             return ReportDto.from(report);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Operation(description = "Get list of reports for given comma separated addresses")
+    @ApiResponse(responseCode = "200", description = "the list of reports for given comma separated addresses",
+            content = {
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = ReportDto.class)
+                    )}
+    )
+    @GET
+    @Path("get-reports/{addresses}")
+    public List<ReportDto> getReports(@Parameter(description = "comma separated addresses from which we request the report") @PathParam("addresses") String addresses) {
+        List<CompletableFuture<Report>> futures = CollectionUtil.streamFromCsv(addresses)
+                .map(address -> networkService.requestReport(Address.fromFullAddress(address)))
+                .toList();
+        try {
+            List<Report> reports = CompletableFutureUtils.allOf(futures).get();
+            log.info(reports.toString());
+            return reports.stream().map(ReportDto::from).toList();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
