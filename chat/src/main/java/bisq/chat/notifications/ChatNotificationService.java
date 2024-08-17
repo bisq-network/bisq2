@@ -261,6 +261,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             wasRemoved = candidate.map(notification -> {
                         boolean result = persistableStore.getNotifications().remove(notification);
                         if (result) {
+                            changedNotification.set(null);
                             changedNotification.set(notification);
                         }
                         return result;
