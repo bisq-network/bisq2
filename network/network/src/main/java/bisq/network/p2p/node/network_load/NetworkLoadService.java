@@ -25,7 +25,6 @@ import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataRequest;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.StorageService;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -51,10 +50,10 @@ public class NetworkLoadService {
     private Optional<Scheduler> updateNetworkLoadScheduler = Optional.empty();
 
     public NetworkLoadService(ServiceNodesByTransport serviceNodesByTransport,
-                              DataService dataService,
+                              StorageService storageService,
                               NetworkLoadSnapshot networkLoadSnapshot) {
         this.serviceNodesByTransport = serviceNodesByTransport;
-        storageService = dataService.getStorageService();
+        this.storageService = storageService;
         this.networkLoadSnapshot = networkLoadSnapshot;
     }
 

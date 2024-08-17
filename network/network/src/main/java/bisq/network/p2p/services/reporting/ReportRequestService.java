@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.reporting;
+package bisq.network.p2p.services.reporting;
 
-import bisq.network.NetworkService;
+import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -26,6 +26,7 @@ import bisq.network.p2p.node.Node;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -34,14 +35,16 @@ import java.util.concurrent.TimeUnit;
  * We do not user a config here as we want to have the same behaviour in the network to avoid stale networkLoad states.
  */
 @Slf4j
-public class StorageReportingService implements Node.Listener {
-    private static final long TIMEOUT_SEC = 120;
+public class ReportRequestService implements Node.Listener {
+    private static final long TIMEOUT_SEC = 10;
 
     private final Node node;
-    private final Map<String, StorageReportingHandler> requestHandlerMap = new ConcurrentHashMap<>();
+    private final Map<String, ReportHandler> requestHandlerMap = new ConcurrentHashMap<>();
 
-    public StorageReportingService(Node node) {
+    public ReportRequestService(Node node) {
         this.node = node;
+
+        initialize();
     }
 
     public void initialize() {
@@ -50,36 +53,17 @@ public class StorageReportingService implements Node.Listener {
 
     public void shutdown() {
         node.removeListener(this);
-        requestHandlerMap.values().forEach(StorageReportingHandler::dispose);
+        requestHandlerMap.values().forEach(ReportHandler::dispose);
         requestHandlerMap.clear();
     }
 
-    public void request(Connection connection) {
-        String key = connection.getId();
-        if (requestHandlerMap.containsKey(key)) {
-            log.info("requestHandlerMap contains {}. " +
-                            "This is expected if the connection is still pending the response or the peer is not available " +
-                            "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
-                    key, connection);
-            return;
-        }
-        StorageReportingHandler handler = new StorageReportingHandler(node, connection);
-        requestHandlerMap.put(key, handler);
-        handler.request()
-                .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
-                .whenComplete((storageReport, throwable) -> {
-                    log.error("storageReporting {}", storageReport);
-                    requestHandlerMap.remove(key);
-                });
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Node.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof StorageReportingRequest request) {
-            StorageReport storageReport = new StorageReport();
-            StorageReportingResponse response = new StorageReportingResponse(request.getRequestId(), storageReport);
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(response, connection));
-        }
     }
 
     @Override
@@ -93,5 +77,30 @@ public class StorageReportingService implements Node.Listener {
             requestHandlerMap.get(key).dispose();
             requestHandlerMap.remove(key);
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Report> request(Address address) {
+        Connection connection = node.getConnection(address);
+        String key = connection.getId();
+        if (requestHandlerMap.containsKey(key)) {
+            log.info("requestHandlerMap contains {}. " +
+                            "This is expected if the connection is still pending the response or the peer is not available " +
+                            "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
+                    key, connection);
+            return null;
+        }
+        ReportHandler handler = new ReportHandler(node, connection);
+        requestHandlerMap.put(key, handler);
+        return handler.request()
+                .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
+                .whenComplete((report, throwable) -> {
+                    log.error("storageReporting {}", report);
+                    requestHandlerMap.remove(key);
+                });
     }
 }

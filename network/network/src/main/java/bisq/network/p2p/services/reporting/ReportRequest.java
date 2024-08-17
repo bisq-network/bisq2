@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.reporting;
+package bisq.network.p2p.services.reporting;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.message.Response;
+import bisq.network.p2p.message.Request;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,14 +26,11 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class StorageReportingResponse implements EnvelopePayloadMessage, Response {
+public final class ReportRequest implements EnvelopePayloadMessage, Request {
     private final String requestId;
-    private final StorageReport storageReport;
 
-    public StorageReportingResponse(String requestId, StorageReport storageReport) {
+    public ReportRequest(String requestId) {
         this.requestId = requestId;
-        this.storageReport = storageReport;
-
         verify();
     }
 
@@ -43,28 +40,25 @@ public final class StorageReportingResponse implements EnvelopePayloadMessage, R
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
-        return newEnvelopePayloadMessageBuilder().setStorageReportingResponse(toValueProto(serializeForHash));
+        return newEnvelopePayloadMessageBuilder().setReportRequest(toValueProto(serializeForHash));
     }
 
     @Override
-    public bisq.network.protobuf.StorageReportingResponse toValueProto(boolean serializeForHash) {
+    public bisq.network.protobuf.ReportRequest toValueProto(boolean serializeForHash) {
         return resolveValueProto(serializeForHash);
     }
 
     @Override
-    public bisq.network.protobuf.StorageReportingResponse.Builder getValueBuilder(boolean serializeForHash) {
-        return bisq.network.protobuf.StorageReportingResponse.newBuilder()
-                .setRequestId(requestId)
-                .setStorageReport(storageReport.toProto(serializeForHash));
+    public bisq.network.protobuf.ReportRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.ReportRequest.newBuilder().setRequestId(requestId);
     }
 
-    public static StorageReportingResponse fromProto(bisq.network.protobuf.StorageReportingResponse proto) {
-        return new StorageReportingResponse(proto.getRequestId(),
-                StorageReport.fromProto(proto.getStorageReport()));
+    public static ReportRequest fromProto(bisq.network.protobuf.ReportRequest proto) {
+        return new ReportRequest(proto.getRequestId());
     }
 
     @Override
     public double getCostFactor() {
-        return 0.05;
+        return 0.5;
     }
 }

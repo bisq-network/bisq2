@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.reporting;
+package bisq.network.p2p.services.reporting;
 
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
@@ -33,24 +33,24 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Getter
 @Slf4j
-class StorageReportingHandler implements Connection.Listener {
+class ReportHandler implements Connection.Listener {
     private final Node node;
     private final Connection connection;
-    private final CompletableFuture<StorageReport> future = new CompletableFuture<>();
+    private final CompletableFuture<Report> future = new CompletableFuture<>();
     private final String requestId;
     private long requestTs;
 
-    StorageReportingHandler(Node node, Connection connection) {
+    ReportHandler(Node node, Connection connection) {
         this.node = node;
         this.connection = connection;
 
         requestId = UUID.randomUUID().toString();
-        connection.addListener(this);
+        this.connection.addListener(this);
     }
 
-    CompletableFuture<StorageReport> request() {
+    CompletableFuture<Report> request() {
         requestTs = System.currentTimeMillis();
-        supplyAsync(() -> node.send(new StorageReportingRequest(requestId), connection), NetworkService.NETWORK_IO_POOL)
+        supplyAsync(() -> node.send(new ReportRequest(requestId), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);
@@ -62,14 +62,14 @@ class StorageReportingHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof StorageReportingResponse response) {
+        if (envelopePayloadMessage instanceof ReportResponse response) {
             if (response.getRequestId().equals(requestId)) {
-                StorageReport storageReport = response.getStorageReport();
+                Report report = response.getReport();
                 String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
                 log.info("Received StorageReportingResponse after {} from {} with requestId {}.Connection={}\nStorageReporting={}",
-                        passed, connection.getPeerAddress(), response.getRequestId(), connection.getId(), storageReport);
+                        passed, connection.getPeerAddress(), response.getRequestId(), connection.getId(), report);
                 removeListeners();
-                future.complete(storageReport);
+                future.complete(report);
             } else {
                 log.warn("Received StorageReportingResponse from {} with invalid requestId {}. RequestId {}. Connection={}",
                         connection.getPeerAddress(), response.getRequestId(), requestId, connection.getId());
