@@ -26,13 +26,15 @@ import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.base.Joiner;
 import javafx.scene.Node;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
+@Slf4j
 public class NetworkInfoController implements Controller {
     @Getter
     private final NetworkInfoModel model;
@@ -46,10 +48,11 @@ public class NetworkInfoController implements Controller {
     private final Optional<TransportTypeController> torController = Optional.empty();
     @Getter
     private final Optional<TransportTypeController> i2pController = Optional.empty();
+    private final NetworkService networkService;
 
     public NetworkInfoController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-        NetworkService networkService = serviceProvider.getNetworkService();
+        networkService = serviceProvider.getNetworkService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         model = new NetworkInfoModel(networkService.getSupportedTransportTypes(),
                 !networkService.isTransportTypeSupported(TransportType.CLEAR),
@@ -82,7 +85,10 @@ public class NetworkInfoController implements Controller {
         model.getVersionDistribution().clear();
         model.getVersionDistribution().addAll(map.entrySet().stream()
                 .map(e -> new Pair<>(e.getKey(), e.getValue().size() / (double) totalSize.get()))
-                .collect(Collectors.toList()));
+                .toList());
+        log.info("Version distribution\n{}", Joiner.on("\n").join(map.entrySet().stream()
+                .map(e -> "Version: " + e.getKey() + "; Number of users: " + e.getValue().size())
+                .toList()));
     }
 
     @Override
