@@ -44,4 +44,8 @@ public class CollectionUtil {
     public static <T> List<T> toShuffledList(Set<T> set) {
         return toShuffledList(set.stream());
     }
+
+    public static Stream<String> streamFromCsv(String addresses) {
+        return Stream.of(addresses.split(",")).filter(Objects::nonNull).map(String::trim);
+    }
 }
