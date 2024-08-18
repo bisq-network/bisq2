@@ -325,7 +325,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private void updateFilteredMarketChannelItems() {
         model.getFilteredMarketChannelItems().setPredicate(null);
         model.getFilteredMarketChannelItems().setPredicate(marketChannelItemsPredicate);
-        model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
     }
 
     private void updateFavouriteMarketChannelItems() {
@@ -336,7 +335,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getFavouriteMarketChannelItems().setPredicate(favouriteMarketChannelItemsPredicate);
         model.getFavouritesTableViewHeightChanged().set(false);
         model.getFavouritesTableViewHeightChanged().set(true);
-        model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
     }
 
     private void maybeSelectFirst() {
