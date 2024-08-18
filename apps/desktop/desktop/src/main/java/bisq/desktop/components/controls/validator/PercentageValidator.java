@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls.validator;
 
 import bisq.common.util.StringUtils;
+import bisq.i18n.Res;
 import bisq.presentation.parser.PercentageParser;
 import javafx.scene.control.TextInputControl;
 import lombok.Getter;
@@ -33,10 +34,16 @@ public class PercentageValidator extends ValidatorBase {
     private Optional<Number> numberValue = Optional.empty();
     private final boolean allowEmptyString;
 
-    public PercentageValidator(String message) {
-        super(message);
+    public PercentageValidator() {
+        this(Res.get("validation.invalidPercentage"));
+    }
 
-        this.allowEmptyString = false;
+    public PercentageValidator(String message) {
+        this(message, false);
+    }
+
+    public PercentageValidator(String message, boolean allowEmptyString) {
+        this(message, Optional.empty(), Optional.empty(), allowEmptyString);
     }
 
     public PercentageValidator(String message, Number minValue, Number maxValue) {
@@ -44,10 +51,17 @@ public class PercentageValidator extends ValidatorBase {
     }
 
     public PercentageValidator(String message, Number minValue, Number maxValue, boolean allowEmptyString) {
+        this(message, Optional.of(minValue), Optional.of(maxValue), allowEmptyString);
+    }
+
+    private PercentageValidator(String message,
+                                Optional<Number> minValue,
+                                Optional<Number> maxValue,
+                                boolean allowEmptyString) {
         super(message);
 
-        this.minValue = Optional.of(minValue);
-        this.maxValue = Optional.of(maxValue);
+        this.minValue = minValue;
+        this.maxValue = maxValue;
         this.allowEmptyString = allowEmptyString;
     }
 
