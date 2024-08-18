@@ -23,7 +23,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.validator.ValidationControl;
 import bisq.desktop.components.controls.validator.ValidatorBase;
-import bisq.desktop.components.controls.validator.deprecated.InputValidator;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
@@ -270,10 +269,6 @@ public class MaterialTextField extends Pane {
     public void setEditable(boolean value) {
         textInputControl.setEditable(value);
         update();
-    }
-
-    public void setValidator(InputValidator validator) {
-        // todo
     }
 
     public void setStringConverter(StringConverter<Number> stringConverter) {
