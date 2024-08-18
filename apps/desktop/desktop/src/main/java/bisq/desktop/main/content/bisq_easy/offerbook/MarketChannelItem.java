@@ -34,8 +34,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.ref.WeakReference;
-
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
@@ -70,8 +68,6 @@ public class MarketChannelItem {
         setUpColorAdjustments();
         marketLogo.setEffect(DEFAULT_COLOR_ADJUST);
 
-        channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
-        updateNumOffers();
         refreshNotifications();
     }
 
@@ -86,6 +82,7 @@ public class MarketChannelItem {
             value = String.valueOf(numNotifications);
         }
         numMarketNotifications.set(value);
+        updateNumOffers();
     }
 
     private void setUpColorAdjustments() {
