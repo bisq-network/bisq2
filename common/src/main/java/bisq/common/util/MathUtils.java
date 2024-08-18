@@ -112,4 +112,18 @@ public class MathUtils {
     public static double getLog2(long value) {
         return Math.log(value) / Math.log(2);
     }
+
+    public static double parseToDouble(String value) {
+        String cleaned = StringUtils.removeAllWhitespaces(value).replace(",", ".");
+        return Double.parseDouble(cleaned);
+    }
+
+    public static boolean isValidDouble(String value) {
+        try {
+            parseToDouble(value);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
