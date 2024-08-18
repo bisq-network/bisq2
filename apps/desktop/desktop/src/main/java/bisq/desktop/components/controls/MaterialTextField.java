@@ -188,7 +188,9 @@ public class MaterialTextField extends Pane {
 
     public void setValidator(ValidatorBase validator) {
         validationControl.setValidators(validator);
-        validator.hasErrorsProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> validate()).get());
+
+        // TODO that cause an endless loop if hasErrors is set to false in the eval method in validators (as in NumberValidator).
+        // validator.hasErrorsProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> validate()).get());
     }
 
     public boolean validate() {
