@@ -31,7 +31,10 @@ import javafx.scene.Node;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -69,11 +72,11 @@ public class NetworkInfoController implements Controller {
     @Override
     public void onActivate() {
         AtomicInteger totalSize = new AtomicInteger();
-        Map<String, Set<UserProfile>> map = new HashMap<>();
+        TreeMap<String, Set<UserProfile>> map = new TreeMap<>();
         userProfileService.getUserProfiles().forEach(userProfile -> {
             String version = userProfile.getApplicationVersion();
             if (version.isEmpty()) {
-                version = Res.get("data.na");
+                version = Res.get("settings.network.versionDistribution.oldVersions");
             }
             map.putIfAbsent(version, new HashSet<>());
             if (!map.get(version).contains(userProfile)) {
@@ -86,9 +89,17 @@ public class NetworkInfoController implements Controller {
         model.getVersionDistribution().addAll(map.entrySet().stream()
                 .map(e -> new Pair<>(e.getKey(), e.getValue().size() / (double) totalSize.get()))
                 .toList());
-        log.info("Version distribution\n{}", Joiner.on("\n").join(map.entrySet().stream()
-                .map(e -> "Version: " + e.getKey() + "; Number of users: " + e.getValue().size())
-                .toList()));
+
+        String info = Joiner.on("\n")
+                .join(map.entrySet().stream()
+                        .map(entry -> {
+                            String version = entry.getKey();
+                            int numUsers = entry.getValue().size();
+                            return Res.get("settings.network.versionDistribution.tooltipLine", numUsers, version);
+                        })
+                        .toList());
+        model.setVersionDistributionTooltip(info);
+        log.info("Version distribution\n{}", info);
     }
 
     @Override
