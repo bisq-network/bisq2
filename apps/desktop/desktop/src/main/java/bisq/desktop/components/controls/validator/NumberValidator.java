@@ -19,6 +19,7 @@ package bisq.desktop.components.controls.validator;
 
 import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
+import bisq.i18n.Res;
 import javafx.scene.control.TextInputControl;
 import lombok.Getter;
 
@@ -26,12 +27,16 @@ import java.util.Optional;
 
 public class NumberValidator extends ValidatorBase {
     @Getter
-    private Optional<Number> minValue = Optional.empty();
+    private Optional<Number> minValue;
     @Getter
-    private Optional<Number> maxValue = Optional.empty();
+    private Optional<Number> maxValue;
     @Getter
     private Optional<Number> numberValue = Optional.empty();
     private final boolean allowEmptyString;
+
+    public NumberValidator() {
+        this(Res.get("validation.invalidNumber"), false);
+    }
 
     public NumberValidator(String message) {
         this(message, false);
