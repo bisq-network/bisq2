@@ -220,12 +220,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         updateFavouriteMarketChannelItems();
         maybeSelectFirst();
 
-        changedNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
-                UIThread.run(() -> {
-                    if (notification != null) {
-                        applyNotification(notification);
-                    }
-                }));
+        changedNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
+            if (notification != null) {
+                UIThread.run(() -> applyNotification(notification));
+            }
+        });
     }
 
     private void applyNotification(ChatNotification notification) {
