@@ -26,6 +26,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
@@ -71,7 +72,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final Predicate<MarketChannelItem> favouriteMarketChannelItemsPredicate;
     private OfferbookListController offerbookListController;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
-            favouriteMarketsPin, showMarketSelectionListCollapsedSettingsPin;
+            favouriteMarketsPin, showMarketSelectionListCollapsedSettingsPin,
+            changedNotificationPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
@@ -218,14 +220,21 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         updateFavouriteMarketChannelItems();
         maybeSelectFirst();
 
-        model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
+        changedNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
+            if (notification != null) {
+                UIThread.run(() -> applyNotification(notification));
+            }
+        });
+    }
+
+    private void applyNotification(ChatNotification notification) {
+        findMarketChannelItem(notification.getChatChannelId())
+                .ifPresent(MarketChannelItem::refreshNotifications);
     }
 
     @Override
     public void onDeactivate() {
         super.onDeactivate();
-
-        model.getMarketChannelItems().forEach(MarketChannelItem::onDeactivate);
 
         showMarketSelectionListCollapsedSettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
@@ -235,6 +244,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
         favouriteMarketsPin.unbind();
+        changedNotificationPin.unbind();
 
         resetSelectedChildTarget();
     }
@@ -325,7 +335,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private void updateFilteredMarketChannelItems() {
         model.getFilteredMarketChannelItems().setPredicate(null);
         model.getFilteredMarketChannelItems().setPredicate(marketChannelItemsPredicate);
-        model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
     }
 
     private void updateFavouriteMarketChannelItems() {
@@ -336,7 +345,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getFavouriteMarketChannelItems().setPredicate(favouriteMarketChannelItemsPredicate);
         model.getFavouritesTableViewHeightChanged().set(false);
         model.getFavouritesTableViewHeightChanged().set(true);
-        model.getMarketChannelItems().forEach(MarketChannelItem::onActivate);
     }
 
     private void maybeSelectFirst() {
@@ -350,6 +358,12 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private Optional<MarketChannelItem> findMarketChannelItem(Market market) {
         return model.getMarketChannelItems().stream()
                 .filter(e -> e.getMarket().equals(market))
+                .findFirst();
+    }
+
+    private Optional<MarketChannelItem> findMarketChannelItem(String chatChannelId) {
+        return model.getMarketChannelItems().stream()
+                .filter(e -> e.getChannel().getId().equals(chatChannelId))
                 .findFirst();
     }
 

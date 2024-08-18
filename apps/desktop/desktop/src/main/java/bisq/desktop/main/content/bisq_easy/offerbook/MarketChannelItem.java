@@ -19,10 +19,8 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
-import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.MarketImageComposition;
@@ -35,8 +33,6 @@ import javafx.scene.effect.ColorAdjust;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.lang.ref.WeakReference;
 
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -56,7 +52,6 @@ public class MarketChannelItem {
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
     private final StringProperty numMarketNotifications = new SimpleStringProperty();
-    private Pin changedChatNotificationPin;
 
     MarketChannelItem(BisqEasyOfferbookChannel channel,
                       FavouriteMarketsService favouriteMarketsService,
@@ -73,32 +68,10 @@ public class MarketChannelItem {
         setUpColorAdjustments();
         marketLogo.setEffect(DEFAULT_COLOR_ADJUST);
 
-        channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
-        updateNumOffers();
-
-        chatNotificationService.getNotConsumedNotifications(channel).forEach(this::applyNotification);
-
-        onActivate();
+        refreshNotifications();
     }
 
-    void onActivate() {
-        if (changedChatNotificationPin != null) {
-            changedChatNotificationPin.unbind();
-        }
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
-                UIThread.run(() -> applyNotification(notification)));
-    }
-
-    void onDeactivate() {
-        if (changedChatNotificationPin != null) {
-            changedChatNotificationPin.unbind();
-        }
-    }
-
-    private void applyNotification(ChatNotification notification) {
-        if (notification == null) {
-            return;
-        }
+    void refreshNotifications() {
         long numNotifications = chatNotificationService.getNumNotifications(channel);
         String value = "";
         if (numNotifications > 9) {
@@ -109,6 +82,7 @@ public class MarketChannelItem {
             value = String.valueOf(numNotifications);
         }
         numMarketNotifications.set(value);
+        updateNumOffers();
     }
 
     private void setUpColorAdjustments() {

@@ -370,10 +370,6 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             return;
         }
 
-        if (isConsumed(chatNotification)) {
-            return;
-        }
-
         // At first start-up when user has not setup their profile yet, we set all notifications as consumed
         if (!userIdentityService.hasUserIdentities()) {
             consumeNotification(chatNotification);
