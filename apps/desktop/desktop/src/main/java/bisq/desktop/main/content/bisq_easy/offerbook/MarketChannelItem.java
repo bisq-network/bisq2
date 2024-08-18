@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
@@ -73,14 +72,10 @@ public class MarketChannelItem {
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
-
-        chatNotificationService.getNotConsumedNotifications(channel).forEach(this::applyNotification);
+        refreshNotifications();
     }
 
-    void applyNotification(ChatNotification notification) {
-        if (notification == null) {
-            return;
-        }
+    void refreshNotifications() {
         long numNotifications = chatNotificationService.getNumNotifications(channel);
         String value = "";
         if (numNotifications > 9) {

@@ -230,7 +230,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     private void applyNotification(ChatNotification notification) {
         findMarketChannelItem(notification.getChatChannelId())
-                .ifPresent(marketplaceChannelItem -> marketplaceChannelItem.applyNotification(notification));
+                .ifPresent(MarketChannelItem::refreshNotifications);
     }
 
     @Override
