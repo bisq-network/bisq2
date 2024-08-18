@@ -22,7 +22,6 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
-import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.MarketImageComposition;
@@ -56,7 +55,6 @@ public class MarketChannelItem {
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
     private final StringProperty numMarketNotifications = new SimpleStringProperty();
-    private Pin changedChatNotificationPin;
 
     MarketChannelItem(BisqEasyOfferbookChannel channel,
                       FavouriteMarketsService favouriteMarketsService,
@@ -77,25 +75,9 @@ public class MarketChannelItem {
         updateNumOffers();
 
         chatNotificationService.getNotConsumedNotifications(channel).forEach(this::applyNotification);
-
-        onActivate();
     }
 
-    void onActivate() {
-        if (changedChatNotificationPin != null) {
-            changedChatNotificationPin.unbind();
-        }
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
-                UIThread.run(() -> applyNotification(notification)));
-    }
-
-    void onDeactivate() {
-        if (changedChatNotificationPin != null) {
-            changedChatNotificationPin.unbind();
-        }
-    }
-
-    private void applyNotification(ChatNotification notification) {
+    void applyNotification(ChatNotification notification) {
         if (notification == null) {
             return;
         }
