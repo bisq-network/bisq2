@@ -62,8 +62,8 @@ public class PriceInput {
         controller.model.description.set(description);
     }
 
-    public void setQuote(PriceQuote price) {
-        controller.model.priceQuote.set(price);
+    public void setQuote(PriceQuote priceQuote) {
+        controller.setQuote(priceQuote);
     }
 
     public void setIsTakeOffer() {
@@ -84,6 +84,11 @@ public class PriceInput {
 
     public void deselect() {
         controller.view.textInput.deselect();
+    }
+
+    public void resetValidation() {
+        controller.model.doResetValidation.set(true);
+        controller.model.doResetValidation.set(false);
     }
 
     public void setEditable(boolean value) {
@@ -117,6 +122,11 @@ public class PriceInput {
             model.reset();
             model.market = market;
             updateFromMarketPrice();
+        }
+
+        public void setQuote(PriceQuote priceQuote) {
+            model.priceString.set(priceQuote == null ? "" : PriceFormatter.format(priceQuote));
+            model.priceQuote.set(priceQuote);
         }
 
         private void updateFromMarketPrice() {
@@ -201,6 +211,7 @@ public class PriceInput {
         private final StringProperty description = new SimpleStringProperty();
         private boolean isEditable = true;
         private final BooleanProperty isPriceValid = new SimpleBooleanProperty();
+        private final BooleanProperty doResetValidation = new SimpleBooleanProperty();
 
         private Model() {
         }
@@ -218,7 +229,7 @@ public class PriceInput {
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int WIDTH = 250;
         private final MaterialTextField textInput;
-        private Subscription focusedPin;
+        private Subscription focusedPin, doResetValidationPin;
 
         private View(Model model, Controller controller, NumberValidator validator) {
             super(new VBox(), model, controller);
@@ -235,15 +246,21 @@ public class PriceInput {
             textInput.descriptionProperty().bind(model.description);
             textInput.textProperty().bindBidirectional(model.priceString);
             focusedPin = EasyBind.subscribe(textInput.textInputFocusedProperty(), controller::onFocusedChanged);
+            doResetValidationPin = EasyBind.subscribe(model.doResetValidation, doResetValidation -> {
+                if (doResetValidation != null && doResetValidation) {
+                    textInput.resetValidation();
+                }
+            });
             textInput.setMouseTransparent(!model.isEditable);
         }
 
         @Override
         protected void onViewDetached() {
-            textInput.resetValidation();
             textInput.descriptionProperty().unbind();
             textInput.textProperty().unbindBidirectional(model.priceString);
+            textInput.resetValidation();
             focusedPin.unsubscribe();
+            doResetValidationPin.unsubscribe();
         }
     }
 }
