@@ -30,15 +30,20 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -272,7 +277,7 @@ class TradePhaseBox {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Label phase1Label, phase2Label, phase3Label, phase4Label;
         private final Button requestMediationButton;
-        private final Hyperlink openTradeGuide, walletHelp, reportToMediator;
+        private final BisqMenuItem openTradeGuide, walletHelp, reportToMediator;
         private final List<Triple<HBox, Label, Badge>> phaseItems;
         private Subscription phaseIndexPin;
 
@@ -299,24 +304,17 @@ class TradePhaseBox {
 
             phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4);
 
-            walletHelp = new Hyperlink(Res.get("bisqEasy.walletGuide.open"), ImageUtil.getImageViewById("icon-wallet"));
-            walletHelp.setGraphicTextGap(5);
-
-            openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeGuide.open"), ImageUtil.getImageViewById("icon-help-grey"));
-            openTradeGuide.setGraphicTextGap(5);
-
-            reportToMediator = new Hyperlink(Res.get("bisqEasy.tradeState.reportToMediator"), ImageUtil.getImageViewById("icon-report"));
-            reportToMediator.setGraphicTextGap(5);
+            walletHelp = new BisqMenuItem("icon-wallet", "icon-wallet", Res.get("bisqEasy.walletGuide.open"));
+            openTradeGuide = new BisqMenuItem("icon-help-grey", "icon-help-white", Res.get("bisqEasy.tradeGuide.open"));
+            reportToMediator = new BisqMenuItem("icon-report", "icon-report-white", Res.get("bisqEasy.tradeState.reportToMediator"));
+            VBox tradeOptionsVBox = new VBox(10, walletHelp, openTradeGuide, reportToMediator);
 
             requestMediationButton = new Button(Res.get("bisqEasy.tradeState.requestMediation"));
             requestMediationButton.getStyleClass().add("outlined-button");
 
             VBox.setMargin(phase1HBox, new Insets(25, 0, 0, 0));
+            VBox.setMargin(tradeOptionsVBox, new Insets(30, 0, 0, 0));
             VBox.setMargin(requestMediationButton, new Insets(15, 0, 0, 0));
-            VBox.setMargin(walletHelp, new Insets(30, 0, 0, 3));
-            VBox.setMargin(openTradeGuide, new Insets(0, 0, 0, 3));
-            VBox.setMargin(reportToMediator, new Insets(0, 0, 0, 3));
-
             root.getChildren().addAll(
                     phase1HBox,
                     getVLine(),
@@ -326,9 +324,7 @@ class TradePhaseBox {
                     getVLine(),
                     phase4HBox,
                     Spacer.fillVBox(),
-                    walletHelp,
-                    openTradeGuide,
-                    reportToMediator,
+                    tradeOptionsVBox,
                     requestMediationButton);
         }
 
