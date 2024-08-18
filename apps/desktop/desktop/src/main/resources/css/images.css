@@ -744,6 +744,10 @@
     -fx-image: url("/images/icons/icon-wallet.png");
 }
 
+#icon-wallet-white {
+    -fx-image: url("/images/icons/icon-wallet-white.png");
+}
+
 #icon-report {
     -fx-image: url("/images/icons/icon-report.png");
 }

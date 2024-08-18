@@ -305,7 +305,7 @@ class TradePhaseBox {
             phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4);
 
             double width = 160;
-            walletHelp = new BisqMenuItem("icon-wallet", "icon-wallet", Res.get("bisqEasy.walletGuide.open"));
+            walletHelp = new BisqMenuItem("icon-wallet", "icon-wallet-white", Res.get("bisqEasy.walletGuide.open"));
             walletHelp.setPrefWidth(width);
             openTradeGuide = new BisqMenuItem("icon-help-grey", "icon-help-white", Res.get("bisqEasy.tradeGuide.open"));
             openTradeGuide.setPrefWidth(width);
