@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.converters;
 
+import bisq.common.util.MathUtils;
 import bisq.presentation.formatters.DefaultNumberFormatter;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class DoubleStringConverter extends StringConverter<Number> {
     }
 
     public Number fromString(String value) {
-        return DefaultNumberFormatter.parse(value);
+        return MathUtils.parseToDouble(value);
     }
 
     public String toString(Number numberValue) {
