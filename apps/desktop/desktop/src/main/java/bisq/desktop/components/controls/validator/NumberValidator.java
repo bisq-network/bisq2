@@ -17,8 +17,8 @@
 
 package bisq.desktop.components.controls.validator;
 
+import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
-import bisq.presentation.formatters.DefaultNumberFormatter;
 import javafx.scene.control.TextInputControl;
 import lombok.Getter;
 
@@ -34,9 +34,11 @@ public class NumberValidator extends ValidatorBase {
     private final boolean allowEmptyString;
 
     public NumberValidator(String message) {
-        super(message);
+        this(message, false);
+    }
 
-        this.allowEmptyString = false;
+    public NumberValidator(String message, boolean allowEmptyString) {
+        this(message, Optional.empty(), Optional.empty(), allowEmptyString);
     }
 
     public NumberValidator(String message, Number minValue, Number maxValue) {
@@ -44,10 +46,17 @@ public class NumberValidator extends ValidatorBase {
     }
 
     public NumberValidator(String message, Number minValue, Number maxValue, boolean allowEmptyString) {
+        this(message, Optional.of(minValue), Optional.of(maxValue), allowEmptyString);
+    }
+
+    private NumberValidator(String message,
+                            Optional<Number> minValue,
+                            Optional<Number> maxValue,
+                            boolean allowEmptyString) {
         super(message);
 
-        this.minValue = Optional.of(minValue);
-        this.maxValue = Optional.of(maxValue);
+        this.minValue = minValue;
+        this.maxValue = maxValue;
         this.allowEmptyString = allowEmptyString;
     }
 
@@ -69,7 +78,7 @@ public class NumberValidator extends ValidatorBase {
                 return;
             }
 
-            double value = DefaultNumberFormatter.parse(text);
+            double value = MathUtils.parseToDouble(text);
             numberValue = Optional.of(value);
 
             if (minValue.isPresent() && value < minValue.get().doubleValue()) {
