@@ -41,6 +41,7 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
+import bisq.network.p2p.services.reporting.Report;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
@@ -50,12 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -297,5 +293,9 @@ public class ServiceNodesByTransport {
 
     public Collection<ServiceNode> getAllServices() {
         return map.values();
+    }
+
+    public CompletableFuture<Report> requestReport(Address address) {
+        return map.get(address.getTransportType()).requestReport(address);
     }
 }

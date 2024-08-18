@@ -76,8 +76,7 @@ class InventoryHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof InventoryResponse) {
-            InventoryResponse response = (InventoryResponse) envelopePayloadMessage;
+        if (envelopePayloadMessage instanceof InventoryResponse response) {
             if (response.getRequestNonce() == nonce) {
                 printReceivedInventory(response);
                 removeListeners();
@@ -97,23 +96,17 @@ class InventoryHandler implements Connection.Listener {
                 .forEach(dataRequest -> {
                     String dataRequestName = dataRequest.getClass().getSimpleName();
                     String payloadName = dataRequest.getClass().getSimpleName();
-                    if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                        AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
+                    if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
                         payloadName = addRequest.getDistributedData().getClass().getSimpleName();
-                    } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                        RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                    } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
                         payloadName = removeRequest.getClassName();
-                    } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
-                        RefreshAuthenticatedDataRequest request = (RefreshAuthenticatedDataRequest) dataRequest;
+                    } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
                         payloadName = request.getClassName();
-                    } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
-                        AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
+                    } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
                         payloadName = addRequest.getAppendOnlyData().getClass().getSimpleName();
-                    } else if (dataRequest instanceof AddMailboxRequest) {
-                        AddMailboxRequest addRequest = (AddMailboxRequest) dataRequest;
+                    } else if (dataRequest instanceof AddMailboxRequest addRequest) {
                         payloadName = addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                    } else if (dataRequest instanceof RemoveMailboxRequest) {
-                        RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) dataRequest;
+                    } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
                         payloadName = removeRequest.getClassName();
                     }
                     dataRequestMap.putIfAbsent(dataRequestName, new HashMap<>());

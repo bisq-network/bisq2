@@ -25,10 +25,9 @@ dependencies {
     implementation("bisq:bisq-easy")
     implementation("bisq:application")
 
+    implementation("network:network-common")
     implementation("network:network")
     implementation("wallets:core")
-    // implementation("wallets:electrum")
-    // implementation("wallets:bitcoind")
 
     implementation(libs.typesafe.config)
     implementation(libs.bundles.glassfish.jersey)

@@ -90,14 +90,12 @@ public abstract class FilterService<T extends InventoryFilter> {
                 .forEach(mapEntry -> {
                     if (isAuthenticatedDataRequestMissing(filter, mapEntry)) {
                         AuthenticatedDataRequest dataRequest = mapEntry.getValue();
-                        if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                            AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) dataRequest;
+                        if (dataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
                             DistributedData distributedData = addAuthenticatedDataRequest.getDistributedData();
                             if (predicate.test(distributedData.getVersion())) {
                                 addRequests.add(addAuthenticatedDataRequest);
                             }
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                            RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
                             if (predicate.test(removeAuthenticatedDataRequest.getVersion())) {
                                 removeRequests.add(removeAuthenticatedDataRequest);
                             }
@@ -127,7 +125,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                         }
                         return !maxSizeReached.get();
                     })
-                    .collect(Collectors.toList()));
+                    .toList());
         }
         return sortedAndFilteredRequests;
     }
@@ -143,13 +141,11 @@ public abstract class FilterService<T extends InventoryFilter> {
                 .forEach(mapEntry -> {
                     if (isMailboxRequestMissing(filter, mapEntry)) {
                         MailboxRequest dataRequest = mapEntry.getValue();
-                        if (dataRequest instanceof AddMailboxRequest) {
-                            AddMailboxRequest addMailboxRequest = (AddMailboxRequest) dataRequest;
+                        if (dataRequest instanceof AddMailboxRequest addMailboxRequest) {
                             if (predicate.test(addMailboxRequest.getMailboxSequentialData().getMailboxData().getVersion())) {
                                 addRequests.add(addMailboxRequest);
                             }
-                        } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            RemoveMailboxRequest removeMailboxRequest = (RemoveMailboxRequest) dataRequest;
+                        } else if (dataRequest instanceof RemoveMailboxRequest removeMailboxRequest) {
                             if (predicate.test(removeMailboxRequest.getVersion())) {
                                 removeRequests.add(removeMailboxRequest);
                             }
@@ -176,7 +172,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                         }
                         return !maxSizeReached.get();
                     })
-                    .collect(Collectors.toList()));
+                    .toList());
         }
         return sortedAndFilteredRequests;
     }

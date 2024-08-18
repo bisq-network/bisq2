@@ -203,6 +203,10 @@ public class DataService implements StorageService.Listener {
                 .map(authenticatedData -> (AuthorizedData) authenticatedData);
     }
 
+    public Stream<MailboxData> getMailboxData() {
+        return storageService.getMailboxData();
+    }
+
     public Stream<AuthenticatedData> getAuthenticatedPayloadStreamByStoreName(String storeName) {
         return storageService.getAuthenticatedData(storeName);
     }

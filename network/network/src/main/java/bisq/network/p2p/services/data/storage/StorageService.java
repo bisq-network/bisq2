@@ -330,6 +330,17 @@ public class StorageService {
         return getStoresByStoreType(ALL).flatMap(store -> new HashMap<>(store.getPersistableStore().getMap()).entrySet().stream());
     }
 
+    public Stream<MailboxData> getMailboxData() {
+        return mailboxStores.values().stream().flatMap(this::getMailboxData);
+    }
+
+    private Stream<MailboxData> getMailboxData(DataStorageService<? extends DataRequest> store) {
+        return store.getPersistableStore().getClone().getMap().values().stream()
+                .filter(e -> e instanceof AddMailboxRequest)
+                .map(e -> (AddMailboxRequest) e)
+                .map(e -> e.getMailboxSequentialData().getMailboxData());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Get or create stores

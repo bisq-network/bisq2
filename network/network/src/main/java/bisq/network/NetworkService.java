@@ -54,6 +54,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.services.reporting.Report;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -133,7 +134,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
-        dataService = supportedServices.contains(ServiceNode.SupportedService.DATA) ?
+        boolean isDataServiceSupported = supportedServices.contains(ServiceNode.SupportedService.DATA);
+        dataService = isDataServiceSupported ?
                 Optional.of(new DataService(persistenceService)) :
                 Optional.empty();
 
@@ -166,11 +168,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 resendMessageService,
                 networkLoadSnapshot);
 
-
-        networkLoadService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
+        boolean isNetworkLoadServiceSupported = isDataServiceSupported &&
                 supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
-                supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
-                Optional.of(new NetworkLoadService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadSnapshot)) :
+                supportedServices.contains(ServiceNode.SupportedService.MONITOR);
+        networkLoadService = isNetworkLoadServiceSupported ?
+                Optional.of(new NetworkLoadService(serviceNodesByTransport,
+                        dataService.orElseThrow().getStorageService(),
+                        networkLoadSnapshot)) :
                 Optional.empty();
 
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
@@ -510,5 +514,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 .filter(serviceNode -> serviceNode.getConfidentialMessageService().isPresent())
                 .map(serviceNode -> serviceNode.getConfidentialMessageService().get())
                 .collect(Collectors.toSet());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Report
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Report> requestReport(Address address) {
+        return serviceNodesByTransport.requestReport(address);
     }
 }

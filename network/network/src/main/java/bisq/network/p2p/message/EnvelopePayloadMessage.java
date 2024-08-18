@@ -32,6 +32,8 @@ import bisq.network.p2p.services.peer_group.keep_alive.Ping;
 import bisq.network.p2p.services.peer_group.keep_alive.Pong;
 import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeRequest;
 import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeResponse;
+import bisq.network.p2p.services.reporting.ReportRequest;
+import bisq.network.p2p.services.reporting.ReportResponse;
 import com.google.protobuf.Message;
 
 /**
@@ -114,6 +116,12 @@ public interface EnvelopePayloadMessage extends NetworkProto {
             case EXTERNALNETWORKMESSAGE: {
                 // Externally defined messages
                 return ExternalNetworkMessage.fromProto(proto.getExternalNetworkMessage());
+            }
+            case REPORTREQUEST: {
+                return ReportRequest.fromProto(proto.getReportRequest());
+            }
+            case REPORTRESPONSE: {
+                return ReportResponse.fromProto(proto.getReportResponse());
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
