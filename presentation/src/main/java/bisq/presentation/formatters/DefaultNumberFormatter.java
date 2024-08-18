@@ -1,6 +1,6 @@
 package bisq.presentation.formatters;
 
-import bisq.common.util.StringUtils;
+import bisq.common.util.MathUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.RoundingMode;
@@ -33,7 +33,7 @@ public class DefaultNumberFormatter {
      * @return The formatted number according to the DEFAULT_NUMBER_FORMAT
      */
     public static String reformat(String numberValue) {
-        return format(parse(numberValue));
+        return format(MathUtils.parseToDouble(numberValue));
     }
 
     public static String format(Number value) {
@@ -42,10 +42,5 @@ public class DefaultNumberFormatter {
 
     public static String format(double value, DecimalFormat decimalFormat) {
         return decimalFormat.format(value);
-    }
-
-    public static double parse(String value) {
-        String cleaned = StringUtils.removeAllWhitespaces(value).replace(",", ".");
-        return Double.parseDouble(cleaned);
     }
 }
