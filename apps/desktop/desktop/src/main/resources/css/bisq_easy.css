@@ -546,6 +546,12 @@
  * Trade state phase (left side box)                                           *
  ******************************************************************************/
 
+.outlined-button.request-mediation-button {
+    -fx-padding: 5 24 5 24 !important;
+    -fx-border-color: -bisq2-yellow !important;
+    -fx-text-fill: -bisq2-yellow !important;
+}
+
 .bisq-easy-trade-state-phase {
     -fx-font-size: 0.93em;
 }

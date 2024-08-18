@@ -304,17 +304,22 @@ class TradePhaseBox {
 
             phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4);
 
+            double width = 160;
             walletHelp = new BisqMenuItem("icon-wallet", "icon-wallet", Res.get("bisqEasy.walletGuide.open"));
+            walletHelp.setPrefWidth(width);
             openTradeGuide = new BisqMenuItem("icon-help-grey", "icon-help-white", Res.get("bisqEasy.tradeGuide.open"));
+            openTradeGuide.setPrefWidth(width);
             reportToMediator = new BisqMenuItem("icon-report", "icon-report-white", Res.get("bisqEasy.tradeState.reportToMediator"));
+            reportToMediator.setPrefWidth(width);
             VBox tradeOptionsVBox = new VBox(10, walletHelp, openTradeGuide, reportToMediator);
+            tradeOptionsVBox.setPadding(new Insets(0, 20, 0, 0));
 
             requestMediationButton = new Button(Res.get("bisqEasy.tradeState.requestMediation"));
-            requestMediationButton.getStyleClass().add("outlined-button");
+            requestMediationButton.getStyleClass().addAll("outlined-button", "request-mediation-button");
 
             VBox.setMargin(phase1HBox, new Insets(25, 0, 0, 0));
             VBox.setMargin(tradeOptionsVBox, new Insets(30, 0, 0, 0));
-            VBox.setMargin(requestMediationButton, new Insets(15, 0, 0, 0));
+            VBox.setMargin(requestMediationButton, new Insets(20, 0, 0, 0));
             root.getChildren().addAll(
                     phase1HBox,
                     getVLine(),
