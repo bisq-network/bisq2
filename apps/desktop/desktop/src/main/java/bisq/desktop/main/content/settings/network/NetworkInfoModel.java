@@ -26,6 +26,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -36,13 +37,18 @@ import java.util.Set;
 @Getter
 public class NetworkInfoModel implements Model {
     private final List<Pair<String, Double>> versionDistribution = new ArrayList<>();
+    @Setter
+    private String versionDistributionTooltip;
     private final BooleanProperty clearNetDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty torDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
     private final Set<TransportType> supportedTransportTypes;
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("data.na"));
 
-    public NetworkInfoModel(Set<TransportType> supportedTransportTypes, boolean clearNetDisabled, boolean torDisabled, boolean i2pDisabled) {
+    public NetworkInfoModel(Set<TransportType> supportedTransportTypes,
+                            boolean clearNetDisabled,
+                            boolean torDisabled,
+                            boolean i2pDisabled) {
         this.supportedTransportTypes = supportedTransportTypes;
         this.clearNetDisabled.set(clearNetDisabled);
         this.torDisabled.set(torDisabled);
