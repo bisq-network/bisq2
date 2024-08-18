@@ -106,10 +106,12 @@ public class TradeWizardPriceController implements Controller {
         }
 
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
-        isPriceInvalidPin = EasyBind.subscribe(priceInput.getValidationResult(), validationResult -> {
-            if (validationResult != null && !validationResult.isValid) {
-                model.getErrorMessage().set(validationResult.errorMessage);
+        isPriceInvalidPin = EasyBind.subscribe(priceInput.isPriceValid(), isPriceValid -> {
+            if (isPriceValid != null && !isPriceValid) {
+                model.getErrorMessage().set(priceInput.getErrorMessage());
                 model.setLastValidPriceQuote(null);
+            } else {
+                model.getErrorMessage().set(null);
             }
         });
         priceSpecPin = EasyBind.subscribe(model.getPriceSpec(), this::updateFeedback);

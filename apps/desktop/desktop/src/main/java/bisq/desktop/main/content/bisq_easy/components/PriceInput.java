@@ -21,10 +21,10 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
+import bisq.common.util.MathUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.validator.deprecated.InputValidator;
-import bisq.desktop.components.controls.validator.deprecated.PriceValidator;
+import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
@@ -90,15 +90,19 @@ public class PriceInput {
         controller.view.textInput.setEditable(value);
     }
 
-    public ReadOnlyObjectProperty<InputValidator.ValidationResult> getValidationResult() {
-        return controller.model.validationResult;
+    public ReadOnlyBooleanProperty isPriceValid() {
+        return controller.model.isPriceValid;
+    }
+
+    public String getErrorMessage() {
+        return controller.validator.getMessage();
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
-        private final PriceValidator validator = new PriceValidator();
+        private final NumberValidator validator = new NumberValidator(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
         private final MarketPriceService marketPriceService;
         private Pin marketPricePin;
         private Subscription quotePin, pricePin;
@@ -126,7 +130,7 @@ public class PriceInput {
 
         @Override
         public void onActivate() {
-            model.validationResult.set(null);
+            model.isPriceValid.set(true);
             updateFromMarketPrice();
 
             marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
@@ -152,9 +156,9 @@ public class PriceInput {
                 return;
             }
 
-            InputValidator.ValidationResult validationResult = validator.validate(price);
-            model.validationResult.set(validationResult);
-            if (!validationResult.isValid) {
+            boolean isValid = MathUtils.isValidDouble(price);
+            model.isPriceValid.set(isValid);
+            if (!isValid) {
                 return;
             }
 
@@ -196,7 +200,7 @@ public class PriceInput {
         private boolean isFocused;
         private final StringProperty description = new SimpleStringProperty();
         private boolean isEditable = true;
-        private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>();
+        private final BooleanProperty isPriceValid = new SimpleBooleanProperty();
 
         private Model() {
         }
@@ -216,7 +220,7 @@ public class PriceInput {
         private final MaterialTextField textInput;
         private Subscription focusedPin;
 
-        private View(Model model, Controller controller, PriceValidator validator) {
+        private View(Model model, Controller controller, NumberValidator validator) {
             super(new VBox(), model, controller);
 
             textInput = new MaterialTextField(model.description.get(), Res.get("component.priceInput.prompt"));
@@ -236,6 +240,7 @@ public class PriceInput {
 
         @Override
         protected void onViewDetached() {
+            textInput.resetValidation();
             textInput.descriptionProperty().unbind();
             textInput.textProperty().unbindBidirectional(model.priceString);
             focusedPin.unsubscribe();
