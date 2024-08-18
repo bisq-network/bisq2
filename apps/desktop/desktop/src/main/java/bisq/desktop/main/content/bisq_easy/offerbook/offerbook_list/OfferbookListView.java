@@ -203,20 +203,26 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 .left()
                 .fixWidth(150)
                 .setCellFactory(getUserProfileCellFactory())
-                .comparator(Comparator
-                        .comparingLong(OfferbookListItem::getTotalScore).reversed()
-                        .thenComparing(OfferbookListItem::getUserNickname))
+                .comparator(Comparator.comparingLong(OfferbookListItem::getTotalScore).reversed())
                 .build();
         tableView.getColumns().add(userProfileColumn);
         tableView.getSortOrder().add(userProfileColumn);
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        BisqTableColumn<OfferbookListItem> priceColumn = new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.price"))
                 .right()
                 .fixWidth(70)
                 .setCellFactory(getPriceCellFactory())
-                .comparator(Comparator.comparing(OfferbookListItem::getPriceSpecAsPercent))
-                .build());
+                .comparator((o1, o2) -> {
+                    if (o1.getBisqEasyOffer().getDirection().isSell()) {
+                        return Double.compare(o1.getPriceSpecAsPercent(), o2.getPriceSpecAsPercent());
+                    } else {
+                        return Double.compare(o2.getPriceSpecAsPercent(), o1.getPriceSpecAsPercent());
+                    }
+                })
+                .build();
+        tableView.getColumns().add(priceColumn);
+        tableView.getSortOrder().add(priceColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .titleProperty(model.getFiatAmountTitle())
