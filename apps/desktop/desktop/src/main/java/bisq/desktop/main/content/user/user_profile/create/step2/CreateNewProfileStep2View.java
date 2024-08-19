@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2Model, CreateNewProfileStep2Controller> {
-    private final ImageView catIconView;
+    private final ImageView catHashImageView;
     private final MaterialTextField statement;
     private final MaterialTextArea terms;
     private final Button saveButton, cancelButton;
@@ -63,16 +63,16 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
         nickName.setAlignment(Pos.TOP_CENTER);
 
-        catIconView = new ImageView();
-        catIconView.setFitWidth(128);
-        catIconView.setFitHeight(128);
+        catHashImageView = new ImageView();
+        catHashImageView.setFitWidth(128);
+        catHashImageView.setFitHeight(128);
 
         nym = new Label();
         nym.getStyleClass().addAll("bisq-text-7");
         nym.setAlignment(Pos.TOP_CENTER);
 
         int width = 250;
-        VBox catVBox = new VBox(8, nickName, catIconView, nym);
+        VBox catVBox = new VBox(8, nickName, catHashImageView, nym);
         catVBox.setAlignment(Pos.TOP_CENTER);
         catVBox.setPrefWidth(width);
         catVBox.setPrefHeight(200);
@@ -126,7 +126,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
 
     @Override
     protected void onViewAttached() {
-        catIconView.imageProperty().bind(model.getCatHashImage());
+        catHashImageView.imageProperty().bind(model.getCatHashImage());
         nickName.textProperty().bind(model.getNickName());
         nym.textProperty().bind(model.getNym());
         terms.textProperty().bindBidirectional(model.getTerms());
@@ -144,7 +144,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
 
     @Override
     protected void onViewDetached() {
-        catIconView.imageProperty().unbind();
+        catHashImageView.imageProperty().unbind();
         nickName.textProperty().unbind();
         nym.textProperty().unbind();
         terms.textProperty().unbindBidirectional(model.getTerms());

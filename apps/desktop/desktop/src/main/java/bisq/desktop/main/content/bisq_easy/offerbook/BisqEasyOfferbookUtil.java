@@ -6,11 +6,13 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringExpression;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -75,7 +77,6 @@ public class BisqEasyOfferbookUtil {
             private final HBox container = new HBox(0, vBox, Spacer.fillHBox(), favouriteLabel);
             private final Tooltip marketDetailsTooltip = new BisqTooltip();
             private final Tooltip favouriteTooltip = new BisqTooltip();
-            private Subscription selectedPin;
 
             {
                 setCursor(Cursor.HAND);
@@ -101,10 +102,6 @@ public class BisqEasyOfferbookUtil {
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (selectedPin != null) {
-                    selectedPin.unsubscribe();
-                }
-
                 if (item != null && !empty) {
                     String quoteCurrencyDisplayName = item.getMarket().getQuoteCurrencyDisplayName();
                     marketName.setText(quoteCurrencyDisplayName);
@@ -116,11 +113,6 @@ public class BisqEasyOfferbookUtil {
                     StringExpression formattedTooltip = Bindings.createStringBinding(() ->
                             BisqEasyOfferbookUtil.getFormattedTooltip(numOffersString, quoteCurrencyDisplayName), item.getNumOffers());
                     marketDetailsTooltip.textProperty().bind(formattedTooltip);
-
-                    TableRow<MarketChannelItem> tableRow = getTableRow();
-                    if (tableRow != null) {
-                        selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), item::updateMarketLogoEffect);
-                    }
 
                     favouriteLabel.setOnMouseClicked(e -> item.toggleFavourite());
 
@@ -141,6 +133,7 @@ public class BisqEasyOfferbookUtil {
             TableCell<MarketChannelItem, MarketChannelItem>> getMarketLogoCellFactory() {
         return column -> new TableCell<>() {
             private final Badge numMessagesBadge = new Badge(Pos.CENTER);
+            private Subscription selectedPin;
 
             {
                 setCursor(Cursor.HAND);
@@ -153,13 +146,28 @@ public class BisqEasyOfferbookUtil {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
                     numMessagesBadge.textProperty().bind(item.getNumMarketNotifications());
-                    Node marketLogo = item.getMarketLogo();
+
+                    Node marketLogo = MarketImageComposition.createMarketLogo(item.getMarket().getQuoteCurrencyCode());
+                    marketLogo.setCache(true);
+                    marketLogo.setCacheHint(CacheHint.SPEED);
+                    marketLogo.setEffect(MarketChannelItem.DIMMED);
+
+                    TableRow<MarketChannelItem> tableRow = getTableRow();
+                    if (tableRow != null) {
+                        selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), isSelectedMarket -> {
+                            marketLogo.setEffect(isSelectedMarket ? MarketChannelItem.SELECTED : MarketChannelItem.DIMMED);
+                        });
+                    }
+
                     StackPane pane = new StackPane(marketLogo, numMessagesBadge);
                     StackPane.setMargin(numMessagesBadge, new Insets(33, 0, 0, 35));
                     setGraphic(pane);
                 } else {
                     numMessagesBadge.textProperty().unbind();
                     numMessagesBadge.setText("");
+                    if (selectedPin != null) {
+                        selectedPin.unsubscribe();
+                    }
                     setGraphic(null);
                 }
             }

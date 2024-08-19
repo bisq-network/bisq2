@@ -19,8 +19,11 @@ package bisq.desktop.components.cathash;
 
 import bisq.common.util.ByteArrayUtils;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.user.profile.UserProfile;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
@@ -33,9 +36,20 @@ public class CatHash {
     private static final int MAX_CACHE_SIZE = 10000;
     private static final ConcurrentHashMap<BigInteger, Image> CACHE = new ConcurrentHashMap<>();
 
+    public static Button getIconButton(UserProfile userProfile, double iconSize) {
+        return BisqIconButton.createIconButton(getImageView(userProfile, iconSize));
+    }
+
+    public static ImageView getImageView(UserProfile userProfile, double iconSize) {
+        ImageView imageView = new ImageView(getImage(userProfile));
+        imageView.setFitWidth(iconSize);
+        imageView.setFitHeight(iconSize);
+        return imageView;
+    }
+
     public static Image getImage(UserProfile userProfile) {
         return getImage(userProfile.getPubKeyHash(), userProfile.getProofOfWork().getSolution(),
-                userProfile.getAvatarVersion(), true);
+                userProfile.getAvatarVersion());
     }
 
     public static Image getImage(byte[] pubKeyHash, byte[] powSolution, int avatarVersion) {
@@ -67,16 +81,10 @@ public class CatHash {
 
     private static BucketConfig getBucketConfig(int avatarVersion) {
         BucketConfig bucketConfig;
-        switch (avatarVersion) {
-            case 0: {
-                bucketConfig = new BucketConfigV0();
-                log.debug("Creating v0 BucketConfig: {}", bucketConfig.getClass().getName());
-                break;
-            }
-            default: {
-                bucketConfig = new BucketConfigV0();
-                log.debug("Falling to create default BucketConfig: {}", bucketConfig.getClass().getName());
-            }
+        if (avatarVersion == 0) {
+            bucketConfig = new BucketConfigV0();
+        } else {
+            throw new IllegalArgumentException("Provided avatarVersion not supported. avatarVersion=" + avatarVersion);
         }
         return bucketConfig;
     }

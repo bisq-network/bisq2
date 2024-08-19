@@ -39,7 +39,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
     protected final Button regenerateButton;
     protected final Button createProfileButton;
     protected final Label nym;
-    protected final ImageView catIconView;
+    protected final ImageView catHashImageView;
     protected final ProgressIndicator powProgressIndicator;
     protected final MaterialTextField nickname;
     protected final ProgressIndicator createProfileIndicator;
@@ -66,12 +66,12 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nickname = new MaterialTextField(Res.get("onboarding.createProfile.nickName"), Res.get("onboarding.createProfile.nickName.prompt"));
         nickname.setMaxWidth(315);
 
-        catIconView = new ImageView();
-        catIconView.setCursor(Cursor.HAND);
+        catHashImageView = new ImageView();
+        catHashImageView.setCursor(Cursor.HAND);
         int size = 120;
-        catIconView.setFitWidth(size);
-        catIconView.setFitHeight(size);
-        Tooltip.install(catIconView, new BisqTooltip(Res.get("onboarding.createProfile.regenerate")));
+        catHashImageView.setFitWidth(size);
+        catHashImageView.setFitHeight(size);
+        Tooltip.install(catHashImageView, new BisqTooltip(Res.get("onboarding.createProfile.regenerate")));
 
         int indicatorSize = size / 2;
         powProgressIndicator = new ProgressIndicator();
@@ -79,10 +79,10 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         powProgressIndicator.setMaxSize(indicatorSize, indicatorSize);
         powProgressIndicator.setOpacity(0.5);
 
-        StackPane catIconPane = new StackPane();
-        catIconPane.setMinSize(size, size);
-        catIconPane.setMaxSize(size, size);
-        catIconPane.getChildren().addAll(powProgressIndicator, catIconView);
+        StackPane catHashPane = new StackPane();
+        catHashPane.setMinSize(size, size);
+        catHashPane.setMaxSize(size, size);
+        catHashPane.getChildren().addAll(powProgressIndicator, catHashImageView);
 
         Label titleLabel = new Label(Res.get("onboarding.createProfile.nym").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
@@ -94,7 +94,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nymBox.setAlignment(Pos.CENTER);
 
 
-        VBox catVBox = new VBox(8, catIconPane, nymBox);
+        VBox catVBox = new VBox(8, catHashPane, nymBox);
         catVBox.setAlignment(Pos.CENTER);
 
         regenerateButton = new Button(Res.get("onboarding.createProfile.regenerate"));
@@ -132,9 +132,9 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
 
     @Override
     protected void onViewAttached() {
-        catIconView.imageProperty().bind(model.getCatHashImage());
-        catIconView.managedProperty().bind(model.getCatHashIconVisible());
-        catIconView.visibleProperty().bind(model.getCatHashIconVisible());
+        catHashImageView.imageProperty().bind(model.getCatHashImage());
+        catHashImageView.managedProperty().bind(model.getCatHashIconVisible());
+        catHashImageView.visibleProperty().bind(model.getCatHashIconVisible());
         powProgressIndicator.managedProperty().bind(model.getCatHashIconVisible().not());
         powProgressIndicator.visibleProperty().bind(model.getCatHashIconVisible().not());
         powProgressIndicator.progressProperty().bind(model.getPowProgress());
@@ -142,7 +142,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nym.textProperty().bind(model.getNym());
         nym.disableProperty().bind(model.getCatHashIconVisible().not());
         regenerateButton.disableProperty().bind(model.getReGenerateButtonDisabled());
-        catIconView.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
+        catHashImageView.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
         nickname.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
 
         nickname.textProperty().bindBidirectional(model.getNickName());
@@ -157,7 +157,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         feedbackLabel.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
 
         regenerateButton.setOnMouseClicked(e -> controller.onRegenerate());
-        catIconView.setOnMouseClicked(e -> controller.onRegenerate());
+        catHashImageView.setOnMouseClicked(e -> controller.onRegenerate());
         createProfileButton.setOnMouseClicked(e -> {
             controller.onCreateUserProfile();
             root.requestFocus();
@@ -168,9 +168,9 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
 
     @Override
     protected void onViewDetached() {
-        catIconView.imageProperty().unbind();
-        catIconView.managedProperty().unbind();
-        catIconView.visibleProperty().unbind();
+        catHashImageView.imageProperty().unbind();
+        catHashImageView.managedProperty().unbind();
+        catHashImageView.visibleProperty().unbind();
         powProgressIndicator.managedProperty().unbind();
         powProgressIndicator.visibleProperty().unbind();
         powProgressIndicator.progressProperty().unbind();
@@ -180,7 +180,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nym.textProperty().unbind();
         nym.disableProperty().unbind();
         regenerateButton.disableProperty().unbind();
-        catIconView.mouseTransparentProperty().unbind();
+        catHashImageView.mouseTransparentProperty().unbind();
         nickname.mouseTransparentProperty().unbind();
 
         nickname.textProperty().unbindBidirectional(model.getNickName());
@@ -192,7 +192,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         createProfileIndicator.progressProperty().unbind();
 
         regenerateButton.setOnMouseClicked(null);
-        catIconView.setOnMouseClicked(null);
+        catHashImageView.setOnMouseClicked(null);
         createProfileButton.setOnMouseClicked(null);
     }
 }

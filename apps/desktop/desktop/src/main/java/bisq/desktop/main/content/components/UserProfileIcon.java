@@ -46,7 +46,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     private final BisqTooltip tooltip = new BisqTooltip();
     @Getter
     private final StringProperty formattedAge = new SimpleStringProperty("");
-    private final ImageView userProfileIcon = new ImageView();
+    private final ImageView catHashImageView = new ImageView();
     @Nullable
     private UserProfile userProfile;
     @Getter
@@ -66,7 +66,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         setSize(size);
 
         setAlignment(Pos.CENTER);
-        getChildren().addAll(userProfileIcon, livenessIndicator);
+        getChildren().addAll(catHashImageView, livenessIndicator);
         sceneChangeListener = (ov, oldValue, newScene) -> handleSceneChange(oldValue, newScene);
     }
 
@@ -92,7 +92,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         }
 
         // Is cached in CatHash
-        userProfileIcon.setImage(CatHash.getImage(userProfile));
+        catHashImageView.setImage(CatHash.getImage(userProfile));
 
         userProfileInfo = userProfile.getTooltipString();
         String version = userProfile.getApplicationVersion();
@@ -113,7 +113,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
     public void dispose() {
         livenessScheduler.dispose();
-        userProfileIcon.setImage(null);
+        catHashImageView.setImage(null);
         userProfile = null;
         Tooltip.uninstall(this, tooltip);
     }
@@ -129,8 +129,8 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
 
     public void setSize(double size) {
         livenessIndicator.setSize(size);
-        userProfileIcon.setFitWidth(size);
-        userProfileIcon.setFitHeight(size);
+        catHashImageView.setFitWidth(size);
+        catHashImageView.setFitHeight(size);
 
         // We want to keep it centered, so we apply it to both sides with inverted numbers
         double adjustment = size * 0.9;

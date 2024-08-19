@@ -22,10 +22,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -35,9 +31,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 // TODO used in a List, should be extracted to a ListItem
 
@@ -60,8 +55,8 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         return controller.view.getRoot();
     }
 
-    public ImageView getCatIcon() {
-        return controller.view.getCatIcon();
+    public ImageView getCatHashImageView() {
+        return controller.view.getCatHashImageView();
     }
 
     public boolean isIgnored() {
@@ -100,12 +95,13 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
             }
 
             String userName = userProfile.getUserName();
-            model.userName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", userName) : userName);
-            model.catHashImage.set(CatHash.getImage(userProfile));
+            model.setUserName(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", userName) : userName);
+            model.setCatHashImage(CatHash.getImage(userProfile));
         }
 
         @Override
         public void onDeactivate() {
+            model.setCatHashImage(null);
         }
 
         public boolean isUserProfileBanned() {
@@ -113,14 +109,16 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         }
     }
 
+    @Getter
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class Model implements bisq.desktop.common.view.Model {
         @EqualsAndHashCode.Include
         private final UserProfile userProfile;
-
         private boolean ignored;
-        private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
-        private final StringProperty userName = new SimpleStringProperty();
+        @Setter
+        private Image catHashImage;
+        @Setter
+        private String userName;
 
         private Model(UserProfile userProfile) {
             this.userProfile = userProfile;
@@ -130,9 +128,8 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         @Getter
-        private final ImageView catIcon;
+        private final ImageView catHashImageView;
         private final Label userName;
-        private Subscription catHashNodeSubscription;
 
         private View(Model model, Controller controller) {
             super(new HBox(10), model, controller);
@@ -152,40 +149,22 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
             String tooltipString = banPrefix + model.userProfile.getTooltipString();
             Tooltip.install(userName, new BisqTooltip(tooltipString));
 
-            catIcon = new ImageView();
-            catIcon.setFitWidth(37.5);
-            catIcon.setFitHeight(37.5);
-            Tooltip.install(catIcon, new BisqTooltip(tooltipString));
-            if (isUserProfileBanned) {
-                // coloring icon red
-                /*Blend blush = new Blend(BlendMode.MULTIPLY,
-                        new ColorAdjust(),
-                        new ColorInput(0,
-                                0,
-                                37.5,
-                                37.5,
-                                Color.RED));
-                catIcon.setClip(new Circle(18.75, 18.75, 18.75));
-                catIcon.setEffect(blush);*/
-            }
-
-            root.getChildren().addAll(catIcon, userName);
+            catHashImageView = new ImageView();
+            catHashImageView.setFitWidth(37.5);
+            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+            Tooltip.install(catHashImageView, new BisqTooltip(tooltipString));
+            root.getChildren().addAll(catHashImageView, userName);
         }
 
         @Override
         protected void onViewAttached() {
-            userName.textProperty().bind(model.userName);
-            catHashNodeSubscription = EasyBind.subscribe(model.catHashImage, image -> {
-                if (image != null) {
-                    this.catIcon.setImage(image);
-                }
-            });
+            userName.setText(model.getUserName());
+            catHashImageView.setImage(model.getCatHashImage());
         }
 
         @Override
         protected void onViewDetached() {
-            userName.textProperty().unbind();
-            catHashNodeSubscription.unsubscribe();
+            catHashImageView.setImage(null);
         }
     }
 }

@@ -54,6 +54,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -129,7 +130,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.nickName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", nickName) : nickName);
             model.nym.set(userProfile.getNym());
             model.userProfileIdString.set(userProfile.getId());
-            model.catHashNode.set(CatHash.getImage(userProfile));
+            model.setCatHashImage(CatHash.getImage(userProfile));
 
             model.addressByTransport.set(userProfile.getAddressByTransportDisplayString(26));
 
@@ -174,6 +175,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 livenessUpateScheduler.stop();
                 livenessUpateScheduler = null;
             }
+            model.setCatHashImage(null);
         }
 
         void onSendPrivateMessage() {
@@ -216,7 +218,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private Optional<Consumer<UserProfile>> mentionUserHandler = Optional.empty();
         private Optional<Consumer<UserProfile>> sendPrivateMessageHandler = Optional.empty();
         private Optional<Runnable> ignoreUserStateHandler = Optional.empty();
-        private final ObjectProperty<Image> catHashNode = new SimpleObjectProperty<>();
+        @Setter
+        private Image catHashImage;
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty addressByTransport = new SimpleStringProperty();
@@ -241,7 +244,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ImageView catIconImageView;
+        private final ImageView catHashImageView;
         private final Label nickName, botId, userId, addressByTransport, statement, totalReputationScore,
                 profileAge, livenessState, terms, version;
         private final BisqMenuItem privateMsg, mention, ignore, undoIgnore, report;
@@ -249,7 +252,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final BisqIconButton botIdCopyButton, userIdCopyButton, addressByTransportCopyButton;
         private final Button closeButton;
-        private Subscription catHashNodeSubscription;
+        private Subscription reputationScorePin;
 
         private View(Model model, Controller controller) {
             super(new VBox(15), model, controller);
@@ -277,9 +280,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 nickName.getStyleClass().add("error");
             }
 
-            catIconImageView = new ImageView();
-            catIconImageView.setFitWidth(100);
-            catIconImageView.setFitHeight(100);
+            catHashImageView = new ImageView();
+            catHashImageView.setFitWidth(100);
+            catHashImageView.setFitHeight(100);
 
             reputationScoreDisplay = new ReputationScoreDisplay();
             reputationScoreDisplay.setAlignment(Pos.CENTER);
@@ -354,11 +357,13 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
             VBox.setMargin(nickName, new Insets(10, 0, 0, 0));
-            root.getChildren().addAll(header, nickName, catIconImageView, reputationScoreDisplay, scrollPane, optionsVBox);
+            root.getChildren().addAll(header, nickName, catHashImageView, reputationScoreDisplay, scrollPane, optionsVBox);
         }
 
         @Override
         protected void onViewAttached() {
+            catHashImageView.setImage(model.getCatHashImage());
+
             nickName.textProperty().bind(model.nickName);
             botId.textProperty().bind(model.nym);
             userId.textProperty().bind(model.userProfileIdString);
@@ -381,13 +386,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             privateMsg.visibleProperty().bind(model.isPeer);
             privateMsg.managedProperty().bind(model.isPeer);
 
-            catHashNodeSubscription = EasyBind.subscribe(model.catHashNode, catIcon -> {
-                if (catIcon != null) {
-                    catIconImageView.setImage(catIcon);
-                }
-            });
-
-            catHashNodeSubscription = EasyBind.subscribe(model.reputationScore, reputationScore -> {
+            reputationScorePin = EasyBind.subscribe(model.reputationScore, reputationScore -> {
                 if (reputationScore != null) {
                     reputationScoreDisplay.setReputationScore(reputationScore);
                     totalReputationScore.setText(String.valueOf(reputationScore.getTotalScore()));
@@ -437,7 +436,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             privateMsg.visibleProperty().unbind();
             privateMsg.managedProperty().unbind();
 
-            catHashNodeSubscription.unsubscribe();
+            reputationScorePin.unsubscribe();
 
             botIdBox.setOnMouseEntered(null);
             botIdBox.setOnMouseExited(null);

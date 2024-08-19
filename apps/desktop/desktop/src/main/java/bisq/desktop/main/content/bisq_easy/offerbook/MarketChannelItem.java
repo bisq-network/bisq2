@@ -23,12 +23,9 @@ import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.settings.FavouriteMarketsService;
 import javafx.beans.property.*;
-import javafx.scene.CacheHint;
-import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,8 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
 public class MarketChannelItem {
-    private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
-    private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
+    public static final ColorAdjust DIMMED = new ColorAdjust(0, -0.2, -0.4, -0.1);
+    public static final ColorAdjust SELECTED = new ColorAdjust(0, 0, -0.1, 0);
     public static final String ASTERISK_SYMBOL = "\u002A"; // Unicode for "＊"
 
     @EqualsAndHashCode.Include
@@ -48,7 +45,6 @@ public class MarketChannelItem {
     private final FavouriteMarketsService favouriteMarketsService;
     private final ChatNotificationService chatNotificationService;
     private final Market market;
-    private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
     private final StringProperty numMarketNotifications = new SimpleStringProperty();
@@ -61,13 +57,6 @@ public class MarketChannelItem {
         this.favouriteMarketsService = favouriteMarketsService;
         this.chatNotificationService = chatNotificationService;
         market = channel.getMarket();
-        marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
-        marketLogo.setCache(true);
-        marketLogo.setCacheHint(CacheHint.SPEED);
-
-        setUpColorAdjustments();
-        marketLogo.setEffect(DEFAULT_COLOR_ADJUST);
-
         refreshNotifications();
     }
 
@@ -85,14 +74,6 @@ public class MarketChannelItem {
         updateNumOffers();
     }
 
-    private void setUpColorAdjustments() {
-        DEFAULT_COLOR_ADJUST.setBrightness(-0.4);
-        DEFAULT_COLOR_ADJUST.setSaturation(-0.2);
-        DEFAULT_COLOR_ADJUST.setContrast(-0.1);
-
-        SELECTED_COLOR_ADJUST.setBrightness(-0.1);
-    }
-
     private void updateNumOffers() {
         UIThread.run(() -> {
             int numOffers = (int) channel.getChatMessages().stream()
@@ -100,10 +81,6 @@ public class MarketChannelItem {
                     .count();
             getNumOffers().set(numOffers);
         });
-    }
-
-    void updateMarketLogoEffect(boolean isSelectedMarket) {
-        getMarketLogo().setEffect(isSelectedMarket ? SELECTED_COLOR_ADJUST : DEFAULT_COLOR_ADJUST);
     }
 
     @Override

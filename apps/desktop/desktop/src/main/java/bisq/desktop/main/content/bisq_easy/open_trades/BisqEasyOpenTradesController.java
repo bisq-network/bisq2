@@ -179,7 +179,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
                 return;
             }
             if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
-                applyPeersIcon(tradeChannel);
                 UserProfile peerUserProfile = tradeChannel.getPeer();
                 String peerUserName = peerUserProfile.getUserName();
 

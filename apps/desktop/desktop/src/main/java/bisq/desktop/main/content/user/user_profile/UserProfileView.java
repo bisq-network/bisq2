@@ -63,7 +63,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
     private final MaterialTextField nymId, profileId, profileAge, livenessState, reputationScoreField, statement;
-    private final ImageView catIconImageView;
+    private final ImageView catHashImageView;
     private final MaterialTextArea terms;
     private final VBox formVBox;
     private final AutoCompleteComboBox<UserIdentity> comboBox;
@@ -77,10 +77,10 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         root.setAlignment(Pos.TOP_LEFT);
         root.setPadding(new Insets(20, 40, 40, 40));
 
-        catIconImageView = new ImageView();
-        catIconImageView.setFitWidth(125);
-        catIconImageView.setFitHeight(125);
-        root.getChildren().add(catIconImageView);
+        catHashImageView = new ImageView();
+        catHashImageView.setFitWidth(125);
+        catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+        root.getChildren().add(catHashImageView);
 
         formVBox = new VBox(25);
         HBox.setHgrow(formVBox, Priority.ALWAYS);
@@ -157,7 +157,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         reputationScoreField.textProperty().bind(model.getReputationScoreValue());
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
-        catIconImageView.imageProperty().bind(model.getCatHash());
+        catHashImageView.imageProperty().bind(model.getCatHashImage());
 
         useDeleteTooltipPin = EasyBind.subscribe(model.getUseDeleteTooltip(), useDeleteTooltip ->
                 deleteWrapper.setTooltip(useDeleteTooltip ? deleteTooltip : null));
@@ -202,7 +202,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         reputationScoreField.textProperty().unbind();
         statement.textProperty().unbindBidirectional(model.getStatement());
         terms.textProperty().unbindBidirectional(model.getTerms());
-        catIconImageView.imageProperty().unbind();
+        catHashImageView.imageProperty().unbind();
         saveButton.disableProperty().unbind();
         deleteButton.disableProperty().unbind();
         deleteWrapper.tooltipProperty().unbind();
@@ -222,6 +222,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         comboBox.resetValidation();
         statement.resetValidation();
         terms.resetValidation();
+        catHashImageView.setImage(null);
     }
 
     private void disableEditableTextBoxes() {

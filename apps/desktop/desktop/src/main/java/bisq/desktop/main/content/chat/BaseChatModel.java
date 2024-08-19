@@ -24,7 +24,6 @@ import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.i18n.Res;
 import javafx.beans.property.*;
-import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,7 +49,6 @@ public abstract class BaseChatModel extends NavigationModel {
     private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelSidebarVisible = new SimpleBooleanProperty();
-    private final ObjectProperty<Node> channelIconNode = new SimpleObjectProperty<>();
     private final String helpTitle;
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
