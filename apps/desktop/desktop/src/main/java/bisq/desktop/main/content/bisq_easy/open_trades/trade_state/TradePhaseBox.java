@@ -30,14 +30,20 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import javafx.beans.property.*;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -128,14 +134,14 @@ class TradePhaseBox {
 
                         case TAKER_SENT_TAKE_OFFER_REQUEST:
 
-                            // Seller
+                        // Seller
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
                         case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                            // Buyer
+                        // Buyer
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_:
@@ -159,13 +165,16 @@ class TradePhaseBox {
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                         case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                            // Buyer
+                        // Buyer
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
                         case BUYER_SENT_FIAT_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(1);
-                            model.getRequestMediationButtonVisible().set(false);
-                            model.getReportToMediatorButtonVisible().set(true);
+                            boolean showRequestMediationButton =
+                                    state == BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION
+                                    || state == BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
+                            model.getRequestMediationButtonVisible().set(showRequestMediationButton);
+                            model.getReportToMediatorButtonVisible().set(!showRequestMediationButton);
                             break;
 
                         case SELLER_CONFIRMED_FIAT_RECEIPT:
@@ -268,7 +277,7 @@ class TradePhaseBox {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Label phase1Label, phase2Label, phase3Label, phase4Label;
         private final Button requestMediationButton;
-        private final Hyperlink openTradeGuide, walletHelp, reportToMediator;
+        private final BisqMenuItem openTradeGuide, walletHelp, reportToMediator;
         private final List<Triple<HBox, Label, Badge>> phaseItems;
         private Subscription phaseIndexPin;
 
@@ -295,24 +304,22 @@ class TradePhaseBox {
 
             phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4);
 
-            walletHelp = new Hyperlink(Res.get("bisqEasy.walletGuide.open"), ImageUtil.getImageViewById("icon-wallet"));
-            walletHelp.setGraphicTextGap(5);
-
-            openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeGuide.open"), ImageUtil.getImageViewById("icon-help-grey"));
-            openTradeGuide.setGraphicTextGap(5);
-
-            reportToMediator = new Hyperlink(Res.get("bisqEasy.tradeState.reportToMediator"), ImageUtil.getImageViewById("icon-report"));
-            reportToMediator.setGraphicTextGap(5);
+            double width = 160;
+            walletHelp = new BisqMenuItem("icon-wallet", "icon-wallet-white", Res.get("bisqEasy.walletGuide.open"));
+            walletHelp.setPrefWidth(width);
+            openTradeGuide = new BisqMenuItem("icon-help-grey", "icon-help-white", Res.get("bisqEasy.tradeGuide.open"));
+            openTradeGuide.setPrefWidth(width);
+            reportToMediator = new BisqMenuItem("icon-report", "icon-report-white", Res.get("bisqEasy.tradeState.reportToMediator"));
+            reportToMediator.setPrefWidth(width);
+            VBox tradeOptionsVBox = new VBox(10, walletHelp, openTradeGuide, reportToMediator);
+            tradeOptionsVBox.setPadding(new Insets(0, 20, 0, 0));
 
             requestMediationButton = new Button(Res.get("bisqEasy.tradeState.requestMediation"));
-            requestMediationButton.getStyleClass().add("outlined-button");
+            requestMediationButton.getStyleClass().addAll("outlined-button", "request-mediation-button");
 
             VBox.setMargin(phase1HBox, new Insets(25, 0, 0, 0));
-            VBox.setMargin(requestMediationButton, new Insets(15, 0, 0, 0));
-            VBox.setMargin(walletHelp, new Insets(30, 0, 0, 3));
-            VBox.setMargin(openTradeGuide, new Insets(0, 0, 0, 3));
-            VBox.setMargin(reportToMediator, new Insets(0, 0, 0, 3));
-
+            VBox.setMargin(tradeOptionsVBox, new Insets(30, 0, 0, 0));
+            VBox.setMargin(requestMediationButton, new Insets(20, 0, 0, 0));
             root.getChildren().addAll(
                     phase1HBox,
                     getVLine(),
@@ -322,9 +329,7 @@ class TradePhaseBox {
                     getVLine(),
                     phase4HBox,
                     Spacer.fillVBox(),
-                    walletHelp,
-                    openTradeGuide,
-                    reportToMediator,
+                    tradeOptionsVBox,
                     requestMediationButton);
         }
 
