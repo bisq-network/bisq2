@@ -244,7 +244,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ImageView catIconImageView;
+        private final ImageView catHashImageView;
         private final Label nickName, botId, userId, addressByTransport, statement, totalReputationScore,
                 profileAge, livenessState, terms, version;
         private final BisqMenuItem privateMsg, mention, ignore, undoIgnore, report;
@@ -280,9 +280,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 nickName.getStyleClass().add("error");
             }
 
-            catIconImageView = new ImageView();
-            catIconImageView.setFitWidth(100);
-            catIconImageView.setFitHeight(100);
+            catHashImageView = new ImageView();
+            catHashImageView.setFitWidth(100);
+            catHashImageView.setFitHeight(100);
 
             reputationScoreDisplay = new ReputationScoreDisplay();
             reputationScoreDisplay.setAlignment(Pos.CENTER);
@@ -357,12 +357,12 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
             VBox.setMargin(nickName, new Insets(10, 0, 0, 0));
-            root.getChildren().addAll(header, nickName, catIconImageView, reputationScoreDisplay, scrollPane, optionsVBox);
+            root.getChildren().addAll(header, nickName, catHashImageView, reputationScoreDisplay, scrollPane, optionsVBox);
         }
 
         @Override
         protected void onViewAttached() {
-            catIconImageView.setImage(model.getCatHashImage());
+            catHashImageView.setImage(model.getCatHashImage());
 
             nickName.textProperty().bind(model.nickName);
             botId.textProperty().bind(model.nym);

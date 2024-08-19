@@ -298,7 +298,7 @@ public class ChannelSidebar {
                 public ListCell<ChannelSidebarUserProfile> call(ListView<ChannelSidebarUserProfile> list) {
                     return new ListCell<>() {
                         Pane chatUser;
-                        private ImageView catIcon;
+                        private ImageView catHashImageView;
                         final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("chat.sideBar.userProfile.undoIgnore"));
                         final HBox hBox = new HBox(10);
 
@@ -325,8 +325,8 @@ public class ChannelSidebar {
                                 // With setOnMouseClicked or released it does not work well (prob. due handlers inside the components)
                                 chatUser.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(channelSidebarUserProfile.getUserProfile()));
 
-                                catIcon = channelSidebarUserProfile.getCatIcon();
-                                catIcon.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(channelSidebarUserProfile.getUserProfile()));
+                                catHashImageView = channelSidebarUserProfile.getCatHashImageView();
+                                catHashImageView.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(channelSidebarUserProfile.getUserProfile()));
 
                                 hBox.getChildren().setAll(chatUser, Spacer.fillHBox(), undoIgnoreUserButton);
 
@@ -337,9 +337,9 @@ public class ChannelSidebar {
                                     chatUser.setOnMousePressed(null);
                                     chatUser = null;
                                 }
-                                if (catIcon != null) {
-                                    catIcon.setOnMousePressed(null);
-                                    catIcon = null;
+                                if (catHashImageView != null) {
+                                    catHashImageView.setOnMousePressed(null);
+                                    catHashImageView = null;
                                 }
                                 setGraphic(null);
                             }

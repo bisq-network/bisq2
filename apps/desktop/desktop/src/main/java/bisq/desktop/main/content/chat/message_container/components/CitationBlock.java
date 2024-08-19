@@ -127,7 +127,7 @@ public class CitationBlock {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ImageView catIconImageView;
+        private final ImageView catHashImageView;
         private final Label userName;
         private final Button closeButton;
         private final Label citation;
@@ -157,10 +157,10 @@ public class CitationBlock {
             userName.getStyleClass().add("font-medium");
             userName.setStyle("-fx-text-fill: -bisq-mid-grey-30");
 
-            catIconImageView = new ImageView();
-            catIconImageView.setFitWidth(25);
-            catIconImageView.setFitHeight(catIconImageView.getFitWidth());
-            HBox userBox = new HBox(15, catIconImageView, userName);
+            catHashImageView = new ImageView();
+            catHashImageView.setFitWidth(25);
+            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+            HBox userBox = new HBox(15, catHashImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
             citation = new Label();
             citation.setWrapText(true);
@@ -177,7 +177,7 @@ public class CitationBlock {
             citation.textProperty().bind(model.citation);
             catHashImagePin = EasyBind.subscribe(model.catHashImage, catHashImage -> {
                 if (catHashImage != null) {
-                    catIconImageView.setImage(catHashImage);
+                    catHashImageView.setImage(catHashImage);
                 }
             });
 
@@ -190,7 +190,7 @@ public class CitationBlock {
             citation.textProperty().unbind();
             catHashImagePin.unsubscribe();
             closeButton.setOnAction(null);
-            catIconImageView.setImage(null);
+            catHashImageView.setImage(null);
         }
     }
 }

@@ -55,7 +55,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         return controller.view.getRoot();
     }
 
-    public ImageView getCatIcon() {
+    public ImageView getCatHashImageView() {
         return controller.view.getCatHashImageView();
     }
 
