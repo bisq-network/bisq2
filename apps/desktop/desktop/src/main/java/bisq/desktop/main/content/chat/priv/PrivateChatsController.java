@@ -110,7 +110,6 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
             }
 
             if (chatChannel instanceof TwoPartyPrivateChatChannel channel) {
-                applyPeersIcon(channel);
                 UserProfile peer = userProfileService.getManagedUserProfile(channel.getPeer());
                 model.getPeersUserProfile().set(peer);
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
