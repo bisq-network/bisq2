@@ -57,7 +57,7 @@ import java.util.Comparator;
 
 @Slf4j
 public class OfferbookListView extends bisq.desktop.common.view.View<VBox, OfferbookListModel, OfferbookListController> {
-    private static final double EXPANDED_OFFER_LIST_WIDTH = 543;
+    private static final double EXPANDED_OFFER_LIST_WIDTH = 545;
     private static final double COLLAPSED_LIST_WIDTH = BisqEasyOfferbookView.COLLAPSED_LIST_WIDTH;
     private static final double HEADER_HEIGHT = BaseChatView.HEADER_HEIGHT;
     private static final double LIST_CELL_HEIGHT = BisqEasyOfferbookView.LIST_CELL_HEIGHT;
@@ -211,7 +211,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         BisqTableColumn<OfferbookListItem> priceColumn = new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.price"))
                 .right()
-                .fixWidth(70)
+                .fixWidth(75)
                 .setCellFactory(getPriceCellFactory())
                 .comparator((o1, o2) -> {
                     if (o1.getBisqEasyOffer().getDirection().isSell()) {
