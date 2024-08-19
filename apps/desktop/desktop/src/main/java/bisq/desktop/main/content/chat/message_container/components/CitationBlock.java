@@ -131,7 +131,7 @@ public class CitationBlock {
         private final Label userName;
         private final Button closeButton;
         private final Label citation;
-        private Subscription catHashNodeSubscription;
+        private Subscription catHashImagePin;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -159,7 +159,7 @@ public class CitationBlock {
 
             catIconImageView = new ImageView();
             catIconImageView.setFitWidth(25);
-            catIconImageView.setFitHeight(25);
+            catIconImageView.setFitHeight(catIconImageView.getFitWidth());
             HBox userBox = new HBox(15, catIconImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
             citation = new Label();
@@ -175,9 +175,9 @@ public class CitationBlock {
             root.managedProperty().bind(model.visible);
             userName.textProperty().bind(model.userName);
             citation.textProperty().bind(model.citation);
-            catHashNodeSubscription = EasyBind.subscribe(model.catHashImage, catIcon -> {
-                if (catIcon != null) {
-                    catIconImageView.setImage(catIcon);
+            catHashImagePin = EasyBind.subscribe(model.catHashImage, catHashImage -> {
+                if (catHashImage != null) {
+                    catIconImageView.setImage(catHashImage);
                 }
             });
 
@@ -188,8 +188,9 @@ public class CitationBlock {
         protected void onViewDetached() {
             userName.textProperty().unbind();
             citation.textProperty().unbind();
-            catHashNodeSubscription.unsubscribe();
+            catHashImagePin.unsubscribe();
             closeButton.setOnAction(null);
+            catIconImageView.setImage(null);
         }
     }
 }

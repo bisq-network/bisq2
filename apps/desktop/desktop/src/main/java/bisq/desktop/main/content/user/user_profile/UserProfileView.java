@@ -79,7 +79,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         catIconImageView = new ImageView();
         catIconImageView.setFitWidth(125);
-        catIconImageView.setFitHeight(125);
+        catIconImageView.setFitHeight(catIconImageView.getFitWidth());
         root.getChildren().add(catIconImageView);
 
         formVBox = new VBox(25);
@@ -222,6 +222,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         comboBox.resetValidation();
         statement.resetValidation();
         terms.resetValidation();
+        catIconImageView.setImage(null);
     }
 
     private void disableEditableTextBoxes() {

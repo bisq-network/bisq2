@@ -24,7 +24,6 @@ import bisq.user.profile.UserProfile;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
@@ -33,30 +32,18 @@ import java.util.concurrent.ConcurrentHashMap;
 // Derived from https://github.com/neuhalje/android-robohash
 @Slf4j
 public class CatHash {
-    @Getter
-    public enum IconSize {
-        SIZE_30(30),
-        SIZE_35(35);
-
-        private final int size;
-
-        IconSize(int size) {
-            this.size = size;
-        }
-    }
-
     private static final int SIZE = 300;
     private static final int MAX_CACHE_SIZE = 10000;
     private static final ConcurrentHashMap<BigInteger, Image> CACHE = new ConcurrentHashMap<>();
 
-    public static Button getIconButton(UserProfile userProfile, IconSize iconSize) {
+    public static Button getIconButton(UserProfile userProfile, double iconSize) {
         return BisqIconButton.createIconButton(getImageView(userProfile, iconSize));
     }
 
-    public static ImageView getImageView(UserProfile userProfile, IconSize iconSize) {
+    public static ImageView getImageView(UserProfile userProfile, double iconSize) {
         ImageView imageView = new ImageView(getImage(userProfile));
-        imageView.setFitWidth(iconSize.getSize());
-        imageView.setFitHeight(iconSize.getSize());
+        imageView.setFitWidth(iconSize);
+        imageView.setFitHeight(iconSize);
         return imageView;
     }
 

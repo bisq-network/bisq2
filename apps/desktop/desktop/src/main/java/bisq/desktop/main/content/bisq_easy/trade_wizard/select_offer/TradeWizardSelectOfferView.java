@@ -234,16 +234,14 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                 return new TableCell<>() {
                     private final Label userName = new Label();
                     private final ImageView catHashImageView = new ImageView();
-                    private final HBox hBox;
+                    private final HBox hBox = new HBox(10, catHashImageView, userName);
 
                     {
                         userName.setId("chat-user-name");
-                        int size = 40;
-                        catHashImageView.setFitWidth(size);
-                        catHashImageView.setFitHeight(size);
-                        hBox = new HBox(10, catHashImageView, userName);
-                        HBox.setMargin(catHashImageView, new Insets(0, 0, 0, 5));
                         hBox.setAlignment(Pos.CENTER_LEFT);
+                        catHashImageView.setFitWidth(40);
+                        catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+                        HBox.setMargin(catHashImageView, new Insets(0, 0, 0, 5));
                     }
 
                     @Override

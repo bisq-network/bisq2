@@ -361,21 +361,17 @@ public class UserProfileSelection {
 
             setCellFactory(param -> new ListCell<>() {
                 private ChangeListener<Number> labelWidthListener;
-                private final ImageView catHashImageView;
-                private final Label label;
-                private final HBox hBox;
+                private final ImageView catHashImageView = new ImageView();
+                private final Label label = new Label();
+                private final HBox hBox = new HBox(10);
 
                 {
-                    label = new Label();
                     label.setMouseTransparent(true);
-
-                    catHashImageView = new ImageView();
                     catHashImageView.setFitWidth(iconSize);
                     catHashImageView.setFitHeight(iconSize);
                     setPrefHeight(50);
                     setPadding(new Insets(10, 0, 0, 10));
 
-                    hBox = new HBox(10);
                     hBox.setPadding(new Insets(0, 10, 0, 10));
                     if (isLeftAligned) {
                         hBox.setAlignment(Pos.CENTER_RIGHT);
@@ -384,6 +380,13 @@ public class UserProfileSelection {
                         hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.getChildren().addAll(catHashImageView, label);
                     }
+
+                    labelWidthListener = (observable, oldValue, newValue) -> {
+                        if (newValue.doubleValue() > 0) {
+                            UserProfileSelection.UserProfileComboBox.this.setComboBoxWidth(calculateWidth(label));
+                            label.widthProperty().removeListener(labelWidthListener);
+                        }
+                    };
                 }
 
                 @Override
@@ -393,23 +396,13 @@ public class UserProfileSelection {
                     if (item != null && !empty) {
                         catHashImageView.setImage(CatHash.getImage(item.userIdentity.getUserProfile()));
                         label.setText(item.userIdentity.getUserName());
-
-                        labelWidthListener = (observable, oldValue, newValue) -> {
-                            if (newValue.doubleValue() > 0) {
-                                UserProfileSelection.UserProfileComboBox.this.setComboBoxWidth(calculateWidth(label));
-                                label.widthProperty().removeListener(labelWidthListener);
-                            }
-                        };
                         label.widthProperty().addListener(labelWidthListener);
 
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
                         catHashImageView.setImage(null);
-                        if (labelWidthListener != null) {
-                            label.widthProperty().removeListener(labelWidthListener);
-                        }
-
+                        label.widthProperty().removeListener(labelWidthListener);
                     }
                 }
             });
@@ -478,6 +471,7 @@ public class UserProfileSelection {
             buttonPane.setCursor(Cursor.HAND);
             buttonPane.setLayoutY(-UserProfileComboBox.Y_OFFSET);
 
+            //todo Fix WeakReference
             control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>((ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
                 if (newValue != null) {
                     UserIdentity userIdentity = newValue.userIdentity;

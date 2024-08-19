@@ -146,7 +146,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
     protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
         if (privateChatChannel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
-            Button iconButton = CatHash.getIconButton(twoPartyPrivateChatChannel.getPeer(), CatHash.IconSize.SIZE_35);
+            Button iconButton = CatHash.getIconButton(twoPartyPrivateChatChannel.getPeer(), 35);
             model.getChannelIconNode().set(iconButton);
         } else if (privateChatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
             if (bisqEasyOpenTradeChannel.isInMediation() && bisqEasyOpenTradeChannel.getMediator().isPresent()) {
@@ -161,10 +161,10 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                     left = bisqEasyOpenTradeChannel.getPeer();
                     right = bisqEasyOpenTradeChannel.getMediator().get();
                 }
-                Button leftIconButton = CatHash.getIconButton(left, CatHash.IconSize.SIZE_35);
+                Button leftIconButton = CatHash.getIconButton(left, 35);
                 leftIconButton.setMouseTransparent(true);
 
-                Button rightIconButton = CatHash.getIconButton(right, CatHash.IconSize.SIZE_35);
+                Button rightIconButton = CatHash.getIconButton(right, 35);
                 rightIconButton.setMouseTransparent(true);
                 HBox.setMargin(rightIconButton, new Insets(0, 0, 0, -20));
 
@@ -172,7 +172,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 model.getChannelIconNode().set(hBox);
             } else {
-                Button iconButton = CatHash.getIconButton(bisqEasyOpenTradeChannel.getPeer(), CatHash.IconSize.SIZE_35);
+                Button iconButton = CatHash.getIconButton(bisqEasyOpenTradeChannel.getPeer(), 35);
                 model.getChannelIconNode().set(iconButton);
             }
         }

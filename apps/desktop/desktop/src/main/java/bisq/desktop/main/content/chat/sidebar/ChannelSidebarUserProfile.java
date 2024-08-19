@@ -151,7 +151,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
 
             catHashImageView = new ImageView();
             catHashImageView.setFitWidth(37.5);
-            catHashImageView.setFitHeight(37.5);
+            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
             Tooltip.install(catHashImageView, new BisqTooltip(tooltipString));
             root.getChildren().addAll(catHashImageView, userName);
         }
@@ -164,6 +164,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
 
         @Override
         protected void onViewDetached() {
+            catHashImageView.setImage(null);
         }
     }
 }
