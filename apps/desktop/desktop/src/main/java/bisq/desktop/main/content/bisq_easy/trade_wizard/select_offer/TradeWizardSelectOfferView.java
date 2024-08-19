@@ -233,16 +233,16 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
             public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
                 return new TableCell<>() {
                     private final Label userName = new Label();
-                    private final ImageView catIcon = new ImageView();
+                    private final ImageView catHashImageView = new ImageView();
                     private final HBox hBox;
 
                     {
                         userName.setId("chat-user-name");
                         int size = 40;
-                        catIcon.setFitWidth(size);
-                        catIcon.setFitHeight(size);
-                        hBox = new HBox(10, catIcon, userName);
-                        HBox.setMargin(catIcon, new Insets(0, 0, 0, 5));
+                        catHashImageView.setFitWidth(size);
+                        catHashImageView.setFitHeight(size);
+                        hBox = new HBox(10, catHashImageView, userName);
+                        HBox.setMargin(catHashImageView, new Insets(0, 0, 0, 5));
                         hBox.setAlignment(Pos.CENTER_LEFT);
                     }
 
@@ -253,7 +253,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         if (item != null && !empty) {
                             userName.setText(item.getMakerUserName());
                             item.getAuthorUserProfile().ifPresent(userProfile ->
-                                    catIcon.setImage(CatHash.getImage(userProfile)));
+                                    catHashImageView.setImage(CatHash.getImage(userProfile)));
                             setGraphic(hBox);
                         } else {
                             setGraphic(null);

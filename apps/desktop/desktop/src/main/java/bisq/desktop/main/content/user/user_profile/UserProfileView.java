@@ -157,7 +157,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         reputationScoreField.textProperty().bind(model.getReputationScoreValue());
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
-        catIconImageView.imageProperty().bind(model.getCatHash());
+        catIconImageView.imageProperty().bind(model.getCatHashImage());
 
         useDeleteTooltipPin = EasyBind.subscribe(model.getUseDeleteTooltip(), useDeleteTooltip ->
                 deleteWrapper.setTooltip(useDeleteTooltip ? deleteTooltip : null));

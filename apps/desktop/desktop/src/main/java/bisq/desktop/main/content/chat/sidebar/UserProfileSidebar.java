@@ -129,7 +129,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.nickName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", nickName) : nickName);
             model.nym.set(userProfile.getNym());
             model.userProfileIdString.set(userProfile.getId());
-            model.catHashNode.set(CatHash.getImage(userProfile));
+            model.catHashImage.set(CatHash.getImage(userProfile));
 
             model.addressByTransport.set(userProfile.getAddressByTransportDisplayString(26));
 
@@ -216,7 +216,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private Optional<Consumer<UserProfile>> mentionUserHandler = Optional.empty();
         private Optional<Consumer<UserProfile>> sendPrivateMessageHandler = Optional.empty();
         private Optional<Runnable> ignoreUserStateHandler = Optional.empty();
-        private final ObjectProperty<Image> catHashNode = new SimpleObjectProperty<>();
+        private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty addressByTransport = new SimpleStringProperty();
@@ -381,7 +381,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             privateMsg.visibleProperty().bind(model.isPeer);
             privateMsg.managedProperty().bind(model.isPeer);
 
-            catHashNodeSubscription = EasyBind.subscribe(model.catHashNode, catIcon -> {
+            catHashNodeSubscription = EasyBind.subscribe(model.catHashImage, catIcon -> {
                 if (catIcon != null) {
                     catIconImageView.setImage(catIcon);
                 }

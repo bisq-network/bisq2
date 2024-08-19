@@ -86,7 +86,7 @@ public class UserProfileController implements Controller {
                         model.getNickName().set(userProfile.getNickName());
                         model.getNymId().set(userProfile.getNym());
                         model.getProfileId().set(userProfile.getId());
-                        model.getCatHash().set(CatHash.getImage(userProfile));
+                        model.getCatHashImage().set(CatHash.getImage(userProfile));
                         model.getStatement().set(userProfile.getStatement());
                         model.getTerms().set(userProfile.getTerms());
 
@@ -140,7 +140,7 @@ public class UserProfileController implements Controller {
         model.getNickName().set("");
         model.getNymId().set("");
         model.getProfileId().set("");
-        model.getCatHash().set(null);
+        model.getCatHashImage().set(null);
         model.getStatement().set("");
         model.getTerms().set("");
         model.getProfileAge().set("");

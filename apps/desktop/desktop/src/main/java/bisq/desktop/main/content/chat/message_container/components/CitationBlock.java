@@ -92,7 +92,7 @@ public class CitationBlock {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getUserName());
-                model.catHashNode.set(CatHash.getImage(author));
+                model.catHashImage.set(CatHash.getImage(author));
                 model.citation.set(chatMessage.getText());
                 model.visible.set(true);
             });
@@ -115,7 +115,7 @@ public class CitationBlock {
     private static class Model implements bisq.desktop.common.view.Model {
         private final BooleanProperty visible = new SimpleBooleanProperty();
         private final StringProperty citation = new SimpleStringProperty("");
-        private final ObjectProperty<Image> catHashNode = new SimpleObjectProperty<>();
+        private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
         private UserProfile author;
 
@@ -173,7 +173,7 @@ public class CitationBlock {
             root.managedProperty().bind(model.visible);
             userName.textProperty().bind(model.userName);
             citation.textProperty().bind(model.citation);
-            catHashNodeSubscription = EasyBind.subscribe(model.catHashNode, catIcon -> {
+            catHashNodeSubscription = EasyBind.subscribe(model.catHashImage, catIcon -> {
                 if (catIcon != null) {
                     catIconImageView.setImage(catIcon);
                 }

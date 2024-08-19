@@ -61,7 +61,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
     }
 
     public ImageView getCatIcon() {
-        return controller.view.getCatIcon();
+        return controller.view.getCatHashImageView();
     }
 
     public boolean isIgnored() {
@@ -130,9 +130,9 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         @Getter
-        private final ImageView catIcon;
+        private final ImageView catHashImageView;
         private final Label userName;
-        private Subscription catHashNodeSubscription;
+        private Subscription catHashImagePin;
 
         private View(Model model, Controller controller) {
             super(new HBox(10), model, controller);
@@ -152,32 +152,19 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
             String tooltipString = banPrefix + model.userProfile.getTooltipString();
             Tooltip.install(userName, new BisqTooltip(tooltipString));
 
-            catIcon = new ImageView();
-            catIcon.setFitWidth(37.5);
-            catIcon.setFitHeight(37.5);
-            Tooltip.install(catIcon, new BisqTooltip(tooltipString));
-            if (isUserProfileBanned) {
-                // coloring icon red
-                /*Blend blush = new Blend(BlendMode.MULTIPLY,
-                        new ColorAdjust(),
-                        new ColorInput(0,
-                                0,
-                                37.5,
-                                37.5,
-                                Color.RED));
-                catIcon.setClip(new Circle(18.75, 18.75, 18.75));
-                catIcon.setEffect(blush);*/
-            }
-
-            root.getChildren().addAll(catIcon, userName);
+            catHashImageView = new ImageView();
+            catHashImageView.setFitWidth(37.5);
+            catHashImageView.setFitHeight(37.5);
+            Tooltip.install(catHashImageView, new BisqTooltip(tooltipString));
+            root.getChildren().addAll(catHashImageView, userName);
         }
 
         @Override
         protected void onViewAttached() {
             userName.textProperty().bind(model.userName);
-            catHashNodeSubscription = EasyBind.subscribe(model.catHashImage, image -> {
-                if (image != null) {
-                    this.catIcon.setImage(image);
+            catHashImagePin = EasyBind.subscribe(model.catHashImage, catHashImage -> {
+                if (catHashImage != null) {
+                    catHashImageView.setImage(catHashImage);
                 }
             });
         }
@@ -185,7 +172,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         @Override
         protected void onViewDetached() {
             userName.textProperty().unbind();
-            catHashNodeSubscription.unsubscribe();
+            catHashImagePin.unsubscribe();
         }
     }
 }
