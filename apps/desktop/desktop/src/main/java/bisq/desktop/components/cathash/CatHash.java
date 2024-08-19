@@ -67,16 +67,10 @@ public class CatHash {
 
     private static BucketConfig getBucketConfig(int avatarVersion) {
         BucketConfig bucketConfig;
-        switch (avatarVersion) {
-            case 0: {
-                bucketConfig = new BucketConfigV0();
-                log.debug("Creating v0 BucketConfig: {}", bucketConfig.getClass().getName());
-                break;
-            }
-            default: {
-                bucketConfig = new BucketConfigV0();
-                log.debug("Falling to create default BucketConfig: {}", bucketConfig.getClass().getName());
-            }
+        if (avatarVersion == 0) {
+            bucketConfig = new BucketConfigV0();
+        } else {
+            throw new IllegalArgumentException("Provided avatarVersion not supported. avatarVersion=" + avatarVersion);
         }
         return bucketConfig;
     }
