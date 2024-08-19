@@ -22,10 +22,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -35,9 +31,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 // TODO used in a List, should be extracted to a ListItem
 
@@ -100,13 +95,13 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
             }
 
             String userName = userProfile.getUserName();
-            model.userName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", userName) : userName);
-            model.catHashImage.set(CatHash.getImage(userProfile));
+            model.setUserName(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", userName) : userName);
+            model.setCatHashImage(CatHash.getImage(userProfile));
         }
 
         @Override
         public void onDeactivate() {
-            model.catHashImage.set(null);
+            model.setCatHashImage(null);
         }
 
         public boolean isUserProfileBanned() {
@@ -114,14 +109,16 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         }
     }
 
+    @Getter
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class Model implements bisq.desktop.common.view.Model {
         @EqualsAndHashCode.Include
         private final UserProfile userProfile;
-
         private boolean ignored;
-        private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
-        private final StringProperty userName = new SimpleStringProperty();
+        @Setter
+        private Image catHashImage;
+        @Setter
+        private String userName;
 
         private Model(UserProfile userProfile) {
             this.userProfile = userProfile;
@@ -133,7 +130,6 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         @Getter
         private final ImageView catHashImageView;
         private final Label userName;
-        private Subscription catHashImagePin;
 
         private View(Model model, Controller controller) {
             super(new HBox(10), model, controller);
@@ -162,18 +158,12 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
 
         @Override
         protected void onViewAttached() {
-            userName.textProperty().bind(model.userName);
-            catHashImagePin = EasyBind.subscribe(model.catHashImage, catHashImage -> {
-                if (catHashImage != null) {
-                    catHashImageView.setImage(catHashImage);
-                }
-            });
+            userName.setText(model.getUserName());
+            catHashImageView.setImage(model.getCatHashImage());
         }
 
         @Override
         protected void onViewDetached() {
-            userName.textProperty().unbind();
-            catHashImagePin.unsubscribe();
         }
     }
 }
