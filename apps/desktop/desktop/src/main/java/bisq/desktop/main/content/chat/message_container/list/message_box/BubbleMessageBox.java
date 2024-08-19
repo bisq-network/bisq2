@@ -41,17 +41,24 @@ import bisq.desktop.main.content.chat.message_container.list.reactions_box.Toggl
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.effect.BlurType;
 import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -62,7 +69,6 @@ import java.util.Optional;
 
 @Slf4j
 public abstract class BubbleMessageBox extends MessageBox {
-    private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 50;
     protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
@@ -70,14 +76,13 @@ public abstract class BubbleMessageBox extends MessageBox {
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
     private static final int MAX_NUM_SUPPORTED_LANGUAGES = 5;
 
-    private final Subscription showHighlightedPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox actionsHBox = new HBox(5);
     protected final VBox quotedMessageVBox, contentVBox;
-    private Subscription reactMenuPin;
+    private Subscription showHighlightedPin, reactMenuPin;
     protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected ReactMenuBox reactMenuBox;
     protected Label userName, dateTime, message;
@@ -119,13 +124,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         getChildren().setAll(contentVBox);
         setAlignment(Pos.CENTER);
 
-        showHighlightedPin = EasyBind.subscribe(item.getShowHighlighted(), showHighlighted -> {
-            if (showHighlighted) {
-                messageBgHBox.getStyleClass().add(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
-            } else {
-                messageBgHBox.getStyleClass().remove(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
-            }
-        });
+        setUpMessageHighlight();
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -359,5 +358,32 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     protected static void onCopyMessage(String chatMessageText) {
         ClipboardUtil.copyToClipboard(chatMessageText);
+    }
+
+    private void setUpMessageHighlight() {
+        DropShadow dropShadow = new DropShadow();
+        dropShadow.setColor(Color.rgb(86, 174, 72)); // Bisq2 green
+        dropShadow.setBlurType(BlurType.GAUSSIAN);
+
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(10),
+                        new KeyValue(dropShadow.radiusProperty(), dropShadow.getRadius()),
+                        new KeyValue(dropShadow.spreadProperty(), dropShadow.getSpread())),
+                new KeyFrame(Duration.seconds(11),
+                        new KeyValue(dropShadow.radiusProperty(), 0),
+                        new KeyValue(dropShadow.spreadProperty(), 0)));
+        timeline.setOnFinished(e -> messageBgHBox.setEffect(null));
+
+        showHighlightedPin = EasyBind.subscribe(item.getShowHighlighted(), showHighlighted -> {
+            if (showHighlighted) {
+                dropShadow.setRadius(15);
+                dropShadow.setSpread(0.3);
+                messageBgHBox.setEffect(dropShadow);
+                timeline.play();
+            } else {
+                timeline.stop();
+                messageBgHBox.setEffect(null);
+            }
+        });
     }
 }

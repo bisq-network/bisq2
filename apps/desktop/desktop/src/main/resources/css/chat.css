@@ -245,12 +245,6 @@
 }
 /* ... */
 
-.highlighted-message-bg {
-    -fx-border-width: 2px;
-    -fx-border-color: -bisq2-green;
-    -fx-border-radius: 8;
-}
-
 .trade-wizard-feedback-bg {
     -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 0 0 16 16;
