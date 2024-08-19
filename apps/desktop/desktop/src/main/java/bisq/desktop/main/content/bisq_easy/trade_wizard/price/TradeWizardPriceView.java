@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.UnorderedList;
+import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -86,6 +87,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         // Input box
         percentageInput = new MaterialTextField(Res.get("bisqEasy.price.percentage.inputBoxText"));
+        percentageInput.setValidator(new PercentageValidator());
         fieldsBox = new VBox(20);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
         fieldsBox.setMinWidth(350);
@@ -184,6 +186,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             fieldsBox.getChildren().setAll(priceInput.getRoot(), percentageInput);
             percentageInput.deselect();
             percentageInput.setEditable(false);
+            percentageInput.resetValidation();
             priceInput.setEditable(true);
             priceInput.requestFocus();
         } else {
@@ -191,6 +194,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             fieldsBox.getChildren().setAll(percentageInput, priceInput.getRoot());
             priceInput.deselect();
             priceInput.setEditable(false);
+            priceInput.resetValidation();
             percentageInput.setEditable(true);
             percentageInput.requestFocus();
         }

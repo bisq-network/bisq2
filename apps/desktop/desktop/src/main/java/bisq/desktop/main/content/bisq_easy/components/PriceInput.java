@@ -21,10 +21,10 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
+import bisq.common.util.MathUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.validator.deprecated.InputValidator;
-import bisq.desktop.components.controls.validator.deprecated.PriceValidator;
+import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
@@ -62,8 +62,8 @@ public class PriceInput {
         controller.model.description.set(description);
     }
 
-    public void setQuote(PriceQuote price) {
-        controller.model.priceQuote.set(price);
+    public void setQuote(PriceQuote priceQuote) {
+        controller.setQuote(priceQuote);
     }
 
     public void setIsTakeOffer() {
@@ -86,19 +86,28 @@ public class PriceInput {
         controller.view.textInput.deselect();
     }
 
+    public void resetValidation() {
+        controller.model.doResetValidation.set(true);
+        controller.model.doResetValidation.set(false);
+    }
+
     public void setEditable(boolean value) {
         controller.view.textInput.setEditable(value);
     }
 
-    public ReadOnlyObjectProperty<InputValidator.ValidationResult> getValidationResult() {
-        return controller.model.validationResult;
+    public ReadOnlyBooleanProperty isPriceValid() {
+        return controller.model.isPriceValid;
+    }
+
+    public String getErrorMessage() {
+        return controller.validator.getMessage();
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
-        private final PriceValidator validator = new PriceValidator();
+        private final NumberValidator validator = new NumberValidator(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
         private final MarketPriceService marketPriceService;
         private Pin marketPricePin;
         private Subscription quotePin, pricePin;
@@ -115,6 +124,11 @@ public class PriceInput {
             updateFromMarketPrice();
         }
 
+        public void setQuote(PriceQuote priceQuote) {
+            model.priceString.set(priceQuote == null ? "" : PriceFormatter.format(priceQuote));
+            model.priceQuote.set(priceQuote);
+        }
+
         private void updateFromMarketPrice() {
             if (model.market != null && model.description.get() == null) {
                 model.description.set(Res.get("component.priceInput.description", model.market.getMarketCodes()));
@@ -126,7 +140,7 @@ public class PriceInput {
 
         @Override
         public void onActivate() {
-            model.validationResult.set(null);
+            model.isPriceValid.set(true);
             updateFromMarketPrice();
 
             marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
@@ -152,9 +166,9 @@ public class PriceInput {
                 return;
             }
 
-            InputValidator.ValidationResult validationResult = validator.validate(price);
-            model.validationResult.set(validationResult);
-            if (!validationResult.isValid) {
+            boolean isValid = MathUtils.isValidDouble(price);
+            model.isPriceValid.set(isValid);
+            if (!isValid) {
                 return;
             }
 
@@ -196,7 +210,8 @@ public class PriceInput {
         private boolean isFocused;
         private final StringProperty description = new SimpleStringProperty();
         private boolean isEditable = true;
-        private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>();
+        private final BooleanProperty isPriceValid = new SimpleBooleanProperty();
+        private final BooleanProperty doResetValidation = new SimpleBooleanProperty();
 
         private Model() {
         }
@@ -214,9 +229,9 @@ public class PriceInput {
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int WIDTH = 250;
         private final MaterialTextField textInput;
-        private Subscription focusedPin;
+        private Subscription focusedPin, doResetValidationPin;
 
-        private View(Model model, Controller controller, PriceValidator validator) {
+        private View(Model model, Controller controller, NumberValidator validator) {
             super(new VBox(), model, controller);
 
             textInput = new MaterialTextField(model.description.get(), Res.get("component.priceInput.prompt"));
@@ -231,6 +246,11 @@ public class PriceInput {
             textInput.descriptionProperty().bind(model.description);
             textInput.textProperty().bindBidirectional(model.priceString);
             focusedPin = EasyBind.subscribe(textInput.textInputFocusedProperty(), controller::onFocusedChanged);
+            doResetValidationPin = EasyBind.subscribe(model.doResetValidation, doResetValidation -> {
+                if (doResetValidation != null && doResetValidation) {
+                    textInput.resetValidation();
+                }
+            });
             textInput.setMouseTransparent(!model.isEditable);
         }
 
@@ -238,7 +258,9 @@ public class PriceInput {
         protected void onViewDetached() {
             textInput.descriptionProperty().unbind();
             textInput.textProperty().unbindBidirectional(model.priceString);
+            textInput.resetValidation();
             focusedPin.unsubscribe();
+            doResetValidationPin.unsubscribe();
         }
     }
 }

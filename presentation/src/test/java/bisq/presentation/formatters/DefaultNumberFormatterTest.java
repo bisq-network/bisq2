@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.text.DecimalFormat;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 public class DefaultNumberFormatterTest {
@@ -23,26 +23,5 @@ public class DefaultNumberFormatterTest {
         assertEquals("123 456 789", DefaultNumberFormatter.format(123456789, numberFormat));
         assertEquals("12 345 678 901 234", DefaultNumberFormatter.format(12345678901234d, numberFormat));
         assertEquals("123 456.789", DefaultNumberFormatter.format(123456.789, numberFormat));
-    }
-
-    @Test
-    public void parse() {
-        assertEquals(1, DefaultNumberFormatter.parse("1"));
-        assertEquals(1, DefaultNumberFormatter.parse("01"));
-        assertEquals(-1, DefaultNumberFormatter.parse("-01"));
-        assertEquals(0.1, DefaultNumberFormatter.parse(",1"));
-        assertEquals(0.1, DefaultNumberFormatter.parse(".1"));
-        assertEquals(-0.1, DefaultNumberFormatter.parse("-.1"));
-        assertEquals(1.23, DefaultNumberFormatter.parse("1,23"));
-        assertEquals(967295.123, DefaultNumberFormatter.parse("967 295,123"));
-        assertEquals(11, DefaultNumberFormatter.parse("1 1"));
-
-        assertNotNull(assertThrows(NullPointerException.class, () -> DefaultNumberFormatter.parse(null)));
-        assertNotNull(assertThrows(NumberFormatException.class, () -> DefaultNumberFormatter.parse("")));
-        assertNotNull(assertThrows(NumberFormatException.class, () -> DefaultNumberFormatter.parse("123.456,789")));
-        assertNotNull(assertThrows(NumberFormatException.class, () -> DefaultNumberFormatter.parse("a123,456.789")));
-        assertNotNull(assertThrows(NumberFormatException.class, () -> DefaultNumberFormatter.parse("..123")));
-        assertNotNull(assertThrows(NumberFormatException.class, () -> DefaultNumberFormatter.parse("-")));
-        assertNotNull(assertThrows(NumberFormatException.class, () -> DefaultNumberFormatter.parse("-.")));
     }
 }

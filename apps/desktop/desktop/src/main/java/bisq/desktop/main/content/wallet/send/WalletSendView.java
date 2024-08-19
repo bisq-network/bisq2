@@ -20,7 +20,7 @@ package bisq.desktop.main.content.wallet.send;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.validator.deprecated.MonetaryValidator;
+import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -33,14 +33,14 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
     private final MaterialPasswordField password;
     private final Button sendButton;
 
-    public WalletSendView(WalletSendModel model, WalletSendController controller, MonetaryValidator amountValidator) {
+    public WalletSendView(WalletSendModel model, WalletSendController controller) {
         super(new VBox(20), model, controller);
 
         root.setPadding(new Insets(40, 0, 0, 0));
 
         address = new MaterialTextField(Res.get("wallet.send.address"), null, null);
         amount = new MaterialTextField(Res.get("wallet.send.amount"), null, null);
-        amount.setValidator(amountValidator);
+        amount.setValidator(new NumberValidator());
         password = new MaterialPasswordField(Res.get("wallet.send.password"), null, null);
         sendButton = new Button(Res.get("wallet.send.sendBtc"));
         sendButton.setDefaultButton(true);
@@ -51,9 +51,7 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
     @Override
     protected void onViewAttached() {
         address.textProperty().bindBidirectional(model.getAddress());
-        address.validate();
         amount.textProperty().bindBidirectional(model.getAmount());
-        amount.validate();
         password.textProperty().bindBidirectional(model.getPassword());
         password.visibleProperty().bind(model.getIsPasswordVisible());
         password.managedProperty().bind(model.getIsPasswordVisible());
@@ -68,5 +66,6 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
         password.visibleProperty().unbind();
         password.managedProperty().unbind();
         sendButton.setOnAction(null);
+        amount.resetValidation();
     }
 }

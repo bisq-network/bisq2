@@ -19,7 +19,8 @@ package bisq.desktop.main.content.bisq_easy.components;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.desktop.components.controls.validator.deprecated.MonetaryValidator;
+import bisq.common.util.MathUtils;
+import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.*;
@@ -82,7 +83,7 @@ public abstract class AmountInput {
         @Getter
         @Setter
         protected View view;
-        protected final MonetaryValidator validator = new MonetaryValidator();
+        protected final NumberValidator validator = new NumberValidator();
 
         private Controller(boolean isBaseCurrency) {
             model = new Model(isBaseCurrency);
@@ -114,8 +115,7 @@ public abstract class AmountInput {
                 setAmountInvalid();
                 return;
             }
-
-            if (isValueInvalid(value)) {
+            if (value.isEmpty() || !MathUtils.isValidDouble(value)) {
                 handleInvalidValue();
                 return;
             }
@@ -126,10 +126,6 @@ public abstract class AmountInput {
 
         private boolean isValueOrCodeNull(String value, String code) {
             return value == null || code == null;
-        }
-
-        private boolean isValueInvalid(String value) {
-            return value.isEmpty() || !validator.validate(value).isValid;
         }
 
         private void handleInvalidValue() {

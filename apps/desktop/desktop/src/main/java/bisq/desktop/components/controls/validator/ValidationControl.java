@@ -24,7 +24,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Control;
 
 public class ValidationControl {
-
+    // The first validator which triggered an error
     private final ReadOnlyObjectWrapper<ValidatorBase> activeValidator = new ReadOnlyObjectWrapper<>();
 
     private final Control control;
@@ -57,6 +57,7 @@ public class ValidationControl {
 
     public void setValidators(ValidatorBase... validators) {
         this.validators.addAll(validators);
+        this.validators.forEach(validator -> validator.setSrcControl(control));
     }
 
     /**
@@ -67,7 +68,6 @@ public class ValidationControl {
      */
     public boolean validate() {
         for (ValidatorBase validator : validators) {
-            validator.setSrcControl(control);
             validator.validate();
             if (validator.getHasErrors()) {
                 activeValidator.set(validator);

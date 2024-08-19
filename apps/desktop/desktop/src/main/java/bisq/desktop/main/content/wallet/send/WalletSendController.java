@@ -20,7 +20,6 @@ package bisq.desktop.main.content.wallet.send;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.controls.validator.deprecated.MonetaryValidator;
 import bisq.desktop.components.overlay.Popup;
 import bisq.presentation.parser.DoubleParser;
 import bisq.wallets.core.WalletService;
@@ -37,14 +36,13 @@ public class WalletSendController implements Controller {
     private final WalletSendView view;
     private final WalletSendModel model;
     private final WalletService walletService;
-    private final MonetaryValidator amountValidator = new MonetaryValidator();
     private Subscription addressPin;
     private Subscription amountPin;
 
     public WalletSendController(ServiceProvider serviceProvider) {
         walletService = serviceProvider.getWalletService().orElseThrow();
         model = new WalletSendModel();
-        view = new WalletSendView(model, this, amountValidator);
+        view = new WalletSendView(model, this);
     }
 
     @Override

@@ -106,10 +106,12 @@ public class TradeWizardPriceController implements Controller {
         }
 
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
-        isPriceInvalidPin = EasyBind.subscribe(priceInput.getValidationResult(), validationResult -> {
-            if (validationResult != null && !validationResult.isValid) {
-                model.getErrorMessage().set(validationResult.errorMessage);
+        isPriceInvalidPin = EasyBind.subscribe(priceInput.isPriceValid(), isPriceValid -> {
+            if (isPriceValid != null && !isPriceValid) {
+                model.getErrorMessage().set(priceInput.getErrorMessage());
                 model.setLastValidPriceQuote(null);
+            } else {
+                model.getErrorMessage().set(null);
             }
         });
         priceSpecPin = EasyBind.subscribe(model.getPriceSpec(), this::updateFeedback);
@@ -158,6 +160,10 @@ public class TradeWizardPriceController implements Controller {
         if (model.isFocused() || model.getMarket() == null) {
             return;
         }
+        applyPercentageString(percentageAsString);
+    }
+
+    private void applyPercentageString(String percentageAsString) {
         if (percentageAsString == null || percentageAsString.trim().isEmpty()) {
             return;
         }
@@ -189,6 +195,14 @@ public class TradeWizardPriceController implements Controller {
 
     void onToggleUseFixPrice() {
         boolean useFixPrice = !model.getUseFixPrice().get();
+
+        // In case of in invalid inputs we apply the value from the flip side before switching,
+        // so that the then inactive field has a valid value again.
+        if (!useFixPrice && !priceInput.isPriceValid().get()) {
+            applyPercentageString(model.getPercentageInput().get());
+        } else if (useFixPrice && model.getErrorMessage().get() != null) {
+            onQuoteInput(priceInput.getQuote().get());
+        }
         model.getUseFixPrice().set(useFixPrice);
         settingsService.setCookie(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey(), useFixPrice);
         applyPriceSpec();
