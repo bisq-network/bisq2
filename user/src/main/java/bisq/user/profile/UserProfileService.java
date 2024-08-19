@@ -154,7 +154,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
 
     private void processUserProfileAddedOrRefreshed(UserProfile userProfile) {
         Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
-        if (existingUserProfile.isEmpty() || !existingUserProfile.get().equals(userProfile)) {
+        // ApplicationVersion is excluded in equals check, so we check manually for it.
+        if (existingUserProfile.isEmpty() ||
+                !existingUserProfile.get().equals(userProfile)
+                || !existingUserProfile.get().getApplicationVersion().equals(userProfile.getApplicationVersion())) {
             if (verifyUserProfile(userProfile)) {
                 ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
                 synchronized (persistableStore) {
