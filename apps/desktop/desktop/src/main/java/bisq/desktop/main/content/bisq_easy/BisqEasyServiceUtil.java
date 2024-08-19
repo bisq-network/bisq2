@@ -136,14 +136,14 @@ public class BisqEasyServiceUtil {
 
     public static String getFormattedPriceSpec(PriceSpec priceSpec) {
         String priceInfo;
-        if (priceSpec instanceof FixPriceSpec) {
-            FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
+        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
             String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
             priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
-        } else if (priceSpec instanceof FloatPriceSpec) {
-            FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;
-            String percent = PercentageFormatter.formatToPercentWithSymbol(floatPriceSpec.getPercentage());
-            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.floatPrice", percent);
+        } else if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
+            String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
+            priceInfo = Res.get(floatPriceSpec.getPercentage() >= 0
+                    ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.above"
+                    : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.below", percent);
         } else {
             priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
         }
