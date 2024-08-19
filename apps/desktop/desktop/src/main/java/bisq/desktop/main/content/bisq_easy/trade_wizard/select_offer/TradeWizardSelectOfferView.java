@@ -256,6 +256,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                                     catHashImageView.setImage(CatHash.getImage(userProfile)));
                             setGraphic(hBox);
                         } else {
+                            catHashImageView.setImage(null);
                             setGraphic(null);
                         }
                     }

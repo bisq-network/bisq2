@@ -174,6 +174,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 livenessUpateScheduler.stop();
                 livenessUpateScheduler = null;
             }
+            model.catHashImage.set(null);
         }
 
         void onSendPrivateMessage() {

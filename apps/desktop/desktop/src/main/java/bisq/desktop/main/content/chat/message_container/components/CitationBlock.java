@@ -101,6 +101,7 @@ public class CitationBlock {
         private void close() {
             model.visible.set(false);
             model.citation.set(null);
+            model.catHashImage.set(null);
         }
 
         @Override
@@ -109,6 +110,7 @@ public class CitationBlock {
 
         @Override
         public void onDeactivate() {
+            model.catHashImage.set(null);
         }
     }
 

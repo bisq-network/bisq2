@@ -106,6 +106,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
 
         @Override
         public void onDeactivate() {
+            model.catHashImage.set(null);
         }
 
         public boolean isUserProfileBanned() {

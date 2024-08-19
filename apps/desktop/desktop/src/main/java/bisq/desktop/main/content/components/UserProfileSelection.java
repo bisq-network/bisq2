@@ -305,6 +305,7 @@ public class UserProfileSelection {
             isLeftAlignedPin.unsubscribe();
             comboBoxWidthPin.unsubscribe();
             isComboBoxPin.unbind();
+            catHashImageView.setImage(null);
         }
 
         public void setMaxComboBoxWidth(int width) {
@@ -404,6 +405,7 @@ public class UserProfileSelection {
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
+                        catHashImageView.setImage(null);
                         if (labelWidthListener != null) {
                             label.widthProperty().removeListener(labelWidthListener);
                         }

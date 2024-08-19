@@ -126,6 +126,7 @@ public class UserProfileController implements Controller {
             livenessUpateScheduler.stop();
             livenessUpateScheduler = null;
         }
+        model.getCatHashImage().set(null);
     }
 
     public void onSelected(UserIdentity userIdentity) {
