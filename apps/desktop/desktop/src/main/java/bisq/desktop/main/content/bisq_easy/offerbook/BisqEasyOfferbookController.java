@@ -40,14 +40,12 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import javafx.collections.ListChangeListener;
-import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -275,13 +273,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 String marketSpecs = channel.getDisplayString();
                 model.getChannelDescription().set(marketSpecs);
 
-                Market market = channel.getMarket();
-                StackPane marketsImage = MarketImageComposition.imageBoxForMarkets(
-                        market.getBaseCurrencyCode().toLowerCase(),
-                        market.getQuoteCurrencyCode().toLowerCase());
-                model.getChannelIconNode().set(marketsImage);
-
-                model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount", channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
+                model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount",
+                        channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
 
                 updateMarketPrice();
 
