@@ -19,8 +19,12 @@ package bisq.desktop.components.cathash;
 
 import bisq.common.util.ByteArrayUtils;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.user.profile.UserProfile;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
@@ -29,9 +33,32 @@ import java.util.concurrent.ConcurrentHashMap;
 // Derived from https://github.com/neuhalje/android-robohash
 @Slf4j
 public class CatHash {
+    @Getter
+    public enum IconSize {
+        SIZE_30(30),
+        SIZE_35(35);
+
+        private final int size;
+
+        IconSize(int size) {
+            this.size = size;
+        }
+    }
+
     private static final int SIZE = 300;
     private static final int MAX_CACHE_SIZE = 10000;
     private static final ConcurrentHashMap<BigInteger, Image> CACHE = new ConcurrentHashMap<>();
+
+    public static Button getIconButton(UserProfile userProfile, IconSize iconSize) {
+        return BisqIconButton.createIconButton(getImageView(userProfile, iconSize));
+    }
+
+    public static ImageView getImageView(UserProfile userProfile, IconSize iconSize) {
+        ImageView imageView = new ImageView(getImage(userProfile));
+        imageView.setFitWidth(iconSize.getSize());
+        imageView.setFitHeight(iconSize.getSize());
+        return imageView;
+    }
 
     public static Image getImage(UserProfile userProfile) {
         return getImage(userProfile.getPubKeyHash(), userProfile.getProofOfWork().getSolution(),

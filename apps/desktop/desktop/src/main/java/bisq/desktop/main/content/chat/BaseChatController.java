@@ -31,7 +31,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.components.cathash.CatHash;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
 import bisq.desktop.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
@@ -42,8 +41,6 @@ import bisq.user.profile.UserProfileService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -149,11 +146,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
     protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
         if (privateChatChannel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
-            Image image = CatHash.getImage(twoPartyPrivateChatChannel.getPeer());
-            ImageView imageView = new ImageView(image);
-            imageView.setFitWidth(35);
-            imageView.setFitHeight(35);
-            Button iconButton = BisqIconButton.createIconButton(imageView);
+            Button iconButton = CatHash.getIconButton(twoPartyPrivateChatChannel.getPeer(), CatHash.IconSize.SIZE_35);
             model.getChannelIconNode().set(iconButton);
         } else if (privateChatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
             if (bisqEasyOpenTradeChannel.isInMediation() && bisqEasyOpenTradeChannel.getMediator().isPresent()) {
@@ -168,16 +161,10 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                     left = bisqEasyOpenTradeChannel.getPeer();
                     right = bisqEasyOpenTradeChannel.getMediator().get();
                 }
-                ImageView leftImageView = new ImageView(CatHash.getImage(left));
-                leftImageView.setFitWidth(35);
-                leftImageView.setFitHeight(35);
-                Button leftIconButton = BisqIconButton.createIconButton(leftImageView);
+                Button leftIconButton = CatHash.getIconButton(left, CatHash.IconSize.SIZE_35);
                 leftIconButton.setMouseTransparent(true);
 
-                ImageView rightImageView = new ImageView(CatHash.getImage(right));
-                rightImageView.setFitWidth(35);
-                rightImageView.setFitHeight(35);
-                Button rightIconButton = BisqIconButton.createIconButton(rightImageView);
+                Button rightIconButton = CatHash.getIconButton(right, CatHash.IconSize.SIZE_35);
                 rightIconButton.setMouseTransparent(true);
                 HBox.setMargin(rightIconButton, new Insets(0, 0, 0, -20));
 
@@ -185,11 +172,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 model.getChannelIconNode().set(hBox);
             } else {
-                Image image = CatHash.getImage(bisqEasyOpenTradeChannel.getPeer());
-                ImageView imageView = new ImageView(image);
-                imageView.setFitWidth(35);
-                imageView.setFitHeight(35);
-                Button iconButton = BisqIconButton.createIconButton(imageView);
+                Button iconButton = CatHash.getIconButton(bisqEasyOpenTradeChannel.getPeer(), CatHash.IconSize.SIZE_35);
                 model.getChannelIconNode().set(iconButton);
             }
         }
