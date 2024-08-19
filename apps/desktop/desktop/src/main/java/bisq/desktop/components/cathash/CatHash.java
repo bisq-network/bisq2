@@ -35,7 +35,7 @@ public class CatHash {
 
     public static Image getImage(UserProfile userProfile) {
         return getImage(userProfile.getPubKeyHash(), userProfile.getProofOfWork().getSolution(),
-                userProfile.getAvatarVersion(), true);
+                userProfile.getAvatarVersion());
     }
 
     public static Image getImage(byte[] pubKeyHash, byte[] powSolution, int avatarVersion) {

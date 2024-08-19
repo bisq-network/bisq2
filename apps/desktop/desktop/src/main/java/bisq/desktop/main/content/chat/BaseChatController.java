@@ -148,16 +148,14 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
-        if (privateChatChannel instanceof TwoPartyPrivateChatChannel) {
-            TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
+        if (privateChatChannel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
             Image image = CatHash.getImage(twoPartyPrivateChatChannel.getPeer());
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(35);
             imageView.setFitHeight(35);
             Button iconButton = BisqIconButton.createIconButton(imageView);
             model.getChannelIconNode().set(iconButton);
-        } else if (privateChatChannel instanceof BisqEasyOpenTradeChannel) {
-            BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel = (BisqEasyOpenTradeChannel) privateChatChannel;
+        } else if (privateChatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
             if (bisqEasyOpenTradeChannel.isInMediation() && bisqEasyOpenTradeChannel.getMediator().isPresent()) {
                 UserProfile left;
                 UserProfile right;
@@ -224,17 +222,12 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     String getHelpButtonText() {
-        switch (model.chatChannelDomain) {
-            case BISQ_EASY_OFFERBOOK:
-            case BISQ_EASY_OPEN_TRADES:
-            case BISQ_EASY_PRIVATE_CHAT:
-                return Res.get("chat.dropdownMenu.tradeGuide");
-            case DISCUSSION:
-            case EVENTS:
-            case SUPPORT:
-            default:
-                return Res.get("chat.dropdownMenu.chatRules");
-        }
+        return switch (model.chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK,
+                 BISQ_EASY_OPEN_TRADES,
+                 BISQ_EASY_PRIVATE_CHAT -> Res.get("chat.dropdownMenu.tradeGuide");
+            default -> Res.get("chat.dropdownMenu.chatRules");
+        };
     }
 
     private void doCloseSideBar() {
