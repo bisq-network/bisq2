@@ -24,6 +24,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.security.*;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
@@ -162,7 +163,19 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     @Override
     public void applyPersisted(UserIdentityStore persisted) {
-        userIdentities.setAll(persisted.getUserIdentities());
+        Set<UserIdentity> persistedUserIdentities = persisted.getUserIdentities().stream()
+                .map(userIdentity -> {
+                    // We update ApplicationVersion and version at our own user profiles
+                    UserProfile existingUserProfile = userIdentity.getUserProfile();
+                    UserProfile userProfile = UserProfile.createNew(existingUserProfile.getNickName(),
+                            existingUserProfile.getProofOfWork(),
+                            existingUserProfile.getAvatarVersion(),
+                            existingUserProfile.getNetworkId(),
+                            existingUserProfile.getTerms(),
+                            existingUserProfile.getStatement());
+                    return new UserIdentity(userIdentity.getIdentity(), userProfile);
+                }).collect(Collectors.toSet());
+        userIdentities.setAll(persistedUserIdentities);
         setSelectedUserIdentityId(persisted.getSelectedUserIdentityId());
 
         encryptedData = persisted.getEncryptedData();
