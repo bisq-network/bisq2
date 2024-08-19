@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class ReportRequestService implements Node.Listener {
-    private static final long TIMEOUT_SEC = 10;
+    private static final long TIMEOUT_SEC = 60;
 
     private final Node node;
     private final Map<String, ReportHandler> requestHandlerMap = new ConcurrentHashMap<>();
