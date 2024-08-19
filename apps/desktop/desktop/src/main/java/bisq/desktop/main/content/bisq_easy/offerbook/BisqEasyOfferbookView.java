@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.bisq_easy.BisqEasyMarketFilter;
-import bisq.common.currency.Market;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
@@ -271,10 +270,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.getSelectionModel().clearSelection();
         favouritesTableView.getSelectionModel().select(selectedItem);
 
-        Market market = selectedItem.getMarket();
-        StackPane marketsImage = MarketImageComposition.imageBoxForMarkets(
-                market.getBaseCurrencyCode().toLowerCase(),
-                market.getQuoteCurrencyCode().toLowerCase());
+        StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket());
         channelHeaderIcon.setGraphic(marketsImage);
     }
 
