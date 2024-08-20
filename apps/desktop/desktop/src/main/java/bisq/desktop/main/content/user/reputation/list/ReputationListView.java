@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.reputation.list;
 
 import bisq.common.data.Pair;
 import bisq.common.monetary.Coin;
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -67,7 +66,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 Res.get("user.reputation.table.headline"),
                 model.getFilterItems(),
                 model.getFilterMenuItemToggleGroup(),
-                this::applySearchPredicate);
+                controller::applySearchPredicate);
         configTableView();
 
         root.getChildren().addAll(richTableView);
@@ -158,17 +157,6 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         valueColumn.visibleProperty().unbind();
         userProfileIdOfScoreUpdatePin.unsubscribe();
         selectedReputationSourcePin.unsubscribe();
-    }
-
-    private void applySearchPredicate(String searchText) {
-        String string = searchText.toLowerCase();
-        model.getFilteredList().setPredicate(item ->
-                StringUtils.isEmpty(string) ||
-                        item.getUserName().toLowerCase().contains(string) ||
-                        item.getUserProfile().getNym().toLowerCase().contains(string) ||
-                        item.getTotalScoreString().contains(string) ||
-                        item.getProfileAgeString().contains(string) ||
-                        item.getValueAsStringProperty().get().toLowerCase().contains(string));
     }
 
     private void configTableView() {

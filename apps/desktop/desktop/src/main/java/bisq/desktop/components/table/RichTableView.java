@@ -85,6 +85,12 @@ public class RichTableView<T> extends VBox {
 
     public RichTableView(SortedList<T> sortedList,
                          String headline,
+                         Consumer<String> searchTextHandler) {
+        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler));
+    }
+
+    public RichTableView(SortedList<T> sortedList,
+                         String headline,
                          List<FilterMenuItem<T>> filterItems,
                          ToggleGroup toggleGroup,
                          Consumer<String> searchTextHandler) {

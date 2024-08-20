@@ -28,9 +28,7 @@ import java.util.Comparator;
 
 @Slf4j
 public class RolesView extends BondedRolesView<RolesModel, RolesController> {
-    public RolesView(RolesModel model,
-                     RolesController controller,
-                     VBox tabControllerRoot) {
+    public RolesView(RolesModel model, RolesController controller, VBox tabControllerRoot) {
         super(model, controller, tabControllerRoot);
     }
 
@@ -46,44 +44,41 @@ public class RolesView extends BondedRolesView<RolesModel, RolesController> {
 
     @Override
     protected void configTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.userProfile"))
                 .left()
                 .minWidth(150)
                 .comparator(Comparator.comparing(BondedRolesListItem::getUserName))
+                .valueSupplier(BondedRolesListItem::getUserName)
                 .setCellFactory(getUserProfileCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.role"))
                 .fixWidth(150)
                 .comparator(Comparator.comparing(BondedRolesListItem::getRoleTypeString))
                 .valueSupplier(BondedRolesListItem::getRoleTypeString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.bondUserName"))
                 .minWidth(200)
                 .comparator(Comparator.comparing(BondedRolesListItem::getBondUserName))
                 .valueSupplier(BondedRolesListItem::getBondUserName)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.profileId"))
                 .minWidth(150)
                 .comparator(Comparator.comparing(BondedRolesListItem::getUserProfileId))
+                .valueSupplier(BondedRolesListItem::getUserProfileId)
                 .setCellFactory(getUserProfileIdCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.signature"))
                 .minWidth(150)
                 .comparator(Comparator.comparing(BondedRolesListItem::getSignature))
+                .valueSupplier(BondedRolesListItem::getSignature)
                 .setCellFactory(getSignatureCellFactory())
                 .build());
-     /*   tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
-                .title(Res.get("user.bondedRoles.table.columns.oracleNode"))
-                .minWidth(200)
-                .comparator(Comparator.comparing(BondedRolesListItem::getPublicKeyHash))
-                .valueSupplier(BondedRolesListItem::getPublicKeyHash)
-                .build());*/
-        tableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<BondedRolesListItem>()
                 .title(Res.get("user.bondedRoles.table.columns.isBanned"))
                 .right()
                 .fixWidth(90)

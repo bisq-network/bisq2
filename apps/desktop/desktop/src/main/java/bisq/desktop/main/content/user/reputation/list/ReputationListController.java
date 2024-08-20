@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.reputation.list;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -164,6 +165,17 @@ public class ReputationListController implements Controller {
                     reputationDetailsPopup = null;
                 })
                 .show();
+    }
+
+    void applySearchPredicate(String searchText) {
+        String string = searchText.toLowerCase();
+        model.getFilteredList().setPredicate(item ->
+                StringUtils.isEmpty(string) ||
+                        item.getUserName().toLowerCase().contains(string) ||
+                        item.getUserProfile().getNym().toLowerCase().contains(string) ||
+                        item.getTotalScoreString().contains(string) ||
+                        item.getProfileAgeString().contains(string) ||
+                        item.getValueAsStringProperty().get().toLowerCase().contains(string));
     }
 
     Optional<ReputationSource> resolveReputationSource(Toggle toggle) {
