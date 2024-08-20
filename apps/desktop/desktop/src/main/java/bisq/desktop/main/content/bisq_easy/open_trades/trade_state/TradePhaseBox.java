@@ -35,12 +35,7 @@ import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -172,7 +167,7 @@ class TradePhaseBox {
                             model.getPhaseIndex().set(1);
                             boolean showRequestMediationButton =
                                     state == BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION
-                                    || state == BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
+                                            || state == BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
                             model.getRequestMediationButtonVisible().set(showRequestMediationButton);
                             model.getReportToMediatorButtonVisible().set(!showRequestMediationButton);
                             break;
@@ -373,30 +368,37 @@ class TradePhaseBox {
         }
 
         private void phaseIndexChanged(Number phaseIndex) {
-            for (int i = 0; i < phaseItems.size(); i++) {
-                Badge badge = phaseItems.get(i).getThird();
-                Label label = phaseItems.get(i).getSecond();
+            for (int index = 0; index < phaseItems.size(); index++) {
+                Badge badge = phaseItems.get(index).getThird();
                 badge.getStyleClass().clear();
-                label.getStyleClass().clear();
                 badge.getStyleClass().add("bisq-easy-trade-state-phase-badge");
-                if (i < phaseIndex.intValue()) {
+
+                Label label = phaseItems.get(index).getSecond();
+                label.getStyleClass().clear();
+
+                if (index < phaseIndex.intValue()) {
                     // completed
                     ImageView checkMark = ImageUtil.getImageViewById("check-white");
                     checkMark.setOpacity(0.75);
                     badge.getLabel().setGraphic(checkMark);
                     badge.setText("");
+                    badge.setLabelStyle(null);
                     badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-completed");
                     label.getStyleClass().add("bisq-easy-trade-state-phase-completed");
-                } else if (i == phaseIndex.intValue()) {
-                    // current
-                    badge.setLabelStyle("-fx-text-fill: white; -fx-font-family: \"IBM Plex Sans Bold\"");
-                    badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-current");
-                    label.getStyleClass().add("bisq-easy-trade-state-phase-current");
                 } else {
-                    // open
-                    badge.setLabelStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans\"");
-                    badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-open");
-                    label.getStyleClass().add("bisq-easy-trade-state-phase-open");
+                    badge.setText(String.valueOf(index));
+                    badge.getLabel().setGraphic(null);
+                    if (index == phaseIndex.intValue()) {
+                        // current
+                        badge.setLabelStyle("-fx-text-fill: white; -fx-font-family: \"IBM Plex Sans Bold\"");
+                        badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-current");
+                        label.getStyleClass().add("bisq-easy-trade-state-phase-current");
+                    } else {
+                        // open
+                        badge.setLabelStyle("-fx-text-fill: -fx-mid-text-color; -fx-font-family: \"IBM Plex Sans\"");
+                        badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-open");
+                        label.getStyleClass().add("bisq-easy-trade-state-phase-open");
+                    }
                 }
             }
         }
@@ -413,6 +415,7 @@ class TradePhaseBox {
             Label label = new Label();
             label.getStyleClass().add("bisq-easy-trade-state-phase");
             Badge badge = new Badge();
+            badge.setUseAnimation(false);
             badge.setText(String.valueOf(index));
             HBox hBox = new HBox(7.5, badge, label);
             hBox.setAlignment(Pos.CENTER_LEFT);

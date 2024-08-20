@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.Transitions;
 import javafx.animation.FadeTransition;
 import javafx.beans.DefaultProperty;
 import javafx.beans.property.ObjectProperty;
@@ -58,6 +59,9 @@ public class Badge extends StackPane {
     private final SimpleStringProperty text = new SimpleStringProperty("");
     private final FadeTransition transition;
 
+    @Getter
+    private boolean useAnimation;
+
     public Badge() {
         this(null, Pos.TOP_RIGHT);
     }
@@ -81,11 +85,13 @@ public class Badge extends StackPane {
         badge.getChildren().add(badgePane);
         badge.setOpacity(0);
 
-        transition = new FadeTransition(Duration.millis(666), badge);
+        transition = new FadeTransition(Duration.millis(Transitions.DEFAULT_DURATION), badge);
         transition.setFromValue(0);
         transition.setToValue(1.0);
         transition.setCycleCount(1);
         transition.setAutoReverse(true);
+
+        useAnimation = Transitions.getUseAnimations();
 
         getChildren().add(badge);
         getStyleClass().add("bisq-badge");
@@ -101,6 +107,12 @@ public class Badge extends StackPane {
                 refreshBadge();
             }
         });
+    }
+
+    public void setUseAnimation(boolean useAnimation) {
+        if (Transitions.getUseAnimations()) {
+            this.useAnimation = useAnimation;
+        }
     }
 
     // For unknown reasons the color of the style class is not applied in certain context (when used in list items)
@@ -126,7 +138,11 @@ public class Badge extends StackPane {
             label.setText(text.get());
             double prefWidth = (textLength - 1) * 7.5 + 15;
             badgePane.setPrefWidth(prefWidth);
-            transition.play();
+            if (useAnimation) {
+                transition.play();
+            } else {
+                badge.setOpacity(1);
+            }
         }
     }
 
