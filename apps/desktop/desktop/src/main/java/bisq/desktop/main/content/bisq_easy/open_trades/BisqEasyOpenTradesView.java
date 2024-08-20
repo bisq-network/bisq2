@@ -32,8 +32,8 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
@@ -349,7 +349,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .setCellFactory(getMediatorCellFactory())
                 .build();
 
-        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
+        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))

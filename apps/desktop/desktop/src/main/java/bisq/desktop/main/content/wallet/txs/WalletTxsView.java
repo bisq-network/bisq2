@@ -19,7 +19,7 @@ package bisq.desktop.main.content.wallet.txs;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
+import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -58,7 +58,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     }
 
     private void configTableView() {
-        richTableView.getColumns().add(BisqTableColumns.getDateColumn(richTableView.getSortOrder()));
+        richTableView.getColumns().add(DateColumnUtil.getDateColumn(richTableView.getSortOrder()));
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.txId"))

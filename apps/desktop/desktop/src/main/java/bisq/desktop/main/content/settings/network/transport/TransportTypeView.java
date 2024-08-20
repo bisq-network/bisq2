@@ -21,7 +21,7 @@ import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
+import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -71,7 +71,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
     }
 
     private void configConnectionsTableView() {
-        connectionsTableView.getColumns().add(BisqTableColumns.getDateColumn(connectionsTableView.getSortOrder()));
+        connectionsTableView.getColumns().add(DateColumnUtil.getDateColumn(connectionsTableView.getSortOrder()));
 
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.peer"))

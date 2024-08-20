@@ -32,7 +32,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
+import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
@@ -190,7 +190,7 @@ public class ReportToModeratorTable {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void configTableView() {
-            richTableView.getColumns().add(BisqTableColumns.getDateColumn(richTableView.getSortOrder()));
+            richTableView.getColumns().add(DateColumnUtil.getDateColumn(richTableView.getSortOrder()));
 
             richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("authorizedRole.moderator.table.reporter"))

@@ -217,7 +217,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 .setCellFactory(getTakerCellFactory())
                 .build());
 
-        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
+        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
