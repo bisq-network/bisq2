@@ -17,6 +17,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
@@ -222,6 +223,31 @@ public class StandardTable<T> extends VBox {
                 .collect(Collectors.toList());
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TableView delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void refresh() {
+        tableView.refresh();
+    }
+
+    public ObservableList<TableColumn<T, ?>> getSortOrder() {
+        return tableView.getSortOrder();
+    }
+
+    public ObservableList<T> getItems() {
+        return tableView.getItems();
+    }
+
+    public ObservableList<TableColumn<T, ?>> getColumns() {
+        return tableView.getColumns();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void selectedFilterMenuItemChanged() {
         toggleGroup.flatMap(toggleGroup -> FilterMenuItem.fromToggle(toggleGroup.getSelectedToggle()))
                 .ifPresent(filterMenuItem -> {
@@ -233,6 +259,11 @@ public class StandardTable<T> extends VBox {
     private void listItemsChanged() {
         numEntriesLabel.setText(Res.get("component.standardTable.numEntries", tableView.getItems().size()));
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // FilterMenuItem
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
@@ -305,14 +336,6 @@ public class StandardTable<T> extends VBox {
             setOnAction(null);
         }
 
-        private void toggleChanged() {
-            setSelected(this.equals(getToggleGroup().getSelectedToggle()));
-        }
-
-        private void applyStyle() {
-            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected());
-        }
-
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Toggle implementation
@@ -347,6 +370,19 @@ public class StandardTable<T> extends VBox {
         public void setSelected(boolean selected) {
             selectedProperty.set(selected);
             applyStyle();
+        }
+
+
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        // Private
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        private void toggleChanged() {
+            setSelected(this.equals(getToggleGroup().getSelectedToggle()));
+        }
+
+        private void applyStyle() {
+            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected());
         }
     }
 }

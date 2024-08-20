@@ -23,7 +23,6 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.StandardTable;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
@@ -56,7 +55,6 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class ReputationListView extends View<VBox, ReputationListModel, ReputationListController> {
-    private final BisqTableView<ListItem> tableView;
     private final StandardTable<ListItem> standardTable;
     private BisqTableColumn<ListItem> scoreColumn, valueColumn;
     private Subscription userProfileIdOfScoreUpdatePin, selectedReputationSourcePin;
@@ -70,7 +68,6 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 model.getFilterItems(),
                 model.getFilterMenuItemToggleGroup(),
                 this::applySearchPredicate);
-        tableView = standardTable.getTableView();
         configTableView();
 
         root.getChildren().addAll(standardTable);
@@ -83,15 +80,15 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         valueColumn.visibleProperty().bind(model.getValueColumnVisible());
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getScoreChangeTrigger(), trigger -> {
             if (trigger != null) {
-                tableView.refresh();
+                standardTable.refresh();
             }
         });
 
         selectedReputationSourcePin = EasyBind.subscribe(model.getSelectedReputationSource(), selectedReputationSource -> {
             UIThread.runOnNextRenderFrame(() -> {
-                tableView.getSortOrder().clear();
+                standardTable.getSortOrder().clear();
                 if (selectedReputationSource == null) {
-                    tableView.getSortOrder().add(scoreColumn);
+                    standardTable.getSortOrder().add(scoreColumn);
                 } else {
 
                     switch (selectedReputationSource) {
@@ -105,7 +102,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                             valueColumn.setSortType(TableColumn.SortType.ASCENDING);
                             break;
                     }
-                    tableView.getSortOrder().add(valueColumn);
+                    standardTable.getSortOrder().add(valueColumn);
                 }
             });
         });
@@ -122,7 +119,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .toList());
         standardTable.setCsvHeaders(Optional.of(csvHeaders));
 
-        List<List<String>> csvData = tableView.getItems().stream()
+        List<List<String>> csvData = standardTable.getItems().stream()
                 .map(item -> {
                     List<String> cellDataInRow = standardTable.getBisqTableColumnsForCsv()
                             .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
@@ -175,21 +172,21 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
     }
 
     private void configTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        standardTable.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.userProfile"))
                 .left()
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .setCellFactory(getUserProfileCellFactory())
                 .valueSupplier(ListItem::getUserName)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        standardTable.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.profileAge"))
                 .left()
                 .comparator(Comparator.comparing(ListItem::getProfileAge).reversed())
                 .valueSupplier(ListItem::getProfileAgeString)
                 .includeForCsv(false)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        standardTable.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.livenessState"))
                 .right()
                 .comparator(Comparator.comparing(ListItem::getPublishDate).reversed())
@@ -202,7 +199,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .sortType(TableColumn.SortType.DESCENDING)
                 .valueSupplier(ListItem::getTotalScoreString)
                 .build();
-        tableView.getColumns().add(scoreColumn);
+        standardTable.getColumns().add(scoreColumn);
 
         valueColumn = new BisqTableColumn.Builder<ListItem>()
                 .titleProperty(model.getFilteredValueTitle())
@@ -210,16 +207,16 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .valuePropertySupplier(ListItem::getValueAsStringProperty)
                 .includeForCsv(false)
                 .build();
-        tableView.getColumns().add(valueColumn);
+        standardTable.getColumns().add(valueColumn);
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        standardTable.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.reputation"))
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getStarsCellFactory())
                 .includeForCsv(false)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        standardTable.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)
                 .title(Res.get("user.reputation.table.columns.details"))
                 .setCellFactory(getDetailsCellFactory())
