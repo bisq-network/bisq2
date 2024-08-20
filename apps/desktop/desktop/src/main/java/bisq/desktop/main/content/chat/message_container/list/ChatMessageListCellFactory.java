@@ -22,13 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.MyOfferMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.MyTextMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.PeerLeftMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.PeerOfferMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.PeerTextMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.TradePeerLefMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -69,34 +63,35 @@ final class ChatMessageListCellFactory
             }
 
             @Override
-            public void updateItem(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+            protected void updateItem(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                    boolean empty) {
                 super.updateItem(item, empty);
 
-                if (item == null || empty) {
-                    cleanup();
-                    return;
-                }
+                if (item != null && !empty) {
+                    Node flow = getListView().lookup(".virtual-flow");
+                    if (flow != null && !flow.isVisible()) {
+                        cleanup();
+                        return;
+                    }
 
-                Node flow = this.getListView().lookup(".virtual-flow");
-                if (flow != null && !flow.isVisible()) {
+                    messageBox = createMessage(item, list);
+                    cellHBox.getChildren().setAll(messageBox);
+                    listWidthPropertyPin = EasyBind.subscribe(messageBox.widthProperty(), w -> updateMessageStyle());
+                    setGraphic(cellHBox);
+                } else {
                     cleanup();
-                    return;
                 }
-
-                messageBox = createMessage(item, list);
-                cellHBox.getChildren().setAll(messageBox);
-                listWidthPropertyPin = EasyBind.subscribe(messageBox.widthProperty(), w -> updateMessageStyle());
-                setGraphic(cellHBox);
             }
 
             private void cleanup() {
                 if (messageBox != null) {
                     messageBox.dispose();
+                    messageBox = null;
                 }
 
                 if (listWidthPropertyPin != null) {
                     listWidthPropertyPin.unsubscribe();
+                    listWidthPropertyPin = null;
                 }
 
                 setGraphic(null);

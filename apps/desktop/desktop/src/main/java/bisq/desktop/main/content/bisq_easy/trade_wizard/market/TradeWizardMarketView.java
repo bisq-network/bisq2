@@ -49,7 +49,7 @@ import java.util.Comparator;
 
 @Slf4j
 public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, TradeWizardMarketController> {
-    private final BisqTableView<MarketListItem> tableView;
+    private final BisqTableView<ListItem> tableView;
     private final SearchBox searchBox;
     private final Label headlineLabel;
 
@@ -117,27 +117,27 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
     private void configTableView() {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .left()
                 .minWidth(120)
-                .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyDisplayName))
+                .comparator(Comparator.comparing(ListItem::getQuoteCurrencyDisplayName))
                 .setCellFactory(getNameCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.tradeWizard.market.columns.numOffers"))
                 .minWidth(60)
-                .valueSupplier(MarketListItem::getNumOffers)
-                .comparator(Comparator.comparing(MarketListItem::getNumOffersAsInteger))
+                .valueSupplier(ListItem::getNumOffers)
+                .comparator(Comparator.comparing(ListItem::getNumOffersAsInteger))
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.tradeWizard.market.columns.numPeers"))
                 .minWidth(60)
-                .valueSupplier(MarketListItem::getNumUsers)
-                .comparator(Comparator.comparing(MarketListItem::getNumUsersAsInteger))
+                .valueSupplier(ListItem::getNumUsers)
+                .comparator(Comparator.comparing(ListItem::getNumUsersAsInteger))
                 .build());
     }
 
-    private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getNameCellFactory
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getNameCellFactory
             () {
         return column -> new TableCell<>() {
             private final Label label = new Label();
@@ -149,7 +149,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
             }
 
             @Override
-            public void updateItem(final MarketListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -163,6 +163,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
                     setGraphic(label);
                 } else {
+                    label.setTooltip(null);
                     label.setGraphic(null);
                     setGraphic(null);
                 }
@@ -173,7 +174,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
-    static class MarketListItem {
+    static class ListItem {
         @EqualsAndHashCode.Include
         private final Market market;
         @EqualsAndHashCode.Include
@@ -188,7 +189,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         //TOD move to cell
         private final Node marketLogo;
 
-        MarketListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
+        ListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
             this.market = market;
             this.numOffersAsInteger = numOffersAsInteger;
             this.numUsersAsInteger = numUsersAsInteger;

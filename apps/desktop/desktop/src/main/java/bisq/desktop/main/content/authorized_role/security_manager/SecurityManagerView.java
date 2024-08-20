@@ -391,7 +391,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             private final Button button = new Button(Res.get("data.remove"));
 
             @Override
-            public void updateItem(final AlertListItem item, boolean empty) {
+            protected void updateItem(AlertListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty && controller.isRemoveDifficultyAdjustmentButtonVisible(item.getAuthorizedAlertData())) {
@@ -411,7 +411,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             private final Button button = new Button(Res.get("data.remove"));
 
             @Override
-            public void updateItem(final DifficultyAdjustmentListItem item, boolean empty) {
+            protected void updateItem(DifficultyAdjustmentListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty && controller.isRemoveDifficultyAdjustmentButtonVisible(item.getData())) {
@@ -431,7 +431,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             private final Button button = new Button(Res.get("data.remove"));
 
             @Override
-            public void updateItem(final MinRequiredReputationScoreListItem item, boolean empty) {
+            protected void updateItem(MinRequiredReputationScoreListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty && controller.isRemoveMinRequiredReputationScoreButtonVisible(item.getData())) {

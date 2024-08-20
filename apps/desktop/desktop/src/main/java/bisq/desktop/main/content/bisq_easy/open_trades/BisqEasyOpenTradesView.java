@@ -403,7 +403,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             private final StackPane stackPane = new StackPane(userProfileIcon);
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -424,7 +424,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             private Badge badge;
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -461,7 +461,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             private Badge badge;
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
@@ -496,7 +496,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -520,7 +520,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {

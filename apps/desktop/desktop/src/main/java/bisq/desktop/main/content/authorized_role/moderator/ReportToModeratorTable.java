@@ -94,8 +94,8 @@ public class ReportToModeratorTable {
 
         @Override
         public void onActivate() {
-            reportListItemsPin = FxBindings.<ReportToModeratorMessage, View.ReportListItem>bind(model.getListItems())
-                    .map(message -> new View.ReportListItem(message, serviceProvider))
+            reportListItemsPin = FxBindings.<ReportToModeratorMessage, View.ListItem>bind(model.getListItems())
+                    .map(message -> new View.ListItem(message, serviceProvider))
                     .to(moderatorService.getReportToModeratorMessages());
         }
 
@@ -155,12 +155,12 @@ public class ReportToModeratorTable {
     @Setter
     private static class Model implements bisq.desktop.common.view.Model {
         private BondedRole bondedRole;
-        private final ObservableList<View.ReportListItem> listItems = FXCollections.observableArrayList();
+        private final ObservableList<View.ListItem> listItems = FXCollections.observableArrayList();
     }
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final RichTableView<ReportListItem> richTableView;
+        private final RichTableView<ListItem> richTableView;
 
         private View(Model model, Controller controller) {
             super(new VBox(5), model, controller);
@@ -192,44 +192,44 @@ public class ReportToModeratorTable {
         private void configTableView() {
             richTableView.getColumns().add(BisqTableColumns.getDateColumn(richTableView.getSortOrder()));
 
-            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("authorizedRole.moderator.table.reporter"))
                     .minWidth(250)
                     .left()
-                    .comparator(Comparator.comparing(ReportListItem::getReporterUserName))
-                    .valueSupplier(ReportListItem::getReporterUserName)
+                    .comparator(Comparator.comparing(ListItem::getReporterUserName))
+                    .valueSupplier(ListItem::getReporterUserName)
                     .setCellFactory(getReporterUserProfileCellFactory())
                     .build());
-            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("authorizedRole.moderator.table.accused"))
                     .minWidth(250)
                     .left()
-                    .comparator(Comparator.comparing(ReportListItem::getAccusedUserName))
-                    .valueSupplier(ReportListItem::getAccusedUserName)
+                    .comparator(Comparator.comparing(ListItem::getAccusedUserName))
+                    .valueSupplier(ListItem::getAccusedUserName)
                     .setCellFactory(getAccusedUserProfileCellFactory())
                     .build());
-            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("authorizedRole.moderator.table.message"))
                     .minWidth(150)
                     .left()
-                    .comparator(Comparator.comparing(ReportListItem::getMessage))
-                    .valueSupplier(ReportListItem::getMessage)
+                    .comparator(Comparator.comparing(ListItem::getMessage))
+                    .valueSupplier(ListItem::getMessage)
                     .setCellFactory(getMessageCellFactory())
                     .build());
-            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("authorizedRole.moderator.table.chatChannelDomain"))
                     .fixWidth(150)
                     .left()
-                    .comparator(Comparator.comparing(ReportListItem::getChatChannelDomain))
-                    .valueSupplier(ReportListItem::getChatChannelDomain)
+                    .comparator(Comparator.comparing(ListItem::getChatChannelDomain))
+                    .valueSupplier(ListItem::getChatChannelDomain)
                     .build());
-            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .isSortable(false)
                     .fixWidth(130)
                     .setCellFactory(getBanCellFactory())
                     .includeForCsv(false)
                     .build());
-            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .isSortable(false)
                     .fixWidth(130)
                     .right()
@@ -238,7 +238,7 @@ public class ReportToModeratorTable {
                     .build());
         }
 
-        private Callback<TableColumn<ReportListItem, ReportListItem>, TableCell<ReportListItem, ReportListItem>> getReporterUserProfileCellFactory() {
+        private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getReporterUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userNameLabel = new Label();
                 private final UserProfileIcon userProfileIcon = new UserProfileIcon();
@@ -254,7 +254,7 @@ public class ReportToModeratorTable {
                 }
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty && item.getReporterUserProfile().isPresent()) {
@@ -274,7 +274,7 @@ public class ReportToModeratorTable {
             };
         }
 
-        private Callback<TableColumn<ReportListItem, ReportListItem>, TableCell<ReportListItem, ReportListItem>> getAccusedUserProfileCellFactory() {
+        private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getAccusedUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userNameLabel = new Label();
                 private final UserProfileIcon userProfileIcon = new UserProfileIcon();
@@ -290,7 +290,7 @@ public class ReportToModeratorTable {
                 }
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -310,7 +310,7 @@ public class ReportToModeratorTable {
             };
         }
 
-        private Callback<TableColumn<ReportListItem, ReportListItem>, TableCell<ReportListItem, ReportListItem>> getMessageCellFactory() {
+        private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMessageCellFactory() {
             return column -> new TableCell<>() {
                 private final Label message = new Label();
                 private final Button icon = BisqIconButton.createCopyIconButton();
@@ -324,7 +324,7 @@ public class ReportToModeratorTable {
                 }
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -342,7 +342,7 @@ public class ReportToModeratorTable {
             };
         }
 
-        private Callback<TableColumn<ReportListItem, ReportListItem>, TableCell<ReportListItem, ReportListItem>> getBanCellFactory() {
+        private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getBanCellFactory() {
             return column -> new TableCell<>() {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.table.ban"));
 
@@ -351,7 +351,7 @@ public class ReportToModeratorTable {
                 }
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -365,12 +365,12 @@ public class ReportToModeratorTable {
             };
         }
 
-        private Callback<TableColumn<ReportListItem, ReportListItem>, TableCell<ReportListItem, ReportListItem>> getDeleteMessageCellFactory() {
+        private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getDeleteMessageCellFactory() {
             return column -> new TableCell<>() {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.table.delete"));
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -391,7 +391,7 @@ public class ReportToModeratorTable {
 
         @Getter
         @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-        private static class ReportListItem implements DateTableItem {
+        private static class ListItem implements DateTableItem {
             @EqualsAndHashCode.Include
             private final ReportToModeratorMessage reportToModeratorMessage;
 
@@ -400,8 +400,8 @@ public class ReportToModeratorTable {
             private final Optional<UserProfile> reporterUserProfile;
             private final UserProfile accusedUserProfile;
 
-            private ReportListItem(ReportToModeratorMessage reportToModeratorMessage,
-                                   ServiceProvider serviceProvider) {
+            private ListItem(ReportToModeratorMessage reportToModeratorMessage,
+                             ServiceProvider serviceProvider) {
                 this.reportToModeratorMessage = reportToModeratorMessage;
 
                 UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();

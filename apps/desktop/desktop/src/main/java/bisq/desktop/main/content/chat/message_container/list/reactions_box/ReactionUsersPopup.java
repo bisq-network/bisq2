@@ -30,17 +30,13 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.PopupControl;
-import javafx.scene.control.Skin;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -55,8 +51,8 @@ public class ReactionUsersPopup extends PopupControl {
 
     private final BisqMenuItem owner;
     private final boolean isMyMessage;
-    private final ObservableList<UserProfile> userProfileList = FXCollections.observableArrayList();
-    private final ListView<UserProfile> userProfileListView = new ListView<>(userProfileList);
+    private final ObservableList<ListItem> userProfileList = FXCollections.observableArrayList();
+    private final ListView<ListItem> userProfileListView = new ListView<>(userProfileList);
     private final VBox popupContent = new VBox();
     @Getter
     private final StackPane root = new StackPane();
@@ -70,6 +66,7 @@ public class ReactionUsersPopup extends PopupControl {
         userProfileList.setAll(reactionItem.getUsersByReactionDate().stream()
                 .limit(MAX_USERS_SHOWN)
                 .map(ReactionItem.UserWithReactionDate::getUserProfile)
+                .map(ListItem::new)
                 .collect(Collectors.toList()));
         userProfileListView.setCellFactory(getCellFactory());
         userProfileListView.setFixedCellSize(CELL_SIZE);
@@ -97,9 +94,9 @@ public class ReactionUsersPopup extends PopupControl {
             showPopup();
         });
         owner.setOnMouseExited(e -> {
-           if (hasMouseExited(e.getScreenX(), e.getScreenY())) {
-               hide();
-           }
+            if (hasMouseExited(e.getScreenX(), e.getScreenY())) {
+                hide();
+            }
         });
         popupContent.setOnMouseExited(e -> {
             if (hasMouseExited(e.getScreenX(), e.getScreenY())) {
@@ -147,29 +144,28 @@ public class ReactionUsersPopup extends PopupControl {
         return !(inPopupBounds || inAreaBetweenButtonAndPopup);
     }
 
-    private Callback<ListView<UserProfile>, ListCell<UserProfile>> getCellFactory() {
+    private Callback<ListView<ListItem>, ListCell<ListItem>> getCellFactory() {
         return new Callback<>() {
             @Override
-            public ListCell<UserProfile> call(ListView<UserProfile> list) {
+            public ListCell<ListItem> call(ListView<ListItem> list) {
                 return new ListCell<>() {
                     private final UserProfileIcon userProfileIcon = new UserProfileIcon(CELL_SIZE - 10);
                     private final Label userNickname = new Label();
-                    final HBox hBox = new HBox(10);
+                    final HBox hBox = new HBox(10, userProfileIcon, userNickname);
 
                     {
                         userProfileIcon.hideLivenessIndicator();
                         userNickname.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
                         hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.setFillHeight(true);
-                        hBox.getChildren().setAll(userProfileIcon, userNickname);
                     }
 
                     @Override
-                    public void updateItem(UserProfile item, boolean empty) {
+                    protected void updateItem(ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            userProfileIcon.setUserProfile(item);
+                            userProfileIcon.setUserProfile(item.getUserProfile());
                             userNickname.setText(StringUtils.truncate(item.getNickName(), 15));
                             setGraphic(hBox);
                         } else {
@@ -180,6 +176,19 @@ public class ReactionUsersPopup extends PopupControl {
                 };
             }
         };
+    }
+
+    @Getter
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+    private static final class ListItem {
+        @EqualsAndHashCode.Include
+        private final UserProfile userProfile;
+        private final String nickName;
+
+        public ListItem(UserProfile userProfile) {
+            this.userProfile = userProfile;
+            nickName = userProfile.getNickName();
+        }
     }
 
     @Getter

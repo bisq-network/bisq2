@@ -201,20 +201,23 @@ public class BisqTableView<T> extends TableView<T> {
             private Subscription selectedPin;
 
             @Override
-            public void updateItem(final T item, boolean empty) {
+            protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
 
-                // Clean up previous row
-                if (getTableRow() != null && selectedPin != null) {
-                    selectedPin.unsubscribe();
-                }
-
-                // Set up new row
-                TableRow<T> newRow = getTableRow();
-                if (newRow != null) {
-                    selectedPin = EasyBind.subscribe(newRow.selectedProperty(), isSelected ->
-                            setId(isSelected ? "selection-marker" : null)
-                    );
+                if (item != null && !empty) {
+                    TableRow<T> tableRow = getTableRow();
+                    if (tableRow != null) {
+                        if (selectedPin != null) {
+                            selectedPin.unsubscribe();
+                        }
+                        selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), isSelected ->
+                                setId(isSelected ? "selection-marker" : null));
+                    }
+                } else {
+                    if (selectedPin != null) {
+                        selectedPin.unsubscribe();
+                        selectedPin = null;
+                    }
                 }
             }
         };

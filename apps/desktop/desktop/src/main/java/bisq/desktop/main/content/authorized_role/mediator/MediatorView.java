@@ -260,7 +260,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             private final Label label = new Label();
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -281,7 +281,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             private UserProfileDisplay userProfileDisplay;
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -304,7 +304,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             private UserProfileDisplay userProfileDisplay;
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {

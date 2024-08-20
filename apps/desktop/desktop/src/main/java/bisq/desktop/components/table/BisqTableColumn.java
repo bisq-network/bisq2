@@ -373,7 +373,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final S item, boolean empty) {
+                            protected void updateItem(S item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -419,7 +419,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             private final TextField textField = new TextField();
 
                             @Override
-                            public void updateItem(final S item, boolean empty) {
+                            protected void updateItem(S item, boolean empty) {
                                 super.updateItem(item, empty);
                                 updateItemWithInputTextFieldHandler.accept(item, textField);
 
@@ -454,8 +454,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<S, S> call(TableColumn<S,
-                            S> column) {
+                    public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
                             private ButtonBase button;
 
@@ -468,8 +467,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             }
 
                             @Override
-                            public void updateItem(final S item, boolean empty) {
+                            protected void updateItem(S item, boolean empty) {
                                 super.updateItem(item, empty);
+
                                 updateItemWithButtonHandler.accept(item, button);
 
                                 if (item != null && !empty) {
@@ -511,8 +511,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             private final CheckBox checkBox = new CheckBox();
 
                             @Override
-                            public void updateItem(final S item, boolean empty) {
+                            protected void updateItem(S item, boolean empty) {
                                 super.updateItem(item, empty);
+
                                 if (item != null && !empty) {
                                     checkBox.setOnAction(event -> onToggleHandler.accept(item, checkBox.isSelected()));
                                     isVisibleFunction.ifPresent(function -> checkBox.setVisible(function.apply(item)));

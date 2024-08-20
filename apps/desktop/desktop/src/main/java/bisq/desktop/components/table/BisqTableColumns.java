@@ -45,7 +45,7 @@ public class BisqTableColumns {
     public static <T extends DateTableItem> Callback<TableColumn<T, T>, TableCell<T, T>> getCellFactory() {
         return column -> new TableCell<>() {
             @Override
-            public void updateItem(final T item, boolean empty) {
+            protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {

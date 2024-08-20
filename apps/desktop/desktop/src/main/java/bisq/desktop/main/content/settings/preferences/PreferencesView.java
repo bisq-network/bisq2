@@ -392,11 +392,12 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                     }
 
                     @Override
-                    public void updateItem(String languageCode, boolean empty) {
-                        super.updateItem(languageCode, empty);
-                        if (languageCode != null && !empty) {
-                            label.setText(controller.getDisplayLanguage(languageCode));
-                            button.setOnAction(e -> controller.onRemoveSupportedLanguage(languageCode));
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            label.setText(controller.getDisplayLanguage(item));
+                            button.setOnAction(e -> controller.onRemoveSupportedLanguage(item));
                             button.getStyleClass().add("grey-transparent-outlined-button");
                             setGraphic(hBox);
                         } else {

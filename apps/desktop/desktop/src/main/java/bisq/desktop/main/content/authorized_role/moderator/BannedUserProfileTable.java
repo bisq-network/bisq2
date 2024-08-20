@@ -204,7 +204,7 @@ public class BannedUserProfileTable {
                 }
 
                 @Override
-                public void updateItem(final ListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -224,7 +224,7 @@ public class BannedUserProfileTable {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.bannedUserProfile.table.contact"));
 
                 @Override
-                public void updateItem(final ListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -243,7 +243,7 @@ public class BannedUserProfileTable {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.table.removeBan"));
 
                 @Override
-                public void updateItem(final ListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {

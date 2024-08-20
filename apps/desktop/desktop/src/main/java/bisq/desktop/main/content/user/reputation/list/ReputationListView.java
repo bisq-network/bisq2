@@ -224,7 +224,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             }
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -259,7 +259,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             }
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -280,7 +280,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -299,7 +299,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             private final Hyperlink info = new Hyperlink(Res.get("user.reputation.table.columns.details.button"));
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {

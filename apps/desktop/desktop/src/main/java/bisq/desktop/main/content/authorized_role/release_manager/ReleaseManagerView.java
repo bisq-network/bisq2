@@ -48,7 +48,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     private final MaterialTextArea releaseNotes;
     private final MaterialTextField version;
     private final CheckBox isPreReleaseCheckBox, isLauncherUpdateCheckBox;
-    private final RichTableView<ReleaseNotificationListItem> richTableView;
+    private final RichTableView<ListItem> richTableView;
 
     public ReleaseManagerView(ReleaseManagerModel model, ReleaseManagerController controller, Pane roleInfo) {
         super(new VBox(10), model, controller);
@@ -114,37 +114,37 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     protected void configTableView() {
         richTableView.getColumns().add(BisqTableColumns.getDateColumn(richTableView.getSortOrder()));
 
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("authorizedRole.releaseManager.table.releaseNotes"))
                 .minWidth(200)
-                .comparator(Comparator.comparing(ReleaseNotificationListItem::getReleaseNotes))
-                .valueSupplier(ReleaseNotificationListItem::getReleaseNotes)
+                .comparator(Comparator.comparing(ListItem::getReleaseNotes))
+                .valueSupplier(ListItem::getReleaseNotes)
                 .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("authorizedRole.releaseManager.table.version"))
                 .minWidth(120)
-                .comparator(Comparator.comparing(ReleaseNotificationListItem::getVersion))
-                .valueSupplier(ReleaseNotificationListItem::getVersion)
+                .comparator(Comparator.comparing(ListItem::getVersion))
+                .valueSupplier(ListItem::getVersion)
                 .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)
                 .title(Res.get("authorizedRole.releaseManager.table.isPreRelease"))
                 .minWidth(120)
-                .valueSupplier(ReleaseNotificationListItem::getIsPreRelease)
+                .valueSupplier(ListItem::getIsPreRelease)
                 .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)
                 .title(Res.get("authorizedRole.releaseManager.table.isLauncherUpdate"))
                 .minWidth(120)
-                .valueSupplier(ReleaseNotificationListItem::getIsLauncherUpdate)
+                .valueSupplier(ListItem::getIsLauncherUpdate)
                 .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("authorizedRole.releaseManager.table.profileId"))
                 .minWidth(150)
-                .comparator(Comparator.comparing(ReleaseNotificationListItem::getReleaseManagerProfileId))
-                .valueSupplier(ReleaseNotificationListItem::getReleaseManagerProfileId)
+                .comparator(Comparator.comparing(ListItem::getReleaseManagerProfileId))
+                .valueSupplier(ListItem::getReleaseManagerProfileId)
                 .build());
-        richTableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)
                 .minWidth(200)
                 .right()
@@ -153,12 +153,12 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
                 .build());
     }
 
-    private Callback<TableColumn<ReleaseNotificationListItem, ReleaseNotificationListItem>, TableCell<ReleaseNotificationListItem, ReleaseNotificationListItem>> getRemoveItemCellFactory() {
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getRemoveItemCellFactory() {
         return column -> new TableCell<>() {
             private final Button button = new Button(Res.get("data.remove"));
 
             @Override
-            public void updateItem(final ReleaseNotificationListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty && controller.isRemoveButtonVisible(item.getReleaseNotification())) {
@@ -175,14 +175,14 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
-    public static class ReleaseNotificationListItem implements DateTableItem {
+    public static class ListItem implements DateTableItem {
         @EqualsAndHashCode.Include
         private final ReleaseNotification releaseNotification;
 
         private final String dateString, timeString, isLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
         private final long date;
 
-        public ReleaseNotificationListItem(ReleaseNotification releaseNotification) {
+        public ListItem(ReleaseNotification releaseNotification) {
             this.releaseNotification = releaseNotification;
 
             date = releaseNotification.getDate();
