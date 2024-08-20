@@ -254,7 +254,7 @@ public class ReportToModeratorTable {
                 }
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ReportListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty && item.getReporterUserProfile().isPresent()) {
@@ -290,7 +290,7 @@ public class ReportToModeratorTable {
                 }
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ReportListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -324,7 +324,7 @@ public class ReportToModeratorTable {
                 }
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ReportListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -351,7 +351,7 @@ public class ReportToModeratorTable {
                 }
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ReportListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -370,7 +370,7 @@ public class ReportToModeratorTable {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.table.delete"));
 
                 @Override
-                public void updateItem(final ReportListItem item, boolean empty) {
+                protected void updateItem(ReportListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {

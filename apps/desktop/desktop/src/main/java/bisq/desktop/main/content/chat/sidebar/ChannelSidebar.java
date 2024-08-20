@@ -310,23 +310,24 @@ public class ChannelSidebar {
                         }
 
                         @Override
-                        public void updateItem(ChannelSidebarUserProfile channelSidebarUserProfile, boolean empty) {
-                            super.updateItem(channelSidebarUserProfile, empty);
-                            if (channelSidebarUserProfile != null && !empty) {
+                        protected void updateItem(ChannelSidebarUserProfile item, boolean empty) {
+                            super.updateItem(item, empty);
+
+                            if (item != null && !empty) {
                                 undoIgnoreUserButton.setOnAction(e -> {
-                                    controller.onUndoIgnoreUser(channelSidebarUserProfile.getUserProfile());
+                                    controller.onUndoIgnoreUser(item.getUserProfile());
                                     participants.refresh();
                                 });
-                                undoIgnoreUserButton.setVisible(channelSidebarUserProfile.isIgnored());
-                                undoIgnoreUserButton.setManaged(channelSidebarUserProfile.isIgnored());
+                                undoIgnoreUserButton.setVisible(item.isIgnored());
+                                undoIgnoreUserButton.setManaged(item.isIgnored());
 
-                                chatUser = channelSidebarUserProfile.getRoot();
-                                chatUser.setOpacity(channelSidebarUserProfile.isIgnored() ? 0.4 : 1);
+                                chatUser = item.getRoot();
+                                chatUser.setOpacity(item.isIgnored() ? 0.4 : 1);
                                 // With setOnMouseClicked or released it does not work well (prob. due handlers inside the components)
-                                chatUser.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(channelSidebarUserProfile.getUserProfile()));
+                                chatUser.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(item.getUserProfile()));
 
-                                catHashImageView = channelSidebarUserProfile.getCatHashImageView();
-                                catHashImageView.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(channelSidebarUserProfile.getUserProfile()));
+                                catHashImageView = item.getCatHashImageView();
+                                catHashImageView.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(item.getUserProfile()));
 
                                 hBox.getChildren().setAll(chatUser, Spacer.fillHBox(), undoIgnoreUserButton);
 

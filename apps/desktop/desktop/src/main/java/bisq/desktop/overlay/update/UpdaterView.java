@@ -218,7 +218,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
             }
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -249,7 +249,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
             private final CheckBox isVerifiedIndicator = new CheckBox();
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {

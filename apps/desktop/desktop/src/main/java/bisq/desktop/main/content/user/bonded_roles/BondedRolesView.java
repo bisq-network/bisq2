@@ -87,7 +87,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             }
 
             @Override
-            public void updateItem(final BondedRolesListItem item, boolean empty) {
+            protected void updateItem(BondedRolesListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -124,7 +124,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             }
 
             @Override
-            public void updateItem(final BondedRolesListItem item, boolean empty) {
+            protected void updateItem(BondedRolesListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -156,7 +156,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             }
 
             @Override
-            public void updateItem(final BondedRolesListItem item, boolean empty) {
+            protected void updateItem(BondedRolesListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {

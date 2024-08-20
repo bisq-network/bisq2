@@ -245,7 +245,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                     }
 
                     @Override
-                    public void updateItem(final ListItem item, boolean empty) {
+                    protected void updateItem(ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
@@ -276,7 +276,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                     }
 
                     @Override
-                    public void updateItem(final ListItem item, boolean empty) {
+                    protected void updateItem(ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {

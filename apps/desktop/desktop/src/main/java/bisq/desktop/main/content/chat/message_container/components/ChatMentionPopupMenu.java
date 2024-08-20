@@ -85,7 +85,7 @@ public class ChatMentionPopupMenu extends BisqPopup {
                     }
 
                     @Override
-                    public void updateItem(ListItem item, boolean empty) {
+                    protected void updateItem(ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {

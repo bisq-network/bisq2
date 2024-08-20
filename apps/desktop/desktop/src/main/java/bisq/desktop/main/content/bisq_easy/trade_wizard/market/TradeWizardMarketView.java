@@ -149,7 +149,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
             }
 
             @Override
-            public void updateItem(final MarketListItem item, boolean empty) {
+            protected void updateItem(MarketListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -163,6 +163,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
                     setGraphic(label);
                 } else {
+                    label.setTooltip(null);
                     label.setGraphic(null);
                     setGraphic(null);
                 }

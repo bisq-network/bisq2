@@ -30,12 +30,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.PopupControl;
-import javafx.scene.control.Skin;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -165,7 +160,7 @@ public class ReactionUsersPopup extends PopupControl {
                     }
 
                     @Override
-                    public void updateItem(UserProfile item, boolean empty) {
+                    protected void updateItem(UserProfile item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {

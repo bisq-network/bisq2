@@ -120,7 +120,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
             }
 
             @Override
-            public void updateItem(final BondedRolesListItem item, boolean empty) {
+            protected void updateItem(BondedRolesListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {

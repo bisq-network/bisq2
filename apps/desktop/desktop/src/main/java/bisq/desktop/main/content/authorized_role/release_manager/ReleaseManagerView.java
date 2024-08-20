@@ -158,7 +158,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
             private final Button button = new Button(Res.get("data.remove"));
 
             @Override
-            public void updateItem(final ReleaseNotificationListItem item, boolean empty) {
+            protected void updateItem(ReleaseNotificationListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty && controller.isRemoveButtonVisible(item.getReleaseNotification())) {
