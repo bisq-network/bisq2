@@ -84,12 +84,14 @@ with that accordingly.
 
 ### List items
 
-The List items are just value objects and grow with the number of list elements. Therefore, we have to be careful with
+The list items are just value objects and grow with the number of list elements. Therefore, we have to be careful with
 memory usage and performance costs from complex operations.
 If listeners are used they have to be disposed.
 For expensive operations we should use lazy initialisation (e.g. get called from the cell on demand and cache the result
 for next repeated calls).
 List items can hold domain services and a reference to the controller.
+By convention, we use the class name `ListItem` for smaller classes which are inner classes of the View. If the list
+item class is larger and justifies to be its own class we use the domain as prefix (e.g. MarketListItem).
 
 #### Best practice for List items
 
