@@ -353,8 +353,9 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
             userName = userProfile.getUserName();
             applyReputationScore(userProfile.getId());
-            profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile).orElse(0L);
-            profileAgeString = reputationService.getProfileAgeService().getProfileAge(userProfile)
+            Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
+            profileAge = optionalProfileAge.orElse(0L);
+            profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na"));
 
@@ -365,7 +366,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             return userProfile.getPublishDate();
         }
 
-        public void dispose() {
+        void dispose() {
             selectedTogglePin.unsubscribe();
         }
 

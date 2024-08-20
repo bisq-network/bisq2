@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -42,7 +41,7 @@ public class ReputationScoreDisplay extends HBox {
     private static final int STAR_SYSTEM = 5; // 5-star system
     private static final String STYLE_CLASS = "reputation-score-display";
 
-    private final List<ImageView> stars = IntStream.range(0, STAR_SYSTEM).mapToObj(i -> getDefaultStar()).collect(Collectors.toList());
+    private final List<ImageView> stars = IntStream.range(0, STAR_SYSTEM).mapToObj(i -> getDefaultStar()).toList();
     private final Tooltip tooltip = new BisqTooltip();
     private ReputationScore reputationScore;
     private String acceptStarId = DEFAULT_ACCEPT_STAR_ID;
