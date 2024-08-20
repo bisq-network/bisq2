@@ -23,9 +23,8 @@ import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
@@ -144,32 +143,15 @@ public class ChannelSidebar {
             if (userProfileIdsOfParticipantsPin != null) {
                 userProfileIdsOfParticipantsPin.unbind();
             }
-            userProfileIdsOfParticipantsPin = chatChannel.getUserProfileIdsOfActiveParticipants().addObserver(new CollectionObserver<>() {
-                @Override
-                public void add(String userProfileId) {
-                    boolean ignored = ignoredChatUserIds.contains(userProfileId);
-                    UIThread.run(() ->
-                            userProfileService.findUserProfile(userProfileId)
-                                    .ifPresent(userProfile -> model.participantList.add(new ChannelSidebarUserProfile(bannedUserService, userProfile, ignored))));
-                }
 
-                @Override
-                public void remove(Object element) {
-                    if (element instanceof String) {
-                        String userProfileId = (String) element;
-                        UIThread.run(() ->
-                                model.participantList.stream()
-                                        .filter(item -> item.getUserProfile().getId().equals(userProfileId))
-                                        .findFirst()
-                                        .ifPresent(model.participantList::remove));
-                    }
-                }
-
-                @Override
-                public void clear() {
-                    UIThread.run(model.participantList::clear);
-                }
-            });
+            userProfileIdsOfParticipantsPin = FxBindings.<String, ChannelSidebarUserProfile>bind(model.participantList)
+                    .filter(profileId -> userProfileService.findUserProfile(profileId).isPresent())
+                    .map(profileId -> {
+                        boolean ignored = ignoredChatUserIds.contains(profileId);
+                        UserProfile userProfile = userProfileService.findUserProfile(profileId).orElseThrow();
+                        return new ChannelSidebarUserProfile(bannedUserService, userProfile, ignored);
+                    })
+                    .to(chatChannel.getUserProfileIdsOfActiveParticipants());
 
             if (chatChannel instanceof CommonPublicChatChannel) {
                 CommonPublicChatChannel commonPublicChatChannel = (CommonPublicChatChannel) chatChannel;
