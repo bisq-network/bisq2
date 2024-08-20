@@ -68,6 +68,14 @@ public class RichTableView<T> extends VBox {
     @Setter
     private Optional<List<List<String>>> csvData = Optional.empty();
 
+    public RichTableView(ObservableList<T> observableList) {
+        this(new SortedList<>(observableList));
+    }
+
+    public RichTableView(ObservableList<T> observableList, String headline) {
+        this(new SortedList<>(observableList), headline);
+    }
+
     public RichTableView(SortedList<T> sortedList) {
         this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
@@ -157,7 +165,7 @@ public class RichTableView<T> extends VBox {
 
         VBox.setMargin(headerBox, new Insets(0, 0, 5, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        VBox.setMargin(footerHBox, new Insets(0, 0, 0, 10));
+        VBox.setMargin(footerHBox, new Insets(-5, 0, 0, 10));
         getChildren().addAll(headerBox, tableView, footerHBox);
 
         listChangeListener = c -> listItemsChanged();
@@ -247,6 +255,10 @@ public class RichTableView<T> extends VBox {
 
     public ObservableList<TableColumn<T, ?>> getColumns() {
         return tableView.getColumns();
+    }
+
+    public void setFixHeight(double value) {
+        tableView.setFixHeight(value);
     }
 
 

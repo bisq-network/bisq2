@@ -27,7 +27,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
@@ -142,56 +142,53 @@ public class BannedUserProfileTable {
     private static class Model implements bisq.desktop.common.view.Model {
         private BondedRole bondedRole;
         private final ObservableList<View.ListItem> listItems = FXCollections.observableArrayList();
-
     }
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqTableView<ListItem> tableView;
+        private final RichTableView<ListItem> richTableView;
 
         private View(Model model, Controller controller) {
             super(new VBox(5), model, controller);
 
             root.setAlignment(Pos.TOP_LEFT);
 
-            Label headline = new Label(Res.get("authorizedRole.moderator.bannedUserProfile.table.headline"));
-            headline.getStyleClass().add("large-thin-headline");
-
-            tableView = new BisqTableView<>(model.getListItems());
-            tableView.setMinHeight(200);
-            tableView.getStyleClass().add("user-bonded-roles-table-view");
+            richTableView = new RichTableView<>(model.getListItems(), Res.get("authorizedRole.moderator.bannedUserProfile.table.headline"));
             configTableView();
 
-            root.getChildren().addAll(headline, tableView);
+            root.getChildren().addAll(richTableView);
         }
 
         @Override
         protected void onViewAttached() {
-            tableView.initialize();
+            richTableView.initialize();
         }
 
         @Override
         protected void onViewDetached() {
-            tableView.dispose();
+            richTableView.dispose();
         }
 
         private void configTableView() {
-            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("authorizedRole.moderator.bannedUserProfile.table.userProfile"))
                     .minWidth(150)
                     .left()
                     .comparator(Comparator.comparing(ListItem::getUserName))
+                    .valueSupplier(ListItem::getUserName)
                     .setCellFactory(getUserProfileCellFactory())
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .isSortable(false)
                     .fixWidth(200)
                     .setCellFactory(getContactCellFactory())
+                    .includeForCsv(false)
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .isSortable(false)
                     .fixWidth(250)
                     .setCellFactory(getRemoveBanCellFactory())
+                    .includeForCsv(false)
                     .build());
         }
 
