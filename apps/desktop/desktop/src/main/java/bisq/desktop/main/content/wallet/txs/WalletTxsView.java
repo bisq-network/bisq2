@@ -20,7 +20,7 @@ package bisq.desktop.main.content.wallet.txs;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableColumns;
-import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.TableColumn;
@@ -31,36 +31,36 @@ import java.util.Comparator;
 
 @Slf4j
 public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsController> {
-    private final BisqTableView<WalletTransactionListItem> tableView;
+    private final RichTableView<WalletTransactionListItem> richTableView;
 
     public WalletTxsView(WalletTxsModel model, WalletTxsController controller) {
         super(new VBox(20), model, controller);
 
         root.setPadding(new Insets(40, 0, 0, 0));
 
-        tableView = new BisqTableView<>(model.getSortedList());
-        tableView.setMinHeight(300);
+        richTableView = new RichTableView<>(model.getSortedList());
+        richTableView.setMinHeight(300);
         // Triggers to fill the available height
-        tableView.setPrefHeight(2000);
+        richTableView.setPrefHeight(2000);
         configTableView();
 
-        root.getChildren().add(tableView);
+        root.getChildren().add(richTableView);
     }
 
     @Override
     protected void onViewAttached() {
-        tableView.initialize();
+        richTableView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
-        tableView.dispose();
+        richTableView.dispose();
     }
 
     private void configTableView() {
-        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
+        richTableView.getColumns().add(BisqTableColumns.getDateColumn(richTableView.getSortOrder()));
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.txId"))
                 .minWidth(200)
                 .left()
@@ -68,7 +68,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
                 .isSortable(true)
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.amount"))
                 .minWidth(120)
                 .valueSupplier(WalletTransactionListItem::getAmountAsString)
@@ -76,7 +76,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
                 .sortType(TableColumn.SortType.DESCENDING)
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.confirmations"))
                 .minWidth(120)
                 .valueSupplier(WalletTransactionListItem::getConfirmationsAsString)

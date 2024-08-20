@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.settings.network.transport;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -119,6 +120,26 @@ public class TransportTypeController implements Controller {
         model.getConnectionListItems().onDeactivate();
         model.getNodeListItems().clear();
         model.getConnectionListItems().clear();
+    }
+
+    void applyConnectionListSearchPredicate(String searchText) {
+        String string = searchText.toLowerCase();
+        model.getConnectionListItems().setPredicate(item ->
+                StringUtils.isEmpty(string) ||
+                        item.getPeer().toLowerCase().contains(string) ||
+                        item.getAddress().toLowerCase().contains(string) ||
+                        item.getNodeTag().contains(string) ||
+                        item.getDirection().contains(string));
+    }
+
+    void applyNodeListSearchPredicate(String searchText) {
+        String string = searchText.toLowerCase();
+        model.getNodeListItems().setPredicate(item ->
+                StringUtils.isEmpty(string) ||
+                        item.getType().toLowerCase().contains(string) ||
+                        item.getNodeTag().contains(string) ||
+                        item.getAddress().toLowerCase().contains(string) ||
+                        item.getKeyId().contains(string));
     }
 
     private void addNode(Node node) {
