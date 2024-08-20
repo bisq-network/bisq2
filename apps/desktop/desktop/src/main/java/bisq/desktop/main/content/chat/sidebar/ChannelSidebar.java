@@ -25,8 +25,10 @@ import bisq.chat.common.CommonPublicChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
@@ -47,6 +49,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -144,17 +147,14 @@ public class ChannelSidebar {
                 userProfileIdsOfParticipantsPin.unbind();
             }
 
-            userProfileIdsOfParticipantsPin = FxBindings.<String, ChannelSidebarUserProfile>bind(model.participantList)
+            userProfileIdsOfParticipantsPin = FxBindings.<String, ListItem>bind(model.participantList)
                     .filter(profileId -> userProfileService.findUserProfile(profileId).isPresent())
-                    .map(profileId -> {
-                        boolean ignored = ignoredChatUserIds.contains(profileId);
-                        UserProfile userProfile = userProfileService.findUserProfile(profileId).orElseThrow();
-                        return new ChannelSidebarUserProfile(bannedUserService, userProfile, ignored);
-                    })
+                    .map(profileId -> new ListItem(userProfileService.findUserProfile(profileId).orElseThrow(),
+                            bannedUserService,
+                            ignoredChatUserIds))
                     .to(chatChannel.getUserProfileIdsOfActiveParticipants());
 
-            if (chatChannel instanceof CommonPublicChatChannel) {
-                CommonPublicChatChannel commonPublicChatChannel = (CommonPublicChatChannel) chatChannel;
+            if (chatChannel instanceof CommonPublicChatChannel commonPublicChatChannel) {
                 model.description.set(commonPublicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
             } else if (chatChannel instanceof BisqEasyOfferbookChannel) {
@@ -188,8 +188,8 @@ public class ChannelSidebar {
         private final StringProperty channelTitle = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();
-        private final ObservableList<ChannelSidebarUserProfile> participantList = FXCollections.observableArrayList();
-        private final SortedList<ChannelSidebarUserProfile> sortedListParticipantList = new SortedList<>(participantList);
+        private final ObservableList<ListItem> participantList = FXCollections.observableArrayList();
+        private final SortedList<ListItem> sortedListParticipantList = new SortedList<>(participantList);
         private Optional<Runnable> undoIgnoreChatUserHandler = Optional.empty();
 
         private Model() {
@@ -198,7 +198,7 @@ public class ChannelSidebar {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ListView<ChannelSidebarUserProfile> participants;
+        private final ListView<ListItem> participants;
         private final Label headline;
         private final Button closeButton;
         private final Text description;
@@ -254,18 +254,28 @@ public class ChannelSidebar {
             closeButton.setOnAction(null);
         }
 
-        private Callback<ListView<ChannelSidebarUserProfile>, ListCell<ChannelSidebarUserProfile>> getCellFactory(
+        private Callback<ListView<ListItem>, ListCell<ListItem>> getCellFactory(
                 Controller controller) {
             return new Callback<>() {
                 @Override
-                public ListCell<ChannelSidebarUserProfile> call(ListView<ChannelSidebarUserProfile> list) {
+                public ListCell<ListItem> call(ListView<ListItem> list) {
                     return new ListCell<>() {
-                        Pane chatUser;
-                        private ImageView catHashImageView;
-                        final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("chat.sideBar.userProfile.undoIgnore"));
-                        final HBox hBox = new HBox(10);
+                        private final Label userName = new Label();
+                        private final BisqTooltip tooltip = new BisqTooltip();
+                        private final ImageView catHashImageView = new ImageView();
+                        private final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("chat.sideBar.userProfile.undoIgnore"));
+                        private final HBox userHBox = new HBox(10, catHashImageView, userName);
+                        private final HBox hBox = new HBox(10, userHBox, Spacer.fillHBox(), undoIgnoreUserButton);
 
                         {
+                            userHBox.setAlignment(Pos.CENTER_LEFT);
+
+                            userName.getStyleClass().add("text-fill-white");
+                            userName.setMaxWidth(100);
+
+                            catHashImageView.setFitWidth(37.5);
+                            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+
                             hBox.setAlignment(Pos.CENTER_LEFT);
                             hBox.setFillHeight(true);
                             hBox.setPadding(new Insets(0, 10, 0, 0));
@@ -273,45 +283,75 @@ public class ChannelSidebar {
                         }
 
                         @Override
-                        protected void updateItem(ChannelSidebarUserProfile item, boolean empty) {
+                        protected void updateItem(ListItem item, boolean empty) {
                             super.updateItem(item, empty);
 
                             if (item != null && !empty) {
+                                boolean isIgnored = item.isIgnored();
+                                UserProfile userProfile = item.getUserProfile();
+
+                                userName.setText(item.getUserName());
+                                if (item.isBanned()) {
+                                    userName.getStyleClass().add("error");
+                                }
+
+                                catHashImageView.setImage(CatHash.getImage(userProfile));
+
+                                tooltip.setText(item.getTooltipString());
+                                Tooltip.install(userHBox, tooltip);
+
+                                undoIgnoreUserButton.setVisible(isIgnored);
+                                undoIgnoreUserButton.setManaged(isIgnored);
+
+                                userHBox.setOpacity(isIgnored ? 0.4 : 1);
+
+                                // With setOnMouseClicked or released it does not work well (prob. due handlers inside the components)
+                                userHBox.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(userProfile));
+                                // catHashImageView.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(item.getUserProfile()));
                                 undoIgnoreUserButton.setOnAction(e -> {
-                                    controller.onUndoIgnoreUser(item.getUserProfile());
+                                    controller.onUndoIgnoreUser(userProfile);
                                     participants.refresh();
                                 });
-                                undoIgnoreUserButton.setVisible(item.isIgnored());
-                                undoIgnoreUserButton.setManaged(item.isIgnored());
-
-                                chatUser = item.getRoot();
-                                chatUser.setOpacity(item.isIgnored() ? 0.4 : 1);
-                                // With setOnMouseClicked or released it does not work well (prob. due handlers inside the components)
-                                chatUser.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(item.getUserProfile()));
-
-                                catHashImageView = item.getCatHashImageView();
-                                catHashImageView.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(item.getUserProfile()));
-
-                                hBox.getChildren().setAll(chatUser, Spacer.fillHBox(), undoIgnoreUserButton);
-
                                 setGraphic(hBox);
                             } else {
                                 undoIgnoreUserButton.setOnAction(null);
-                                if (chatUser != null) {
-                                    chatUser.setOnMousePressed(null);
-                                    chatUser = null;
-                                }
-                                if (catHashImageView != null) {
-                                    catHashImageView.setOnMousePressed(null);
-                                    catHashImageView = null;
-                                }
+                                userHBox.setOnMousePressed(null);
+                                catHashImageView.setImage(null);
+                                Tooltip.uninstall(hBox, tooltip);
                                 setGraphic(null);
                             }
                         }
-
                     };
                 }
             };
+        }
+    }
+
+    @Slf4j
+    @Getter
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+    private static class ListItem implements Comparable<ListItem> {
+        @EqualsAndHashCode.Include
+        private final UserProfile userProfile;
+
+        private final BannedUserService bannedUserService;
+        private final boolean ignored;
+        private final boolean isBanned;
+        private final String userName, tooltipString;
+
+        private ListItem(UserProfile userProfile, BannedUserService bannedUserService, Set<String> ignoredChatUserIds) {
+            this.bannedUserService = bannedUserService;
+            this.userProfile = userProfile;
+            this.ignored = ignoredChatUserIds.contains(userProfile.getId());
+            isBanned = bannedUserService.isUserProfileBanned(userProfile);
+            userName = isBanned ? Res.get("user.userProfile.userName.banned", userProfile.getUserName()) : userProfile.getUserName();
+            String banPrefix = isBanned ? Res.get("user.userProfile.tooltip.banned") + "\n" : "";
+            tooltipString = banPrefix + userProfile.getTooltipString();
+        }
+
+        @Override
+        public int compareTo(ListItem o) {
+            return o.userProfile.getUserName().compareTo(o.userProfile.getUserName());
         }
     }
 }
