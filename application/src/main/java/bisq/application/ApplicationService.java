@@ -156,6 +156,8 @@ public abstract class ApplicationService implements Service {
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", config.getBaseDir());
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
+        log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
+
         if (customConfigProvided) {
             log.info("Using custom config file");
         }

@@ -53,8 +53,8 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
         versionDistributionHBox = new HBox(20);
         Label myVersionAndCommitHash = new Label(Res.get("settings.network.myVersionAndCommitHash",
                 ApplicationVersion.getVersion().getVersionAsString(),
-                ApplicationVersion.getBuildCommitShortHash()));
-
+                ApplicationVersion.getBuildCommitShortHash(),
+                ApplicationVersion.getTorVersionString()));
 
         VBox versionsVBox = new VBox(15, versionDistributionHBox, myVersionAndCommitHash);
 

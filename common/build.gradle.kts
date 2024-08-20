@@ -5,6 +5,12 @@ plugins {
     id("bisq.protobuf")
 }
 
+
+val torVersion: String? = project.findProperty("tor.version") as String?
+if (torVersion == null) {
+    throw GradleException("Tor version is not defined in gradle.properties")
+}
+
 /**
  * Generate a Java class with the current version number extracted from gradle.properties and makes
  * it available for use in all java modules that has access to common.
@@ -23,12 +29,14 @@ val generateVersionClass by tasks.registering {
         } catch (e: Exception) {
             "unknown"
         }
+
         versionFile.writeText("""
             package bisq.common.application;
 
             public final class BuildVersion {
                 public static final String VERSION = "${project.version}";
                 public static final String COMMIT_SHORT_HASH = "$gitCommitVersion";
+                public static final String TOR_VERSION = "$torVersion";
             }
         """.trimIndent())
     }
