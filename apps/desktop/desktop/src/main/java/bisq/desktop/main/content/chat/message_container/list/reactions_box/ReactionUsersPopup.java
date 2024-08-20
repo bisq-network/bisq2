@@ -183,10 +183,12 @@ public class ReactionUsersPopup extends PopupControl {
     private static final class ListItem {
         @EqualsAndHashCode.Include
         private final UserProfile userProfile;
+
         private final String nickName;
 
         public ListItem(UserProfile userProfile) {
             this.userProfile = userProfile;
+
             nickName = userProfile.getNickName();
         }
     }

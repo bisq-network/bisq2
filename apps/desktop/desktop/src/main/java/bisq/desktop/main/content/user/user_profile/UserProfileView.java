@@ -282,9 +282,10 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         return field;
     }
 
-    @EqualsAndHashCode
     @Getter
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class ListItem {
+        @EqualsAndHashCode.Include
         private final UserIdentity userIdentity;
 
         public ListItem(UserIdentity userIdentity) {

@@ -313,9 +313,9 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         };
     }
 
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class ListItem {
         @EqualsAndHashCode.Include
         private final UserProfile userProfile;
