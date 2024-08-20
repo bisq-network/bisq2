@@ -57,7 +57,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ChannelSidebar {
@@ -131,8 +130,6 @@ public class ChannelSidebar {
             if (chatChannel == null) {
                 model.descriptionVisible.set(false);
                 model.description.set(null);
-                model.adminProfile = Optional.empty();
-                model.moderators.clear();
                 model.channel.set(null);
                 return;
             }
@@ -178,26 +175,12 @@ public class ChannelSidebar {
                 CommonPublicChatChannel commonPublicChatChannel = (CommonPublicChatChannel) chatChannel;
                 model.description.set(commonPublicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = commonPublicChatChannel.getChannelAdminId()
-                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin)
-                                .map(userProfile -> new ChannelSidebarUserProfile(bannedUserService, userProfile)))
-                        .stream()
-                        .findAny();
-                model.moderators.setAll(commonPublicChatChannel.getChannelModeratorIds().stream()
-                        .flatMap(id -> userProfileService.findUserProfile(id).stream())
-                        .map(userProfile -> new ChannelSidebarUserProfile(bannedUserService, userProfile))
-                        .sorted()
-                        .collect(Collectors.toList()));
             } else if (chatChannel instanceof BisqEasyOfferbookChannel) {
                 model.description.set(((BisqEasyOfferbookChannel) chatChannel).getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = Optional.empty();
-                model.moderators.clear();
             } else {
                 model.descriptionVisible.set(false);
                 model.description.set(null);
-                model.adminProfile = Optional.empty();
-                model.moderators.clear();
             }
 
             model.channel.set(chatChannel);
@@ -223,8 +206,6 @@ public class ChannelSidebar {
         private final StringProperty channelTitle = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();
-        private final ObservableList<ChannelSidebarUserProfile> moderators = FXCollections.observableArrayList();
-        private Optional<ChannelSidebarUserProfile> adminProfile = Optional.empty();
         private final ObservableList<ChannelSidebarUserProfile> participantList = FXCollections.observableArrayList();
         private final SortedList<ChannelSidebarUserProfile> sortedListParticipantList = new SortedList<>(participantList);
         private Optional<Runnable> undoIgnoreChatUserHandler = Optional.empty();

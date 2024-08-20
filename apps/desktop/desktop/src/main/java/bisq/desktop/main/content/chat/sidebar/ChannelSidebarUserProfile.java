@@ -42,10 +42,6 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
     @EqualsAndHashCode.Include
     private final Controller controller;
 
-    public ChannelSidebarUserProfile(BannedUserService bannedUserService, UserProfile userProfile) {
-        this(bannedUserService, userProfile, false);
-    }
-
     public ChannelSidebarUserProfile(BannedUserService bannedUserService, UserProfile userProfile, boolean ignored) {
         controller = new Controller(userProfile, bannedUserService);
         controller.model.ignored = ignored;
