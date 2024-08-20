@@ -22,7 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
+import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
@@ -112,7 +112,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     }
 
     protected void configTableView() {
-        richTableView.getColumns().add(BisqTableColumns.getDateColumn(richTableView.getSortOrder()));
+        richTableView.getColumns().add(DateColumnUtil.getDateColumn(richTableView.getSortOrder()));
 
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("authorizedRole.releaseManager.table.releaseNotes"))
@@ -172,9 +172,9 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         };
     }
 
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class ListItem implements DateTableItem {
         @EqualsAndHashCode.Include
         private final ReleaseNotification releaseNotification;
@@ -195,4 +195,5 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
             releaseManagerProfileId = releaseNotification.getReleaseManagerProfileId();
         }
     }
+
 }

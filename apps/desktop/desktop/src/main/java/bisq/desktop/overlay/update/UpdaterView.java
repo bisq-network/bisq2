@@ -235,6 +235,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
                     });
                     setGraphic(hBox);
                 } else {
+                    progressBar.setProgress(0);
                     if (progressPin != null) {
                         progressPin.unsubscribe();
                     }
@@ -260,6 +261,8 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
                     setGraphic(isVerifiedIndicator);
                 } else {
                     isVerifiedIndicator.selectedProperty().unbind();
+                    isVerifiedIndicator.visibleProperty().unbind();
+                    isVerifiedIndicator.managedProperty().unbind();
                     setGraphic(null);
                 }
             }

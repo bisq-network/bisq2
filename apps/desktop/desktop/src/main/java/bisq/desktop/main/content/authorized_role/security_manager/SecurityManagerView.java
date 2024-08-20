@@ -30,7 +30,7 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
+import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
@@ -305,7 +305,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     }
 
     private void configDifficultyAdjustmentTableView() {
-        difficultyAdjustmentTableView.getColumns().add(BisqTableColumns.getDateColumn(difficultyAdjustmentTableView.getSortOrder()));
+        difficultyAdjustmentTableView.getColumns().add(DateColumnUtil.getDateColumn(difficultyAdjustmentTableView.getSortOrder()));
         difficultyAdjustmentTableView.getColumns().add(new BisqTableColumn.Builder<DifficultyAdjustmentListItem>()
                 .title(Res.get("authorizedRole.securityManager.difficultyAdjustment.table.value"))
                 .minWidth(150)
@@ -321,7 +321,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     }
 
     private void configMinRequiredReputationScoreTableView() {
-        minRequiredReputationScoreTableView.getColumns().add(BisqTableColumns.getDateColumn(minRequiredReputationScoreTableView.getSortOrder()));
+        minRequiredReputationScoreTableView.getColumns().add(DateColumnUtil.getDateColumn(minRequiredReputationScoreTableView.getSortOrder()));
         minRequiredReputationScoreTableView.getColumns().add(new BisqTableColumn.Builder<MinRequiredReputationScoreListItem>()
                 .title(Res.get("authorizedRole.securityManager.minRequiredReputationScore.table.value"))
                 .minWidth(150)
@@ -339,7 +339,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
 
     private void configAlertTableView() {
-        alertTableView.getColumns().add(BisqTableColumns.getDateColumn(alertTableView.getSortOrder()));
+        alertTableView.getColumns().add(DateColumnUtil.getDateColumn(alertTableView.getSortOrder()));
 
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .title(Res.get("authorizedRole.securityManager.alert.table.alertType"))

@@ -84,6 +84,8 @@ final class ChatMessageListCellFactory
             }
 
             private void cleanup() {
+                cellHBox.getChildren().clear();
+                ;
                 if (messageBox != null) {
                     messageBox.dispose();
                     messageBox = null;

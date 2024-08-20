@@ -389,16 +389,16 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
                     {
                         hBox.setAlignment(Pos.CENTER_LEFT);
+                        button.getStyleClass().add("grey-transparent-outlined-button");
                     }
 
                     @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
+                    protected void updateItem(String languageCode, boolean empty) {
+                        super.updateItem(languageCode, empty);
 
-                        if (item != null && !empty) {
-                            label.setText(controller.getDisplayLanguage(item));
-                            button.setOnAction(e -> controller.onRemoveSupportedLanguage(item));
-                            button.getStyleClass().add("grey-transparent-outlined-button");
+                        if (languageCode != null && !empty) {
+                            label.setText(controller.getDisplayLanguage(languageCode));
+                            button.setOnAction(e -> controller.onRemoveSupportedLanguage(languageCode));
                             setGraphic(hBox);
                         } else {
                             button.setOnAction(null);

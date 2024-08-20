@@ -279,13 +279,16 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         return column -> new TableCell<>() {
             private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
 
+            {
+                reputationScoreDisplay.setAlignment(Pos.CENTER);
+            }
+
             @Override
             protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
                     reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    reputationScoreDisplay.setAlignment(Pos.CENTER);
                     setGraphic(reputationScoreDisplay);
                 } else {
                     setGraphic(null);
@@ -313,9 +316,9 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         };
     }
 
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class ListItem {
         @EqualsAndHashCode.Include
         private final UserProfile userProfile;
@@ -350,8 +353,9 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
             userName = userProfile.getUserName();
             applyReputationScore(userProfile.getId());
-            profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile).orElse(0L);
-            profileAgeString = reputationService.getProfileAgeService().getProfileAge(userProfile)
+            Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
+            profileAge = optionalProfileAge.orElse(0L);
+            profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na"));
 
@@ -362,7 +366,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             return userProfile.getPublishDate();
         }
 
-        public void dispose() {
+        void dispose() {
             selectedTogglePin.unsubscribe();
         }
 

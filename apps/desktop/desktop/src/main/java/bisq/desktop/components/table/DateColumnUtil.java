@@ -13,7 +13,7 @@ import javafx.util.Callback;
 import javax.annotation.Nullable;
 import java.util.Comparator;
 
-public class BisqTableColumns {
+public class DateColumnUtil {
 
     public static <T extends DateTableItem> BisqTableColumn<T> getDateColumn() {
         return getDateColumn(null);

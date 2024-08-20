@@ -103,6 +103,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                     item.getUserProfile().ifPresent(userProfileIcon::setUserProfile);
                     setGraphic(hBox);
                 } else {
+                    userName.setTooltip(null);
                     userProfileIcon.dispose();
                     setGraphic(null);
                 }
@@ -115,6 +116,8 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             private final Label userProfileId = new Label();
             private final Button icon = BisqIconButton.createCopyIconButton();
             private final HBox hBox = new HBox(userProfileId, icon);
+            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
+            private final BisqTooltip copYTooltip = new BisqTooltip(Res.get("action.copyToClipboard"), BisqTooltip.Style.DARK);
 
             {
                 icon.setMinWidth(30);
@@ -129,13 +132,16 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     userProfileId.setText(item.getUserProfileId());
-                    userProfileId.setTooltip(new BisqTooltip(item.getUserProfileId(), BisqTooltip.Style.DARK));
+                    tooltip.setText(item.getUserProfileId());
+                    userProfileId.setTooltip(tooltip);
 
                     icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getUserProfileId()));
-                    icon.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard"), BisqTooltip.Style.DARK));
+                    icon.setTooltip(copYTooltip);
                     setGraphic(hBox);
                 } else {
                     icon.setOnAction(null);
+                    userProfileId.setTooltip(null);
+                    icon.setTooltip(null);
                     setGraphic(null);
                 }
             }
@@ -147,6 +153,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             private final Label signature = new Label();
             private final Button icon = BisqIconButton.createCopyIconButton();
             private final HBox hBox = new HBox(signature, icon);
+            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
 
             {
                 icon.setMinWidth(30);
@@ -160,13 +167,14 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+                    tooltip.setText(item.getSignature());
                     signature.setText(item.getSignature());
-                    signature.setTooltip(new BisqTooltip(item.getSignature(), BisqTooltip.Style.DARK));
-
+                    signature.setTooltip(tooltip);
                     icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getSignature()));
                     setGraphic(hBox);
                 } else {
                     icon.setOnAction(null);
+                    signature.setTooltip(null);
                     setGraphic(null);
                 }
             }

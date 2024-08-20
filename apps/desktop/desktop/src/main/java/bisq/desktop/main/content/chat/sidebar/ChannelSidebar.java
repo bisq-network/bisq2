@@ -340,8 +340,9 @@ public class ChannelSidebar {
         private final String userName, tooltipString;
 
         private ListItem(UserProfile userProfile, BannedUserService bannedUserService, Set<String> ignoredChatUserIds) {
-            this.bannedUserService = bannedUserService;
             this.userProfile = userProfile;
+
+            this.bannedUserService = bannedUserService;
             this.ignored = ignoredChatUserIds.contains(userProfile.getId());
             isBanned = bannedUserService.isUserProfileBanned(userProfile);
             userName = isBanned ? Res.get("user.userProfile.userName.banned", userProfile.getUserName()) : userProfile.getUserName();

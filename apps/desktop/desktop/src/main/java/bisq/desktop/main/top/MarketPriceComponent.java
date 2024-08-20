@@ -285,13 +285,7 @@ public class MarketPriceComponent {
                         boolean isStale = item.isStale();
                         staleIcon.setManaged(isStale);
                         staleIcon.setVisible(isStale);
-                        String isStalePostFix = isStale ? Res.get("component.marketPrice.tooltip.isStale") : "";
-                        String tooltipText = Res.get("component.marketPrice.tooltip",
-                                item.getSource(),
-                                item.getAgeInSeconds(),
-                                item.date,
-                                isStalePostFix);
-                        tooltip.setText(tooltipText);
+                        tooltip.setText(item.getTooltipText());
                         Tooltip.install(hBox, tooltip);
                         setGraphic(hBox);
                     } else {
@@ -304,6 +298,7 @@ public class MarketPriceComponent {
     }
 
     @Slf4j
+    @Getter
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class ListItem {
         @EqualsAndHashCode.Include
@@ -329,6 +324,15 @@ public class MarketPriceComponent {
 
         public String getAgeInSeconds() {
             return TimeFormatter.getAgeInSeconds(marketPrice.getAge());
+        }
+
+        public String getTooltipText() {
+            String isStalePostFix = isStale() ? Res.get("component.marketPrice.tooltip.isStale") : "";
+            return Res.get("component.marketPrice.tooltip",
+                    getSource(),
+                    getAgeInSeconds(),
+                    date,
+                    isStalePostFix);
         }
 
         public String getProviderUrl() {

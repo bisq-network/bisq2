@@ -217,7 +217,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 .setCellFactory(getTakerCellFactory())
                 .build());
 
-        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
+        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
@@ -347,13 +347,15 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     @Slf4j
     @Getter
     @ToString
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     static class ListItem implements ActivatableTableItem, DateTableItem {
+        @EqualsAndHashCode.Include
+        private final MediationCase mediationCase;
+        @EqualsAndHashCode.Include
+        private final BisqEasyOpenTradeChannel channel;
         private final ChatNotificationService chatNotificationService;
         private final ReputationService reputationService;
 
-        private final BisqEasyOpenTradeChannel channel;
-        private final MediationCase mediationCase;
         private final Trader maker, taker;
         private final long date, price, baseAmount, quoteAmount;
         private final String dateString, timeString, tradeId, shortTradeId, offerId, direction, market,
@@ -366,12 +368,12 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         ListItem(ServiceProvider serviceProvider,
                  MediationCase mediationCase,
                  BisqEasyOpenTradeChannel channel) {
+            this.mediationCase = mediationCase;
+            this.channel = channel;
+
             reputationService = serviceProvider.getUserService().getReputationService();
             UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
             chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-
-            this.channel = channel;
-            this.mediationCase = mediationCase;
             BisqEasyContract contract = mediationCase.getMediationRequest().getContract();
             BisqEasyOffer offer = contract.getOffer();
             List<UserProfile> traders = new ArrayList<>(channel.getTraders());
