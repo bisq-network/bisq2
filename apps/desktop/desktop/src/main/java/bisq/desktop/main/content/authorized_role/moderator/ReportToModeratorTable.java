@@ -315,6 +315,7 @@ public class ReportToModeratorTable {
                 private final Label message = new Label();
                 private final Button icon = BisqIconButton.createCopyIconButton();
                 private final HBox hBox = new HBox(message, icon);
+                private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
 
                 {
                     icon.setMinWidth(30);
@@ -330,12 +331,14 @@ public class ReportToModeratorTable {
                     if (item != null && !empty) {
                         message.setText(item.getMessage());
                         message.setMaxHeight(30);
-                        message.setTooltip(new BisqTooltip(item.getMessage(), BisqTooltip.Style.DARK));
+                        tooltip.setText(item.getMessage());
+                        message.setTooltip(tooltip);
 
                         icon.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getMessage()));
                         setGraphic(hBox);
                     } else {
                         icon.setOnAction(null);
+                        message.setTooltip(null);
                         setGraphic(null);
                     }
                 }

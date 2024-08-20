@@ -279,13 +279,16 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         return column -> new TableCell<>() {
             private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
 
+            {
+                reputationScoreDisplay.setAlignment(Pos.CENTER);
+            }
+
             @Override
             protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
                     reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    reputationScoreDisplay.setAlignment(Pos.CENTER);
                     setGraphic(reputationScoreDisplay);
                 } else {
                     setGraphic(null);

@@ -494,6 +494,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getPaymentMethodCellFactory() {
         return column -> new TableCell<>() {
             private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
+            private final StackPane pane = new StackPane();
 
             @Override
             protected void updateItem(ListItem item, boolean empty) {
@@ -503,12 +504,14 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                     Node paymentMethodIcon = !item.isFiatPaymentMethodCustom()
                             ? ImageUtil.getImageViewById(item.getFiatPaymentRail().name())
                             : BisqEasyViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod());
-                    StackPane pane = new StackPane(paymentMethodIcon);
+                    pane.getChildren().add(paymentMethodIcon);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.paymentMethod.tooltip",
                             item.getFiatPaymentMethod()));
                     Tooltip.install(pane, tooltip);
                     setGraphic(pane);
                 } else {
+                    Tooltip.uninstall(pane, tooltip);
+                    pane.getChildren().clear();
                     setGraphic(null);
                 }
             }
@@ -518,22 +521,27 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSettlementMethodCellFactory() {
         return column -> new TableCell<>() {
             private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
+            private final StackPane pane = new StackPane();
+            private final ColorAdjust colorAdjust = new ColorAdjust();
 
+            {
+                colorAdjust.setBrightness(-0.2);
+            }
             @Override
             protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
                     ImageView icon = ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name());
-                    ColorAdjust colorAdjust = new ColorAdjust();
-                    colorAdjust.setBrightness(-0.2);
                     icon.setEffect(colorAdjust);
-                    StackPane pane = new StackPane(icon);
+                    pane.getChildren().add(icon);
                     tooltip.setText(Res.get("bisqEasy.openTrades.table.settlementMethod.tooltip",
                             item.getBitcoinSettlementMethod()));
                     Tooltip.install(pane, tooltip);
                     setGraphic(pane);
                 } else {
+                    Tooltip.uninstall(pane, tooltip);
+                    pane.getChildren().clear();
                     setGraphic(null);
                 }
             }

@@ -9,7 +9,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringExpression;
+import javafx.beans.binding.StringBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -71,12 +71,13 @@ public class BisqEasyOfferbookUtil {
             private final Label marketCode = new Label();
             private final Label numOffers = new Label();
             private final Label favouriteLabel = new Label();
-            private final ImageView star;
             private final HBox hBox = new HBox(10, marketCode, numOffers);
             private final VBox vBox = new VBox(0, marketName, hBox);
             private final HBox container = new HBox(0, vBox, Spacer.fillHBox(), favouriteLabel);
             private final Tooltip marketDetailsTooltip = new BisqTooltip();
             private final Tooltip favouriteTooltip = new BisqTooltip();
+            private StringBinding formattedNumOffersBindings;
+            private StringBinding formattedTooltipBinding;
 
             {
                 setCursor(Cursor.HAND);
@@ -88,7 +89,7 @@ public class BisqEasyOfferbookUtil {
                 favouriteTooltip.textProperty().set(isFavouritesTableView
                         ? Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.removeFromFavourites")
                         : Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.addToFavourites"));
-                star = ImageUtil.getImageViewById(isFavouritesTableView
+                ImageView star = ImageUtil.getImageViewById(isFavouritesTableView
                         ? "star-yellow"
                         : "star-grey-hollow");
                 favouriteLabel.setGraphic(star);
@@ -107,12 +108,12 @@ public class BisqEasyOfferbookUtil {
                     marketName.setText(quoteCurrencyDisplayName);
                     marketCode.setText(item.getMarket().getQuoteCurrencyCode());
                     int numOffersString = item.getNumOffers().get();
-                    StringExpression formattedNumOffers = Bindings.createStringBinding(() ->
+                    formattedNumOffersBindings = Bindings.createStringBinding(() ->
                             BisqEasyOfferbookUtil.getFormattedOfferNumber(numOffersString), item.getNumOffers());
-                    numOffers.textProperty().bind(formattedNumOffers);
-                    StringExpression formattedTooltip = Bindings.createStringBinding(() ->
+                    numOffers.textProperty().bind(formattedNumOffersBindings);
+                    formattedTooltipBinding = Bindings.createStringBinding(() ->
                             BisqEasyOfferbookUtil.getFormattedTooltip(numOffersString, quoteCurrencyDisplayName), item.getNumOffers());
-                    marketDetailsTooltip.textProperty().bind(formattedTooltip);
+                    marketDetailsTooltip.textProperty().bind(formattedTooltipBinding);
 
                     favouriteLabel.setOnMouseClicked(e -> item.toggleFavourite());
 
@@ -120,7 +121,10 @@ public class BisqEasyOfferbookUtil {
                 } else {
                     numOffers.textProperty().unbind();
                     marketDetailsTooltip.textProperty().unbind();
-
+                    formattedNumOffersBindings.dispose();
+                    formattedNumOffersBindings = null;
+                    formattedTooltipBinding.dispose();
+                    formattedTooltipBinding = null;
                     favouriteLabel.setOnMouseClicked(null);
 
                     setGraphic(null);
@@ -144,6 +148,7 @@ public class BisqEasyOfferbookUtil {
             @Override
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
+
                 if (item != null && !empty) {
                     numMessagesBadge.textProperty().bind(item.getNumMarketNotifications());
 
@@ -167,6 +172,7 @@ public class BisqEasyOfferbookUtil {
                     numMessagesBadge.setText("");
                     if (selectedPin != null) {
                         selectedPin.unsubscribe();
+                        selectedPin = null;
                     }
                     setGraphic(null);
                 }

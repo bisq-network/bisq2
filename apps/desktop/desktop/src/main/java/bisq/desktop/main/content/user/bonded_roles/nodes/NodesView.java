@@ -111,6 +111,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
             private final Label address = new Label();
             private final Button icon = BisqIconButton.createInfoIconButton(Res.get("user.bondedRoles.table.columns.node.address.openPopup"));
             private final HBox hBox = new HBox(address, icon);
+            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
 
             {
                 icon.setMinWidth(30);
@@ -126,7 +127,8 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                 if (item != null && !empty) {
                     String addressString = item.getAddress();
                     address.setText(addressString);
-                    address.setTooltip(new BisqTooltip(addressString, BisqTooltip.Style.DARK));
+                    tooltip.setText(addressString);
+                    address.setTooltip(tooltip);
                     icon.setOnAction(e -> new Popup()
                             .headline(Res.get("user.bondedRoles.table.columns.node.address.popup.headline"))
                             .message(item.getAddressInfoJson())
@@ -136,6 +138,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                     setGraphic(hBox);
                 } else {
                     icon.setOnAction(null);
+                    address.setTooltip(null);
                     setGraphic(null);
                 }
             }

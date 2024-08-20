@@ -141,6 +141,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
             () {
         return column -> new TableCell<>() {
             private final Label label = new Label();
+            private final Tooltip tooltip = new BisqTooltip();
 
             {
                 label.setPadding(new Insets(0, 0, 0, 10));
@@ -157,7 +158,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
                     String quoteCurrencyName = item.getQuoteCurrencyDisplayName();
                     label.setText(quoteCurrencyName);
                     if (quoteCurrencyName.length() > 20) {
-                        Tooltip tooltip = new BisqTooltip(quoteCurrencyName);
+                        tooltip.setText(quoteCurrencyName);
                         label.setTooltip(tooltip);
                     }
 

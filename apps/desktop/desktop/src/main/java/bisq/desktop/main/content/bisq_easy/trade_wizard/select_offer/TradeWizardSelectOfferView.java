@@ -280,6 +280,9 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
+                            if (tableRow != null) {
+                                tableRow.setOnMouseClicked(null);
+                            }
                             tableRow = getTableRow();
                             tableRow.setOnMouseClicked(e -> controller.onSelectRow(item));
                             reputationScoreDisplay.setReputationScore(item.getReputationScore());
