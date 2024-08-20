@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.bonded_roles;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -72,7 +73,18 @@ public abstract class BondedRolesController implements Controller {
         bondedRolesPin.unbind();
     }
 
-    public void onCopyPublicKeyAsHex(String publicKeyAsHex) {
+    void onCopyPublicKeyAsHex(String publicKeyAsHex) {
         ClipboardUtil.copyToClipboard(publicKeyAsHex);
+    }
+
+    void applySearchPredicate(String searchText) {
+        String string = searchText.toLowerCase();
+        model.getFilteredList().setPredicate(item ->
+                StringUtils.isEmpty(string) ||
+                        item.getUserName().toLowerCase().contains(string) ||
+                        item.getUserProfileId().contains(string) ||
+                        item.getBondUserName().contains(string) ||
+                        item.getAddress().toLowerCase().contains(string) ||
+                        item.getRoleTypeString().toLowerCase().contains(string));
     }
 }

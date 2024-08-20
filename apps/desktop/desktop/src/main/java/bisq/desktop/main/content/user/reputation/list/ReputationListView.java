@@ -19,12 +19,10 @@ package bisq.desktop.main.content.user.reputation.list;
 
 import bisq.common.data.Pair;
 import bisq.common.monetary.Coin;
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.StandardTable;
+import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
@@ -56,8 +54,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class ReputationListView extends View<VBox, ReputationListModel, ReputationListController> {
-    private final BisqTableView<ListItem> tableView;
-    private final StandardTable<ListItem> standardTable;
+    private final RichTableView<ListItem> richTableView;
     private BisqTableColumn<ListItem> scoreColumn, valueColumn;
     private Subscription userProfileIdOfScoreUpdatePin, selectedReputationSourcePin;
 
@@ -65,33 +62,32 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                               ReputationListController controller) {
         super(new VBox(20), model, controller);
 
-        standardTable = new StandardTable<>(model.getSortedList(),
+        richTableView = new RichTableView<>(model.getSortedList(),
                 Res.get("user.reputation.table.headline"),
                 model.getFilterItems(),
                 model.getFilterMenuItemToggleGroup(),
-                this::applySearchPredicate);
-        tableView = standardTable.getTableView();
+                controller::applySearchPredicate);
         configTableView();
 
-        root.getChildren().addAll(standardTable);
+        root.getChildren().addAll(richTableView);
     }
 
     @Override
     protected void onViewAttached() {
-        standardTable.initialize();
-        standardTable.resetSearch();
+        richTableView.initialize();
+        richTableView.resetSearch();
         valueColumn.visibleProperty().bind(model.getValueColumnVisible());
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getScoreChangeTrigger(), trigger -> {
             if (trigger != null) {
-                tableView.refresh();
+                richTableView.refresh();
             }
         });
 
         selectedReputationSourcePin = EasyBind.subscribe(model.getSelectedReputationSource(), selectedReputationSource -> {
             UIThread.runOnNextRenderFrame(() -> {
-                tableView.getSortOrder().clear();
+                richTableView.getSortOrder().clear();
                 if (selectedReputationSource == null) {
-                    tableView.getSortOrder().add(scoreColumn);
+                    richTableView.getSortOrder().add(scoreColumn);
                 } else {
 
                     switch (selectedReputationSource) {
@@ -105,12 +101,12 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                             valueColumn.setSortType(TableColumn.SortType.ASCENDING);
                             break;
                     }
-                    tableView.getSortOrder().add(valueColumn);
+                    richTableView.getSortOrder().add(valueColumn);
                 }
             });
         });
 
-        List<String> csvHeaders = standardTable.buildCsvHeaders();
+        List<String> csvHeaders = richTableView.buildCsvHeaders();
         csvHeaders.add(Res.get("user.reputation.ranking").toUpperCase());
         csvHeaders.addAll(Stream.of(ReputationSource.values())
                 .map(reputationSource -> reputationSource.getDisplayString().toUpperCase())
@@ -120,11 +116,11 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         csvHeaders.addAll(Stream.of(ReputationSource.values())
                 .map(reputationSource -> Res.get("component.standardTable.csv.plainValue", reputationSource.getDisplayString().toUpperCase()))
                 .toList());
-        standardTable.setCsvHeaders(Optional.of(csvHeaders));
+        richTableView.setCsvHeaders(Optional.of(csvHeaders));
 
-        List<List<String>> csvData = tableView.getItems().stream()
+        List<List<String>> csvData = richTableView.getItems().stream()
                 .map(item -> {
-                    List<String> cellDataInRow = standardTable.getBisqTableColumnsForCsv()
+                    List<String> cellDataInRow = richTableView.getBisqTableColumnsForCsv()
                             .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
                             .collect(Collectors.toList());
 
@@ -152,44 +148,33 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                     return cellDataInRow;
                 })
                 .collect(Collectors.toList());
-        standardTable.setCsvData(Optional.of(csvData));
+        richTableView.setCsvData(Optional.of(csvData));
     }
 
     @Override
     protected void onViewDetached() {
-        standardTable.dispose();
+        richTableView.dispose();
         valueColumn.visibleProperty().unbind();
         userProfileIdOfScoreUpdatePin.unsubscribe();
         selectedReputationSourcePin.unsubscribe();
     }
 
-    private void applySearchPredicate(String searchText) {
-        String string = searchText.toLowerCase();
-        model.getFilteredList().setPredicate(item ->
-                StringUtils.isEmpty(string) ||
-                        item.getUserName().toLowerCase().contains(string) ||
-                        item.getUserProfile().getNym().toLowerCase().contains(string) ||
-                        item.getTotalScoreString().contains(string) ||
-                        item.getProfileAgeString().contains(string) ||
-                        item.getValueAsStringProperty().get().toLowerCase().contains(string));
-    }
-
     private void configTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.userProfile"))
                 .left()
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .setCellFactory(getUserProfileCellFactory())
                 .valueSupplier(ListItem::getUserName)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.profileAge"))
                 .left()
                 .comparator(Comparator.comparing(ListItem::getProfileAge).reversed())
                 .valueSupplier(ListItem::getProfileAgeString)
                 .includeForCsv(false)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.livenessState"))
                 .right()
                 .comparator(Comparator.comparing(ListItem::getPublishDate).reversed())
@@ -202,7 +187,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .sortType(TableColumn.SortType.DESCENDING)
                 .valueSupplier(ListItem::getTotalScoreString)
                 .build();
-        tableView.getColumns().add(scoreColumn);
+        richTableView.getColumns().add(scoreColumn);
 
         valueColumn = new BisqTableColumn.Builder<ListItem>()
                 .titleProperty(model.getFilteredValueTitle())
@@ -210,16 +195,16 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .valuePropertySupplier(ListItem::getValueAsStringProperty)
                 .includeForCsv(false)
                 .build();
-        tableView.getColumns().add(valueColumn);
+        richTableView.getColumns().add(valueColumn);
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.reputation"))
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getStarsCellFactory())
                 .includeForCsv(false)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)
                 .title(Res.get("user.reputation.table.columns.details"))
                 .setCellFactory(getDetailsCellFactory())

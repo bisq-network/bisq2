@@ -21,7 +21,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.OrderedList;
-import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -38,19 +38,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class BondedRolesView<M extends BondedRolesModel, C extends BondedRolesController> extends View<VBox, M, C> {
-    protected final BisqTableView<BondedRolesListItem> tableView;
+    protected final RichTableView<BondedRolesListItem> richTableView;
 
-    public BondedRolesView(M model,
-                           C controller,
-                           VBox tabControllerRoot) {
+    public BondedRolesView(M model, C controller, VBox tabControllerRoot) {
         super(new VBox(20), model, controller);
 
-        Label tableHeadline = new Label(getTableHeadline());
-        tableHeadline.getStyleClass().add("bisq-content-headline-label");
-
-        tableView = new BisqTableView<>(model.getSortedList());
-        tableView.setMinHeight(200);
-        tableView.getStyleClass().add("user-bonded-roles-table-view");
+        richTableView = new RichTableView<>(model.getSortedList(), getTableHeadline(), controller::applySearchPredicate);
         configTableView();
 
         Label verificationHeadline = new Label(getVerificationHeadline());
@@ -58,12 +51,11 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
         OrderedList verificationInstruction = new OrderedList(Res.get("user.bondedRoles.verification.howTo.instruction"), "bisq-text-13");
 
         VBox.setMargin(tabControllerRoot, new Insets(0, 0, 20, 0));
-        VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
         VBox.setMargin(verificationHeadline, new Insets(0, 0, -10, 10));
         VBox.setMargin(verificationInstruction, new Insets(0, 0, 0, 10));
-        VBox.setVgrow(tableView, Priority.ALWAYS);
+        VBox.setVgrow(richTableView, Priority.ALWAYS);
         root.setPadding(new Insets(0, 40, 40, 40));
-        root.getChildren().addAll(tabControllerRoot, tableHeadline, tableView, verificationHeadline, verificationInstruction);
+        root.getChildren().addAll(tabControllerRoot, richTableView, verificationHeadline, verificationInstruction);
     }
 
     protected abstract String getVerificationHeadline();
@@ -72,12 +64,12 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
     @Override
     protected void onViewAttached() {
-        tableView.initialize();
+        richTableView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
-        tableView.dispose();
+        richTableView.dispose();
     }
 
     protected abstract void configTableView();

@@ -108,7 +108,8 @@ public class SecurityManagerController implements Controller {
                 model.getDifficultyAdjustmentFactorButtonDisabled().set(difficultyAdjustmentFactor == null ||
                         !isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor.doubleValue())));
 
-        minRequiredReputationScoreListItemsPin = FxBindings.<AuthorizedMinRequiredReputationScoreData, SecurityManagerView.MinRequiredReputationScoreListItem>bind(model.getMinRequiredReputationScoreListItems())
+        minRequiredReputationScoreListItemsPin = FxBindings.<AuthorizedMinRequiredReputationScoreData,
+                        SecurityManagerView.MinRequiredReputationScoreListItem>bind(model.getMinRequiredReputationScoreListItems())
                 .map(SecurityManagerView.MinRequiredReputationScoreListItem::new)
                 .to(minRequiredReputationScoreService.getAuthorizedMinRequiredReputationScoreDataSet());
 

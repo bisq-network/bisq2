@@ -36,8 +36,8 @@ public class TransportTypeModel implements Model {
     private final ServiceNode serviceNode;
     private final Node defaultNode;
     private final ObservableSet<Connection> connections = new ObservableSet<>();
-    private final TableList<NodeListItem> nodeListItems = new TableList<>();
     private final TableList<ConnectionListItem> connectionListItems = new TableList<>();
+    private final TableList<NodeListItem> nodeListItems = new TableList<>();
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty();
 
     public TransportTypeModel(TransportType transportType, ServiceNode serviceNode, Node defaultNode) {

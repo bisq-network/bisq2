@@ -17,6 +17,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
@@ -44,11 +45,11 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Convenience class for a standardized table view with a headline, num entries and support for filters.
+ * Convenience class for a feature rich table view with a headline, search, num entries and support for filters.
  */
 @Slf4j
 @Getter
-public class StandardTable<T> extends VBox {
+public class RichTableView<T> extends VBox {
     private final Optional<String> headline;
     private final Optional<List<FilterMenuItem<T>>> filterItems;
     private final Optional<ToggleGroup> toggleGroup;
@@ -67,22 +68,36 @@ public class StandardTable<T> extends VBox {
     @Setter
     private Optional<List<List<String>>> csvData = Optional.empty();
 
-    public StandardTable(SortedList<T> sortedList) {
+    public RichTableView(ObservableList<T> observableList) {
+        this(new SortedList<>(observableList));
+    }
+
+    public RichTableView(ObservableList<T> observableList, String headline) {
+        this(new SortedList<>(observableList), headline);
+    }
+
+    public RichTableView(SortedList<T> sortedList) {
         this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-    public StandardTable(SortedList<T> sortedList, String headline) {
+    public RichTableView(SortedList<T> sortedList, String headline) {
         this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-    public StandardTable(SortedList<T> sortedList,
+    public RichTableView(SortedList<T> sortedList,
                          String headline,
                          List<FilterMenuItem<T>> filterItems,
                          ToggleGroup toggleGroup) {
         this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.empty());
     }
 
-    public StandardTable(SortedList<T> sortedList,
+    public RichTableView(SortedList<T> sortedList,
+                         String headline,
+                         Consumer<String> searchTextHandler) {
+        this(sortedList, Optional.of(headline), Optional.empty(), Optional.empty(), Optional.of(searchTextHandler));
+    }
+
+    public RichTableView(SortedList<T> sortedList,
                          String headline,
                          List<FilterMenuItem<T>> filterItems,
                          ToggleGroup toggleGroup,
@@ -90,7 +105,7 @@ public class StandardTable<T> extends VBox {
         this(sortedList, Optional.of(headline), Optional.of(filterItems), Optional.of(toggleGroup), Optional.of(searchTextHandler));
     }
 
-    private StandardTable(SortedList<T> sortedList,
+    private RichTableView(SortedList<T> sortedList,
                           Optional<String> headline,
                           Optional<List<FilterMenuItem<T>>> filterItems,
                           Optional<ToggleGroup> toggleGroup,
@@ -150,7 +165,7 @@ public class StandardTable<T> extends VBox {
 
         VBox.setMargin(headerBox, new Insets(0, 0, 5, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        VBox.setMargin(footerHBox, new Insets(0, 0, 0, 10));
+        VBox.setMargin(footerHBox, new Insets(-5, 0, 0, 10));
         getChildren().addAll(headerBox, tableView, footerHBox);
 
         listChangeListener = c -> listItemsChanged();
@@ -163,7 +178,7 @@ public class StandardTable<T> extends VBox {
         listItemsChanged();
         toggleGroup.ifPresent(toggleGroup -> toggleGroup.selectedToggleProperty().addListener(toggleChangeListener));
         selectedFilterMenuItemChanged();
-        filterItems.ifPresent(filterItems -> filterItems.forEach(StandardTable.FilterMenuItem::initialize));
+        filterItems.ifPresent(filterItems -> filterItems.forEach(RichTableView.FilterMenuItem::initialize));
         searchTextHandler.ifPresent(stringConsumer -> searchTextPin = EasyBind.subscribe(searchBox.textProperty(), stringConsumer));
         exportHyperlink.setOnAction(ev -> {
             List<String> headers = csvHeaders.orElse(buildCsvHeaders());
@@ -185,7 +200,7 @@ public class StandardTable<T> extends VBox {
         tableView.dispose();
         tableView.getItems().removeListener(listChangeListener);
         toggleGroup.ifPresent(toggleGroup -> toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener));
-        filterItems.ifPresent(filterItems -> filterItems.forEach(StandardTable.FilterMenuItem::dispose));
+        filterItems.ifPresent(filterItems -> filterItems.forEach(RichTableView.FilterMenuItem::dispose));
         if (searchTextPin != null) {
             searchTextPin.unsubscribe();
         }
@@ -222,6 +237,35 @@ public class StandardTable<T> extends VBox {
                 .collect(Collectors.toList());
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TableView delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void refresh() {
+        tableView.refresh();
+    }
+
+    public ObservableList<TableColumn<T, ?>> getSortOrder() {
+        return tableView.getSortOrder();
+    }
+
+    public ObservableList<T> getItems() {
+        return tableView.getItems();
+    }
+
+    public ObservableList<TableColumn<T, ?>> getColumns() {
+        return tableView.getColumns();
+    }
+
+    public void setFixHeight(double value) {
+        tableView.setFixHeight(value);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void selectedFilterMenuItemChanged() {
         toggleGroup.flatMap(toggleGroup -> FilterMenuItem.fromToggle(toggleGroup.getSelectedToggle()))
                 .ifPresent(filterMenuItem -> {
@@ -234,23 +278,28 @@ public class StandardTable<T> extends VBox {
         numEntriesLabel.setText(Res.get("component.standardTable.numEntries", tableView.getItems().size()));
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // FilterMenuItem
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
     public static final class FilterMenuItem<T> extends DropdownMenuItem implements Toggle {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
         public static FilterMenuItem<ReputationListView.ListItem> getShowAllFilterMenuItem(ToggleGroup toggleGroup) {
-            return new StandardTable.FilterMenuItem<>(toggleGroup, Res.get("component.standardTable.filter.showAll"), Optional.empty(), e -> true);
+            return new RichTableView.FilterMenuItem<>(toggleGroup, Res.get("component.standardTable.filter.showAll"), Optional.empty(), e -> true);
         }
 
         public static Optional<FilterMenuItem<ReputationListView.ListItem>> fromToggle(Toggle selectedToggle) {
             if (selectedToggle == null) {
                 return Optional.empty();
             }
-            if (selectedToggle instanceof StandardTable.FilterMenuItem) {
+            if (selectedToggle instanceof RichTableView.FilterMenuItem) {
                 try {
                     //noinspection unchecked
-                    return Optional.of((StandardTable.FilterMenuItem<ReputationListView.ListItem>) selectedToggle);
+                    return Optional.of((RichTableView.FilterMenuItem<ReputationListView.ListItem>) selectedToggle);
                 } catch (ClassCastException e) {
                     log.error("Cast failed", e);
                     return Optional.empty();
@@ -305,14 +354,6 @@ public class StandardTable<T> extends VBox {
             setOnAction(null);
         }
 
-        private void toggleChanged() {
-            setSelected(this.equals(getToggleGroup().getSelectedToggle()));
-        }
-
-        private void applyStyle() {
-            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected());
-        }
-
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Toggle implementation
@@ -347,6 +388,19 @@ public class StandardTable<T> extends VBox {
         public void setSelected(boolean selected) {
             selectedProperty.set(selected);
             applyStyle();
+        }
+
+
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        // Private
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        private void toggleChanged() {
+            setSelected(this.equals(getToggleGroup().getSelectedToggle()));
+        }
+
+        private void applyStyle() {
+            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected());
         }
     }
 }

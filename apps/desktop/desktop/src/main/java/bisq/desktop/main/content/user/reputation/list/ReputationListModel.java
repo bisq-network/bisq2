@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.user.reputation.list;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.components.table.StandardTable;
+import bisq.desktop.components.table.RichTableView;
 import bisq.user.reputation.ReputationSource;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -42,6 +42,6 @@ public class ReputationListModel implements Model {
     private final StringProperty filteredValueTitle = new SimpleStringProperty();
     private final BooleanProperty valueColumnVisible = new SimpleBooleanProperty();
     private final ObjectProperty<ReputationSource> selectedReputationSource = new SimpleObjectProperty<>();
-    private final List<StandardTable.FilterMenuItem<ReputationListView.ListItem>> filterItems = new ArrayList<>();
+    private final List<RichTableView.FilterMenuItem<ReputationListView.ListItem>> filterItems = new ArrayList<>();
     private final ToggleGroup filterMenuItemToggleGroup = new ToggleGroup();
 }

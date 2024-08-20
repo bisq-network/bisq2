@@ -33,8 +33,8 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableColumns;
-import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateTableItem;
+import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
@@ -160,32 +160,28 @@ public class ReportToModeratorTable {
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqTableView<ReportListItem> tableView;
+        private final RichTableView<ReportListItem> richTableView;
 
         private View(Model model, Controller controller) {
             super(new VBox(5), model, controller);
 
             root.setAlignment(Pos.TOP_LEFT);
 
-            Label headline = new Label(Res.get("authorizedRole.moderator.reportToModerator.table.headline"));
-            headline.getStyleClass().add("large-thin-headline");
-
-            tableView = new BisqTableView<>(model.getListItems());
-            tableView.setMinHeight(200);
-            tableView.getStyleClass().add("user-bonded-roles-table-view");
+            richTableView = new RichTableView<>(model.getListItems(),
+                    Res.get("authorizedRole.moderator.reportToModerator.table.headline"));
             configTableView();
 
-            root.getChildren().addAll(headline, tableView);
+            root.getChildren().addAll(richTableView);
         }
 
         @Override
         protected void onViewAttached() {
-            tableView.initialize();
+            richTableView.initialize();
         }
 
         @Override
         protected void onViewDetached() {
-            tableView.dispose();
+            richTableView.dispose();
         }
 
 
@@ -194,46 +190,51 @@ public class ReportToModeratorTable {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void configTableView() {
-            tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
+            richTableView.getColumns().add(BisqTableColumns.getDateColumn(richTableView.getSortOrder()));
 
-            tableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
                     .title(Res.get("authorizedRole.moderator.table.reporter"))
                     .minWidth(250)
                     .left()
                     .comparator(Comparator.comparing(ReportListItem::getReporterUserName))
+                    .valueSupplier(ReportListItem::getReporterUserName)
                     .setCellFactory(getReporterUserProfileCellFactory())
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
                     .title(Res.get("authorizedRole.moderator.table.accused"))
                     .minWidth(250)
                     .left()
                     .comparator(Comparator.comparing(ReportListItem::getAccusedUserName))
+                    .valueSupplier(ReportListItem::getAccusedUserName)
                     .setCellFactory(getAccusedUserProfileCellFactory())
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
                     .title(Res.get("authorizedRole.moderator.table.message"))
                     .minWidth(150)
                     .left()
                     .comparator(Comparator.comparing(ReportListItem::getMessage))
+                    .valueSupplier(ReportListItem::getMessage)
                     .setCellFactory(getMessageCellFactory())
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
                     .title(Res.get("authorizedRole.moderator.table.chatChannelDomain"))
                     .fixWidth(150)
                     .left()
                     .comparator(Comparator.comparing(ReportListItem::getChatChannelDomain))
                     .valueSupplier(ReportListItem::getChatChannelDomain)
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
                     .isSortable(false)
                     .fixWidth(130)
                     .setCellFactory(getBanCellFactory())
+                    .includeForCsv(false)
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
                     .isSortable(false)
                     .fixWidth(130)
                     .right()
                     .setCellFactory(getDeleteMessageCellFactory())
+                    .includeForCsv(false)
                     .build());
         }
 

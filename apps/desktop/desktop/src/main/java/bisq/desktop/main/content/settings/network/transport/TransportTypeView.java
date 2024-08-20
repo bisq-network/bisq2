@@ -22,68 +22,38 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableColumns;
-import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 
 public class TransportTypeView extends View<GridPane, TransportTypeModel, TransportTypeController> {
-    private final BisqTableView<ConnectionListItem> connectionsTableView;
-    private final BisqTableView<NodeListItem> nodesTableView;
+    private final RichTableView<ConnectionListItem> connectionsTableView;
+    private final RichTableView<NodeListItem> nodesTableView;
     private final MaterialTextField myAddress;
 
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
         super(GridPaneUtil.getGridPane(5, 20, new Insets(0)), model, controller);
-
 
         myAddress = new MaterialTextField(Res.get("settings.network.nodeInfo.myAddress"));
         myAddress.setEditable(false);
         myAddress.showCopyIcon();
         root.add(myAddress, 0, root.getRowCount(), 2, 1);
 
-        Label connectionsLabel = GridPaneUtil.getHeadline(
+        connectionsTableView = new RichTableView<>(model.getConnectionListItems().getSortedList(),
                 Res.get("settings.network.connections.title"),
-                "bisq-sub-title-label",
-                "",
-                0);
-        GridPane.setMargin(connectionsLabel, new Insets(0, 0, -15, 10));
-        root.add(connectionsLabel, 0, root.getRowCount());
-
-        connectionsTableView = new BisqTableView<>(model.getConnectionListItems().getSortedList());
-        connectionsTableView.setPadding(new Insets(-15, 0, 0, 0));
-        connectionsTableView.setMinHeight(150);
-        connectionsTableView.setPrefHeight(250);
+                controller::applyConnectionListSearchPredicate);
         // Fill available width
         connectionsTableView.setPrefWidth(2000);
         configConnectionsTableView();
+        root.add(connectionsTableView, 0, root.getRowCount(), 2, 1);
 
-        VBox vBoxConnections = new VBox(16, connectionsTableView);
-        vBoxConnections.getStyleClass().add("bisq-grey-2-bg");
-        vBoxConnections.setPadding(new Insets(20, 0, 0, 0));
-        vBoxConnections.setAlignment(Pos.TOP_LEFT);
-        root.add(vBoxConnections, 0, root.getRowCount(), 2, 1);
-
-        Label nodesLabel = GridPaneUtil.getHeadline(Res.get("settings.network.nodes.title"),
-                "bisq-sub-title-label",
-                "",
-                0);
-        GridPane.setMargin(nodesLabel, new Insets(0, 0, -15, 10));
-        root.add(nodesLabel, 0, root.getRowCount());
-
-        nodesTableView = new BisqTableView<>(model.getNodeListItems().getSortedList());
-        nodesTableView.setPadding(new Insets(-15, 0, 0, 0));
-        nodesTableView.setMinHeight(100);
+        nodesTableView = new RichTableView<>(model.getNodeListItems().getSortedList(),
+                Res.get("settings.network.nodes.title"),
+                controller::applyNodeListSearchPredicate);
         nodesTableView.setPrefHeight(200);
         configNodesTableView();
-
-        VBox vBoxNodes = new VBox(16, nodesTableView);
-        vBoxNodes.getStyleClass().add("bisq-grey-2-bg");
-        vBoxNodes.setPadding(new Insets(20, 0, 0, 0));
-        vBoxNodes.setAlignment(Pos.TOP_LEFT);
-        root.add(vBoxNodes, 0, root.getRowCount(), 2, 1);
+        root.add(nodesTableView, 0, root.getRowCount(), 2, 1);
     }
 
     @Override

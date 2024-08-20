@@ -31,8 +31,8 @@ import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableColumns;
-import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateTableItem;
+import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.presentation.formatters.BooleanFormatter;
@@ -73,9 +73,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     private final AutoCompleteComboBox<BondedRoleListItem> bondedRoleSelection;
     private final CheckBox haltTradingCheckBox, requireVersionForTradingCheckBox;
     private final HBox requireVersionForTradingHBox;
-    private final BisqTableView<AlertListItem> alertTableView;
-    private final BisqTableView<DifficultyAdjustmentListItem> difficultyAdjustmentTableView;
-    private final BisqTableView<MinRequiredReputationScoreListItem> minRequiredReputationScoreTableView;
+    private final RichTableView<AlertListItem> alertTableView;
+    private final RichTableView<DifficultyAdjustmentListItem> difficultyAdjustmentTableView;
+    private final RichTableView<MinRequiredReputationScoreListItem> minRequiredReputationScoreTableView;
 
     private Subscription selectedAlertTypePin, selectedBondedRolListItemPin;
 
@@ -134,33 +134,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         sendAlertButton.setDefaultButton(true);
         sendAlertButton.setAlignment(Pos.BOTTOM_RIGHT);
 
-        Label alertTableHeadline = new Label(Res.get("authorizedRole.securityManager.alert.table.headline"));
-        alertTableHeadline.getStyleClass().add("large-thin-headline");
-
-        alertTableView = new BisqTableView<>(model.getSortedAlertListItems());
-        alertTableView.setFixHeight(200);
-        alertTableView.getStyleClass().add("user-bonded-roles-table-view");
+        alertTableView = new RichTableView<>(model.getSortedAlertListItems(),
+                Res.get("authorizedRole.securityManager.alert.table.headline"));
         configAlertTableView();
-
-
-        // difficultyAdjustment
-        Label difficultyAdjustmentHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.headline"));
-        difficultyAdjustmentHeadline.getStyleClass().add("large-thin-headline");
-
-        difficultyAdjustmentFactor = new MaterialTextField(Res.get("authorizedRole.securityManager.difficultyAdjustment.description"));
-        difficultyAdjustmentFactor.setMaxWidth(400);
-        difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
-
-        difficultyAdjustmentButton = new Button(Res.get("authorizedRole.securityManager.difficultyAdjustment.button"));
-        difficultyAdjustmentButton.setDefaultButton(true);
-
-        Label difficultyAdjustmentTableHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.table.headline"));
-        difficultyAdjustmentTableHeadline.getStyleClass().add("large-thin-headline");
-
-        difficultyAdjustmentTableView = new BisqTableView<>(model.getDifficultyAdjustmentListItems());
-        difficultyAdjustmentTableView.setFixHeight(200);
-        difficultyAdjustmentTableView.getStyleClass().add("user-bonded-roles-table-view");
-        configDifficultyAdjustmentTableView();
 
 
         // minRequiredReputationScore
@@ -174,13 +150,25 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         minRequiredReputationScoreButton = new Button(Res.get("authorizedRole.securityManager.minRequiredReputationScore.button"));
         minRequiredReputationScoreButton.setDefaultButton(true);
 
-        Label minRequiredReputationScoreTableHeadline = new Label(Res.get("authorizedRole.securityManager.minRequiredReputationScore.table.headline"));
-        minRequiredReputationScoreTableHeadline.getStyleClass().add("large-thin-headline");
-
-        minRequiredReputationScoreTableView = new BisqTableView<>(model.getMinRequiredReputationScoreListItems());
-        minRequiredReputationScoreTableView.setFixHeight(200);
-        minRequiredReputationScoreTableView.getStyleClass().add("user-bonded-roles-table-view");
+        minRequiredReputationScoreTableView = new RichTableView<>(model.getMinRequiredReputationScoreListItems(),
+                Res.get("authorizedRole.securityManager.minRequiredReputationScore.table.headline"));
         configMinRequiredReputationScoreTableView();
+
+
+        // difficultyAdjustment
+        Label difficultyAdjustmentHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.headline"));
+        difficultyAdjustmentHeadline.getStyleClass().add("large-thin-headline");
+
+        difficultyAdjustmentFactor = new MaterialTextField(Res.get("authorizedRole.securityManager.difficultyAdjustment.description"));
+        difficultyAdjustmentFactor.setMaxWidth(400);
+        difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
+
+        difficultyAdjustmentButton = new Button(Res.get("authorizedRole.securityManager.difficultyAdjustment.button"));
+        difficultyAdjustmentButton.setDefaultButton(true);
+
+        difficultyAdjustmentTableView = new RichTableView<>(model.getDifficultyAdjustmentListItems(),
+                Res.get("authorizedRole.securityManager.difficultyAdjustment.table.headline"));
+        configDifficultyAdjustmentTableView();
 
 
         // Role info
@@ -189,11 +177,8 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         VBox.setMargin(difficultyAdjustmentButton, new Insets(0, 0, 10, 0));
         VBox.setMargin(sendAlertButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(haltTradingCheckBox, new Insets(10, 0, 0, 0));
-        VBox.setMargin(alertTableHeadline, new Insets(10, 0, 0, 0));
         VBox.setMargin(minRequiredReputationScoreHeadline, new Insets(20, 0, 0, 0));
-        VBox.setMargin(minRequiredReputationScoreTableHeadline, new Insets(10, 0, 0, 0));
         VBox.setMargin(difficultyAdjustmentHeadline, new Insets(20, 0, 0, 0));
-        VBox.setMargin(difficultyAdjustmentTableHeadline, new Insets(10, 0, 0, 0));
         VBox.setMargin(roleInfo, new Insets(20, 0, 0, 0));
         VBox.setVgrow(difficultyAdjustmentTableView, Priority.NEVER);
         VBox.setVgrow(alertTableView, Priority.NEVER);
@@ -203,13 +188,13 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 haltTradingCheckBox, requireVersionForTradingHBox,
                 bondedRoleSelection,
                 sendAlertButton,
-                alertTableHeadline, alertTableView,
+                alertTableView,
 
                 minRequiredReputationScoreHeadline, minRequiredReputationScore, minRequiredReputationScoreButton,
-                minRequiredReputationScoreTableHeadline, minRequiredReputationScoreTableView,
+                minRequiredReputationScoreTableView,
 
                 difficultyAdjustmentHeadline, difficultyAdjustmentFactor, difficultyAdjustmentButton,
-                difficultyAdjustmentTableHeadline, difficultyAdjustmentTableView,
+                difficultyAdjustmentTableView,
 
                 roleInfo);
     }
@@ -217,7 +202,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     @Override
     protected void onViewAttached() {
         alertTableView.initialize();
+        minRequiredReputationScoreTableView.initialize();
         difficultyAdjustmentTableView.initialize();
+
         Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
                 Converters.DOUBLE_STRING_CONVERTER);
         Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(),
@@ -275,7 +262,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     @Override
     protected void onViewDetached() {
         alertTableView.dispose();
+        minRequiredReputationScoreTableView.dispose();
         difficultyAdjustmentTableView.dispose();
+
         Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
         Bindings.unbindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore());
 
@@ -343,7 +332,8 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .isSortable(false)
                 .minWidth(200)
                 .right()
-                .setCellFactory(getMinRequiredReputationScoreCellFactory())
+                .setCellFactory(getRemoveMinRequiredReputationScoreCellFactory())
+                .includeForCsv(false)
                 .build());
     }
 
@@ -392,6 +382,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .minWidth(200)
                 .right()
                 .setCellFactory(getRemoveAlertCellFactory())
+                .includeForCsv(false)
                 .build());
     }
 
@@ -435,7 +426,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     }
 
     private Callback<TableColumn<MinRequiredReputationScoreListItem, MinRequiredReputationScoreListItem>,
-            TableCell<MinRequiredReputationScoreListItem, MinRequiredReputationScoreListItem>> getMinRequiredReputationScoreCellFactory() {
+            TableCell<MinRequiredReputationScoreListItem, MinRequiredReputationScoreListItem>> getRemoveMinRequiredReputationScoreCellFactory() {
         return column -> new TableCell<>() {
             private final Button button = new Button(Res.get("data.remove"));
 

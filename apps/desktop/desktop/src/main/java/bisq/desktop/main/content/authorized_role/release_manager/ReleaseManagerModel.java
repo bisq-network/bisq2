@@ -24,7 +24,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +36,6 @@ public class ReleaseManagerModel implements Model {
     private final BooleanProperty isPreRelease = new SimpleBooleanProperty();
     private final BooleanProperty isLauncherUpdate = new SimpleBooleanProperty();
     private final ObservableList<ReleaseManagerView.ReleaseNotificationListItem> listItems = FXCollections.observableArrayList();
-    private final SortedList<ReleaseManagerView.ReleaseNotificationListItem> sortedListItems = new SortedList<>(listItems);
     public ReleaseManagerModel() {
     }
 }
