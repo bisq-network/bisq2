@@ -1,3 +1,12 @@
+import java.util.*
+
+// Function to read properties from a file - TODO find a way to reuse this code instead of copying when needed
+fun readPropertiesFile(filePath: String): Properties {
+    val properties = Properties()
+    file(filePath).inputStream().use { properties.load(it) }
+    return properties
+}
+
 plugins {
     id("bisq.java-library")
     id("bisq.java-integration-tests")
@@ -5,7 +14,9 @@ plugins {
 }
 
 tor {
-    version.set("12.0.5")
+    val properties = readPropertiesFile("../../../gradle.properties")
+    val torVersion = properties.getProperty("tor.version", "unspecified")
+    version.set(torVersion)
 }
 
 sourceSets {
