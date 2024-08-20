@@ -24,7 +24,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.components.table.StandardTable;
+import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -167,7 +167,7 @@ public class ReputationListController implements Controller {
     }
 
     Optional<ReputationSource> resolveReputationSource(Toggle toggle) {
-        return StandardTable.FilterMenuItem.fromToggle(toggle)
+        return RichTableView.FilterMenuItem.fromToggle(toggle)
                 .flatMap(selectedFilterMenuItem -> selectedFilterMenuItem.getData()
                         .filter(data -> data instanceof ReputationSource)
                         .map(data -> (ReputationSource) data));
@@ -186,7 +186,7 @@ public class ReputationListController implements Controller {
     }
 
     private void addFilterMenuItem(ReputationSource reputationSource) {
-        StandardTable.FilterMenuItem<ReputationListView.ListItem> filterMenuItem = new StandardTable.FilterMenuItem<>(
+        RichTableView.FilterMenuItem<ReputationListView.ListItem> filterMenuItem = new RichTableView.FilterMenuItem<>(
                 model.getFilterMenuItemToggleGroup(),
                 reputationSource.getDisplayString(),
                 Optional.of(reputationSource),
@@ -195,7 +195,7 @@ public class ReputationListController implements Controller {
     }
 
     private void updateFilter(Toggle selectedToggle) {
-        StandardTable.FilterMenuItem.fromToggle(selectedToggle).ifPresent(selectedFilterMenuItem -> {
+        RichTableView.FilterMenuItem.fromToggle(selectedToggle).ifPresent(selectedFilterMenuItem -> {
             model.getValueColumnVisible().set(selectedFilterMenuItem.getData().isPresent());
             model.getFilteredValueTitle().set(selectedFilterMenuItem.getTitle().toUpperCase());
             model.getFilteredList().setPredicate(item ->
@@ -204,7 +204,7 @@ public class ReputationListController implements Controller {
         model.getSelectedReputationSource().set(resolveReputationSource(selectedToggle).orElse(null));
     }
 
-    private StandardTable.FilterMenuItem<ReputationListView.ListItem> getShowAllFilterMenuItem() {
-        return StandardTable.FilterMenuItem.getShowAllFilterMenuItem(model.getFilterMenuItemToggleGroup());
+    private RichTableView.FilterMenuItem<ReputationListView.ListItem> getShowAllFilterMenuItem() {
+        return RichTableView.FilterMenuItem.getShowAllFilterMenuItem(model.getFilterMenuItemToggleGroup());
     }
 }
