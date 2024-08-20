@@ -33,7 +33,6 @@ import lombok.Getter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ActiveReactionsDisplayBox extends HBox {
     private final ObservableList<ReactionItem> reactionItems = FXCollections.observableArrayList();
@@ -47,10 +46,10 @@ public class ActiveReactionsDisplayBox extends HBox {
     public ActiveReactionsDisplayBox(Collection<ReactionItem> reactionItems, ToggleReaction toggleReaction) {
         this.reactionItems.addAll(reactionItems);
         this.toggleReaction = toggleReaction;
-        listChangeListener = change -> updateItems();
+        listChangeListener = change -> updateReactionItems();
         sortedReactionItems.setComparator(ReactionItem.firstAddedComparator());
         initialize();
-        updateItems();
+        updateReactionItems();
         getStyleClass().add("active-reactions-display-box");
     }
 
@@ -102,13 +101,12 @@ public class ActiveReactionsDisplayBox extends HBox {
         });
     }
 
-    private void updateItems() {
+    private void updateReactionItems() {
         UIThread.run(() -> {
             disposeReactionMenuUsersPopup();
-            getChildren().clear();
-            getChildren().addAll(sortedReactionItems.stream()
+            getChildren().setAll(sortedReactionItems.stream()
                     .map(item -> new ActiveReactionMenuItem(item, toggleReaction))
-                    .collect(Collectors.toList()));
+                    .toList());
         });
     }
 

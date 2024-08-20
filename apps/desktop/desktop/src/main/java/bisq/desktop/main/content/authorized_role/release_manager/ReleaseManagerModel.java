@@ -35,7 +35,7 @@ public class ReleaseManagerModel implements Model {
     private final StringProperty version = new SimpleStringProperty();
     private final BooleanProperty isPreRelease = new SimpleBooleanProperty();
     private final BooleanProperty isLauncherUpdate = new SimpleBooleanProperty();
-    private final ObservableList<ReleaseManagerView.ReleaseNotificationListItem> listItems = FXCollections.observableArrayList();
+    private final ObservableList<ReleaseManagerView.ListItem> listItems = FXCollections.observableArrayList();
     public ReleaseManagerModel() {
     }
 }

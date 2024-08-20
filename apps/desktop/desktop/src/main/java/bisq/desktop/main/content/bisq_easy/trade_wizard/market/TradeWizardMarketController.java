@@ -105,7 +105,7 @@ public class TradeWizardMarketController implements Controller {
                             .map(ChatMessage::getAuthorUserProfileId)
                             .distinct()
                             .count();
-                    TradeWizardMarketView.MarketListItem item = new TradeWizardMarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);
+                    TradeWizardMarketView.ListItem item = new TradeWizardMarketView.ListItem(market, numOffersInChannel, numUsersInChannel);
                     if (market.equals(model.getSelectedMarket().get())) {
                         model.getSelectedMarketListItem().set(item);
                     }
@@ -132,7 +132,7 @@ public class TradeWizardMarketController implements Controller {
         searchTextPin.unsubscribe();
     }
 
-    void onMarketListItemClicked(TradeWizardMarketView.MarketListItem item) {
+    void onMarketListItemClicked(TradeWizardMarketView.ListItem item) {
         if (item == null) {
             return;
         }

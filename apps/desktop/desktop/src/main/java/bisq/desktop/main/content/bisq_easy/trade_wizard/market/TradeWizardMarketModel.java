@@ -37,12 +37,12 @@ public class TradeWizardMarketModel implements Model {
     private Direction direction;
     @Setter
     private String headline;
-    private final ObjectProperty<TradeWizardMarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
+    private final ObjectProperty<TradeWizardMarketView.ListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObservableList<TradeWizardMarketView.MarketListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<TradeWizardMarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<TradeWizardMarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
+    private final ObservableList<TradeWizardMarketView.ListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<TradeWizardMarketView.ListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<TradeWizardMarketView.ListItem> sortedList = new SortedList<>(filteredList);
 
 
     void reset() {
