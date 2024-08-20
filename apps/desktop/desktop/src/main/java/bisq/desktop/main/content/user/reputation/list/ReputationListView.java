@@ -352,13 +352,13 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             this.toggleGroup = toggleGroup;
 
             userName = userProfile.getUserName();
-            applyReputationScore(userProfile.getId());
             Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na"));
 
+            // applyReputationScore gets called from selectedToggleChanged
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
         }
 
