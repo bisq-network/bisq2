@@ -108,10 +108,6 @@ item class is larger and justifies to be its own class we use the domain as pref
   the usage context about the domain.
 - If stored as individual class use the domain name as prefix, e.g. `MarketListItem`.
 
-### TODO
-
-Apply those best practice to our code base. It is currently not following those in all cases.
-
 [1] https://openjfx.io/javadoc/12/javafx.controls/javafx/scene/control/skin/VirtualFlow.html<br>
 [2] https://github.com/FXMisc/Flowless<br>
 [3] https://continuously.dev/blog/2015/02/10/the-trouble-with-weak-listeners.html

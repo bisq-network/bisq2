@@ -401,11 +401,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                         setTooltip(tooltip);
                                     }
                                 } else {
-                                    setText("");
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
                                     textProperty().unbind();
                                     tooltip.textProperty().unbind();
                                     setTooltip(null);
+                                    setText("");
                                 }
                             }
                         };
