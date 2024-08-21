@@ -82,7 +82,6 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox actionsHBox = new HBox(5);
     protected final VBox quotedMessageVBox, contentVBox;
-    private Subscription showHighlightedPin, reactMenuPin;
     protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected ReactMenuBox reactMenuBox;
     protected Label userName, dateTime, message;
@@ -91,6 +90,8 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
+    private Subscription showHighlightedPin, reactMenuPin;
+    private Timeline timeline;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -202,6 +203,13 @@ public abstract class BubbleMessageBox extends MessageBox {
         activeReactionsDisplayHBox.dispose();
         reactMenuBox.dispose();
         userProfileIcon.dispose();
+
+        if (timeline != null) {
+            timeline.stop();
+        }
+        if (messageBgHBox != null) {
+            messageBgHBox.setEffect(null);
+        }
     }
 
     private void showDateTimeAndActionsMenu(boolean shouldShow) {
@@ -365,7 +373,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         dropShadow.setColor(Color.rgb(86, 174, 72)); // Bisq2 green
         dropShadow.setBlurType(BlurType.GAUSSIAN);
 
-        Timeline timeline = new Timeline(
+        timeline = new Timeline(
                 new KeyFrame(Duration.seconds(10),
                         new KeyValue(dropShadow.radiusProperty(), dropShadow.getRadius()),
                         new KeyValue(dropShadow.spreadProperty(), dropShadow.getSpread())),
