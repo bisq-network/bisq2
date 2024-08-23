@@ -31,8 +31,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
     public static final String EXTENSION = ".protobuf";
-
-    private static final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("Persistence-io-pool");
+    private static final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("Persistence");
 
     @Getter
     private final Path storePath;
