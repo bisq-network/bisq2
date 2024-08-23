@@ -295,7 +295,7 @@ public class ChannelSidebar {
                                     userName.getStyleClass().add("error");
                                 }
 
-                                catHashImageView.setImage(CatHash.getImage(userProfile));
+                                catHashImageView.setImage(CatHash.getImage(userProfile, catHashImageView.getFitWidth()));
 
                                 tooltip.setText(item.getTooltipString());
                                 Tooltip.install(userHBox, tooltip);

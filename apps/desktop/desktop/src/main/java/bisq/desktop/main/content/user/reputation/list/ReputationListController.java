@@ -24,6 +24,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.RichTableView;
 import bisq.i18n.Res;
@@ -38,6 +39,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,6 +97,8 @@ public class ReputationListController implements Controller {
             @Override
             public void putAll(Map<? extends String, ? extends UserProfile> map) {
                 UIThread.run(() -> {
+                    CatHash.pruneOutdatedProfileIcons(new HashSet<>(map.values()));
+
                     List<ReputationListView.ListItem> listItems = map.values().stream()
                             .map(userProfile -> new ReputationListView.ListItem(userProfile,
                                     reputationService,

@@ -29,6 +29,7 @@ import java.util.Optional;
 
 @Getter
 public class CreateProfileModel implements Model {
+    static final double CAT_HASH_IMAGE_SIZE = 120;
     @Setter
     private Optional<KeyPair> keyPair = Optional.empty();
     @Setter

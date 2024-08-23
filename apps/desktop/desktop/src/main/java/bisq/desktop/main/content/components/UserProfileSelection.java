@@ -260,7 +260,7 @@ public class UserProfileSelection {
             userName.getStyleClass().add("bisq-text-19");
             catHashImageView = new ImageView();
             catHashImageView.setFitWidth(iconSize);
-            catHashImageView.setFitHeight(iconSize);
+            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
             userNameAndIcon = new HBox(10, userName, catHashImageView);
             userNameAndIcon.setLayoutY(8);
             userNameAndIcon.setAlignment(Pos.CENTER);
@@ -278,7 +278,8 @@ public class UserProfileSelection {
                             UserIdentity userIdentity = selected.userIdentity;
                             if (userIdentity != null) {
                                 userName.setText(comboBox.getConverter().toString(selected));
-                                catHashImageView.setImage(CatHash.getImage(userIdentity.getUserProfile()));
+                                catHashImageView.setImage(CatHash.getImage(userIdentity.getUserProfile(),
+                                        catHashImageView.getFitWidth()));
                             }
                         }
                     });
@@ -368,7 +369,7 @@ public class UserProfileSelection {
                 {
                     label.setMouseTransparent(true);
                     catHashImageView.setFitWidth(iconSize);
-                    catHashImageView.setFitHeight(iconSize);
+                    catHashImageView.setFitHeight(catHashImageView.getFitWidth());
                     setPrefHeight(50);
                     setPadding(new Insets(10, 0, 0, 10));
 
@@ -394,7 +395,8 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        catHashImageView.setImage(CatHash.getImage(item.userIdentity.getUserProfile()));
+                        catHashImageView.setImage(CatHash.getImage(item.userIdentity.getUserProfile(),
+                                catHashImageView.getFitWidth()));
                         label.setText(item.userIdentity.getUserName());
                         label.widthProperty().addListener(labelWidthListener);
 
@@ -476,7 +478,8 @@ public class UserProfileSelection {
                 if (newValue != null) {
                     UserIdentity userIdentity = newValue.userIdentity;
                     if (userIdentity != null) {
-                        catHashImageView.setImage(CatHash.getImage(userIdentity.getUserProfile()));
+                        catHashImageView.setImage(CatHash.getImage(userIdentity.getUserProfile(),
+                                catHashImageView.getFitWidth()));
                         label.setText(control.getConverter().toString(newValue));
                         buttonPane.layout();
                     }
@@ -495,7 +498,7 @@ public class UserProfileSelection {
         void setIconSize(int iconSize) {
             this.iconSize = iconSize;
             catHashImageView.setFitWidth(iconSize);
-            catHashImageView.setFitHeight(iconSize);
+            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
         }
 
         void setUseMaterialStyle(boolean useMaterialStyle) {

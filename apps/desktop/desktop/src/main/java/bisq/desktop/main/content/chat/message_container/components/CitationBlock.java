@@ -92,7 +92,7 @@ public class CitationBlock {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getUserName());
-                model.catHashImage.set(CatHash.getImage(author));
+                model.catHashImage.set(CatHash.getImage(author, Model.CAT_HASH_IMAGE_SIZE));
                 model.citation.set(chatMessage.getText());
                 model.visible.set(true);
             });
@@ -115,6 +115,7 @@ public class CitationBlock {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
+        static final double CAT_HASH_IMAGE_SIZE = 25;
         private final BooleanProperty visible = new SimpleBooleanProperty();
         private final StringProperty citation = new SimpleStringProperty("");
         private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
@@ -158,7 +159,7 @@ public class CitationBlock {
             userName.setStyle("-fx-text-fill: -bisq-mid-grey-30");
 
             catHashImageView = new ImageView();
-            catHashImageView.setFitWidth(25);
+            catHashImageView.setFitWidth(Model.CAT_HASH_IMAGE_SIZE);
             catHashImageView.setFitHeight(catHashImageView.getFitWidth());
             HBox userBox = new HBox(15, catHashImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));

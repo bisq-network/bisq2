@@ -17,13 +17,13 @@
 
 package bisq.desktop.common.utils;
 
+import bisq.common.file.FileUtils;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.image.*;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -32,7 +32,8 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.InputStream;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Objects;
 
 @Slf4j
@@ -86,7 +87,11 @@ public class ImageUtil {
         stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_16.png"));
     }
 
-    public static Image composeImage(String[] paths, int width, int height) {
+    public static Image composeImage(String[] paths, double size) {
+        return composeImage(paths, size, size);
+    }
+
+    public static Image composeImage(String[] paths, double width, double height) {
         Canvas canvas = new Canvas();
         canvas.setWidth(width);
         canvas.setHeight(height);
@@ -130,7 +135,10 @@ public class ImageUtil {
         return getOverlappedIconsPane(leftIconId, rightIconId, 20, "overlapped-icons");
     }
 
-    public static StackPane getOverlappedIconsPane(String leftIconId, String rightIconId, double size, String circleStyle) {
+    public static StackPane getOverlappedIconsPane(String leftIconId,
+                                                   String rightIconId,
+                                                   double size,
+                                                   String circleStyle) {
         StackPane pane = new StackPane();
         double paneWidth = size * 2 + 1;
         pane.setMinWidth(paneWidth);
@@ -153,5 +161,47 @@ public class ImageUtil {
         StackPane.setAlignment(rightIconWithRing, Pos.CENTER_RIGHT);
         pane.getChildren().addAll(leftIcon, rightIconWithRing);
         return pane;
+    }
+
+    public static Image readRawImage(File file) throws IOException {
+        byte[] rawData = FileUtils.read(file.getAbsolutePath());
+        return byteArrayToImage(rawData);
+    }
+
+    public static void writeRawImage(Image image, File file) throws IOException {
+        byte[] rawData = imageToByteArray(image);
+        FileUtils.write(file.getAbsolutePath(), rawData);
+    }
+
+    public static Image byteArrayToImage(byte[] data) {
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
+
+        int width = byteArrayInputStream.read();
+        int height = byteArrayInputStream.read();
+
+        byte[] pixels = new byte[width * height * 4];
+        byteArrayInputStream.read(pixels, 0, pixels.length);
+
+        WritableImage image = new WritableImage(width, height);
+        PixelWriter pixelWriter = image.getPixelWriter();
+        pixelWriter.setPixels(0, 0, width, height, PixelFormat.getByteBgraInstance(), pixels, 0, width * 4);
+
+        return image;
+    }
+
+    public static byte[] imageToByteArray(Image image) {
+        int width = (int) image.getWidth();
+        int height = (int) image.getHeight();
+        PixelReader pixelReader = image.getPixelReader();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byteArrayOutputStream.write(width);
+        byteArrayOutputStream.write(height);
+
+        ByteBuffer buffer = ByteBuffer.allocate(width * height * 4); // 4 bytes per pixel (ARGB)
+        WritablePixelFormat<ByteBuffer> format = WritablePixelFormat.getByteBgraInstance();
+        pixelReader.getPixels(0, 0, width, height, format, buffer, width * 4);
+
+        byteArrayOutputStream.write(buffer.array(), 0, buffer.array().length);
+        return byteArrayOutputStream.toByteArray();
     }
 }

@@ -130,7 +130,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.nickName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", nickName) : nickName);
             model.nym.set(userProfile.getNym());
             model.userProfileIdString.set(userProfile.getId());
-            model.setCatHashImage(CatHash.getImage(userProfile));
+            model.setCatHashImage(CatHash.getImage(userProfile, Model.CAT_HASH_IMAGE_SIZE));
 
             model.addressByTransport.set(userProfile.getAddressByTransportDisplayString(26));
 
@@ -212,6 +212,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
+        static final double CAT_HASH_IMAGE_SIZE = 100;
+
         private final ChatService chatService;
         private final UserProfile userProfile;
         private final ChatChannel<? extends ChatMessage> selectedChannel;
@@ -281,8 +283,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             }
 
             catHashImageView = new ImageView();
-            catHashImageView.setFitWidth(100);
-            catHashImageView.setFitHeight(100);
+            catHashImageView.setFitWidth(Model.CAT_HASH_IMAGE_SIZE);
+            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
 
             reputationScoreDisplay = new ReputationScoreDisplay();
             reputationScoreDisplay.setAlignment(Pos.CENTER);

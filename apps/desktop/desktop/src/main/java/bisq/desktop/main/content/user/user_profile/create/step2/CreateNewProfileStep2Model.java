@@ -28,6 +28,7 @@ import java.security.KeyPair;
 
 @Getter
 public class CreateNewProfileStep2Model implements Model {
+    static final double CAT_HASH_IMAGE_SIZE = 128;
     @Setter
     private KeyPair keyPair;
     @Setter

@@ -229,6 +229,11 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
+                    // The update at the second tick would trigger a updateItem on all items not only on the visible
+                    // ones, which cause a performance peak as creating lots of user profile icons is expensive
+                    // (about 13ms on a fast machine) and need to be done on the UI thread.
+                    // Therefor we deactivate the update of the last activity.
+                    userProfileIcon.setUseSecondTick(false);
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
                 } else {
@@ -263,11 +268,19 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    age.textProperty().bind(userProfileIcon.getFormattedAge());
+                    // The update at the second tick would trigger a updateItem on all items not only on the visible
+                    // ones, which cause a performance peak as creating lots of user profile icons is expensive
+                    // (about 13ms on a fast machine) and need to be done on the UI thread.
+                    // Therefor we deactivate the update of the last activity.
+                    // We don't use the binding the for above reasons.
+                    userProfileIcon.setUseSecondTick(false);
+                    //age.textProperty().bind(userProfileIcon.getFormattedAge());
+                    age.setText(userProfileIcon.getFormattedAge().get());
+
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
                 } else {
-                    age.textProperty().unbind();
+                    //age.textProperty().unbind();
                     userProfileIcon.dispose();
                     setGraphic(null);
                 }
@@ -352,13 +365,13 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             this.toggleGroup = toggleGroup;
 
             userName = userProfile.getUserName();
-            applyReputationScore(userProfile.getId());
             Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na"));
 
+            // applyReputationScore gets called from selectedToggleChanged
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
         }
 

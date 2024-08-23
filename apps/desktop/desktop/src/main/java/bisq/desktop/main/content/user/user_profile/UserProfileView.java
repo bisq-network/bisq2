@@ -78,7 +78,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         root.setPadding(new Insets(20, 40, 40, 40));
 
         catHashImageView = new ImageView();
-        catHashImageView.setFitWidth(125);
+        catHashImageView.setFitWidth(UserProfileModel.CAT_HASH_IMAGE_SIZE);
         catHashImageView.setFitHeight(catHashImageView.getFitWidth());
         root.getChildren().add(catHashImageView);
 

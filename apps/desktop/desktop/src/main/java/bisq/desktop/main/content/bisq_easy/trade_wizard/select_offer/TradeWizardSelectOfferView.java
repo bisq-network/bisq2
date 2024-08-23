@@ -251,7 +251,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         if (item != null && !empty) {
                             userName.setText(item.getMakerUserName());
                             item.getAuthorUserProfile().ifPresent(userProfile ->
-                                    catHashImageView.setImage(CatHash.getImage(userProfile)));
+                                    catHashImageView.setImage(CatHash.getImage(userProfile, catHashImageView.getFitWidth())));
                             setGraphic(hBox);
                         } else {
                             catHashImageView.setImage(null);

@@ -68,12 +68,12 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
 
         catHashImageView = new ImageView();
         catHashImageView.setCursor(Cursor.HAND);
-        int size = 120;
+        double size = CreateProfileModel.CAT_HASH_IMAGE_SIZE;
         catHashImageView.setFitWidth(size);
-        catHashImageView.setFitHeight(size);
+        catHashImageView.setFitHeight(catHashImageView.getFitWidth());
         Tooltip.install(catHashImageView, new BisqTooltip(Res.get("onboarding.createProfile.regenerate")));
 
-        int indicatorSize = size / 2;
+        double indicatorSize = size / 2;
         powProgressIndicator = new ProgressIndicator();
         powProgressIndicator.setMinSize(indicatorSize, indicatorSize);
         powProgressIndicator.setMaxSize(indicatorSize, indicatorSize);
