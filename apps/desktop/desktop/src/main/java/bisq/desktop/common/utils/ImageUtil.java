@@ -86,7 +86,11 @@ public class ImageUtil {
         stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_16.png"));
     }
 
-    public static Image composeImage(String[] paths, int width, int height) {
+    public static Image composeImage(String[] paths, double size) {
+        return composeImage(paths, size, size);
+    }
+
+    public static Image composeImage(String[] paths, double width, double height) {
         Canvas canvas = new Canvas();
         canvas.setWidth(width);
         canvas.setHeight(height);
@@ -130,7 +134,10 @@ public class ImageUtil {
         return getOverlappedIconsPane(leftIconId, rightIconId, 20, "overlapped-icons");
     }
 
-    public static StackPane getOverlappedIconsPane(String leftIconId, String rightIconId, double size, String circleStyle) {
+    public static StackPane getOverlappedIconsPane(String leftIconId,
+                                                   String rightIconId,
+                                                   double size,
+                                                   String circleStyle) {
         StackPane pane = new StackPane();
         double paneWidth = size * 2 + 1;
         pane.setMinWidth(paneWidth);

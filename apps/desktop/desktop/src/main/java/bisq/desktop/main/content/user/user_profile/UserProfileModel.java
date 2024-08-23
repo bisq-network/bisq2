@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class UserProfileModel implements Model {
+    static final double CAT_HASH_IMAGE_SIZE = 125;
     private final ObjectProperty<UserIdentity> selectedUserIdentity = new SimpleObjectProperty<>();
     private final ObservableList<UserIdentity> userIdentities = FXCollections.observableArrayList();
     private final StringProperty nickName = new SimpleStringProperty();

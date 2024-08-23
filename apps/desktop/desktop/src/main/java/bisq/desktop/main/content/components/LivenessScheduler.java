@@ -20,13 +20,12 @@ package bisq.desktop.main.content.components;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
-import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Getter
 public class LivenessScheduler {
     interface AgeConsumer {
         void setAge(Long age);
@@ -41,6 +40,8 @@ public class LivenessScheduler {
     private final AgeConsumer ageConsumer;
     private final FormattedAgeConsumer formattedAgeConsumer;
     private boolean disabled;
+    @Setter
+    private boolean useSecondTick = true;
 
     LivenessScheduler(AgeConsumer ageConsumer, FormattedAgeConsumer formattedAgeConsumer) {
         this.ageConsumer = ageConsumer;
@@ -60,20 +61,26 @@ public class LivenessScheduler {
         if (userProfile.equals(this.userProfile) && userProfile.getPublishDate() == this.userProfile.getPublishDate()) {
             return;
         }
-
+        this.userProfile = userProfile;
         dispose();
-        scheduler = UIScheduler.run(() -> {
-            long publishDate = userProfile.getPublishDate();
-            if (publishDate == 0) {
-                ageConsumer.setAge(null);
-                formattedAgeConsumer.setFormattedAge(null);
-            } else {
-                long age = Math.max(0, System.currentTimeMillis() - publishDate);
-                ageConsumer.setAge(age);
-                String formattedAge = TimeFormatter.formatAge(age);
-                formattedAgeConsumer.setFormattedAge(formattedAge);
-            }
-        }).periodically(0, 1, TimeUnit.SECONDS);
+
+        applyData();
+        if (useSecondTick) {
+            scheduler = UIScheduler.run(this::applyData).periodically(1, TimeUnit.SECONDS);
+        }
+    }
+
+    private void applyData() {
+        long publishDate = userProfile.getPublishDate();
+        if (publishDate == 0) {
+            ageConsumer.setAge(null);
+            formattedAgeConsumer.setFormattedAge(null);
+        } else {
+            long age = Math.max(0, System.currentTimeMillis() - publishDate);
+            ageConsumer.setAge(age);
+            String formattedAge = TimeFormatter.formatAge(age);
+            formattedAgeConsumer.setFormattedAge(formattedAge);
+        }
     }
 
     void dispose() {

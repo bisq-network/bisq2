@@ -92,7 +92,10 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         model.setProofOfWork(data.getProofOfWork());
         model.getNickName().set(data.getNickName());
         model.getNym().set(data.getNym());
-        model.getCatHashImage().set(CatHash.getImage(data.getPubKeyHash(), data.getProofOfWork().getSolution(), CURRENT_AVATARS_VERSION));
+        model.getCatHashImage().set(CatHash.getImage(data.getPubKeyHash(),
+                data.getProofOfWork().getSolution(),
+                CURRENT_AVATARS_VERSION,
+                CreateNewProfileStep2Model.CAT_HASH_IMAGE_SIZE));
     }
 
     @Override

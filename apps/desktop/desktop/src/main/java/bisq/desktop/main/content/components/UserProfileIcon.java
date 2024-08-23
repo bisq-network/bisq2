@@ -56,6 +56,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     private String versionInfo = "";
     private final LivenessScheduler livenessScheduler;
     private final ChangeListener<Scene> sceneChangeListener;
+    private double size;
 
     public UserProfileIcon() {
         this(DEFAULT_ICON_SIZE);
@@ -92,7 +93,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         }
 
         // Is cached in CatHash
-        catHashImageView.setImage(CatHash.getImage(userProfile));
+        catHashImageView.setImage(CatHash.getImage(userProfile, size));
 
         userProfileInfo = userProfile.getTooltipString();
         String version = userProfile.getApplicationVersion();
@@ -128,6 +129,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     }
 
     public void setSize(double size) {
+        this.size = size;
         livenessIndicator.setSize(size);
         catHashImageView.setFitWidth(size);
         catHashImageView.setFitHeight(size);
@@ -139,6 +141,10 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         double top = adjustment / 2;
         double left = adjustment / 2;
         StackPane.setMargin(livenessIndicator, new Insets(top, right, bottom, left));
+    }
+
+    public void setUseSecondTick(boolean useSecondTick) {
+        livenessScheduler.setUseSecondTick(useSecondTick);
     }
 
     public void hideLivenessIndicator() {

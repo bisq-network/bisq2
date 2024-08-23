@@ -64,8 +64,8 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nickName.setAlignment(Pos.TOP_CENTER);
 
         catHashImageView = new ImageView();
-        catHashImageView.setFitWidth(128);
-        catHashImageView.setFitHeight(128);
+        catHashImageView.setFitWidth(CreateNewProfileStep2Model.CAT_HASH_IMAGE_SIZE);
+        catHashImageView.setFitHeight(catHashImageView.getFitWidth());
 
         nym = new Label();
         nym.getStyleClass().addAll("bisq-text-7");

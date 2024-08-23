@@ -17,13 +17,11 @@
 
 package bisq.desktop.components.cathash;
 
+import bisq.common.encoding.Hex;
 import bisq.common.util.ByteArrayUtils;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.user.profile.UserProfile;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
@@ -32,43 +30,37 @@ import java.util.concurrent.ConcurrentHashMap;
 // Derived from https://github.com/neuhalje/android-robohash
 @Slf4j
 public class CatHash {
-    private static final int SIZE = 300;
-    private static final int MAX_CACHE_SIZE = 10000;
+    // Largest size in offerbook is 60, in reputationListView ist 40 and in chats 30.
+    // Larger images are used only rarely and are nto cached.
+    public static final double SIZE_OF_CACHED_ICONS = 60;
+
+    // This is a 120*120 image meaning 14 400 pixels. At 4 bytes each, that takes 57.6 KB in memory.
+    // With 5000 images we would get about 288 MB.
+    private static final int MAX_CACHE_SIZE = 5000;
     private static final ConcurrentHashMap<BigInteger, Image> CACHE = new ConcurrentHashMap<>();
 
-    public static Button getIconButton(UserProfile userProfile, double iconSize) {
-        return BisqIconButton.createIconButton(getImageView(userProfile, iconSize));
+    public static Image getImage(UserProfile userProfile, double size) {
+        return getImage(userProfile.getPubKeyHash(),
+                userProfile.getProofOfWork().getSolution(),
+                userProfile.getAvatarVersion(),
+                size);
     }
 
-    public static ImageView getImageView(UserProfile userProfile, double iconSize) {
-        ImageView imageView = new ImageView(getImage(userProfile));
-        imageView.setFitWidth(iconSize);
-        imageView.setFitHeight(iconSize);
-        return imageView;
-    }
-
-    public static Image getImage(UserProfile userProfile) {
-        return getImage(userProfile.getPubKeyHash(), userProfile.getProofOfWork().getSolution(),
-                userProfile.getAvatarVersion());
-    }
-
-    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, int avatarVersion) {
-        return getImage(pubKeyHash, powSolution, avatarVersion, true);
-    }
-
-    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, int avatarVersion, boolean useCache) {
+    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, int avatarVersion, double size) {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger input = new BigInteger(combined);
+        boolean useCache = size <= SIZE_OF_CACHED_ICONS;
         if (useCache && CACHE.containsKey(input)) {
             return CACHE.get(input);
         }
 
+        long ts = System.currentTimeMillis();
         BucketConfig bucketConfig = getBucketConfig(avatarVersion);
-        log.debug("Getting user avatar image using class {}", bucketConfig.getClass().getName());
-
         int[] buckets = BucketEncoder.encode(input, bucketConfig.getBucketSizes());
         String[] paths = BucketEncoder.toPaths(buckets, bucketConfig.getPathTemplates());
-        Image image = ImageUtil.composeImage(paths, SIZE, SIZE);
+        // For retina support we scale by 2
+        Image image = ImageUtil.composeImage(paths, 2 * SIZE_OF_CACHED_ICONS);
+        log.debug("Creating user profile icon for {} took {} ms.", Hex.encode(pubKeyHash), System.currentTimeMillis() - ts);
         if (useCache && CACHE.size() < MAX_CACHE_SIZE) {
             CACHE.put(input, image);
         }
@@ -80,12 +72,10 @@ public class CatHash {
     }
 
     private static BucketConfig getBucketConfig(int avatarVersion) {
-        BucketConfig bucketConfig;
         if (avatarVersion == 0) {
-            bucketConfig = new BucketConfigV0();
+            return new BucketConfigV0();
         } else {
             throw new IllegalArgumentException("Provided avatarVersion not supported. avatarVersion=" + avatarVersion);
         }
-        return bucketConfig;
     }
 }

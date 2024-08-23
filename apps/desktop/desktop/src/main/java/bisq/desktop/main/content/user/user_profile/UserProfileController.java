@@ -86,7 +86,7 @@ public class UserProfileController implements Controller {
                         model.getNickName().set(userProfile.getNickName());
                         model.getNymId().set(userProfile.getNym());
                         model.getProfileId().set(userProfile.getId());
-                        model.getCatHashImage().set(CatHash.getImage(userProfile));
+                        model.getCatHashImage().set(CatHash.getImage(userProfile, UserProfileModel.CAT_HASH_IMAGE_SIZE));
                         model.getStatement().set(userProfile.getStatement());
                         model.getTerms().set(userProfile.getTerms());
 
