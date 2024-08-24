@@ -62,13 +62,14 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private static final double HEADER_HEIGHT = BaseChatView.HEADER_HEIGHT;
     private static final double LIST_CELL_HEIGHT = BisqEasyOfferbookView.LIST_CELL_HEIGHT;
 
-    private final Label title, offerListByDirectionFilter;
+    private final Label title;
     private final BisqTableView<OfferbookListItem> tableView;
     private final BisqTooltip titleTooltip;
     private final HBox header;
     private final ImageView offerListWhiteIcon, offerListGreyIcon, offerListGreenIcon;
-    private final DropdownMenu directionFilterDropdownMenu;
-    private final DropdownMenuItem buyFromOffers, sellToOffers;
+    private final DropdownMenu offersDirectionFilterMenu, paymentsFilterMenu;
+    private DropdownMenuItem buyFromOffers, sellToOffers;
+    private Label offerListByDirectionFilter;
     private Subscription showOfferListExpandedPin, showBuyFromOffersPin, offerListTableViewSelectionPin;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
@@ -90,19 +91,13 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         header.setMaxHeight(HEADER_HEIGHT);
         header.getStyleClass().add("chat-header-title");
 
-        directionFilterDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        directionFilterDropdownMenu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
-        directionFilterDropdownMenu.setOpenToTheRight(true);
-        offerListByDirectionFilter = new Label();
-        directionFilterDropdownMenu.setLabel(offerListByDirectionFilter);
-        buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
-        sellToOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
-        directionFilterDropdownMenu.addMenuItems(buyFromOffers, sellToOffers);
+        offersDirectionFilterMenu = createAndGetOffersDirectionFilterMenu();
+        paymentsFilterMenu = createAndGetPaymentsFilterDropdownMenu();
 
-        HBox subheader = new HBox();
+        HBox subheader = new HBox(10);
         subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getStyleClass().add("offer-list-subheader");
-        subheader.getChildren().add(directionFilterDropdownMenu);
+        subheader.getChildren().addAll(offersDirectionFilterMenu, paymentsFilterMenu);
 
         tableView = new BisqTableView<>(model.getSortedOfferbookListItems());
         tableView.getStyleClass().add("offers-list");
@@ -122,8 +117,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             if (showOfferListExpanded != null) {
                 tableView.setVisible(showOfferListExpanded);
                 tableView.setManaged(showOfferListExpanded);
-                directionFilterDropdownMenu.setVisible(showOfferListExpanded);
-                directionFilterDropdownMenu.setManaged(showOfferListExpanded);
+                offersDirectionFilterMenu.setVisible(showOfferListExpanded);
+                offersDirectionFilterMenu.setManaged(showOfferListExpanded);
                 title.setGraphic(offerListGreyIcon);
                 if (showOfferListExpanded) {
                     header.setAlignment(Pos.CENTER_LEFT);
@@ -194,6 +189,26 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         sellToOffers.setOnAction(null);
 
         title.setTooltip(null);
+    }
+
+    private DropdownMenu createAndGetOffersDirectionFilterMenu() {
+        DropdownMenu menu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        menu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
+        menu.setOpenToTheRight(true);
+        offerListByDirectionFilter = new Label();
+        menu.setLabel(offerListByDirectionFilter);
+        buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
+        sellToOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
+        menu.addMenuItems(buyFromOffers, sellToOffers);
+        return menu;
+    }
+
+    private DropdownMenu createAndGetPaymentsFilterDropdownMenu() {
+        DropdownMenu menu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        menu.getStyleClass().add("dropdown-offer-list-payment-filter-menu");
+        menu.setOpenToTheRight(true);
+        menu.setLabel(new Label(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title")));
+        return menu;
     }
 
     private void configOffersTableView() {
