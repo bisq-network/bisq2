@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
-import bisq.desktop.common.Layout;
 import bisq.desktop.common.converters.Converters;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -28,6 +27,7 @@ import bisq.desktop.components.controls.Switch;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.settings.ChatNotificationType;
@@ -78,8 +78,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         root.setAlignment(Pos.TOP_LEFT);
 
         // Language
-        Label languageSelectionHeadline = new Label(Res.get("settings.preferences.language.headline"));
-        languageSelectionHeadline.getStyleClass().add("large-thin-headline");
+        Label languageSelectionHeadline = SettingsViewUtils.getHeadline(Res.get("settings.preferences.language.headline"));
 
         languageSelection = new AutoCompleteComboBox<>(model.getLanguageCodes(), Res.get("settings.preferences.language.select"));
         languageSelection.setPrefWidth(300);
@@ -97,8 +96,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         languageSelection.validateOnNoItemSelectedWithMessage(Res.get("settings.preferences.language.select.invalid"));
 
         // Supported languages
-        Label supportedLanguagesHeadline = new Label(Res.get("settings.preferences.language.supported.headline"));
-        supportedLanguagesHeadline.getStyleClass().add("large-thin-headline");
+        Label supportedLanguagesHeadline = SettingsViewUtils.getHeadline(Res.get("settings.preferences.language.supported.headline"));
 
         GridPane supportedLanguageGridPane = new GridPane();
         supportedLanguageGridPane.setVgap(5);
@@ -154,8 +152,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
 
         // Notifications
-        Label notificationsHeadline = new Label(Res.get("settings.preferences.notification.options"));
-        notificationsHeadline.getStyleClass().add("large-thin-headline");
+        Label notificationsHeadline = SettingsViewUtils.getHeadline(Res.get("settings.preferences.notification.options"));
 
         all = new RadioButton(Res.get("settings.preferences.notification.option.all"));
         all.setToggleGroup(notificationsToggleGroup);
@@ -181,8 +178,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
 
         // Display
-        Label displayHeadline = new Label(Res.get("settings.preferences.display.headline"));
-        displayHeadline.getStyleClass().add("large-thin-headline");
+        Label displayHeadline = SettingsViewUtils.getHeadline(Res.get("settings.preferences.display.headline"));
 
         useAnimations = new Switch(Res.get("settings.preferences.display.useAnimations"));
         preventStandbyMode = new Switch(Res.get("settings.preferences.display.preventStandbyMode"));
@@ -194,8 +190,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
 
         // Trade
-        Label tradeHeadline = new Label(Res.get("settings.preferences.trade.headline"));
-        tradeHeadline.getStyleClass().add("large-thin-headline");
+        Label tradeHeadline = SettingsViewUtils.getHeadline(Res.get("settings.preferences.trade.headline"));
 
         offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
         closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
@@ -240,12 +235,12 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         VBox.setMargin(notificationsVBox, insets);
         VBox.setMargin(displayVBox, insets);
         VBox.setMargin(tradeVBox, insets);
-        root.getChildren().addAll(languageSelectionHeadline, getLine(), languageSelection,
-                supportedLanguagesHeadline, getLine(), supportedLanguageGridPane,
-                notificationsHeadline, getLine(), notificationsVBox,
-                displayHeadline, getLine(), displayVBox,
-                tradeHeadline, getLine(), tradeVBox,
-                networkHeadline, getLine(), networkVBox);
+        root.getChildren().addAll(languageSelectionHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), languageSelection,
+                supportedLanguagesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), supportedLanguageGridPane,
+                notificationsHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), notificationsVBox,
+                displayHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), displayVBox,
+                tradeHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), tradeVBox,
+                networkHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), networkVBox);
 
         notificationsToggleListener = (observable, oldValue, newValue) -> controller.onSetChatNotificationType((ChatNotificationType) newValue.getUserData());
     }
@@ -353,12 +348,6 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         maxTradePriceDeviation.resetValidation();
         minRequiredReputationScore.resetValidation();
         difficultyAdjustmentFactor.resetValidation();
-    }
-
-    private Region getLine() {
-        Region line = Layout.hLine();
-        VBox.setMargin(line, new Insets(-42.5, 0, -30, 0));
-        return line;
     }
 
     private void applyChatNotificationType() {
