@@ -92,6 +92,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
         filterDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         filterDropdownMenu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
+        filterDropdownMenu.setOpenToTheRight(true);
         offerListByDirectionFilter = new Label();
         filterDropdownMenu.setLabel(offerListByDirectionFilter);
         buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
