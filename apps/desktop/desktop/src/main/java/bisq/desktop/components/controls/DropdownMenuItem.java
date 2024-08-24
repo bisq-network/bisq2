@@ -22,8 +22,8 @@ import javafx.event.Event;
 import javafx.scene.control.CustomMenuItem;
 import lombok.Getter;
 
+@Getter
 public class DropdownMenuItem extends CustomMenuItem {
-    @Getter
     private final BisqMenuItem bisqMenuItem;
 
     public DropdownMenuItem(String defaultIconId, String activeIconId, String text) {

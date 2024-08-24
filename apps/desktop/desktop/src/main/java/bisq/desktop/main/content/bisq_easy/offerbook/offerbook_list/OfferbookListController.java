@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
+import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
@@ -48,7 +49,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
     private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin;
-    private Subscription showBuyOffersFromModelPin;
+    private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin;
 
     public OfferbookListController(ServiceProvider serviceProvider,
                                    ChatMessageContainerController chatMessageContainerController) {
@@ -71,8 +72,13 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
         showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers ->
                 model.getFilteredOfferbookListItems().setPredicate(item ->
+                        // TODO: compare as well selectedMarkets if any
                         showBuyOffers == item.isBuyOffer()
                 ));
+        activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
+            String hint = count.intValue() == 0 ? Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title.all") : count.toString();
+            model.getPaymentFilterTitle().set(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title", hint));
+        });
     }
 
     @Override
@@ -82,6 +88,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         showBuyOffersPin.unbind();
         showOfferListExpandedSettingsPin.unbind();
         showBuyOffersFromModelPin.unsubscribe();
+        activeMarketPaymentsCountPin.unsubscribe();
         if (offerMessagesPin != null) {
             offerMessagesPin.unbind();
         }
@@ -95,6 +102,10 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
         model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount",
                 channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
+
+        model.getAvailableMarketPayments().setAll(FiatPaymentMethodUtil.getPaymentMethods(channel.getMarket().getQuoteCurrencyCode()));
+        model.getSelectedMarketPayments().clear();
+        model.getActiveMarketPaymentsCount().set(0);
 
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
