@@ -17,32 +17,23 @@
 
 package bisq.desktop.main.content.settings.network.transport;
 
-import bisq.common.observable.collection.ObservableSet;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.components.table.TableList;
 import bisq.network.common.TransportType;
-import bisq.network.p2p.ServiceNode;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class TransportTypeModel implements Model {
+public class TransportModel implements Model {
     private final TransportType transportType;
-    private final ServiceNode serviceNode;
     private final Node defaultNode;
-    private final ObservableSet<Connection> connections = new ObservableSet<>();
-    private final TableList<ConnectionListItem> connectionListItems = new TableList<>();
-    private final TableList<NodeListItem> nodeListItems = new TableList<>();
-    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty();
+    @Setter
+    private String myDefaultNodeAddress;
 
-    public TransportTypeModel(TransportType transportType, ServiceNode serviceNode, Node defaultNode) {
+    public TransportModel(TransportType transportType, Node defaultNode) {
         this.transportType = transportType;
-        this.serviceNode = serviceNode;
         this.defaultNode = defaultNode;
     }
 }

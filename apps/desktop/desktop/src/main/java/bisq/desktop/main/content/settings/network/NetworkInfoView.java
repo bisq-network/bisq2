@@ -17,16 +17,10 @@
 
 package bisq.desktop.main.content.settings.network;
 
-import bisq.common.application.ApplicationVersion;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqTooltip;
-import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,73 +29,30 @@ import java.util.Optional;
 
 @Slf4j
 public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> {
-    private final Accordion accordion;
-    private final HBox versionDistributionHBox;
-    private final BisqTooltip tooltip;
 
-    public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller,
+    public NetworkInfoView(NetworkInfoModel model,
+                           NetworkInfoController controller,
+                           VBox versionDistribution,
                            Optional<Node> clear,
                            Optional<Node> tor,
                            Optional<Node> i2p) {
-        super(new VBox(20), model, controller);
+        super(new VBox(50), model, controller);
 
-        root.setPadding(new Insets(-10, 40, 40, 40));
+        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
-        root.setFillWidth(true);
+        clear.ifPresent(childRoot -> root.getChildren().add(childRoot));
+        tor.ifPresent(childRoot -> root.getChildren().add(childRoot));
+        i2p.ifPresent(childRoot -> root.getChildren().add(childRoot));
 
-        versionDistributionHBox = new HBox(20);
-        Label myVersionAndCommitHash = new Label(Res.get("settings.network.myVersionAndCommitHash",
-                ApplicationVersion.getVersion().getVersionAsString(),
-                ApplicationVersion.getBuildCommitShortHash(),
-                ApplicationVersion.getTorVersionString()));
-
-        VBox versionsVBox = new VBox(15, versionDistributionHBox, myVersionAndCommitHash);
-
-        tooltip = new BisqTooltip();
-        Tooltip.install(versionsVBox, tooltip);
-
-        accordion = new Accordion();
-
-        accordion.getPanes().add(new TitledPane(Res.get("settings.network.versions.headline"), versionsVBox));
-
-        clear.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.clearNet"), childRoot)));
-        tor.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.tor"), childRoot)));
-        i2p.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.i2p"), childRoot)));
-
-        root.getChildren().add(accordion);
+        root.getChildren().addAll(versionDistribution);
     }
-
 
     @Override
     protected void onViewAttached() {
-        versionDistributionHBox.getChildren().clear();
-        model.getVersionDistribution().forEach(pair -> addVersion(pair.getFirst(), pair.getSecond()));
-        tooltip.setText(model.getVersionDistributionTooltip());
-
-        if (accordion.getPanes().size() > 1) {
-            UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(1).setExpanded(true));
-        } else if (!accordion.getPanes().isEmpty()) {
-            UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(0).setExpanded(true));
-        }
     }
 
     @Override
     protected void onViewDetached() {
-    }
-
-    private void addVersion(String version, double percentage) {
-        if (percentage == 1) {
-            // We want to avoid the check style shown when 100% is reached
-            percentage = 0.999999999999;
-        }
-        ProgressIndicator progressIndicator = new ProgressIndicator(percentage);
-        progressIndicator.setMinSize(100, 100);
-        Label label = new Label(Res.get("settings.network.versionDistribution.version", version, "67"));
-        VBox vBox = new VBox(10, label, progressIndicator);
-        vBox.setAlignment(Pos.CENTER);
-        vBox.getStyleClass().add("bisq-box-1");
-        vBox.setPadding(new Insets(10));
-        versionDistributionHBox.getChildren().add(vBox);
     }
 }
