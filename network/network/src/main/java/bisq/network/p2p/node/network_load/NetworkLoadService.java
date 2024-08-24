@@ -25,6 +25,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.StorageService;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,6 +51,12 @@ public class NetworkLoadService {
     private final Scheduler scheduler;
     private final Object lock = new Object();
 
+    @Getter
+    private long sentBytesOfLastHour, spentSendMessageTimeOfLastHour, numMessagesSentOfLastHour,
+            receivedBytesOfLastHour, deserializeTimeOfLastHour, numMessagesReceivedOfLastHour;
+    @Getter
+    private TreeMap<String, AtomicLong> numSentMessagesByMessageClassName, numReceivedMessagesByMessageClassName;
+
     public NetworkLoadService(ServiceNode serviceNode,
                               StorageService storageService,
                               NetworkLoadSnapshot networkLoadSnapshot) {
@@ -66,7 +73,7 @@ public class NetworkLoadService {
         scheduler.stop();
     }
 
-    private void updateNetworkLoad() {
+    public NetworkLoad updateNetworkLoad() {
         Map<String, ConnectionMetrics> currentConnections = getConnectionMetricsByConnectionId();
         Set<ConnectionMetrics> allConnectionMetrics;
         synchronized (lock) {
@@ -86,30 +93,31 @@ public class NetworkLoadService {
         double load = calculateLoad(allConnectionMetrics);
         NetworkLoad networkLoad = new NetworkLoad(load, difficultyAdjustmentFactor);
         networkLoadSnapshot.updateNetworkLoad(networkLoad);
+        return networkLoad;
     }
 
     private double calculateLoad(Set<ConnectionMetrics> allConnectionMetrics) {
         // For metrics of last hour we use metrics from the accumulated connections (closed of past hour).
-        long sentBytesOfLastHour = allConnectionMetrics.stream()
+        sentBytesOfLastHour = allConnectionMetrics.stream()
                 .mapToLong(ConnectionMetrics::getSentBytesOfLastHour)
                 .sum();
-        long spentSendMessageTimeOfLastHour = allConnectionMetrics.stream()
+        spentSendMessageTimeOfLastHour = allConnectionMetrics.stream()
                 .mapToLong(ConnectionMetrics::getSpentSendMessageTimeOfLastHour)
                 .sum();
-        long numMessagesSentOfLastHour = allConnectionMetrics.stream()
+        numMessagesSentOfLastHour = allConnectionMetrics.stream()
                 .mapToLong(ConnectionMetrics::getNumMessagesSentOfLastHour)
                 .sum();
-        long receivedBytesOfLastHour = allConnectionMetrics.stream()
+        receivedBytesOfLastHour = allConnectionMetrics.stream()
                 .mapToLong(ConnectionMetrics::getReceivedBytesOfLastHour)
                 .sum();
-        long deserializeTimeOfLastHour = allConnectionMetrics.stream()
+        deserializeTimeOfLastHour = allConnectionMetrics.stream()
                 .mapToLong(ConnectionMetrics::getDeserializeTimeOfLastHour)
                 .sum();
-        long numMessagesReceivedOfLastHour = allConnectionMetrics.stream()
+        numMessagesReceivedOfLastHour = allConnectionMetrics.stream()
                 .mapToLong(ConnectionMetrics::getNumMessagesReceivedOfLastHour)
                 .sum();
 
-        Map<String, AtomicLong> numSentMessagesByMessageClassName = new TreeMap<>();
+        numSentMessagesByMessageClassName = new TreeMap<>();
         allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getNumSentMessagesByMessageClassName)
                 .forEach(map -> {
@@ -119,13 +127,13 @@ public class NetworkLoadService {
                 });
         StringBuilder numSentMsgPerClassName = new StringBuilder();
         numSentMessagesByMessageClassName.forEach((key, value) -> {
-            numSentMsgPerClassName.append("\n - ");
+            numSentMsgPerClassName.append("\n    - ");
             numSentMsgPerClassName.append(key);
             numSentMsgPerClassName.append(": ");
             numSentMsgPerClassName.append(value.get());
         });
 
-        Map<String, AtomicLong> numReceivedMessagesByMessageClassName = new TreeMap<>();
+        numReceivedMessagesByMessageClassName = new TreeMap<>();
         allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getNumReceivedMessagesByMessageClassName)
                 .forEach(map -> {
@@ -135,7 +143,7 @@ public class NetworkLoadService {
                 });
         StringBuilder numRecMsgPerClassName = new StringBuilder();
         numReceivedMessagesByMessageClassName.forEach((key, value) -> {
-            numRecMsgPerClassName.append("\n - ");
+            numRecMsgPerClassName.append("\n    - ");
             numRecMsgPerClassName.append(key);
             numRecMsgPerClassName.append(": ");
             numRecMsgPerClassName.append(value.get());
@@ -146,16 +154,21 @@ public class NetworkLoadService {
 
         StringBuilder sb = new StringBuilder("\n\n////////////////////////////////////////////////////////////////////////////////////////////////////");
         sb.append("\nNetwork statistics").append(("\n////////////////////////////////////////////////////////////////////////////////////////////////////"))
+                .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
                 .append("\nNumber of Connections: ").append(numConnections)
+
+                .append("\nSent messages:")
+                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toMB(sentBytesOfLastHour)).append(" MB")
+                .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
                 .append("\nNumber of messages sent in last hour: ").append(numMessagesSentOfLastHour)
                 .append("\nNumber of messages sent by class name:").append(numSentMsgPerClassName)
+
+                .append("\nReceived messages:")
+                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toMB(receivedBytesOfLastHour)).append(" MB")
+                .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
                 .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
                 .append("\nNumber of messages received by class name:").append(numRecMsgPerClassName)
-                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toMB(sentBytesOfLastHour)).append(" MB")
-                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toMB(receivedBytesOfLastHour)).append(" MB")
-                .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
-                .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
-                .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
+
                 .append("\n////////////////////////////////////////////////////////////////////////////////////////////////////");
 
         double MAX_NUM_CON = 30; //todo use value from config
