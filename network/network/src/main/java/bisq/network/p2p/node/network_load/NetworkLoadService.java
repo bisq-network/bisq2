@@ -28,6 +28,7 @@ import bisq.network.p2p.services.data.storage.StorageService;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,6 +39,7 @@ import java.util.stream.Stream;
 public class NetworkLoadService {
     private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(15);
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.####");
 
     private final ServiceNode serviceNode;
     private final NetworkLoadSnapshot networkLoadSnapshot;
@@ -161,7 +163,7 @@ public class NetworkLoadService {
         double numConnectionsImpact = numConnections / MAX_NUM_CON * NUM_CON_WEIGHT;
 
         double MAX_SENT_BYTES = ByteUnit.MB.toBytes(20);
-        double SENT_BYTES_WEIGHT = 0.1;
+        double SENT_BYTES_WEIGHT = 0.2;
         double sentBytesImpact = sentBytesOfLastHour / MAX_SENT_BYTES * SENT_BYTES_WEIGHT;
 
         //todo incorrect
@@ -175,7 +177,7 @@ public class NetworkLoadService {
         double numMessagesSentImpact = numMessagesSentOfLastHour / MAX_NUM_MSG_SENT * NUM_MSG_SENT_WEIGHT;
 
         double MAX_REC_BYTES = ByteUnit.MB.toBytes(20);
-        double REC_BYTES_WEIGHT = 0.1;
+        double REC_BYTES_WEIGHT = 0.2;
         double receivedBytesImpact = receivedBytesOfLastHour / MAX_REC_BYTES * REC_BYTES_WEIGHT;
 
         double MAX_DESERIALIZE_TIME = TimeUnit.MINUTES.toMillis(1);
@@ -186,9 +188,9 @@ public class NetworkLoadService {
         double NUM_MSG_REC_WEIGHT = 0.1;
         double numMessagesReceivedImpact = numMessagesReceivedOfLastHour / MAX_NUM_MSG_REC * NUM_MSG_REC_WEIGHT;
 
-        // 6MB at Aug 2024 -> 0,018
+        // 6MB at Aug 2024 -> 0.018
         double MAX_DB_SIZE = ByteUnit.MB.toBytes(100);
-        double DB_WEIGHT = 0.3;
+        double DB_WEIGHT = 0.1;
         double networkDatabaseSizeImpact = networkDatabaseSize / MAX_DB_SIZE * DB_WEIGHT;
 
         double load = numConnectionsImpact +
@@ -202,17 +204,17 @@ public class NetworkLoadService {
         sb.append("\n\n----------------------------------------------------------------------------------------------------")
                 .append("\nCalculated network load:")
                 .append(("\n----------------------------------------------------------------------------------------------------"))
-                .append("\nnumConnectionsImpact=").append(numConnectionsImpact)
-                .append("\nsentBytesImpact=").append(sentBytesImpact)
-                .append("\nspentSendTimeImpact=").append(spentSendTimeImpact)
-                .append("\nnumMessagesSentImpact=").append(numMessagesSentImpact)
-                .append("\nreceivedBytesImpact=").append(receivedBytesImpact)
-                .append("\ndeserializeTimeImpact=").append(deserializeTimeImpact)
-                .append("\nnumMessagesReceivedImpact=").append(numMessagesReceivedImpact)
-                .append("\nnetworkDatabaseSizeImpact=").append(networkDatabaseSizeImpact)
-                .append("\nNetwork load=").append(load)
+                .append("\nnumConnectionsImpact=").append(DECIMAL_FORMAT.format(numConnectionsImpact))
+                .append("\nsentBytesImpact=").append(DECIMAL_FORMAT.format(sentBytesImpact))
+                .append("\nspentSendTimeImpact=").append(DECIMAL_FORMAT.format(spentSendTimeImpact))
+                .append("\nnumMessagesSentImpact=").append(DECIMAL_FORMAT.format(numMessagesSentImpact))
+                .append("\nreceivedBytesImpact=").append(DECIMAL_FORMAT.format(receivedBytesImpact))
+                .append("\ndeserializeTimeImpact=").append(DECIMAL_FORMAT.format(deserializeTimeImpact))
+                .append("\nnumMessagesReceivedImpact=").append(DECIMAL_FORMAT.format(numMessagesReceivedImpact))
+                .append("\nnetworkDatabaseSizeImpact=").append(DECIMAL_FORMAT.format(networkDatabaseSizeImpact))
+                .append("\nNetwork load=").append(DECIMAL_FORMAT.format(load))
                 .append("\n----------------------------------------------------------------------------------------------------\n");
-        log.info(sb.toString());
+        log.error(sb.toString());
 
         //TODO load calculation has some bugs at spentSendTimeImpact. Until fixed we limit load to 0.1 to avoid high difficulty
         return MathUtils.bounded(0, 0.1, load);
