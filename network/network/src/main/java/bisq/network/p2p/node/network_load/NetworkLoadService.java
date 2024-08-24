@@ -21,7 +21,7 @@ import bisq.common.data.ByteUnit;
 import bisq.common.proto.Proto;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.MathUtils;
-import bisq.network.p2p.ServiceNodesByTransport;
+import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataRequest;
@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,30 +41,27 @@ public class NetworkLoadService {
     private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(15);
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
 
-    private final ServiceNodesByTransport serviceNodesByTransport;
+    private final ServiceNode serviceNode;
     private final NetworkLoadSnapshot networkLoadSnapshot;
     private final StorageService storageService;
     @Setter
     private double difficultyAdjustmentFactor = NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT;
-    private Optional<Scheduler> updateNetworkLoadScheduler = Optional.empty();
+    private final Scheduler updateNetworkLoadScheduler;
 
-    public NetworkLoadService(ServiceNodesByTransport serviceNodesByTransport,
+    public NetworkLoadService(ServiceNode serviceNode,
                               StorageService storageService,
                               NetworkLoadSnapshot networkLoadSnapshot) {
-        this.serviceNodesByTransport = serviceNodesByTransport;
+        this.serviceNode = serviceNode;
         this.storageService = storageService;
         this.networkLoadSnapshot = networkLoadSnapshot;
-    }
 
-    public void initialize() {
-        log.info("initialize");
-        updateNetworkLoadScheduler = Optional.of(Scheduler.run(this::updateNetworkLoad)
+        updateNetworkLoadScheduler = Scheduler.run(this::updateNetworkLoad)
                 .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
-                .name("NetworkLoadExchangeService.updateNetworkLoadScheduler"));
+                .name("NetworkLoadExchangeService.updateNetworkLoadScheduler");
     }
 
     public void shutdown() {
-        updateNetworkLoadScheduler.ifPresent(Scheduler::stop);
+        updateNetworkLoadScheduler.stop();
     }
 
     private void updateNetworkLoad() {
@@ -79,14 +75,14 @@ public class NetworkLoadService {
     }
 
     private List<ConnectionMetrics> getAllConnectionMetrics() {
-        return serviceNodesByTransport.getAllServices().stream()
-                .flatMap(serviceNode -> serviceNode.getNodesById().getAllNodes().stream())
+        return serviceNode.getNodesById().getAllNodes().stream()
                 .flatMap(Node::getAllConnections)
                 .map(Connection::getConnectionMetrics)
                 .collect(Collectors.toList());
     }
 
-    private static double calculateLoad(List<ConnectionMetrics> allConnectionMetrics, List<? extends DataRequest> dataRequests) {
+    private static double calculateLoad(List<ConnectionMetrics> allConnectionMetrics,
+                                        List<? extends DataRequest> dataRequests) {
         long numConnections = allConnectionMetrics.size();
         long sentBytesOfLastHour = allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getSentBytesOfLastHour)
