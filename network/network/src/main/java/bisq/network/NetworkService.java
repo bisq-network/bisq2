@@ -37,7 +37,6 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
-import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
@@ -146,7 +145,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.of(new ResendMessageService(persistenceService, this, messageDeliveryStatusService.orElseThrow())) :
                 Optional.empty();
 
-        NetworkLoadSnapshot networkLoadSnapshot = new NetworkLoadSnapshot();
 
         seedAddressesByTransportFromConfig = config.getSeedAddressesByTransport();
         serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
@@ -163,8 +161,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 equihashProofOfWorkService,
                 dataService,
                 messageDeliveryStatusService,
-                resendMessageService,
-                networkLoadSnapshot);
+                resendMessageService);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
     }
 

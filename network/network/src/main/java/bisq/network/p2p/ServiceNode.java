@@ -159,8 +159,7 @@ public class ServiceNode implements Node.Listener {
                 Optional<ResendMessageService> resendMessageService,
                 AuthorizationService authorizationService,
                 Set<Address> seedNodeAddresses,
-                TransportType transportType,
-                NetworkLoadSnapshot networkLoadSnapshot) {
+                TransportType transportType) {
         this.config = config;
         this.nodeConfig = nodeConfig;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
@@ -171,7 +170,8 @@ public class ServiceNode implements Node.Listener {
         this.resendMessageService = resendMessageService;
         this.seedNodeAddresses = seedNodeAddresses;
         this.transportType = transportType;
-        this.networkLoadSnapshot = networkLoadSnapshot;
+
+        this.networkLoadSnapshot = new NetworkLoadSnapshot();
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);

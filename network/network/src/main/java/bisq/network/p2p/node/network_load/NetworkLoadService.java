@@ -46,7 +46,7 @@ public class NetworkLoadService {
     private final StorageService storageService;
     @Setter
     private double difficultyAdjustmentFactor = NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT;
-    private final Scheduler updateNetworkLoadScheduler;
+    private final Scheduler scheduler;
 
     public NetworkLoadService(ServiceNode serviceNode,
                               StorageService storageService,
@@ -55,13 +55,13 @@ public class NetworkLoadService {
         this.storageService = storageService;
         this.networkLoadSnapshot = networkLoadSnapshot;
 
-        updateNetworkLoadScheduler = Scheduler.run(this::updateNetworkLoad)
+        scheduler = Scheduler.run(this::updateNetworkLoad)
                 .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
-                .name("NetworkLoadExchangeService.updateNetworkLoadScheduler");
+                .name("NetworkLoadService.scheduler");
     }
 
     public void shutdown() {
-        updateNetworkLoadScheduler.stop();
+        scheduler.stop();
     }
 
     private void updateNetworkLoad() {
