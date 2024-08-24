@@ -81,12 +81,14 @@ public class Traffic {
                         model.setDataSent(DataSizeFormatter.formatMB(networkLoadService.getSentBytesOfLastHour()));
                         model.setTimeSpentSending(TimeFormatter.formatDuration(networkLoadService.getSpentSendMessageTimeOfLastHour()));
                         model.setNumMessagesSent(String.valueOf(networkLoadService.getNumMessagesSentOfLastHour()));
-                        model.setSentMessagesDetails(getNumMessagesByMessageClassName(networkLoadService.getNumSentMessagesByMessageClassName()));
+                        model.setSentMessagesDetails(getNumMessagesByClassName(networkLoadService.getNumSentMessagesByClassName()));
+                        model.setSentDistributedDataDetails(getNumMessagesByClassName(networkLoadService.getNumSentDistributedDataByClassName()));
 
                         model.setDataReceived(DataSizeFormatter.formatMB(networkLoadService.getReceivedBytesOfLastHour()));
                         model.setTimeSpentDeserializing(TimeFormatter.formatDuration(networkLoadService.getDeserializeTimeOfLastHour()));
                         model.setNumMessagesReceived(String.valueOf(networkLoadService.getNumMessagesReceivedOfLastHour()));
-                        model.setReceivedMessagesDetails(getNumMessagesByMessageClassName(networkLoadService.getNumReceivedMessagesByMessageClassName()));
+                        model.setReceivedMessagesDetails(getNumMessagesByClassName(networkLoadService.getNumReceivedMessagesByClassName()));
+                        model.setReceivedDistributedDataDetails(getNumMessagesByClassName(networkLoadService.getNumReceivedDistributedDataByClassName()));
                     });
         }
 
@@ -94,15 +96,15 @@ public class Traffic {
         public void onDeactivate() {
         }
 
-        private String getNumMessagesByMessageClassName(TreeMap<String, AtomicLong> map) {
-            StringBuilder numSentMsgPerClassName = new StringBuilder();
+        private String getNumMessagesByClassName(TreeMap<String, AtomicLong> map) {
+            StringBuilder stringBuilder = new StringBuilder();
             map.forEach((key, value) -> {
-                numSentMsgPerClassName.append("\n        - ");
-                numSentMsgPerClassName.append(key);
-                numSentMsgPerClassName.append(": ");
-                numSentMsgPerClassName.append(value.get());
+                stringBuilder.append("\n        - ");
+                stringBuilder.append(key);
+                stringBuilder.append(": ");
+                stringBuilder.append(value.get());
             });
-            return numSentMsgPerClassName.toString();
+            return stringBuilder.toString();
         }
     }
 
@@ -117,6 +119,8 @@ public class Traffic {
         private String numMessagesSent = Res.get("data.na");
         @Setter
         private String sentMessagesDetails = Res.get("data.na");
+        @Setter
+        private String sentDistributedDataDetails = Res.get("data.na");
 
         @Setter
         private String dataReceived = Res.get("data.na");
@@ -126,6 +130,8 @@ public class Traffic {
         private String numMessagesReceived = Res.get("data.na");
         @Setter
         private String receivedMessagesDetails = Res.get("data.na");
+        @Setter
+        private String receivedDistributedDataDetails = Res.get("data.na");
 
         private Model() {
         }
@@ -157,12 +163,14 @@ public class Traffic {
                     model.getDataSent(),
                     model.getTimeSpentSending(),
                     model.getNumMessagesSent(),
-                    model.getSentMessagesDetails()));
+                    model.getSentMessagesDetails(),
+                    model.getSentDistributedDataDetails()));
             receivedDetails.setText(Res.get("settings.network.transport.traffic.received.details",
                     model.getDataReceived(),
                     model.getTimeSpentDeserializing(),
                     model.getNumMessagesReceived(),
-                    model.getReceivedMessagesDetails()));
+                    model.getReceivedMessagesDetails(),
+                    model.getReceivedDistributedDataDetails()));
 
 
             sentDetails.minHeightProperty().bind(receivedDetails.heightProperty());
