@@ -42,6 +42,7 @@ class OfferbookListModel implements bisq.desktop.common.view.Model {
     private final StringProperty paymentFilterTitle = new SimpleStringProperty();
     private final ObservableList<FiatPaymentMethod> availableMarketPayments = FXCollections.observableArrayList();
     private final ObservableSet<FiatPaymentMethod> selectedMarketPayments = FXCollections.observableSet();
+    private final BooleanProperty isCustomPaymentsSelected = new SimpleBooleanProperty();
     private final IntegerProperty activeMarketPaymentsCount = new SimpleIntegerProperty();
 
     OfferbookListModel() {

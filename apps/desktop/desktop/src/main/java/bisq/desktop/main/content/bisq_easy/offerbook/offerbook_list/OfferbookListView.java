@@ -229,19 +229,22 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
     private void updateMarketPaymentFilters() {
         cleanUpPaymentsFilterMenu();
+
         model.getAvailableMarketPayments().forEach(payment -> {
-            PaymentMenuItem item = new PaymentMenuItem(payment);
+            PaymentMenuItem item = new PaymentMenuItem(payment.getDisplayString());
             item.setOnAction(e -> {
                 item.updateSelection(!item.isSelected());
-                if (item.isSelected()) {
-                    model.getSelectedMarketPayments().add(payment);
-                } else {
-                    model.getSelectedMarketPayments().remove(payment);
-                }
-                model.getActiveMarketPaymentsCount().set(model.getSelectedMarketPayments().size());
+                controller.toggleMethodFilter(payment, item.isSelected());
             });
             paymentsFilterMenu.addMenuItems(item);
         });
+
+        PaymentMenuItem customItem = new PaymentMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.customMethod"));
+        customItem.setOnAction(e -> {
+            customItem.updateSelection(!customItem.isSelected());
+            controller.toggleCustomMethodFilter(customItem.isSelected());
+        });
+        paymentsFilterMenu.addMenuItems(customItem);
     }
 
     private void cleanUpPaymentsFilterMenu() {
@@ -305,7 +308,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 .comparator(Comparator.comparing(OfferbookListItem::getBitcoinPaymentMethodsAsString))
                 .build());
     }
-
 
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getUserProfileCellFactory() {
@@ -467,9 +469,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private static final class PaymentMenuItem extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
-        PaymentMenuItem(FiatPaymentMethod fiatPaymentMethod) {
+        PaymentMenuItem(String displayName) {
             // TODO: Update code so that we can pass label instead of text
-            super("check-white", "check-white", fiatPaymentMethod.getDisplayString());
+            super("check-white", "check-white", displayName);
 
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);

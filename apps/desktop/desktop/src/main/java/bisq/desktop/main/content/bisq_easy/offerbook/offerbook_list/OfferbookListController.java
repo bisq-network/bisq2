@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -104,8 +105,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                 channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
 
         model.getAvailableMarketPayments().setAll(FiatPaymentMethodUtil.getPaymentMethods(channel.getMarket().getQuoteCurrencyCode()));
-        model.getSelectedMarketPayments().clear();
-        model.getActiveMarketPaymentsCount().set(0);
+        resetPaymentFilters();
 
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
@@ -168,5 +168,33 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
     void onSelectSellToFilter() {
         model.getShowBuyOffers().set(true);
+    }
+
+    void toggleMethodFilter(FiatPaymentMethod paymentMethod, boolean isSelected) {
+        if (isSelected) {
+            model.getSelectedMarketPayments().add(paymentMethod);
+        } else {
+            model.getSelectedMarketPayments().remove(paymentMethod);
+        }
+        updateActiveMarketPaymentsCount();
+    }
+
+    void toggleCustomMethodFilter(boolean isSelected) {
+        model.getIsCustomPaymentsSelected().set(isSelected);
+        updateActiveMarketPaymentsCount();
+    }
+
+    private void resetPaymentFilters() {
+        model.getSelectedMarketPayments().clear();
+        model.getIsCustomPaymentsSelected().set(false);
+        updateActiveMarketPaymentsCount();
+    }
+
+    private void updateActiveMarketPaymentsCount() {
+        int count = model.getSelectedMarketPayments().size();
+        if (model.getIsCustomPaymentsSelected().get()) {
+            ++count;
+        }
+        model.getActiveMarketPaymentsCount().set(count);
     }
 }
