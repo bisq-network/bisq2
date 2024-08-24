@@ -23,11 +23,13 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.ServiceNode;
+import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.presentation.formatters.PercentageFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -64,12 +66,18 @@ public class SystemLoad {
         private final Optional<TransportController> i2pController = Optional.empty();
         private final Optional<StorageService> storageService;
         private final Optional<NetworkLoadService> networkLoadService;
+        private final Optional<HashCashTokenService.Metrics> metrics;
 
         private Controller(ServiceProvider serviceProvider, TransportType transportType) {
             NetworkService networkService = serviceProvider.getNetworkService();
             storageService = networkService.getDataService().map(DataService::getStorageService);
             networkLoadService = networkService.findServiceNode(transportType)
                     .flatMap(ServiceNode::getNetworkLoadService);
+            metrics = networkService.getServiceNodesByTransport().getAuthorizationService().getSupportedServices().values().stream()
+                    .filter(authorizationTokenService -> authorizationTokenService instanceof HashCashTokenService)
+                    .map(authorizationTokenService -> (HashCashTokenService) authorizationTokenService)
+                    .map(HashCashTokenService::getMetrics)
+                    .findAny();
 
             model = new Model();
             view = new View(model, this);
@@ -86,7 +94,12 @@ public class SystemLoad {
                     .map(DataSizeFormatter::formatMB)
                     .orElse(Res.get("data.na")));
 
-            model.setPowTime("TODO");
+            metrics.ifPresent(metrics -> {
+                model.setAccumulatedPoWDuration(TimeFormatter.formatDuration(metrics.getAccumulatedPoWDuration()));
+                model.setAveragePowTimePerMessage(TimeFormatter.formatDuration(metrics.getAveragePowTimePerMessage()));
+                model.setAverageNetworkLoad(PercentageFormatter.formatToPercentWithSymbol(metrics.getAverageNetworkLoad()));
+                model.setNumPowTokensCreated(String.valueOf(metrics.getNumPowTokensCreated()));
+            });
         }
 
         @Override
@@ -100,9 +113,15 @@ public class SystemLoad {
         @Setter
         private String dbSize;
         @Setter
-        private String powTime;
-        @Setter
         private String networkLoad;
+        @Setter
+        private String accumulatedPoWDuration = Res.get("data.na");
+        @Setter
+        private String averagePowTimePerMessage = Res.get("data.na");
+        @Setter
+        private String averageNetworkLoad = Res.get("data.na");
+        @Setter
+        private String numPowTokensCreated = Res.get("data.na");
 
         private Model() {
         }
@@ -110,28 +129,45 @@ public class SystemLoad {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final Label details;
+        private final Label systemLoad;
+        private final Label pow;
 
         private View(Model model, Controller controller) {
             super(new VBox(10), model, controller);
 
-            Label headline = new Label(Res.get("settings.network.transport.systemLoad.headline"));
-            headline.getStyleClass().add("standard-table-headline");
+            Label powHeadline = new Label(Res.get("settings.network.transport.pow.headline"));
+            powHeadline.getStyleClass().add("standard-table-headline");
 
-            details = new Label();
-            details.getStyleClass().add("standard-table-view");
-            details.setPadding(new Insets(10));
-            details.setAlignment(Pos.TOP_LEFT);
-            details.setPrefWidth(4000);
+            pow = new Label();
+            pow.getStyleClass().add("standard-table-view");
+            pow.setPadding(new Insets(10));
+            pow.setAlignment(Pos.TOP_LEFT);
+            pow.setPrefWidth(4000);
 
-            VBox.setMargin(headline, new Insets(0, 0, 0, 10));
-            root.getChildren().addAll(headline, details);
+            Label systemLoadHeadline = new Label(Res.get("settings.network.transport.systemLoad.headline"));
+            systemLoadHeadline.getStyleClass().add("standard-table-headline");
+
+            systemLoad = new Label();
+            systemLoad.getStyleClass().add("standard-table-view");
+            systemLoad.setPadding(new Insets(10));
+            systemLoad.setAlignment(Pos.TOP_LEFT);
+            systemLoad.setPrefWidth(4000);
+
+            VBox.setMargin(powHeadline, new Insets(0, 0, 0, 10));
+            VBox.setMargin(systemLoadHeadline, new Insets(15, 0, 0, 10));
+            root.getChildren().addAll(powHeadline, pow, systemLoadHeadline, systemLoad);
         }
 
         @Override
         protected void onViewAttached() {
-            details.setText(Res.get("settings.network.transport.systemLoad.details",
-                    model.getDbSize(), model.getPowTime(), model.getNetworkLoad()));
+            pow.setText(Res.get("settings.network.transport.pow.details",
+                    model.getAccumulatedPoWDuration(),
+                    model.getAveragePowTimePerMessage(),
+                    model.getNumPowTokensCreated()));
+            systemLoad.setText(Res.get("settings.network.transport.systemLoad.details",
+                    model.getDbSize(),
+                    model.getNetworkLoad(),
+                    model.getAverageNetworkLoad()));
         }
 
         @Override

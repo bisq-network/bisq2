@@ -46,6 +46,7 @@ import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -68,6 +69,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class ServiceNodesByTransport {
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<TransportType> supportedTransportTypes;
+    @Getter
     private final AuthorizationService authorizationService;
 
     public ServiceNodesByTransport(Map<TransportType, TransportConfig> configByTransportType,
