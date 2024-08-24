@@ -71,14 +71,11 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     public void onActivate() {
         showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
         showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
-        showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers ->
-                model.getFilteredOfferbookListItems().setPredicate(item ->
-                        // TODO: compare as well selectedMarkets if any
-                        showBuyOffers == item.isBuyOffer()
-                ));
+        showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> applyPredicate());
         activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
             String hint = count.intValue() == 0 ? Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title.all") : count.toString();
             model.getPaymentFilterTitle().set(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title", hint));
+            applyPredicate();
         });
     }
 
@@ -196,5 +193,18 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             ++count;
         }
         model.getActiveMarketPaymentsCount().set(count);
+    }
+
+    private void applyPredicate() {
+        model.getFilteredOfferbookListItems().setPredicate(this::shouldShowListItem);
+    }
+
+    private boolean shouldShowListItem(OfferbookListItem item) {
+        boolean matchesDirection = model.getShowBuyOffers().get() == item.isBuyOffer();
+        boolean paymentFiltersApplied = model.getActiveMarketPaymentsCount().get() != 0;
+        boolean matchesPaymentFilters = paymentFiltersApplied && item.getFiatPaymentMethods().stream()
+                .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
+                                || model.getSelectedMarketPayments().contains(payment));
+        return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters);
     }
 }
