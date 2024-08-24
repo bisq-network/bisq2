@@ -62,18 +62,18 @@ public class ConnectionMetrics {
         lastUpdate.set(now);
 
         int ageInMinutes = getAgeInMinutes(now);
-        sentBytesPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        sentBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.getSerializedSize());
+        sentBytesPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .addAndGet(networkEnvelope.getSerializedSize());
 
-        numMessagesSentPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        numMessagesSentPerMinute.get(ageInMinutes).incrementAndGet();
+        numMessagesSentPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .incrementAndGet();
 
-        spentSendMessageTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        spentSendMessageTimePerMinute.get(ageInMinutes).getAndAdd(spentTime);
+        spentSendMessageTimePerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .addAndGet(spentTime);
 
         String name = ClassUtils.getClassName(networkEnvelope.getEnvelopePayloadMessage().getClass());
-        numSentMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
-        numSentMessagesByMessageClassName.get(name).getAndIncrement();
+        numSentMessagesByMessageClassName.computeIfAbsent(name, key -> new AtomicLong())
+                .incrementAndGet();
     }
 
     public void onReceived(NetworkEnvelope networkEnvelope, long deserializeTime) {
@@ -81,18 +81,18 @@ public class ConnectionMetrics {
         lastUpdate.set(now);
 
         int ageInMinutes = getAgeInMinutes(now);
-        receivedBytesPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        receivedBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.getSerializedSize());
+        receivedBytesPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .addAndGet(networkEnvelope.getSerializedSize());
 
-        numMessagesReceivedPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        numMessagesReceivedPerMinute.get(ageInMinutes).incrementAndGet();
+        numMessagesReceivedPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .incrementAndGet();
 
-        deserializeTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        deserializeTimePerMinute.get(ageInMinutes).getAndAdd(deserializeTime);
+        deserializeTimePerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .addAndGet(deserializeTime);
 
         String name = ClassUtils.getClassName(networkEnvelope.getEnvelopePayloadMessage().getClass());
-        numReceivedMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
-        numReceivedMessagesByMessageClassName.get(name).getAndIncrement();
+        numReceivedMessagesByMessageClassName.computeIfAbsent(name, key -> new AtomicLong())
+                .incrementAndGet();
     }
 
     public void addRtt(long value) {
