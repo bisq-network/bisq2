@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class NetworkLoadService {
     private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(15);
-    private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
+    private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(1);
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.####");
 
     private final ServiceNode serviceNode;
@@ -151,11 +151,11 @@ public class NetworkLoadService {
                 .append("\nNumber of messages sent by class name:").append(numSentMsgPerClassName)
                 .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
                 .append("\nNumber of messages received by class name:").append(numRecMsgPerClassName)
-                .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
                 .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toMB(sentBytesOfLastHour)).append(" MB")
                 .append("\nData received in last hour: ").append(ByteUnit.BYTE.toMB(receivedBytesOfLastHour)).append(" MB")
                 .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
                 .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
+                .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
                 .append("\n////////////////////////////////////////////////////////////////////////////////////////////////////");
 
         double MAX_NUM_CON = 30; //todo use value from config
@@ -166,11 +166,9 @@ public class NetworkLoadService {
         double SENT_BYTES_WEIGHT = 0.2;
         double sentBytesImpact = sentBytesOfLastHour / MAX_SENT_BYTES * SENT_BYTES_WEIGHT;
 
-        //todo incorrect
         double MAX_SPENT_SEND_TIME = TimeUnit.MINUTES.toMillis(1);
         double SPENT_SEND_TIME_WEIGHT = 0.1;
         double spentSendTimeImpact = spentSendMessageTimeOfLastHour / MAX_SPENT_SEND_TIME * SPENT_SEND_TIME_WEIGHT;
-        log.error("spentSendMessageTimeOfLastHour {}", spentSendMessageTimeOfLastHour);
 
         double MAX_NUM_MSG_SENT = 2000;
         double NUM_MSG_SENT_WEIGHT = 0.1;
@@ -214,11 +212,9 @@ public class NetworkLoadService {
                 .append("\nnetworkDatabaseSizeImpact=").append(DECIMAL_FORMAT.format(networkDatabaseSizeImpact))
                 .append("\nNetwork load=").append(DECIMAL_FORMAT.format(load))
                 .append("\n----------------------------------------------------------------------------------------------------\n");
-        log.error(sb.toString());
+        log.info(sb.toString());
 
-        //TODO load calculation has some bugs at spentSendTimeImpact. Until fixed we limit load to 0.1 to avoid high difficulty
-        return MathUtils.bounded(0, 0.1, load);
-        //return MathUtils.bounded(0, 1, load);
+        return MathUtils.bounded(0, 1, load);
     }
 
     private Set<? extends DataRequest> getAllDataRequests() {
