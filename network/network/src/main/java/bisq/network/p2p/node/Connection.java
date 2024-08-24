@@ -234,12 +234,12 @@ public abstract class Connection {
 
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
-            boolean sent = false;
+            boolean success = false;
             long ts = System.currentTimeMillis();
             synchronized (writeLock) {
                 try {
                     networkEnvelopeSocket.send(networkEnvelope);
-                    sent = true;
+                    success = true;
                 } catch (Exception exception) {
                     if (isRunning()) {
                         throw exception;
@@ -248,7 +248,7 @@ public abstract class Connection {
                     }
                 }
             }
-            if (sent) {
+            if (success) {
                 connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
                 if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}",

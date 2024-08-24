@@ -37,7 +37,6 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
-import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
@@ -111,8 +110,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     @Getter
     private final Optional<ResendMessageService> resendMessageService;
     @Getter
-    private final Optional<NetworkLoadService> networkLoadService;
-    @Getter
     private final Persistence<NetworkServiceStore> persistence;
     @Getter
     private final Map<TransportType, CompletableFuture<Node>> initializedDefaultNodeByTransport = new HashMap<>();
@@ -148,7 +145,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.of(new ResendMessageService(persistenceService, this, messageDeliveryStatusService.orElseThrow())) :
                 Optional.empty();
 
-        NetworkLoadSnapshot networkLoadSnapshot = new NetworkLoadSnapshot();
 
         seedAddressesByTransportFromConfig = config.getSeedAddressesByTransport();
         serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
@@ -165,18 +161,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 equihashProofOfWorkService,
                 dataService,
                 messageDeliveryStatusService,
-                resendMessageService,
-                networkLoadSnapshot);
-
-        boolean isNetworkLoadServiceSupported = isDataServiceSupported &&
-                supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
-                supportedServices.contains(ServiceNode.SupportedService.MONITOR);
-        networkLoadService = isNetworkLoadServiceSupported ?
-                Optional.of(new NetworkLoadService(serviceNodesByTransport,
-                        dataService.orElseThrow().getStorageService(),
-                        networkLoadSnapshot)) :
-                Optional.empty();
-
+                resendMessageService);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
     }
 
@@ -198,7 +183,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         log.info("initialize");
 
         NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
-        initializedDefaultNodeByTransport.putAll(serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId));
+        Map<TransportType, CompletableFuture<Node>> map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId);
+        initializedDefaultNodeByTransport.putAll(map);
 
         // We use anyOf to complete as soon as we got at least one transport node initialized
         return CompletableFutureUtils.anyOf(initializedDefaultNodeByTransport.values())
@@ -206,7 +192,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                     if (node != null) {
                         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
                         resendMessageService.ifPresent(ResendMessageService::initialize);
-                        networkLoadService.ifPresent(NetworkLoadService::initialize);
                         return true;
                     } else {
                         return false;
@@ -219,7 +204,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return CompletableFuture.supplyAsync(() -> {
                     messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
                     resendMessageService.ifPresent(ResendMessageService::shutdown);
-                    networkLoadService.ifPresent(NetworkLoadService::shutdown);
+                    // networkLoadService.ifPresent(NetworkLoadService::shutdown);
                     dataService.ifPresent(DataService::shutdown);
                     return true;
                 })
@@ -449,6 +434,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {
         return messageDeliveryStatusService.map(MessageDeliveryStatusService::getMessageDeliveryStatusByMessageId)
                 .orElse(new ObservableHashMap<>());
+    }
+
+    public Set<NetworkLoadService> getNetworkLoadServices() {
+        return serviceNodesByTransport.getAllServices().stream()
+                .flatMap(serviceNode -> serviceNode.getNetworkLoadService().stream())
+                .collect(Collectors.toSet());
     }
 
 

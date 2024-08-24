@@ -39,8 +39,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class NetworkLoadExchangeService implements Node.Listener {
     private static final long TIMEOUT_SEC = 120;
-    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(10);
-    private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
+    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toMillis(10);
+    private static final long INTERVAL = TimeUnit.MINUTES.toMillis(3);
     private static final long MAX_IDLE = TimeUnit.MINUTES.toMillis(5);
 
     private final Node node;
@@ -54,8 +54,8 @@ public class NetworkLoadExchangeService implements Node.Listener {
 
     public void initialize() {
         scheduler = Optional.of(Scheduler.run(this::requestFromAll)
-                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
-                .name("NetworkLoadExchangeService.scheduler"));
+                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.MILLISECONDS)
+                .name(getClass().getSimpleName()));
     }
 
     public void shutdown() {

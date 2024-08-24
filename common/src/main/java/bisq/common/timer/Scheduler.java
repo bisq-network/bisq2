@@ -49,7 +49,7 @@ public class Scheduler implements TaskScheduler {
     }
 
     public Scheduler name(String threadName) {
-        this.threadName = Optional.of(StringUtils.truncate(threadName, 10));
+        this.threadName = Optional.of("Scheduler-" + StringUtils.truncate(threadName, 30));
         return this;
     }
 

@@ -214,11 +214,11 @@ public class BisqEasyService implements Service {
     }
 
     private void applyDifficultyAdjustmentFactor() {
-        networkService.getNetworkLoadService().ifPresent(service -> {
+        networkService.getNetworkLoadServices().forEach(networkLoadService -> {
             if (settingsService.getIgnoreDiffAdjustmentFromSecManager().get()) {
-                service.setDifficultyAdjustmentFactor(settingsService.getDifficultyAdjustmentFactor().get());
+                networkLoadService.setDifficultyAdjustmentFactor(settingsService.getDifficultyAdjustmentFactor().get());
             } else {
-                service.setDifficultyAdjustmentFactor(bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().get());
+                networkLoadService.setDifficultyAdjustmentFactor(bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().get());
             }
         });
     }

@@ -73,7 +73,7 @@ public class KeepAliveService implements Node.Listener {
     public void initialize() {
         scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired)
                 .periodically(config.getInterval())
-                .name("KeepAliveService.scheduler"));
+                .name(getClass().getSimpleName()));
     }
 
     public void shutdown() {

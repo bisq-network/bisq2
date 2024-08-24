@@ -330,6 +330,12 @@ public class StorageService {
         return getStoresByStoreType(ALL).flatMap(store -> new HashMap<>(store.getPersistableStore().getMap()).entrySet().stream());
     }
 
+    public long getNetworkDatabaseSize() {
+        return getStoresByStoreType(ALL)
+                .mapToLong(store -> store.getPersistableStore().getSerializedSize())
+                .sum();
+    }
+
     public Stream<MailboxData> getMailboxData() {
         return mailboxStores.values().stream().flatMap(this::getMailboxData);
     }
