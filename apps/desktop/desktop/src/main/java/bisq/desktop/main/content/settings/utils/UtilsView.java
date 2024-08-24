@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.settings.utils;
 
-import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.DirectoryPathValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,7 +29,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,8 +48,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label backupHeadline = new Label(Res.get("settings.utils.backup.headline"));
-        backupHeadline.getStyleClass().add("large-thin-headline");
+        Label backupHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.backup.headline"));
         backupLocation = new MaterialTextField(Res.get("settings.utils.backup.location"),
                 Res.get("settings.utils.backup.location.prompt"),
                 Res.get("settings.utils.backup.location.help"));
@@ -60,29 +58,25 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         HBox backupButtons = new HBox(10, setBackupLocationButton, backupButton);
         VBox backupBox = new VBox(20, backupLocation, backupButtons);
 
-        Label localDataHeadline = new Label(Res.get("settings.utils.localData.headline"));
-        localDataHeadline.getStyleClass().add("large-thin-headline");
+        Label localDataHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.localData.headline"));
         openDataDirButton = new Hyperlink(Res.get("settings.utils.localData.openDataDir"));
         openLogFileButton = new Hyperlink(Res.get("settings.utils.localData.openLogFile"));
         openTorLogFileButton = new Hyperlink(Res.get("settings.utils.localData.openTorLogFile"));
 
         VBox localDataBox = new VBox(5, openDataDirButton, openLogFileButton, openTorLogFileButton);
 
-        Label rulesHeadline = new Label(Res.get("settings.utils.rules.headline"));
-        rulesHeadline.getStyleClass().add("large-thin-headline");
+        Label rulesHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.rules.headline"));
         chatRules = new Hyperlink(Res.get("settings.utils.rules.chatRules"));
         tradeGuide = new Hyperlink(Res.get("settings.utils.rules.tradeGuide"));
         walletGuide = new Hyperlink(Res.get("settings.utils.rules.walletGuide"));
         VBox rulesAndGuidesBox = new VBox(5, chatRules, tradeGuide, walletGuide);
 
-        Label legalHeadline = new Label(Res.get("settings.utils.legal.headline"));
-        legalHeadline.getStyleClass().add("large-thin-headline");
+        Label legalHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.legal.headline"));
         tac = new Hyperlink(Res.get("settings.utils.legal.tac"));
         license = new Hyperlink(Res.get("settings.utils.legal.license"));
         VBox legalBox = new VBox(5, tac, license);
 
-        Label resourcesHeadline = new Label(Res.get("settings.utils.resources.headline"));
-        resourcesHeadline.getStyleClass().add("large-thin-headline");
+        Label resourcesHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.resources.headline"));
         webpage = new Hyperlink(Res.get("settings.utils.resources.webpage"));
         dao = new Hyperlink(Res.get("settings.utils.resources.dao"));
         sourceCode = new Hyperlink(Res.get("settings.utils.resources.sourceCode"));
@@ -97,11 +91,11 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         VBox.setMargin(rulesAndGuidesBox, value);
         VBox.setMargin(legalBox, value);
         VBox.setMargin(resourcesBox, value);
-        root.getChildren().addAll(backupHeadline, getLine(), backupBox,
-                localDataHeadline, getLine(), localDataBox,
-                rulesHeadline, getLine(), rulesAndGuidesBox,
-                legalHeadline, getLine(), legalBox,
-                resourcesHeadline, getLine(), resourcesBox);
+        root.getChildren().addAll(backupHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), backupBox,
+                localDataHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), localDataBox,
+                rulesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), rulesAndGuidesBox,
+                legalHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), legalBox,
+                resourcesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), resourcesBox);
     }
 
     @Override
@@ -160,11 +154,5 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         sourceCode.setOnAction(null);
         community.setOnAction(null);
         contribute.setOnAction(null);
-    }
-
-    private Region getLine() {
-        Region line = Layout.hLine();
-        VBox.setMargin(line, new Insets(-42.5, 0, -30, 0));
-        return line;
     }
 }

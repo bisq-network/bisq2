@@ -15,24 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.network;
+package bisq.desktop.main.content.settings.network.version;
 
+import bisq.common.data.Pair;
 import bisq.desktop.common.view.Model;
-import bisq.network.common.TransportType;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Getter
-public class NetworkInfoModel implements Model {
-    private final Set<TransportType> supportedTransportTypes;
+public class VersionDistributionModel implements Model {
+    private final List<Pair<String, Double>> versionDistribution = new ArrayList<>();
+    @Setter
+    private String versionDistributionTooltip;
 
-    public NetworkInfoModel(Set<TransportType> supportedTransportTypes,
-                            boolean clearNetDisabled,
-                            boolean torDisabled,
-                            boolean i2pDisabled) {
-        this.supportedTransportTypes = supportedTransportTypes;
+    public VersionDistributionModel() {
     }
 }

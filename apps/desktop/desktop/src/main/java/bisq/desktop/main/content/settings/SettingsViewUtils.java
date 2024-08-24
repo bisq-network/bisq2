@@ -15,24 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.network;
+package bisq.desktop.main.content.settings;
 
-import bisq.desktop.common.view.Model;
-import bisq.network.common.TransportType;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.Layout;
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
-import java.util.Set;
+public class SettingsViewUtils {
+    public static Label getHeadline(String text) {
+        Label headline = new Label(text);
+        headline.getStyleClass().add("large-thin-headline");
+        return headline;
+    }
 
-@Slf4j
-@Getter
-public class NetworkInfoModel implements Model {
-    private final Set<TransportType> supportedTransportTypes;
-
-    public NetworkInfoModel(Set<TransportType> supportedTransportTypes,
-                            boolean clearNetDisabled,
-                            boolean torDisabled,
-                            boolean i2pDisabled) {
-        this.supportedTransportTypes = supportedTransportTypes;
+    public static Region getLineAfterHeadline(double spacing) {
+        Region line = Layout.hLine();
+        VBox.setMargin(line, new Insets(7.5 - spacing, 0, 20 - spacing, 0));
+        return line;
     }
 }

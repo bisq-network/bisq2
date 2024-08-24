@@ -34,11 +34,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     // Keep track of message counter per connection to avoid reuse of pow
     private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
     @Getter
-    private double accumulatedPoWDuration;
-    @Getter
-    private final List<Long> aggregatedPoWDuration = new CopyOnWriteArrayList<>();
-    @Getter
-    private final List<Double> aggregatedNetworkLoadValues = new CopyOnWriteArrayList<>();
+    private final Metrics metrics = new Metrics();
 
     public HashCashTokenService(HashCashProofOfWorkService proofOfWorkService) {
         this.proofOfWorkService = proofOfWorkService;
@@ -54,30 +50,10 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         byte[] challenge = getChallenge(peerAddress, messageCounter);
         byte[] payload = getPayload(message);
         ProofOfWork proofOfWork = proofOfWorkService.mint(payload, challenge, difficulty);
-        HashCashToken token = new HashCashToken(proofOfWork, messageCounter);
         long duration = System.currentTimeMillis() - ts;
-        accumulatedPoWDuration += duration;
-        aggregatedPoWDuration.add(duration);
-        aggregatedNetworkLoadValues.add(networkLoad.getLoad());
-        int size = aggregatedPoWDuration.size();
-        if (size % 100 == 0) {
-            double averageTimePerMessage = MathUtils.roundDouble(aggregatedPoWDuration.stream().mapToLong(e -> e).average().orElse(0D), 2);
-            double accDuration = MathUtils.roundDouble(accumulatedPoWDuration / 1000, 2);
-            double averageLoad = MathUtils.roundDouble(aggregatedNetworkLoadValues.stream().mapToDouble(e -> e).average().orElse(0D), 4);
-            if (averageTimePerMessage > 1000) {
-                log.warn("Average time/message used for PoW is very high");
-            } else if (averageTimePerMessage > 300) {
-                log.warn("Average time/message used for PoW is higher as expected");
-            }
-            log.info("Total time used for PoW: {} sec; Average time/message used for PoW: {} ms; Average network load value: {}; Number of messages: {}",
-                    accDuration, averageTimePerMessage, averageLoad, size
-            );
-            if (aggregatedPoWDuration.size() > 100_000) {
-                log.warn("aggregatedPoWDuration is getting too large. We clear the list.");
-                aggregatedPoWDuration.clear();
-                aggregatedNetworkLoadValues.clear();
-            }
-        }
+        metrics.update(duration, networkLoad.getLoad());
+
+        HashCashToken token = new HashCashToken(proofOfWork, messageCounter);
         log.debug("Create HashCashToken for {} took {} ms" +
                         "\ncostFactor={}" +
                         "\ngetPayload(message)={}" +
@@ -248,5 +224,49 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         double load = MathUtils.bounded(MIN_LOAD, 1, networkLoad.getLoad());
         double difficulty = TARGET_DIFFICULTY * messageCostFactor * load * networkLoad.getDifficultyAdjustmentFactor();
         return MathUtils.bounded(MIN_DIFFICULTY, MAX_DIFFICULTY, difficulty);
+    }
+
+    @Slf4j
+
+    public static class Metrics {
+        private final List<Long> aggregatedPoWDuration = new CopyOnWriteArrayList<>();
+        private final List<Double> aggregatedNetworkLoadValues = new CopyOnWriteArrayList<>();
+        @Getter
+        private long accumulatedPoWDuration;
+        @Getter
+        private int numPowTokensCreated;
+        @Getter
+        private long averagePowTimePerMessage;
+        @Getter
+        private double averageNetworkLoad;
+
+        void update(long duration, double networkLoad) {
+            accumulatedPoWDuration += duration;
+            aggregatedPoWDuration.add(duration);
+            aggregatedNetworkLoadValues.add(networkLoad);
+            numPowTokensCreated = aggregatedPoWDuration.size();
+            if (numPowTokensCreated % 10 == 0) {
+                averagePowTimePerMessage = MathUtils.roundDoubleToLong(aggregatedPoWDuration.stream().mapToLong(e -> e).average().orElse(0D));
+                averageNetworkLoad = MathUtils.roundDouble(aggregatedNetworkLoadValues.stream().mapToDouble(e -> e).average().orElse(0D), 4);
+
+                if (numPowTokensCreated % 100 == 0) {
+                    if (averagePowTimePerMessage > 1000) {
+                        log.warn("Average time/message used for PoW is very high");
+                    } else if (averagePowTimePerMessage > 300) {
+                        log.warn("Average time/message used for PoW is higher as expected");
+                    }
+                    log.info("Total time used for PoW: {} sec; Average time/message used for PoW: {} ms; Average network load value: {}; Number of messages: {}",
+                            MathUtils.roundDoubleToLong(accumulatedPoWDuration / 1000d),
+                            averagePowTimePerMessage,
+                            averageNetworkLoad,
+                            numPowTokensCreated);
+                    if (aggregatedPoWDuration.size() > 100_000) {
+                        log.warn("aggregatedPoWDuration is getting too large. We clear the list.");
+                        aggregatedPoWDuration.clear();
+                        aggregatedNetworkLoadValues.clear();
+                    }
+                }
+            }
+        }
     }
 }

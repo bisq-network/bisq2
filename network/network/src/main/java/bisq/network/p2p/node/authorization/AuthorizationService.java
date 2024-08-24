@@ -49,6 +49,7 @@ public class AuthorizationService {
     }
 
     private final List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes; // Lower list index means higher preference
+    @Getter
     private final Map<AuthorizationTokenType, AuthorizationTokenService<? extends AuthorizationToken>> supportedServices = new HashMap<>();
 
     public AuthorizationService(Config config,
