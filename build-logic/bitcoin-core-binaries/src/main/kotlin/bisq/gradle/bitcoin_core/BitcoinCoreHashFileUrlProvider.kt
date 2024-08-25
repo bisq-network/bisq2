@@ -1,8 +1,8 @@
 package bisq.gradle.bitcoin_core
 
-import bisq.gradle.tasks.PerOsUrlProvider
+import bisq.gradle.tasks.PerPlatformUrlProvider
 
-class BitcoinCoreHashFileUrlProvider(private val version: String) : PerOsUrlProvider {
+class BitcoinCoreHashFileUrlProvider(private val version: String) : PerPlatformUrlProvider {
     override val urlPrefix: String
         get() = "https://bitcoincore.org/bin/bitcoin-core-$version/SHA256SUMS"
 

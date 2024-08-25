@@ -22,7 +22,7 @@ class BisqElectrumPlugin : Plugin<Project> {
             binaryName = "Electrum",
             version = extension.version,
 
-            perOsUrlProvider = { version -> ElectrumBinaryUrlProvider(version) },
+            perPlatformUrlProvider = { version -> ElectrumBinaryUrlProvider(version) },
             downloadDirectory = DOWNLOADS_DIR,
 
             pgpFingerprintToKeyUrlMap = mapOf(

@@ -22,7 +22,7 @@ class BitcoinCorePlugin : Plugin<Project> {
             binaryName = "BitcoinCoreSha256Sums",
             version = extension.version,
 
-            perOsUrlProvider = { version -> BitcoinCoreHashFileUrlProvider(version) },
+            perPlatformUrlProvider = { version -> BitcoinCoreHashFileUrlProvider(version) },
             downloadDirectory = DOWNLOADS_DIR,
 
             pgpFingerprintToKeyUrlMap = mapOf(

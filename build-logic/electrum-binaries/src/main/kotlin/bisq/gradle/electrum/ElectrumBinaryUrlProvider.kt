@@ -1,8 +1,8 @@
 package bisq.gradle.electrum
 
-import bisq.gradle.tasks.PerOsUrlProvider
+import bisq.gradle.tasks.PerPlatformUrlProvider
 
-class ElectrumBinaryUrlProvider(private val version: String) : PerOsUrlProvider {
+class ElectrumBinaryUrlProvider(private val version: String) : PerPlatformUrlProvider {
     override val urlPrefix: String
         get() = "https://download.electrum.org/$version/"
 

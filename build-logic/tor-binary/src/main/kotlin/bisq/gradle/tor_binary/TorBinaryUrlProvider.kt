@@ -1,8 +1,8 @@
 package bisq.gradle.tor_binary
 
-import bisq.gradle.tasks.PerOsUrlProvider
+import bisq.gradle.tasks.PerPlatformUrlProvider
 
-class TorBinaryUrlProvider(private val version: String) : PerOsUrlProvider {
+class TorBinaryUrlProvider(private val version: String) : PerPlatformUrlProvider {
     override val urlPrefix: String
         get() = "https://archive.torproject.org/tor-package-archive/torbrowser/$version/"
 

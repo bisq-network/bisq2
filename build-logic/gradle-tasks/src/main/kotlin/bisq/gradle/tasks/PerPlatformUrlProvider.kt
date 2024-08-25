@@ -3,7 +3,7 @@ package bisq.gradle.tasks
 import bisq.gradle.common.Platform.*
 import bisq.gradle.common.getPlatform
 
-interface PerOsUrlProvider {
+interface PerPlatformUrlProvider {
     val urlPrefix: String
 
     val LINUX_X86_64_URL: String

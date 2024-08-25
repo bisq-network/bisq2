@@ -19,7 +19,7 @@ class BisqTorBinaryPlugin : Plugin<Project> {
             binaryName = "Tor",
             version = extension.version,
 
-            perOsUrlProvider = { version -> TorBinaryUrlProvider(version) },
+            perPlatformUrlProvider = { version -> TorBinaryUrlProvider(version) },
             downloadDirectory = DOWNLOADS_DIR,
 
             pgpFingerprintToKeyUrlMap = mapOf(
