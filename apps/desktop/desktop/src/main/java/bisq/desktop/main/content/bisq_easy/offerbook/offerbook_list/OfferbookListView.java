@@ -50,6 +50,7 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
@@ -245,10 +246,10 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         cleanUpPaymentsFilterMenu();
 
         model.getAvailableMarketPayments().forEach(payment -> {
-            ImageView icon = ImageUtil.getImageViewById(payment.getName());
-            Label label = new Label(payment.getDisplayString(), icon);
-            label.setGraphicTextGap(5);
-            PaymentMenuItem item = new PaymentMenuItem(label);
+            ImageView paymentIcon = ImageUtil.getImageViewById(payment.getName());
+            Label paymentLabel = new Label(payment.getDisplayString(), paymentIcon);
+            paymentLabel.setGraphicTextGap(10);
+            PaymentMenuItem item = new PaymentMenuItem(paymentLabel);
             item.setOnAction(e -> {
                 item.updateSelection(!item.isSelected());
                 controller.toggleMethodFilter(payment, item.isSelected());
@@ -256,7 +257,10 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             paymentsFilterMenu.addMenuItems(item);
         });
 
-        Label customPaymentLabel = new Label(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.customMethod"));
+        StackPane customPaymentIcon = BisqEasyViewUtils.getCustomPaymentMethodIcon("C");
+        Label customPaymentLabel = new Label(
+                Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.customPayments"), customPaymentIcon);
+        customPaymentLabel.setGraphicTextGap(10);
         PaymentMenuItem customItem = new PaymentMenuItem(customPaymentLabel);
         customItem.setOnAction(e -> {
             customItem.updateSelection(!customItem.isSelected());

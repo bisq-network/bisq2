@@ -56,6 +56,7 @@ public class DropdownMenu extends HBox {
     private boolean openUpwards = false;
     @Setter
     private boolean openToTheRight = false;
+    private Double prefWidth = null;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -151,6 +152,10 @@ public class DropdownMenu extends HBox {
             getStyleClass().add("dropdown-menu-active");
             updateIcon(activeIcon);
             isMenuShowing.setValue(true);
+            if (prefWidth != null && !contextMenu.getItems().isEmpty()
+                    && contextMenu.getItems().getFirst() instanceof DropdownMenuItem) {
+                updateMenuItemWidth();
+            }
         });
         contextMenu.setOnHidden(e -> {
             getStyleClass().remove("dropdown-menu-active");
@@ -163,17 +168,22 @@ public class DropdownMenu extends HBox {
                 isFirstRun = true;
                 // Once the contextMenu has calculated the width on the first render time we update the items
                 // so that they all have the same size.
-                for (MenuItem item : contextMenu.getItems()) {
-                    if (item instanceof DropdownBisqMenuItem dropdownBisqMenuItem) {
-                        dropdownBisqMenuItem.updateWidth(contextMenu.getWidth() - 18); // Remove margins
-                    }
-                    if (item instanceof DropdownMenuItem dropdownMenuItem) {
-                        dropdownMenuItem.updateWidth(contextMenu.getWidth() - 18); // Remove margins
-                    }
-                }
+                prefWidth = contextMenu.getWidth() - 18; // Remove margins
+                updateMenuItemWidth();
             }
         };
         contextMenu.widthProperty().addListener(new WeakChangeListener<>(widthPropertyChangeListener));
+    }
+
+    private void updateMenuItemWidth() {
+        for (MenuItem item : contextMenu.getItems()) {
+            if (item instanceof DropdownBisqMenuItem dropdownBisqMenuItem) {
+                dropdownBisqMenuItem.updateWidth(prefWidth);
+            }
+            if (item instanceof DropdownMenuItem dropdownMenuItem) {
+                dropdownMenuItem.updateWidth(prefWidth);
+            }
+        }
     }
 
     private void updateIcon(ImageView newIcon) {
