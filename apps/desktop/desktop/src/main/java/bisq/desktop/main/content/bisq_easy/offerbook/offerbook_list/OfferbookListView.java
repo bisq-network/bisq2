@@ -64,6 +64,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private static final double COLLAPSED_LIST_WIDTH = BisqEasyOfferbookView.COLLAPSED_LIST_WIDTH;
     private static final double HEADER_HEIGHT = BaseChatView.HEADER_HEIGHT;
     private static final double LIST_CELL_HEIGHT = BisqEasyOfferbookView.LIST_CELL_HEIGHT;
+    private static final String ACTIVE_PAYMENT_FILTER_CLASS = "active-payment-filter";
 
     private final Label title;
     private final BisqTableView<OfferbookListItem> tableView;
@@ -74,7 +75,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private final ListChangeListener<FiatPaymentMethod> listChangeListener;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
     private Label offerDirectionFilterLabel, paymentsFilterLabel;
-    private Subscription showOfferListExpandedPin, showBuyFromOffersPin, offerListTableViewSelectionPin;
+    private Subscription showOfferListExpandedPin, showBuyFromOffersPin,
+            offerListTableViewSelectionPin, activeMarketPaymentsCountPin;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
@@ -175,6 +177,16 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             }
         });
 
+        activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
+            if (count.intValue() != 0) {
+                if (!paymentsFilterLabel.getStyleClass().contains(ACTIVE_PAYMENT_FILTER_CLASS)) {
+                    paymentsFilterLabel.getStyleClass().add(ACTIVE_PAYMENT_FILTER_CLASS);
+                }
+            } else {
+                paymentsFilterLabel.getStyleClass().remove(ACTIVE_PAYMENT_FILTER_CLASS);
+            }
+        });
+
         model.getAvailableMarketPayments().addListener(listChangeListener);
         updateMarketPaymentFilters();
 
@@ -193,6 +205,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         showOfferListExpandedPin.unsubscribe();
         offerListTableViewSelectionPin.unsubscribe();
         showBuyFromOffersPin.unsubscribe();
+        activeMarketPaymentsCountPin.unsubscribe();
 
         model.getAvailableMarketPayments().removeListener(listChangeListener);
 
@@ -474,7 +487,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private static final class PaymentMenuItem extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
-        PaymentMenuItem(Label displayLabel) {
+        private PaymentMenuItem(Label displayLabel) {
             super("check-white", "check-white", displayLabel);
 
             getStyleClass().add("dropdown-menu-item");
