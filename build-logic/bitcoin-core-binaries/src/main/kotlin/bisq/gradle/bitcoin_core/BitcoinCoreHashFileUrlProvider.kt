@@ -6,12 +6,15 @@ class BitcoinCoreHashFileUrlProvider(private val version: String) : PerOsUrlProv
     override val urlPrefix: String
         get() = "https://bitcoincore.org/bin/bitcoin-core-$version/SHA256SUMS"
 
-    override val linuxUrl: String
+    override val LINUX_X86_64_URL: String
         get() = ""
 
-    override val macOsUrl: String
+    override val MACOS_X86_64_URL: String
         get() = ""
 
-    override val windowsUrl: String
+    override val MACOS_ARM_64_URL: String
+        get() = ""
+
+    override val WIN_X86_64_URL: String
         get() = ""
 }
