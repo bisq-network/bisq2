@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,10 +31,10 @@ public class CompletableFutureUtils {
      * @param collection Collection of futures
      * @param <T>        The generic type of the future
      * @return Returns a CompletableFuture with a list of the results once all futures
-     * have completed successfully. If any future got canceled or completed exceptionally the result also
-     * completes exceptionally.
-     * This is different to the `CompletableFuture.allOf` behaviour which completes successfully also if any of the futures
-     * complete exceptionally.
+     * have completed successfully.
+     * If any future got canceled or completed exceptionally the result also completes exceptionally.
+     * The difference to the `CompletableFuture.allOf` method is that we expect that all futures have the same type,
+     * and we return a list of all results. Order of result list is same as order of the futures passed (not completion order).
      */
     public static <T> CompletableFuture<List<T>> allOf(Collection<CompletableFuture<T>> collection) {
         //noinspection unchecked
@@ -46,33 +47,23 @@ public class CompletableFutureUtils {
 
     @SafeVarargs
     public static <T> CompletableFuture<List<T>> allOf(CompletableFuture<T>... list) {
-        CompletableFuture<List<T>> result = CompletableFuture.allOf(list).thenApply(v ->
-                Stream.of(list)
-                        .map(future -> {
-                            // We want to return the results in list, not the futures. Once allOf call is complete
-                            // we know that all futures have completed (normally, exceptional or cancelled).
-                            // For exceptional and canceled cases we throw an exception.
-                            T res = future.join();
-                            if (future.isCompletedExceptionally()) {
-                                throw new RuntimeException((future.handle((r, throwable) -> throwable).join()));
-                            }
-                            if (future.isCancelled()) {
-                                throw new RuntimeException("Future got canceled");
-                            }
-                            return res;
-                        })
-                        .collect(Collectors.<T>toList())
-        );
-        return result;
+        return CompletableFuture.allOf(list)
+                .thenApply(nil ->
+                        // We want to return the results in list, not the futures. Once allOf call is complete
+                        // we know that all futures have successfully completed, thus the join call does not block.
+                        Stream.of(list)
+                                .map(CompletableFuture::join)
+                                .collect(Collectors.<T>toList())
+                );
     }
 
     /**
      * @param collection Collection of futures
      * @param <T>        The generic type of the future
      * @return Returns a CompletableFuture with the result once any future has completed successfully.
-     * If all futures completed exceptionally the result also completes exceptionally.
+     * If all futures completed exceptionally or got cancelled the result also completes exceptionally.
      * This is different to the `CompletableFuture.anyOf` behaviour which completes exceptionally if any of the futures
-     * complete exceptionally.
+     * complete exceptionally or got cancelled.
      */
     public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {
         //noinspection unchecked
@@ -103,25 +94,7 @@ public class CompletableFutureUtils {
         return resultFuture;
     }
 
-    // Strangely the CompletableFuture API do not offer that method
     public static <T> boolean isCompleted(CompletableFuture<T> future) {
-        return future.isDone() && !future.isCompletedExceptionally() && !future.isCancelled();
-    }
-
-    // CompletableFuture.applyToEither has some undesired error handling behavior (if first fail result fails).
-    // This method provides the expected behaviour that if one of the 2 futures completes we complete our
-    // result future. If both fail the result fail as well.
-    // Borrowed from https://4comprehension.com/be-careful-with-completablefuture-applytoeither/
-    public static <T> CompletableFuture<T> either(CompletableFuture<T> f1, CompletableFuture<T> f2) {
-        CompletableFuture<T> result = new CompletableFuture<>();
-        CompletableFuture.allOf(f1, f2).whenComplete((nil, throwable) -> {
-            if (f1.isCompletedExceptionally() && f2.isCompletedExceptionally()) {
-                result.completeExceptionally(throwable);
-            }
-        });
-
-        f1.thenAccept(result::complete);
-        f2.thenAccept(result::complete);
-        return result;
+        return future.state() == Future.State.SUCCESS;
     }
 }
