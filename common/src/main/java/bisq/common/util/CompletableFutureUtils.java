@@ -30,10 +30,10 @@ public class CompletableFutureUtils {
      * @param collection Collection of futures
      * @param <T>        The generic type of the future
      * @return Returns a CompletableFuture with a list of the results once all futures
-     * have completed successfully. If any future got canceled or completed exceptionally the result also
-     * completes exceptionally.
-     * This is different to the `CompletableFuture.allOf` behaviour which completes successfully also if any of the futures
-     * complete exceptionally.
+     * have completed successfully.
+     * If any future got canceled or completed exceptionally the result also completes exceptionally.
+     * The difference to the `CompletableFuture.allOf` method is that we expect that all futures have the same type,
+     * and we return a list of all results. Order of result list is same as order of the futures passed (not completion order).
      */
     public static <T> CompletableFuture<List<T>> allOf(Collection<CompletableFuture<T>> collection) {
         //noinspection unchecked
@@ -46,24 +46,14 @@ public class CompletableFutureUtils {
 
     @SafeVarargs
     public static <T> CompletableFuture<List<T>> allOf(CompletableFuture<T>... list) {
-        CompletableFuture<List<T>> result = CompletableFuture.allOf(list).thenApply(v ->
-                Stream.of(list)
-                        .map(future -> {
-                            // We want to return the results in list, not the futures. Once allOf call is complete
-                            // we know that all futures have completed (normally, exceptional or cancelled).
-                            // For exceptional and canceled cases we throw an exception.
-                            T res = future.join();
-                            if (future.isCompletedExceptionally()) {
-                                throw new RuntimeException((future.handle((r, throwable) -> throwable).join()));
-                            }
-                            if (future.isCancelled()) {
-                                throw new RuntimeException("Future got canceled");
-                            }
-                            return res;
-                        })
-                        .collect(Collectors.<T>toList())
-        );
-        return result;
+        return CompletableFuture.allOf(list)
+                .thenApply(nil ->
+                        // We want to return the results in list, not the futures. Once allOf call is complete
+                        // we know that all futures have successfully completed, thus the join call does not block.
+                        Stream.of(list)
+                                .map(CompletableFuture::join)
+                                .collect(Collectors.<T>toList())
+                );
     }
 
     /**
