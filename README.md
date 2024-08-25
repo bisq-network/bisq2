@@ -13,8 +13,8 @@ the [Bisq wiki](https://bisq.wiki/Bisq_2)
 For the initial release Bisq 2 will come with the [Bisq Easy](https://bisq.wiki/Bisq_Easy) protocol only. Work on the
 other protocols will start after Bisq 2 has been shipped.
 
-Bisq Easy is designed for novice Bitcoin users with a focus on ease to use and convenience. It does not require that the
-user has already Bitcoin and it is based on an easy-to-use chat interface. Security is based on reputation of the
+Bisq Easy is designed for novice Bitcoin users with a focus on ease of use and convenience. It does not require that the
+user already has Bitcoin and it is based on an easy-to-use chat interface. Security is based on reputation of the
 Bitcoin seller. It does not compete with the current Bisq v1 trade protocol but is complementary to it. It serves and
 targets a user group which we cannot reach with Bisq v1. You can read more about Bisq Easy
 in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
