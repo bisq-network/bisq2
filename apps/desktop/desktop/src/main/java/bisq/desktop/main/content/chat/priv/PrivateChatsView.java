@@ -22,7 +22,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
-import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
@@ -63,7 +63,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,
             myUserProfilePin;
     private UserProfileDisplay chatPeerUserProfileDisplay, chatMyUserProfileDisplay;
-    private DropdownMenuItem leaveChatButton;
+    private DropdownBisqMenuItem leaveChatButton;
 
     public PrivateChatsView(PrivateChatsModel model,
                             PrivateChatsController controller,
@@ -169,7 +169,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         chatHeaderVBox = new VBox(0);
         HBox.setHgrow(chatHeaderVBox, Priority.ALWAYS);
 
-        leaveChatButton = new DropdownMenuItem("leave-chat-red-lit-10", "leave-chat-red",
+        leaveChatButton = new DropdownBisqMenuItem("leave-chat-red-lit-10", "leave-chat-red",
                 Res.get("bisqEasy.privateChats.leave"));
         leaveChatButton.getStyleClass().add("red-menu-item");
 

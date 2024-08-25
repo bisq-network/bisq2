@@ -518,7 +518,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     @Getter
-    private static final class SortAndFilterMarketsDropdownMenuItem<T> extends DropdownMenuItem {
+    private static final class SortAndFilterMarketsDropdownMenuItem<T> extends DropdownBisqMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
         private final T menuItem;

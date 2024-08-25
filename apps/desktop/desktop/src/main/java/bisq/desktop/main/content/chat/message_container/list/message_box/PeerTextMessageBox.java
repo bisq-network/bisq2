@@ -23,7 +23,7 @@ import bisq.chat.pub.PublicChatMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
@@ -38,7 +38,7 @@ import org.fxmisc.easybind.Subscription;
 public class PeerTextMessageBox extends BubbleMessageBox {
     private Subscription isMenuShowingPin;
     protected BisqMenuItem replyAction, openPrivateChatAction;
-    protected DropdownMenuItem ignoreUserMenuItem, reportUserMenuItem;
+    protected DropdownBisqMenuItem ignoreUserMenuItem, reportUserMenuItem;
 
     public PeerTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                               ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -74,9 +74,9 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         openPrivateChatAction.setTooltip(Res.get("chat.message.privateMessage"));
 
         // More actions dropdown menu
-        ignoreUserMenuItem = new DropdownMenuItem("ignore-grey", "ignore-white",
+        ignoreUserMenuItem = new DropdownBisqMenuItem("ignore-grey", "ignore-white",
                 Res.get("chat.message.contextMenu.ignoreUser"));
-        reportUserMenuItem = new DropdownMenuItem("report-grey", "report-white",
+        reportUserMenuItem = new DropdownBisqMenuItem("report-grey", "report-white",
                 Res.get("chat.message.contextMenu.reportUser"));
         moreActionsMenu = new DropdownMenu("more-actions-grey", "more-actions-white", true);
         moreActionsMenu.setTooltip(Res.get("chat.message.moreOptions"));

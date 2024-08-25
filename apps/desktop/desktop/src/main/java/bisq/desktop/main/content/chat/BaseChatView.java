@@ -20,7 +20,7 @@ package bisq.desktop.main.content.chat;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;
@@ -40,7 +40,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();
     protected Label channelIcon = new Label();
-    protected DropdownMenuItem helpButton, infoButton;
+    protected DropdownBisqMenuItem helpButton, infoButton;
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
     protected final HBox titleHBox = new HBox(10);
@@ -72,8 +72,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     }
 
     private void setUpHeaderDropdownMenu() {
-        helpButton = new DropdownMenuItem("icon-help-grey", "icon-help-white");
-        infoButton = new DropdownMenuItem("icon-info-grey", "icon-info-white",
+        helpButton = new DropdownBisqMenuItem("icon-help-grey", "icon-help-white");
+        infoButton = new DropdownBisqMenuItem("icon-info-grey", "icon-info-white",
                 Res.get("chat.dropdownMenu.channelInfo"));
         headerDropdownMenu.addMenuItems(helpButton, infoButton);
         headerDropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));

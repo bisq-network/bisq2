@@ -17,48 +17,60 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.utils.ImageUtil;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.CustomMenuItem;
-import lombok.Getter;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 
-@Getter
 public class DropdownMenuItem extends CustomMenuItem {
-    private final BisqMenuItem bisqMenuItem;
+    public static final String ICON_CSS_STYLE = "menu-item-icon";
 
-    public DropdownMenuItem(String defaultIconId, String activeIconId, String text) {
-        bisqMenuItem = new BisqMenuItem(defaultIconId, activeIconId, text);
-        bisqMenuItem.getStyleClass().add("dropdown-menu-item-content");
-        setContent(bisqMenuItem);
+    private final HBox hBox;
+    private ImageView defaultIcon, activeIcon, buttonIcon;
 
-        // Using DropdownMenuItem.setOnAction leads to duplicate execution of the handler on MacOS 14.5 / M3.
-        // Might be a bug in the MacOS specific JavaFX libraries as other devs could not reproduce the issue.
-        // Using an eventFilter and consuming the event solves the issue.
-        // This happens only when bisqMenuItem is used inside the DropdownMenuItem
-        bisqMenuItem.addEventFilter(ActionEvent.ANY, Event::consume);
-    }
+    public DropdownMenuItem(String defaultIconId, String activeIconId, Node node) {
+        hBox = new HBox(10);
+        hBox.getStyleClass().add("dropdown-menu-item-content");
 
-    public DropdownMenuItem(String text) {
-        this(null, null, text);
-    }
+        if (defaultIconId != null && activeIconId != null) {
+            defaultIcon = ImageUtil.getImageViewById(defaultIconId);
+            activeIcon = ImageUtil.getImageViewById(activeIconId);
+            defaultIcon.getStyleClass().add(ICON_CSS_STYLE);
+            activeIcon.getStyleClass().add(ICON_CSS_STYLE);
+            buttonIcon = defaultIcon;
+            hBox.getChildren().add(buttonIcon);
+            attachListeners();
+        }
 
-    public DropdownMenuItem(String defaultIconId, String activeIconId) {
-        this(defaultIconId, activeIconId, "");
-    }
+        if (node != null) {
+            hBox.getChildren().add(node);
+        }
 
-    public void setLabelText(String text) {
-        bisqMenuItem.setText(text);
-    }
-
-    public Double getWidth() {
-        return bisqMenuItem.getWidth();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.getStyleClass().add("bisq-menu-item");
+        hBox.addEventFilter(ActionEvent.ANY, Event::consume);
+        setContent(hBox);
     }
 
     public void updateWidth(Double width) {
-        bisqMenuItem.setPrefWidth(width);
+        hBox.setPrefWidth(width);
     }
 
-    public String getLabelText() {
-        return bisqMenuItem.getText();
+    private void attachListeners() {
+        hBox.setOnMouseEntered(e -> updateIcon(activeIcon));
+        hBox.setOnMouseExited(e -> updateIcon(defaultIcon));
+        hBox.setOnMouseClicked(e -> updateIcon(defaultIcon));
+    }
+
+    private void updateIcon(ImageView newIcon) {
+        if (buttonIcon != newIcon) {
+            buttonIcon = newIcon;
+            hBox.getChildren().removeFirst();
+            hBox.getChildren().addFirst(buttonIcon);
+        }
     }
 }
