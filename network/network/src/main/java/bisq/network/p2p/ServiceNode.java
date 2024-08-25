@@ -259,7 +259,8 @@ public class ServiceNode implements Node.Listener {
                 supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
                 Optional.of(new NetworkLoadService(this,
                         dataService.orElseThrow().getStorageService(),
-                        networkLoadSnapshot)) :
+                        networkLoadSnapshot,
+                        peerGroupServiceConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
                 Optional.empty();
 
         setState(State.INITIALIZING);
