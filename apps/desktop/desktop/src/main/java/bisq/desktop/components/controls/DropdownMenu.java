@@ -164,8 +164,7 @@ public class DropdownMenu extends HBox {
                 // Once the contextMenu has calculated the width on the first render time we update the items
                 // so that they all have the same size.
                 for (MenuItem item : contextMenu.getItems()) {
-                    if (item instanceof DropdownMenuItem) {
-                        DropdownMenuItem dropdownMenuItem = (DropdownMenuItem) item;
+                    if (item instanceof DropdownMenuItem dropdownMenuItem) {
                         dropdownMenuItem.updateWidth(contextMenu.getWidth() - 18); // Remove margins
                     }
                 }

@@ -328,6 +328,11 @@
     -fx-text-fill: -bisq2-red-lit-40;
 }
 
+/* PAYMENT METHODS FILTER */
+.dropdown-offer-list-payment-filter-menu {
+    -fx-padding: 0 5 0 5;
+}
+
 /* COLLAPSE AND EXPAND COLUMNS */
 .collapsed-offer-list-container {
     -fx-background-color: -bisq-dark-grey-20;
