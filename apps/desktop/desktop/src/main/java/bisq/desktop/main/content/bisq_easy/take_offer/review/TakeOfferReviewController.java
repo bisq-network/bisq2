@@ -239,7 +239,7 @@ public class TakeOfferReviewController implements Controller {
                     closeAndNavigateToHandler.accept(NavigationTarget.BISQ_EASY);
                     throw new RuntimeException("Take offer message sending did not succeed after 2 minutes.");
                 })
-                .after(2, TimeUnit.MINUTES);
+                .after(150, TimeUnit.SECONDS); // We have 120 seconds socket timeout, so we should never get triggered here, as the message will be sent as mailbox message
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
                     timeoutScheduler.stop();
