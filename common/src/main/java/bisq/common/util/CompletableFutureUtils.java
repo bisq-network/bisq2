@@ -97,21 +97,4 @@ public class CompletableFutureUtils {
     public static <T> boolean isCompleted(CompletableFuture<T> future) {
         return future.state() == Future.State.SUCCESS;
     }
-
-    // CompletableFuture.applyToEither has some undesired error handling behavior (if first fail result fails).
-    // This method provides the expected behaviour that if one of the 2 futures completes we complete our
-    // result future. If both fail the result fail as well.
-    // Borrowed from https://4comprehension.com/be-careful-with-completablefuture-applytoeither/
-    public static <T> CompletableFuture<T> either(CompletableFuture<T> f1, CompletableFuture<T> f2) {
-        CompletableFuture<T> result = new CompletableFuture<>();
-        CompletableFuture.allOf(f1, f2).whenComplete((nil, throwable) -> {
-            if (f1.isCompletedExceptionally() && f2.isCompletedExceptionally()) {
-                result.completeExceptionally(throwable);
-            }
-        });
-
-        f1.thenAccept(result::complete);
-        f2.thenAccept(result::complete);
-        return result;
-    }
 }
