@@ -135,6 +135,11 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     // We check the difficulty used for the proof of work if it matches the current network load or if available the
     // previous network load. If the difference is inside a tolerance range we consider it still valid, but it should
     // be investigated why that happens, thus we log those cases.
+    // It is likely caused when there is a flood of messages as it is the case when the oracle node republishes its data.
+    // During that time the local network load rises, but we might not have exchanges with our peers our network load 
+    // (3-5 min interval) and thus peers use a too low network load to calculate the difficulty for messages sent to us.
+    // We could trigger a network load exchange if detect a certain level of deviation but as long we don't observe 
+    // those deviations in normal network mode, we ignore it.
     private boolean isDifficultyInvalid(EnvelopePayloadMessage message,
                                         double proofOfWorkDifficulty,
                                         NetworkLoad currentNetworkLoad,
@@ -163,14 +168,14 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
             log.debug("No previous network load available");
             if (missing <= DIFFICULTY_TOLERANCE) {
                 log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
-                                "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                        deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+                                "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}",
+                        deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty);
                 return false;
             }
 
             log.warn("Difficulty of current network load deviates from the proofOfWork difficulty and is outside the tolerated range.\n" +
-                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                    deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}",
+                    deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty);
             return true;
         }
 
@@ -189,8 +194,8 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
 
         if (missing <= DIFFICULTY_TOLERANCE) {
             log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
-                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                    deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}",
+                    deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty);
             return false;
         }
 
@@ -199,14 +204,14 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
             deviationToTolerance = MathUtils.roundDouble(missingUsingPrevious / DIFFICULTY_TOLERANCE * 100, 2);
             deviationToExpectedDifficulty = MathUtils.roundDouble(missingUsingPrevious / expectedPreviousDifficulty * 100, 2);
             log.info("Difficulty of previous network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
-                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                    deviationToTolerance, deviationToExpectedDifficulty, expectedPreviousDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}",
+                    deviationToTolerance, deviationToExpectedDifficulty, expectedPreviousDifficulty, proofOfWorkDifficulty);
             return false;
         }
 
         log.warn("Difficulties of current and previous network load deviate from the proofOfWork difficulty and are outside the tolerated range.\n" +
-                        "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+                        "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}",
+                deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty);
         return true;
     }
 
