@@ -54,6 +54,7 @@ public class DropdownMenuItem extends CustomMenuItem {
         hBox.getStyleClass().add("bisq-menu-item");
         hBox.addEventFilter(ActionEvent.ANY, Event::consume);
         setContent(hBox);
+        setHideOnClick(false);
     }
 
     public void updateWidth(Double width) {
