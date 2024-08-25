@@ -44,6 +44,7 @@ public class NetworkLoadService {
 
     private final ServiceNode serviceNode;
     private final NetworkLoadSnapshot networkLoadSnapshot;
+    private final int maxNumConnectedPeers;
     private final StorageService storageService;
     private final Map<String, ConnectionMetrics> connectionMetricsByConnectionId = new HashMap<>();
     @Setter
@@ -60,10 +61,12 @@ public class NetworkLoadService {
 
     public NetworkLoadService(ServiceNode serviceNode,
                               StorageService storageService,
-                              NetworkLoadSnapshot networkLoadSnapshot) {
+                              NetworkLoadSnapshot networkLoadSnapshot,
+                              int maxNumConnectedPeers) {
         this.serviceNode = serviceNode;
         this.storageService = storageService;
         this.networkLoadSnapshot = networkLoadSnapshot;
+        this.maxNumConnectedPeers = maxNumConnectedPeers;
 
         scheduler = Scheduler.run(this::updateNetworkLoad)
                 .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
@@ -206,36 +209,43 @@ public class NetworkLoadService {
 
                 .append("\n////////////////////////////////////////////////////////////////////////////////////////////////////");
 
-        double MAX_NUM_CON = 30; //todo use value from config
+        // We apply a factor to each max value based on the maxNumConnectedPeers to reflect higher expected load
+        // This is mainly important for seed nodes which are configured with higher maxNumConnectedPeers.
+        double defaultMaxNumConnectedPeers = 12;
+        double numConnectedPeersFactor = maxNumConnectedPeers / defaultMaxNumConnectedPeers;
+
+        double MAX_NUM_CON = 20 * defaultMaxNumConnectedPeers;
         double NUM_CON_WEIGHT = 0.1;
         double numConnectionsImpact = numConnections / MAX_NUM_CON * NUM_CON_WEIGHT;
 
-        double MAX_SENT_BYTES = ByteUnit.MB.toBytes(20);
+        double MAX_SENT_BYTES = ByteUnit.MB.toBytes(20) * numConnectedPeersFactor;
         double SENT_BYTES_WEIGHT = 0.2;
         double sentBytesImpact = sentBytesOfLastHour / MAX_SENT_BYTES * SENT_BYTES_WEIGHT;
 
-        double MAX_SPENT_SEND_TIME = TimeUnit.MINUTES.toMillis(1);
+        double MAX_SPENT_SEND_TIME = TimeUnit.MINUTES.toMillis(1) * numConnectedPeersFactor;
         double SPENT_SEND_TIME_WEIGHT = 0.1;
         double spentSendTimeImpact = spentSendMessageTimeOfLastHour / MAX_SPENT_SEND_TIME * SPENT_SEND_TIME_WEIGHT;
 
-        double MAX_NUM_MSG_SENT = 2000;
+        double MAX_NUM_MSG_SENT = 5000 * numConnectedPeersFactor;
         double NUM_MSG_SENT_WEIGHT = 0.1;
         double numMessagesSentImpact = numMessagesSentOfLastHour / MAX_NUM_MSG_SENT * NUM_MSG_SENT_WEIGHT;
 
-        double MAX_REC_BYTES = ByteUnit.MB.toBytes(20);
+        // We receive about 5 MB when oracle node republishes its data
+        double MAX_REC_BYTES = ByteUnit.MB.toBytes(20) * numConnectedPeersFactor;
         double REC_BYTES_WEIGHT = 0.2;
         double receivedBytesImpact = receivedBytesOfLastHour / MAX_REC_BYTES * REC_BYTES_WEIGHT;
 
-        double MAX_DESERIALIZE_TIME = TimeUnit.MINUTES.toMillis(1);
+        double MAX_DESERIALIZE_TIME = TimeUnit.MINUTES.toMillis(1) * numConnectedPeersFactor;
         double DESERIALIZE_TIME_WEIGHT = 0.1;
         double deserializeTimeImpact = deserializeTimeOfLastHour / MAX_DESERIALIZE_TIME * DESERIALIZE_TIME_WEIGHT;
 
-        double MAX_NUM_MSG_REC = 1000;
+        // When oracle node republishes its data we get about 2500 messages in about 10 minutes
+        double MAX_NUM_MSG_REC = 5000 * numConnectedPeersFactor;
         double NUM_MSG_REC_WEIGHT = 0.1;
         double numMessagesReceivedImpact = numMessagesReceivedOfLastHour / MAX_NUM_MSG_REC * NUM_MSG_REC_WEIGHT;
 
         // 6MB at Aug 2024 -> 0.018
-        double MAX_DB_SIZE = ByteUnit.MB.toBytes(100);
+        double MAX_DB_SIZE = ByteUnit.MB.toBytes(100); // Has no correlation to maxNumConnectedPeers
         double DB_WEIGHT = 0.1;
         double networkDatabaseSizeImpact = networkDatabaseSize / MAX_DB_SIZE * DB_WEIGHT;
 
