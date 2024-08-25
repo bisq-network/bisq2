@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,9 +61,9 @@ public class CompletableFutureUtils {
      * @param collection Collection of futures
      * @param <T>        The generic type of the future
      * @return Returns a CompletableFuture with the result once any future has completed successfully.
-     * If all futures completed exceptionally the result also completes exceptionally.
+     * If all futures completed exceptionally or got cancelled the result also completes exceptionally.
      * This is different to the `CompletableFuture.anyOf` behaviour which completes exceptionally if any of the futures
-     * complete exceptionally.
+     * complete exceptionally or got cancelled.
      */
     public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {
         //noinspection unchecked
@@ -93,9 +94,8 @@ public class CompletableFutureUtils {
         return resultFuture;
     }
 
-    // Strangely the CompletableFuture API do not offer that method
     public static <T> boolean isCompleted(CompletableFuture<T> future) {
-        return future.isDone() && !future.isCompletedExceptionally() && !future.isCancelled();
+        return future.state() == Future.State.SUCCESS;
     }
 
     // CompletableFuture.applyToEither has some undesired error handling behavior (if first fail result fails).
