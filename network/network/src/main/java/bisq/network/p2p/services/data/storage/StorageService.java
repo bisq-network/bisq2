@@ -510,7 +510,7 @@ public class StorageService {
                 appendOnlyDataStores.values().stream());
     }
 
-    private Stream<DataStorageService<? extends DataRequest>> getStoresByStoreType(StoreType storeType) {
+    public Stream<DataStorageService<? extends DataRequest>> getStoresByStoreType(StoreType storeType) {
         List<DataStorageService<? extends DataRequest>> dataStorageServiceStream;
         switch (storeType) {
             case ALL:

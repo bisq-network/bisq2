@@ -17,13 +17,7 @@
 
 package bisq.chat.notifications;
 
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatMessageType;
-import bisq.chat.ChatService;
-import bisq.chat.ChatUtil;
+import bisq.chat.*;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
@@ -37,7 +31,11 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
+import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -51,14 +49,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DATA_STORE;
 
 /**
  * Handles chat notifications
@@ -86,8 +84,10 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     private final long startUpDateTime = System.currentTimeMillis();
     @Setter
     private boolean isApplicationFocussed;
+    private final Set<String> prunedAndExpiredChatMessageIds = new HashSet<>();
 
     public ChatNotificationService(PersistenceService persistenceService,
+                                   NetworkService networkService,
                                    ChatService chatService,
                                    SystemNotificationService systemNotificationService,
                                    SettingsService settingsService,
@@ -99,6 +99,36 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         this.settingsService = settingsService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
+
+        networkService.getDataService().ifPresent(dataService -> {
+            dataService.getStorageService().getStoresByStoreType(AUTHENTICATED_DATA_STORE)
+                    .map(DataStorageService::getPrunedAndExpiredDataRequests)
+                    .forEach(prunedAndExpiredDataRequests -> prunedAndExpiredDataRequests.addObserver(new CollectionObserver<>() {
+                        @Override
+                        public void add(DataRequest element) {
+                            if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+                                if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
+                                    String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
+                                    // As we get called at pruning persistence which happens before initializing the services,
+                                    // We store the ids to apply the remove at out initialize method.
+                                    // For the cases when we get expired data during runtime we call removeNotification.
+                                    // For the pre-initialize state that would fail as our persisted data might be filled after
+                                    // the network data store.
+                                    prunedAndExpiredChatMessageIds.add(id);
+                                    removeNotification(id);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void remove(Object element) {
+                        }
+
+                        @Override
+                        public void clear() {
+                        }
+                    }));
+        });
     }
 
     @Override
@@ -115,6 +145,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        prunedAndExpiredChatMessageIds.forEach(this::removeNotification);
+        prunedAndExpiredChatMessageIds.clear();
+
         BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
         bisqEasyOpenTradeChannelService.getChannels().addObserver(() ->
                 onChannelsChanged(bisqEasyOpenTradeChannelService.getChannels()));

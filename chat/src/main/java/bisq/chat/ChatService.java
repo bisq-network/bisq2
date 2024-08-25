@@ -80,6 +80,7 @@ public class ChatService implements Service {
         this.userProfileService = userService.getUserProfileService();
 
         chatNotificationService = new ChatNotificationService(persistenceService,
+                networkService,
                 this,
                 systemNotificationService,
                 settingsService,

@@ -318,7 +318,14 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
-                .filter(entry -> entry.getValue().isExpired())
+                .filter(entry -> {
+                    AuthenticatedDataRequest dataRequest = entry.getValue();
+                    boolean isExpired = dataRequest.isExpired();
+                    if (isExpired) {
+                        prunedAndExpiredDataRequests.add(dataRequest);
+                    }
+                    return isExpired;
+                })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
             log.info("We remove {} expired entries from our map", expiredEntries.size());

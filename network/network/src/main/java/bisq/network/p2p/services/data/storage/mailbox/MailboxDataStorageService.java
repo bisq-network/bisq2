@@ -231,7 +231,14 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
-                .filter(entry -> entry.getValue().isExpired())
+                .filter(entry -> {
+                    MailboxRequest dataRequest = entry.getValue();
+                    boolean isExpired = dataRequest.isExpired();
+                    if (isExpired) {
+                        prunedAndExpiredDataRequests.add(dataRequest);
+                    }
+                    return isExpired;
+                })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
             log.info("We remove {} expired entries from our map", expiredEntries.size());
