@@ -167,7 +167,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         model.getShowBuyOffers().set(true);
     }
 
-    void toggleMethodFilter(FiatPaymentMethod paymentMethod, boolean isSelected) {
+    void togglePaymentFilter(FiatPaymentMethod paymentMethod, boolean isSelected) {
         if (isSelected) {
             model.getSelectedMarketPayments().add(paymentMethod);
         } else {
@@ -176,8 +176,14 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         updateActiveMarketPaymentsCount();
     }
 
-    void toggleCustomMethodFilter(boolean isSelected) {
+    void toggleCustomPaymentFilter(boolean isSelected) {
         model.getIsCustomPaymentsSelected().set(isSelected);
+        updateActiveMarketPaymentsCount();
+    }
+
+    void clearPaymentFilters() {
+        model.getSelectedMarketPayments().clear();
+        model.getIsCustomPaymentsSelected().set(false);
         updateActiveMarketPaymentsCount();
     }
 

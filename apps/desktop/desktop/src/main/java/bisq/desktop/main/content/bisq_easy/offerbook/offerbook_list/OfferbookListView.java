@@ -43,6 +43,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
@@ -249,12 +250,13 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             ImageView paymentIcon = ImageUtil.getImageViewById(payment.getName());
             Label paymentLabel = new Label(payment.getDisplayString(), paymentIcon);
             paymentLabel.setGraphicTextGap(10);
-            PaymentMenuItem item = new PaymentMenuItem(paymentLabel);
-            item.setOnAction(e -> {
-                item.updateSelection(!item.isSelected());
-                controller.toggleMethodFilter(payment, item.isSelected());
+            PaymentMenuItem paymentItem = new PaymentMenuItem(paymentLabel);
+            paymentItem.setHideOnClick(false);
+            paymentItem.setOnAction(e -> {
+                paymentItem.updateSelection(!paymentItem.isSelected());
+                controller.togglePaymentFilter(payment, paymentItem.isSelected());
             });
-            paymentsFilterMenu.addMenuItems(item);
+            paymentsFilterMenu.addMenuItems(paymentItem);
         });
 
         StackPane customPaymentIcon = BisqEasyViewUtils.getCustomPaymentMethodIcon("C");
@@ -262,11 +264,25 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.customPayments"), customPaymentIcon);
         customPaymentLabel.setGraphicTextGap(10);
         PaymentMenuItem customItem = new PaymentMenuItem(customPaymentLabel);
+        customItem.setHideOnClick(false);
         customItem.setOnAction(e -> {
             customItem.updateSelection(!customItem.isSelected());
-            controller.toggleCustomMethodFilter(customItem.isSelected());
+            controller.toggleCustomPaymentFilter(customItem.isSelected());
         });
         paymentsFilterMenu.addMenuItems(customItem);
+
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        DropdownBisqMenuItem clearFilters = new DropdownBisqMenuItem("delete-t-grey", "delete-t-white",
+                Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.clearFilters"));
+        clearFilters.setHideOnClick(false);
+        clearFilters.setOnAction(e -> {
+            controller.clearPaymentFilters();
+            paymentsFilterMenu.getMenuItems().stream()
+                    .filter(item -> item instanceof PaymentMenuItem)
+                    .map(item -> (PaymentMenuItem) item)
+                    .forEach(paymentMenuItem -> paymentMenuItem.updateSelection(false));
+        });
+        paymentsFilterMenu.addMenuItems(separator, clearFilters);
     }
 
     private void cleanUpPaymentsFilterMenu() {
