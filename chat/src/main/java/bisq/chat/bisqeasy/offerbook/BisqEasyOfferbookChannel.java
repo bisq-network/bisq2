@@ -18,7 +18,7 @@
 package bisq.chat.bisqeasy.offerbook;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.common.currency.Market;
 import bisq.i18n.Res;

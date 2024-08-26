@@ -18,7 +18,7 @@
 package bisq.chat.common;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;

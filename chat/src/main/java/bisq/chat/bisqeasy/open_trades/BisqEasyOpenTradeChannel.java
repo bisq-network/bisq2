@@ -18,7 +18,7 @@
 package bisq.chat.bisqeasy.open_trades;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;

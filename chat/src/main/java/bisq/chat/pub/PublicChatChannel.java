@@ -19,7 +19,7 @@ package bisq.chat.pub;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.observable.collection.ObservableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

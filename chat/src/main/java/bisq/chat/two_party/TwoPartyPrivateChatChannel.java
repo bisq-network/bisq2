@@ -18,7 +18,7 @@
 package bisq.chat.two_party;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateChatChannel;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;

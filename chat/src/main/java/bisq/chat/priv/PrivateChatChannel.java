@@ -19,8 +19,8 @@ package bisq.chat.priv;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
 import bisq.chat.ChatMessageType;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.identity.UserIdentity;
 import lombok.EqualsAndHashCode;

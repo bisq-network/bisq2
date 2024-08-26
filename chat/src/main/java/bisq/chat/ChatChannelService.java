@@ -17,6 +17,7 @@
 
 package bisq.chat;
 
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableArray;
