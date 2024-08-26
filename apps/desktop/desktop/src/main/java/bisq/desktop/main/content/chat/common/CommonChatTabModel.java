@@ -20,14 +20,12 @@ package bisq.desktop.main.content.chat.common;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.ContentTabModel;
-import bisq.desktop.main.content.chat.ChatUtil;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import lombok.Getter;
 
-import java.util.Comparator;
 import java.util.HashMap;
 
 @Getter
@@ -43,23 +41,18 @@ final class CommonChatTabModel extends ContentTabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return channelTabButtonModelByChannelId.isEmpty()
-                ? NavigationTarget.NONE
-                : channelTabButtonModelByChannelId.values().stream().min(getChannelTabButtonComparator()).get().getNavigationTarget();
+        if (chatChannelDomain == ChatChannelDomain.DISCUSSION) {
+            return NavigationTarget.CHAT_DISCUSSION;
+        } else if (chatChannelDomain == ChatChannelDomain.SUPPORT) {
+            return NavigationTarget.SUPPORT_ASSISTANCE;
+        } else {
+            return NavigationTarget.NONE;
+        }
     }
 
     NavigationTarget getPrivateChatsNavigationTarget() {
-        if (chatChannelDomain == ChatChannelDomain.DISCUSSION) {
-            return NavigationTarget.DISCUSSION_PRIVATECHATS;
-        } else if (chatChannelDomain == ChatChannelDomain.EVENTS) {
-            return NavigationTarget.EVENTS_PRIVATECHATS;
-        }
-        return NavigationTarget.SUPPORT_PRIVATECHATS;
-    }
-
-    Comparator<ChannelTabButtonModel> getChannelTabButtonComparator() {
-        return chatChannelDomain == ChatChannelDomain.SUPPORT
-                ? ChatUtil.SUPPORT_CHANNEL_TAB_BUTTON_COMPARATOR
-                : ChatUtil.DEFAULT_CHANNEL_TAB_BUTTON_COMPARATOR;
+        return chatChannelDomain == ChatChannelDomain.DISCUSSION
+                ? NavigationTarget.CHAT_PRIVATE
+                : NavigationTarget.NONE;
     }
 }

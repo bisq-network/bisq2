@@ -24,6 +24,7 @@ import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,20 +35,15 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class CommonPublicChatChannel extends PublicChatChannel<CommonPublicChatMessage> {
-    private static String createId(ChatChannelDomain chatChannelDomain, String channelTitle) {
-        return chatChannelDomain.name().toLowerCase() + "." + channelTitle;
-    }
-
     private final Optional<String> channelAdminId;
     private final List<String> channelModeratorIds;
     private final String channelTitle;
-    // transient fields are excluded by default for EqualsAndHashCode
-    private transient final String description;
+    private transient final SubDomain subDomain;
 
-    public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelTitle) {
-        this(createId(chatChannelDomain, channelTitle),
-                chatChannelDomain,
-                channelTitle,
+    public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, SubDomain subDomain) {
+        this(subDomain.getChannelId(),
+                subDomain.getChatChannelDomain(),
+                subDomain.getTitle(),
                 Optional.empty(),
                 new ArrayList<>(),
                 ChatChannelNotificationType.GLOBAL_DEFAULT);
@@ -66,7 +62,8 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
         this.channelModeratorIds = channelModeratorIds;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.channelModeratorIds);
-        description = Res.get(id + ".description");
+
+        this.subDomain = SubDomain.from(chatChannelDomain, channelTitle);
     }
 
     @Override
@@ -90,7 +87,44 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     }
 
     @Override
+    public ChatChannelDomain getChatChannelDomain() {
+        return chatChannelDomain.migrate();
+    }
+
+    @Override
+    public String getId() {
+        return Migration.migrateChannelId(id);
+    }
+
+    @Override
     public String getDisplayString() {
-        return Res.get(chatChannelDomain.name().toLowerCase() + "." + channelTitle + ".title");
+        return Res.get(chatChannelDomain.name().toLowerCase() + "." + getChannelTitle() + ".title");
+    }
+
+    public String getDescription() {
+        return Res.get(chatChannelDomain.name().toLowerCase() + "." + getChannelTitle() + ".description");
+    }
+
+
+    @Slf4j
+    public static class Migration {
+        public static CommonPublicChatChannel migrate(CommonPublicChatChannel channel) {
+            SubDomain subDomain = channel.getSubDomain().migrate();
+            return new CommonPublicChatChannel(subDomain.getChannelId(),
+                    subDomain.getChatChannelDomain(),
+                    subDomain.getTitle(),
+                    channel.getChannelAdminId(),
+                    channel.getChannelModeratorIds(),
+                    channel.getChatChannelNotificationType().get());
+        }
+
+        public static String migrateChannelId(ChatChannelDomain chatChannelDomain, String channelTitle) {
+            return SubDomain.from(chatChannelDomain, channelTitle).migrate().getChannelId();
+        }
+
+        public static String migrateChannelId(String channelId) {
+            return SubDomain.from(channelId).migrate().getChannelId();
+        }
+
     }
 }

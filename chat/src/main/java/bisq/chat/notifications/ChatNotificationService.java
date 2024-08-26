@@ -28,7 +28,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -160,7 +160,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 .forEach(commonPublicChatChannelService -> commonPublicChatChannelService.getChannels().addObserver(() ->
                         onChannelsChanged(commonPublicChatChannelService.getChannels())));
 
-        chatService.getTwoPartyPrivateChatChannelServices().values()
+        chatService.getTwoPartyPrivateChatChannelServices()
                 .forEach(twoPartyPrivateChatChannelService -> twoPartyPrivateChatChannelService.getChannels().addObserver(() ->
                         onChannelsChanged(twoPartyPrivateChatChannelService.getChannels())));
 
@@ -346,7 +346,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }
     }
 
-    private <M extends ChatMessage> void onChannelsChanged(ObservableArray<? extends ChatChannel<M>> channels) {
+    private <M extends ChatMessage> void onChannelsChanged(ObservableSet<? extends ChatChannel<M>> channels) {
         channels.forEach(chatChannel -> {
             String channelId = chatChannel.getId();
             if (chatMessagesByChannelIdPins.containsKey(channelId)) {

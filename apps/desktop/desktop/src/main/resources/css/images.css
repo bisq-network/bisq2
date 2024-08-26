@@ -291,18 +291,6 @@
     -fx-image: url("/images/navigation/nav-community-hover.png");
 }
 
-#nav-events {
-    -fx-image: url("/images/navigation/nav-events.png");
-}
-
-#nav-events-active {
-    -fx-image: url("/images/navigation/nav-events-active.png");
-}
-
-#nav-events-hover {
-    -fx-image: url("/images/navigation/nav-events-hover.png");
-}
-
 #nav-learn {
     -fx-image: url("/images/navigation/nav-learn.png");
 }

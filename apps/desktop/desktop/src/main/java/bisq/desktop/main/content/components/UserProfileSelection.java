@@ -193,21 +193,14 @@ public class UserProfileSelection {
             }
             model.getIsPrivateChannel().set(false);
             switch (navigationTarget) {
-                //case BISQ_EASY:
                 case BISQ_EASY_OFFERBOOK:
                     selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY_OFFERBOOK));
                     return;
                 case BISQ_EASY_OPEN_TRADES:
                     selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY_OPEN_TRADES));
                     return;
-                case BISQ_EASY_PRIVATE_CHAT:
-                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT));
-                    return;
-                case DISCUSSION:
+                case CHAT:
                     selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.DISCUSSION));
-                    return;
-                case EVENTS:
-                    selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.EVENTS));
                     return;
                 case SUPPORT:
                     selectionServiceChanged(chatChannelSelectionServices.get(ChatChannelDomain.SUPPORT));

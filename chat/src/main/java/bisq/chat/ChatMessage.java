@@ -50,7 +50,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     public static final int MAX_TEXT_LENGTH = 10_000;
 
     protected final String id;
-    private final ChatChannelDomain chatChannelDomain;
+    protected final ChatChannelDomain chatChannelDomain;
     protected final String channelId;
     protected final Optional<String> text;
     protected String authorUserProfileId;

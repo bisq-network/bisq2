@@ -34,8 +34,8 @@ import lombok.Getter;
 import lombok.ToString;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
@@ -65,7 +65,7 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
                                  long date,
                                  boolean wasEdited,
                                  ChatMessageType chatMessageType,
-                                 List<R> reactions) {
+                                 Set<R> reactions) {
         this(messageId,
                 chatChannelDomain,
                 channelId,
@@ -91,7 +91,7 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
                                  long date,
                                  boolean wasEdited,
                                  ChatMessageType chatMessageType,
-                                 List<R> reactions) {
+                                 Set<R> reactions) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
