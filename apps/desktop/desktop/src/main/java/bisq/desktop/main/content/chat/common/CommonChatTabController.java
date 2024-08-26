@@ -70,30 +70,6 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         view = new CommonChatTabView(model, this);
     }
 
-    private void createChannels() {
-        commonPublicChatChannelService.getChannels().forEach(commonPublicChatChannel -> {
-            findOrCreateChannelItem(commonPublicChatChannel).ifPresent(channelTabButtonModel ->
-                    model.channelTabButtonModelByChannelId.put(channelTabButtonModel.getChannelId(), channelTabButtonModel));
-        });
-    }
-
-    private Optional<ChannelTabButtonModel> findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof CommonPublicChatChannel commonChannel) {
-            SubDomain subDomain = commonChannel.getSubDomain();
-            if (subDomain.isDeprecated()) {
-                return Optional.empty();
-            }
-
-            if (model.channelTabButtonModelByChannelId.containsKey(chatChannel.getId())) {
-                return Optional.of(model.channelTabButtonModelByChannelId.get(chatChannel.getId()));
-            } else {
-                NavigationTarget navigationTarget = toNavigationTarget(commonChannel);
-                return Optional.of(new ChannelTabButtonModel(commonChannel, navigationTarget, commonPublicChatChannelService));
-            }
-        }
-        return Optional.empty();
-    }
-
     @Override
     public void onActivate() {
         super.onActivate();
@@ -123,6 +99,30 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
             default:
                 return Optional.empty();
         }
+    }
+
+    private void createChannels() {
+        commonPublicChatChannelService.getChannels().forEach(commonPublicChatChannel -> {
+            findOrCreateChannelItem(commonPublicChatChannel).ifPresent(channelTabButtonModel ->
+                    model.channelTabButtonModelByChannelId.put(channelTabButtonModel.getChannelId(), channelTabButtonModel));
+        });
+    }
+
+    private Optional<ChannelTabButtonModel> findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
+        if (chatChannel instanceof CommonPublicChatChannel commonChannel) {
+            SubDomain subDomain = commonChannel.getSubDomain();
+            if (subDomain.isDeprecated()) {
+                return Optional.empty();
+            }
+
+            if (model.channelTabButtonModelByChannelId.containsKey(chatChannel.getId())) {
+                return Optional.of(model.channelTabButtonModelByChannelId.get(chatChannel.getId()));
+            } else {
+                NavigationTarget navigationTarget = toNavigationTarget(commonChannel);
+                return Optional.of(new ChannelTabButtonModel(commonChannel, navigationTarget, commonPublicChatChannelService));
+            }
+        }
+        return Optional.empty();
     }
 
     private void handleNotification(ChatNotification notification) {

@@ -154,6 +154,7 @@ public enum NavigationTarget {
     // SUPPORT
     SUPPORT(CONTENT),
     SUPPORT_ASSISTANCE(SUPPORT),
+    SUPPORT_RESOURCES(SUPPORT),
 
     // USER
     USER(CONTENT),
