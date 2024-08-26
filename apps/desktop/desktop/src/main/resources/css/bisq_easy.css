@@ -333,6 +333,10 @@
     -fx-padding: 0 5 0 5;
 }
 
+.active-payment-filter {
+    -fx-text-fill: -fx-light-text-color !important;
+}
+
 /* COLLAPSE AND EXPAND COLUMNS */
 .collapsed-offer-list-container {
     -fx-background-color: -bisq-dark-grey-20;

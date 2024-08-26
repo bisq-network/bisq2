@@ -6,7 +6,7 @@ import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.user.reputation.list.ReputationListView;
@@ -286,7 +286,7 @@ public class RichTableView<T> extends VBox {
 
     @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-    public static final class FilterMenuItem<T> extends DropdownMenuItem implements Toggle {
+    public static final class FilterMenuItem<T> extends DropdownBisqMenuItem implements Toggle {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
         public static FilterMenuItem<ReputationListView.ListItem> getShowAllFilterMenuItem(ToggleGroup toggleGroup) {
