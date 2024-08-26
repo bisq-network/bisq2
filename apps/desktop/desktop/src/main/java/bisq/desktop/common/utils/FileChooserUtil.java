@@ -42,7 +42,7 @@ public class FileChooserUtil {
     private static Optional<File> openFile(Scene scene, Optional<String> initialFileName) {
         FileChooser fileChooser = getFileChooser(initialFileName);
         Optional<File> result = Optional.ofNullable(fileChooser.showOpenDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFielChooserDirectory);
+        result.ifPresent(FileChooserUtil::persistFileChooserDirectory);
         return result;
     }
 
@@ -57,7 +57,7 @@ public class FileChooserUtil {
     private static Optional<File> saveFile(Scene scene, Optional<String> initialFileName) {
         FileChooser fileChooser = getFileChooser(initialFileName);
         Optional<File> result = Optional.ofNullable(fileChooser.showSaveDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFielChooserDirectory);
+        result.ifPresent(FileChooserUtil::persistFileChooserDirectory);
         return result;
     }
 
@@ -80,7 +80,7 @@ public class FileChooserUtil {
         }
         directoryChooser.setTitle(title);
         Optional<File> result = Optional.ofNullable(directoryChooser.showDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFielChooserDirectory);
+        result.ifPresent(FileChooserUtil::persistFileChooserDirectory);
         return result;
     }
 
@@ -96,7 +96,7 @@ public class FileChooserUtil {
         return fileChooser;
     }
 
-    private static void persistFielChooserDirectory(File file) {
+    private static void persistFileChooserDirectory(File file) {
         SettingsService.getInstance().setCookie(CookieKey.FILE_CHOOSER_DIR, Paths.get(file.getAbsolutePath()).getParent().toString());
     }
 }
