@@ -37,12 +37,14 @@ import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
+import javafx.collections.SetChangeListener;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
@@ -53,11 +55,13 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.Optional;
 
 @Slf4j
 public class OfferbookListView extends bisq.desktop.common.view.View<VBox, OfferbookListModel, OfferbookListController> {
@@ -73,11 +77,12 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private final HBox header;
     private final ImageView offerListWhiteIcon, offerListGreyIcon, offerListGreenIcon;
     private final DropdownMenu offerDirectionFilterMenu, paymentsFilterMenu;
-    private final ListChangeListener<FiatPaymentMethod> listChangeListener;
+    private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
+    private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
     private Label offerDirectionFilterLabel, paymentsFilterLabel;
     private Subscription showOfferListExpandedPin, showBuyFromOffersPin,
-            offerListTableViewSelectionPin, activeMarketPaymentsCountPin;
+            offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
@@ -98,7 +103,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         header.setMaxHeight(HEADER_HEIGHT);
         header.getStyleClass().add("chat-header-title");
 
-        listChangeListener = change -> updateMarketPaymentFilters();
+        availablePaymentsChangeListener = change -> updateMarketPaymentFilters();
+        selectedPaymentsChangeListener = change -> updatePaymentsSelection();
         offerDirectionFilterMenu = createAndGetOffersDirectionFilterMenu();
         paymentsFilterMenu = createAndGetPaymentsFilterDropdownMenu();
 
@@ -188,8 +194,13 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             }
         });
 
-        model.getAvailableMarketPayments().addListener(listChangeListener);
+        isCustomPaymentsSelectedPin = EasyBind.subscribe(model.getIsCustomPaymentsSelected(),
+                isSelected -> updatePaymentsSelection());
+
+        model.getAvailableMarketPayments().addListener(availablePaymentsChangeListener);
         updateMarketPaymentFilters();
+        model.getSelectedMarketPayments().addListener(selectedPaymentsChangeListener);
+        updatePaymentsSelection();
 
         title.setOnMouseEntered(e -> title.setGraphic(offerListWhiteIcon));
         title.setOnMouseClicked(e -> controller.toggleOfferList());
@@ -207,8 +218,10 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         offerListTableViewSelectionPin.unsubscribe();
         showBuyFromOffersPin.unsubscribe();
         activeMarketPaymentsCountPin.unsubscribe();
+        isCustomPaymentsSelectedPin.unsubscribe();
 
-        model.getAvailableMarketPayments().removeListener(listChangeListener);
+        model.getAvailableMarketPayments().removeListener(availablePaymentsChangeListener);
+        model.getSelectedMarketPayments().removeListener(selectedPaymentsChangeListener);
 
         title.setOnMouseEntered(null);
         title.setOnMouseExited(null);
@@ -249,24 +262,27 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             ImageView paymentIcon = ImageUtil.getImageViewById(payment.getName());
             Label paymentLabel = new Label(payment.getDisplayString(), paymentIcon);
             paymentLabel.setGraphicTextGap(10);
-            PaymentMenuItem item = new PaymentMenuItem(paymentLabel);
-            item.setOnAction(e -> {
-                item.updateSelection(!item.isSelected());
-                controller.toggleMethodFilter(payment, item.isSelected());
-            });
-            paymentsFilterMenu.addMenuItems(item);
+            PaymentMenuItem paymentItem = new PaymentMenuItem(payment, paymentLabel);
+            paymentItem.setHideOnClick(false);
+            paymentItem.setOnAction(e -> controller.togglePaymentFilter(payment, paymentItem.isSelected()));
+            paymentsFilterMenu.addMenuItems(paymentItem);
         });
 
         StackPane customPaymentIcon = BisqEasyViewUtils.getCustomPaymentMethodIcon("C");
         Label customPaymentLabel = new Label(
                 Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.customPayments"), customPaymentIcon);
         customPaymentLabel.setGraphicTextGap(10);
-        PaymentMenuItem customItem = new PaymentMenuItem(customPaymentLabel);
-        customItem.setOnAction(e -> {
-            customItem.updateSelection(!customItem.isSelected());
-            controller.toggleCustomMethodFilter(customItem.isSelected());
-        });
+        PaymentMenuItem customItem = new PaymentMenuItem(null, customPaymentLabel);
+        customItem.setHideOnClick(false);
+        customItem.setOnAction(e -> controller.toggleCustomPaymentFilter(customItem.isSelected()));
         paymentsFilterMenu.addMenuItems(customItem);
+
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        DropdownBisqMenuItem clearFilters = new DropdownBisqMenuItem("delete-t-grey", "delete-t-white",
+                Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.clearFilters"));
+        clearFilters.setHideOnClick(false);
+        clearFilters.setOnAction(e -> controller.clearPaymentFilters());
+        paymentsFilterMenu.addMenuItems(separator, clearFilters);
     }
 
     private void cleanUpPaymentsFilterMenu() {
@@ -275,6 +291,18 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 .map(item -> (PaymentMenuItem) item)
                 .forEach(PaymentMenuItem::dispose);
         paymentsFilterMenu.clearMenuItems();
+    }
+
+    private void updatePaymentsSelection() {
+        paymentsFilterMenu.getMenuItems().stream()
+                .filter(item -> item instanceof PaymentMenuItem)
+                .map(item -> (PaymentMenuItem) item)
+                .forEach(paymentMenuItem ->
+                    paymentMenuItem.getPaymentMethod()
+                            .ifPresentOrElse(
+                                    payment -> paymentMenuItem.updateSelection(model.getSelectedMarketPayments().contains(payment)),
+                                    () -> paymentMenuItem.updateSelection(model.getIsCustomPaymentsSelected().get()))
+                );
     }
 
     private void configOffersTableView() {
@@ -488,12 +516,16 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         };
     }
 
+    @Getter
     private static final class PaymentMenuItem extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
-        private PaymentMenuItem(Label displayLabel) {
+        private final Optional<FiatPaymentMethod> paymentMethod;
+
+        private PaymentMenuItem(FiatPaymentMethod paymentMethod, Label displayLabel) {
             super("check-white", "check-white", displayLabel);
 
+            this.paymentMethod = Optional.ofNullable(paymentMethod);
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
             initialize();
