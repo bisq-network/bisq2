@@ -182,7 +182,6 @@ public enum NavigationTarget {
     SETTINGS(CONTENT),
     PREFERENCES(SETTINGS),
     NETWORK_INFO(SETTINGS),
-    UTILS(SETTINGS),
 
     // WALLET
     WALLET(CONTENT),

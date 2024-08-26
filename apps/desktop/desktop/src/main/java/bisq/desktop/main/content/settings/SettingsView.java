@@ -27,6 +27,5 @@ public class SettingsView extends ContentTabView<SettingsModel, SettingsControll
 
         addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
         addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-        addTab(Res.get("settings.utils"), NavigationTarget.UTILS);
     }
 }
