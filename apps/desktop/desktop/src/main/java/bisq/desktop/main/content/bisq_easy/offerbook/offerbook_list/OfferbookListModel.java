@@ -18,10 +18,12 @@
 package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -44,6 +46,7 @@ class OfferbookListModel implements bisq.desktop.common.view.Model {
     private final ObservableSet<FiatPaymentMethod> selectedMarketPayments = FXCollections.observableSet();
     private final BooleanProperty isCustomPaymentsSelected = new SimpleBooleanProperty();
     private final IntegerProperty activeMarketPaymentsCount = new SimpleIntegerProperty();
+    private final SimpleObjectProperty<BisqEasyOfferbookChannel> channel = new SimpleObjectProperty<>();
 
     OfferbookListModel() {
     }
