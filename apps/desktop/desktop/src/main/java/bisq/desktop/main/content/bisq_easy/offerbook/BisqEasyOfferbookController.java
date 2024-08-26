@@ -95,11 +95,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     }
 
     @Override
-    public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        super.createDependencies(chatChannelDomain);
-    }
-
-    @Override
     public BisqEasyOfferbookModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
         BisqEasyOfferbookModel model = new BisqEasyOfferbookModel(chatChannelDomain);
 

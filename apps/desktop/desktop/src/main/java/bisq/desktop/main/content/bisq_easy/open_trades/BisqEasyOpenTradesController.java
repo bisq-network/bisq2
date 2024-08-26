@@ -75,8 +75,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         tradeStateController = new TradeStateController(serviceProvider);
         openTradesWelcome = new OpenTradesWelcome();
         tradeDataHeader = new TradeDataHeader(serviceProvider, Res.get("bisqEasy.openTrades.chat.peer.description").toUpperCase());
-
-        selectionService = chatService.getBisqEasyOpenTradesSelectionService();
     }
 
     @Override

@@ -228,6 +228,17 @@ public class ChatService implements Service {
     }
 
     public ChatChannelSelectionService getChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+        switch (chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK -> {
+                return getBisqEasyOfferbookChannelSelectionService();
+            }
+            case BISQ_EASY_OPEN_TRADES -> {
+                return getBisqEasyOpenTradesSelectionService();
+            }
+            case BISQ_EASY_PRIVATE_CHAT -> {
+                return getBisqEasyPrivateChatChannelSelectionService();
+            }
+        }
         return chatChannelSelectionServices.get(chatChannelDomain);
     }
 
