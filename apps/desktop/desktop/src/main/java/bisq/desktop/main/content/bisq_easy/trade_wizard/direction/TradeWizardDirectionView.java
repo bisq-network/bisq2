@@ -91,7 +91,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
-        gainReputationButton.setOnAction(evt -> controller.onGainReputation());
+        gainReputationButton.setOnAction(evt -> controller.onBuildReputation());
         withoutReputationButton.setOnAction(evt -> controller.onTradeWithoutReputation());
         backToBuyButton.setOnAction(evt -> controller.onCloseReputationInfo());
 

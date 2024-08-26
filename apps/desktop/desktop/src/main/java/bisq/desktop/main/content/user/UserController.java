@@ -22,10 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.user.accounts.PaymentAccountsController;
-import bisq.desktop.main.content.user.bonded_roles.nodes.NodesController;
-import bisq.desktop.main.content.user.bonded_roles.roles.RolesController;
 import bisq.desktop.main.content.user.password.PasswordController;
-import bisq.desktop.main.content.user.reputation.ReputationController;
 import bisq.desktop.main.content.user.user_profile.UserProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,15 +50,6 @@ public class UserController extends ContentTabController<UserModel> {
             }
             case BISQ_EASY_PAYMENT_ACCOUNTS: {
                 return Optional.of(new PaymentAccountsController(serviceProvider));
-            }
-            case REPUTATION: {
-                return Optional.of(new ReputationController(serviceProvider));
-            }
-            case ROLES: {
-                return Optional.of(new RolesController(serviceProvider));
-            }
-            case NODES: {
-                return Optional.of(new NodesController(serviceProvider));
             }
             default: {
                 return Optional.empty();

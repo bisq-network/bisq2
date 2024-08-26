@@ -88,8 +88,8 @@ public class TradeWizardDirectionController implements Controller {
         applyShowReputationInfo();
     }
 
-    void onGainReputation() {
-        closeAndNavigateToHandler.accept(NavigationTarget.REPUTATION);
+    void onBuildReputation() {
+        closeAndNavigateToHandler.accept(NavigationTarget.BUILD_REPUTATION);
     }
 
     void onTradeWithoutReputation() {

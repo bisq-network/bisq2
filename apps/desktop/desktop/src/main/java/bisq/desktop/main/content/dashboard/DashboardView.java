@@ -50,7 +50,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
     private static final Insets DEFAULT_PADDING = new Insets(30, 40, 40, 40);
     private static final Insets NOTIFICATION_PADDING = new Insets(10, 40, 40, 40);
 
-    private final Button tradeProtocols, learnMore;
+    private final Button tradeProtocols, buildReputation;
     private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
     private final GridPane gridPane;
     private Subscription isNotificationVisiblePin;
@@ -123,10 +123,10 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
                 groupPaneStyleClass,
                 groupInsets);
 
-        learnMore = new Button(Res.get("dashboard.third.button"));
+        buildReputation = new Button(Res.get("dashboard.third.button"));
         GridPaneUtil.fillColumn(subGridPane,
                 1,
-                learnMore,
+                buildReputation,
                 buttonStyleClass,
                 buttonInsets,
                 Res.get("dashboard.third.headline"),
@@ -164,7 +164,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         );
 
         tradeProtocols.setOnAction(e -> controller.onOpenTradeOverview());
-        learnMore.setOnAction(e -> controller.onLearn());
+        buildReputation.setOnAction(e -> controller.onBuildReputation());
     }
 
     @Override
@@ -177,7 +177,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         isNotificationVisiblePin.unsubscribe();
 
         tradeProtocols.setOnAction(null);
-        learnMore.setOnAction(null);
+        buildReputation.setOnAction(null);
     }
 
     private Triple<VBox, Label, Label> getPriceBox(String title) {
