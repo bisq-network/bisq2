@@ -70,7 +70,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private final Label title, showMyOffersOnlyLabel;
     private final BisqTableView<OfferbookListItem> tableView;
     private final BisqTooltip titleTooltip;
-    private final HBox header;
+    private final HBox header, showOnlyMyMessagesHBox;
     private final ImageView offerListWhiteIcon, offerListGreyIcon, offerListGreenIcon;
     private final DropdownMenu offerDirectionFilterMenu, paymentsFilterMenu;
     private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
@@ -106,7 +106,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         paymentsFilterMenu = createAndGetPaymentsFilterDropdownMenu();
         showMyOffersOnlyLabel = new Label(Res.get("bisqEasy.offerbook.offerList.table.filters.showMyOffersOnly"));
         showOnlyMyMessages = new CheckBox();
-        HBox showOnlyMyMessagesHBox = new HBox(5, showOnlyMyMessages, showMyOffersOnlyLabel);
+        showOnlyMyMessagesHBox = new HBox(5, showOnlyMyMessages, showMyOffersOnlyLabel);
         showOnlyMyMessagesHBox.getStyleClass().add("offerbook-subheader-checkbox");
         showOnlyMyMessagesHBox.setAlignment(Pos.CENTER);
 
@@ -153,6 +153,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                     Transitions.expansionAnimation(root, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH, () -> {
                         paymentsFilterMenu.setVisible(true);
                         paymentsFilterMenu.setManaged(true);
+                        showOnlyMyMessagesHBox.setVisible(true);
+                        showOnlyMyMessagesHBox.setManaged(true);
                     });
                     title.setOnMouseExited(e -> title.setGraphic(offerListGreenIcon));
                 } else {
@@ -171,6 +173,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                         title.setOnMouseExited(e -> title.setGraphic(offerListGreyIcon));
                         paymentsFilterMenu.setVisible(false);
                         paymentsFilterMenu.setManaged(false);
+                        showOnlyMyMessagesHBox.setVisible(false);
+                        showOnlyMyMessagesHBox.setManaged(false);
                     });
                 }
             }
