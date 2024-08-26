@@ -156,7 +156,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         }
     }
 
-    private void removeMessage(M message, C channel) {
+    protected void removeMessage(M message, C channel) {
         synchronized (getPersistableStore()) {
             channel.removeChatMessage(message);
         }

@@ -195,14 +195,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             model.getChatMessageIds().clear();
             model.setAutoScrollToBottom(true);
 
-            if (channel instanceof BisqEasyOfferbookChannel) {
-                chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
-            } else if (channel instanceof BisqEasyOpenTradeChannel) {
-                chatMessagesPin = bindChatMessages((BisqEasyOpenTradeChannel) channel);
-            } else if (channel instanceof CommonPublicChatChannel) {
-                chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
-            } else if (channel instanceof TwoPartyPrivateChatChannel) {
-                chatMessagesPin = bindChatMessages((TwoPartyPrivateChatChannel) channel);
+            if (channel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
+                chatMessagesPin = bindChatMessages(bisqEasyOfferbookChannel);
+            } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+                chatMessagesPin = bindChatMessages(bisqEasyOpenTradeChannel);
+            } else if (channel instanceof CommonPublicChatChannel commonPublicChatChannel) {
+                chatMessagesPin = bindChatMessages(commonPublicChatChannel);
+            } else if (channel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
+                chatMessagesPin = bindChatMessages(twoPartyPrivateChatChannel);
             }
 
             if (focusSubscription != null) {
@@ -527,20 +527,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
         chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer)
-                .ifPresent(channel -> {
-                    if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
-                        Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
-                    }
-                    if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
-                        Navigation.navigateTo(NavigationTarget.DISCUSSION_PRIVATECHATS);
-                    }
-                    if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
-                        Navigation.navigateTo(NavigationTarget.EVENTS_PRIVATECHATS);
-                    }
-                    if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
-                        Navigation.navigateTo(NavigationTarget.SUPPORT_PRIVATECHATS);
-                    }
-                });
+                .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
     }
 
     private void applyPredicate() {
@@ -577,7 +564,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
         // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
         // but as we have a contains() check there it will not have any effect.
-        model.getChatMessages().setAll(channel.getChatMessages().stream()
+        model.getChatMessages().addAll(channel.getChatMessages().stream()
                 .filter(chatMessage -> chatMessage.getChatMessageType() != TAKE_BISQ_EASY_OFFER)
                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
                         channel,
@@ -658,19 +645,24 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
     }
 
-    private void publishPrivateChatMessageReaction(ChatMessage chatMessage, ChatChannel<?> chatChannel, Reaction reaction,
+    private void publishPrivateChatMessageReaction(ChatMessage chatMessage,
+                                                   ChatChannel<?> chatChannel,
+                                                   Reaction reaction,
                                                    Optional<ChatMessageReaction> messageReaction) {
-        boolean isRemoved = false;
-        if (messageReaction.isPresent() && messageReaction.get() instanceof PrivateChatMessageReaction) {
-            PrivateChatMessageReaction privateChatReaction = (PrivateChatMessageReaction) messageReaction.get();
+        boolean isRemoved;
+        if (messageReaction.isPresent() &&
+                messageReaction.get() instanceof PrivateChatMessageReaction privateChatReaction) {
             isRemoved = !privateChatReaction.isRemoved();
+        } else {
+            isRemoved = false;
         }
 
         if (chatMessage instanceof TwoPartyPrivateChatMessage) {
             checkArgument(chatChannel instanceof TwoPartyPrivateChatChannel, "Channel needs to be of type TwoPartyPrivateChatChannel.");
             TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
-            chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain())
-                    .sendTextMessageReaction((TwoPartyPrivateChatMessage) chatMessage, channel, reaction, isRemoved);
+            ChatChannelDomain chatChannelDomain = model.getChatChannelDomain();
+            chatService.findTwoPartyPrivateChatChannelService(chatChannelDomain).ifPresent(service ->
+                    service.sendTextMessageReaction((TwoPartyPrivateChatMessage) chatMessage, channel, reaction, isRemoved));
         } else if (chatMessage instanceof BisqEasyOpenTradeMessage) {
             checkArgument(chatChannel instanceof BisqEasyOpenTradeChannel, "Channel needs to be of type BisqEasyOpenTradeChannel.");
             BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;

@@ -17,9 +17,10 @@
 
 package bisq.chat;
 
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.application.Service;
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceClient;
@@ -95,7 +96,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         findChannel(chatChannel.getId()).ifPresent(this::doRemoveExpiredMessages);
     }
 
-    public abstract ObservableArray<C> getChannels();
+    public abstract ObservableSet<C> getChannels();
 
     protected void doRemoveExpiredMessages(C channel) {
         Set<M> toRemove = channel.getChatMessages().stream()

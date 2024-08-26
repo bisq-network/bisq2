@@ -12,12 +12,9 @@ public class ChatChannelDomainNavigationTargetMapper {
         switch (chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK:
             case BISQ_EASY_OPEN_TRADES:
-            case BISQ_EASY_PRIVATE_CHAT:
                 return Optional.of(NavigationTarget.BISQ_EASY);
             case DISCUSSION:
-                return Optional.of(NavigationTarget.DISCUSSION);
-            case EVENTS:
-                return Optional.of(NavigationTarget.EVENTS);
+                return Optional.of(NavigationTarget.CHAT);
             case SUPPORT:
                 return Optional.of(NavigationTarget.SUPPORT);
             default:
@@ -30,18 +27,13 @@ public class ChatChannelDomainNavigationTargetMapper {
         switch (navigationTarget) {
             case BISQ_EASY:
                 return Set.of(ChatChannelDomain.BISQ_EASY_OFFERBOOK,
-                        ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
-                        ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
+                        ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
             case BISQ_EASY_OFFERBOOK:
                 return Set.of(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
             case BISQ_EASY_OPEN_TRADES:
                 return Set.of(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
-            case BISQ_EASY_PRIVATE_CHAT:
-                return Set.of(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
-            case DISCUSSION:
+            case CHAT:
                 return Set.of(ChatChannelDomain.DISCUSSION);
-            case EVENTS:
-                return Set.of(ChatChannelDomain.EVENTS);
             case SUPPORT:
                 return Set.of(ChatChannelDomain.SUPPORT);
             default:

@@ -17,25 +17,25 @@
 
 package bisq.chat.bisqeasy.open_trades;
 
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
 public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyOpenTradeChannelStore> {
-    private final ObservableArray<BisqEasyOpenTradeChannel> channels = new ObservableArray<>();
+    private final ObservableSet<BisqEasyOpenTradeChannel> channels = new ObservableSet<>();
 
     public BisqEasyOpenTradeChannelStore() {
     }
 
-    private BisqEasyOpenTradeChannelStore(List<BisqEasyOpenTradeChannel> privateTradeChannels) {
+    private BisqEasyOpenTradeChannelStore(Set<BisqEasyOpenTradeChannel> privateTradeChannels) {
         setAll(privateTradeChannels);
     }
 
@@ -53,9 +53,9 @@ public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyO
     }
 
     public static BisqEasyOpenTradeChannelStore fromProto(bisq.chat.protobuf.BisqEasyOpenTradeChannelStore proto) {
-        List<BisqEasyOpenTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
+        Set<BisqEasyOpenTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
                 .map(e -> (BisqEasyOpenTradeChannel) BisqEasyOpenTradeChannel.fromProto(e))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
         return new BisqEasyOpenTradeChannelStore(privateTradeChannels);
     }
 
@@ -77,10 +77,10 @@ public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyO
 
     @Override
     public BisqEasyOpenTradeChannelStore getClone() {
-        return new BisqEasyOpenTradeChannelStore(new ArrayList<>(channels));
+        return new BisqEasyOpenTradeChannelStore(new HashSet<>(channels));
     }
 
-    public void setAll(List<BisqEasyOpenTradeChannel> privateTradeChannels) {
+    public void setAll(Set<BisqEasyOpenTradeChannel> privateTradeChannels) {
         this.channels.setAll(privateTradeChannels);
     }
 }

@@ -1,12 +1,7 @@
 package bisq.desktop.main.content.chat.message_container;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelSelectionService;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
-import bisq.chat.Citation;
+import bisq.chat.*;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
@@ -273,10 +268,14 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                         .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                         .show();
             }
-        } else if (chatChannel instanceof CommonPublicChatChannel) {
-            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain()).publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
-        } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-            chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
+        } else {
+            ChatChannelDomain chatChannelDomain = model.getChatChannelDomain();
+            if (chatChannel instanceof CommonPublicChatChannel) {
+                chatService.getCommonPublicChatChannelServices().get(chatChannelDomain).publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
+            } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+                chatService.findTwoPartyPrivateChatChannelService(chatChannelDomain).ifPresent(service ->
+                        service.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel));
+            }
         }
 
         citationBlock.close();

@@ -69,23 +69,20 @@ public class ContentController extends NavigationController {
             case DASHBOARD: {
                 return Optional.of(new DashboardController(serviceProvider));
             }
-            case DISCUSSION: {
-                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.DISCUSSION, NavigationTarget.DISCUSSION));
-            }
-            case ACADEMY: {
-                return Optional.of(new AcademyController(serviceProvider));
-            }
-            case EVENTS: {
-                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.EVENTS, NavigationTarget.EVENTS));
-            }
-            case SUPPORT: {
-                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.SUPPORT, NavigationTarget.SUPPORT));
+            case BISQ_EASY: {
+                return Optional.of(new BisqEasyController(serviceProvider));
             }
             case TRADE_PROTOCOLS: {
                 return Optional.of(new TradeAppsController(serviceProvider));
             }
-            case BISQ_EASY: {
-                return Optional.of(new BisqEasyController(serviceProvider));
+            case ACADEMY: {
+                return Optional.of(new AcademyController(serviceProvider));
+            }
+            case CHAT: {
+                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.DISCUSSION, NavigationTarget.CHAT));
+            }
+            case SUPPORT: {
+                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.SUPPORT, NavigationTarget.SUPPORT));
             }
             case USER: {
                 return Optional.of(new UserController(serviceProvider));

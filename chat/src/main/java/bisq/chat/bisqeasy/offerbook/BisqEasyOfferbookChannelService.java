@@ -25,7 +25,7 @@ import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -95,7 +95,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableArray<BisqEasyOfferbookChannel> getChannels() {
+    public ObservableSet<BisqEasyOfferbookChannel> getChannels() {
         return persistableStore.getChannels();
     }
 

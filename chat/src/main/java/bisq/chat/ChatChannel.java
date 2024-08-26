@@ -20,6 +20,7 @@ package bisq.chat;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;

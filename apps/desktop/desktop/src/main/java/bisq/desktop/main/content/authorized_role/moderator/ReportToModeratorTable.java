@@ -131,22 +131,7 @@ public class ReportToModeratorTable {
         }
 
         private void navigateToChannel(ChatChannelDomain chatChannelDomain) {
-            switch (chatChannelDomain) {
-                case BISQ_EASY_OFFERBOOK:
-                case BISQ_EASY_OPEN_TRADES:
-                case BISQ_EASY_PRIVATE_CHAT:
-                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
-                    break;
-                case DISCUSSION:
-                    Navigation.navigateTo(NavigationTarget.DISCUSSION_PRIVATECHATS);
-                    break;
-                case EVENTS:
-                    Navigation.navigateTo(NavigationTarget.EVENTS_PRIVATECHATS);
-                    break;
-                case SUPPORT:
-                    Navigation.navigateTo(NavigationTarget.SUPPORT_PRIVATECHATS);
-                    break;
-            }
+            Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE);
         }
     }
 

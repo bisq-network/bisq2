@@ -31,7 +31,7 @@ import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -95,11 +95,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     }
 
     @Override
-    public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        super.createDependencies(chatChannelDomain);
-    }
-
-    @Override
     public BisqEasyOfferbookModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
         BisqEasyOfferbookModel model = new BisqEasyOfferbookModel(chatChannelDomain);
 
@@ -127,7 +122,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         showMarketSelectionListCollapsedSettingsPin = FxBindings.bindBiDir(model.getShowMarketSelectionListCollapsed())
                 .to(settingsService.getShowMarketSelectionListCollapsed());
 
-        ObservableArray<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
+        ObservableSet<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChannels.addObserver(() ->
                 UIThread.run(() -> model.getIsTradeChannelVisible().set(!bisqEasyOpenTradeChannels.isEmpty())));
 

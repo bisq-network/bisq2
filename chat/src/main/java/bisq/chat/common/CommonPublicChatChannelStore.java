@@ -17,25 +17,25 @@
 
 package bisq.chat.common;
 
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
 public class CommonPublicChatChannelStore implements PersistableStore<CommonPublicChatChannelStore> {
-    private final ObservableArray<CommonPublicChatChannel> channels = new ObservableArray<>();
+    private final ObservableSet<CommonPublicChatChannel> channels = new ObservableSet<>();
 
-    public CommonPublicChatChannelStore() {
+    CommonPublicChatChannelStore() {
     }
 
-    private CommonPublicChatChannelStore(List<CommonPublicChatChannel> privateDiscussionChannels) {
+    private CommonPublicChatChannelStore(Set<CommonPublicChatChannel> privateDiscussionChannels) {
         setAll(privateDiscussionChannels);
     }
 
@@ -44,7 +44,7 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
         return bisq.chat.protobuf.CommonPublicChatChannelStore.newBuilder()
                 .addAllChannels(channels.stream()
                         .map(e -> e.toProto(serializeForHash))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toSet()));
     }
 
     @Override
@@ -53,9 +53,9 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
     }
 
     public static CommonPublicChatChannelStore fromProto(bisq.chat.protobuf.CommonPublicChatChannelStore proto) {
-        List<CommonPublicChatChannel> privateDiscussionChannels = proto.getChannelsList().stream()
+        Set<CommonPublicChatChannel> privateDiscussionChannels = proto.getChannelsList().stream()
                 .map(e -> (CommonPublicChatChannel) CommonPublicChatChannel.fromProto(e))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
         return new CommonPublicChatChannelStore(privateDiscussionChannels);
     }
 
@@ -77,10 +77,10 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
 
     @Override
     public CommonPublicChatChannelStore getClone() {
-        return new CommonPublicChatChannelStore(new ArrayList<>(channels));
+        return new CommonPublicChatChannelStore(new HashSet<>(channels));
     }
 
-    public void setAll(List<CommonPublicChatChannel> privateDiscussionChannels) {
+    public void setAll(Set<CommonPublicChatChannel> privateDiscussionChannels) {
         this.channels.setAll(privateDiscussionChannels);
     }
 }

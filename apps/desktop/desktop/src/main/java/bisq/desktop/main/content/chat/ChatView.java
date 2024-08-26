@@ -24,7 +24,7 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
+public abstract class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
     protected static final double SIDE_PADDING = 40;
 
     public ChatView(ChatModel model,

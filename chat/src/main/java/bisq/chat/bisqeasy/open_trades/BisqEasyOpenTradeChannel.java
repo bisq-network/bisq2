@@ -18,7 +18,7 @@
 package bisq.chat.bisqeasy.open_trades;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
@@ -30,10 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -94,7 +91,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                 myUserIdentity,
                 Set.of(peer),
                 mediator,
-                new ArrayList<>(),
+                new HashSet<>(),
                 false,
                 ChatChannelNotificationType.ALL);
     }
@@ -111,7 +108,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                 myUserIdentity,
                 Set.of(requestingTrader, nonRequestingTrader),
                 Optional.of(myUserIdentity.getUserProfile()),
-                new ArrayList<>(),
+                new HashSet<>(),
                 true,
                 ChatChannelNotificationType.ALL);
     }
@@ -123,7 +120,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                                      UserIdentity myUserIdentity,
                                      Set<UserProfile> traders,
                                      Optional<UserProfile> mediator,
-                                     List<BisqEasyOpenTradeMessage> chatMessages,
+                                     Set<BisqEasyOpenTradeMessage> chatMessages,
                                      boolean isInMediation,
                                      ChatChannelNotificationType chatChannelNotificationType) {
         super(channelId, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, myUserIdentity, chatMessages, chatChannelNotificationType);
@@ -168,7 +165,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                 proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
                 proto.getChatMessagesList().stream()
                         .map(BisqEasyOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()),
+                        .collect(Collectors.toSet()),
                 proto.getIsInMediation(),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
     }

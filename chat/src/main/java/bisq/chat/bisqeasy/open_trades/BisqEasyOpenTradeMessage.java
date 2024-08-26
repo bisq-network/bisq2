@@ -35,10 +35,10 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
@@ -85,7 +85,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                                     Optional<UserProfile> mediator,
                                     ChatMessageType chatMessageType,
                                     Optional<BisqEasyOffer> bisqEasyOffer,
-                                    List<BisqEasyOpenTradeMessageReaction> reactions) {
+                                    Set<BisqEasyOpenTradeMessageReaction> reactions) {
         this(tradeId,
                 messageId,
                 ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
@@ -117,7 +117,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                                      Optional<UserProfile> mediator,
                                      ChatMessageType chatMessageType,
                                      Optional<BisqEasyOffer> bisqEasyOffer,
-                                     List<BisqEasyOpenTradeMessageReaction> reactions) {
+                                     Set<BisqEasyOpenTradeMessageReaction> reactions) {
         super(messageId, chatChannelDomain, channelId, senderUserProfile, receiverUserProfileId,
                 receiverNetworkId, text, citation, date, wasEdited, chatMessageType, reactions);
         this.tradeId = tradeId;
@@ -144,7 +144,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                 new Date().getTime(),
                 false,
                 chatMessageType,
-                new ArrayList<>());
+                new HashSet<>());
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
@@ -202,7 +202,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                 bisqEasyOffer,
                 protoMessage.getChatMessageReactionsList().stream()
                         .map(BisqEasyOpenTradeMessageReaction::fromProto)
-                        .collect(Collectors.toList())
+                        .collect(Collectors.toSet())
         );
     }
 

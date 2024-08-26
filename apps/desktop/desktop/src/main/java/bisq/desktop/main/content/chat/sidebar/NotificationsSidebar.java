@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.chat.sidebar;
 
 import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelNotificationType;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;

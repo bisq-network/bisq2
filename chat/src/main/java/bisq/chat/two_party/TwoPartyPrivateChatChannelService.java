@@ -23,7 +23,7 @@ import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
@@ -37,8 +37,8 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -82,11 +82,12 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableArray<TwoPartyPrivateChatChannel> getChannels() {
+    public ObservableSet<TwoPartyPrivateChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
-    public Optional<TwoPartyPrivateChatChannel> findOrCreateChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
+    public Optional<TwoPartyPrivateChatChannel> findOrCreateChannel(ChatChannelDomain chatChannelDomain,
+                                                                    UserProfile peer) {
         synchronized (this) {
             UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity();
             return findChannel(chatChannelDomain, peer, myUserIdentity.getId())
@@ -148,11 +149,12 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 new Date().getTime(),
                 wasEdited,
                 chatMessageType,
-                new ArrayList<>());
+                new HashSet<>());
     }
 
     @Override
-    protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
+    protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer,
+                                                                           UserIdentity myUserIdentity) {
         return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
     }
 
@@ -191,7 +193,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         });
     }
 
-    private Optional<TwoPartyPrivateChatChannel> findChannel(ChatChannelDomain chatChannelDomain, UserProfile peer, String myUserIdentityId) {
+    private Optional<TwoPartyPrivateChatChannel> findChannel(ChatChannelDomain chatChannelDomain,
+                                                             UserProfile peer,
+                                                             String myUserIdentityId) {
         return findChannel(TwoPartyPrivateChatChannel.createId(chatChannelDomain, peer.getId(), myUserIdentityId));
     }
 }

@@ -22,7 +22,7 @@ import bisq.chat.Citation;
 import bisq.chat.pub.PublicChatChannelService;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.Reaction;
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -101,7 +101,7 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableArray<CommonPublicChatChannel> getChannels() {
+    public ObservableSet<CommonPublicChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 

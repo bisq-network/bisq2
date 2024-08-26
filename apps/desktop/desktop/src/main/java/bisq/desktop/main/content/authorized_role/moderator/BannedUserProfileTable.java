@@ -124,10 +124,7 @@ public class BannedUserProfileTable {
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
                     break;
                 case DISCUSSION:
-                    Navigation.navigateTo(NavigationTarget.DISCUSSION);
-                    break;
-                case EVENTS:
-                    Navigation.navigateTo(NavigationTarget.EVENTS);
+                    Navigation.navigateTo(NavigationTarget.CHAT);
                     break;
                 case SUPPORT:
                     Navigation.navigateTo(NavigationTarget.SUPPORT);

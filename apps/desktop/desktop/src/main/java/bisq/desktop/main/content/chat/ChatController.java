@@ -19,49 +19,20 @@ package bisq.desktop.main.content.chat;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelSelectionService;
-import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
 
 @Slf4j
 public abstract class ChatController<V extends ChatView<V, M>, M extends ChatModel>
         extends BaseChatController<V, M> implements Controller {
-    protected ChatChannelSelectionService selectionService;
-    protected Pin selectedChannelPin;
 
     public ChatController(ServiceProvider serviceProvider,
                           ChatChannelDomain chatChannelDomain,
                           NavigationTarget navigationTarget) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
-    }
-
-    @Override
-    public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        selectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
-    }
-
-    @Override
-    public void onActivate() {
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
-        model.getSearchText().set("");
-        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
-            if (searchText == null || searchText.isEmpty()) {
-                chatMessageContainerController.setSearchPredicate(item -> true);
-            } else {
-                chatMessageContainerController.setSearchPredicate(item -> item.match(searchText));
-            }
-        });
-    }
-
-    @Override
-    public void onDeactivate() {
-        selectedChannelPin.unbind();
-        searchTextPin.unsubscribe();
     }
 
     @Override

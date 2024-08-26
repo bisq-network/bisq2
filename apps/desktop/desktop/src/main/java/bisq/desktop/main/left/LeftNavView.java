@@ -82,7 +82,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-bisq-easy",
                 NavigationTarget.BISQ_EASY, false);
 
-        LeftNavButton tradeAppsButton = createNavigationButton(Res.get("navigation.tradeApps"),
+        LeftNavButton protocols = createNavigationButton(Res.get("navigation.tradeApps"),
                 "nav-trade",
                 NavigationTarget.TRADE_PROTOCOLS, false);
 
@@ -90,17 +90,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-wallet",
                 NavigationTarget.WALLET, false);
 
-        LeftNavButton learnButton = createNavigationButton(Res.get("navigation.academy"),
+        LeftNavButton learn = createNavigationButton(Res.get("navigation.academy"),
                 "nav-learn",
                 NavigationTarget.ACADEMY, false);
 
-        LeftNavButton chat = createNavigationButton(Res.get("navigation.discussion"),
+        LeftNavButton chat = createNavigationButton(Res.get("navigation.chat"),
                 "nav-chat",
-                NavigationTarget.DISCUSSION, false);
-
-        LeftNavButton events = createNavigationButton(Res.get("navigation.events"),
-                "nav-events",
-                NavigationTarget.EVENTS, false);
+                NavigationTarget.CHAT, false);
 
         LeftNavButton support = createNavigationButton(Res.get("navigation.support"),
                 "nav-support",
@@ -149,10 +145,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, tradeAppsButton,
-                learnButton,
-                chat, events, support,
-                user, settings, authorizedRole);
+        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, protocols,
+                learn, chat, support, user, settings, authorizedRole);
         if (model.isWalletEnabled()) {
             mainMenuItems.getChildren().add(3, wallet);
         }
@@ -311,7 +305,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         return button;
     }
 
-    private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget, LeftNavButton parentButton) {
+    private LeftNavSubButton createSubmenuNavigationButton(String title,
+                                                           NavigationTarget navigationTarget,
+                                                           LeftNavButton parentButton) {
         LeftNavSubButton button = new LeftNavSubButton(title, toggleGroup, navigationTarget, parentButton);
         setupButtonHandler(navigationTarget, button);
         VBox.setVgrow(button, Priority.ALWAYS);

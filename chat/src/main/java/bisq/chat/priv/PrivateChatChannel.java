@@ -19,8 +19,8 @@ package bisq.chat.priv;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelNotificationType;
 import bisq.chat.ChatMessageType;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.identity.UserIdentity;
 import lombok.EqualsAndHashCode;
@@ -28,7 +28,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @ToString(callSuper = true)
@@ -45,7 +44,7 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage<?>> extend
     public PrivateChatChannel(String id,
                               ChatChannelDomain chatChannelDomain,
                               UserIdentity myUserIdentity,
-                              List<M> chatMessages,
+                              Set<M> chatMessages,
                               ChatChannelNotificationType chatChannelNotificationType) {
         super(id, chatChannelDomain, chatChannelNotificationType);
 

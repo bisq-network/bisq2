@@ -25,6 +25,7 @@ import bisq.chat.ChatService;
 import bisq.chat.common.CommonChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
+import bisq.chat.common.SubDomain;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
@@ -53,14 +54,16 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     private final CommonChannelSelectionService chatChannelSelectionService;
     private Pin selectedChannelPin, changedChatNotificationPin;
 
-    public CommonChatTabController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
+    public CommonChatTabController(ServiceProvider serviceProvider,
+                                   ChatChannelDomain chatChannelDomain,
+                                   NavigationTarget navigationTarget) {
         super(new CommonChatTabModel(chatChannelDomain), navigationTarget, serviceProvider);
 
         ChatService chatService = serviceProvider.getChatService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         channelDomain = chatChannelDomain;
         commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
-        twoPartyPrivateChatChannelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
+        twoPartyPrivateChatChannelService = chatService.getTwoPartyPrivateChatChannelService();
         chatChannelSelectionService = (CommonChannelSelectionService) chatService.getChatChannelSelectionServices().get(chatChannelDomain);
 
         createChannels();
@@ -69,27 +72,26 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
 
     private void createChannels() {
         commonPublicChatChannelService.getChannels().forEach(commonPublicChatChannel -> {
-            ChannelTabButtonModel channelTabButtonModel = findOrCreateChannelItem(commonPublicChatChannel);
-            if (channelTabButtonModel != null) {
-                model.channelTabButtonModelByChannelId.put(channelTabButtonModel.getChannelId(), channelTabButtonModel);
-            }
+            findOrCreateChannelItem(commonPublicChatChannel).ifPresent(channelTabButtonModel ->
+                    model.channelTabButtonModelByChannelId.put(channelTabButtonModel.getChannelId(), channelTabButtonModel));
         });
     }
 
-    private ChannelTabButtonModel findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
+    private Optional<ChannelTabButtonModel> findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof CommonPublicChatChannel commonChannel) {
+            SubDomain subDomain = commonChannel.getSubDomain();
+            if (subDomain.isDeprecated()) {
+                return Optional.empty();
+            }
+
             if (model.channelTabButtonModelByChannelId.containsKey(chatChannel.getId())) {
-                return model.channelTabButtonModelByChannelId.get(chatChannel.getId());
+                return Optional.of(model.channelTabButtonModelByChannelId.get(chatChannel.getId()));
             } else {
-                String targetName = channelDomain.toString() + "_" + commonChannel.getChannelTitle().toUpperCase();
-                try {
-                    return new ChannelTabButtonModel(commonChannel, NavigationTarget.valueOf(targetName), commonPublicChatChannelService);
-                } catch (IllegalArgumentException e) {
-                    log.info("Couldn't find navigation target " + targetName + " in channel domain " + channelDomain);
-                }
+                NavigationTarget navigationTarget = toNavigationTarget(commonChannel);
+                return Optional.of(new ChannelTabButtonModel(commonChannel, navigationTarget, commonPublicChatChannelService));
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     @Override
@@ -108,6 +110,19 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
 
         selectedChannelPin.unbind();
         changedChatNotificationPin.unbind();
+    }
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case CHAT_DISCUSSION:
+            case SUPPORT_ASSISTANCE:
+                return Optional.of(new CommonPublicChatController(serviceProvider, channelDomain, navigationTarget));
+            case CHAT_PRIVATE:
+                return Optional.of(new CommonPrivateChatsController(serviceProvider, channelDomain, navigationTarget));
+            default:
+                return Optional.empty();
+        }
     }
 
     private void handleNotification(ChatNotification notification) {
@@ -154,17 +169,14 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     }
 
     void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        ChannelTabButtonModel channelTabButtonModel = findOrCreateChannelItem(chatChannel);
-        if (channelTabButtonModel != null) {
+        findOrCreateChannelItem(chatChannel).ifPresent(channelTabButtonModel -> {
             model.selectedChannelTabButtonModel.set(channelTabButtonModel);
-
             if (model.previousSelectedChannelTabButtonModel != null) {
                 model.previousSelectedChannelTabButtonModel.setSelected(false);
             }
             model.previousSelectedChannelTabButtonModel = channelTabButtonModel;
-
             channelTabButtonModel.setSelected(true);
-        }
+        });
     }
 
     void onSelected(NavigationTarget navigationTarget) {
@@ -180,30 +192,22 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         }
     }
 
-    @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case DISCUSSION_BISQ:
-            case DISCUSSION_BITCOIN:
-            case DISCUSSION_MARKETS:
-            case DISCUSSION_OFFTOPIC:
-            case EVENTS_CONFERENCES:
-            case EVENTS_MEETUPS:
-            case EVENTS_PODCASTS:
-            case EVENTS_TRADEEVENTS:
-            case SUPPORT_SUPPORT:
-            case SUPPORT_QUESTIONS:
-            case SUPPORT_REPORTS: {
-                return Optional.of(new CommonPublicChatController(serviceProvider, channelDomain, navigationTarget));
+    private static NavigationTarget toNavigationTarget(CommonPublicChatChannel commonChannel) {
+        ChatChannelDomain chatChannelDomain = commonChannel.getChatChannelDomain().migrate();
+        SubDomain subDomain = commonChannel.getSubDomain().migrate();
+        if (chatChannelDomain == ChatChannelDomain.DISCUSSION) {
+            if (subDomain == SubDomain.DISCUSSION_BISQ) {
+                return NavigationTarget.CHAT_DISCUSSION;
+            } else {
+                return NavigationTarget.CHAT_PRIVATE;
             }
-            case DISCUSSION_PRIVATECHATS:
-            case EVENTS_PRIVATECHATS:
-            case SUPPORT_PRIVATECHATS: {
-                return Optional.of(new CommonPrivateChatsController(serviceProvider, channelDomain, navigationTarget));
-            }
-            default: {
-                return Optional.empty();
+        } else if (chatChannelDomain == ChatChannelDomain.SUPPORT) {
+            if (subDomain == SubDomain.SUPPORT_SUPPORT) {
+                return NavigationTarget.SUPPORT_ASSISTANCE;
+            } else {
+                return NavigationTarget.NONE;
             }
         }
+        return NavigationTarget.NONE;
     }
 }

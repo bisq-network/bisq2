@@ -30,15 +30,12 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Getter
 public abstract class BaseChatModel extends NavigationModel {
     protected final ChatChannelDomain chatChannelDomain;
-    private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty channelTitle = new SimpleStringProperty("");
     private final StringProperty channelDescription = new SimpleStringProperty("");
