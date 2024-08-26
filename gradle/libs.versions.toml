@@ -56,7 +56,7 @@ protobuf-java-lib = { strictly = '3.19.4' }
 protobuf-gradle-plugin-lib = { strictly = '0.9.3' }
 
 sarxos-lib = { strictly = '0.3.12' }
-shadow-plugin = { strictly = '7.1.2' }
+shadow-plugin = { strictly = '8.3.0' }
 slf4j-lib = { strictly = '1.7.36' }
 spring-boot-starter-web-lib = { strictly = '2.5.6' }
 springfox-lib = { strictly = '3.0.0' }
@@ -176,5 +176,5 @@ springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swa
 [plugins]
 kotlindsl = { id = 'org.gradle.kotlin.kotlin-dsl', version.ref = 'kotlindsl-plugin' }
 openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx-plugin' }
-shadow = { id = 'com.github.johnrengelman.shadow', version.ref = 'shadow-plugin' }
+shadow = { id = 'com.gradleup.shadow', version.ref = 'shadow-plugin' }
 gradle-javacpp-platform = { id = "org.bytedeco.gradle-javacpp-platform", version.ref = "javacv" }
