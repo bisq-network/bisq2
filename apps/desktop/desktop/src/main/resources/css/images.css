@@ -468,6 +468,10 @@
     -fx-image: url("/images/onboarding/learn.png");
 }
 
+#reputation-ribbon {
+    -fx-image: url("/images/onboarding/reputation-ribbon.png");
+}
+
 #dollar-btc {
     -fx-image: url("/images/onboarding/dollar-btc.png");
 }

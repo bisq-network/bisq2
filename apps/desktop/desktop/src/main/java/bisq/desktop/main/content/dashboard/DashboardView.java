@@ -131,7 +131,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
                 buttonInsets,
                 Res.get("dashboard.third.headline"),
                 headlineLabelStyleClass,
-                "learn",
+                "reputation-ribbon",
                 16d,
                 headlineInsets,
                 Res.get("dashboard.third.content"),
