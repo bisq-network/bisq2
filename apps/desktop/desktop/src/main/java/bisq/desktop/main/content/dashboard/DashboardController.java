@@ -88,8 +88,8 @@ public class DashboardController implements Controller {
         isNotificationVisiblePin.unbind();
     }
 
-    public void onLearn() {
-        Navigation.navigateTo(NavigationTarget.ACADEMY);
+    public void onBuildReputation() {
+        Navigation.navigateTo(NavigationTarget.BUILD_REPUTATION);
     }
 
     public void onOpenTradeOverview() {

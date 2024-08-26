@@ -21,8 +21,11 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
-import bisq.desktop.main.content.settings.network.NetworkInfoController;
-import bisq.desktop.main.content.settings.preferences.PreferencesController;
+import bisq.desktop.main.content.settings.display.DisplaySettingsController;
+import bisq.desktop.main.content.settings.language.LanguageSettingsController;
+import bisq.desktop.main.content.settings.network.NetworkSettingsController;
+import bisq.desktop.main.content.settings.notifications.NotificationsSettingsController;
+import bisq.desktop.main.content.settings.trade.TradeSettingsController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,11 +44,20 @@ public class SettingsController extends ContentTabController<SettingsModel> {
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case PREFERENCES: {
-                return Optional.of(new PreferencesController(serviceProvider));
+            case LANGUAGE_SETTINGS: {
+                return Optional.of(new LanguageSettingsController(serviceProvider));
             }
-            case NETWORK_INFO: {
-                return Optional.of(new NetworkInfoController(serviceProvider));
+            case NOTIFICATION_SETTINGS: {
+                return Optional.of(new NotificationsSettingsController(serviceProvider));
+            }
+            case DISPLAY_SETTINGS: {
+                return Optional.of(new DisplaySettingsController(serviceProvider));
+            }
+            case TRADE_SETTINGS: {
+                return Optional.of(new TradeSettingsController(serviceProvider));
+            }
+            case NETWORK_SETTINGS: {
+                return Optional.of(new NetworkSettingsController(serviceProvider));
             }
             default: {
                 return Optional.empty();

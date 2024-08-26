@@ -23,6 +23,6 @@ import bisq.desktop.main.content.ContentTabModel;
 public class SettingsModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.PREFERENCES;
+        return NavigationTarget.LANGUAGE_SETTINGS;
     }
 }
