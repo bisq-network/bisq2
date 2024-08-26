@@ -22,6 +22,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
@@ -147,7 +148,10 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                     root.getStyleClass().add("chat-container");
                     title.setText(Res.get("bisqEasy.offerbook.offerList"));
                     titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip"));
-                    Transitions.expansionAnimation(root, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH);
+                    Transitions.expansionAnimation(root, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH, () -> {
+                        paymentsFilterMenu.setVisible(true);
+                        paymentsFilterMenu.setManaged(true);
+                    });
                     title.setOnMouseExited(e -> title.setGraphic(offerListGreenIcon));
                 } else {
                     Transitions.expansionAnimation(root, EXPANDED_OFFER_LIST_WIDTH, COLLAPSED_LIST_WIDTH + 20, () -> {
@@ -163,6 +167,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                         titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip"));
                         title.setGraphic(offerListGreyIcon);
                         title.setOnMouseExited(e -> title.setGraphic(offerListGreyIcon));
+                        paymentsFilterMenu.setVisible(false);
+                        paymentsFilterMenu.setManaged(false);
                     });
                 }
             }
