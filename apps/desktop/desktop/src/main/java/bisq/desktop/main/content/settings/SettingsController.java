@@ -23,7 +23,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.settings.network.NetworkInfoController;
 import bisq.desktop.main.content.settings.preferences.PreferencesController;
-import bisq.desktop.main.content.settings.utils.UtilsController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,9 +46,6 @@ public class SettingsController extends ContentTabController<SettingsModel> {
             }
             case NETWORK_INFO: {
                 return Optional.of(new NetworkInfoController(serviceProvider));
-            }
-            case UTILS: {
-                return Optional.of(new UtilsController(serviceProvider));
             }
             default: {
                 return Optional.empty();

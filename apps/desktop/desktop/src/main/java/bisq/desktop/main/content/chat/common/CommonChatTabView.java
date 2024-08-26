@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonChatTabController> {
-
     CommonChatTabView(CommonChatTabModel model, CommonChatTabController controller) {
         super(model, controller);
 

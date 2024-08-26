@@ -154,6 +154,7 @@ public enum NavigationTarget {
     // SUPPORT
     SUPPORT(CONTENT),
     SUPPORT_ASSISTANCE(SUPPORT),
+    SUPPORT_RESOURCES(SUPPORT),
 
     // USER
     USER(CONTENT),
@@ -181,7 +182,6 @@ public enum NavigationTarget {
     SETTINGS(CONTENT),
     PREFERENCES(SETTINGS),
     NETWORK_INFO(SETTINGS),
-    UTILS(SETTINGS),
 
     // WALLET
     WALLET(CONTENT),

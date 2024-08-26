@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.utils;
+package bisq.desktop.main.content.support.resources;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.common.file.FileUtils;
@@ -44,24 +44,24 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Slf4j
-public class UtilsController implements Controller {
+public class ResourcesController implements Controller {
     @Getter
-    private final UtilsView view;
-    private final UtilsModel model;
+    private final ResourcesView view;
+    private final ResourcesModel model;
     private final String baseDir;
     private final String appName;
     private final PersistenceService persistenceService;
     private final SettingsService settingsService;
     private Pin backupLocationPin;
 
-    public UtilsController(ServiceProvider serviceProvider) {
+    public ResourcesController(ServiceProvider serviceProvider) {
         baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
         appName = serviceProvider.getConfig().getAppName();
         settingsService = serviceProvider.getSettingsService();
         persistenceService = serviceProvider.getPersistenceService();
 
-        model = new UtilsModel();
-        view = new UtilsView(model, this);
+        model = new ResourcesModel();
+        view = new ResourcesView(model, this);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class UtilsController implements Controller {
         if (StringUtils.isEmpty(path)) {
             path = PlatformUtils.getHomeDirectory();
         }
-        String title = Res.get("settings.utils.backup.selectLocation");
+        String title = Res.get("support.resources.backup.selectLocation");
         FileChooserUtil.chooseDirectory(getView().getRoot().getScene(), path, title)
                 .ifPresent(directory -> model.getBackupLocation().set(directory.getAbsolutePath()));
     }
@@ -115,12 +115,12 @@ public class UtilsController implements Controller {
                             String destinationDirName = appName + "_backup_" + dateString;
                             String destination = Paths.get(model.getBackupLocation().get(), destinationDirName).toString();
                             if (!new File(model.getBackupLocation().get()).exists()) {
-                                new Popup().warning(Res.get("settings.utils.backup.destinationNotExist", model.getBackupLocation().get())).show();
+                                new Popup().warning(Res.get("support.resources.backup.destinationNotExist", model.getBackupLocation().get())).show();
                                 return;
                             }
                             try {
                                 FileUtils.copyDirectory(baseDir, destination);
-                                new Popup().feedback(Res.get("settings.utils.backup.success", destination)).show();
+                                new Popup().feedback(Res.get("support.resources.backup.success", destination)).show();
                             } catch (IOException e) {
                                 new Popup().error(e).show();
                             }

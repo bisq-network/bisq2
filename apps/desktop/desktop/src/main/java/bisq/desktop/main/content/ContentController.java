@@ -28,6 +28,7 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyController;
 import bisq.desktop.main.content.chat.common.CommonChatTabController;
 import bisq.desktop.main.content.dashboard.DashboardController;
 import bisq.desktop.main.content.settings.SettingsController;
+import bisq.desktop.main.content.support.SupportController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;
 import bisq.desktop.main.content.user.UserController;
 import bisq.desktop.main.content.wallet.WalletController;
@@ -82,7 +83,7 @@ public class ContentController extends NavigationController {
                 return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.DISCUSSION, NavigationTarget.CHAT));
             }
             case SUPPORT: {
-                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.SUPPORT, NavigationTarget.SUPPORT));
+                return Optional.of(new SupportController(serviceProvider));
             }
             case USER: {
                 return Optional.of(new UserController(serviceProvider));

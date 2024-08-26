@@ -15,17 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings;
+package bisq.desktop.main.content.support;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
+import lombok.extern.slf4j.Slf4j;
 
-public class SettingsView extends ContentTabView<SettingsModel, SettingsController> {
-    public SettingsView(SettingsModel model, SettingsController controller) {
+@Slf4j
+public class SupportView extends ContentTabView<SupportModel, SupportController> {
+    SupportView(SupportModel model, SupportController controller) {
         super(model, controller);
 
-        addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
+        addTab(Res.get("support.assistance"), NavigationTarget.SUPPORT_ASSISTANCE);
+        addTab(Res.get("support.resources"), NavigationTarget.SUPPORT_RESOURCES);
     }
 }

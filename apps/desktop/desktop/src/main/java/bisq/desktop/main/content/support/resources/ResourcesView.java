@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.utils;
+package bisq.desktop.main.content.support.resources;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -33,69 +33,72 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
+public class ResourcesView extends View<VBox, ResourcesModel, ResourcesController> {
 
-    private static final ValidatorBase DIRECTORY_PATH_VALIDATOR = new DirectoryPathValidator(Res.get("settings.utils.backup.location.invalid"));
+    private static final ValidatorBase DIRECTORY_PATH_VALIDATOR = new DirectoryPathValidator(Res.get("support.resources.backup.location.invalid"));
 
     private final Button setBackupLocationButton, backupButton;
     private final MaterialTextField backupLocation;
     private final Hyperlink webpage, dao, sourceCode, community, contribute,
             openLogFileButton, openTorLogFileButton, openDataDirButton, chatRules, tradeGuide, walletGuide, license, tac;
 
-    public UtilsView(UtilsModel model, UtilsController controller) {
+    public ResourcesView(ResourcesModel model, ResourcesController controller) {
         super(new VBox(50), model, controller);
 
         root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label backupHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.backup.headline"));
-        backupLocation = new MaterialTextField(Res.get("settings.utils.backup.location"),
-                Res.get("settings.utils.backup.location.prompt"),
-                Res.get("settings.utils.backup.location.help"));
+        Label guidesHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.guides.headline"));
+        tradeGuide = new Hyperlink(Res.get("support.resources.guides.tradeGuide"));
+        walletGuide = new Hyperlink(Res.get("support.resources.guides.walletGuide"));
+        chatRules = new Hyperlink(Res.get("support.resources.guides.chatRules"));
+        VBox guidesBox = new VBox(5, tradeGuide, walletGuide, chatRules);
+
+        Label backupHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.backup.headline"));
+        backupLocation = new MaterialTextField(Res.get("support.resources.backup.location"),
+                Res.get("support.resources.backup.location.prompt"),
+                Res.get("support.resources.backup.location.help"));
         backupLocation.setValidators(DIRECTORY_PATH_VALIDATOR);
-        setBackupLocationButton = new Button(Res.get("settings.utils.backup.setLocationButton"));
-        backupButton = new Button(Res.get("settings.utils.backup.backupButton"));
+        setBackupLocationButton = new Button(Res.get("support.resources.backup.setLocationButton"));
+        backupButton = new Button(Res.get("support.resources.backup.backupButton"));
         HBox backupButtons = new HBox(10, setBackupLocationButton, backupButton);
         VBox backupBox = new VBox(20, backupLocation, backupButtons);
 
-        Label localDataHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.localData.headline"));
-        openDataDirButton = new Hyperlink(Res.get("settings.utils.localData.openDataDir"));
-        openLogFileButton = new Hyperlink(Res.get("settings.utils.localData.openLogFile"));
-        openTorLogFileButton = new Hyperlink(Res.get("settings.utils.localData.openTorLogFile"));
+        Label localDataHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.localData.headline"));
+        openDataDirButton = new Hyperlink(Res.get("support.resources.localData.openDataDir"));
+        openLogFileButton = new Hyperlink(Res.get("support.resources.localData.openLogFile"));
+        openTorLogFileButton = new Hyperlink(Res.get("support.resources.localData.openTorLogFile"));
 
         VBox localDataBox = new VBox(5, openDataDirButton, openLogFileButton, openTorLogFileButton);
 
-        Label rulesHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.rules.headline"));
-        chatRules = new Hyperlink(Res.get("settings.utils.rules.chatRules"));
-        tradeGuide = new Hyperlink(Res.get("settings.utils.rules.tradeGuide"));
-        walletGuide = new Hyperlink(Res.get("settings.utils.rules.walletGuide"));
-        VBox rulesAndGuidesBox = new VBox(5, chatRules, tradeGuide, walletGuide);
 
-        Label legalHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.legal.headline"));
-        tac = new Hyperlink(Res.get("settings.utils.legal.tac"));
-        license = new Hyperlink(Res.get("settings.utils.legal.license"));
+        Label resourcesHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.resources.headline"));
+        webpage = new Hyperlink(Res.get("support.resources.resources.webpage"));
+        dao = new Hyperlink(Res.get("support.resources.resources.dao"));
+        sourceCode = new Hyperlink(Res.get("support.resources.resources.sourceCode"));
+        community = new Hyperlink(Res.get("support.resources.resources.community"));
+        contribute = new Hyperlink(Res.get("support.resources.resources.contribute"));
+
+        Label legalHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.legal.headline"));
+        tac = new Hyperlink(Res.get("support.resources.legal.tac"));
+        license = new Hyperlink(Res.get("support.resources.legal.license"));
         VBox legalBox = new VBox(5, tac, license);
-
-        Label resourcesHeadline = SettingsViewUtils.getHeadline(Res.get("settings.utils.resources.headline"));
-        webpage = new Hyperlink(Res.get("settings.utils.resources.webpage"));
-        dao = new Hyperlink(Res.get("settings.utils.resources.dao"));
-        sourceCode = new Hyperlink(Res.get("settings.utils.resources.sourceCode"));
-        community = new Hyperlink(Res.get("settings.utils.resources.community"));
-        contribute = new Hyperlink(Res.get("settings.utils.resources.contribute"));
 
         VBox resourcesBox = new VBox(5, webpage, dao, sourceCode, community, contribute);
 
         Insets value = new Insets(0, 5, 0, 5);
         VBox.setMargin(backupBox, value);
         VBox.setMargin(localDataBox, value);
-        VBox.setMargin(rulesAndGuidesBox, value);
+        VBox.setMargin(guidesBox, value);
         VBox.setMargin(legalBox, value);
         VBox.setMargin(resourcesBox, value);
-        root.getChildren().addAll(backupHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), backupBox,
+        root.getChildren().addAll(
+                guidesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), guidesBox,
                 localDataHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), localDataBox,
-                rulesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), rulesAndGuidesBox,
-                legalHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), legalBox,
-                resourcesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), resourcesBox);
+                backupHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), backupBox,
+                resourcesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), resourcesBox,
+                legalHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), legalBox
+        );
     }
 
     @Override
@@ -125,7 +128,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
     }
 
     private void onBackupButtonPressed() {
-        if(backupLocation.validate()) {
+        if (backupLocation.validate()) {
             controller.onBackup();
         }
     }

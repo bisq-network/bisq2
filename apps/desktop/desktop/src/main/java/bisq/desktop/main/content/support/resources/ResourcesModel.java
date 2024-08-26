@@ -15,17 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings;
+package bisq.desktop.main.content.support.resources;
 
-import bisq.bisq_easy.NavigationTarget;
-import bisq.desktop.main.content.ContentTabView;
-import bisq.i18n.Res;
+import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class SettingsView extends ContentTabView<SettingsModel, SettingsController> {
-    public SettingsView(SettingsModel model, SettingsController controller) {
-        super(model, controller);
-
-        addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-    }
+@Slf4j
+@Getter
+public class ResourcesModel implements Model {
+    private final StringProperty backupLocation = new SimpleStringProperty();
+    private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
+    private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
 }

@@ -15,20 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.utils;
+package bisq.desktop.main.content.support;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.common.CommonPublicChatChannel;
+import bisq.desktop.main.content.ContentTabModel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class UtilsModel implements Model {
-   private final StringProperty backupLocation = new SimpleStringProperty();
-   private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
-   private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
+public class SupportModel extends ContentTabModel {
+    @Setter
+    private CommonPublicChatChannel assistanceChannel;
+
+    SupportModel() {
+    }
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.SUPPORT_ASSISTANCE;
+    }
 }

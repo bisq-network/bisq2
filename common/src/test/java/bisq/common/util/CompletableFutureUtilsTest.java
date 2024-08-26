@@ -151,7 +151,7 @@ public class CompletableFutureUtilsTest {
 
     @Test
     public void testAnyOfWithType() {
-        CompletableFuture<Integer> future_1 = createIntegerFuture(20, 1);
+        CompletableFuture<Integer> future_1 = createIntegerFuture(20, 2);
         CompletableFuture<Integer> future_2 = createIntegerFuture(10, 2);
         future_1.whenComplete((result, throwable) -> {
             assertNotNull(throwable);
