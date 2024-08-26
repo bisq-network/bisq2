@@ -47,6 +47,7 @@ class OfferbookListModel implements bisq.desktop.common.view.Model {
     private final BooleanProperty isCustomPaymentsSelected = new SimpleBooleanProperty();
     private final IntegerProperty activeMarketPaymentsCount = new SimpleIntegerProperty();
     private final SimpleObjectProperty<BisqEasyOfferbookChannel> channel = new SimpleObjectProperty<>();
+    private final BooleanProperty showMyOffersOnly = new SimpleBooleanProperty();
 
     OfferbookListModel() {
     }

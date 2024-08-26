@@ -22,7 +22,6 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
-import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
@@ -44,11 +43,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -80,6 +75,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private final DropdownMenu offerDirectionFilterMenu, paymentsFilterMenu;
     private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
     private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
+    private final CheckBox showOnlyMyMessages;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
     private Label offerDirectionFilterLabel, paymentsFilterLabel;
     private Subscription showOfferListExpandedPin, showBuyFromOffersPin,
@@ -108,11 +104,16 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         selectedPaymentsChangeListener = change -> updatePaymentsSelection();
         offerDirectionFilterMenu = createAndGetOffersDirectionFilterMenu();
         paymentsFilterMenu = createAndGetPaymentsFilterDropdownMenu();
+        Label label = new Label(Res.get("bisqEasy.offerbook.offerList.table.filters.showMyOffersOnly"));
+        showOnlyMyMessages = new CheckBox();
+        HBox showOnlyMyMessagesHBox = new HBox(5, label, showOnlyMyMessages);
+        showOnlyMyMessagesHBox.getStyleClass().add("offerbook-subheader-checkbox");
+        showOnlyMyMessagesHBox.setAlignment(Pos.CENTER);
 
         HBox subheader = new HBox(10);
         subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getStyleClass().add("offer-list-subheader");
-        subheader.getChildren().addAll(offerDirectionFilterMenu, paymentsFilterMenu);
+        subheader.getChildren().addAll(offerDirectionFilterMenu, paymentsFilterMenu, showOnlyMyMessagesHBox);
 
         tableView = new BisqTableView<>(model.getSortedOfferbookListItems());
         tableView.getStyleClass().add("offers-list");
@@ -129,6 +130,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     @Override
     protected void onViewAttached() {
         paymentsFilterLabel.textProperty().bind(model.getPaymentFilterTitle());
+        showOnlyMyMessages.selectedProperty().bindBidirectional(model.getShowMyOffersOnly());
 
         showOfferListExpandedPin = EasyBind.subscribe(model.getShowOfferListExpanded(), showOfferListExpanded -> {
             if (showOfferListExpanded != null) {
@@ -219,6 +221,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     @Override
     protected void onViewDetached() {
         paymentsFilterLabel.textProperty().unbind();
+        showOnlyMyMessages.selectedProperty().unbindBidirectional(model.getShowMyOffersOnly());
 
         showOfferListExpandedPin.unsubscribe();
         offerListTableViewSelectionPin.unsubscribe();

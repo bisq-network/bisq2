@@ -57,7 +57,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final UserProfileService userProfileService;
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
-    private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin;
+    private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin;
     private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin;
 
     public OfferbookListController(ServiceProvider serviceProvider,
@@ -85,6 +85,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             model.getPaymentFilterTitle().set(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title", hint));
             applyPredicate();
         });
+        showMyOffersOnlyPin = FxBindings.bindBiDir(model.getShowMyOffersOnly()).to(settingsService.getShowMyOffersOnly());
     }
 
     @Override
@@ -98,6 +99,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         if (offerMessagesPin != null) {
             offerMessagesPin.unbind();
         }
+        showMyOffersOnlyPin.unbind();
     }
 
     public void setSelectedChannel(BisqEasyOfferbookChannel channel) {
@@ -242,6 +244,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         boolean matchesPaymentFilters = paymentFiltersApplied && item.getFiatPaymentMethods().stream()
                 .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
                                 || model.getSelectedMarketPayments().contains(payment));
+        // TODO: add myOffersOnly filter
         return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters);
     }
 
