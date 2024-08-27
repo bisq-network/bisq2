@@ -34,7 +34,7 @@ public class WaitingAnimation extends StackPane {
     public static final int INTERVAL = 1000;
 
     private final ImageView spinningCircle;
-    private ImageView waitingStateIcon;
+    private final ImageView waitingStateIcon;
     private final RotateTransition rotate;
     private final FadeTransition fadeTransition;
     private Scene scene;

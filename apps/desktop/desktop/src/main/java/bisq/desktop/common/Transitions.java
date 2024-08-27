@@ -86,8 +86,8 @@ public class Transitions {
     private static final Interpolator DEFAULT_INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
     @Setter
     private static SettingsService settingsService;
-    private static Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
-    private static Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
+    private static final Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
+    private static final Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
 
     public static FadeTransition fadeIn(Node node) {
         return fadeIn(node, DEFAULT_DURATION);

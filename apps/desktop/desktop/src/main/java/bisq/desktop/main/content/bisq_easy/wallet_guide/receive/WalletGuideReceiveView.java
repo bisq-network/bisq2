@@ -41,7 +41,8 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
     private final Button backButton, closeButton;
     private final Hyperlink link1, link2;
     private final ImageView image1, image2;
-    private FadeTransition fadeTransition1, fadeTransition2;
+    private final FadeTransition fadeTransition1;
+    private final FadeTransition fadeTransition2;
     private UIScheduler scheduler1, scheduler2, scheduler3;
 
     public WalletGuideReceiveView(WalletGuideReceiveModel model, WalletGuideReceiveController controller) {

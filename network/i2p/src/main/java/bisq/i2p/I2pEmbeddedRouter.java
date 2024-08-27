@@ -31,10 +31,10 @@ public class I2pEmbeddedRouter {
     private Router router;
     private RouterContext routerContext;
     protected CommSystemFacade.Status i2pRouterStatus;
-    private int inboundKBytesPerSecond;
-    private int outboundKBytesPerSecond;
-    private int bandwidthSharePercentage;
-    private String dirPath;
+    private final int inboundKBytesPerSecond;
+    private final int outboundKBytesPerSecond;
+    private final int bandwidthSharePercentage;
+    private final String dirPath;
     private static boolean initialized = false;
 
     private static I2pEmbeddedRouter localRouter;
