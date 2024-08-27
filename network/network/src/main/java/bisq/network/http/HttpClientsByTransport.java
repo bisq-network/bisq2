@@ -50,7 +50,6 @@ public class HttpClientsByTransport {
                             new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 4444))
                     );
             case CLEAR -> new ClearNetHttpClient(url, userAgent);
-            default -> throw new IllegalArgumentException("Providers network type not recognized. " + transportType);
         };
     }
 }

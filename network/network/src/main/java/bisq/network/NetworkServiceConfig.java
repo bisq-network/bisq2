@@ -148,7 +148,6 @@ public final class NetworkServiceConfig {
                 dataDir = baseDir;
                 yield ClearNetTransportService.Config.from(dataDir, transportConfig);
             }
-            default -> throw new RuntimeException("Unhandled case. type=" + transportType);
         };
     }
 
@@ -163,7 +162,6 @@ public final class NetworkServiceConfig {
             case CLEAR -> ConfigUtil.getStringList(config, "clear").stream()
                     .map(Address::fromFullAddress)
                     .collect(Collectors.toSet());
-            default -> throw new RuntimeException("Unhandled case. transportType=" + transportType);
         };
     }
 

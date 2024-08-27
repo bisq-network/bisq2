@@ -357,7 +357,6 @@ public class MarketPriceComponent {
                 case PROPAGATED_IN_NETWORK ->
                         Res.get("component.marketPrice.source." + source, getMarketPriceProvidingOracle());
                 case REQUESTED_FROM_PRICE_NODE -> Res.get("component.marketPrice.source." + source, getProviderUrl());
-                default -> throw new RuntimeException("Unsupported source: " + source.name());
             };
         }
 

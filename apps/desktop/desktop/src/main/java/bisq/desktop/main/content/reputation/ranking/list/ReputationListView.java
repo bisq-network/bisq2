@@ -435,7 +435,6 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 case BURNED_BSQ, BSQ_BOND -> AmountFormatter.formatAmount(Coin.asBsqFromValue(value));
                 case PROFILE_AGE, BISQ1_ACCOUNT_AGE, BISQ1_SIGNED_ACCOUNT_AGE_WITNESS ->
                         value > 0 ? TimeFormatter.formatAgeInDays(value) : "";
-                default -> String.valueOf(value);
             };
         }
 

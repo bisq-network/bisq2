@@ -186,7 +186,6 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
             case IS_GREATER_THAN -> valueForPrecision > otherValueForPrecision;
             case IS_GREATER_THAN_OR_EQUAL -> valueForPrecision >= otherValueForPrecision;
             case IS_EQUAL -> valueForPrecision == otherValueForPrecision;
-            default -> throw new IllegalArgumentException("Unsupported comparisonOperator: " + comparisonOperator);
         };
     }
 

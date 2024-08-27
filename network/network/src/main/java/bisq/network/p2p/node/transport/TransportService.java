@@ -36,7 +36,6 @@ public interface TransportService {
             case TOR -> new TorTransportService(config);
             case I2P -> new I2PTransportService(config);
             case CLEAR -> new ClearNetTransportService(config);
-            default -> throw new RuntimeException("Unhandled transportType");
         };
     }
 

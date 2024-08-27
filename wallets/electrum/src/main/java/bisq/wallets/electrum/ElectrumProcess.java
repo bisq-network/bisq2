@@ -95,8 +95,6 @@ public class ElectrumProcess implements BisqProcess {
             case LINUX -> ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX;
             case MAC_OS -> ElectrumBinaryExtractor.MAC_OS_BINARY_SUFFIX;
             case WINDOWS -> ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX;
-            default ->
-                    throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OS.getOsName());
         };
     }
 
@@ -120,8 +118,6 @@ public class ElectrumProcess implements BisqProcess {
             case MAC_OS -> destDirPath.resolve("Electrum." + binarySuffix)
                     .resolve("Contents/MacOS/run_electrum");
             case WINDOWS -> destDirPath.resolve("electrum-" + version + "." + binarySuffix);
-            default ->
-                    throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OS.getOsName());
         };
     }
 }

@@ -78,7 +78,6 @@ public class LeavePrivateChatManager {
             case BISQ_EASY_OPEN_TRADES -> bisqEasyOpenTradeChannelService;
             case BISQ_EASY_PRIVATE_CHAT, DISCUSSION, EVENTS, SUPPORT ->
                     twoPartyPrivateChatChannelServices.get(chatChannelDomain);
-            default -> throw new IllegalArgumentException("Not supported chatChannelDomain " + chatChannelDomain);
         };
     }
 }

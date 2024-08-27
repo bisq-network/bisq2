@@ -84,8 +84,8 @@ public class BisqTextArea extends TextArea {
     @Override
     protected void layoutChildren() {
         Node lookupNode = lookup(SELECTOR_SCROLL_PANE);
-        if (lookupNode instanceof ScrollPane selectorScrollPane) {
-            if (!selectorScrollPane.getChildrenUnmodifiable().isEmpty()) {
+        if (lookupNode instanceof ScrollPane scrollPane) {
+            if (!scrollPane.getChildrenUnmodifiable().isEmpty()) {
                 try {
                     super.layoutChildren();
                 } catch (Throwable t) {

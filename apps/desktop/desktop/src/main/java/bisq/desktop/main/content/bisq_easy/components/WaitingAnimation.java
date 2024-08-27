@@ -119,7 +119,6 @@ public class WaitingAnimation extends StackPane {
             case BITCOIN_PAYMENT -> "bitcoin-payment";
             case BITCOIN_CONFIRMATION -> "bitcoin-confirmation";
             case SCAN_WITH_CAMERA -> "scan-with-camera";
-            default -> throw new IllegalArgumentException("Unknown WaitingState: " + waitingState);
         };
     }
 

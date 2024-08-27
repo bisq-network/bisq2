@@ -515,7 +515,6 @@ public class StorageService {
             case AUTHENTICATED_DATA_STORE -> new ArrayList<>(authenticatedDataStores.values());
             case MAILBOX_DATA_STORE -> new ArrayList<>(mailboxStores.values());
             case APPEND_ONLY_DATA_STORE -> new ArrayList<>(appendOnlyDataStores.values());
-            default -> throw new RuntimeException("Unhandled case. storeType= " + storeType);
         };
         return dataStorageServiceStream.stream();
     }

@@ -29,7 +29,6 @@ public class MarketFilterPredicate {
             case ALL -> item -> true;
             case FAVOURITES -> item -> item.getIsFavourite().get();
             case WITH_OFFERS -> item -> item.getNumOffers().get() > 0;
-            default -> throw new IllegalArgumentException("Unexpected enum " + bisqEasyMarketFilter);
         };
     }
 }
