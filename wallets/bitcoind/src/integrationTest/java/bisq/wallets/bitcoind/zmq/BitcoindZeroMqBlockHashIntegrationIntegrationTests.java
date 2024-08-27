@@ -18,8 +18,6 @@
 package bisq.wallets.bitcoind.zmq;
 
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
-import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;

@@ -20,7 +20,6 @@ package bisq.wallets.elementsd.rpc.responses;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 

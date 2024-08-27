@@ -19,9 +19,7 @@ package bisq.wallets.electrum.rpc.calls;
 
 import bisq.wallets.electrum.rpc.responses.ElectrumCreateResponse;
 import bisq.wallets.json_rpc.DaemonRpcCall;
-import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
-import com.squareup.moshi.JsonAdapter;
 import lombok.Getter;
 
 public class ElectrumCreateRpcCall extends DaemonRpcCall<ElectrumCreateRpcCall.Request, ElectrumCreateResponse> {

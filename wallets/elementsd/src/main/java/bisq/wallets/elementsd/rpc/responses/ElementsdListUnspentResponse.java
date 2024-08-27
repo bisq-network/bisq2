@@ -21,7 +21,6 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 

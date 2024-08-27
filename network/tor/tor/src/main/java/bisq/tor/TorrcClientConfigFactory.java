@@ -21,7 +21,6 @@ import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.ClientTorrcGenerator;
 import bisq.network.tor.common.torrc.TestNetworkTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
-import bisq.tor.process.NativeTorProcess;
 import lombok.Builder;
 import net.freehaven.tor.control.PasswordDigest;
 

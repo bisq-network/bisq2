@@ -21,7 +21,6 @@ import bisq.wallets.bitcoind.rpc.responses.AbstractDecodeRawTransactionResponse;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 public class ElementsdDecodeRawTransactionResponse extends JsonRpcResponse<ElementsdDecodeRawTransactionResponse.Result> {
     @Getter

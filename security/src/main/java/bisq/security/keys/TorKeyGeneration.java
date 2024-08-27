@@ -19,7 +19,6 @@ package bisq.security.keys;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.crypto.digests.SHA3Digest;
-import org.bouncycastle.crypto.digests.SHA512Digest;
 import org.bouncycastle.math.ec.rfc8032.Ed25519;
 import org.bouncycastle.util.encoders.Base32;
 
