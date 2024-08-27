@@ -31,6 +31,10 @@ import java.util.Optional;
 
 @Slf4j
 public class FileChooserUtil {
+
+    private static final boolean DIRECTORY_CHOOSER = true;
+    private static final boolean FILE_CHOOSER = false;
+
     public static Optional<File> openFile(Scene scene) {
         return openFile(scene, Optional.empty());
     }
@@ -42,7 +46,7 @@ public class FileChooserUtil {
     private static Optional<File> openFile(Scene scene, Optional<String> initialFileName) {
         FileChooser fileChooser = getFileChooser(initialFileName);
         Optional<File> result = Optional.ofNullable(fileChooser.showOpenDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFileChooserDirectory);
+        result.ifPresent(file -> persistFileChooserDirectory(file, FILE_CHOOSER));
         return result;
     }
 
@@ -57,7 +61,7 @@ public class FileChooserUtil {
     private static Optional<File> saveFile(Scene scene, Optional<String> initialFileName) {
         FileChooser fileChooser = getFileChooser(initialFileName);
         Optional<File> result = Optional.ofNullable(fileChooser.showSaveDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFileChooserDirectory);
+        result.ifPresent(file -> persistFileChooserDirectory(file, FILE_CHOOSER));
         return result;
     }
 
@@ -80,7 +84,7 @@ public class FileChooserUtil {
         }
         directoryChooser.setTitle(title);
         Optional<File> result = Optional.ofNullable(directoryChooser.showDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFileChooserDirectory);
+        result.ifPresent(file -> persistFileChooserDirectory(file, DIRECTORY_CHOOSER));
         return result;
     }
 
@@ -96,7 +100,8 @@ public class FileChooserUtil {
         return fileChooser;
     }
 
-    private static void persistFileChooserDirectory(File file) {
-        SettingsService.getInstance().setCookie(CookieKey.FILE_CHOOSER_DIR, Paths.get(file.getAbsolutePath()).getParent().toString());
+    private static void persistFileChooserDirectory(File file, boolean isDirectoryChooser) {
+        String directoryToPersist = isDirectoryChooser ? file.getAbsolutePath() : Paths.get(file.getAbsolutePath()).getParent().toString();
+        SettingsService.getInstance().setCookie(CookieKey.FILE_CHOOSER_DIR, directoryToPersist);
     }
 }
