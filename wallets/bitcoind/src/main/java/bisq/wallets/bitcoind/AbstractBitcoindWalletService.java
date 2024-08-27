@@ -163,14 +163,10 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
 
     @Override
     public CompletableFuture<ObservableSet<String>> requestWalletAddresses() {
-        if (wallet.isEmpty()) {
-            return CompletableFuture.completedFuture(walletAddresses);
-        } else {
-            return CompletableFuture.supplyAsync(() -> {
-                walletAddresses.addAll(wallet.get().getWalletAddresses());
-                return walletAddresses;
-            });
-        }
+        return wallet.map(t -> CompletableFuture.supplyAsync(() -> {
+            walletAddresses.addAll(t.getWalletAddresses());
+            return walletAddresses;
+        })).orElseGet(() -> CompletableFuture.completedFuture(walletAddresses));
     }
 
     @Override

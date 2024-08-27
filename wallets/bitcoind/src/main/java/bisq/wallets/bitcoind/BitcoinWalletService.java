@@ -79,15 +79,11 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
 
     @Override
     public CompletableFuture<Coin> requestBalance() {
-        if (wallet.isEmpty()) {
-            return CompletableFuture.completedFuture(Coin.asBtcFromValue(0));
-        } else {
-            return CompletableFuture.supplyAsync(() -> {
-                double balance = wallet.get().getBalance();
-                Coin balanceAsCoin = Coin.asBtcFromFaceValue(balance);
-                this.balance.set(balanceAsCoin);
-                return balanceAsCoin;
-            });
-        }
+        return wallet.map(bitcoinWallet -> CompletableFuture.supplyAsync(() -> {
+            double balance = bitcoinWallet.getBalance();
+            Coin balanceAsCoin = Coin.asBtcFromFaceValue(balance);
+            this.balance.set(balanceAsCoin);
+            return balanceAsCoin;
+        })).orElseGet(() -> CompletableFuture.completedFuture(Coin.asBtcFromValue(0)));
     }
 }

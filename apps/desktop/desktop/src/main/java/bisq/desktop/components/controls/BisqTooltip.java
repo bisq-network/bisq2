@@ -52,10 +52,8 @@ public class BisqTooltip extends Tooltip {
 
     public void useStyle(Style style) {
         switch (style) {
-            case DEFAULT -> {
-                // Force font color as color from css gets shadowed by parent
-                setStyle("-fx-text-fill: -fx-dark-text-color !important;");
-            }
+            case DEFAULT -> // Force font color as color from css gets shadowed by parent
+                    setStyle("-fx-text-fill: -fx-dark-text-color !important;");
             case MEDIUM_DARK -> {
                 getStyleClass().add("medium-dark-tooltip");
                 // Force font color as color from css gets shadowed by parent

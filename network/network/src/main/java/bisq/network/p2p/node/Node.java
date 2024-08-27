@@ -562,7 +562,7 @@ public class Node implements Connection.Handler {
                             outboundConnectionsByAddress or inboundConnectionsByAddress maps. \
                             We close after a short delay that connection to avoid memory leaks. \
                             We still notify listeners as its is unclear yet if there are valid listeners in that case.\
-                                                
+                                                        
                             envelopePayloadMessage={}
                             connection={}""",
                     StringUtils.truncate(envelopePayloadMessage), connection);
