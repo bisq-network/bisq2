@@ -332,7 +332,7 @@ public class FileUtils {
 
     public static HttpURLConnection downloadFile(URL url, File destination, Observable<Double> progress) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        int fileSize = -1;
+        int fileSize;
         try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());
              FileOutputStream outputStream = new FileOutputStream(destination)) {
             connection.connect();

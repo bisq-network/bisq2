@@ -100,6 +100,7 @@ public class WebcamService implements Service {
         return CompletableFuture.supplyAsync(() -> {
                     while (!isStopped) {
                         try {
+                            //noinspection BusyWait
                             Thread.sleep(100);
                         } catch (InterruptedException ignore) {
                         }

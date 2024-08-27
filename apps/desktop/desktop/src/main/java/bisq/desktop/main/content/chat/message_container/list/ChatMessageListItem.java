@@ -157,8 +157,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         reputationScoreDisplay.setReputationScore(reputationScore);
 
-        if (isBisqEasyPublicChatMessageWithOffer()) {
-            BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+        if (isBisqEasyPublicChatMessageWithOffer() && chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
             message = getLocalizedOfferBookMessage(bisqEasyOfferbookMessage);
             if (bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
                 UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();

@@ -20,7 +20,6 @@ package bisq.common.proto;
 import com.google.common.base.Enums;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -34,7 +33,6 @@ import static com.google.common.base.Preconditions.*;
 
 @Slf4j
 public class ProtobufUtils {
-    @Nullable
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
         String info = "Enum type= " + enumType.getSimpleName() + "; name=" + name;
         checkNotNull(name, "Enum name must not be null. " + info);

@@ -63,7 +63,7 @@ public class HybridEncryptionTest {
             HybridEncryption.decryptAndVerify(withFakeSigAndPubKey, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof IllegalArgumentException);
+            assertInstanceOf(IllegalArgumentException.class, e);
         }
     }
 
@@ -84,7 +84,7 @@ public class HybridEncryptionTest {
             HybridEncryption.decryptAndVerify(withFakeSig, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof SignatureException);
+            assertInstanceOf(SignatureException.class, e);
         }
     }
 
@@ -103,7 +103,7 @@ public class HybridEncryptionTest {
             HybridEncryption.decryptAndVerify(withFakeIv, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof AEADBadTagException);
+            assertInstanceOf(AEADBadTagException.class, e);
         }
     }
 
@@ -125,7 +125,7 @@ public class HybridEncryptionTest {
             HybridEncryption.decryptAndVerify(withFakeHmac, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof IllegalArgumentException);
+            assertInstanceOf(IllegalArgumentException.class, e);
         }
     }
 }
