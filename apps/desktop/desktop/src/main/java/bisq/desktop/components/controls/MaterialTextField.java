@@ -83,7 +83,10 @@ public class MaterialTextField extends Pane {
         this(description, prompt, help, null);
     }
 
-    public MaterialTextField(@Nullable String description, @Nullable String prompt, @Nullable String help, @Nullable String value) {
+    public MaterialTextField(@Nullable String description,
+                             @Nullable String prompt,
+                             @Nullable String help,
+                             @Nullable String value) {
         bg.getStyleClass().add("material-text-field-bg");
 
         line.setPrefHeight(1);
@@ -400,23 +403,25 @@ public class MaterialTextField extends Pane {
     }
 
     protected void onInputTextFieldFocus(boolean focus) {
-        if (focus && textInputControl.isEditable()) {
-            resetValidation();
-            selectionLine.setPrefWidth(0);
-            selectionLine.setOpacity(1);
-            Transitions.animateWidth(selectionLine, getWidth());
-        } else {
-            Transitions.fadeOut(selectionLine, 200);
-            stringConverter.ifPresent(stringConverter -> {
-                try {
-                    setText(stringConverter.toString(stringConverter.fromString(getText())));
-                } catch (Exception ignore) {
-                }
-            });
-            validate();
+        if (textInputControl.isEditable()) {
+            if (focus) {
+                resetValidation();
+                selectionLine.setPrefWidth(0);
+                selectionLine.setOpacity(1);
+                Transitions.animateWidth(selectionLine, getWidth());
+            } else {
+                Transitions.fadeOut(selectionLine, 200);
+                stringConverter.ifPresent(stringConverter -> {
+                    try {
+                        setText(stringConverter.toString(stringConverter.fromString(getText())));
+                    } catch (Exception ignore) {
+                    }
+                });
+                validate();
+            }
+            onMouseExited();
+            update();
         }
-        onMouseExited();
-        update();
     }
 
     protected void onWidthChanged(double width) {
