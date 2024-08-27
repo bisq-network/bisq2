@@ -788,20 +788,12 @@ public class Node implements Connection.Handler {
                         case UNSPECIFIED:
                             log.error("Unspecified connectionException reason. {}", msg, exception);
                             break;
-                        case INVALID_NETWORK_VERSION:
+                        case INVALID_NETWORK_VERSION, ADDRESS_BANNED, ONION_ADDRESS_VERIFICATION_FAILED,
+                             AUTHORIZATION_FAILED:
                             log.warn(msg, exception);
                             break;
                         case PROTOBUF_IS_NULL:
                             log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
-                            break;
-                        case AUTHORIZATION_FAILED:
-                            log.warn(msg, exception);
-                            break;
-                        case ONION_ADDRESS_VERIFICATION_FAILED:
-                            log.warn(msg, exception);
-                            break;
-                        case ADDRESS_BANNED:
-                            log.warn(msg, exception);
                             break;
                         default:
                             log.error("Unhandled connectionException reason. {}", msg, exception);
