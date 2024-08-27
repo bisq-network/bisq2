@@ -926,7 +926,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     // footer contains optional hyperlinks extracted from the message
     protected void addFooter() {
-        if (messageHyperlinks != null && messageHyperlinks.size() > 0) {
+        if (messageHyperlinks != null && !messageHyperlinks.isEmpty()) {
             VBox footerBox = new VBox();
             GridPane.setRowIndex(footerBox, gridPane.getRowCount());
             GridPane.setColumnSpan(footerBox, 2);

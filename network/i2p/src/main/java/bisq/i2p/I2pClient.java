@@ -255,7 +255,7 @@ public class I2pClient {
         // Only destroy the session manager if the IO exception closed its last connected socket
         // The session manager, especially for the default session, handles multiple sockets (one per peer)
         I2PSocketManager manager = sessionMap.get(sessionId);
-        if (manager != null && manager.listSockets().size() == 0) {
+        if (manager != null && manager.listSockets().isEmpty()) {
             manager.destroySocketManager();
             sessionMap.remove(sessionId);
         }

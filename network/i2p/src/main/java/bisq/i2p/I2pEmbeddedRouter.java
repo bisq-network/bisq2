@@ -92,7 +92,7 @@ public class I2pEmbeddedRouter {
 
         I2PSocketManager manager;
         //Has the router been initialized?
-        while(RouterContext.listContexts().size() < 1) {
+        while (RouterContext.listContexts().isEmpty()) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
