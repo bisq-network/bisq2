@@ -81,7 +81,7 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
             targetCollection.addAll(sourceItems.stream()
                     .filter(filterFunction::apply)
                     .map(mapFunction)
-                    .collect(Collectors.toList()));
+                    .toList());
         });
     }
 

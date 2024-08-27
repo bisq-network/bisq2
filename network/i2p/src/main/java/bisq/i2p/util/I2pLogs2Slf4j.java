@@ -25,7 +25,7 @@ public class I2pLogs2Slf4j extends Log {
 
     public I2pLogs2Slf4j(Class<?> cls) {
         super(cls);
-        delegate = (Logger) LoggerFactory.getLogger(cls.getName());
+        delegate = LoggerFactory.getLogger(cls.getName());
         level = findLevel(delegate);
     }
 

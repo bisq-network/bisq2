@@ -287,11 +287,11 @@ public class TorControlProtocol implements AutoCloseable {
     // [250-ServiceID=bedb3wpuybkuwvjat2zq5odtqbajq7x3ovllvh7l2kbxakbgkzgikqyd, 250 OK]
     // [250-ServiceID=bedb3wpuybkuwvjat2zq5odtqbajq7x3ovllvh7l2kbxakbgkzgikqyd, 250-ServiceID=xjlwqzk6n4i5co574jrljsigelx6itzya32cfb7sfofqn7wueyhjj4id, 250 OK]
     private String validateReply(Stream<String> replyStream, String commandName) {
-        List<String> replies = replyStream.collect(Collectors.toList());
+        List<String> replies = replyStream.toList();
 
         String OK250 = "250 OK";
         boolean hasOK250 = replies.stream().anyMatch(e -> e.equals(OK250));
-        List<String> listOf250WithData = replies.stream().filter(e -> e.startsWith("250-")).collect(Collectors.toList());
+        List<String> listOf250WithData = replies.stream().filter(e -> e.startsWith("250-")).toList();
         if (!listOf250WithData.isEmpty()) {
             // TODO are there use cases where we need all 250WithData entries?
             return listOf250WithData.getFirst();

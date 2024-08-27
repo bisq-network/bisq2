@@ -301,7 +301,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 List<BitcoinPaymentMethod> matchingBitcoinPaymentMethods = peersOffer.getBaseSidePaymentMethodSpecs().stream()
                         .filter(e -> takersBitcoinPaymentMethodSet.contains(e.getPaymentMethod()))
                         .map(PaymentMethodSpec::getPaymentMethod)
-                        .collect(Collectors.toList());
+                        .toList();
                 if (matchingBitcoinPaymentMethods.isEmpty()) {
                     return false;
                 }
@@ -310,7 +310,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 List<FiatPaymentMethod> matchingFiatPaymentMethods = peersOffer.getQuoteSidePaymentMethodSpecs().stream()
                         .filter(e -> takersFiatPaymentMethodSet.contains(e.getPaymentMethod()))
                         .map(PaymentMethodSpec::getPaymentMethod)
-                        .collect(Collectors.toList());
+                        .toList();
                 if (matchingFiatPaymentMethods.isEmpty()) {
                     return false;
                 }

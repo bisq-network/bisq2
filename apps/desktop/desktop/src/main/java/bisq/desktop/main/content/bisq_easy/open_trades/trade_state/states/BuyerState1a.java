@@ -218,9 +218,7 @@ public class BuyerState1a extends BaseState {
                                     model.getWebcamStateIconId().set("webcam-state-connecting");
                                     model.getWebcamStateInfo().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.connecting"));
                                     break;
-                                case RUNNING:
-                                    break;
-                                case STOPPING:
+                                case RUNNING, STOPPING:
                                     break;
                                 case TERMINATED:
                                     isIdle = true;

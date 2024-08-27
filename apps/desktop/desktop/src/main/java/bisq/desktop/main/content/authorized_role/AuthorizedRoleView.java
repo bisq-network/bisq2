@@ -48,17 +48,7 @@ public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, Auth
                 case MODERATOR:
                     tabButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
                     break;
-                case SECURITY_MANAGER:
-                    break;
-                case RELEASE_MANAGER:
-                    break;
-                case SEED_NODE:
-                    break;
-                case ORACLE_NODE:
-                    break;
-                case EXPLORER_NODE:
-                    break;
-                case MARKET_PRICE_NODE:
+                case SECURITY_MANAGER, MARKET_PRICE_NODE, EXPLORER_NODE, ORACLE_NODE, SEED_NODE, RELEASE_MANAGER:
                     break;
             }
         });

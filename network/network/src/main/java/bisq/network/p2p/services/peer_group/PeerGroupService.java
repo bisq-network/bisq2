@@ -300,7 +300,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         lastReportTs = System.currentTimeMillis();
         List<Peer> sortedList = map.values().stream()
                 .sorted()
-                .collect(Collectors.toList());
+                .toList();
         long liveAge = TimeUnit.MINUTES.toMillis(10);
         long numPeers = sortedList.size();
         long numLivePeers = sortedList.stream().filter(peer -> peer.getAge() < liveAge).count();
