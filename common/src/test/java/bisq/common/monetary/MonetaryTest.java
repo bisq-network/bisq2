@@ -23,8 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MonetaryTest {
 
@@ -231,6 +230,7 @@ public class MonetaryTest {
         assertEquals(666667, priceQuote.getValue());
         assertEquals(0.00666667, priceQuote.asDouble());
 
+        //noinspection CatchMayIgnoreException
         try {
             // overflow as we movePointRight by 12 with xmr
             xmr = Coin.asXmrFromFaceValue(15000000d);
@@ -239,7 +239,7 @@ public class MonetaryTest {
             assertEquals(666667, priceQuote.getValue());
             assertEquals(0.00666667, priceQuote.asDouble());
         } catch (Exception e) {
-            assertTrue(e instanceof ArithmeticException);
+            assertInstanceOf(ArithmeticException.class, e);
         }
     }
 }

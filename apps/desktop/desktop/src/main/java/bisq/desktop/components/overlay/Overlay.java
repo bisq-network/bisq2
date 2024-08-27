@@ -152,7 +152,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected BisqGridPane gridPane;
 
     protected double width = DEFAULT_WIDTH;
-    protected double buttonDistance = 20;
+    protected final double buttonDistance = 20;
 
     protected boolean showReportErrorButtons;
     private boolean showBusyAnimation;
@@ -161,7 +161,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected boolean disableActionButton;
     protected boolean useBgEffect = true;
     @Getter
-    protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
+    protected final BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
 
     protected boolean useAnimation = true;
 
@@ -578,14 +578,17 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public void display() {
         // Once our owner gets removed we also want to remove our overlay
-        owner.sceneProperty().addListener(new WeakChangeListener<Scene>(new ChangeListener<Scene>() {
+
+        //todo pin down
+        @SuppressWarnings("Convert2Lambda") ChangeListener<Scene> changeListener = new ChangeListener<>() {
             @Override
             public void changed(ObservableValue<? extends Scene> observable, Scene oldValue, Scene newValue) {
                 if (oldValue != null && newValue == null) {
                     hide();
                 }
             }
-        }));
+        };
+        owner.sceneProperty().addListener(new WeakChangeListener<>(changeListener));
 
         Scene rootScene = owner.getScene();
         if (rootScene != null) {
@@ -923,7 +926,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     // footer contains optional hyperlinks extracted from the message
     protected void addFooter() {
-        if (messageHyperlinks != null && messageHyperlinks.size() > 0) {
+        if (messageHyperlinks != null && !messageHyperlinks.isEmpty()) {
             VBox footerBox = new VBox();
             GridPane.setRowIndex(footerBox, gridPane.getRowCount());
             GridPane.setColumnSpan(footerBox, 2);
@@ -951,51 +954,48 @@ public abstract class Overlay<T extends Overlay<T>> {
         logButton.setOnAction(event -> PlatformUtils.open(new File(baseDir, "bisq.log")));
 
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
-        zipLogButton.setOnAction(event -> {
-            FileChooserUtil.chooseDirectory(getRootContainer().getScene(), baseDir, "")
-                    .ifPresent(directory -> {
-                        // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
-                        // private data gets leaked in case the user used their real name as their OS user.
-                        Path debugLogPath = Path.of(baseDir + "/tor/").resolve("debug.log");
-                        File debugLogForZipFile = Path.of(baseDir + "/tor/").resolve("debug_for_zip.log").toFile();
-                        try {
-                            if (debugLogForZipFile.exists()) {
-                                debugLogForZipFile.delete();
-                            }
-                            FileUtils.copyFile(debugLogPath.toFile(), debugLogForZipFile);
-                            String logContent = FileUtils.readAsString(debugLogForZipFile.getAbsolutePath());
-                            logContent = StringUtils.maskHomeDirectory(logContent);
-                            FileUtils.writeToFile(logContent, debugLogForZipFile);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+        zipLogButton.setOnAction(event -> FileChooserUtil.chooseDirectory(getRootContainer().getScene(), baseDir, "")
+                .ifPresent(directory -> {
+                    // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
+                    // private data gets leaked in case the user used their real name as their OS user.
+                    Path debugLogPath = Path.of(baseDir + "/tor/").resolve("debug.log");
+                    File debugLogForZipFile = Path.of(baseDir + "/tor/").resolve("debug_for_zip.log").toFile();
+                    try {
+                        if (debugLogForZipFile.exists()) {
+                            debugLogForZipFile.delete();
                         }
-                        String zipDirectory = directory.getAbsolutePath();
-                        URI uri = URI.create("jar:file:" + Paths.get(zipDirectory, "bisq2-logs.zip").toUri().getRawPath());
-                        Map<String, String> env = Map.of("create", "true");
-                        List<Path> logPaths = Arrays.asList(
-                                Path.of(baseDir).resolve("bisq.log"),
-                                debugLogForZipFile.toPath());
-                        try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
-                            logPaths.forEach(logPath -> {
-                                if (logPath.toFile().isFile()) {
-                                    try {
-                                        Files.copy(logPath, zipFileSystem.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                        FileUtils.copyFile(debugLogPath.toFile(), debugLogForZipFile);
+                        String logContent = FileUtils.readAsString(debugLogForZipFile.getAbsolutePath());
+                        logContent = StringUtils.maskHomeDirectory(logContent);
+                        FileUtils.writeToFile(logContent, debugLogForZipFile);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    String zipDirectory = directory.getAbsolutePath();
+                    URI uri = URI.create("jar:file:" + Paths.get(zipDirectory, "bisq2-logs.zip").toUri().getRawPath());
+                    Map<String, String> env = Map.of("create", "true");
+                    List<Path> logPaths = Arrays.asList(
+                            Path.of(baseDir).resolve("bisq.log"),
+                            debugLogForZipFile.toPath());
+                    try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
+                        logPaths.forEach(logPath -> {
+                            if (logPath.toFile().isFile()) {
+                                try {
+                                    Files.copy(logPath, zipFileSystem.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
                                 }
-                            });
-                            PlatformUtils.open(zipDirectory);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-        });
+                            }
+                        });
+                        PlatformUtils.open(zipDirectory);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
 
         Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
         gitHubButton.setOnAction(event -> {
-            if (content instanceof TextArea) {
-                TextArea errorReportTextArea = (TextArea) content;
+            if (content instanceof TextArea errorReportTextArea) {
                 ClipboardUtil.copyToClipboard(errorReportTextArea.getText());
                 Browser.open("https://github.com/bisq-network/bisq2/issues");
             }
@@ -1031,7 +1031,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
             CheckBox dontShowAgainCheckBox = new CheckBox(dontShowAgainText);
             HBox.setHgrow(dontShowAgainCheckBox, Priority.NEVER);
-            buttonBox.getChildren().add(0, dontShowAgainCheckBox);
+            buttonBox.getChildren().addFirst(dontShowAgainCheckBox);
 
             dontShowAgainCheckBox.setSelected(isChecked);
             dontShowAgainService.putDontShowAgain(dontShowAgainId, isChecked);

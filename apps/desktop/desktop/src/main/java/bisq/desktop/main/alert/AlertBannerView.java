@@ -47,8 +47,8 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
     private final Button closeButton;
     private final HBox banner;
     private final ChangeListener<Number> heightListener;
-    Label headline = new Label();
-    Label message = new Label();
+    final Label headline = new Label();
+    final Label message = new Label();
     private Timeline slideInRightTimeline, slideOutTopTimeline;
     private Subscription isVisiblePin, alertTypePin, isBisqEasyNotificationVisiblePin;
 

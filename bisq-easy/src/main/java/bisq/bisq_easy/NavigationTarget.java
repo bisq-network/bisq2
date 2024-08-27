@@ -240,7 +240,7 @@ public enum NavigationTarget {
         List<NavigationTarget> temp = new ArrayList<>();
         Optional<NavigationTarget> candidate = Optional.of(parent);
         while (candidate.isPresent()) {
-            temp.add(0, candidate.get());
+            temp.addFirst(candidate.get());
             candidate = candidate.get().getParent();
         }
         this.path = temp;

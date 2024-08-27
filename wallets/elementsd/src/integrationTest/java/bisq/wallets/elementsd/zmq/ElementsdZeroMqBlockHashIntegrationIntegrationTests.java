@@ -40,7 +40,7 @@ public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedE
     void blockHashNotification() throws InterruptedException {
         ZmqListeners zmqListeners = elementsdRegtestSetup.getZmqMinerListeners();
         zmqListeners.registerNewBlockMinedListener((blockHash) -> {
-            log.info("Notification: New block with hash " + blockHash);
+            log.info("Notification: New block with hash {}", blockHash);
             if (minedBlockHashes.contains(blockHash)) {
                 listenerReceivedBlockHashLatch.countDown();
             } else {
@@ -52,7 +52,7 @@ public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedE
             while (true) {
                 try {
                     List<String> blockHashes = elementsdRegtestSetup.mineOneBlock();
-                    log.info("Mined Block: " + blockHashes);
+                    log.info("Mined Block: {}", blockHashes);
 
                     for (String blockHash : blockHashes) {
                         if (minedBlockHashes.contains(blockHash)) {

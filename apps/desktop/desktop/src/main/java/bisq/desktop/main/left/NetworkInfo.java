@@ -82,90 +82,88 @@ public class NetworkInfo {
             model.setI2pEnabled(networkService.isTransportTypeSupported(TransportType.I2P));
 
             networkService.getSupportedTransportTypes().forEach(type ->
-                    networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
-                        serviceNode.getPeerGroupManager().ifPresent(peerGroupManager -> {
-                            PeerGroupService peerGroupService = peerGroupManager.getPeerGroupService();
-                            Node node = peerGroupManager.getNode();
-                            String numTargetConnections = String.valueOf(peerGroupService.getTargetNumConnectedPeers());
-                            switch (type) {
-                                case CLEAR:
-                                    model.setClearNetNumTargetConnections(numTargetConnections);
-                                    break;
-                                case TOR:
-                                    model.setTorNumTargetConnections(numTargetConnections);
-                                    break;
-                                case I2P:
-                                    model.setI2pNumTargetConnections(numTargetConnections);
-                                    break;
+                    networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> serviceNode.getPeerGroupManager().ifPresent(peerGroupManager -> {
+                        PeerGroupService peerGroupService = peerGroupManager.getPeerGroupService();
+                        Node node = peerGroupManager.getNode();
+                        String numTargetConnections = String.valueOf(peerGroupService.getTargetNumConnectedPeers());
+                        switch (type) {
+                            case CLEAR:
+                                model.setClearNetNumTargetConnections(numTargetConnections);
+                                break;
+                            case TOR:
+                                model.setTorNumTargetConnections(numTargetConnections);
+                                break;
+                            case I2P:
+                                model.setI2pNumTargetConnections(numTargetConnections);
+                                break;
+                        }
+
+                        serviceNode.getInventoryService().ifPresent(inventoryService -> {
+                            InventoryRequestService inventoryRequestService = inventoryService.getInventoryRequestService();
+                            numPendingRequestsPin = inventoryRequestService.getNumPendingRequests().addObserver(numPendingRequests -> {
+                                        if (numPendingRequests != null) {
+                                            UIThread.run(() -> {
+                                                model.setPendingInventoryRequests(String.valueOf(numPendingRequests));
+                                                model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                                            });
+                                        }
+                                    }
+                            );
+                            allDataReceivedPin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
+                                if (allDataReceived != null) {
+                                    UIThread.run(() -> {
+                                        model.getAllInventoryDataReceived().set(allDataReceived);
+
+                                        if (allDataReceived) {
+                                            if (inventoryRequestAnimation != null) {
+                                                inventoryRequestAnimation.stop();
+                                            }
+
+                                            model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.completed"));
+                                        }
+                                        model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                                    });
+                                }
+                            });
+                            inventoryRequestAnimation = UIScheduler.run(() -> {
+                                        StringBuilder dots = new StringBuilder();
+                                                long numDots = inventoryRequestAnimation.getCounter() % 6;
+                                                for (long l = 0; l < numDots; l++) {
+                                                    dots.append(".");
+                                                }
+                                                if (!inventoryRequestService.getAllDataReceived().get()) {
+                                                    model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);
+                                                    model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                                                }
+                                            }
+                                    )
+                                    .periodically(250);
+                            model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequestsAtStartup()));
+
+                            model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                        });
+
+                        Node defaultNode = serviceNode.getDefaultNode();
+                        defaultNode.addListener(new Node.Listener() {
+                            @Override
+                            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                                  Connection connection,
+                                                  NetworkId networkId) {
                             }
 
-                            serviceNode.getInventoryService().ifPresent(inventoryService -> {
-                                InventoryRequestService inventoryRequestService = inventoryService.getInventoryRequestService();
-                                numPendingRequestsPin = inventoryRequestService.getNumPendingRequests().addObserver(numPendingRequests -> {
-                                            if (numPendingRequests != null) {
-                                                UIThread.run(() -> {
-                                                    model.setPendingInventoryRequests(String.valueOf(numPendingRequests));
-                                                    model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                                                });
-                                            }
-                                        }
-                                );
-                                allDataReceivedPin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
-                                    if (allDataReceived != null) {
-                                        UIThread.run(() -> {
-                                            model.getAllInventoryDataReceived().set(allDataReceived);
+                            @Override
+                            public void onConnection(Connection connection) {
+                                onNumConnectionsChanged(type, node);
+                            }
 
-                                            if (allDataReceived) {
-                                                if (inventoryRequestAnimation != null) {
-                                                    inventoryRequestAnimation.stop();
-                                                }
-
-                                                model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.completed"));
-                                            }
-                                            model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                                        });
-                                    }
-                                });
-                                inventoryRequestAnimation = UIScheduler.run(() -> {
-                                                    String dots = "";
-                                                    long numDots = inventoryRequestAnimation.getCounter() % 6;
-                                                    for (long l = 0; l < numDots; l++) {
-                                                        dots += ".";
-                                                    }
-                                                    if (!inventoryRequestService.getAllDataReceived().get()) {
-                                                        model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);
-                                                        model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                                                    }
-                                                }
-                                        )
-                                        .periodically(250);
-                                model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequestsAtStartup()));
-
-                                model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                            });
-
-                            Node defaultNode = serviceNode.getDefaultNode();
-                            defaultNode.addListener(new Node.Listener() {
-                                @Override
-                                public void onMessage(EnvelopePayloadMessage envelopePayloadMessage,
-                                                      Connection connection,
-                                                      NetworkId networkId) {
-                                }
-
-                                @Override
-                                public void onConnection(Connection connection) {
-                                    onNumConnectionsChanged(type, node);
-                                }
-
-                                @Override
-                                public void onDisconnect(Connection connection, CloseReason closeReason) {
-                                    onNumConnectionsChanged(type, node);
-                                }
-                            });
-
-                            onNumConnectionsChanged(type, node);
+                            @Override
+                            public void onDisconnect(Connection connection, CloseReason closeReason) {
+                                onNumConnectionsChanged(type, node);
+                            }
                         });
-                    })
+
+                        onNumConnectionsChanged(type, node);
+                    }))
             );
         }
 

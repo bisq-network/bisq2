@@ -49,18 +49,11 @@ public abstract class AuthenticatedData implements StorageData {
     }
 
     public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
-        switch (proto.getMessageCase()) {
-            case DEFAULTAUTHENTICATEDDATA: {
-                return DefaultAuthenticatedData.fromProto(proto);
-            }
-            case AUTHORIZEDDATA: {
-                return AuthorizedData.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case DEFAULTAUTHENTICATEDDATA -> DefaultAuthenticatedData.fromProto(proto);
+            case AUTHORIZEDDATA -> AuthorizedData.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
     }
 
     // We delegate the delivery of MetaData to the distributedData.

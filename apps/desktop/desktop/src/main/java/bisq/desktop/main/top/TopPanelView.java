@@ -57,7 +57,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         root.getChildren().addAll(Spacer.fillHBox(), marketPriceComponent, userProfileSelectionRoot);
 
         if (model.isWalletEnabled()) {
-            root.getChildren().add(0, balanceBox);
+            root.getChildren().addFirst(balanceBox);
         }
     }
 

@@ -69,16 +69,15 @@ public class PriceUtil {
 
     public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
         Optional<Double> percentage;
-        if (priceSpec instanceof FixPriceSpec) {
-            PriceQuote fixPrice = getFixPriceQuote((FixPriceSpec) priceSpec);
-            percentage = findMarketPriceQuote(marketPriceService, market).map(marketPrice ->
-                    getPercentageToMarketPrice(marketPrice, fixPrice));
-        } else if (priceSpec instanceof MarketPriceSpec) {
-            percentage = Optional.of(0d);
-        } else if (priceSpec instanceof FloatPriceSpec) {
-            percentage = Optional.of(((FloatPriceSpec) priceSpec).getPercentage());
-        } else {
-            throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
+        switch (priceSpec) {
+            case FixPriceSpec fixPriceSpec -> {
+                PriceQuote fixPrice = getFixPriceQuote(fixPriceSpec);
+                percentage = findMarketPriceQuote(marketPriceService, market).map(marketPrice ->
+                        getPercentageToMarketPrice(marketPrice, fixPrice));
+            }
+            case MarketPriceSpec marketPriceSpec -> percentage = Optional.of(0d);
+            case FloatPriceSpec floatPriceSpec -> percentage = Optional.of(floatPriceSpec.getPercentage());
+            case null, default -> throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
         }
         return percentage;
     }
@@ -93,15 +92,12 @@ public class PriceUtil {
     }
 
     public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
-        if (priceSpec instanceof FixPriceSpec) {
-            return Optional.of(getFixPriceQuote((FixPriceSpec) priceSpec));
-        } else if (priceSpec instanceof MarketPriceSpec) {
-            return findMarketPriceQuote(marketPriceService, market);
-        } else if (priceSpec instanceof FloatPriceSpec) {
-            return findFloatPriceQuote(marketPriceService, (FloatPriceSpec) priceSpec, market);
-        } else {
-            throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
-        }
+        return switch (priceSpec) {
+            case FixPriceSpec fixPriceSpec -> Optional.of(getFixPriceQuote(fixPriceSpec));
+            case MarketPriceSpec marketPriceSpec -> findMarketPriceQuote(marketPriceService, market);
+            case FloatPriceSpec floatPriceSpec -> findFloatPriceQuote(marketPriceService, floatPriceSpec, market);
+            case null, default -> throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
+        };
     }
 
     public static PriceQuote getFixPriceQuote(FixPriceSpec fixPriceSpec) {

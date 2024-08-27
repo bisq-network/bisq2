@@ -77,12 +77,11 @@ public class CitationBlock {
         private final Model model;
         @Getter
         private final View view;
-        private final ChatService chatService;
         private final UserProfileService userProfileService;
 
 
         private Controller(ServiceProvider serviceProvider) {
-            this.chatService = serviceProvider.getChatService();
+            ChatService chatService = serviceProvider.getChatService();
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             model = new Model();
             view = new View(model, this);

@@ -185,7 +185,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         if (model.getSelectedChannel().get() instanceof PublicChatChannel) {
             List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
             if (!myUserProfilesInChannel.isEmpty()) {
-                UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
+                UserIdentity lastUsedUserProfile = myUserProfilesInChannel.getFirst();
                 if (!lastUsedUserProfile.equals(userIdentityService.getSelectedUserIdentity())) {
                     new Popup().warning(Res.get("chat.message.send.differentUserProfile.warn"))
                             .closeButtonText(Res.get("confirmation.no"))
@@ -286,7 +286,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
             if (model.getUserProfileSelectionVisible().get()) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
                 if (!myUserProfilesInChannel.isEmpty()) {
-                    userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
+                    userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.getFirst());
                 }
             }
         });

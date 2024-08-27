@@ -24,8 +24,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +36,10 @@ import static bisq.updater.UpdaterUtils.*;
 @EqualsAndHashCode
 public class DownloadItem {
 
-    static List<DownloadItem> createDescriptorList(String version, String destinationDirectory, String fileName, List<String> keys) throws IOException {
+    static List<DownloadItem> createDescriptorList(String version,
+                                                   String destinationDirectory,
+                                                   String fileName,
+                                                   List<String> keys) {
         String baseUrl = GITHUB_DOWNLOAD_URL + version + "/";
         List<DownloadItem> downloadItems = new ArrayList<>();
         downloadItems.add(create(SIGNING_KEY_FILE, baseUrl, destinationDirectory));
@@ -52,7 +53,7 @@ public class DownloadItem {
         return downloadItems;
     }
 
-    public static DownloadItem create(String fileName, String baseUrl, String destinationDirectory) throws MalformedURLException {
+    public static DownloadItem create(String fileName, String baseUrl, String destinationDirectory) {
         return create(fileName, fileName, baseUrl, destinationDirectory);
     }
 

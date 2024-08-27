@@ -45,8 +45,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 // TODO (Critical) close connection if failing
 @Slf4j
@@ -125,9 +124,7 @@ public class TorHttpClient extends BaseHttpClient {
             context.setAttribute("socks.address", socksAddress);
 
             HttpUriRequest request = getHttpUriRequest(httpMethod, baseUrl, param);
-            optionalHeader.ifPresent(header -> {
-                request.setHeader(header.getFirst(), header.getSecond());
-            });
+            optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));
 
             try (CloseableHttpResponse httpResponse = closeableHttpClient.execute(request, context)) {
                 String response = inputStreamToString(httpResponse.getEntity().getContent());

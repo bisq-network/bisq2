@@ -45,7 +45,6 @@ public class TradeWizardMarketController implements Controller {
     private final TradeWizardMarketModel model;
     @Getter
     private final TradeWizardMarketView view;
-    private final ChatService chatService;
     private final Runnable onNextHandler;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
@@ -54,7 +53,7 @@ public class TradeWizardMarketController implements Controller {
 
     public TradeWizardMarketController(ServiceProvider serviceProvider, Runnable onNextHandler) {
         this.onNextHandler = onNextHandler;
-        chatService = serviceProvider.getChatService();
+        ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         bisqEasyOfferbookSelectionService = chatService.getBisqEasyOfferbookChannelSelectionService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();

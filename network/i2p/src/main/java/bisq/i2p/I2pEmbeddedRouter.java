@@ -31,10 +31,10 @@ public class I2pEmbeddedRouter {
     private Router router;
     private RouterContext routerContext;
     protected CommSystemFacade.Status i2pRouterStatus;
-    private int inboundKBytesPerSecond;
-    private int outboundKBytesPerSecond;
-    private int bandwidthSharePercentage;
-    private String dirPath;
+    private final int inboundKBytesPerSecond;
+    private final int outboundKBytesPerSecond;
+    private final int bandwidthSharePercentage;
+    private final String dirPath;
     private static boolean initialized = false;
 
     private static I2pEmbeddedRouter localRouter;
@@ -92,19 +92,21 @@ public class I2pEmbeddedRouter {
 
         I2PSocketManager manager;
         //Has the router been initialized?
-        while(RouterContext.listContexts().size() < 1) {
+        while (RouterContext.listContexts().isEmpty()) {
             try {
+                //noinspection BusyWait
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        routerContext = RouterContext.listContexts().get(0);
+        routerContext = RouterContext.listContexts().getFirst();
         router = routerContext.router();
         // Check for RUNNING state (indicating NetDB and tunnels are ready)
         while(!router.isRunning()) {
             try {
+                //noinspection BusyWait
                 Thread.sleep(1000);
                 if (!router.isAlive()) {
                     log.error("Router died while starting");
@@ -174,9 +176,10 @@ public class I2pEmbeddedRouter {
             }
             router.setKillVMOnEnd(false);
             router.runRouter();
-            routerContext = RouterContext.listContexts().get(0);
+            routerContext = RouterContext.listContexts().getFirst();
             while(!router.isRunning()) {
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(1000);
                     if (!router.isAlive()) {
                         log.error("Router died while starting");
@@ -192,7 +195,7 @@ public class I2pEmbeddedRouter {
             log.trace("===========Begin Router Info===========\n{}\n===========End Router Info===========", router.getRouterInfo().toString());
         }
         catch (IllegalStateException e) {
-
+            log.error("Exception", e);
         }
     }
 

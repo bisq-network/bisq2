@@ -90,6 +90,7 @@ public class RestApiApplicationService extends ApplicationService {
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
+        //noinspection SwitchStatementWithTooFewBranches
         switch (bitcoinWalletSelection) {
            /* case BITCOIND:
                 walletService = Optional.of(new BitcoinWalletService(BitcoinWalletService.Config.from(bitcoinWalletConfig.getConfig("bitcoind")), getPersistenceService()));
@@ -211,10 +212,8 @@ public class RestApiApplicationService extends ApplicationService {
                         if (success) {
                             setState(State.APP_INITIALIZED);
 
-                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> {
-                                networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                        networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
-                            });
+                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
 
                             log.info("ApplicationService initialized");
                         } else {
@@ -244,10 +243,8 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> bondedRolesService.shutdown())
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
-                .thenCompose(result -> {
-                    return walletService.map(Service::shutdown)
-                            .orElse(CompletableFuture.completedFuture(true));
-                })
+                .thenCompose(result -> walletService.map(Service::shutdown)
+                        .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> throwable == null)

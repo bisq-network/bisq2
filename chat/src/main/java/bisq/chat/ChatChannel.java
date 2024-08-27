@@ -68,25 +68,17 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     }
 
     public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
-        switch (proto.getMessageCase()) {
-            case TWOPARTYPRIVATECHATCHANNEL: {
-                return TwoPartyPrivateChatChannel.fromProto(proto, proto.getTwoPartyPrivateChatChannel());
-            }
-            case BISQEASYOPENTRADECHANNEL: {
-                return BisqEasyOpenTradeChannel.fromProto(proto, proto.getBisqEasyOpenTradeChannel());
-            }
-            case BISQEASYOFFERBOOKCHANNEL: {
-                return BisqEasyOfferbookChannel.fromProto(proto, proto.getBisqEasyOfferbookChannel());
-            }
-            case COMMONPUBLICCHATCHANNEL: {
-                return CommonPublicChatChannel.fromProto(proto, proto.getCommonPublicChatChannel());
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case TWOPARTYPRIVATECHATCHANNEL ->
+                    TwoPartyPrivateChatChannel.fromProto(proto, proto.getTwoPartyPrivateChatChannel());
+            case BISQEASYOPENTRADECHANNEL ->
+                    BisqEasyOpenTradeChannel.fromProto(proto, proto.getBisqEasyOpenTradeChannel());
+            case BISQEASYOFFERBOOKCHANNEL ->
+                    BisqEasyOfferbookChannel.fromProto(proto, proto.getBisqEasyOfferbookChannel());
+            case COMMONPUBLICCHATCHANNEL ->
+                    CommonPublicChatChannel.fromProto(proto, proto.getCommonPublicChatChannel());
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
     }
 
 

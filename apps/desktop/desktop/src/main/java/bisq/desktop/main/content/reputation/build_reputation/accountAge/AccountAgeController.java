@@ -53,20 +53,12 @@ public class AccountAgeController extends TabController<AccountAgeModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case ACCOUNT_AGE_TAB_1: {
-                return Optional.of(new AccountAgeTab1Controller(serviceProvider));
-            }
-            case ACCOUNT_AGE_TAB_2: {
-                return Optional.of(new AccountAgeTab2Controller(serviceProvider));
-            }
-            case ACCOUNT_AGE_TAB_3: {
-                return Optional.of(new AccountAgeTab3Controller(serviceProvider, view.getRoot()));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case ACCOUNT_AGE_TAB_1 -> Optional.of(new AccountAgeTab1Controller(serviceProvider));
+            case ACCOUNT_AGE_TAB_2 -> Optional.of(new AccountAgeTab2Controller(serviceProvider));
+            case ACCOUNT_AGE_TAB_3 -> Optional.of(new AccountAgeTab3Controller(serviceProvider, view.getRoot()));
+            default -> Optional.empty();
+        };
     }
 
     void onClose() {

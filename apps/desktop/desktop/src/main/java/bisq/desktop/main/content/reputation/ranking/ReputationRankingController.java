@@ -26,10 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ReputationRankingController implements Controller {
     @Getter
     private final ReputationRankingView view;
-    private final ReputationRankingModel model;
 
     public ReputationRankingController(ServiceProvider serviceProvider) {
-        model = new ReputationRankingModel();
+        ReputationRankingModel model = new ReputationRankingModel();
         view = new ReputationRankingView(model, this);
     }
 

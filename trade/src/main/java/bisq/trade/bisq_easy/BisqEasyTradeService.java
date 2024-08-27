@@ -108,8 +108,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
             @Override
             public void remove(Object element) {
-                if (element instanceof AuthorizedAlertData) {
-                    AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) element;
+                if (element instanceof AuthorizedAlertData authorizedAlertData) {
                     if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
                         if (authorizedAlertData.isHaltTrading()) {
                             haltTrading = false;
@@ -145,24 +144,23 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof BisqEasyTradeMessage) {
+        if (envelopePayloadMessage instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
             verifyTradingNotOnHalt();
             verifyMinVersionForTrading();
 
-            BisqEasyTradeMessage bisqEasyTradeMessage = (BisqEasyTradeMessage) envelopePayloadMessage;
             if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
                 return;
             }
 
-            if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
-                onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyBtcAddressMessage) {
-                onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyAccountDataMessage) {
-                onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) bisqEasyTradeMessage);
-            } else {
-                handleBisqEasyTradeMessage(bisqEasyTradeMessage);
+            switch (bisqEasyTradeMessage) {
+                case BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest ->
+                        onBisqEasyTakeOfferMessage(bisqEasyTakeOfferRequest);
+                case BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage ->
+                        onBisqEasyBtcAddressMessage(bisqEasyBtcAddressMessage);
+                case BisqEasyAccountDataMessage bisqEasyAccountDataMessage ->
+                        onBisqEasySendAccountDataMessage(bisqEasyAccountDataMessage);
+                default -> handleBisqEasyTradeMessage(bisqEasyTradeMessage);
             }
         }
     }

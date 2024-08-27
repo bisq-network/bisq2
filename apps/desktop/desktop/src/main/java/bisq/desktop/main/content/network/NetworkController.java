@@ -42,22 +42,12 @@ public class NetworkController extends ContentTabController<NetworkModel> {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case MY_NETWORK_NODE: {
-                return Optional.of(new MyNetworkNodeController(serviceProvider));
-            }
-            case P2P_NETWORK: {
-                return Optional.of(new P2PNetworkController(serviceProvider));
-            }
-            case ROLES: {
-                return Optional.of(new RolesController(serviceProvider));
-            }
-            case NODES: {
-                return Optional.of(new NodesController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case MY_NETWORK_NODE -> Optional.of(new MyNetworkNodeController(serviceProvider));
+            case P2P_NETWORK -> Optional.of(new P2PNetworkController(serviceProvider));
+            case ROLES -> Optional.of(new RolesController(serviceProvider));
+            case NODES -> Optional.of(new NodesController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

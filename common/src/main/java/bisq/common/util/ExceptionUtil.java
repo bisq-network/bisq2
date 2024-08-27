@@ -53,7 +53,7 @@ public class ExceptionUtil {
     public static List<Throwable> getCauseStack(Throwable throwable) {
         List<Throwable> stack = new ArrayList<>();
         while (throwable != null) {
-            stack.add(0, throwable);
+            stack.addFirst(throwable);
             throwable = throwable.getCause();
         }
         return stack;
@@ -69,7 +69,7 @@ public class ExceptionUtil {
         List<String> traceClasses = Arrays.stream(rootCause.getStackTrace())
                 .map(StackTraceElement::toString)
                 .collect(Collectors.toList());
-        traceClasses.add(0, rootCause.getClass().getName());
+        traceClasses.addFirst(rootCause.getClass().getName());
         return Joiner.on("\n    at ").join(traceClasses);
     }
 

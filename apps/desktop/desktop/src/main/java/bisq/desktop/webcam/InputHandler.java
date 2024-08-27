@@ -40,7 +40,7 @@ public class InputHandler {
         try (Scanner scanner = new Scanner(socket.getInputStream())) {
             StringBuilder stringBuilder = new StringBuilder();
             // We only expect one line
-            while (scanner.hasNextLine() && stringBuilder.length() == 0) {
+            while (scanner.hasNextLine() && stringBuilder.isEmpty()) {
                 String line = scanner.nextLine();
                 stringBuilder.append(line);
             }

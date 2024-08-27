@@ -67,11 +67,9 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     @Getter
     protected final CreateNewProfileStep2View view;
     protected final UserIdentityService userIdentityService;
-    private final ServiceProvider serviceProvider;
 
     public CreateNewProfileStep2Controller(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        this.serviceProvider = serviceProvider;
 
         model = createModel();
         view = createView();

@@ -64,7 +64,7 @@ public class StorageService {
     final Map<String, MailboxDataStorageService> mailboxStores = new ConcurrentHashMap<>();
     final Map<String, AppendOnlyDataStorageService> appendOnlyDataStores = new ConcurrentHashMap<>();
     private final PersistenceService persistenceService;
-    private final Set<StorageService.Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public StorageService(PersistenceService persistenceService) {
         this.persistenceService = persistenceService;
@@ -206,17 +206,16 @@ public class StorageService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Optional<StorageData>> onAddDataRequest(AddDataRequest addDataRequest) {
-        if (addDataRequest instanceof AddMailboxRequest) {
-            return onAddMailboxRequest((AddMailboxRequest) addDataRequest);
-        } else if (addDataRequest instanceof AddAuthenticatedDataRequest) {
-            return onAddAuthenticatedDataRequest((AddAuthenticatedDataRequest) addDataRequest);
-        } else if (addDataRequest instanceof AddAppendOnlyDataRequest) {
-            return onAddAppendOnlyDataRequest((AddAppendOnlyDataRequest) addDataRequest);
-        } else {
-            return CompletableFuture.failedFuture(
+        return switch (addDataRequest) {
+            case AddMailboxRequest addMailboxRequest -> onAddMailboxRequest(addMailboxRequest);
+            case AddAuthenticatedDataRequest addAuthenticatedDataRequest ->
+                    onAddAuthenticatedDataRequest(addAuthenticatedDataRequest);
+            case AddAppendOnlyDataRequest addAppendOnlyDataRequest ->
+                    onAddAppendOnlyDataRequest(addAppendOnlyDataRequest);
+            case null, default -> CompletableFuture.failedFuture(
                     new IllegalArgumentException("AddRequest called with invalid addDataRequest: " +
-                            addDataRequest.getClass().getSimpleName()));
-        }
+                            (addDataRequest != null ? addDataRequest.getClass().getSimpleName() : "null")));
+        };
     }
 
     private CompletableFuture<Optional<StorageData>> onAddMailboxRequest(AddMailboxRequest request) {
@@ -511,23 +510,12 @@ public class StorageService {
     }
 
     public Stream<DataStorageService<? extends DataRequest>> getStoresByStoreType(StoreType storeType) {
-        List<DataStorageService<? extends DataRequest>> dataStorageServiceStream;
-        switch (storeType) {
-            case ALL:
-                dataStorageServiceStream = getAllStores().collect(Collectors.toList());
-                break;
-            case AUTHENTICATED_DATA_STORE:
-                dataStorageServiceStream = new ArrayList<>(authenticatedDataStores.values());
-                break;
-            case MAILBOX_DATA_STORE:
-                dataStorageServiceStream = new ArrayList<>(mailboxStores.values());
-                break;
-            case APPEND_ONLY_DATA_STORE:
-                dataStorageServiceStream = new ArrayList<>(appendOnlyDataStores.values());
-                break;
-            default:
-                throw new RuntimeException("Unhandled case. storeType= " + storeType);
-        }
+        List<DataStorageService<? extends DataRequest>> dataStorageServiceStream = switch (storeType) {
+            case ALL -> getAllStores().collect(Collectors.toList());
+            case AUTHENTICATED_DATA_STORE -> new ArrayList<>(authenticatedDataStores.values());
+            case MAILBOX_DATA_STORE -> new ArrayList<>(mailboxStores.values());
+            case APPEND_ONLY_DATA_STORE -> new ArrayList<>(appendOnlyDataStores.values());
+        };
         return dataStorageServiceStream.stream();
     }
 
@@ -550,11 +538,11 @@ public class StorageService {
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListener(StorageService.Listener listener) {
+    public void addListener(Listener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(StorageService.Listener listener) {
+    public void removeListener(Listener listener) {
         listeners.remove(listener);
     }
 }

@@ -81,7 +81,7 @@ public class PersistableStoreFileManager {
             boolean isSuccess = backupFile.renameTo(storeFile);
 
             if (!isSuccess) {
-                log.error("Couldn't rename " + backupFile + " to " + storeFilePath);
+                log.error("Couldn't rename {} to {}", backupFile, storeFilePath);
             }
         }
     }

@@ -95,7 +95,7 @@ public class ElectrumBinaryExtractor {
             try {
                 FileUtils.deleteFileOrDirectory(electrumAppInDataDir);
             } catch (IOException e) {
-                log.error("Could not delete " + electrumAppInDataDir, e);
+                log.error("Could not delete {}", electrumAppInDataDir, e);
                 throw new IllegalStateException("Couldn't delete old Electrum.app", e);
             }
         }

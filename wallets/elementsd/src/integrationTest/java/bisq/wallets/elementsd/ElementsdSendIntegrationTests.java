@@ -21,14 +21,13 @@ import bisq.wallets.core.model.AddressType;
 import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
 import org.junit.jupiter.api.Test;
 
-import java.net.MalformedURLException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ElementsdSendIntegrationTests extends SharedElementsdInstanceTests {
     @Test
-    public void sendOneLBtcToAddress() throws MalformedURLException, InterruptedException {
+    public void sendOneLBtcToAddress() throws InterruptedException {
         peginBtc(20);
         var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 

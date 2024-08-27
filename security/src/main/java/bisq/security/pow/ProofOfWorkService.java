@@ -78,11 +78,11 @@ public abstract class ProofOfWorkService {
                 double average = tsList.stream().mapToLong(e -> e).average().getAsDouble();
                 long min = tsList.stream().mapToLong(e -> e).min().getAsLong();
                 long max = tsList.stream().mapToLong(e -> e).max().getAsLong();
-                sb.append("\nDifficulty: Math.pow(2, " + i + ") = " + (int) diff);
-                sb.append(": average=" + average);
-                sb.append(", min=" + min);
-                sb.append(", max=" + max);
-                sb.append(", tsList=" + tsList);
+                sb.append("\nDifficulty: Math.pow(2, ").append(i).append(") = ").append((int) diff);
+                sb.append(": average=").append(average);
+                sb.append(", min=").append(min);
+                sb.append(", max=").append(max);
+                sb.append(", tsList=").append(tsList);
             }
             log.info(sb.toString());
         });

@@ -52,6 +52,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
         return persisted;
     }
 
+    @SuppressWarnings("RedundantMethodOverride")
     @Override
     protected long getMaxWriteRateInMs() {
         return 1000;

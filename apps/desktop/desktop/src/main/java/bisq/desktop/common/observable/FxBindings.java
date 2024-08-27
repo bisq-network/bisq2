@@ -341,13 +341,9 @@ public class FxBindings {
         }
 
         public Pin to(Observable<S> observable) {
-            ChangeListener<S> listener = (o, oldValue, newValue) -> {
-                observable.set(newValue);
-            };
+            ChangeListener<S> listener = (o, oldValue, newValue) -> observable.set(newValue);
             observer.addListener(listener);
-            Pin pin = observable.addObserver(e -> UIThread.run(() -> {
-                observer.set(e);
-            }));
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
             return () -> {
                 observer.removeListener(listener);
                 pin.unbind();

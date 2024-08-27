@@ -115,7 +115,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         }
 
         // If new data is older than existing entry we clear set and add our new data, otherwise we ignore the new data.
-        AuthorizedTimestampData existing = new ArrayList<>(dataSet).get(0);
+        AuthorizedTimestampData existing = new ArrayList<>(dataSet).getFirst();
         if (existing.getDate() > data.getDate()) {
             dataSet.clear();
             dataSet.add(data);
@@ -179,16 +179,14 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
             persist();
 
             Set<String> profileIds = new HashSet<>(persistableStore.getProfileIds());
-            CompletableFuture.runAsync(() -> {
-                        profileIds.forEach(userProfileId -> {
-                            requestTimestamp(userProfileId);
-                            long delay = 30_000 + new Random().nextInt(90_000);
-                            try {
-                                Thread.sleep(delay);
-                            } catch (InterruptedException ignore) {
-                            }
-                        });
-                    },
+            CompletableFuture.runAsync(() -> profileIds.forEach(userProfileId -> {
+                        requestTimestamp(userProfileId);
+                        long delay = 30_000 + new Random().nextInt(90_000);
+                        try {
+                            Thread.sleep(delay);
+                        } catch (InterruptedException ignore) {
+                        }
+                    }),
                     ExecutorFactory.newSingleThreadScheduledExecutor("requestForAllProfileIdsBeforeExpired"));
             return true;
         }

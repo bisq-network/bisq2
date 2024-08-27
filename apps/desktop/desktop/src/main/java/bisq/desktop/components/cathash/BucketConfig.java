@@ -34,8 +34,8 @@ public abstract class BucketConfig {
 
     @Getter
     static class Bucket {
-        int count;
-        int idx;
+        final int count;
+        final int idx;
 
         public Bucket(int count, int idx) {
             this.count = count;
@@ -45,9 +45,9 @@ public abstract class BucketConfig {
 
     @Getter
     static class PathDetails {
-        String path;
-        int itemIdx;
-        Optional<Integer> shapeIdx;
+        final String path;
+        final int itemIdx;
+        final Optional<Integer> shapeIdx;
 
         public PathDetails(String path, Integer itemIdx) {
             this(path, itemIdx, null);

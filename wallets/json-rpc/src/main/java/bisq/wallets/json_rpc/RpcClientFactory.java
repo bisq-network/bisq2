@@ -39,6 +39,7 @@ public class RpcClientFactory {
     private static String createRpcUrlWithWithSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix) {
         String hostname = rpcConfig.getHostname();
         int port = rpcConfig.getPort();
+        @SuppressWarnings("HttpUrlsUsage")
         var url = "http://" + hostname + ":" + port;
         if (urlSuffix.isPresent()) {
             url += urlSuffix.get();

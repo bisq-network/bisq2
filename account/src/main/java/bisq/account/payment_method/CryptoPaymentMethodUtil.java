@@ -39,20 +39,13 @@ public class CryptoPaymentMethodUtil {
     }
 
     public static List<CryptoPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
-        switch (protocolType) {
-            case BISQ_EASY:
-                throw new IllegalArgumentException("No support for CryptoPaymentMethods for BISQ_EASY");
-            case BISQ_MU_SIG:
-            case LIGHTNING_ESCROW:
-                return getPaymentRails();
-            case MONERO_SWAP:
-                return List.of(CryptoPaymentRail.MONERO);
-            case LIQUID_SWAP:
-                return List.of(CryptoPaymentRail.LIQUID);
-            case BSQ_SWAP:
-                return List.of(CryptoPaymentRail.BSQ);
-            default:
-                throw new RuntimeException("Not handled case: protocolType=" + protocolType);
-        }
+        return switch (protocolType) {
+            case BISQ_EASY -> throw new IllegalArgumentException("No support for CryptoPaymentMethods for BISQ_EASY");
+            case BISQ_MU_SIG, LIGHTNING_ESCROW -> getPaymentRails();
+            case MONERO_SWAP -> List.of(CryptoPaymentRail.MONERO);
+            case LIQUID_SWAP -> List.of(CryptoPaymentRail.LIQUID);
+            case BSQ_SWAP -> List.of(CryptoPaymentRail.BSQ);
+            default -> throw new RuntimeException("Not handled case: protocolType=" + protocolType);
+        };
     }
 }

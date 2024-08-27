@@ -43,25 +43,13 @@ public class SettingsController extends ContentTabController<SettingsModel> {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case LANGUAGE_SETTINGS: {
-                return Optional.of(new LanguageSettingsController(serviceProvider));
-            }
-            case NOTIFICATION_SETTINGS: {
-                return Optional.of(new NotificationsSettingsController(serviceProvider));
-            }
-            case DISPLAY_SETTINGS: {
-                return Optional.of(new DisplaySettingsController(serviceProvider));
-            }
-            case TRADE_SETTINGS: {
-                return Optional.of(new TradeSettingsController(serviceProvider));
-            }
-            case NETWORK_SETTINGS: {
-                return Optional.of(new NetworkSettingsController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case LANGUAGE_SETTINGS -> Optional.of(new LanguageSettingsController(serviceProvider));
+            case NOTIFICATION_SETTINGS -> Optional.of(new NotificationsSettingsController(serviceProvider));
+            case DISPLAY_SETTINGS -> Optional.of(new DisplaySettingsController(serviceProvider));
+            case TRADE_SETTINGS -> Optional.of(new TradeSettingsController(serviceProvider));
+            case NETWORK_SETTINGS -> Optional.of(new NetworkSettingsController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

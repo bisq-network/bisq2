@@ -129,7 +129,7 @@ public class ChipToggleButton extends HBox implements Toggle {
     }
 
     public void setLeftIcon(Node icon) {
-        getChildren().add(0, icon);
+        getChildren().addFirst(icon);
     }
 
     public void setRightIcon(Node icon) {

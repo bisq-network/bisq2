@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MarketChannelItem {
     public static final ColorAdjust DIMMED = new ColorAdjust(0, -0.2, -0.4, -0.1);
     public static final ColorAdjust SELECTED = new ColorAdjust(0, 0, -0.1, 0);
+    @SuppressWarnings("UnnecessaryUnicodeEscape")
     public static final String ASTERISK_SYMBOL = "\u002A"; // Unicode for "＊"
 
     @EqualsAndHashCode.Include

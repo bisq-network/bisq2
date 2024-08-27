@@ -142,38 +142,30 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private void applyInitialData() {
         // Start with the AuthorizedOracleNode
         networkService.getDataService()
-                .ifPresent(dataService -> {
-                    dataService.getAuthorizedData()
-                            .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode)
-                            .forEach(this::onAuthorizedDataAdded);
-                });
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode)
+                        .forEach(this::onAuthorizedDataAdded));
 
         // Then we process the AuthorizedBondedRole of type ORACLE_NODE
         networkService.getDataService()
-                .ifPresent(dataService -> {
-                    dataService.getAuthorizedData()
-                            .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                            .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() == BondedRoleType.ORACLE_NODE)
-                            .forEach(this::onAuthorizedDataAdded);
-                });
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
+                        .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() == BondedRoleType.ORACLE_NODE)
+                        .forEach(this::onAuthorizedDataAdded));
 
         // Then we process the other AuthorizedBondedRoles
         networkService.getDataService()
-                .ifPresent(dataService -> {
-                    dataService.getAuthorizedData()
-                            .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                            .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() != BondedRoleType.ORACLE_NODE)
-                            .forEach(this::onAuthorizedDataAdded);
-                });
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
+                        .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() != BondedRoleType.ORACLE_NODE)
+                        .forEach(this::onAuthorizedDataAdded));
 
         // Now we can apply other data
         networkService.getDataService()
-                .ifPresent(dataService -> {
-                    dataService.getAuthorizedData()
-                            .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode))
-                            .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole))
-                            .forEach(this::onAuthorizedDataAdded);
-                });
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode))
+                        .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole))
+                        .forEach(this::onAuthorizedDataAdded));
 
         networkService.addDataServiceListener(this);
     }

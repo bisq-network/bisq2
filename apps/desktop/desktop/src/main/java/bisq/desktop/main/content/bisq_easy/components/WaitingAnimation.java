@@ -110,26 +110,16 @@ public class WaitingAnimation extends StackPane {
     }
 
     private String getWaitingStateIconId(WaitingState waitingState) {
-        switch (waitingState) {
-            case TAKE_BISQ_EASY_OFFER:
-                return "take-bisq-easy-offer";
-            case ACCOUNT_DATA:
-                return "account-data";
-            case FIAT_PAYMENT:
-                return "fiat-payment";
-            case FIAT_PAYMENT_CONFIRMATION:
-                return "fiat-payment-confirmation";
-            case BITCOIN_ADDRESS:
-                return "bitcoin-address";
-            case BITCOIN_PAYMENT:
-                return "bitcoin-payment";
-            case BITCOIN_CONFIRMATION:
-                return "bitcoin-confirmation";
-            case SCAN_WITH_CAMERA:
-                return "scan-with-camera";
-            default:
-                throw new IllegalArgumentException("Unknown WaitingState: " + waitingState);
-        }
+        return switch (waitingState) {
+            case TAKE_BISQ_EASY_OFFER -> "take-bisq-easy-offer";
+            case ACCOUNT_DATA -> "account-data";
+            case FIAT_PAYMENT -> "fiat-payment";
+            case FIAT_PAYMENT_CONFIRMATION -> "fiat-payment-confirmation";
+            case BITCOIN_ADDRESS -> "bitcoin-address";
+            case BITCOIN_PAYMENT -> "bitcoin-payment";
+            case BITCOIN_CONFIRMATION -> "bitcoin-confirmation";
+            case SCAN_WITH_CAMERA -> "scan-with-camera";
+        };
     }
 
     private String getSpinningCircleIconId(WaitingState waitingState) {

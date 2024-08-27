@@ -34,11 +34,11 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Works for Mac (Intel and aarch64) and Windows.
- *
+ * <p>
  * We use org.bytedeco.opencv.opencv_videoio.VideoCapture.grab calls to let it fail fast if permissions for camera
  * usage are not set. VideoCapture is also used to determine how many devices are available. Other means like using
  * OpenCVFrameGrabber.getDeviceDescriptions() did not work in that setup.
- *
+ * <p>
  * For testing on MacOS, `tccutil reset Camera` is a useful terminal command to reset camera permissions.
  */
 @Slf4j

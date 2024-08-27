@@ -52,14 +52,12 @@ public class BondedReputationTab3Controller implements Controller {
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
-                chatUserIdentity -> {
-                    UIThread.run(() -> {
-                        model.getSelectedChatUserIdentity().set(chatUserIdentity);
-                        if (chatUserIdentity != null) {
-                            model.getPubKeyHash().set(chatUserIdentity.getId());
-                        }
-                    });
-                }
+                chatUserIdentity -> UIThread.run(() -> {
+                    model.getSelectedChatUserIdentity().set(chatUserIdentity);
+                    if (chatUserIdentity != null) {
+                        model.getPubKeyHash().set(chatUserIdentity.getId());
+                    }
+                })
         );
     }
 

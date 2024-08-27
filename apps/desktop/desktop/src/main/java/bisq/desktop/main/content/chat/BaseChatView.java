@@ -19,8 +19,8 @@ package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
+import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;
@@ -39,7 +39,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();
-    protected Label channelIcon = new Label();
+    protected final Label channelIcon = new Label();
     protected DropdownBisqMenuItem helpButton, infoButton;
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();

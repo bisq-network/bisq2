@@ -128,21 +128,12 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
 
 
     public static Offer<? extends PaymentMethodSpec<?>, ? extends PaymentMethodSpec<?>> fromProto(bisq.offer.protobuf.Offer proto) {
-        switch (proto.getMessageCase()) {
-            case BISQEASYOFFER: {
-                return BisqEasyOffer.fromProto(proto);
-            }
-            case BISQMUSIGOFFER: {
-                return BisqMuSigOffer.fromProto(proto);
-            }
-            case SUBMARINEOFFER: {
-                return SubmarineOffer.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case BISQEASYOFFER -> BisqEasyOffer.fromProto(proto);
+            case BISQMUSIGOFFER -> BisqMuSigOffer.fromProto(proto);
+            case SUBMARINEOFFER -> SubmarineOffer.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

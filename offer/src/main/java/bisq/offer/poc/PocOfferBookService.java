@@ -25,7 +25,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -61,7 +60,7 @@ public class PocOfferBookService {
         offers.addAll(dataService.getAuthenticatedPayloadStreamByStoreName("Offer")
                 .filter(payload -> payload.getDistributedData() instanceof PocOffer)
                 .map(payload -> (PocOffer) payload.getDistributedData())
-                .collect(Collectors.toList()));
+                .toList());
         return CompletableFuture.completedFuture(true);
     }
 }

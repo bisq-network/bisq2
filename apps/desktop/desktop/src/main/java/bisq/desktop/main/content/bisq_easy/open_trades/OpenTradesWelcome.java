@@ -44,13 +44,12 @@ public class OpenTradesWelcome {
         return controller.getView();
     }
 
-    private static class Controller implements bisq.desktop.common.view.Controller {
-        private final Model model;
+    public static class Controller implements bisq.desktop.common.view.Controller {
         @Getter
         private final View view;
 
         private Controller() {
-            model = new Model();
+            Model model = new Model();
             view = new View(model, this);
         }
 
@@ -68,7 +67,7 @@ public class OpenTradesWelcome {
     }
 
     @Getter
-    private static class Model implements bisq.desktop.common.view.Model {
+    public static class Model implements bisq.desktop.common.view.Model {
     }
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {

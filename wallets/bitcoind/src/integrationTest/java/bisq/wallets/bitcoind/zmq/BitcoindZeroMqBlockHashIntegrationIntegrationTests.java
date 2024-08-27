@@ -18,8 +18,6 @@
 package bisq.wallets.bitcoind.zmq;
 
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
-import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -47,7 +45,7 @@ public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
     void blockHashNotification() throws InterruptedException {
         ZmqListeners zmqListeners = regtestSetup.getZmqListeners();
         zmqListeners.registerNewBlockMinedListener((blockHash) -> {
-            log.info("Notification: New block with hash " + blockHash);
+            log.info("Notification: New block with hash {}", blockHash);
 
             if (minedBlockHashes.contains(blockHash)) {
                 listenerReceivedBlockHashLatch.countDown();
@@ -60,7 +58,7 @@ public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
             while (true) {
                 try {
                     List<String> blockHashes = regtestSetup.mineOneBlock();
-                    log.info("Mined block: " + blockHashes);
+                    log.info("Mined block: {}", blockHashes);
 
                     for (String blockHash : blockHashes) {
                         if (minedBlockHashes.contains(blockHash)) {

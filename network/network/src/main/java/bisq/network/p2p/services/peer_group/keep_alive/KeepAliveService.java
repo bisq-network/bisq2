@@ -100,8 +100,7 @@ public class KeepAliveService implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof Ping) {
-            Ping ping = (Ping) envelopePayloadMessage;
+        if (envelopePayloadMessage instanceof Ping ping) {
             log.debug("{} received Ping with nonce {} from {}", node, ping.getNonce(), connection.getPeerAddress());
             NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new Pong(ping.getNonce()), connection));
             log.debug("{} sent Pong with nonce {} to {}. Connection={}", node, ping.getNonce(), connection.getPeerAddress(), connection.getId());

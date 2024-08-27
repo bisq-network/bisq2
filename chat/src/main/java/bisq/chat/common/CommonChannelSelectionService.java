@@ -68,13 +68,15 @@ public class CommonChannelSelectionService extends ChatChannelSelectionService {
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         // Assume only private channels can be set to null
-        if (chatChannel == null) {
-            lastSelectedPrivateChannel = Optional.empty();
-        } else if (chatChannel instanceof PublicChatChannel) {
-            publicChatChannelService.removeExpiredMessages(chatChannel);
-        } else if (chatChannel instanceof TwoPartyPrivateChatChannel privateChatChannel) {
-            lastSelectedPrivateChannel = Optional.of(privateChatChannel);
-            userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
+        switch (chatChannel) {
+            case null -> lastSelectedPrivateChannel = Optional.empty();
+            case PublicChatChannel<?> publicChatChannel -> publicChatChannelService.removeExpiredMessages(chatChannel);
+            case TwoPartyPrivateChatChannel privateChatChannel -> {
+                lastSelectedPrivateChannel = Optional.of(privateChatChannel);
+                userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
+            }
+            default -> {
+            }
         }
         super.selectChannel(chatChannel);
     }

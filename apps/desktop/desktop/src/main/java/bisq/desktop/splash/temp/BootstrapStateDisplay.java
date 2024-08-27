@@ -110,15 +110,11 @@ public class BootstrapStateDisplay {
         }
 
         private String getIconId(TransportType transportType) {
-            switch (transportType) {
-                case TOR:
-                    return "tor";
-                case I2P:
-                    return "i2p";
-                case CLEAR:
-                default:
-                    return "clearnet";
-            }
+            return switch (transportType) {
+                case TOR -> "tor";
+                case I2P -> "i2p";
+                default -> "clearnet";
+            };
         }
 
         void onToggleDetails() {

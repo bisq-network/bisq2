@@ -55,7 +55,7 @@ public class Badge extends StackPane {
     @Getter
     @Setter
     private boolean enabled = true;
-    protected ObjectProperty<Pos> position = new SimpleObjectProperty<>(Pos.TOP_RIGHT);
+    protected final ObjectProperty<Pos> position = new SimpleObjectProperty<>(Pos.TOP_RIGHT);
     private final SimpleStringProperty text = new SimpleStringProperty("");
     private final FadeTransition transition;
 
@@ -153,7 +153,7 @@ public class Badge extends StackPane {
     public void setControl(Node control) {
         if (control != null) {
             this.control = control;
-            getChildren().add(0, control);
+            getChildren().addFirst(control);
 
             // if the control got resized the badge must be reset
             if (control instanceof Region) {

@@ -34,7 +34,6 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
     public static final int WIDTH = 535;
     private final ProgressBar progressBar;
     private final Label applicationServiceState;
-    private final Label version;
 
     public SplashView(SplashModel model, SplashController controller) {
         super(new VBox(), model, controller);
@@ -45,7 +44,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         ImageView logo = new ImageView();
         logo.setId("logo-splash");
 
-        version = new Label(model.getVersion());
+        Label version = new Label(model.getVersion());
         version.setOpacity(0.5);
         version.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
 

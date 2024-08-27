@@ -36,7 +36,7 @@ public class OsxNotificationDelegate implements SystemNotificationDelegate {
             Foundation.init();
             return true;
         } catch (Throwable t) {
-            log.error("No native OSX support for notifications. OSX version: " + OS.getOsVersion(), t);
+            log.error("No native OSX support for notifications. OSX version: {}", OS.getOsVersion(), t);
             return false;
         }
     }

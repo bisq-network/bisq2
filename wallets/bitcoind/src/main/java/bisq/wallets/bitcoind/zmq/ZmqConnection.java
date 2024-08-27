@@ -121,7 +121,7 @@ public class ZmqConnection implements AutoCloseable {
             throw new CannotFindZmqAddressException("ZeroMQ: All topics need to published on the same address.");
         }
 
-        return zmqNotifications.get(0).getAddress();
+        return zmqNotifications.getFirst().getAddress();
     }
 
     private boolean canSubscribeToAllTopics(List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications) {

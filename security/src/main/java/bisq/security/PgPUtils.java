@@ -62,8 +62,7 @@ public class PgPUtils {
         try (InputStream inputStream = PGPUtil.getDecoderStream(new FileInputStream(sigFile))) {
             PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(inputStream, new JcaKeyFingerprintCalculator());
             Object signatureObject = pgpObjectFactory.nextObject();
-            if (signatureObject instanceof PGPSignatureList) {
-                PGPSignatureList signatureList = (PGPSignatureList) signatureObject;
+            if (signatureObject instanceof PGPSignatureList signatureList) {
                 checkArgument(!signatureList.isEmpty(), "signatureList must not be empty");
                 return signatureList.get(0);
             } else if (signatureObject instanceof PGPSignature) {

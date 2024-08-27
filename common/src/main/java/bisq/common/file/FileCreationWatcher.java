@@ -73,7 +73,7 @@ public class FileCreationWatcher {
                 }
             }
         } catch (IOException | InterruptedException e) {
-            log.error("Couldn't watch directory: " + directoryToWatch.toAbsolutePath(), e);
+            log.error("Couldn't watch directory: {}", directoryToWatch.toAbsolutePath(), e);
         }
 
         throw new IllegalStateException("FileCreationWatcher terminated prematurely.");

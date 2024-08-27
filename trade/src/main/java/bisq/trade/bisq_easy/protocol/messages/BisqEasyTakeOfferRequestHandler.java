@@ -83,7 +83,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                                     if (throwable == null) {
                                         log.info("Offer with ID {} removed", chatMessage.getBisqEasyOffer().map(Offer::getId).orElse("N/A"));
                                     } else {
-                                        log.error("We got an error at doDeleteMessage: " + throwable);
+                                        log.error("We got an error at doDeleteMessage", throwable);
                                     }
                                 }));
             }
@@ -207,10 +207,10 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L) + "\n" +
                 "takersContract=" + takersContract;
         if (throwException) {
-            log.error(message + details);
+            log.error("message={}, details={}", message, details);
             throw new IllegalArgumentException(message);
         } else if (showWaring) {
-            log.warn(message + details);
+            log.warn("message={}, details={}", message, details);
         } else if (myAmount != takersAmount) {
             log.info("My amount and the amount set by the taker are not the same. This is expected if the offer used a " +
                     "market based price and the taker had a different market price.\n" +

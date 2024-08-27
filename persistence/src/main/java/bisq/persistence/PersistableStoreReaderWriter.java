@@ -53,7 +53,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             return (Optional) Optional.of(persistableStore);
 
         } catch (Exception e) {
-            log.error("Couldn't read " + storeFilePath + " from file.", e);
+            log.error("Couldn't read {} from file.", storeFilePath, e);
             tryToBackupCorruptedStoreFile();
         }
 
@@ -69,7 +69,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             storeFileManager.renameTempFileToCurrentFile();
 
         } catch (CouldNotSerializePersistableStore e) {
-            log.error("Couldn't serialize " + persistableStore, e);
+            log.error("Couldn't serialize {}", persistableStore, e);
 
         } catch (Exception e) {
             log.error("Couldn't write persistable store to disk. Trying restore backup.", e);
@@ -94,7 +94,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
                     "corruptedFilesAtRead"
             );
         } catch (IOException e) {
-            log.error("Error trying to backup corrupted file " + storeFilePath + ": " + e.getMessage(), e);
+            log.error("Error trying to backup corrupted file {}: {}", storeFilePath, e.getMessage(), e);
         }
     }
 

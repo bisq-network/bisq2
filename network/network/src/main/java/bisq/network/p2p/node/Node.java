@@ -313,6 +313,7 @@ public class Node implements Connection.Handler {
     }
 
     public void onNewIncomingConnection(InboundConnectionChannel inboundConnectionChannel) {
+        //noinspection EmptyTryBlock
         try {
             // inboundConnectionsByAddress.put(inboundConnectionChannel.getPeerAddress(), inboundConnectionChannel);
             // DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(inboundConnectionChannel)));
@@ -562,7 +563,7 @@ public class Node implements Connection.Handler {
                             outboundConnectionsByAddress or inboundConnectionsByAddress maps. \
                             We close after a short delay that connection to avoid memory leaks. \
                             We still notify listeners as its is unclear yet if there are valid listeners in that case.\
-                                                
+                                                        
                             envelopePayloadMessage={}
                             connection={}""",
                     StringUtils.truncate(envelopePayloadMessage), connection);
@@ -611,8 +612,7 @@ public class Node implements Connection.Handler {
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
-            if (envelopePayloadMessage instanceof CloseConnectionMessage) {
-                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
+            if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
                 log.debug("Received CloseConnectionMessage from {} with reason: {}", connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 // closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
@@ -770,48 +770,37 @@ public class Node implements Connection.Handler {
             return;
         }
         String msg = "Exception:";
-        if (exception instanceof EOFException) {
-            log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
-        } else if (exception instanceof ConnectException) {
-            log.debug(msg, exception);
-        } else if (exception instanceof SocketException) {
-            log.debug(msg, exception);
-        } else if (exception instanceof UnknownHostException) {
-            log.warn("UnknownHostException. Might happen if we try to connect to wrong network type.", exception);
-        } else if (exception instanceof SocketTimeoutException) {
-            log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
-        } else if (exception instanceof ConnectionException) {
-            ConnectionException connectionException = (ConnectionException) exception;
-            if (connectionException.getCause() instanceof SocketTimeoutException) {
-                handleException(connectionException.getCause());
-                return;
-            }
-            if (connectionException.getReason() != null) {
-                switch (connectionException.getReason()) {
-                    case UNSPECIFIED:
-                        log.error("Unspecified connectionException reason. {}", msg, exception);
-                        break;
-                    case INVALID_NETWORK_VERSION:
-                        log.warn(msg, exception);
-                        break;
-                    case PROTOBUF_IS_NULL:
-                        log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
-                        break;
-                    case AUTHORIZATION_FAILED:
-                        log.warn(msg, exception);
-                        break;
-                    case ONION_ADDRESS_VERIFICATION_FAILED:
-                        log.warn(msg, exception);
-                        break;
-                    case ADDRESS_BANNED:
-                        log.warn(msg, exception);
-                        break;
-                    default:
-                        log.error("Unhandled connectionException reason. {}", msg, exception);
+        switch (exception) {
+            case EOFException eofException -> log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
+            case ConnectException connectException -> log.debug(msg, exception);
+            case SocketException socketException -> log.debug(msg, exception);
+            case UnknownHostException unknownHostException ->
+                    log.warn("UnknownHostException. Might happen if we try to connect to wrong network type.", exception);
+            case SocketTimeoutException socketTimeoutException ->
+                    log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
+            case ConnectionException connectionException -> {
+                if (connectionException.getCause() instanceof SocketTimeoutException) {
+                    handleException(connectionException.getCause());
+                    return;
+                }
+                if (connectionException.getReason() != null) {
+                    switch (connectionException.getReason()) {
+                        case UNSPECIFIED:
+                            log.error("Unspecified connectionException reason. {}", msg, exception);
+                            break;
+                        case INVALID_NETWORK_VERSION, ADDRESS_BANNED, ONION_ADDRESS_VERIFICATION_FAILED,
+                             AUTHORIZATION_FAILED:
+                            log.warn(msg, exception);
+                            break;
+                        case PROTOBUF_IS_NULL:
+                            log.info("Exception: {}", ExceptionUtil.getRootCauseMessage(exception));
+                            break;
+                        default:
+                            log.error("Unhandled connectionException reason. {}", msg, exception);
+                    }
                 }
             }
-        } else {
-            log.error("Unhandled exception type {}", msg, exception);
+            default -> log.error("Unhandled exception type {}", msg, exception);
         }
     }
 
@@ -841,6 +830,7 @@ public class Node implements Connection.Handler {
             try {
                 Thread.sleep(devModeDelayInMs);
             } catch (Throwable t) {
+                log.error("Exception", t);
             }
         }
     }

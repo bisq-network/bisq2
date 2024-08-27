@@ -78,39 +78,19 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
     }
 
     public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {
-        switch (proto.getMessageCase()) {
-            case ZELLEACCOUNT: {
-                return ZelleAccount.fromProto(proto);
-            }
-            case USERDEFINEDFIATACCOUNT: {
-                return UserDefinedFiatAccount.fromProto(proto);
-            }
-            case REVOLUTACCOUNT: {
-                return RevolutAccount.fromProto(proto);
-            }
-            case COUNTRYBASEDACCOUNT: {
-                return CountryBasedAccount.fromProto(proto);
-            }
-            case FASTERPAYMENTSACCOUNT: {
-                return FasterPaymentsAccount.fromProto(proto);
-            }
-            case PAYIDACCOUNT: {
-                return PayIDAccount.fromProto(proto);
-            }
-            case CASHBYMAILACCOUNT: {
-                return CashByMailAccount.fromProto(proto);
-            }
-            case INTERACETRANSFERACCOUNT: {
-                return InteracETransferAccount.fromProto(proto);
-            }
-            case CASHAPPACCOUNT: {
-                return CashAppAccount.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case ZELLEACCOUNT -> ZelleAccount.fromProto(proto);
+            case USERDEFINEDFIATACCOUNT -> UserDefinedFiatAccount.fromProto(proto);
+            case REVOLUTACCOUNT -> RevolutAccount.fromProto(proto);
+            case COUNTRYBASEDACCOUNT -> CountryBasedAccount.fromProto(proto);
+            case FASTERPAYMENTSACCOUNT -> FasterPaymentsAccount.fromProto(proto);
+            case PAYIDACCOUNT -> PayIDAccount.fromProto(proto);
+            case CASHBYMAILACCOUNT -> CashByMailAccount.fromProto(proto);
+            case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
+            case CASHAPPACCOUNT -> CashAppAccount.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            default -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
 

@@ -163,21 +163,19 @@ public class SecurityManagerController implements Controller {
                         model.getRequireVersionForTrading().get(),
                         StringUtils.toOptional(model.getMinVersion().get()),
                         bannedRole)
-                .whenComplete((result, throwable) -> {
-                    UIThread.run(() -> {
-                        if (throwable != null) {
-                            new Popup().error(throwable).show();
-                        } else {
-                            model.getSelectedAlertType().set(null);
-                            model.getHeadline().set(null);
-                            model.getMessage().set(null);
-                            model.getHaltTrading().set(false);
-                            model.getRequireVersionForTrading().set(false);
-                            model.getMinVersion().set(null);
-                            model.getSelectedBondedRoleListItem().set(null);
-                        }
-                    });
-                });
+                .whenComplete((result, throwable) -> UIThread.run(() -> {
+                    if (throwable != null) {
+                        new Popup().error(throwable).show();
+                    } else {
+                        model.getSelectedAlertType().set(null);
+                        model.getHeadline().set(null);
+                        model.getMessage().set(null);
+                        model.getHaltTrading().set(false);
+                        model.getRequireVersionForTrading().set(false);
+                        model.getMinVersion().set(null);
+                        model.getSelectedBondedRoleListItem().set(null);
+                    }
+                }));
     }
 
     boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedAlertData authorizedAlertData) {
@@ -212,15 +210,13 @@ public class SecurityManagerController implements Controller {
         double difficultyAdjustmentFactor = model.getDifficultyAdjustmentFactor().get();
         if (isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor)) {
             securityManagerService.publishDifficultyAdjustment(difficultyAdjustmentFactor)
-                    .whenComplete((result, throwable) -> {
-                        UIThread.run(() -> {
-                            if (throwable != null) {
-                                new Popup().error(throwable).show();
-                            } else {
-                                model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
-                            }
-                        });
-                    });
+                    .whenComplete((result, throwable) -> UIThread.run(() -> {
+                        if (throwable != null) {
+                            new Popup().error(throwable).show();
+                        } else {
+                            model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
+                        }
+                    }));
         }
     }
 
@@ -228,15 +224,13 @@ public class SecurityManagerController implements Controller {
         long minRequiredReputationScore = model.getMinRequiredReputationScore().get();
         if (isValidMinRequiredRequiredReputationScore(minRequiredReputationScore)) {
             securityManagerService.publishMinRequiredReputationScore(minRequiredReputationScore)
-                    .whenComplete((result, throwable) -> {
-                        UIThread.run(() -> {
-                            if (throwable != null) {
-                                new Popup().error(throwable).show();
-                            } else {
-                                model.getMinRequiredReputationScore().set(minRequiredReputationScoreService.getMostRecentValueOrDefault().get());
-                            }
-                        });
-                    });
+                    .whenComplete((result, throwable) -> UIThread.run(() -> {
+                        if (throwable != null) {
+                            new Popup().error(throwable).show();
+                        } else {
+                            model.getMinRequiredReputationScore().set(minRequiredReputationScoreService.getMostRecentValueOrDefault().get());
+                        }
+                    }));
         }
     }
 
@@ -296,7 +290,7 @@ public class SecurityManagerController implements Controller {
         AlertType alertType = model.getSelectedAlertType().get();
         boolean isInvalid = alertType == null;
         if (isInvalid) {
-            model.getActionButtonDisabled().set(isInvalid);
+            model.getActionButtonDisabled().set(true);
             return;
         }
         boolean isMessageEmpty = StringUtils.isEmpty(model.getMessage().get());

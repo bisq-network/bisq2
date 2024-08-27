@@ -110,7 +110,7 @@ public class OutboundConnectionManager {
             }
 
         } catch (IOException e) {
-            log.warn("Couldn't create connection to " + address.getFullAddress(), e);
+            log.warn("Couldn't create connection to {}", address.getFullAddress(), e);
         }
 
         return completableFuture;
@@ -124,6 +124,7 @@ public class OutboundConnectionManager {
         } catch (ConnectException e) {
             // Couldn't connect to peer, nothing we can do.
             Address address = addressByChannel.get(socketChannel);
+            //noinspection resource
             channelByAddress.remove(address);
 
             addressByChannel.remove(socketChannel);
@@ -235,6 +236,7 @@ public class OutboundConnectionManager {
 
             // Connection closed.
             Address address = addressByChannel.get(socketChannel);
+            //noinspection resource
             channelByAddress.remove(address);
 
             addressByChannel.remove(socketChannel);

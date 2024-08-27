@@ -27,11 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 public class P2PNetworkController implements Controller {
     @Getter
     private final P2PNetworkView view;
-    private final P2PNetworkModel model;
 
     public P2PNetworkController(ServiceProvider serviceProvider) {
         VersionDistributionController versionDistributionController = new VersionDistributionController(serviceProvider);
-        model = new P2PNetworkModel();
+        P2PNetworkModel model = new P2PNetworkModel();
         view = new P2PNetworkView(model, this, versionDistributionController.getView().getRoot());
     }
 

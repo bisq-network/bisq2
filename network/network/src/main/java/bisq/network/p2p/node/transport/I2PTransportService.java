@@ -54,7 +54,7 @@ public class I2PTransportService implements TransportService {
         private final int bandwidthSharePercentage;
         private final int i2cpPort;
         private final String i2cpHost;
-        private boolean embeddedRouter;
+        private final boolean embeddedRouter;
         private final Path dataDir;
         private final boolean extendedI2pLogging;
         private final int sendMessageThrottleTime;
@@ -96,7 +96,7 @@ public class I2PTransportService implements TransportService {
     @Getter
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
     private int numSocketsCreated = 0;
-    private I2PTransportService.Config config;
+    private final I2PTransportService.Config config;
     private Scheduler startBootstrapProgressUpdater;
 
     public I2PTransportService(TransportConfig config) {
@@ -134,6 +134,7 @@ public class I2PTransportService implements TransportService {
             }
             while (!I2pEmbeddedRouter.isRouterRunning()) {
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(1000);
                 } catch (InterruptedException ignore) {
                 }

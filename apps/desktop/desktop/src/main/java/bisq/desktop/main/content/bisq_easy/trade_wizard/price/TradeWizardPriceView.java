@@ -126,20 +126,18 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
 
-        shouldShowLearnWhyOverlayPin = EasyBind.subscribe(model.getShouldShowLearnWhyOverlay(), showOverlay -> {
-            UIScheduler.run(() -> {
-                if (showOverlay) {
-                    learnWhyOverlay.setVisible(true);
-                    learnWhyOverlay.setManaged(true);
-                    Transitions.blurStrong(content, 0);
-                    Transitions.slideInTop(learnWhyOverlay, 450);
-                } else {
-                    learnWhyOverlay.setVisible(false);
-                    learnWhyOverlay.setManaged(false);
-                    Transitions.removeEffect(content);
-                }
-            }).after(100);
-        });
+        shouldShowLearnWhyOverlayPin = EasyBind.subscribe(model.getShouldShowLearnWhyOverlay(), showOverlay -> UIScheduler.run(() -> {
+            if (showOverlay) {
+                learnWhyOverlay.setVisible(true);
+                learnWhyOverlay.setManaged(true);
+                Transitions.blurStrong(content, 0);
+                Transitions.slideInTop(learnWhyOverlay, 450);
+            } else {
+                learnWhyOverlay.setVisible(false);
+                learnWhyOverlay.setManaged(false);
+                Transitions.removeEffect(content);
+            }
+        }).after(100));
 
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
         fixedPrice.setOnAction(e -> controller.useFixedPrice());

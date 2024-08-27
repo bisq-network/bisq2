@@ -50,17 +50,10 @@ public abstract class RangeAmountSpec implements AmountSpec {
     }
 
     static RangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {
-        switch (proto.getMessageCase()) {
-            case BASESIDERANGEAMOUNTSPEC: {
-                return BaseSideRangeAmountSpec.fromProto(proto);
-            }
-            case QUOTESIDERANGEAMOUNTSPEC: {
-                return QuoteSideRangeAmountSpec.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case BASESIDERANGEAMOUNTSPEC -> BaseSideRangeAmountSpec.fromProto(proto);
+            case QUOTESIDERANGEAMOUNTSPEC -> QuoteSideRangeAmountSpec.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
     }
 }

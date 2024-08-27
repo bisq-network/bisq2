@@ -68,7 +68,6 @@ public class TradeWizardSelectOfferController implements Controller {
     @Getter
     private final TradeWizardSelectOfferView view;
     private final ReputationService reputationService;
-    private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final UserProfileService userProfileService;
@@ -90,7 +89,7 @@ public class TradeWizardSelectOfferController implements Controller {
         ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        settingsService = serviceProvider.getSettingsService();
+        SettingsService settingsService = serviceProvider.getSettingsService();
         bisqEasyService = serviceProvider.getBisqEasyService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
@@ -204,7 +203,7 @@ public class TradeWizardSelectOfferController implements Controller {
 
     void onSelectRow(TradeWizardSelectOfferView.ListItem listItem) {
         if (listItem == null) {
-            selectListItem(listItem);
+            selectListItem(null);
             return;
         }
         if (listItem.equals(model.getSelectedItem())) {
@@ -301,7 +300,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 List<BitcoinPaymentMethod> matchingBitcoinPaymentMethods = peersOffer.getBaseSidePaymentMethodSpecs().stream()
                         .filter(e -> takersBitcoinPaymentMethodSet.contains(e.getPaymentMethod()))
                         .map(PaymentMethodSpec::getPaymentMethod)
-                        .collect(Collectors.toList());
+                        .toList();
                 if (matchingBitcoinPaymentMethods.isEmpty()) {
                     return false;
                 }
@@ -310,7 +309,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 List<FiatPaymentMethod> matchingFiatPaymentMethods = peersOffer.getQuoteSidePaymentMethodSpecs().stream()
                         .filter(e -> takersFiatPaymentMethodSet.contains(e.getPaymentMethod()))
                         .map(PaymentMethodSpec::getPaymentMethod)
-                        .collect(Collectors.toList());
+                        .toList();
                 if (matchingFiatPaymentMethods.isEmpty()) {
                     return false;
                 }

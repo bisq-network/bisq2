@@ -300,36 +300,19 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         lastReportTs = System.currentTimeMillis();
         List<Peer> sortedList = map.values().stream()
                 .sorted()
-                .collect(Collectors.toList());
+                .toList();
         long liveAge = TimeUnit.MINUTES.toMillis(10);
         long numPeers = sortedList.size();
         long numLivePeers = sortedList.stream().filter(peer -> peer.getAge() < liveAge).count();
         long numNonLivePeers = sortedList.stream().filter(peer -> peer.getAge() >= liveAge).count();
-        String range = StringUtils.formatTime(sortedList.get(0).getAge()) +
+        String range = StringUtils.formatTime(sortedList.getFirst().getAge()) +
                 " to " +
-                StringUtils.formatTime(sortedList.get(sortedList.size() - 1).getAge());
-        log.info("\n##########################################################################################\n" +
-                        info + " peers\n" +
-                        "##########################################################################################\n" +
-                        "Number of peers: {}\n" +
-                        "Number of peers with age < 10 min: {}\n" +
-                        "Number of peers with age >= 10 min {}\n" +
-                        "Age range from {}\n" +
-                        "##########################################################################################",
-                numPeers, numLivePeers, numNonLivePeers, range);
+                StringUtils.formatTime(sortedList.getLast().getAge());
+        log.info("\n##########################################################################################\n{} peers\n##########################################################################################\nNumber of peers: {}\nNumber of peers with age < 10 min: {}\nNumber of peers with age >= 10 min {}\nAge range from {}\n##########################################################################################", info, numPeers, numLivePeers, numNonLivePeers, range);
 
         String peerAddressesByAge = Joiner.on("\n").join(sortedList.stream()
                 .map(peer -> "Age: " + StringUtils.formatTime(peer.getAge()) + "; Address: " + peer.getAddress().getFullAddress())
                 .collect(Collectors.toList()));
-        log.debug("\n##########################################################################################\n" +
-                        info + " peers\n" +
-                        "##########################################################################################\n" +
-                        "Number of peers: {}\n" +
-                        "Number of peers with age < 10 min: {}\n" +
-                        "Number of peers with age >= 10 min {}\n" +
-                        "Age range from {}\n" +
-                        "Peer addressesByAge:\n{}\n" +
-                        "##########################################################################################",
-                numPeers, numLivePeers, numNonLivePeers, range, peerAddressesByAge);
+        log.debug("\n##########################################################################################\n{} peers\n##########################################################################################\nNumber of peers: {}\nNumber of peers with age < 10 min: {}\nNumber of peers with age >= 10 min {}\nAge range from {}\nPeer addressesByAge:\n{}\n##########################################################################################", info, numPeers, numLivePeers, numNonLivePeers, range, peerAddressesByAge);
     }
 }

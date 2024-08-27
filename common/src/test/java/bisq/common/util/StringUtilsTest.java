@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
@@ -18,8 +17,8 @@ public class StringUtilsTest {
         List<Pair<String, List<String>>> textWithStyleAndRest;
 
         textWithStyleAndRest = StringUtils.getTextStylePairs("<EUR/BTC style=text-color-light>");
-        assertEquals("EUR/BTC", textWithStyleAndRest.get(0).getFirst());
-        assertEquals("text-color-light", textWithStyleAndRest.get(0).getSecond().get(0));
+        assertEquals("EUR/BTC", textWithStyleAndRest.getFirst().getFirst());
+        assertEquals("text-color-light", textWithStyleAndRest.getFirst().getSecond().getFirst());
         assertEquals(1, textWithStyleAndRest.size());
 
         textWithStyleAndRest = StringUtils.getTextStylePairs("You are <SELLING style=text-color-light> Bitcoin with <SEPA style=text-color-mid, text-underline> and <SEPA INSTANT style=text-color-mid,text-underline>");
@@ -29,7 +28,7 @@ public class StringUtilsTest {
         assertNull(textWithStyleAndRest.get(0).getSecond());
 
         assertEquals("SELLING", textWithStyleAndRest.get(1).getFirst());
-        assertEquals("text-color-light", textWithStyleAndRest.get(1).getSecond().get(0));
+        assertEquals("text-color-light", textWithStyleAndRest.get(1).getSecond().getFirst());
 
         assertEquals(" Bitcoin with ", textWithStyleAndRest.get(2).getFirst());
         assertNull(textWithStyleAndRest.get(2).getSecond());

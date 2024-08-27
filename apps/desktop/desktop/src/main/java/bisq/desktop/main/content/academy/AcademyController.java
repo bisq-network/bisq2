@@ -45,31 +45,15 @@ public class AcademyController extends ContentTabController<AcademyModel> {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case OVERVIEW_ACADEMY: {
-                return Optional.of(new OverviewAcademyController(serviceProvider));
-            }
-            case BISQ_ACADEMY: {
-                return Optional.of(new BisqAcademyController(serviceProvider));
-            }
-            case BITCOIN_ACADEMY: {
-                return Optional.of(new BitcoinAcademyController(serviceProvider));
-            }
-            case WALLETS_ACADEMY: {
-                return Optional.of(new WalletsAcademyController(serviceProvider));
-            }
-            case SECURITY_ACADEMY: {
-                return Optional.of(new SecurityAcademyController(serviceProvider));
-            }
-            case PRIVACY_ACADEMY: {
-                return Optional.of(new PrivacyAcademyController(serviceProvider));
-            }
-            case FOSS_ACADEMY: {
-                return Optional.of(new FossAcademyController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case OVERVIEW_ACADEMY -> Optional.of(new OverviewAcademyController(serviceProvider));
+            case BISQ_ACADEMY -> Optional.of(new BisqAcademyController(serviceProvider));
+            case BITCOIN_ACADEMY -> Optional.of(new BitcoinAcademyController(serviceProvider));
+            case WALLETS_ACADEMY -> Optional.of(new WalletsAcademyController(serviceProvider));
+            case SECURITY_ACADEMY -> Optional.of(new SecurityAcademyController(serviceProvider));
+            case PRIVACY_ACADEMY -> Optional.of(new PrivacyAcademyController(serviceProvider));
+            case FOSS_ACADEMY -> Optional.of(new FossAcademyController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

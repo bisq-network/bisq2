@@ -186,10 +186,8 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         UIThread.runOnNextRenderFrame(() -> {
             tableViewAnchorPane.setMinHeight(height);
             tableViewAnchorPane.setMaxHeight(height);
-            UIThread.runOnNextRenderFrame(() -> {
-                // Delay call as otherwise the width does not take the scrollbar width correctly into account
-                tableView.adjustMinWidth();
-            });
+            // Delay call as otherwise the width does not take the scrollbar width correctly into account
+            UIThread.runOnNextRenderFrame(tableView::adjustMinWidth);
         });
     }
 
@@ -347,7 +345,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     @Getter
     @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    static class ListItem implements ActivatableTableItem, DateTableItem {
+    public static class ListItem implements ActivatableTableItem, DateTableItem {
         @EqualsAndHashCode.Include
         private final MediationCase mediationCase;
         @EqualsAndHashCode.Include

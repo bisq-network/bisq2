@@ -78,19 +78,17 @@ public class CompletableFutureUtils {
     public static <T> CompletableFuture<T> anyOf(CompletableFuture<T>... list) {
         CompletableFuture<T> resultFuture = new CompletableFuture<>();
         AtomicInteger remaining = new AtomicInteger(list.length);
-        Stream.of(list).forEach(future -> {
-            future.whenComplete((result, throwable) -> {
-                if (!resultFuture.isDone()) {
-                    if (throwable == null) {
-                        resultFuture.complete(result);
-                    } else {
-                        if (remaining.decrementAndGet() == 0) {
-                            resultFuture.completeExceptionally(throwable);
-                        }
+        Stream.of(list).forEach(future -> future.whenComplete((result, throwable) -> {
+            if (!resultFuture.isDone()) {
+                if (throwable == null) {
+                    resultFuture.complete(result);
+                } else {
+                    if (remaining.decrementAndGet() == 0) {
+                        resultFuture.completeExceptionally(throwable);
                     }
                 }
-            });
-        });
+            }
+        }));
         return resultFuture;
     }
 

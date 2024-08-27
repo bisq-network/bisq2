@@ -51,12 +51,12 @@ public class StaticFileHandler implements HttpHandler {
     @Setter
     @NonNull
     protected String rootContext;
-    ClassLoader classLoader = getClass().getClassLoader();
+    final ClassLoader classLoader = getClass().getClassLoader();
 
     public void handle(HttpExchange exchange) throws IOException {
         URI uri = exchange.getRequestURI();
 
-        log.debug("requesting: " + uri.getPath());
+        log.debug("requesting: {}", uri.getPath());
         String filename = uri.getPath();
         if (filename == null || !filename.startsWith(rootContext) ||
                 Arrays.stream(VALID_SUFFIX).noneMatch(filename::endsWith)) {
@@ -75,7 +75,7 @@ public class StaticFileHandler implements HttpHandler {
                 respond404(exchange);
                 return;
             }
-            log.debug("sending: " + resourceName);
+            log.debug("sending: {}", resourceName);
             // Object exists and is a file: accept with response code 200.
             String mime = "text/html";
             if (resourceName.endsWith(".js")) mime = "application/javascript";

@@ -56,7 +56,7 @@ public class KeyFingerprintReader {
                 line = reader.readLine();
             }
         } catch (IOException e) {
-            log.error("Cannot read " + fingerprintFile.getAbsolutePath(), e);
+            log.error("Cannot read {}", fingerprintFile.getAbsolutePath(), e);
         }
 
         return Optional.empty();

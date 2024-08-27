@@ -50,32 +50,18 @@ public class TradeAppsController extends ContentTabController<TradeAppsModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case TRADE_PROTOCOLS_OVERVIEW: {
-                return Optional.of(new TradeOverviewController(serviceProvider));
-            }
-            case BISQ_EASY_INFO: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_EASY,
-                        "https://bisq.wiki/Trade_Protocols#Bisq_Easy"));
-            }
-            case BISQ_MU_SIG: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_MU_SIG,
-                        "https://bisq.wiki/Trade_Protocols#Bisq_MuSig"));
-            }
-            case SUBMARINE: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.SUBMARINE,
-                        "https://bisq.wiki/Trade_Protocols#Submarine_Swaps"));
-            }
-            case BISQ_LIGHTNING: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_LIGHTNING,
-                        "https://bisq.wiki/Trade_Protocols#Bisq_Lightning"));
-            }
-            case MORE_TRADE_PROTOCOLS: {
-                return Optional.of(new MoreProtocolsController());
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case TRADE_PROTOCOLS_OVERVIEW -> Optional.of(new TradeOverviewController(serviceProvider));
+            case BISQ_EASY_INFO -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_EASY,
+                    "https://bisq.wiki/Trade_Protocols#Bisq_Easy"));
+            case BISQ_MU_SIG -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_MU_SIG,
+                    "https://bisq.wiki/Trade_Protocols#Bisq_MuSig"));
+            case SUBMARINE -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.SUBMARINE,
+                    "https://bisq.wiki/Trade_Protocols#Submarine_Swaps"));
+            case BISQ_LIGHTNING -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_LIGHTNING,
+                    "https://bisq.wiki/Trade_Protocols#Bisq_Lightning"));
+            case MORE_TRADE_PROTOCOLS -> Optional.of(new MoreProtocolsController());
+            default -> Optional.empty();
+        };
     }
 }

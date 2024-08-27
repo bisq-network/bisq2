@@ -58,35 +58,16 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
     }
 
     public static CountryBasedAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        switch (proto.getCountryBasedAccountPayload().getMessageCase()) {
-            case BANKACCOUNTPAYLOAD: {
-                return BankAccountPayload.fromProto(proto);
-            }
-            case SEPAACCOUNTPAYLOAD: {
-                return SepaAccountPayload.fromProto(proto);
-            }
-            case F2FACCOUNTPAYLOAD: {
-                return F2FAccountPayload.fromProto(proto);
-            }
-            case PIXACCOUNTPAYLOAD: {
-                return PixAccountPayload.fromProto(proto);
-            }
-            case STRIKEACCOUNTPAYLOAD: {
-                return StrikeAccountPayload.fromProto(proto);
-            }
-            case AMAZONGIFTCARDACCOUNTPAYLOAD: {
-                return AmazonGiftCardAccountPayload.fromProto(proto);
-            }
-            case UPIACCOUNTPAYLOAD: {
-                return UpiAccountPayload.fromProto(proto);
-            }
-            case BIZUMACCOUNTPAYLOAD: {
-                return BizumAccountPayload.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getCountryBasedAccountPayload().getMessageCase()) {
+            case BANKACCOUNTPAYLOAD -> BankAccountPayload.fromProto(proto);
+            case SEPAACCOUNTPAYLOAD -> SepaAccountPayload.fromProto(proto);
+            case F2FACCOUNTPAYLOAD -> F2FAccountPayload.fromProto(proto);
+            case PIXACCOUNTPAYLOAD -> PixAccountPayload.fromProto(proto);
+            case STRIKEACCOUNTPAYLOAD -> StrikeAccountPayload.fromProto(proto);
+            case AMAZONGIFTCARDACCOUNTPAYLOAD -> AmazonGiftCardAccountPayload.fromProto(proto);
+            case UPIACCOUNTPAYLOAD -> UpiAccountPayload.fromProto(proto);
+            case BIZUMACCOUNTPAYLOAD -> BizumAccountPayload.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
     }
 }

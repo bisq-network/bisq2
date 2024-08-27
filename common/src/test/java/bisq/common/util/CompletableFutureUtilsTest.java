@@ -65,7 +65,7 @@ public class CompletableFutureUtilsTest {
                 log.info("{} (waited {} ms: {})", msg, sleepMs, val);
                 return val;
             } catch (InterruptedException e) {
-                log.error("Interrupted: " + e.getMessage(), e);
+                log.error("Interrupted: {}", e.getMessage(), e);
                 return false;
             }
         });
@@ -77,7 +77,7 @@ public class CompletableFutureUtilsTest {
                 Thread.sleep(sleepMs);
                 log.info("{} (waited {} ms)", msg, sleepMs);
             } catch (InterruptedException e) {
-                log.error("Interrupted: " + e.getMessage(), e);
+                log.error("Interrupted: {}", e.getMessage(), e);
             }
         });
     }
@@ -86,12 +86,8 @@ public class CompletableFutureUtilsTest {
     public void testAllOfWithType() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(20, 1);
         CompletableFuture<Integer> future_2 = createIntegerFuture(10, 2);
-        future_1.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
-        });
-        future_2.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
-        });
+        future_1.whenComplete((result, throwable) -> assertNotNull(throwable));
+        future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
         int sum = CompletableFutureUtils.allOf(future_1, future_2)
                 .thenApply(result -> {
                     log.info("CompletableFutureUtils.allOf() completed. result={}", result);
@@ -111,17 +107,10 @@ public class CompletableFutureUtilsTest {
             assertNull(throwable);
             future_2.cancel(true);
         });
-        future_2.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
+        future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
+        future_3.whenComplete((result, throwable) -> assertNotNull(throwable));
 
-        });
-        future_3.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
-        });
-
-        Exception exception = assertThrows(ExecutionException.class, () -> {
-            CompletableFutureUtils.allOf(future_1, future_2).get();
-        });
+        Exception exception = assertThrows(ExecutionException.class, () -> CompletableFutureUtils.allOf(future_1, future_2).get());
         assertEquals(exception.getCause().getClass(), CancellationException.class);
     }
 
@@ -134,18 +123,11 @@ public class CompletableFutureUtilsTest {
             assertEquals(1, result);
             assertNull(throwable);
         });
-        future_2.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
+        future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
+        future_3.whenComplete((result, throwable) -> assertNotNull(throwable));
 
-        });
-        future_3.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
-        });
-
-        Exception exception = assertThrows(ExecutionException.class, () -> {
-            CompletableFutureUtils.allOf(future_1, future_2).whenComplete((r, t) -> {
-            }).get();
-        });
+        Exception exception = assertThrows(ExecutionException.class, () -> CompletableFutureUtils.allOf(future_1, future_2).whenComplete((r, t) -> {
+        }).get());
         assertEquals(exception.getCause().getClass(), RuntimeException.class);
     }
 
@@ -153,14 +135,8 @@ public class CompletableFutureUtilsTest {
     public void testAnyOfWithType() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(20, 2);
         CompletableFuture<Integer> future_2 = createIntegerFuture(10, 2);
-        future_1.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
-
-        });
-        future_2.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
-
-        });
+        future_1.whenComplete((result, throwable) -> assertNotNull(throwable));
+        future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
         int result = CompletableFutureUtils.anyOf(future_1, future_2)
                 .thenApply(r -> {
                     log.info("CompletableFutureUtils.anyOf() completed. result={}", r);
@@ -175,22 +151,13 @@ public class CompletableFutureUtilsTest {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
         CompletableFuture<Integer> future_2 = createIntegerFuture(20, 2);
         CompletableFuture<Integer> future_3 = createIntegerFuture(30, 3);
-        future_1.whenComplete((result, throwable) -> {
-            future_2.cancel(true);
-        });
+        future_1.whenComplete((result, throwable) -> future_2.cancel(true));
 
-        future_2.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
-
-        });
-        future_3.whenComplete((result, throwable) -> {
-            assertNull(throwable);
-        });
+        future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
+        future_3.whenComplete((result, throwable) -> assertNull(throwable));
 
         CompletableFutureUtils.anyOf(future_2, future_3)
-                .whenComplete((r, t) -> {
-                    assertEquals(3, r);
-                })
+                .whenComplete((r, t) -> assertEquals(3, r))
                 .join();
     }
 
@@ -199,22 +166,13 @@ public class CompletableFutureUtilsTest {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
         CompletableFuture<Integer> future_2 = createFailingIntegerFuture(20, 2);
         CompletableFuture<Integer> future_3 = createIntegerFuture(30, 3);
-        future_1.whenComplete((result, throwable) -> {
-            assertNull(throwable);
-        });
+        future_1.whenComplete((result, throwable) -> assertNull(throwable));
 
-        future_2.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
-
-        });
-        future_3.whenComplete((result, throwable) -> {
-            assertNull(throwable);
-        });
+        future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
+        future_3.whenComplete((result, throwable) -> assertNull(throwable));
 
         CompletableFutureUtils.anyOf(future_1, future_2, future_3)
-                .whenComplete((r, t) -> {
-                    assertEquals(1, r);
-                })
+                .whenComplete((r, t) -> assertEquals(1, r))
                 .join();
     }
 
@@ -222,22 +180,13 @@ public class CompletableFutureUtilsTest {
     public void testAnyWithAllExceptionally() {
         CompletableFuture<Integer> future_1 = createFailingIntegerFuture(10, 1);
         CompletableFuture<Integer> future_2 = createFailingIntegerFuture(20, 2);
-        future_1.whenComplete((result, throwable) -> {
-            assertNull(throwable);
-        });
+        future_1.whenComplete((result, throwable) -> assertNull(throwable));
 
-        future_2.whenComplete((result, throwable) -> {
-            assertNotNull(throwable);
+        future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
 
-        });
-
-        Exception exception = assertThrows(CompletionException.class, () -> {
-            CompletableFutureUtils.anyOf(future_1, future_2)
-                    .whenComplete((r, throwable) -> {
-                        assertNotNull(throwable);
-                    })
-                    .join();
-        });
+        Exception exception = assertThrows(CompletionException.class, () -> CompletableFutureUtils.anyOf(future_1, future_2)
+                .whenComplete((r, throwable) -> assertNotNull(throwable))
+                .join());
         assertEquals(exception.getCause().getClass(), RuntimeException.class);
     }
 

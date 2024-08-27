@@ -65,7 +65,6 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -398,7 +397,7 @@ public class TradeWizardAmountController implements Controller {
                 .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
                 .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
                 .filter(this::filterOffers)
-                .collect(Collectors.toList());
+                .toList();
         boolean isSellOffer = bisqEasyOffers.stream()
                 .map(Offer::getDirection)
                 .map(Direction::isSell)

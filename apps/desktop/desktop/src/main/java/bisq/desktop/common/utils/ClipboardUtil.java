@@ -27,7 +27,7 @@ import java.util.Optional;
 public class ClipboardUtil {
     public static void copyToClipboard(String content) {
         try {
-            if (content != null && content.length() > 0) {
+            if (content != null && !content.isEmpty()) {
                 Clipboard clipboard = Clipboard.getSystemClipboard();
                 ClipboardContent clipboardContent = new ClipboardContent();
                 clipboardContent.putString(content);

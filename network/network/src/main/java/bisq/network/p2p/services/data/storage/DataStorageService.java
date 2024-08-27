@@ -51,7 +51,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     protected final String subDirectory;
     @Getter
-    public ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
+    public final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
     protected Optional<Integer> maxMapSize = Optional.empty();
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
@@ -112,27 +112,17 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         if (isExceeding) {
             String className = persistableStore.getMap().values().stream()
                     .findFirst()
-                    .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                            AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                            return addRequest.getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                            RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
-                            return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
-                            RefreshAuthenticatedDataRequest request = (RefreshAuthenticatedDataRequest) dataRequest;
-                            return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
-                            AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
-                            return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest) {
-                            AddMailboxRequest addRequest = (AddMailboxRequest) dataRequest;
-                            return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) dataRequest;
-                            return removeRequest.getClassName();
-                        }
-                        return "N/A";
+                    .map(dataRequest -> switch (dataRequest) {
+                        case AddAuthenticatedDataRequest addRequest ->
+                                addRequest.getDistributedData().getClass().getSimpleName();
+                        case RemoveAuthenticatedDataRequest removeRequest -> removeRequest.getClassName();
+                        case RefreshAuthenticatedDataRequest request -> request.getClassName();
+                        case AddAppendOnlyDataRequest addRequest ->
+                                addRequest.getAppendOnlyData().getClass().getSimpleName();
+                        case AddMailboxRequest addRequest ->
+                                addRequest.getMailboxSequentialData().getMailboxData().getClassName();
+                        case RemoveMailboxRequest removeRequest -> removeRequest.getClassName();
+                        default -> "N/A";
                     }).orElse("N/A");
 
             log.warn("Max. map size reached for {}. map.size()={}, getMaxMapSize={}",
@@ -141,27 +131,17 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         if (size > 20_000) {
             String className = persistableStore.getMap().values().stream()
                     .findFirst()
-                    .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                            AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                            return addRequest.getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                            RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
-                            return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
-                            RefreshAuthenticatedDataRequest request = (RefreshAuthenticatedDataRequest) dataRequest;
-                            return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
-                            AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
-                            return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest) {
-                            AddMailboxRequest addRequest = (AddMailboxRequest) dataRequest;
-                            return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) dataRequest;
-                            return removeRequest.getClassName();
-                        }
-                        return "N/A";
+                    .map(dataRequest -> switch (dataRequest) {
+                        case AddAuthenticatedDataRequest addRequest ->
+                                addRequest.getDistributedData().getClass().getSimpleName();
+                        case RemoveAuthenticatedDataRequest removeRequest -> removeRequest.getClassName();
+                        case RefreshAuthenticatedDataRequest request -> request.getClassName();
+                        case AddAppendOnlyDataRequest addRequest ->
+                                addRequest.getAppendOnlyData().getClass().getSimpleName();
+                        case AddMailboxRequest addRequest ->
+                                addRequest.getMailboxSequentialData().getMailboxData().getClassName();
+                        case RemoveMailboxRequest removeRequest -> removeRequest.getClassName();
+                        default -> "N/A";
                     }).orElse("N/A");
 
             log.info("Map size for {} reached > 20 000 entries. map.size()={}", className, size);

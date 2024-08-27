@@ -154,6 +154,7 @@ public class ClearNetTransportService implements TransportService {
             try {
                 Thread.sleep(devModeDelayInMs);
             } catch (Throwable t) {
+                log.error("Exception", t);
             }
         }
     }

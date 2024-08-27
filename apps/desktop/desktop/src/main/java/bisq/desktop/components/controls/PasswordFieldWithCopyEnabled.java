@@ -33,7 +33,7 @@ public class PasswordFieldWithCopyEnabled extends PasswordField {
      */
     public void copy() {
         final String selectedText = getSelectedText();
-        if (selectedText.length() > 0) {
+        if (!selectedText.isEmpty()) {
             final ClipboardContent content = new ClipboardContent();
             content.putString(selectedText);
             Clipboard.getSystemClipboard().setContent(content);

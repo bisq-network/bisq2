@@ -90,9 +90,7 @@ public class ReactionUsersPopup extends PopupControl {
         userProfileListView.prefHeightProperty().bind(userProfileListView.fixedCellSizeProperty()
                 .multiply(Math.min(userProfileList.size(), MAX_USERS_SHOWN_AT_THE_SAME_TIME)).add(listViewPadding));
 
-        owner.setOnMouseEntered(e -> {
-            showPopup();
-        });
+        owner.setOnMouseEntered(e -> showPopup());
         owner.setOnMouseExited(e -> {
             if (hasMouseExited(e.getScreenX(), e.getScreenY())) {
                 hide();

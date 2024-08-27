@@ -152,7 +152,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                         periodicRequestDoaDataScheduler = Scheduler.run(() -> {
                             log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
                             requestDaoData().join();
-                            ;
                             MemoryReport.logReport();
                             log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
                         }).periodically(5, TimeUnit.SECONDS);
@@ -202,8 +201,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedAlertData) {
-            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
+        if (data instanceof AuthorizedAlertData authorizedAlertData) {
             if (authorizedAlertData.getAlertType() == AlertType.BAN &&
                     isAuthorized(authorizedData) &&
                     authorizedAlertData.getBannedRole().isPresent()) {
@@ -412,9 +410,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                                         "Date from bridge service call: {}; Date from users request: {}",
                                                 hashAsHex, date, requestDate);
                                     }
-                                }, () -> {
-                                    log.warn("Result of requestAccountAgeWitness returns empty optional. Request was: {}", request);
-                                });
+                                }, () -> log.warn("Result of requestAccountAgeWitness returns empty optional. Request was: {}", request));
                             } else {
                                 log.warn("Error at accountAgeService.findAccountAgeWitness", throwable);
                             }
@@ -467,9 +463,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                                         "Date from bridge service call: {}; Date from users request: {}",
                                                 request.getHashAsHex(), date, witnessSignDate);
                                     }
-                                }, () -> {
-                                    log.warn("Result of requestSignedWitnessDate returns empty optional. Request was: {}", request);
-                                });
+                                }, () -> log.warn("Result of requestSignedWitnessDate returns empty optional. Request was: {}", request));
                             } else {
                                 log.warn("Error at signedWitnessService.requestSignedWitnessDate", throwable);
                             }
@@ -546,26 +540,18 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     private String toBisq1RoleTypeName(BondedRoleType bondedRoleType) {
         String name = bondedRoleType.name();
-        switch (name) {
-            case "MEDIATOR":
-                return "MEDIATOR"; // 5k
-            case "MODERATOR":
-                return "YOUTUBE_ADMIN"; // 5k; repurpose unused role
-            case "ARBITRATOR":
-                return "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k!
-            case "SECURITY_MANAGER":
-                return "BITCOINJ_MAINTAINER"; // 10k; repurpose unused role
-            case "RELEASE_MANAGER":
-                return "FORUM_ADMIN"; // 10k; repurpose unused role
-            case "ORACLE_NODE":
-                return "NETLAYER_MAINTAINER"; // 10k; repurpose unused role
-            case "SEED_NODE":
-                return "SEED_NODE_OPERATOR"; // 10k
-            case "EXPLORER_NODE":
-                return "BSQ_EXPLORER_OPERATOR"; // 10k; Explorer operator
-            case "MARKET_PRICE_NODE":
-                return "DATA_RELAY_NODE_OPERATOR"; // 10k; price node
-        }
-        return name;
+        return switch (name) {
+            case "MEDIATOR" -> "MEDIATOR"; // 5k
+            case "MODERATOR" -> "YOUTUBE_ADMIN"; // 5k; repurpose unused role
+            case "ARBITRATOR" -> "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k!
+            case "SECURITY_MANAGER" -> "BITCOINJ_MAINTAINER"; // 10k; repurpose unused role
+            case "RELEASE_MANAGER" -> "FORUM_ADMIN"; // 10k; repurpose unused role
+            case "ORACLE_NODE" -> "NETLAYER_MAINTAINER"; // 10k; repurpose unused role
+            case "SEED_NODE" -> "SEED_NODE_OPERATOR"; // 10k
+            case "EXPLORER_NODE" -> "BSQ_EXPLORER_OPERATOR"; // 10k; Explorer operator
+            case "MARKET_PRICE_NODE" -> "DATA_RELAY_NODE_OPERATOR";
+            default -> // 10k; price node
+                    name;
+        };
     }
 }

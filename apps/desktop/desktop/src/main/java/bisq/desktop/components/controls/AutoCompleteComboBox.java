@@ -407,7 +407,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                                 if (newValue != null && listView.getParent() != null) {
                                     Parent rootPopup = listView.getParent().getParent();
                                     if (rootPopup instanceof Pane && ((Pane) rootPopup).getChildren().size() == 1) {
-                                        ((Pane) rootPopup).getChildren().add(0, listBackground);
+                                        ((Pane) rootPopup).getChildren().addFirst(listBackground);
                                     }
                                 }
                             }).get());

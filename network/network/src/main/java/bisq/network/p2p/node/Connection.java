@@ -117,7 +117,7 @@ public abstract class Connection {
             PeerSocket peerSocket = new DefaultPeerSocket(socket);
             this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
         } catch (IOException exception) {
-            log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
+            log.error("Could not create objectOutputStream/objectInputStream for socket {}", socket, exception);
             errorHandler.accept(this, exception);
             shutdown(CloseReason.EXCEPTION.exception(exception));
             return;

@@ -251,10 +251,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         UIThread.runOnNextRenderFrame(() -> {
             tableViewAnchorPane.setMinHeight(height);
             tableViewAnchorPane.setMaxHeight(height);
-            UIThread.runOnNextRenderFrame(() -> {
-                // Delay call as otherwise the width does not take the scrollbar width correctly into account
-                tableView.adjustMinWidth();
-            });
+            // Delay call as otherwise the width does not take the scrollbar width correctly into account
+            UIThread.runOnNextRenderFrame(tableView::adjustMinWidth);
         });
     }
 
@@ -527,6 +525,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             {
                 colorAdjust.setBrightness(-0.2);
             }
+
             @Override
             protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
@@ -621,28 +620,27 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
             reputationScore = reputationService.getReputationScore(peersUserProfile);
 
-            changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
-                UIThread.run(() -> {
-                    if (notification == null) {
-                        return;
-                    }
-                    if (!notification.getChatChannelId().equals(channel.getId())) {
-                        return;
-                    }
-                    boolean isSenderMediator = notification.getSenderUserProfile().equals(channel.getMediator());
-                    boolean isNotificationFromMediator = notification.getMediator().equals(notification.getSenderUserProfile());
-                    long numNotifications = chatNotificationService.getNumNotifications(channel);
-                    if (isSenderMediator && isNotificationFromMediator) {
-                        mediatorNumNotifications = numNotifications - peerNumNotifications;
-                        String value = mediatorNumNotifications > 0 ? String.valueOf(mediatorNumNotifications) : "";
-                        mediatorNumNotificationsProperty.set(value);
-                    } else {
-                        peerNumNotifications = numNotifications - mediatorNumNotifications;
-                        String value = peerNumNotifications > 0 ? String.valueOf(peerNumNotifications) : "";
-                        peerNumNotificationsProperty.set(value);
-                    }
-                });
-            });
+            changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
+                    UIThread.run(() -> {
+                        if (notification == null) {
+                            return;
+                        }
+                        if (!notification.getChatChannelId().equals(channel.getId())) {
+                            return;
+                        }
+                        boolean isSenderMediator = notification.getSenderUserProfile().equals(channel.getMediator());
+                        boolean isNotificationFromMediator = notification.getMediator().equals(notification.getSenderUserProfile());
+                        long numNotifications = chatNotificationService.getNumNotifications(channel);
+                        if (isSenderMediator && isNotificationFromMediator) {
+                            mediatorNumNotifications = numNotifications - peerNumNotifications;
+                            String value = mediatorNumNotifications > 0 ? String.valueOf(mediatorNumNotifications) : "";
+                            mediatorNumNotificationsProperty.set(value);
+                        } else {
+                            peerNumNotifications = numNotifications - mediatorNumNotifications;
+                            String value = peerNumNotifications > 0 ? String.valueOf(peerNumNotifications) : "";
+                            peerNumNotificationsProperty.set(value);
+                        }
+                    }));
 
             isInMediationPin = channel.isInMediationObservable().addObserver(isInMediation -> {
                 if (isInMediation == null) {

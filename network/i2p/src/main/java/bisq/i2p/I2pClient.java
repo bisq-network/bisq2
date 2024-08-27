@@ -46,7 +46,7 @@ public class I2pClient {
     // Sockets expected to be created after the router is operational, so no need to have a large value that accommodates for router startup time
     public final static long DEFAULT_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
     private final static Map<String, I2pClient> I2P_CLIENT_BY_APP = new ConcurrentHashMap<>();
-    private boolean embeddedRouter;
+    private final boolean embeddedRouter;
     private I2pEmbeddedRouter i2pRouter;
     private final long socketTimeout;
     private final String dirPath;
@@ -250,12 +250,12 @@ public class I2pClient {
     }
 
     protected void handleIOException(IOException e, String sessionId) {
-        log.error("IO Exception for session " + sessionId + ": " + e.getMessage(), e);
+        log.error("IO Exception for session {}: {}", sessionId, e.getMessage(), e);
 
         // Only destroy the session manager if the IO exception closed its last connected socket
         // The session manager, especially for the default session, handles multiple sockets (one per peer)
         I2PSocketManager manager = sessionMap.get(sessionId);
-        if (manager != null && manager.listSockets().size() == 0) {
+        if (manager != null && manager.listSockets().isEmpty()) {
             manager.destroySocketManager();
             sessionMap.remove(sessionId);
         }

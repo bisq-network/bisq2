@@ -72,13 +72,12 @@ public class TradeDataHeader {
         private final Model model;
         private final ReputationService reputationService;
         private final ServiceProvider serviceProvider;
-        private final UserProfileService userProfileService;
         private Subscription channelPin;
 
         private Controller(ServiceProvider serviceProvider, String peerDescription) {
             this.serviceProvider = serviceProvider;
             reputationService = serviceProvider.getUserService().getReputationService();
-            userProfileService = serviceProvider.getUserService().getUserProfileService();
+            UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
 
             model = new Model(peerDescription);
             view = new View(model, this);

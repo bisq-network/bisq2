@@ -52,7 +52,6 @@ public class ReleaseManagerService implements Service {
     private final NetworkService networkService;
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
-    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
     private final boolean staticPublicKeysProvided;
 
@@ -62,7 +61,7 @@ public class ReleaseManagerService implements Service {
                                  BondedRolesService bondedRolesService) {
         userIdentityService = userService.getUserIdentityService();
         this.networkService = networkService;
-        authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
+        AuthorizedBondedRolesService authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         staticPublicKeysProvided = config.isStaticPublicKeysProvided();
     }
 

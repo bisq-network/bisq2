@@ -19,7 +19,6 @@ package bisq.wallets.bitcoind.rpc.responses;
 
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
 public class BitcoindAddOrCreateMultiSigAddressResponse extends JsonRpcResponse<BitcoindAddOrCreateMultiSigAddressResponse.Result> {
     @Getter

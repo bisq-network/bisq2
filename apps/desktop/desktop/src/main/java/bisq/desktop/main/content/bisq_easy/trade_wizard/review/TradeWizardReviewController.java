@@ -85,6 +85,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TradeWizardReviewController implements Controller {
+    @SuppressWarnings("UnnecessaryUnicodeEscape")
     private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
     private final TradeWizardReviewModel model;
@@ -345,10 +346,10 @@ public class TradeWizardReviewController implements Controller {
             model.getTakersBitcoinPaymentMethods().setAll(bitcoinPaymentMethods);
             model.getTakersFiatPaymentMethods().setAll(fiatPaymentMethods);
             if (model.getTakersSelectedBitcoinPaymentMethod() == null) {
-                model.setTakersSelectedBitcoinPaymentMethod(bitcoinPaymentMethods.get(0));
+                model.setTakersSelectedBitcoinPaymentMethod(bitcoinPaymentMethods.getFirst());
             }
             if (model.getTakersSelectedFiatPaymentMethod() == null) {
-                model.setTakersSelectedFiatPaymentMethod(fiatPaymentMethods.get(0));
+                model.setTakersSelectedFiatPaymentMethod(fiatPaymentMethods.getFirst());
             }
             model.setBitcoinPaymentMethodDescription(
                     bitcoinPaymentMethods.size() == 1

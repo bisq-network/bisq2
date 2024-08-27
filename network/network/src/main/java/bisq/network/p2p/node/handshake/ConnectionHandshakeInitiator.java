@@ -38,8 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
-import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.*;
 
 @Slf4j
 public class ConnectionHandshakeInitiator {
@@ -90,14 +89,13 @@ public class ConnectionHandshakeInitiator {
             throw new ConnectionException("Received multiple responses from client. requests=" + responseNetworkEnvelopes);
         }
 
-        NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.get(0);
+        NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.getFirst();
         responseNetworkEnvelope.verifyVersion();
 
-        if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response)) {
+        if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response response)) {
             throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                     responseNetworkEnvelope);
         }
-        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
         Address address = response.getCapability().getAddress();
         if (banList.isBanned(address)) {
             throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);

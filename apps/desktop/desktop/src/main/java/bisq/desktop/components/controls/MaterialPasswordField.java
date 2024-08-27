@@ -50,13 +50,11 @@ public class MaterialPasswordField extends MaterialTextField {
         super(description, prompt, help);
 
         textProperty().addListener(new WeakReference<>(
-                (ChangeListener<String>) (observable, oldValue, newValue) -> {
-                    password.set(newValue);
-                }).get());
+                (ChangeListener<String>) (observable, oldValue, newValue) -> password.set(newValue)).get());
 
         password.addListener(new WeakReference<>(
                 (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> {
-                    if ((newValue == null || newValue.length() == 0) && !textProperty().isBound()) {
+                    if ((newValue == null || newValue.isEmpty()) && !textProperty().isBound()) {
                         setText("");
                     }
                 }).get());

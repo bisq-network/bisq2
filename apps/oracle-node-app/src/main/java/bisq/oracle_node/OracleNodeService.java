@@ -213,7 +213,7 @@ public class OracleNodeService implements Service {
                     Optional.of(identityService.getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap()),
                     networkId,
                     Optional.of(authorizedOracleNode),
-                    staticPublicKeysProvided);
+                    true);
 
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
             startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
@@ -231,8 +231,7 @@ public class OracleNodeService implements Service {
 
             @Override
             public void remove(Object element) {
-                if (element instanceof BondedRole) {
-                    BondedRole bondedRole = (BondedRole) element;
+                if (element instanceof BondedRole bondedRole) {
                     networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
                             keyPair,
                             authorizedPublicKey);

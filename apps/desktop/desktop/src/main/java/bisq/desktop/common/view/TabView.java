@@ -105,9 +105,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             }
         });
 
-        viewListener = (observable, oldValue, newValue) -> {
-            onChildView(oldValue, newValue);
-        };
+        viewListener = (observable, oldValue, newValue) -> onChildView(oldValue, newValue);
         model.getView().addListener(viewListener);
         onChildView(null, model.getView().get());
 

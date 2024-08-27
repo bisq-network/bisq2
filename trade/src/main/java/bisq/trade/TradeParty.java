@@ -58,40 +58,26 @@ public abstract class TradeParty implements PersistableProto {
     }
 
     public static BisqEasyTradeParty protoToBisqEasyTradeParty(bisq.trade.protobuf.TradeParty proto) {
-        switch (proto.getMessageCase()) {
-            case BISQEASYTRADEPARTY: {
-                return BisqEasyTradeParty.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case BISQEASYTRADEPARTY -> BisqEasyTradeParty.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            default -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
     public static BisqMuSigTradeParty protoToBisqMuSigTradeParty(bisq.trade.protobuf.TradeParty proto) {
-        switch (proto.getMessageCase()) {
-            case BISQMUSIGTRADEPARTY: {
-                return BisqMuSigTradeParty.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case BISQMUSIGTRADEPARTY -> BisqMuSigTradeParty.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            default -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
     public static SubmarineTradeParty protoToSubmarineTradeParty(bisq.trade.protobuf.TradeParty proto) {
-        switch (proto.getMessageCase()) {
-            case SUBMARINETRADEPARTY: {
-                return SubmarineTradeParty.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case SUBMARINETRADEPARTY -> SubmarineTradeParty.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            default -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 }

@@ -42,22 +42,16 @@ public class NodesTabController extends BondedRolesTabController<NodesTabModel> 
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case REGISTER_SEED_NODE: {
-                return Optional.of(new NodeRegistrationController(serviceProvider, BondedRoleType.SEED_NODE));
-            }
-            case REGISTER_ORACLE_NODE: {
-                return Optional.of(new NodeRegistrationController(serviceProvider, BondedRoleType.ORACLE_NODE));
-            }
-            case REGISTER_EXPLORER_NODE: {
-                return Optional.of(new NodeRegistrationController(serviceProvider, BondedRoleType.EXPLORER_NODE));
-            }
-            case REGISTER_MARKET_PRICE_NODE: {
-                return Optional.of(new NodeRegistrationController(serviceProvider, BondedRoleType.MARKET_PRICE_NODE));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case REGISTER_SEED_NODE ->
+                    Optional.of(new NodeRegistrationController(serviceProvider, BondedRoleType.SEED_NODE));
+            case REGISTER_ORACLE_NODE ->
+                    Optional.of(new NodeRegistrationController(serviceProvider, BondedRoleType.ORACLE_NODE));
+            case REGISTER_EXPLORER_NODE ->
+                    Optional.of(new NodeRegistrationController(serviceProvider, BondedRoleType.EXPLORER_NODE));
+            case REGISTER_MARKET_PRICE_NODE ->
+                    Optional.of(new NodeRegistrationController(serviceProvider, BondedRoleType.MARKET_PRICE_NODE));
+            default -> Optional.empty();
+        };
     }
 }
