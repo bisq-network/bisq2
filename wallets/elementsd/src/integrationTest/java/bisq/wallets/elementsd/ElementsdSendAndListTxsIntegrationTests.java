@@ -22,7 +22,6 @@ import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
 import bisq.wallets.elementsd.rpc.responses.ElementsdListTransactionsResponse;
 import org.junit.jupiter.api.Test;
 
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInstanceTests {
     @Test
-    public void sendLBtcAndListTxs() throws MalformedURLException, InterruptedException {
+    public void sendLBtcAndListTxs() throws InterruptedException {
         peginBtc(20);
         var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 

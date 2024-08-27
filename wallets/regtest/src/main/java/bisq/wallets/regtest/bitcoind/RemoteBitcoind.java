@@ -24,14 +24,13 @@ import bisq.wallets.bitcoind.zmq.BitcoindRawTxProcessor;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
-import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.model.AddressType;
-import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
+import bisq.wallets.json_rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +53,7 @@ public class RemoteBitcoind implements BisqProcess {
     private final List<BitcoindWallet> loadedWallets = new ArrayList<>();
     private ZmqConnection bitcoindZeroMq;
 
-    public RemoteBitcoind(RpcConfig rpcConfig) throws MalformedURLException {
+    public RemoteBitcoind(RpcConfig rpcConfig) {
         this.rpcConfig = rpcConfig;
         this.daemon = createBitcoindDaemon();
         this.minerWallet = new BitcoindWallet(daemon, rpcConfig, MINER_WALLET_NAME);
@@ -76,7 +75,7 @@ public class RemoteBitcoind implements BisqProcess {
         loadedWallets.forEach(BitcoindWallet::shutdown);
     }
 
-    public BitcoindWallet createAndInitializeNewWallet(String walletName) throws MalformedURLException {
+    public BitcoindWallet createAndInitializeNewWallet(String walletName) {
         var bitcoindWallet = new BitcoindWallet(daemon, rpcConfig, walletName);
         bitcoindWallet.initialize(Optional.of(WALLET_PASSPHRASE));
         return bitcoindWallet;

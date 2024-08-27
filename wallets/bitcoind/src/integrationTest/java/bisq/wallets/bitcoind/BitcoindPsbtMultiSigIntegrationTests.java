@@ -22,8 +22,8 @@ import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportDescriptorRequestEntry;
 import bisq.wallets.bitcoind.rpc.responses.*;
-import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
@@ -155,7 +155,7 @@ public class BitcoindPsbtMultiSigIntegrationTests {
         return xPub.split("]")[1].split("/")[0];
     }
 
-    private BitcoindWallet createWatchOnlyDescriptorWallet(String walletPrefix) throws MalformedURLException {
+    private BitcoindWallet createWatchOnlyDescriptorWallet(String walletPrefix) {
         String walletName = walletPrefix + "_watch_only_descriptor_wallet";
         daemon.createOrLoadWatchOnlyWallet(walletName);
         return new BitcoindWallet(daemon, rpcConfig, walletName);

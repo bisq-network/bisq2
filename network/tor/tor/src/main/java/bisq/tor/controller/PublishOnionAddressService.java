@@ -50,7 +50,7 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
         this.torKeyPair = torKeyPair;
     }
 
-    public CompletableFuture<Void> publish(int onionServicePort, int localPort) throws InterruptedException {
+    public CompletableFuture<Void> publish(int onionServicePort, int localPort) {
         future = Optional.of(CompletableFuture.runAsync(() -> {
                     torControlProtocol.addHsDescEventListener(this);
 

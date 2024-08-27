@@ -30,10 +30,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import static bisq.security.pow.hashcash.HashCashProofOfWorkService.numberOfLeadingZeros;
-import static bisq.security.pow.hashcash.HashCashProofOfWorkService.toNumLeadingZeros;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static bisq.security.pow.hashcash.HashCashProofOfWorkService.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 class HashCashProofOfWorkServiceTest {
 
@@ -82,7 +80,7 @@ class HashCashProofOfWorkServiceTest {
 //        Minting 1000 tokens with > 8 leading zeros  took 0.318 ms per token and 526 iterations in average. Verification took 0.001 ms per token.
     }
 
-    private void run(int log2Difficulty, StringBuilder stringBuilder) throws ExecutionException, InterruptedException {
+    private void run(int log2Difficulty, StringBuilder stringBuilder) {
         double difficulty = Math.scalb(1.0, log2Difficulty);
         int numTokens = 1000;
         byte[] payload = RandomStringUtils.random(50, true, true).getBytes(StandardCharsets.UTF_8);
