@@ -188,10 +188,7 @@ public class ChatService implements Service {
         return findTwoPartyPrivateChatChannelService(chatChannelDomain).stream()
                 .flatMap(twoPartyPrivateChatChannelService ->
                         twoPartyPrivateChatChannelService.findOrCreateChannel(chatChannelDomain, peer).stream()
-                                .map(channel -> {
-                                    getChatChannelSelectionService(chatChannelDomain).selectChannel(channel);
-                                    return channel;
-                                }))
+                                .peek(channel -> getChatChannelSelectionService(chatChannelDomain).selectChannel(channel)))
                 .findAny();
     }
 
