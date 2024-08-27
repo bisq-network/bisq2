@@ -26,10 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ReputationScoreController implements Controller {
     @Getter
     private final ReputationScoreView view;
-    private final ReputationScoreModel model;
 
     public ReputationScoreController(ServiceProvider serviceProvider) {
-        model = new ReputationScoreModel();
+        ReputationScoreModel model = new ReputationScoreModel();
         view = new ReputationScoreView(model, this);
     }
 

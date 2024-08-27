@@ -45,12 +45,11 @@ public class OpenTradesWelcome {
     }
 
     public static class Controller implements bisq.desktop.common.view.Controller {
-        private final Model model;
         @Getter
         private final View view;
 
         private Controller() {
-            model = new Model();
+            Model model = new Model();
             view = new View(model, this);
         }
 

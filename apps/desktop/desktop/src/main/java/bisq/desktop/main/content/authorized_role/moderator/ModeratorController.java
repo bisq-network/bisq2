@@ -27,13 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ModeratorController implements Controller {
     @Getter
     private final ModeratorView view;
-    private final ModeratorModel model;
 
     public ModeratorController(ServiceProvider serviceProvider) {
         ReportToModeratorTable reportToModeratorTable = new ReportToModeratorTable(serviceProvider);
         BannedUserProfileTable bannedUserProfileTable = new BannedUserProfileTable(serviceProvider);
         RoleInfo roleInfo = new RoleInfo(serviceProvider);
-        model = new ModeratorModel();
+        ModeratorModel model = new ModeratorModel();
         view = new ModeratorView(model, this, reportToModeratorTable.getRoot(), bannedUserProfileTable.getRoot(), roleInfo.getRoot());
     }
 

@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, WalletGuideReceiveController> {
     private final Button backButton, closeButton;
     private final Hyperlink link1, link2;
-    private final ImageView image1, image2;
+    private final ImageView image2;
     private final FadeTransition fadeTransition1;
     private final FadeTransition fadeTransition2;
     private UIScheduler scheduler1, scheduler2, scheduler3;
@@ -71,7 +71,7 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         VBox.setMargin(link2, new Insets(0, 0, 0, 0));
         vBox.getChildren().addAll(headline, content, link1, link2, buttons);
 
-        image1 = ImageUtil.getImageViewById("blue-wallet-tx");
+        ImageView image1 = ImageUtil.getImageViewById("blue-wallet-tx");
         image2 = ImageUtil.getImageViewById("blue-wallet-qr");
         StackPane images = new StackPane(image1, image2);
         images.setAlignment(Pos.TOP_LEFT);

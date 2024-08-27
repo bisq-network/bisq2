@@ -68,7 +68,6 @@ public class TradeWizardSelectOfferController implements Controller {
     @Getter
     private final TradeWizardSelectOfferView view;
     private final ReputationService reputationService;
-    private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final UserProfileService userProfileService;
@@ -90,7 +89,7 @@ public class TradeWizardSelectOfferController implements Controller {
         ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        settingsService = serviceProvider.getSettingsService();
+        SettingsService settingsService = serviceProvider.getSettingsService();
         bisqEasyService = serviceProvider.getBisqEasyService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();

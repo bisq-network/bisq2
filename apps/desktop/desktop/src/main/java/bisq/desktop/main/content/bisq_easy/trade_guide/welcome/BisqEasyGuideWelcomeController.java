@@ -30,11 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 public class BisqEasyGuideWelcomeController implements Controller {
     @Getter
     private final BisqEasyGuideWelcomeView view;
-    private final SettingsService settingsService;
     private final BisqEasyGuideWelcomeModel model;
 
     public BisqEasyGuideWelcomeController(ServiceProvider serviceProvider) {
-        settingsService = serviceProvider.getSettingsService();
+        SettingsService settingsService = serviceProvider.getSettingsService();
         model = new BisqEasyGuideWelcomeModel();
         view = new BisqEasyGuideWelcomeView(model, this);
     }

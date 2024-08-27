@@ -41,7 +41,6 @@ public class ReleaseManagerController implements Controller {
     private final ReleaseManagerView view;
     private final ReleaseManagerModel model;
     private final UserIdentityService userIdentityService;
-    private final UserProfileService userProfileService;
     private final ReleaseNotificationsService releaseNotificationsService;
     private final ReleaseManagerService releaseManagerService;
     private Pin getReleaseNotificationsPin;
@@ -49,7 +48,7 @@ public class ReleaseManagerController implements Controller {
     public ReleaseManagerController(ServiceProvider serviceProvider) {
         releaseManagerService = serviceProvider.getSupportService().getReleaseManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
         releaseNotificationsService = serviceProvider.getBondedRolesService().getReleaseNotificationsService();
         RoleInfo roleInfo = new RoleInfo(serviceProvider);
         model = new ReleaseManagerModel();

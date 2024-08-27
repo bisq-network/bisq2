@@ -57,7 +57,6 @@ public class MediatorController implements Controller {
     protected final UserProfileService userProfileService;
     protected final ChatMessageContainerController chatMessageContainerController;
 
-    private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationCaseHeader mediationCaseHeader;
     private final MediatorService mediatorService;
@@ -70,7 +69,7 @@ public class MediatorController implements Controller {
         chatService = serviceProvider.getChatService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        channelService = chatService.getBisqEasyOpenTradeChannelService();
+        BisqEasyOpenTradeChannelService channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesSelectionService();
         mediatorService = serviceProvider.getSupportService().getMediatorService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();

@@ -27,12 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 public class WalletSettingsController implements Controller {
     @Getter
     private final WalletSettingsView view;
-    private final WalletSettingsModel model;
-    private final WalletService walletService;
 
     public WalletSettingsController(ServiceProvider serviceProvider) {
-        walletService = serviceProvider.getWalletService().orElseThrow();
-        model = new WalletSettingsModel();
+        WalletService walletService = serviceProvider.getWalletService().orElseThrow();
+        WalletSettingsModel model = new WalletSettingsModel();
         view = new WalletSettingsView(model, this);
     }
 

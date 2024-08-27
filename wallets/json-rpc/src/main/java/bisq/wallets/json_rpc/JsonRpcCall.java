@@ -21,13 +21,8 @@ import bisq.common.util.StringUtils;
 
 public class JsonRpcCall {
     private final String jsonrpc = "2.0";
-    private final String id;
-    private final String method;
-    private final Object params;
 
     public JsonRpcCall(String method, Object params) {
-        this.id = StringUtils.createUid();
-        this.method = method;
-        this.params = params;
+        String id = StringUtils.createUid();
     }
 }

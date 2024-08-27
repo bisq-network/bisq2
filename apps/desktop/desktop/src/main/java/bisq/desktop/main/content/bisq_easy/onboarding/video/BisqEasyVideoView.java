@@ -76,8 +76,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     private final ImageView startImage, endImage, soundImage, soundOffImage, largePause, largePlay, largeReplay;
     private final HBox volumeHBox;
     private final ProgressBar positionProgressBar;
-    private final StackPane progressPane;
-    private final VBox controlsVBox, controlsWrapperVBox;
+    private final VBox controlsVBox;
     private final Button playButton, pauseButton, soundButton, closeButton;
     private Subscription windowSizePin, currentTimePin, volumePin, statusPin;
     private Timeline showControlsTimeline, hideControlsTimeline, pausePlayTimeline;
@@ -102,7 +101,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         positionSlider.getStyleClass().add("video-position-slider");
 
         StackPane.setMargin(positionProgressBar, new Insets(0, 6, 0, 6));
-        progressPane = new StackPane(positionProgressBar, positionSlider);
+        StackPane progressPane = new StackPane(positionProgressBar, positionSlider);
         progressPane.setPadding(new Insets(0, 10, 0, 10));
 
         playButton = BisqIconButton.createIconButton("play");
@@ -156,7 +155,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         StackPane.setAlignment(largePause, Pos.CENTER);
         StackPane.setAlignment(largePlay, Pos.CENTER);
         StackPane.setAlignment(largeReplay, Pos.CENTER);
-        controlsWrapperVBox = new VBox(Spacer.fillVBox(), controlsVBox);
+        VBox controlsWrapperVBox = new VBox(Spacer.fillVBox(), controlsVBox);
         root.getChildren().addAll(mediaView, startImage, endImage, largePause, largePlay, largeReplay, controlsWrapperVBox);
     }
 

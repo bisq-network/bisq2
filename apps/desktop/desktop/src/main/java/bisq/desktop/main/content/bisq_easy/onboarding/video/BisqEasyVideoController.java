@@ -31,14 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyVideoController implements Controller {
-    private final BisqEasyVideoModel model;
     @Getter
     private final BisqEasyVideoView view;
     private final SettingsService settingsService;
 
     public BisqEasyVideoController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
-        model = new BisqEasyVideoModel();
+        BisqEasyVideoModel model = new BisqEasyVideoModel();
         view = new BisqEasyVideoView(model, this);
     }
 

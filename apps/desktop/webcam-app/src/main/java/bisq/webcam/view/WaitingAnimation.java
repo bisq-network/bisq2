@@ -34,7 +34,6 @@ public class WaitingAnimation extends StackPane {
     public static final int INTERVAL = 1000;
 
     private final ImageView spinningCircle;
-    private final ImageView waitingStateIcon;
     private final RotateTransition rotate;
     private final FadeTransition fadeTransition;
     private Scene scene;
@@ -53,7 +52,7 @@ public class WaitingAnimation extends StackPane {
         spinningCircle.setFitWidth(78);
         spinningCircle.setPreserveRatio(true);
 
-        waitingStateIcon = new ImageView();
+        ImageView waitingStateIcon = new ImageView();
         waitingStateIcon.setId("scan-with-camera");
 
         getChildren().addAll(spinningCircle, waitingStateIcon);

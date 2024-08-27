@@ -112,7 +112,6 @@ public class ServiceNode implements Node.Listener {
     private final PeerGroupService peerGroupService;
     private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
-    private final Optional<ResendMessageService> resendMessageService;
     private final KeyBundleService keyBundleService;
     private final Set<Address> seedNodeAddresses;
     @Getter
@@ -167,7 +166,6 @@ public class ServiceNode implements Node.Listener {
         this.keyBundleService = keyBundleService;
         this.dataService = dataService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
-        this.resendMessageService = resendMessageService;
         this.seedNodeAddresses = seedNodeAddresses;
         this.transportType = transportType;
 

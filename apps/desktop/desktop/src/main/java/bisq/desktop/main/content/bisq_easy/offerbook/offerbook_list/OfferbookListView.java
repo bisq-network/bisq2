@@ -24,8 +24,8 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
+import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -78,8 +78,11 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private final CheckBox showOnlyMyMessages;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
     private Label offerDirectionFilterLabel, paymentsFilterLabel;
-    private Subscription showOfferListExpandedPin, showBuyFromOffersPin, showMyOffersOnlyPin,
-            offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
+    private Subscription showOfferListExpandedPin;
+    private Subscription showBuyFromOffersPin;
+    private Subscription offerListTableViewSelectionPin;
+    private Subscription activeMarketPaymentsCountPin;
+    private Subscription isCustomPaymentsSelectedPin;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
@@ -209,7 +212,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         isCustomPaymentsSelectedPin = EasyBind.subscribe(model.getIsCustomPaymentsSelected(),
                 isSelected -> updatePaymentsSelection());
 
-        showMyOffersOnlyPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffers -> {
+        Subscription showMyOffersOnlyPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffers -> {
             if (showMyOffers) {
                 if (!showMyOffersOnlyLabel.getStyleClass().contains(ACTIVE_FILTER_CLASS)) {
                     showMyOffersOnlyLabel.getStyleClass().add(ACTIVE_FILTER_CLASS);

@@ -60,7 +60,6 @@ public class WebcamApp extends Application {
     private QrCodeSender qrCodeSender;
     private WebcamView webcamView;
     private boolean imageDetected;
-    private Scene scene;
 
     public WebcamApp() {
         webcamService = new WebcamService();
@@ -124,7 +123,7 @@ public class WebcamApp extends Application {
 
     private void setupStage(Stage primaryStage) {
         webcamView = new WebcamView(this::onRety);
-        scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
+        Scene scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
         scene.setFill(Paint.valueOf("#1c1c1c"));
         scene.getStylesheets().addAll(requireNonNull(this.getClass().getResource("/css/base.css")).toExternalForm(),
                 requireNonNull(this.getClass().getResource("/css/webapp.css")).toExternalForm());
