@@ -56,35 +56,16 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
     }
 
     public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.Account proto) {
-        switch (proto.getCountryBasedAccount().getMessageCase()) {
-            case BANKACCOUNT: {
-                return BankAccount.fromProto(proto);
-            }
-            case SEPAACCOUNT: {
-                return SepaAccount.fromProto(proto);
-            }
-            case F2FACCOUNT: {
-                return F2FAccount.fromProto(proto);
-            }
-            case PIXACCOUNT: {
-                return PixAccount.fromProto(proto);
-            }
-            case STRIKEACCOUNT: {
-                return StrikeAccount.fromProto(proto);
-            }
-            case AMAZONGIFTCARDACCOUNT: {
-                return AmazonGiftCardAccount.fromProto(proto);
-            }
-            case UPIACCOUNT: {
-                return UpiAccount.fromProto(proto);
-            }
-            case BIZUMACCOUNT: {
-                return BizumAccount.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getCountryBasedAccount().getMessageCase()) {
+            case BANKACCOUNT -> BankAccount.fromProto(proto);
+            case SEPAACCOUNT -> SepaAccount.fromProto(proto);
+            case F2FACCOUNT -> F2FAccount.fromProto(proto);
+            case PIXACCOUNT -> PixAccount.fromProto(proto);
+            case STRIKEACCOUNT -> StrikeAccount.fromProto(proto);
+            case AMAZONGIFTCARDACCOUNT -> AmazonGiftCardAccount.fromProto(proto);
+            case UPIACCOUNT -> UpiAccount.fromProto(proto);
+            case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 }

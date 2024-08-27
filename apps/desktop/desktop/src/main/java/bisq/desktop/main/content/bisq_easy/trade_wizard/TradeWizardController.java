@@ -236,32 +236,16 @@ public class TradeWizardController extends NavigationController implements InitW
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case TRADE_WIZARD_DIRECTION: {
-                return Optional.of(tradeWizardDirectionController);
-            }
-            case TRADE_WIZARD_MARKET: {
-                return Optional.of(tradeWizardMarketController);
-            }
-            case TRADE_WIZARD_PRICE: {
-                return Optional.of(tradeWizardPriceController);
-            }
-            case TRADE_WIZARD_PAYMENT_METHODS: {
-                return Optional.of(tradeWizardPaymentMethodsController);
-            }
-            case TRADE_WIZARD_AMOUNT: {
-                return Optional.of(tradeWizardAmountController);
-            }
-            case TRADE_WIZARD_TAKE_OFFER_OFFER: {
-                return Optional.of(tradeWizardSelectOfferController);
-            }
-            case TRADE_WIZARD_REVIEW_OFFER: {
-                return Optional.of(tradeWizardReviewController);
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case TRADE_WIZARD_DIRECTION -> Optional.of(tradeWizardDirectionController);
+            case TRADE_WIZARD_MARKET -> Optional.of(tradeWizardMarketController);
+            case TRADE_WIZARD_PRICE -> Optional.of(tradeWizardPriceController);
+            case TRADE_WIZARD_PAYMENT_METHODS -> Optional.of(tradeWizardPaymentMethodsController);
+            case TRADE_WIZARD_AMOUNT -> Optional.of(tradeWizardAmountController);
+            case TRADE_WIZARD_TAKE_OFFER_OFFER -> Optional.of(tradeWizardSelectOfferController);
+            case TRADE_WIZARD_REVIEW_OFFER -> Optional.of(tradeWizardReviewController);
+            default -> Optional.empty();
+        };
     }
 
     void onNext() {

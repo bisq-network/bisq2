@@ -510,23 +510,13 @@ public class StorageService {
     }
 
     public Stream<DataStorageService<? extends DataRequest>> getStoresByStoreType(StoreType storeType) {
-        List<DataStorageService<? extends DataRequest>> dataStorageServiceStream;
-        switch (storeType) {
-            case ALL:
-                dataStorageServiceStream = getAllStores().collect(Collectors.toList());
-                break;
-            case AUTHENTICATED_DATA_STORE:
-                dataStorageServiceStream = new ArrayList<>(authenticatedDataStores.values());
-                break;
-            case MAILBOX_DATA_STORE:
-                dataStorageServiceStream = new ArrayList<>(mailboxStores.values());
-                break;
-            case APPEND_ONLY_DATA_STORE:
-                dataStorageServiceStream = new ArrayList<>(appendOnlyDataStores.values());
-                break;
-            default:
-                throw new RuntimeException("Unhandled case. storeType= " + storeType);
-        }
+        List<DataStorageService<? extends DataRequest>> dataStorageServiceStream = switch (storeType) {
+            case ALL -> getAllStores().collect(Collectors.toList());
+            case AUTHENTICATED_DATA_STORE -> new ArrayList<>(authenticatedDataStores.values());
+            case MAILBOX_DATA_STORE -> new ArrayList<>(mailboxStores.values());
+            case APPEND_ONLY_DATA_STORE -> new ArrayList<>(appendOnlyDataStores.values());
+            default -> throw new RuntimeException("Unhandled case. storeType= " + storeType);
+        };
         return dataStorageServiceStream.stream();
     }
 

@@ -88,23 +88,15 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case MEDIATOR:
-                return Optional.of(new MediatorController(serviceProvider));
-            case MODERATOR:
-                return Optional.of(new ModeratorController(serviceProvider));
-            case SECURITY_MANAGER:
-                return Optional.of(new SecurityManagerController(serviceProvider));
-            case RELEASE_MANAGER:
-                return Optional.of(new ReleaseManagerController(serviceProvider));
-            case SEED_NODE:
-            case ORACLE_NODE:
-            case EXPLORER_NODE:
-            case MARKET_PRICE_NODE:
-                return Optional.of(new RoleInfo(serviceProvider).getController());
-            default:
-                return Optional.empty();
-        }
+        return switch (navigationTarget) {
+            case MEDIATOR -> Optional.of(new MediatorController(serviceProvider));
+            case MODERATOR -> Optional.of(new ModeratorController(serviceProvider));
+            case SECURITY_MANAGER -> Optional.of(new SecurityManagerController(serviceProvider));
+            case RELEASE_MANAGER -> Optional.of(new ReleaseManagerController(serviceProvider));
+            case SEED_NODE, ORACLE_NODE, EXPLORER_NODE, MARKET_PRICE_NODE ->
+                    Optional.of(new RoleInfo(serviceProvider).getController());
+            default -> Optional.empty();
+        };
     }
 
     private void onBondedRolesChanged() {

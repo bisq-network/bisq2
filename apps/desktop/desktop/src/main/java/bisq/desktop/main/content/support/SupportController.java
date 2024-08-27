@@ -79,14 +79,12 @@ public class SupportController extends ContentTabController<SupportModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case SUPPORT_ASSISTANCE:
-                return Optional.of(new CommonPublicChatController(serviceProvider, ChatChannelDomain.SUPPORT, navigationTarget));
-            case SUPPORT_RESOURCES:
-                return Optional.of(new ResourcesController(serviceProvider));
-            default:
-                return Optional.empty();
-        }
+        return switch (navigationTarget) {
+            case SUPPORT_ASSISTANCE ->
+                    Optional.of(new CommonPublicChatController(serviceProvider, ChatChannelDomain.SUPPORT, navigationTarget));
+            case SUPPORT_RESOURCES -> Optional.of(new ResourcesController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     private void handleNotification(ChatNotification notification) {

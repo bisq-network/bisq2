@@ -53,20 +53,12 @@ public class BondedReputationController extends TabController<BondedReputationMo
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case BSQ_BOND_TAB_1: {
-                return Optional.of(new BondedReputationTab1Controller(serviceProvider));
-            }
-            case BSQ_BOND_TAB_2: {
-                return Optional.of(new BondedReputationTab2Controller(serviceProvider));
-            }
-            case BSQ_BOND_TAB_3: {
-                return Optional.of(new BondedReputationTab3Controller(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case BSQ_BOND_TAB_1 -> Optional.of(new BondedReputationTab1Controller(serviceProvider));
+            case BSQ_BOND_TAB_2 -> Optional.of(new BondedReputationTab2Controller(serviceProvider));
+            case BSQ_BOND_TAB_3 -> Optional.of(new BondedReputationTab3Controller(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     void onClose() {

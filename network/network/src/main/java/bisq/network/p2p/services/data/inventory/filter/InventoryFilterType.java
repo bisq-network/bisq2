@@ -28,14 +28,11 @@ public enum InventoryFilterType implements ProtoEnum {
     MINI_SKETCH;
 
     public static Optional<InventoryFilterType> fromFeature(Feature feature) {
-        switch (feature) {
-            case INVENTORY_HASH_SET:
-                return Optional.of(HASH_SET);
-            case INVENTORY_MINI_SKETCH:
-                return Optional.of(MINI_SKETCH);
-            default:
-                return Optional.empty();
-        }
+        return switch (feature) {
+            case INVENTORY_HASH_SET -> Optional.of(HASH_SET);
+            case INVENTORY_MINI_SKETCH -> Optional.of(MINI_SKETCH);
+            default -> Optional.empty();
+        };
     }
 
     @Override

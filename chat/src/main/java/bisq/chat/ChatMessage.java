@@ -103,45 +103,25 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     }
 
     public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
-        switch (proto.getMessageCase()) {
-            case TWOPARTYPRIVATECHATMESSAGE: {
-                return TwoPartyPrivateChatMessage.fromProto(proto);
-            }
-
-            case BISQEASYOFFERBOOKMESSAGE: {
-                return BisqEasyOfferbookMessage.fromProto(proto);
-            }
-            case BISQEASYOPENTRADEMESSAGE: {
-                return BisqEasyOpenTradeMessage.fromProto(proto);
-            }
-
-            case COMMONPUBLICCHATMESSAGE: {
-                return CommonPublicChatMessage.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case TWOPARTYPRIVATECHATMESSAGE -> TwoPartyPrivateChatMessage.fromProto(proto);
+            case BISQEASYOFFERBOOKMESSAGE -> BisqEasyOfferbookMessage.fromProto(proto);
+            case BISQEASYOPENTRADEMESSAGE -> BisqEasyOpenTradeMessage.fromProto(proto);
+            case COMMONPUBLICCHATMESSAGE -> CommonPublicChatMessage.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
     public static ProtoResolver<DistributedData> getDistributedDataResolver() {
         return any -> {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
-                switch (proto.getMessageCase()) {
-                    case BISQEASYOFFERBOOKMESSAGE: {
-                        return BisqEasyOfferbookMessage.fromProto(proto);
-                    }
-                    case COMMONPUBLICCHATMESSAGE: {
-                        return CommonPublicChatMessage.fromProto(proto);
-                    }
-                    case MESSAGE_NOT_SET: {
-                        throw new UnresolvableProtobufMessageException(proto);
-                    }
-                }
-                throw new UnresolvableProtobufMessageException(proto);
+                return switch (proto.getMessageCase()) {
+                    case BISQEASYOFFERBOOKMESSAGE -> BisqEasyOfferbookMessage.fromProto(proto);
+                    case COMMONPUBLICCHATMESSAGE -> CommonPublicChatMessage.fromProto(proto);
+                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+                    default -> throw new UnresolvableProtobufMessageException(proto);
+                };
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -152,20 +132,12 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         return any -> {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
-                switch (proto.getMessageCase()) {
-                    case TWOPARTYPRIVATECHATMESSAGE: {
-                        return TwoPartyPrivateChatMessage.fromProto(proto);
-                    }
-
-                    case BISQEASYOPENTRADEMESSAGE: {
-                        return BisqEasyOpenTradeMessage.fromProto(proto);
-                    }
-
-                    case MESSAGE_NOT_SET: {
-                        throw new UnresolvableProtobufMessageException(proto);
-                    }
-                }
-                throw new UnresolvableProtobufMessageException(proto);
+                return switch (proto.getMessageCase()) {
+                    case TWOPARTYPRIVATECHATMESSAGE -> TwoPartyPrivateChatMessage.fromProto(proto);
+                    case BISQEASYOPENTRADEMESSAGE -> BisqEasyOpenTradeMessage.fromProto(proto);
+                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+                    default -> throw new UnresolvableProtobufMessageException(proto);
+                };
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

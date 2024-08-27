@@ -90,15 +90,13 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case CHAT_DISCUSSION:
-            case SUPPORT_ASSISTANCE:
-                return Optional.of(new CommonPublicChatController(serviceProvider, channelDomain, navigationTarget));
-            case CHAT_PRIVATE:
-                return Optional.of(new CommonPrivateChatsController(serviceProvider, channelDomain, navigationTarget));
-            default:
-                return Optional.empty();
-        }
+        return switch (navigationTarget) {
+            case CHAT_DISCUSSION, SUPPORT_ASSISTANCE ->
+                    Optional.of(new CommonPublicChatController(serviceProvider, channelDomain, navigationTarget));
+            case CHAT_PRIVATE ->
+                    Optional.of(new CommonPrivateChatsController(serviceProvider, channelDomain, navigationTarget));
+            default -> Optional.empty();
+        };
     }
 
     private void createChannels() {

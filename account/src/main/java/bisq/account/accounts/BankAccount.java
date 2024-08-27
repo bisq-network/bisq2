@@ -24,17 +24,11 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
     }
 
     public static BankAccount<?> fromProto(bisq.account.protobuf.Account proto) {
-        switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
-            case ACHTRANSFERACCOUNT:
-                return AchTransferAccount.fromProto(proto);
-            case NATIONALBANKACCOUNT:
-                return NationalBankAccount.fromProto(proto);
-            case CASHDEPOSITACCOUNT:
-                return CashDepositAccount.fromProto(proto);
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
+            case ACHTRANSFERACCOUNT -> AchTransferAccount.fromProto(proto);
+            case NATIONALBANKACCOUNT -> NationalBankAccount.fromProto(proto);
+            case CASHDEPOSITACCOUNT -> CashDepositAccount.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 }

@@ -428,24 +428,16 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         if (notificationType == ChatChannelNotificationType.GLOBAL_DEFAULT) {
             notificationType = ChatChannelNotificationType.fromChatNotificationType(settingsService.getChatNotificationType().get());
         }
-        boolean shouldSendNotification;
-        switch (notificationType) {
-            case GLOBAL_DEFAULT:
-                throw new RuntimeException("GLOBAL_DEFAULT not possible here");
-            case ALL:
-                shouldSendNotification = true;
-                break;
-            case MENTION:
+        boolean shouldSendNotification = switch (notificationType) {
+            case GLOBAL_DEFAULT -> throw new RuntimeException("GLOBAL_DEFAULT not possible here");
+            case ALL -> true;
+            case MENTION ->
                 // We treat citations also like mentions
-                shouldSendNotification = userIdentityService.getUserIdentities().stream()
-                        .anyMatch(userIdentity -> chatMessage.wasMentioned(userIdentity) ||
-                                chatMessage.wasCited(userIdentity));
-                break;
-            case OFF:
-            default:
-                shouldSendNotification = false;
-                break;
-        }
+                    userIdentityService.getUserIdentities().stream()
+                            .anyMatch(userIdentity -> chatMessage.wasMentioned(userIdentity) ||
+                                    chatMessage.wasCited(userIdentity));
+            default -> false;
+        };
 
         if (shouldSendNotification) {
             addNotification(chatNotification);

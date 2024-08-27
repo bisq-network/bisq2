@@ -53,20 +53,12 @@ public class SignedWitnessController extends TabController<SignedWitnessModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case SIGNED_WITNESS_TAB_1: {
-                return Optional.of(new SignedWitnessTab1Controller(serviceProvider));
-            }
-            case SIGNED_WITNESS_TAB_2: {
-                return Optional.of(new SignedWitnessTab2Controller(serviceProvider));
-            }
-            case SIGNED_WITNESS_TAB_3: {
-                return Optional.of(new SignedWitnessTab3Controller(serviceProvider, view.getRoot()));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case SIGNED_WITNESS_TAB_1 -> Optional.of(new SignedWitnessTab1Controller(serviceProvider));
+            case SIGNED_WITNESS_TAB_2 -> Optional.of(new SignedWitnessTab2Controller(serviceProvider));
+            case SIGNED_WITNESS_TAB_3 -> Optional.of(new SignedWitnessTab3Controller(serviceProvider, view.getRoot()));
+            default -> Optional.empty();
+        };
     }
 
     void onClose() {

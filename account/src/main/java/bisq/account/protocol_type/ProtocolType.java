@@ -26,17 +26,10 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 // specific module where it would fit in.
 public interface ProtocolType extends ProtoEnum {
     static ProtocolType fromProto(bisq.account.protobuf.ProtocolType proto) {
-        switch (proto.getMessageCase()) {
-            case TRADEPROTOCOLTYPE: {
-                return TradeProtocolType.fromProto(proto.getTradeProtocolType());
-            }
-            case LOANPROTOCOLTYPE: {
-                return LoanProtocolType.fromProto(proto.getLoanProtocolType());
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case TRADEPROTOCOLTYPE -> TradeProtocolType.fromProto(proto.getTradeProtocolType());
+            case LOANPROTOCOLTYPE -> LoanProtocolType.fromProto(proto.getLoanProtocolType());
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 }

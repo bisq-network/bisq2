@@ -43,30 +43,18 @@ public interface DataRequest extends BroadcastMessage {
     bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash);
 
     static DataRequest fromProto(bisq.network.protobuf.DataRequest proto) {
-        switch (proto.getMessageCase()) {
-            case ADDAUTHENTICATEDDATAREQUEST: {
-                return AddAuthenticatedDataRequest.fromProto(proto.getAddAuthenticatedDataRequest());
-            }
-            case REMOVEAUTHENTICATEDDATAREQUEST: {
-                return RemoveAuthenticatedDataRequest.fromProto(proto.getRemoveAuthenticatedDataRequest());
-            }
-            case REFRESHAUTHENTICATEDDATAREQUEST: {
-                return RefreshAuthenticatedDataRequest.fromProto(proto.getRefreshAuthenticatedDataRequest());
-            }
-            case ADDMAILBOXREQUEST: {
-                return AddMailboxRequest.fromProto(proto.getAddMailboxRequest());
-            }
-            case REMOVEMAILBOXREQUEST: {
-                return RemoveMailboxRequest.fromProto(proto.getRemoveMailboxRequest());
-            }
-            case ADDAPPENDONLYDATAREQUEST: {
-                return AddAppendOnlyDataRequest.fromProto(proto.getAddAppendOnlyDataRequest());
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case ADDAUTHENTICATEDDATAREQUEST ->
+                    AddAuthenticatedDataRequest.fromProto(proto.getAddAuthenticatedDataRequest());
+            case REMOVEAUTHENTICATEDDATAREQUEST ->
+                    RemoveAuthenticatedDataRequest.fromProto(proto.getRemoveAuthenticatedDataRequest());
+            case REFRESHAUTHENTICATEDDATAREQUEST ->
+                    RefreshAuthenticatedDataRequest.fromProto(proto.getRefreshAuthenticatedDataRequest());
+            case ADDMAILBOXREQUEST -> AddMailboxRequest.fromProto(proto.getAddMailboxRequest());
+            case REMOVEMAILBOXREQUEST -> RemoveMailboxRequest.fromProto(proto.getRemoveMailboxRequest());
+            case ADDAPPENDONLYDATAREQUEST -> AddAppendOnlyDataRequest.fromProto(proto.getAddAppendOnlyDataRequest());
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
     boolean isExpired();

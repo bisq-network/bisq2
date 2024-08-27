@@ -431,17 +431,12 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         }
 
         private String formatReputationSourceValue(ReputationSource reputationSource, long value) {
-            switch (reputationSource) {
-                case BURNED_BSQ:
-                case BSQ_BOND:
-                    return AmountFormatter.formatAmount(Coin.asBsqFromValue(value));
-                case PROFILE_AGE:
-                case BISQ1_ACCOUNT_AGE:
-                case BISQ1_SIGNED_ACCOUNT_AGE_WITNESS:
-                    return value > 0 ? TimeFormatter.formatAgeInDays(value) : "";
-                default:
-                    return String.valueOf(value);
-            }
+            return switch (reputationSource) {
+                case BURNED_BSQ, BSQ_BOND -> AmountFormatter.formatAmount(Coin.asBsqFromValue(value));
+                case PROFILE_AGE, BISQ1_ACCOUNT_AGE, BISQ1_SIGNED_ACCOUNT_AGE_WITNESS ->
+                        value > 0 ? TimeFormatter.formatAgeInDays(value) : "";
+                default -> String.valueOf(value);
+            };
         }
 
         private void selectedToggleChanged(Toggle selectedToggle) {

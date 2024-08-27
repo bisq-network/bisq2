@@ -29,26 +29,13 @@ public interface OfferOption extends NetworkProto {
     }
 
     static OfferOption fromProto(bisq.offer.protobuf.OfferOption proto) {
-        switch (proto.getMessageCase()) {
-            case TRADETERMSOPTION: {
-                return TradeTermsOption.fromProto(proto.getTradeTermsOption());
-            }
-            case REPUTATIONOPTION: {
-                return ReputationOption.fromProto(proto.getReputationOption());
-            }
-            case COLLATERALOPTION: {
-                return CollateralOption.fromProto(proto.getCollateralOption());
-            }
-            case FIATPAYMENTOPTION: {
-                return FiatPaymentOption.fromProto(proto.getFiatPaymentOption());
-            }
-            case FEEOPTION: {
-                return FeeOption.fromProto(proto.getFeeOption());
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case TRADETERMSOPTION -> TradeTermsOption.fromProto(proto.getTradeTermsOption());
+            case REPUTATIONOPTION -> ReputationOption.fromProto(proto.getReputationOption());
+            case COLLATERALOPTION -> CollateralOption.fromProto(proto.getCollateralOption());
+            case FIATPAYMENTOPTION -> FiatPaymentOption.fromProto(proto.getFiatPaymentOption());
+            case FEEOPTION -> FeeOption.fromProto(proto.getFeeOption());
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 }

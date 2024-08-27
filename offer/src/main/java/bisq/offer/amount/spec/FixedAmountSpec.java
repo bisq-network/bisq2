@@ -47,17 +47,10 @@ public abstract class FixedAmountSpec implements AmountSpec {
     }
 
     static FixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {
-        switch (proto.getMessageCase()) {
-            case BASESIDEFIXEDAMOUNTSPEC: {
-                return BaseSideFixedAmountSpec.fromProto(proto);
-            }
-            case QUOTESIDEFIXEDAMOUNTSPEC: {
-                return QuoteSideFixedAmountSpec.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case BASESIDEFIXEDAMOUNTSPEC -> BaseSideFixedAmountSpec.fromProto(proto);
+            case QUOTESIDEFIXEDAMOUNTSPEC -> QuoteSideFixedAmountSpec.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 }

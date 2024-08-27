@@ -54,23 +54,13 @@ public class WalletGuideController extends TabController<WalletGuideModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case WALLET_GUIDE_INTRO: {
-                return Optional.of(new WalletGuideIntroController(serviceProvider));
-            }
-            case WALLET_GUIDE_DOWNLOAD: {
-                return Optional.of(new WalletGuideDownloadController(serviceProvider));
-            }
-            case WALLET_GUIDE_CREATE_WALLET: {
-                return Optional.of(new WalletGuideCreateWalletController(serviceProvider));
-            }
-            case WALLET_GUIDE_RECEIVE: {
-                return Optional.of(new WalletGuideReceiveController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case WALLET_GUIDE_INTRO -> Optional.of(new WalletGuideIntroController(serviceProvider));
+            case WALLET_GUIDE_DOWNLOAD -> Optional.of(new WalletGuideDownloadController(serviceProvider));
+            case WALLET_GUIDE_CREATE_WALLET -> Optional.of(new WalletGuideCreateWalletController(serviceProvider));
+            case WALLET_GUIDE_RECEIVE -> Optional.of(new WalletGuideReceiveController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     void onClose() {

@@ -52,32 +52,19 @@ public class MoreProtocolsController implements InitWithDataController<MoreProto
     }
 
     public Optional<ProtocolRoadmapController> getProtocolRoadmapController(TradeProtocolType tradeProtocolType) {
-        switch (tradeProtocolType) {
-            case LIQUID_MU_SIG: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_MU_SIG,
-                        "https://bisq.wiki/Trade_Protocols#Liquid_MuSig"));
-            }
-
-            case LIQUID_SWAP: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_SWAP,
-                        "https://bisq.wiki/Trade_Protocols#Liquid_Swaps"));
-            }
-            case BSQ_SWAP: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BSQ_SWAP,
-                        "https://bisq.wiki/BSQ"));
-            }
-            case LIGHTNING_ESCROW: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_ESCROW,
-                        "https://github.com/bisq-network/proposals/issues/416"));
-            }
-            case MONERO_SWAP: {
-                return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MONERO_SWAP,
-                        "https://bisq.wiki/Trade_Protocols#Monero_Swaps"));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (tradeProtocolType) {
+            case LIQUID_MU_SIG -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_MU_SIG,
+                    "https://bisq.wiki/Trade_Protocols#Liquid_MuSig"));
+            case LIQUID_SWAP -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_SWAP,
+                    "https://bisq.wiki/Trade_Protocols#Liquid_Swaps"));
+            case BSQ_SWAP -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.BSQ_SWAP,
+                    "https://bisq.wiki/BSQ"));
+            case LIGHTNING_ESCROW -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_ESCROW,
+                    "https://github.com/bisq-network/proposals/issues/416"));
+            case MONERO_SWAP -> Optional.of(new ProtocolRoadmapController(TradeProtocolType.MONERO_SWAP,
+                    "https://bisq.wiki/Trade_Protocols#Monero_Swaps"));
+            default -> Optional.empty();
+        };
     }
 
     @Override

@@ -160,28 +160,24 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case TAKE_OFFER_AMOUNT: {
+        return switch (navigationTarget) {
+            case TAKE_OFFER_AMOUNT -> {
                 if (!model.isAmountVisible()) {
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER_PAYMENT);
-                    return Optional.empty();
+                    yield Optional.empty();
                 }
-                return Optional.of(takeOfferAmountController);
+                yield Optional.of(takeOfferAmountController);
             }
-            case TAKE_OFFER_PAYMENT: {
+            case TAKE_OFFER_PAYMENT -> {
                 if (!model.isPaymentMethodVisible()) {
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER_REVIEW);
-                    return Optional.empty();
+                    yield Optional.empty();
                 }
-                return Optional.of(takeOfferPaymentController);
+                yield Optional.of(takeOfferPaymentController);
             }
-            case TAKE_OFFER_REVIEW: {
-                return Optional.of(takeOfferReviewController);
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+            case TAKE_OFFER_REVIEW -> Optional.of(takeOfferReviewController);
+            default -> Optional.empty();
+        };
     }
 
     void onNext() {

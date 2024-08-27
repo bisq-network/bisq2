@@ -103,22 +103,12 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     }
 
     public static PaymentMethod<? extends PaymentRail> fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        switch (proto.getMessageCase()) {
-            case FIATPAYMENTMETHOD: {
-                return FiatPaymentMethod.fromProto(proto);
-            }
-            case BITCOINPAYMENTMETHOD: {
-                return BitcoinPaymentMethod.fromProto(proto);
-            }
-            case CRYPTOPAYMENTMETHOD: {
-                return CryptoPaymentMethod.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case FIATPAYMENTMETHOD -> FiatPaymentMethod.fromProto(proto);
+            case BITCOINPAYMENTMETHOD -> BitcoinPaymentMethod.fromProto(proto);
+            case CRYPTOPAYMENTMETHOD -> CryptoPaymentMethod.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
     protected abstract R getCustomPaymentRail();

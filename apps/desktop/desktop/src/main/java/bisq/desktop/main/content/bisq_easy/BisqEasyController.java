@@ -71,23 +71,13 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case BISQ_EASY_ONBOARDING: {
-                return Optional.of(new BisqEasyOnboardingController(serviceProvider));
-            }
-            case BISQ_EASY_OFFERBOOK: {
-                return Optional.of(new BisqEasyOfferbookController(serviceProvider));
-            }
-            case BISQ_EASY_OPEN_TRADES: {
-                return Optional.of(new BisqEasyOpenTradesController(serviceProvider));
-            }
-            case BISQ_EASY_PRIVATE_CHAT: {
-                return Optional.of(new BisqEasyPrivateChatsController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case BISQ_EASY_ONBOARDING -> Optional.of(new BisqEasyOnboardingController(serviceProvider));
+            case BISQ_EASY_OFFERBOOK -> Optional.of(new BisqEasyOfferbookController(serviceProvider));
+            case BISQ_EASY_OPEN_TRADES -> Optional.of(new BisqEasyOpenTradesController(serviceProvider));
+            case BISQ_EASY_PRIVATE_CHAT -> Optional.of(new BisqEasyPrivateChatsController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     private void handleNotification(ChatNotification notification) {
@@ -121,15 +111,11 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     }
 
     private Optional<NavigationTarget> findNavigationTarget(ChatChannelDomain chatChannelDomain) {
-        switch (chatChannelDomain) {
-            case BISQ_EASY_OFFERBOOK:
-                return Optional.of(NavigationTarget.BISQ_EASY_OFFERBOOK);
-            case BISQ_EASY_OPEN_TRADES:
-                return Optional.of(NavigationTarget.BISQ_EASY_OPEN_TRADES);
-            case BISQ_EASY_PRIVATE_CHAT:
-                return Optional.of(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
-            default:
-                return Optional.empty();
-        }
+        return switch (chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK -> Optional.of(NavigationTarget.BISQ_EASY_OFFERBOOK);
+            case BISQ_EASY_OPEN_TRADES -> Optional.of(NavigationTarget.BISQ_EASY_OPEN_TRADES);
+            case BISQ_EASY_PRIVATE_CHAT -> Optional.of(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+            default -> Optional.empty();
+        };
     }
 }

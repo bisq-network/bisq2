@@ -59,19 +59,11 @@ public class OnboardingController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case ONBOARDING_WELCOME: {
-                return Optional.of(new WelcomeController(serviceProvider));
-            }
-            case ONBOARDING_GENERATE_NYM: {
-                return Optional.of(new CreateProfileController(serviceProvider));
-            }
-            case ONBOARDING_PASSWORD: {
-                return Optional.of(new OnboardingPasswordController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case ONBOARDING_WELCOME -> Optional.of(new WelcomeController(serviceProvider));
+            case ONBOARDING_GENERATE_NYM -> Optional.of(new CreateProfileController(serviceProvider));
+            case ONBOARDING_PASSWORD -> Optional.of(new OnboardingPasswordController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

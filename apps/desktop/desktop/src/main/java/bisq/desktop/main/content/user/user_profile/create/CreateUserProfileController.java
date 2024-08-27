@@ -61,17 +61,11 @@ public class CreateUserProfileController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case CREATE_PROFILE_STEP1: {
-                return Optional.of(new CreateNewProfileStep1Controller(serviceProvider));
-            }
-            case CREATE_PROFILE_STEP2: {
-                return Optional.of(new CreateNewProfileStep2Controller(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case CREATE_PROFILE_STEP1 -> Optional.of(new CreateNewProfileStep1Controller(serviceProvider));
+            case CREATE_PROFILE_STEP2 -> Optional.of(new CreateNewProfileStep2Controller(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     public void onQuit() {

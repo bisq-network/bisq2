@@ -11,14 +11,11 @@ public enum AuthorizationTokenType implements ProtoEnum {
     EQUI_HASH;
 
     public static Optional<AuthorizationTokenType> fromFeature(Feature feature) {
-        switch (feature) {
-            case AUTHORIZATION_HASH_CASH:
-                return Optional.of(AuthorizationTokenType.HASH_CASH);
-            case AUTHORIZATION_EQUI_HASH:
-                return Optional.of(AuthorizationTokenType.EQUI_HASH);
-            default:
-                return Optional.empty();
-        }
+        return switch (feature) {
+            case AUTHORIZATION_HASH_CASH -> Optional.of(AuthorizationTokenType.HASH_CASH);
+            case AUTHORIZATION_EQUI_HASH -> Optional.of(AuthorizationTokenType.EQUI_HASH);
+            default -> Optional.empty();
+        };
     }
 
     @Override

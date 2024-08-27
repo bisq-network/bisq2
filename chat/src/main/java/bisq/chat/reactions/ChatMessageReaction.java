@@ -80,42 +80,25 @@ public abstract class ChatMessageReaction implements NetworkProto {
     }
 
     public static ChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction proto) {
-        switch (proto.getMessageCase()) {
-            case COMMONPUBLICCHATMESSAGEREACTION: {
-                return CommonPublicChatMessageReaction.fromProto(proto);
-            }
-            case BISQEASYOFFERBOOKMESSAGEREACTION: {
-                return BisqEasyOfferbookMessageReaction.fromProto(proto);
-            }
-            case TWOPARTYPRIVATECHATMESSAGEREACTION: {
-                return TwoPartyPrivateChatMessageReaction.fromProto(proto);
-            }
-            case BISQEASYOPENTRADEMESSAGEREACTION: {
-                return BisqEasyOpenTradeMessageReaction.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case COMMONPUBLICCHATMESSAGEREACTION -> CommonPublicChatMessageReaction.fromProto(proto);
+            case BISQEASYOFFERBOOKMESSAGEREACTION -> BisqEasyOfferbookMessageReaction.fromProto(proto);
+            case TWOPARTYPRIVATECHATMESSAGEREACTION -> TwoPartyPrivateChatMessageReaction.fromProto(proto);
+            case BISQEASYOPENTRADEMESSAGEREACTION -> BisqEasyOpenTradeMessageReaction.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
     public static ProtoResolver<DistributedData> getDistributedDataResolver() {
         return any -> {
             try {
                 bisq.chat.protobuf.ChatMessageReaction proto = any.unpack(bisq.chat.protobuf.ChatMessageReaction.class);
-                switch (proto.getMessageCase()) {
-                    case COMMONPUBLICCHATMESSAGEREACTION: {
-                        return CommonPublicChatMessageReaction.fromProto(proto);
-                    }
-                    case BISQEASYOFFERBOOKMESSAGEREACTION: {
-                        return BisqEasyOfferbookMessageReaction.fromProto(proto);
-                    }
-                    case MESSAGE_NOT_SET: {
-                        throw new UnresolvableProtobufMessageException(proto);
-                    }
-                }
-                throw new UnresolvableProtobufMessageException(proto);
+                return switch (proto.getMessageCase()) {
+                    case COMMONPUBLICCHATMESSAGEREACTION -> CommonPublicChatMessageReaction.fromProto(proto);
+                    case BISQEASYOFFERBOOKMESSAGEREACTION -> BisqEasyOfferbookMessageReaction.fromProto(proto);
+                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+                    default -> throw new UnresolvableProtobufMessageException(proto);
+                };
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -126,18 +109,12 @@ public abstract class ChatMessageReaction implements NetworkProto {
         return any -> {
             try {
                 bisq.chat.protobuf.ChatMessageReaction proto = any.unpack(bisq.chat.protobuf.ChatMessageReaction.class);
-                switch (proto.getMessageCase()) {
-                    case TWOPARTYPRIVATECHATMESSAGEREACTION: {
-                        return TwoPartyPrivateChatMessageReaction.fromProto(proto);
-                    }
-                    case BISQEASYOPENTRADEMESSAGEREACTION: {
-                        return BisqEasyOpenTradeMessageReaction.fromProto(proto);
-                    }
-                    case MESSAGE_NOT_SET: {
-                        throw new UnresolvableProtobufMessageException(proto);
-                    }
-                }
-                throw new UnresolvableProtobufMessageException(proto);
+                return switch (proto.getMessageCase()) {
+                    case TWOPARTYPRIVATECHATMESSAGEREACTION -> TwoPartyPrivateChatMessageReaction.fromProto(proto);
+                    case BISQEASYOPENTRADEMESSAGEREACTION -> BisqEasyOpenTradeMessageReaction.fromProto(proto);
+                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+                    default -> throw new UnresolvableProtobufMessageException(proto);
+                };
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

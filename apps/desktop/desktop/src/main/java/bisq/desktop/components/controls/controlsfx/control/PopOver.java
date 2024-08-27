@@ -536,41 +536,27 @@ public class PopOver extends PopupControl {
     }
 
     private double computeXOffset() {
-        switch (getArrowLocation()) {
-            case TOP_LEFT:
-            case BOTTOM_LEFT:
-                return getCornerRadius() + getArrowIndent() + getArrowSize();
-            case TOP_CENTER:
-            case BOTTOM_CENTER:
-                return getContentNode().prefWidth(-1) / 2;
-            case TOP_RIGHT:
-            case BOTTOM_RIGHT:
-                return getContentNode().prefWidth(-1) - getArrowIndent()
-                        - getCornerRadius() - getArrowSize();
-            default:
-                return 0;
-        }
+        return switch (getArrowLocation()) {
+            case TOP_LEFT, BOTTOM_LEFT -> getCornerRadius() + getArrowIndent() + getArrowSize();
+            case TOP_CENTER, BOTTOM_CENTER -> getContentNode().prefWidth(-1) / 2;
+            case TOP_RIGHT, BOTTOM_RIGHT -> getContentNode().prefWidth(-1) - getArrowIndent()
+                    - getCornerRadius() - getArrowSize();
+            default -> 0;
+        };
     }
 
     private double computeYOffset() {
         double prefContentHeight = getContentNode().prefHeight(-1);
 
-        switch (getArrowLocation()) {
-            case LEFT_TOP:
-            case RIGHT_TOP:
-                return getCornerRadius() + getArrowIndent() + getArrowSize();
-            case LEFT_CENTER:
-            case RIGHT_CENTER:
-                return Math.max(prefContentHeight, 2 * (getCornerRadius()
-                        + getArrowIndent() + getArrowSize())) / 2;
-            case LEFT_BOTTOM:
-            case RIGHT_BOTTOM:
-                return Math.max(prefContentHeight - getCornerRadius()
-                        - getArrowIndent() - getArrowSize(), getCornerRadius()
-                        + getArrowIndent() + getArrowSize());
-            default:
-                return 0;
-        }
+        return switch (getArrowLocation()) {
+            case LEFT_TOP, RIGHT_TOP -> getCornerRadius() + getArrowIndent() + getArrowSize();
+            case LEFT_CENTER, RIGHT_CENTER -> Math.max(prefContentHeight, 2 * (getCornerRadius()
+                    + getArrowIndent() + getArrowSize())) / 2;
+            case LEFT_BOTTOM, RIGHT_BOTTOM -> Math.max(prefContentHeight - getCornerRadius()
+                    - getArrowIndent() - getArrowSize(), getCornerRadius()
+                    + getArrowIndent() + getArrowSize());
+            default -> 0;
+        };
     }
 
     /**

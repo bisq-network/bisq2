@@ -64,35 +64,17 @@ public abstract class AccountPayload implements NetworkProto {
     }
 
     public static AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        switch (proto.getMessageCase()) {
-            case ZELLEACCOUNTPAYLOAD: {
-                return ZelleAccountPayload.fromProto(proto);
-            }
-            case COUNTRYBASEDACCOUNTPAYLOAD: {
-                return CountryBasedAccountPayload.fromProto(proto);
-            }
-            case REVOLUTACCOUNTPAYLOAD: {
-                return RevolutAccountPayload.fromProto(proto);
-            }
-            case USERDEFINEDFIATACCOUNTPAYLOAD: {
-                return UserDefinedFiatAccountPayload.fromProto(proto);
-            }
-            case FASTERPAYMENTSACCOUNTPAYLOAD: {
-                return FasterPaymentsAccountPayload.fromProto(proto);
-            }
-            case CASHBYMAILACCOUNTPAYLOAD: {
-                return CashByMailAccountPayload.fromProto(proto);
-            }
-            case INTERACETRANSFERACCOUNTPAYLOAD: {
-                return InteracETransferAccountPayload.fromProto(proto);
-            }
-            case CASHAPPACCOUNTPAYLOAD: {
-                return CashAppAccountPayload.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case ZELLEACCOUNTPAYLOAD -> ZelleAccountPayload.fromProto(proto);
+            case COUNTRYBASEDACCOUNTPAYLOAD -> CountryBasedAccountPayload.fromProto(proto);
+            case REVOLUTACCOUNTPAYLOAD -> RevolutAccountPayload.fromProto(proto);
+            case USERDEFINEDFIATACCOUNTPAYLOAD -> UserDefinedFiatAccountPayload.fromProto(proto);
+            case FASTERPAYMENTSACCOUNTPAYLOAD -> FasterPaymentsAccountPayload.fromProto(proto);
+            case CASHBYMAILACCOUNTPAYLOAD -> CashByMailAccountPayload.fromProto(proto);
+            case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
+            case CASHAPPACCOUNTPAYLOAD -> CashAppAccountPayload.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            default -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 }

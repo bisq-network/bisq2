@@ -70,63 +70,31 @@ public interface EnvelopePayloadMessage extends NetworkProto {
 
 
     static EnvelopePayloadMessage fromProto(bisq.network.protobuf.EnvelopePayloadMessage proto) {
-        switch (proto.getMessageCase()) {
-            case CONNECTIONHANDSHAKEREQUEST: {
-                return ConnectionHandshake.Request.fromProto(proto.getConnectionHandshakeRequest());
-            }
-            case CONNECTIONHANDSHAKERESPONSE: {
-                return ConnectionHandshake.Response.fromProto(proto.getConnectionHandshakeResponse());
-            }
-            case CLOSECONNECTIONMESSAGE: {
-                return CloseConnectionMessage.fromProto(proto.getCloseConnectionMessage());
-            }
-            case PEEREXCHANGEREQUEST: {
-                return PeerExchangeRequest.fromProto(proto.getPeerExchangeRequest());
-            }
-            case PEEREXCHANGERESPONSE: {
-                return PeerExchangeResponse.fromProto(proto.getPeerExchangeResponse());
-            }
-            case PING: {
-                return Ping.fromProto(proto.getPing());
-            }
-            case PONG: {
-                return Pong.fromProto(proto.getPong());
-            }
-            case CONFIDENTIALMESSAGE: {
-                return ConfidentialMessage.fromProto(proto.getConfidentialMessage());
-            }
-            case ACKMESSAGE: {
-                return AckMessage.fromProto(proto.getAckMessage());
-            }
-            case INVENTORYREQUEST: {
-                return InventoryRequest.fromProto(proto.getInventoryRequest());
-            }
-            case INVENTORYRESPONSE: {
-                return InventoryResponse.fromProto(proto.getInventoryResponse());
-            }
-            case DATAREQUEST: {
-                return DataRequest.fromProto(proto.getDataRequest());
-            }
-            case NETWORKLOADEXCHANGEREQUEST: {
-                return NetworkLoadExchangeRequest.fromProto(proto.getNetworkLoadExchangeRequest());
-            }
-            case NETWORKLOADEXCHANGERESPONSE: {
-                return NetworkLoadExchangeResponse.fromProto(proto.getNetworkLoadExchangeResponse());
-            }
-            case EXTERNALNETWORKMESSAGE: {
+        return switch (proto.getMessageCase()) {
+            case CONNECTIONHANDSHAKEREQUEST ->
+                    ConnectionHandshake.Request.fromProto(proto.getConnectionHandshakeRequest());
+            case CONNECTIONHANDSHAKERESPONSE ->
+                    ConnectionHandshake.Response.fromProto(proto.getConnectionHandshakeResponse());
+            case CLOSECONNECTIONMESSAGE -> CloseConnectionMessage.fromProto(proto.getCloseConnectionMessage());
+            case PEEREXCHANGEREQUEST -> PeerExchangeRequest.fromProto(proto.getPeerExchangeRequest());
+            case PEEREXCHANGERESPONSE -> PeerExchangeResponse.fromProto(proto.getPeerExchangeResponse());
+            case PING -> Ping.fromProto(proto.getPing());
+            case PONG -> Pong.fromProto(proto.getPong());
+            case CONFIDENTIALMESSAGE -> ConfidentialMessage.fromProto(proto.getConfidentialMessage());
+            case ACKMESSAGE -> AckMessage.fromProto(proto.getAckMessage());
+            case INVENTORYREQUEST -> InventoryRequest.fromProto(proto.getInventoryRequest());
+            case INVENTORYRESPONSE -> InventoryResponse.fromProto(proto.getInventoryResponse());
+            case DATAREQUEST -> DataRequest.fromProto(proto.getDataRequest());
+            case NETWORKLOADEXCHANGEREQUEST ->
+                    NetworkLoadExchangeRequest.fromProto(proto.getNetworkLoadExchangeRequest());
+            case NETWORKLOADEXCHANGERESPONSE ->
+                    NetworkLoadExchangeResponse.fromProto(proto.getNetworkLoadExchangeResponse());
+            case EXTERNALNETWORKMESSAGE ->
                 // Externally defined messages
-                return ExternalNetworkMessage.fromProto(proto.getExternalNetworkMessage());
-            }
-            case REPORTREQUEST: {
-                return ReportRequest.fromProto(proto.getReportRequest());
-            }
-            case REPORTRESPONSE: {
-                return ReportResponse.fromProto(proto.getReportResponse());
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+                    ExternalNetworkMessage.fromProto(proto.getExternalNetworkMessage());
+            case REPORTREQUEST -> ReportRequest.fromProto(proto.getReportRequest());
+            case REPORTRESPONSE -> ReportResponse.fromProto(proto.getReportResponse());
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 }

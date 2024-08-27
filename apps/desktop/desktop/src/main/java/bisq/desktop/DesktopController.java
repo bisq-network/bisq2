@@ -150,17 +150,11 @@ public class DesktopController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case SPLASH: {
-                return Optional.of(splashController);
-            }
-            case MAIN: {
-                return Optional.of(new MainController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case SPLASH -> Optional.of(splashController);
+            case MAIN -> Optional.of(new MainController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     @Override

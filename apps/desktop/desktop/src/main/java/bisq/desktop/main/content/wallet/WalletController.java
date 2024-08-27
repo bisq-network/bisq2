@@ -43,25 +43,13 @@ public class WalletController extends ContentTabController<WalletModel> {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case WALLET_DASHBOARD: {
-                return Optional.of(new WalletDashboardController(serviceProvider));
-            }
-            case WALLET_SEND: {
-                return Optional.of(new WalletSendController(serviceProvider));
-            }
-            case WALLET_RECEIVE: {
-                return Optional.of(new WalletReceiveController(serviceProvider));
-            }
-            case WALLET_TXS: {
-                return Optional.of(new WalletTxsController(serviceProvider));
-            }
-            case WALLET_SETTINGS: {
-                return Optional.of(new WalletSettingsController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case WALLET_DASHBOARD -> Optional.of(new WalletDashboardController(serviceProvider));
+            case WALLET_SEND -> Optional.of(new WalletSendController(serviceProvider));
+            case WALLET_RECEIVE -> Optional.of(new WalletReceiveController(serviceProvider));
+            case WALLET_TXS -> Optional.of(new WalletTxsController(serviceProvider));
+            case WALLET_SETTINGS -> Optional.of(new WalletSettingsController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

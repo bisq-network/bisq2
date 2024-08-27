@@ -33,18 +33,12 @@ public class FiatPaymentRailUtil {
     }
 
     public static List<FiatPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
-        switch (protocolType) {
-            case BISQ_EASY:
-            case BISQ_MU_SIG:
-            case LIGHTNING_ESCROW:
-                return getPaymentRails();
-            case MONERO_SWAP:
-            case LIQUID_SWAP:
-            case BSQ_SWAP:
-                throw new IllegalArgumentException("No paymentMethods for that protocolType");
-            default:
-                throw new RuntimeException("Not handled case: protocolType=" + protocolType);
-        }
+        return switch (protocolType) {
+            case BISQ_EASY, BISQ_MU_SIG, LIGHTNING_ESCROW -> getPaymentRails();
+            case MONERO_SWAP, LIQUID_SWAP, BSQ_SWAP ->
+                    throw new IllegalArgumentException("No paymentMethods for that protocolType");
+            default -> throw new RuntimeException("Not handled case: protocolType=" + protocolType);
+        };
     }
 
     public static List<FiatPaymentRail> getPaymentRails(String currencyCode) {
