@@ -152,7 +152,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                         periodicRequestDoaDataScheduler = Scheduler.run(() -> {
                             log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
                             requestDaoData().join();
-                            ;
                             MemoryReport.logReport();
                             log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
                         }).periodically(5, TimeUnit.SECONDS);

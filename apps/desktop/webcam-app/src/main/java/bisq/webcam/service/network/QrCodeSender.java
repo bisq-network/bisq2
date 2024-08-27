@@ -70,7 +70,7 @@ public class QrCodeSender {
     private CompletableFuture<Void> doSend(String message) {
         log.info("send {} to {}", message, serverAddress);
         return CompletableFuture.runAsync(() -> {
-                    try (Socket socket = new Socket();) {
+                    try (Socket socket = new Socket()) {
                         socket.connect(serverAddress);
                         try (PrintWriter printWriter = new PrintWriter(socket.getOutputStream())) {
                             printWriter.println(message);

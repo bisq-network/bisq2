@@ -79,7 +79,7 @@ public class I2pLogs2Slf4j extends Log {
         if(translatedPriority.toInt() == Level.ERROR.toInt())
             delegate.error(msg);
         if(translatedPriority.toInt() == Level.INFO.toInt())
-            delegate.info(msg);;
+            delegate.info(msg);
     }
 
     @Override

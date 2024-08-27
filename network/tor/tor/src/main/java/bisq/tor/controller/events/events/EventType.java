@@ -21,7 +21,7 @@ package bisq.tor.controller.events.events;
 // Used to implement SETEVENTS and GETINFO events/names
 public enum EventType {
     STATUS_CLIENT,
-    HS_DESC;
+    HS_DESC
 }
 
 /*
