@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import static bisq.security.pow.hashcash.HashCashProofOfWorkService.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,7 +60,7 @@ class HashCashProofOfWorkServiceTest {
     }
 
     @Test
-    public void testDiffIncrease() throws ExecutionException, InterruptedException {
+    public void testDiffIncrease() {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < 9; i++) {
             run(i, stringBuilder);

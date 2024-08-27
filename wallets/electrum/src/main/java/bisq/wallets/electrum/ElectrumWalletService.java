@@ -178,7 +178,7 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     @Override
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount) {
         return CompletableFuture.supplyAsync(() -> {
-            String txId = wallet.sendToAddress(passphrase, address, amount);
+            @SuppressWarnings("UnnecessaryLocalVariable") String txId = wallet.sendToAddress(passphrase, address, amount);
             // requestBalance();
             return txId;
         });

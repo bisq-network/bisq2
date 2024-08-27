@@ -28,7 +28,6 @@ import bisq.wallets.regtest.process.MultiProcessCoordinator;
 import lombok.Getter;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -58,7 +57,7 @@ public class BitcoindRegtestSetup
         );
     }
 
-    public BitcoindWallet createAndInitializeNewWallet(String walletName) throws MalformedURLException {
+    public BitcoindWallet createAndInitializeNewWallet(String walletName) {
         return remoteBitcoind.createAndInitializeNewWallet(walletName);
     }
 

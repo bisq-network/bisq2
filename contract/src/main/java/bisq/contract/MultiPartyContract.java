@@ -43,6 +43,7 @@ public abstract class MultiPartyContract<T extends Offer<?, ?>> extends TwoParty
     }
 
     public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {
+        //noinspection SwitchStatementWithTooFewBranches
         switch (proto.getTwoPartyContract().getMessageCase()) {
             // no impl yet
             case MESSAGE_NOT_SET: {
