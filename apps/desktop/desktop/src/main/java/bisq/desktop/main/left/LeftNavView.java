@@ -357,8 +357,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         if (selectedLeftNavButton == null) return;
 
         LeftNavButton buttonForHeight;
-        if (selectedLeftNavButton instanceof LeftNavSubButton) {
-            LeftNavSubButton leftNavSubButton = (LeftNavSubButton) selectedLeftNavButton;
+        if (selectedLeftNavButton instanceof LeftNavSubButton leftNavSubButton) {
             LeftNavButton parentButton = leftNavSubButton.getParentButton();
             if (!parentButton.getIsSubMenuExpanded().get()) {
                 buttonForHeight = parentButton;
@@ -387,14 +386,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private double calculateTargetY() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
         double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
-        if (selectedLeftNavButton instanceof LeftNavSubButton) {
-            LeftNavSubButton leftNavSubButton = (LeftNavSubButton) selectedLeftNavButton;
+        if (selectedLeftNavButton instanceof LeftNavSubButton leftNavSubButton) {
             LeftNavButton parentButton = leftNavSubButton.getParentButton();
             if (parentButton.getIsSubMenuExpanded().get()) {
                 for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
                     Node item = mainMenuItems.getChildren().get(i);
-                    if (item instanceof VBox) {
-                        VBox submenu = (VBox) item;
+                    if (item instanceof VBox submenu) {
                         if (submenu.getChildren().contains(selectedLeftNavButton)) {
                             targetY += submenu.getLayoutY();
                             break;
@@ -412,8 +409,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
         for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
             Node item = mainMenuItems.getChildren().get(i);
-            if (item instanceof VBox) {
-                VBox submenu = (VBox) item;
+            if (item instanceof VBox submenu) {
                 LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
 
                 parentMenuItem.setHighlighted(submenu.getChildren().contains(selectedLeftNavButton));

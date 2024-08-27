@@ -148,8 +148,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         ChatMessage chatMessage = item.getChatMessage();
         boolean isPublicChannel = item.isPublicChannel();
         boolean allowEditing = isPublicChannel;
-        if (chatMessage instanceof BisqEasyOfferbookMessage) {
-            BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
             allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
         }
 

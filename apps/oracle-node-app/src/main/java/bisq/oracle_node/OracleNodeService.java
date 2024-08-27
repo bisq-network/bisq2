@@ -231,8 +231,7 @@ public class OracleNodeService implements Service {
 
             @Override
             public void remove(Object element) {
-                if (element instanceof BondedRole) {
-                    BondedRole bondedRole = (BondedRole) element;
+                if (element instanceof BondedRole bondedRole) {
                     networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
                             keyPair,
                             authorizedPublicKey);

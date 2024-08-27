@@ -273,8 +273,7 @@ public class MarketPriceRequestService {
                         failedProviders.add(provider);
                         selectedProvider.set(selectNextProvider());
 
-                        if (rootCause instanceof HttpException) {
-                            HttpException httpException = (HttpException) rootCause;
+                        if (rootCause instanceof HttpException httpException) {
                             int responseCode = httpException.getResponseCode();
                             // If not server error we pass the error to the client
                             if (responseCode < 500) {

@@ -334,13 +334,12 @@ public class Transitions {
         if (node != null) {
             node.setMouseTransparent(false);
             Effect effect = node.getEffect();
-            if (effect instanceof GaussianBlur) {
+            if (effect instanceof GaussianBlur gaussianBlur) {
                 if (node.getId() == null) {
                     node.setId(StringUtils.createUid());
                 }
                 Timeline timeline = new Timeline();
                 removeEffectTimeLineByNodeId.put(node.getId(), timeline);
-                GaussianBlur gaussianBlur = (GaussianBlur) effect;
                 KeyValue kv1 = new KeyValue(gaussianBlur.radiusProperty(), 0.0);
                 KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
                 timeline.getKeyFrames().add(kf1);
@@ -410,8 +409,7 @@ public class Transitions {
         slideOutRight(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
-                if (parent instanceof Pane) {
-                    Pane pane = (Pane) parent;
+                if (parent instanceof Pane pane) {
                     pane.getChildren().remove(nodeOut);
                 }
             }
@@ -425,8 +423,7 @@ public class Transitions {
         slideOutLeft(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
-                if (parent instanceof Pane) {
-                    Pane pane = (Pane) parent;
+                if (parent instanceof Pane pane) {
                     pane.getChildren().remove(nodeOut);
                 }
             }
@@ -467,8 +464,7 @@ public class Transitions {
                 }
                 Parent parent = nodeOut.getParent();
                 if (parent != null) {
-                    if (parent instanceof Pane) {
-                        Pane pane = (Pane) parent;
+                    if (parent instanceof Pane pane) {
                         pane.getChildren().remove(nodeOut);
                     }
                 }

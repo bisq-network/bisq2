@@ -108,8 +108,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
             @Override
             public void remove(Object element) {
-                if (element instanceof AuthorizedAlertData) {
-                    AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) element;
+                if (element instanceof AuthorizedAlertData authorizedAlertData) {
                     if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
                         if (authorizedAlertData.isHaltTrading()) {
                             haltTrading = false;
@@ -145,11 +144,10 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof BisqEasyTradeMessage) {
+        if (envelopePayloadMessage instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
             verifyTradingNotOnHalt();
             verifyMinVersionForTrading();
 
-            BisqEasyTradeMessage bisqEasyTradeMessage = (BisqEasyTradeMessage) envelopePayloadMessage;
             if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
                 return;

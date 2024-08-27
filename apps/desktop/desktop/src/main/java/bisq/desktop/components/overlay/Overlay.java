@@ -995,8 +995,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
         gitHubButton.setOnAction(event -> {
-            if (content instanceof TextArea) {
-                TextArea errorReportTextArea = (TextArea) content;
+            if (content instanceof TextArea errorReportTextArea) {
                 ClipboardUtil.copyToClipboard(errorReportTextArea.getText());
                 Browser.open("https://github.com/bisq-network/bisq2/issues");
             }

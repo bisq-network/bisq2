@@ -241,11 +241,10 @@ public final class ConnectionHandshake {
             long deserializeTime = System.currentTimeMillis() - startDeserializeTs;
 
             responseNetworkEnvelope.verifyVersion();
-            if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof Response)) {
+            if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof Response response)) {
                 throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                         responseNetworkEnvelope);
             }
-            Response response = (Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
             Address address = response.getCapability().getAddress();
             if (banList.isBanned(address)) {
                 throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
@@ -296,11 +295,10 @@ public final class ConnectionHandshake {
 
             requestNetworkEnvelope.verifyVersion();
 
-            if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof Request)) {
+            if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof Request request)) {
                 throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                         requestNetworkEnvelope);
             }
-            Request request = (Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
             Capability requestersCapability = request.getCapability();
             Address peerAddress = requestersCapability.getAddress();
             if (banList.isBanned(peerAddress)) {

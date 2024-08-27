@@ -359,8 +359,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
                 @Override
                 public void remove(Object message) {
-                    if (message instanceof ChatMessage) {
-                        ChatMessage chatMessage = (ChatMessage) message;
+                    if (message instanceof ChatMessage chatMessage) {
                         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
                         removeNotification(id);
                     }
@@ -416,8 +415,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }*/
 
         // If user has set "Show offers only" in settings we mark messages as consumed
-        if (chatMessage instanceof BisqEasyOfferbookMessage) {
-            BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
             if (settingsService.getOffersOnly().get() && !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
                 consumeNotification(chatNotification);
                 return;

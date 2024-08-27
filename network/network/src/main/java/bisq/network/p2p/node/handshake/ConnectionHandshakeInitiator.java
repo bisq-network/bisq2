@@ -93,11 +93,10 @@ public class ConnectionHandshakeInitiator {
         NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.get(0);
         responseNetworkEnvelope.verifyVersion();
 
-        if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response)) {
+        if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response response)) {
             throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                     responseNetworkEnvelope);
         }
-        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
         Address address = response.getCapability().getAddress();
         if (banList.isBanned(address)) {
             throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);

@@ -124,8 +124,7 @@ public class ViewTransition {
     private void remove(Region region) {
         if (region != null) {
             Parent parent = region.getParent();
-            if (parent instanceof Pane) {
-                Pane pane = (Pane) parent;
+            if (parent instanceof Pane pane) {
                 pane.getChildren().remove(region);
             }
         }

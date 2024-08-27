@@ -97,8 +97,7 @@ public class SellerState1 extends BaseState {
                     }));
             selectedAccountPin = accountService.selectedAccountAsObservable().addObserver(account ->
                     UIThread.run(() -> {
-                        if (account instanceof UserDefinedFiatAccount) {
-                            UserDefinedFiatAccount userDefinedFiatAccount = (UserDefinedFiatAccount) account;
+                        if (account instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
                             model.selectedAccountProperty().set(userDefinedFiatAccount);
                             model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());
                         }

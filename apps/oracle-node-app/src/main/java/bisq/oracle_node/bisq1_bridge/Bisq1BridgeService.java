@@ -202,8 +202,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedAlertData) {
-            AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
+        if (data instanceof AuthorizedAlertData authorizedAlertData) {
             if (authorizedAlertData.getAlertType() == AlertType.BAN &&
                     isAuthorized(authorizedData) &&
                     authorizedAlertData.getBannedRole().isPresent()) {

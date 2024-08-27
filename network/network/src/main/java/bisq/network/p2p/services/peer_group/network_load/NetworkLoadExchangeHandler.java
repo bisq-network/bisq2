@@ -66,8 +66,7 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof NetworkLoadExchangeResponse) {
-            NetworkLoadExchangeResponse response = (NetworkLoadExchangeResponse) envelopePayloadMessage;
+        if (envelopePayloadMessage instanceof NetworkLoadExchangeResponse response) {
             if (response.getRequestNonce() == nonce) {
                 NetworkLoad peersNetworkLoad = response.getNetworkLoad();
                 String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";

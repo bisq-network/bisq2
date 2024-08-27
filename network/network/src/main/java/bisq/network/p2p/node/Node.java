@@ -611,8 +611,7 @@ public class Node implements Connection.Handler {
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
-            if (envelopePayloadMessage instanceof CloseConnectionMessage) {
-                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
+            if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {
                 log.debug("Received CloseConnectionMessage from {} with reason: {}", connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 // closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
