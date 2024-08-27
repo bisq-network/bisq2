@@ -33,6 +33,7 @@ import bisq.desktop.main.content.chat.message_container.ChatMessageContainerCont
 import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -57,8 +58,9 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final UserProfileService userProfileService;
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
-    private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin;
-    private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin;
+    private final UserIdentityService userIdentityService;
+    private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin, userIdentityPin;
+    private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin, showMyOffersOnlyFromModelPin;
 
     public OfferbookListController(ServiceProvider serviceProvider,
                                    ChatMessageContainerController chatMessageContainerController) {
@@ -67,6 +69,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         model = new OfferbookListModel();
         view = new OfferbookListView(model, this);
     }
@@ -85,6 +88,9 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             model.getPaymentFilterTitle().set(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title", hint));
             applyPredicate();
         });
+        showMyOffersOnlyPin = FxBindings.bindBiDir(model.getShowMyOffersOnly()).to(settingsService.getShowMyOffersOnly());
+        showMyOffersOnlyFromModelPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffersOnly -> applyPredicate());
+        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::applyPredicate));
     }
 
     @Override
@@ -98,6 +104,9 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         if (offerMessagesPin != null) {
             offerMessagesPin.unbind();
         }
+        showMyOffersOnlyPin.unbind();
+        showMyOffersOnlyFromModelPin.unsubscribe();
+        userIdentityPin.unbind();
     }
 
     public void setSelectedChannel(BisqEasyOfferbookChannel channel) {
@@ -242,7 +251,10 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         boolean matchesPaymentFilters = paymentFiltersApplied && item.getFiatPaymentMethods().stream()
                 .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
                                 || model.getSelectedMarketPayments().contains(payment));
-        return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters);
+        boolean myOffersOnly = model.getShowMyOffersOnly().get();
+        UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        boolean isMyOffer = item.getUserProfile().equals(selectedUserProfile);
+        return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters) && (!myOffersOnly || isMyOffer);
     }
 
     private String getCookieSubKey() {

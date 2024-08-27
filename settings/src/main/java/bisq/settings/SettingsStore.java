@@ -59,6 +59,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> showOfferListExpanded = new Observable<>();
     final Observable<Boolean> showMarketSelectionListCollapsed = new Observable<>();
     final Observable<String> backupLocation = new Observable<>();
+    final Observable<Boolean> showMyOffersOnly = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -83,7 +84,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 false,
                 false,
-                PlatformUtils.getHomeDirectory());
+                PlatformUtils.getHomeDirectory(),
+                false);
     }
 
     public SettingsStore(Cookie cookie,
@@ -108,7 +110,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean showBuyOffers,
                          boolean showOfferListExpanded,
                          boolean showMarketSelectionListCollapsed,
-                         String backupLocation) {
+                         String backupLocation,
+                         boolean showMyOffersOnly) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -132,6 +135,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.showOfferListExpanded.set(showOfferListExpanded);
         this.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
         this.backupLocation.set(backupLocation);
+        this.showMyOffersOnly.set(showMyOffersOnly);
     }
 
     @Override
@@ -159,7 +163,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setShowBuyOffers(showBuyOffers.get())
                 .setShowOfferListExpanded(showOfferListExpanded.get())
                 .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get())
-                .setBackupLocation(backupLocation.get());
+                .setBackupLocation(backupLocation.get())
+                .setShowMyOffersOnly(showMyOffersOnly.get());
     }
 
     @Override
@@ -199,7 +204,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getShowBuyOffers(),
                 proto.getShowOfferListExpanded(),
                 proto.getShowMarketSelectionListCollapsed(),
-                proto.getBackupLocation());
+                proto.getBackupLocation(),
+                proto.getShowMyOffersOnly());
     }
 
     @Override
@@ -237,7 +243,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 showBuyOffers.get(),
                 showOfferListExpanded.get(),
                 showMarketSelectionListCollapsed.get(),
-                backupLocation.get());
+                backupLocation.get(),
+                showMyOffersOnly.get());
     }
 
     @Override
@@ -266,6 +273,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             showOfferListExpanded.set(persisted.showOfferListExpanded.get());
             showMarketSelectionListCollapsed.set(persisted.showMarketSelectionListCollapsed.get());
             backupLocation.set(persisted.backupLocation.get());
+            showMyOffersOnly.set(persisted.showMyOffersOnly.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }
