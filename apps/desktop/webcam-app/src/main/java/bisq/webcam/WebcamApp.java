@@ -205,7 +205,13 @@ public class WebcamApp extends Application {
                     ((WebcamException) throwable.getCause()).getLocalizedErrorMessage();
             case WebcamException webcamException -> webcamException.getLocalizedErrorMessage();
             case TimeoutException timeoutException -> Res.get("TimeoutException", throwable.getMessage());
-            case null, default -> throwable.toString();
+            case null, default -> {
+                if (throwable != null) {
+                    yield throwable.toString();
+                } else {
+                    yield "throwable was null";
+                }
+            }
         };
     }
 }

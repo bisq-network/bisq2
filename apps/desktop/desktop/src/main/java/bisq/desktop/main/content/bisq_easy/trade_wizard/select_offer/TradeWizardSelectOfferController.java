@@ -203,7 +203,7 @@ public class TradeWizardSelectOfferController implements Controller {
 
     void onSelectRow(TradeWizardSelectOfferView.ListItem listItem) {
         if (listItem == null) {
-            selectListItem(listItem);
+            selectListItem(null);
             return;
         }
         if (listItem.equals(model.getSelectedItem())) {

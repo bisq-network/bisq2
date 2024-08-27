@@ -64,7 +64,7 @@ public class StorageService {
     final Map<String, MailboxDataStorageService> mailboxStores = new ConcurrentHashMap<>();
     final Map<String, AppendOnlyDataStorageService> appendOnlyDataStores = new ConcurrentHashMap<>();
     private final PersistenceService persistenceService;
-    private final Set<StorageService.Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public StorageService(PersistenceService persistenceService) {
         this.persistenceService = persistenceService;
@@ -214,7 +214,7 @@ public class StorageService {
                     onAddAppendOnlyDataRequest(addAppendOnlyDataRequest);
             case null, default -> CompletableFuture.failedFuture(
                     new IllegalArgumentException("AddRequest called with invalid addDataRequest: " +
-                            addDataRequest.getClass().getSimpleName()));
+                            (addDataRequest != null ? addDataRequest.getClass().getSimpleName() : "null")));
         };
     }
 
@@ -538,11 +538,11 @@ public class StorageService {
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListener(StorageService.Listener listener) {
+    public void addListener(Listener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(StorageService.Listener listener) {
+    public void removeListener(Listener listener) {
         listeners.remove(listener);
     }
 }

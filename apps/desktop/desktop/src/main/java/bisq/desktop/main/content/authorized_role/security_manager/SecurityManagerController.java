@@ -290,7 +290,7 @@ public class SecurityManagerController implements Controller {
         AlertType alertType = model.getSelectedAlertType().get();
         boolean isInvalid = alertType == null;
         if (isInvalid) {
-            model.getActionButtonDisabled().set(isInvalid);
+            model.getActionButtonDisabled().set(true);
             return;
         }
         boolean isMessageEmpty = StringUtils.isEmpty(model.getMessage().get());
