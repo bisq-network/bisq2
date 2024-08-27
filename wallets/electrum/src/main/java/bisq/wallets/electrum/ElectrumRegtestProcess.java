@@ -101,7 +101,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
             Process process = processBuilder.start();
             String input = new BufferedReader(new InputStreamReader(process.getInputStream()))
                     .lines().collect(Collectors.joining("\n"));
-            log.info("Trying to stop old process: " + input);
+            log.info("Trying to stop old process: {}", input);
         } catch (IOException e) {
             log.warn("Exception when stopping old wallet process", e);
         }

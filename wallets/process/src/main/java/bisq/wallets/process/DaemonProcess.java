@@ -77,7 +77,7 @@ public abstract class DaemonProcess implements BisqProcess {
             isSuccess = waitingFuture.get(2, TimeUnit.MINUTES);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             String processName = process.info().command().orElse("<unknown process>");
-            log.error(processName + " didn't start after two minutes.", e);
+            log.error("{} didn't start after two minutes.", processName, e);
         }
 
         if (!isSuccess) {
@@ -100,7 +100,7 @@ public abstract class DaemonProcess implements BisqProcess {
         Map<String, String> environment = processBuilder.environment();
         environment.putAll(processConfig.getEnvironmentVars());
 
-        log.info("Starting Process: " + processConfig);
+        log.info("Starting Process: {}", processConfig);
         return processBuilder.start();
     }
 
@@ -114,7 +114,7 @@ public abstract class DaemonProcess implements BisqProcess {
             return logScanner.waitUntilLogContainsLines();
         } catch (ExecutionException | InterruptedException | IOException | TimeoutException e) {
             String processName = process.info().command().orElse("<unknown process>");
-            log.error(processName + " didn't start correctly.", e);
+            log.error("{} didn't start correctly.", processName, e);
             throw new CannotStartProcessException(processName, e);
         }
     }

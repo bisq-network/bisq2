@@ -348,7 +348,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             chatService.getBisqEasyOfferbookChannelService().deleteChatMessage(bisqEasyOfferbookMessage, userIdentity.getNetworkIdWithKeyPair())
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            log.error("We got an error at doDeleteMessage: " + throwable);
+                            log.error("We got an error at doDeleteMessage", throwable);
                         }
                     });
         } else if (chatMessage instanceof CommonPublicChatMessage commonPublicChatMessage) {

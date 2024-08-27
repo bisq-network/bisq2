@@ -65,7 +65,7 @@ public class CompletableFutureUtilsTest {
                 log.info("{} (waited {} ms: {})", msg, sleepMs, val);
                 return val;
             } catch (InterruptedException e) {
-                log.error("Interrupted: " + e.getMessage(), e);
+                log.error("Interrupted: {}", e.getMessage(), e);
                 return false;
             }
         });
@@ -77,7 +77,7 @@ public class CompletableFutureUtilsTest {
                 Thread.sleep(sleepMs);
                 log.info("{} (waited {} ms)", msg, sleepMs);
             } catch (InterruptedException e) {
-                log.error("Interrupted: " + e.getMessage(), e);
+                log.error("Interrupted: {}", e.getMessage(), e);
             }
         });
     }

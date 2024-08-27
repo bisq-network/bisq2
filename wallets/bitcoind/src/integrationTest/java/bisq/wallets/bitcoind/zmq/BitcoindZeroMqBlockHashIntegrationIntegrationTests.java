@@ -45,7 +45,7 @@ public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
     void blockHashNotification() throws InterruptedException {
         ZmqListeners zmqListeners = regtestSetup.getZmqListeners();
         zmqListeners.registerNewBlockMinedListener((blockHash) -> {
-            log.info("Notification: New block with hash " + blockHash);
+            log.info("Notification: New block with hash {}", blockHash);
 
             if (minedBlockHashes.contains(blockHash)) {
                 listenerReceivedBlockHashLatch.countDown();
@@ -58,7 +58,7 @@ public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
             while (true) {
                 try {
                     List<String> blockHashes = regtestSetup.mineOneBlock();
-                    log.info("Mined block: " + blockHashes);
+                    log.info("Mined block: {}", blockHashes);
 
                     for (String blockHash : blockHashes) {
                         if (minedBlockHashes.contains(blockHash)) {

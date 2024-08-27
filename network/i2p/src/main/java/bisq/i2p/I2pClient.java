@@ -250,7 +250,7 @@ public class I2pClient {
     }
 
     protected void handleIOException(IOException e, String sessionId) {
-        log.error("IO Exception for session " + sessionId + ": " + e.getMessage(), e);
+        log.error("IO Exception for session {}: {}", sessionId, e.getMessage(), e);
 
         // Only destroy the session manager if the IO exception closed its last connected socket
         // The session manager, especially for the default session, handles multiple sockets (one per peer)

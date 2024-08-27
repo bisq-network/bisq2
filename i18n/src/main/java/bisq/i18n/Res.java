@@ -84,7 +84,7 @@ public class Res {
                         }
                     });
         } catch (MissingResourceException e) {
-            log.warn("Missing resource for key: " + key, e);
+            log.warn("Missing resource for key: {}", key, e);
             return "[" + key + "!!!]";
         }
     }

@@ -110,7 +110,7 @@ public class OutboundConnectionManager {
             }
 
         } catch (IOException e) {
-            log.warn("Couldn't create connection to " + address.getFullAddress(), e);
+            log.warn("Couldn't create connection to {}", address.getFullAddress(), e);
         }
 
         return completableFuture;
