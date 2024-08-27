@@ -380,16 +380,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         if (chatMessage instanceof BisqEasyOfferbookMessage) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             chatService.getBisqEasyOfferbookChannelService().publishEditedChatMessage(bisqEasyOfferbookMessage, editedText, userIdentity);
-        } else if (chatMessage instanceof CommonPublicChatMessage) {
-            CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
+        } else if (chatMessage instanceof CommonPublicChatMessage commonPublicChatMessage) {
             chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain()).publishEditedChatMessage(commonPublicChatMessage, editedText, userIdentity);
         }
     }
 
     public void onReportUser(ChatMessage chatMessage) {
         ChatChannelDomain chatChannelDomain = model.getSelectedChannel().get().getChatChannelDomain();
-        if (chatMessage instanceof PrivateChatMessage) {
-            PrivateChatMessage privateChatMessage = (PrivateChatMessage) chatMessage;
+        if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
             Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
                     new ReportToModeratorWindow.InitData(privateChatMessage.getSenderUserProfile(), chatChannelDomain));
         } else {

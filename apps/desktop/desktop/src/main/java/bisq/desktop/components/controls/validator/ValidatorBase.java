@@ -179,7 +179,7 @@ public abstract class ValidatorBase {
 
 
     /***** Icon *****/
-    protected SimpleObjectProperty<Supplier<Node>> iconSupplier = new SimpleObjectProperty<Supplier<Node>>();
+    protected SimpleObjectProperty<Supplier<Node>> iconSupplier = new SimpleObjectProperty<>();
 
     public void setIconSupplier(Supplier<Node> icon) {
         this.iconSupplier.set(icon);
