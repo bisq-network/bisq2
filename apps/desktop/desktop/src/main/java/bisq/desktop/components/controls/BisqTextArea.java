@@ -95,7 +95,7 @@ public class BisqTextArea extends TextArea {
             }
 
             if (!initialized) {
-                this.selectorScrollPane = selectorScrollPane;
+                this.selectorScrollPane = scrollPane;
                 Node lookupTextNode = lookup(SELECTOR_TEXT);
                 if (lookupTextNode instanceof Text aTextNode) {
                     // If we use a promptText the input field is not the aTextNode we find by the lookup,
@@ -116,7 +116,7 @@ public class BisqTextArea extends TextArea {
                         this.selectorText = aTextNode;
                     }
                     textProperty().addListener(textChangeListener);
-                    selectorScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                    scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
                     adjustHeight();
                     initialized = true;
                 }
