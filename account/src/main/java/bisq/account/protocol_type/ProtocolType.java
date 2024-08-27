@@ -29,7 +29,7 @@ public interface ProtocolType extends ProtoEnum {
         return switch (proto.getMessageCase()) {
             case TRADEPROTOCOLTYPE -> TradeProtocolType.fromProto(proto.getTradeProtocolType());
             case LOANPROTOCOLTYPE -> LoanProtocolType.fromProto(proto.getLoanProtocolType());
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 }

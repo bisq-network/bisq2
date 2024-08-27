@@ -108,7 +108,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
             case BISQEASYOFFERBOOKMESSAGE -> BisqEasyOfferbookMessage.fromProto(proto);
             case BISQEASYOPENTRADEMESSAGE -> BisqEasyOpenTradeMessage.fromProto(proto);
             case COMMONPUBLICCHATMESSAGE -> CommonPublicChatMessage.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 
@@ -119,7 +119,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
                 return switch (proto.getMessageCase()) {
                     case BISQEASYOFFERBOOKMESSAGE -> BisqEasyOfferbookMessage.fromProto(proto);
                     case COMMONPUBLICCHATMESSAGE -> CommonPublicChatMessage.fromProto(proto);
-                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
                     default -> throw new UnresolvableProtobufMessageException(proto);
                 };
             } catch (InvalidProtocolBufferException e) {
@@ -135,7 +135,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
                 return switch (proto.getMessageCase()) {
                     case TWOPARTYPRIVATECHATMESSAGE -> TwoPartyPrivateChatMessage.fromProto(proto);
                     case BISQEASYOPENTRADEMESSAGE -> BisqEasyOpenTradeMessage.fromProto(proto);
-                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
                     default -> throw new UnresolvableProtobufMessageException(proto);
                 };
             } catch (InvalidProtocolBufferException e) {

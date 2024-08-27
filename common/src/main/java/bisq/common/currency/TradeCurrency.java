@@ -70,7 +70,7 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
         return switch (proto.getMessageCase()) {
             case CRYPTOCURRENCY -> CryptoCurrency.fromProto(proto);
             case FIATCURRENCY -> FiatCurrency.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 

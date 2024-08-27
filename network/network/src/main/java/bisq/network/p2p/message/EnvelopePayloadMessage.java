@@ -94,7 +94,7 @@ public interface EnvelopePayloadMessage extends NetworkProto {
                     ExternalNetworkMessage.fromProto(proto.getExternalNetworkMessage());
             case REPORTREQUEST -> ReportRequest.fromProto(proto.getReportRequest());
             case REPORTRESPONSE -> ReportResponse.fromProto(proto.getReportResponse());
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 }

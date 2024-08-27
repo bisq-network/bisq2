@@ -53,7 +53,7 @@ public abstract class RangeAmountSpec implements AmountSpec {
         return switch (proto.getMessageCase()) {
             case BASESIDERANGEAMOUNTSPEC -> BaseSideRangeAmountSpec.fromProto(proto);
             case QUOTESIDERANGEAMOUNTSPEC -> QuoteSideRangeAmountSpec.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 }

@@ -106,7 +106,7 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         return switch (proto.getMessageCase()) {
             case COIN -> Coin.fromProto(proto);
             case FIAT -> Fiat.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 

@@ -60,7 +60,7 @@ public abstract class TradeParty implements PersistableProto {
     public static BisqEasyTradeParty protoToBisqEasyTradeParty(bisq.trade.protobuf.TradeParty proto) {
         return switch (proto.getMessageCase()) {
             case BISQEASYTRADEPARTY -> BisqEasyTradeParty.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
     }
@@ -68,7 +68,7 @@ public abstract class TradeParty implements PersistableProto {
     public static BisqMuSigTradeParty protoToBisqMuSigTradeParty(bisq.trade.protobuf.TradeParty proto) {
         return switch (proto.getMessageCase()) {
             case BISQMUSIGTRADEPARTY -> BisqMuSigTradeParty.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
     }
@@ -76,7 +76,7 @@ public abstract class TradeParty implements PersistableProto {
     public static SubmarineTradeParty protoToSubmarineTradeParty(bisq.trade.protobuf.TradeParty proto) {
         return switch (proto.getMessageCase()) {
             case SUBMARINETRADEPARTY -> SubmarineTradeParty.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
             default -> throw new UnresolvableProtobufMessageException(proto);
         };
     }

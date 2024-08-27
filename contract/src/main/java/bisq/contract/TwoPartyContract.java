@@ -49,7 +49,7 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
             case BISQEASYCONTRACT -> BisqEasyContract.fromProto(proto);
             case BISQMUSIGCONTRACT -> BisqMuSigContract.fromProto(proto);
             case SUBMARINECONTRACT -> SubmarineContract.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 }

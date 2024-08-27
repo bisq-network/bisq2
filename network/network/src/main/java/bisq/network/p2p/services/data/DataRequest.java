@@ -53,7 +53,7 @@ public interface DataRequest extends BroadcastMessage {
             case ADDMAILBOXREQUEST -> AddMailboxRequest.fromProto(proto.getAddMailboxRequest());
             case REMOVEMAILBOXREQUEST -> RemoveMailboxRequest.fromProto(proto.getRemoveMailboxRequest());
             case ADDAPPENDONLYDATAREQUEST -> AddAppendOnlyDataRequest.fromProto(proto.getAddAppendOnlyDataRequest());
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 

@@ -85,7 +85,7 @@ public abstract class ChatMessageReaction implements NetworkProto {
             case BISQEASYOFFERBOOKMESSAGEREACTION -> BisqEasyOfferbookMessageReaction.fromProto(proto);
             case TWOPARTYPRIVATECHATMESSAGEREACTION -> TwoPartyPrivateChatMessageReaction.fromProto(proto);
             case BISQEASYOPENTRADEMESSAGEREACTION -> BisqEasyOpenTradeMessageReaction.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 
@@ -96,7 +96,7 @@ public abstract class ChatMessageReaction implements NetworkProto {
                 return switch (proto.getMessageCase()) {
                     case COMMONPUBLICCHATMESSAGEREACTION -> CommonPublicChatMessageReaction.fromProto(proto);
                     case BISQEASYOFFERBOOKMESSAGEREACTION -> BisqEasyOfferbookMessageReaction.fromProto(proto);
-                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
                     default -> throw new UnresolvableProtobufMessageException(proto);
                 };
             } catch (InvalidProtocolBufferException e) {
@@ -112,7 +112,7 @@ public abstract class ChatMessageReaction implements NetworkProto {
                 return switch (proto.getMessageCase()) {
                     case TWOPARTYPRIVATECHATMESSAGEREACTION -> TwoPartyPrivateChatMessageReaction.fromProto(proto);
                     case BISQEASYOPENTRADEMESSAGEREACTION -> BisqEasyOpenTradeMessageReaction.fromProto(proto);
-                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+                    case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
                     default -> throw new UnresolvableProtobufMessageException(proto);
                 };
             } catch (InvalidProtocolBufferException e) {

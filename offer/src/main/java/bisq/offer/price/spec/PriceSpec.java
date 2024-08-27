@@ -34,7 +34,7 @@ public interface PriceSpec extends NetworkProto {
             case FIXPRICE -> FixPriceSpec.fromProto(proto.getFixPrice());
             case FLOATPRICE -> FloatPriceSpec.fromProto(proto.getFloatPrice());
             case MARKETPRICE -> MarketPriceSpec.fromProto(proto.getMarketPrice());
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 }

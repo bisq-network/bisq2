@@ -77,7 +77,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
                     BisqEasyOfferbookChannel.fromProto(proto, proto.getBisqEasyOfferbookChannel());
             case COMMONPUBLICCHATCHANNEL ->
                     CommonPublicChatChannel.fromProto(proto, proto.getCommonPublicChatChannel());
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 

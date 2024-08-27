@@ -65,7 +65,7 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
         return switch (proto.getMessageCase()) {
             case TWOPARTYCONTRACT -> TwoPartyContract.fromProto(proto);
             case MULTIPARTYCONTRACT -> MultiPartyContract.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 

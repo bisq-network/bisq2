@@ -65,7 +65,7 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
             case AMAZONGIFTCARDACCOUNT -> AmazonGiftCardAccount.fromProto(proto);
             case UPIACCOUNT -> UpiAccount.fromProto(proto);
             case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 }

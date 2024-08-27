@@ -28,7 +28,7 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
             case ACHTRANSFERACCOUNT -> AchTransferAccount.fromProto(proto);
             case NATIONALBANKACCOUNT -> NationalBankAccount.fromProto(proto);
             case CASHDEPOSITACCOUNT -> CashDepositAccount.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 }

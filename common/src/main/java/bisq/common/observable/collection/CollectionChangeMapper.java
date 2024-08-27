@@ -71,7 +71,7 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
                 .filter(filterFunction::apply)
                 .map(mapFunction)
                 .filter(item -> !targetCollection.contains(item))
-                .collect(Collectors.toList())));
+                .toList()));
     }
 
     @Override

@@ -32,7 +32,7 @@ public interface AmountSpec extends NetworkProto {
         return switch (proto.getMessageCase()) {
             case FIXEDAMOUNTSPEC -> FixedAmountSpec.fromProto(proto.getFixedAmountSpec());
             case RANGEAMOUNTSPEC -> RangeAmountSpec.fromProto(proto.getRangeAmountSpec());
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 }

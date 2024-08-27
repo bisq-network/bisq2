@@ -52,7 +52,7 @@ public abstract class AuthenticatedData implements StorageData {
         return switch (proto.getMessageCase()) {
             case DEFAULTAUTHENTICATEDDATA -> DefaultAuthenticatedData.fromProto(proto);
             case AUTHORIZEDDATA -> AuthorizedData.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
 
