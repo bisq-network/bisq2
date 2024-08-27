@@ -28,8 +28,8 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods.TradeWizardPaymentMethodsController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods.TradeWizardPaymentMethodsController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.price.TradeWizardPriceController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.review.TradeWizardReviewController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer.TradeWizardSelectOfferController;
@@ -162,9 +162,7 @@ public class TradeWizardController extends NavigationController implements InitW
             updateNextButtonDisabledState();
         });
         amountSpecPin = EasyBind.subscribe(tradeWizardAmountController.getQuoteSideAmountSpec(),
-                quoteSideAmountSpec -> {
-                    tradeWizardSelectOfferController.setQuoteSideAmountSpec(quoteSideAmountSpec);
-                });
+                tradeWizardSelectOfferController::setQuoteSideAmountSpec);
         priceSpecPin = EasyBind.subscribe(tradeWizardPriceController.getPriceSpec(),
                 priceSpec -> {
                     tradeWizardAmountController.updateQuoteSideAmountSpecWithPriceSpec(priceSpec);

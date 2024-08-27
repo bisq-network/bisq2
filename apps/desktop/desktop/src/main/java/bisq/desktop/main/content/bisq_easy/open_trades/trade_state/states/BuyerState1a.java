@@ -177,21 +177,19 @@ public class BuyerState1a extends BaseState {
                 resetWebcamData();
 
                 WebcamAppModel webcamAppServiceModel = webcamAppService.getModel();
-                qrCodePin = webcamAppServiceModel.getQrCode().addObserver(qrCode -> {
-                    UIThread.run(() -> {
-                        model.getQrCodeDetectedFromWebcam().set(qrCode != null);
-                        if (qrCode != null) {
-                            // QR code is more efficient with uppercase, thus many wallets provide it uppercase.
-                            // As lower case is the common display style and bitcoin addresses and LN invoices are
-                            // case-insensitive, we convert it to lowercase.
-                            String payload = qrCode.toLowerCase();
-                            if (BitcoinURIScheme.isBitcoinUriScheme(payload)) {
-                                payload = BitcoinURIScheme.extractBitcoinAddress(payload);
-                            }
-                            model.getBitcoinPaymentData().set(payload);
+                qrCodePin = webcamAppServiceModel.getQrCode().addObserver(qrCode -> UIThread.run(() -> {
+                    model.getQrCodeDetectedFromWebcam().set(qrCode != null);
+                    if (qrCode != null) {
+                        // QR code is more efficient with uppercase, thus many wallets provide it uppercase.
+                        // As lower case is the common display style and bitcoin addresses and LN invoices are
+                        // case-insensitive, we convert it to lowercase.
+                        String payload = qrCode.toLowerCase();
+                        if (BitcoinURIScheme.isBitcoinUriScheme(payload)) {
+                            payload = BitcoinURIScheme.extractBitcoinAddress(payload);
                         }
-                    });
-                });
+                        model.getBitcoinPaymentData().set(payload);
+                    }
+                }));
 
                 imageRecognizedPin = webcamAppServiceModel.getImageRecognized().addObserver(imageRecognized -> {
                     if (imageRecognized != null) {

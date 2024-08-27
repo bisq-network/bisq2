@@ -144,9 +144,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             }
         });
 
-        layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> {
-            handleScrollValueChanged();
-        });
+        layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> handleScrollValueChanged());
 
         applyScrollValue(1);
     }

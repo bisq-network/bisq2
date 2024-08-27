@@ -392,23 +392,19 @@ public class DataService implements StorageService.Listener {
 
     public void processAddDataRequest(AddDataRequest addDataRequest, boolean allowReBroadcast) {
         storageService.onAddDataRequest(addDataRequest)
-                .whenComplete((optionalData, throwable) -> {
-                    optionalData.ifPresent(storageData -> {
-                        if (allowReBroadcast) {
-                            broadcasters.forEach(e -> e.reBroadcast(addDataRequest));
-                        }
-                    });
-                });
+                .whenComplete((optionalData, throwable) -> optionalData.ifPresent(storageData -> {
+                    if (allowReBroadcast) {
+                        broadcasters.forEach(e -> e.reBroadcast(addDataRequest));
+                    }
+                }));
     }
 
     public void processRemoveDataRequest(RemoveDataRequest removeDataRequest, boolean allowReBroadcast) {
         storageService.onRemoveDataRequest(removeDataRequest)
-                .whenComplete((optionalData, throwable) -> {
-                    optionalData.ifPresent(storageData -> {
-                        if (allowReBroadcast) {
-                            broadcasters.forEach(e -> e.reBroadcast(removeDataRequest));
-                        }
-                    });
-                });
+                .whenComplete((optionalData, throwable) -> optionalData.ifPresent(storageData -> {
+                    if (allowReBroadcast) {
+                        broadcasters.forEach(e -> e.reBroadcast(removeDataRequest));
+                    }
+                }));
     }
 }

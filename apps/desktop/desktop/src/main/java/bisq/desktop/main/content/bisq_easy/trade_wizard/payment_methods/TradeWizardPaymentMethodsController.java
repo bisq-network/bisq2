@@ -17,13 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.BitcoinPaymentMethodUtil;
-import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethodUtil;
-import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.PaymentMethodUtil;
+import bisq.account.payment_method.*;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -156,30 +150,26 @@ public class TradeWizardPaymentMethodsController implements Controller {
         maybeRemoveCustomFiatPaymentMethods();
 
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
-                .ifPresent(names -> {
-                    List.of(names.split(",")).forEach(name -> {
-                        if (name.isEmpty()) {
-                            return;
-                        }
-                        FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
-                        boolean isCustomPaymentMethod = fiatPaymentMethod.isCustomPaymentMethod();
-                        if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
-                            maybeAddFiatPaymentMethod(fiatPaymentMethod);
-                        } else {
-                            maybeAddCustomFiatPaymentMethod(fiatPaymentMethod);
-                        }
-                    });
-                });
+                .ifPresent(names -> List.of(names.split(",")).forEach(name -> {
+                    if (name.isEmpty()) {
+                        return;
+                    }
+                    FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
+                    boolean isCustomPaymentMethod = fiatPaymentMethod.isCustomPaymentMethod();
+                    if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
+                        maybeAddFiatPaymentMethod(fiatPaymentMethod);
+                    } else {
+                        maybeAddCustomFiatPaymentMethod(fiatPaymentMethod);
+                    }
+                }));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_BITCOIN_METHODS)
-                .ifPresent(names -> {
-                    List.of(names.split(",")).forEach(name -> {
-                        if (name.isEmpty()) {
-                            return;
-                        }
-                        BitcoinPaymentMethod bitcoinPaymentMethod = BitcoinPaymentMethodUtil.getPaymentMethod(name);
-                        maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
-                    });
-                });
+                .ifPresent(names -> List.of(names.split(",")).forEach(name -> {
+                    if (name.isEmpty()) {
+                        return;
+                    }
+                    BitcoinPaymentMethod bitcoinPaymentMethod = BitcoinPaymentMethodUtil.getPaymentMethod(name);
+                    maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
+                }));
         maybeAddOnChainPaymentMethodAsSelected();
     }
 

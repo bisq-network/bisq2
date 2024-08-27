@@ -197,9 +197,7 @@ public class WebcamApp extends Application {
 
     private void handleError(Throwable throwable) {
         String errorMessage = getErrorMessage(throwable);
-        Platform.runLater(() -> {
-            webcamView.applyErrorMessage(Res.get("errorHeadline"), errorMessage);
-        });
+        Platform.runLater(() -> webcamView.applyErrorMessage(Res.get("errorHeadline"), errorMessage));
     }
 
     private static String getErrorMessage(Throwable throwable) {

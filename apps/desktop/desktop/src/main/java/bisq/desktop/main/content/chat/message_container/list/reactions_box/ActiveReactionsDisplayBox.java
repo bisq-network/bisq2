@@ -93,12 +93,8 @@ public class ActiveReactionsDisplayBox extends HBox {
     }
 
     private void removeItemListeners() {
-        itemCountChangeListener.forEach((item, changeListener) -> {
-            item.getCount().removeListener(changeListener);
-        });
-        itemSelectedChangeListener.forEach((item, changeListener) -> {
-            item.getSelected().removeListener(changeListener);
-        });
+        itemCountChangeListener.forEach((item, changeListener) -> item.getCount().removeListener(changeListener));
+        itemSelectedChangeListener.forEach((item, changeListener) -> item.getSelected().removeListener(changeListener));
     }
 
     private void updateReactionItems() {

@@ -67,13 +67,11 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
 
     @Override
     public void addAll(Collection<? extends S> sourceItems) {
-        executor.accept(() -> {
-            targetCollection.addAll(sourceItems.stream()
-                    .filter(filterFunction::apply)
-                    .map(mapFunction)
-                    .filter(item -> !targetCollection.contains(item))
-                    .collect(Collectors.toList()));
-        });
+        executor.accept(() -> targetCollection.addAll(sourceItems.stream()
+                .filter(filterFunction::apply)
+                .map(mapFunction)
+                .filter(item -> !targetCollection.contains(item))
+                .collect(Collectors.toList())));
     }
 
     @Override

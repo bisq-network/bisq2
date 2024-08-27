@@ -186,10 +186,8 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         UIThread.runOnNextRenderFrame(() -> {
             tableViewAnchorPane.setMinHeight(height);
             tableViewAnchorPane.setMaxHeight(height);
-            UIThread.runOnNextRenderFrame(() -> {
-                // Delay call as otherwise the width does not take the scrollbar width correctly into account
-                tableView.adjustMinWidth();
-            });
+            // Delay call as otherwise the width does not take the scrollbar width correctly into account
+            UIThread.runOnNextRenderFrame(tableView::adjustMinWidth);
         });
     }
 

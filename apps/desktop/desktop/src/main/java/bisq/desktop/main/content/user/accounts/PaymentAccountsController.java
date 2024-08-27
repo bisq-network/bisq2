@@ -37,8 +37,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 import static bisq.bisq_easy.NavigationTarget.CREATE_BISQ_EASY_PAYMENT_ACCOUNT;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 @Slf4j
 public class PaymentAccountsController implements Controller {
@@ -61,17 +60,15 @@ public class PaymentAccountsController implements Controller {
     public void onActivate() {
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-        accountsPin = accountService.getAccounts().addObserver(() -> {
-            UIThread.run(() -> {
-                model.setAllAccounts(accountService.getAccounts());
-                maybeSelectFirstAccount();
-                model.getNoAccountsSetup().set(!accountService.hasAccounts());
-                model.getHeadline().set(accountService.hasAccounts() ?
-                        Res.get("user.paymentAccounts.headline") :
-                        Res.get("user.paymentAccounts.noAccounts.headline")
-                );
-            });
-        });
+        accountsPin = accountService.getAccounts().addObserver(() -> UIThread.run(() -> {
+            model.setAllAccounts(accountService.getAccounts());
+            maybeSelectFirstAccount();
+            model.getNoAccountsSetup().set(!accountService.hasAccounts());
+            model.getHeadline().set(accountService.hasAccounts() ?
+                    Res.get("user.paymentAccounts.headline") :
+                    Res.get("user.paymentAccounts.noAccounts.headline")
+            );
+        }));
 
         selectedAccountPin = FxBindings.bind(model.selectedAccountProperty())
                 .to(accountService.selectedAccountAsObservable());

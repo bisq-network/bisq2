@@ -179,37 +179,35 @@ public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> 
             model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup",
                     explorerService.getSelectedProvider().get().getBaseUrl()));
             requestFuture = explorerService.requestTx(paymentProof)
-                    .whenComplete((tx, throwable) -> {
-                        UIThread.run(() -> {
-                            if (scheduler != null) {
-                                scheduler.stop();
-                            }
-                            if (throwable == null) {
-                                handleTxBalance(tx);
-                                model.getIsConfirmed().set(tx.getStatus().isConfirmed());
-                                if (tx.getStatus().isConfirmed()) {
-                                    CONFIRMED_TX_CACHE.put(paymentProof, tx);
-                                    model.getConfirmationState().set(Model.ConfirmationState.CONFIRMED);
-                                    model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
-                                    model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.confirmed"));
-                                    if (scheduler != null) {
-                                        scheduler.stop();
-                                    }
-                                } else {
-                                    model.getConfirmationState().set(Model.ConfirmationState.IN_MEMPOOL);
-                                    model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.notConfirmed"));
-                                    scheduler = UIScheduler.run(this::requestTx).after(20, TimeUnit.SECONDS);
+                    .whenComplete((tx, throwable) -> UIThread.run(() -> {
+                        if (scheduler != null) {
+                            scheduler.stop();
+                        }
+                        if (throwable == null) {
+                            handleTxBalance(tx);
+                            model.getIsConfirmed().set(tx.getStatus().isConfirmed());
+                            if (tx.getStatus().isConfirmed()) {
+                                CONFIRMED_TX_CACHE.put(paymentProof, tx);
+                                model.getConfirmationState().set(Model.ConfirmationState.CONFIRMED);
+                                model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
+                                model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.confirmed"));
+                                if (scheduler != null) {
+                                    scheduler.stop();
                                 }
                             } else {
-                                model.getConfirmationState().set(Model.ConfirmationState.FAILED);
-                                Throwable rootCause = ExceptionUtil.getRootCause(throwable);
-                                model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed",
-                                        explorerService.getSelectedProvider().get().getBaseUrl(),
-                                        rootCause.getClass().getSimpleName(),
-                                        ExceptionUtil.getRootCauseMessage(rootCause)));
+                                model.getConfirmationState().set(Model.ConfirmationState.IN_MEMPOOL);
+                                model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.notConfirmed"));
+                                scheduler = UIScheduler.run(this::requestTx).after(20, TimeUnit.SECONDS);
                             }
-                        });
-                    });
+                        } else {
+                            model.getConfirmationState().set(Model.ConfirmationState.FAILED);
+                            Throwable rootCause = ExceptionUtil.getRootCause(throwable);
+                            model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed",
+                                    explorerService.getSelectedProvider().get().getBaseUrl(),
+                                    rootCause.getClass().getSimpleName(),
+                                    ExceptionUtil.getRootCauseMessage(rootCause)));
+                        }
+                    }));
         }
 
         private void handleTxBalance(Tx tx) {

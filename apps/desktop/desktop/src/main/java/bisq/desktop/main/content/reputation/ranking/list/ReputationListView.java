@@ -84,28 +84,26 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             }
         });
 
-        selectedReputationSourcePin = EasyBind.subscribe(model.getSelectedReputationSource(), selectedReputationSource -> {
-            UIThread.runOnNextRenderFrame(() -> {
-                richTableView.getSortOrder().clear();
-                if (selectedReputationSource == null) {
-                    richTableView.getSortOrder().add(scoreColumn);
-                } else {
+        selectedReputationSourcePin = EasyBind.subscribe(model.getSelectedReputationSource(), selectedReputationSource -> UIThread.runOnNextRenderFrame(() -> {
+            richTableView.getSortOrder().clear();
+            if (selectedReputationSource == null) {
+                richTableView.getSortOrder().add(scoreColumn);
+            } else {
 
-                    switch (selectedReputationSource) {
-                        case BURNED_BSQ:
-                        case BSQ_BOND:
-                            valueColumn.setSortType(TableColumn.SortType.DESCENDING);
-                            break;
-                        case PROFILE_AGE:
-                        case BISQ1_ACCOUNT_AGE:
-                        case BISQ1_SIGNED_ACCOUNT_AGE_WITNESS:
-                            valueColumn.setSortType(TableColumn.SortType.ASCENDING);
-                            break;
-                    }
-                    richTableView.getSortOrder().add(valueColumn);
+                switch (selectedReputationSource) {
+                    case BURNED_BSQ:
+                    case BSQ_BOND:
+                        valueColumn.setSortType(TableColumn.SortType.DESCENDING);
+                        break;
+                    case PROFILE_AGE:
+                    case BISQ1_ACCOUNT_AGE:
+                    case BISQ1_SIGNED_ACCOUNT_AGE_WITNESS:
+                        valueColumn.setSortType(TableColumn.SortType.ASCENDING);
+                        break;
                 }
-            });
-        });
+                richTableView.getSortOrder().add(valueColumn);
+            }
+        }));
 
         List<String> csvHeaders = richTableView.buildCsvHeaders();
         csvHeaders.add(Res.get("reputation.ranking").toUpperCase());

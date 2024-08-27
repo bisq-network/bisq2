@@ -108,18 +108,16 @@ public class ReportToModeratorTable {
             ChatChannelDomain chatChannelDomain = message.getChatChannelDomain();
             Optional<String> citation = isReportingUser ? Optional.of(message.getMessage()) : Optional.empty();
             moderatorService.contactUser(chatChannelDomain, userProfile, citation, isReportingUser)
-                    .whenComplete((result, throwable) -> {
-                        UIThread.run(() -> {
-                            if (throwable == null) {
-                                SendMessageResult.findAnyErrorMsg(result)
-                                        .ifPresent(errorMsg -> new Popup().error(errorMsg).show());
-                                navigateToChannel(chatChannelDomain);
-                                UIThread.runOnNextRenderFrame(() -> navigateToChannel(chatChannelDomain));
-                            } else {
-                                new Popup().error(throwable).show();
-                            }
-                        });
-                    });
+                    .whenComplete((result, throwable) -> UIThread.run(() -> {
+                        if (throwable == null) {
+                            SendMessageResult.findAnyErrorMsg(result)
+                                    .ifPresent(errorMsg -> new Popup().error(errorMsg).show());
+                            navigateToChannel(chatChannelDomain);
+                            UIThread.runOnNextRenderFrame(() -> navigateToChannel(chatChannelDomain));
+                        } else {
+                            new Popup().error(throwable).show();
+                        }
+                    }));
         }
 
         void onBan(ReportToModeratorMessage message) {

@@ -127,28 +127,26 @@ public class MediatorController implements Controller {
                 })
                 .to(mediatorService.getMediationCases());
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(chatChannel -> {
-            UIThread.run(() -> {
-                if (chatChannel == null) {
-                    model.getSelectedItem().set(null);
-                    mediationCaseHeader.setMediationCaseListItem(null);
-                    mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                    model.getSelectedChannel().set(null);
-                    update();
-                } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
-                    model.getSelectedChannel().set(chatChannel);
-                    BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
-                    model.getListItems().stream()
-                            .filter(item -> item.getChannel().equals(channel))
-                            .findAny()
-                            .ifPresent(item -> {
-                                model.getSelectedItem().set(item);
-                                mediationCaseHeader.setMediationCaseListItem(item);
-                                mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                            });
-                }
-            });
-        });
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(chatChannel -> UIThread.run(() -> {
+            if (chatChannel == null) {
+                model.getSelectedItem().set(null);
+                mediationCaseHeader.setMediationCaseListItem(null);
+                mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+                model.getSelectedChannel().set(null);
+                update();
+            } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
+                model.getSelectedChannel().set(chatChannel);
+                BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
+                model.getListItems().stream()
+                        .filter(item -> item.getChannel().equals(channel))
+                        .findAny()
+                        .ifPresent(item -> {
+                            model.getSelectedItem().set(item);
+                            mediationCaseHeader.setMediationCaseListItem(item);
+                            mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+                        });
+            }
+        }));
 
         update();
 

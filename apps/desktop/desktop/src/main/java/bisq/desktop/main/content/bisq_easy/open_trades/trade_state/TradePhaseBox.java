@@ -121,91 +121,89 @@ class TradePhaseBox {
             model.getPhase3Info().set(Res.get("bisqEasy.tradeState.phase3").toUpperCase());
             model.getPhase4Info().set(Res.get("bisqEasy.tradeState.phase4").toUpperCase());
 
-            bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state -> {
-                UIThread.run(() -> {
-                    switch (state) {
-                        case INIT:
-                            break;
+            bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state -> UIThread.run(() -> {
+                switch (state) {
+                    case INIT:
+                        break;
 
-                        case TAKER_SENT_TAKE_OFFER_REQUEST:
-
-                        // Seller
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
-                        case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                        // Buyer
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_:
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                        case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                        case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_:
-                            model.getPhaseIndex().set(0);
-                            model.getRequestMediationButtonVisible().set(false);
-                            model.getReportToMediatorButtonVisible().set(true);
-                            break;
+                    case TAKER_SENT_TAKE_OFFER_REQUEST:
 
                         // Seller
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_:
-                        case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                        case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
+                    case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                         // Buyer
-                        case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                        case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
-                        case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                            model.getPhaseIndex().set(1);
-                            boolean showRequestMediationButton =
-                                    state == BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION
-                                            || state == BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
-                            model.getRequestMediationButtonVisible().set(showRequestMediationButton);
-                            model.getReportToMediatorButtonVisible().set(!showRequestMediationButton);
-                            break;
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_:
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
+                    case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
+                    case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_:
+                        model.getPhaseIndex().set(0);
+                        model.getRequestMediationButtonVisible().set(false);
+                        model.getReportToMediatorButtonVisible().set(true);
+                        break;
 
-                        case SELLER_CONFIRMED_FIAT_RECEIPT:
-                        case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                        case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
-                        case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                            model.getPhaseIndex().set(2);
-                            model.getRequestMediationButtonVisible().set(true);
-                            model.getReportToMediatorButtonVisible().set(false);
-                            break;
+                    // Seller
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_:
+                    case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
+                    case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
+                        // Buyer
+                    case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
+                    case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
+                    case BUYER_SENT_FIAT_SENT_CONFIRMATION:
+                        model.getPhaseIndex().set(1);
+                        boolean showRequestMediationButton =
+                                state == BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION
+                                        || state == BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
+                        model.getRequestMediationButtonVisible().set(showRequestMediationButton);
+                        model.getReportToMediatorButtonVisible().set(!showRequestMediationButton);
+                        break;
 
-                        case BTC_CONFIRMED:
-                            model.getPhaseIndex().set(3);
-                            model.getRequestMediationButtonVisible().set(false);
-                            model.getReportToMediatorButtonVisible().set(true);
-                            break;
+                    case SELLER_CONFIRMED_FIAT_RECEIPT:
+                    case SELLER_SENT_BTC_SENT_CONFIRMATION:
+                    case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
+                    case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
+                        model.getPhaseIndex().set(2);
+                        model.getRequestMediationButtonVisible().set(true);
+                        model.getReportToMediatorButtonVisible().set(false);
+                        break;
 
-                        case REJECTED:
-                        case PEER_REJECTED:
-                        case CANCELLED:
-                        case PEER_CANCELLED:
-                            model.getRequestMediationButtonVisible().set(false);
-                            model.getReportToMediatorButtonVisible().set(true);
-                            break;
+                    case BTC_CONFIRMED:
+                        model.getPhaseIndex().set(3);
+                        model.getRequestMediationButtonVisible().set(false);
+                        model.getReportToMediatorButtonVisible().set(true);
+                        break;
 
-                        case FAILED:
-                        case FAILED_AT_PEER:
-                            model.getRequestMediationButtonVisible().set(false);
-                            model.getReportToMediatorButtonVisible().set(false);
-                            break;
+                    case REJECTED:
+                    case PEER_REJECTED:
+                    case CANCELLED:
+                    case PEER_CANCELLED:
+                        model.getRequestMediationButtonVisible().set(false);
+                        model.getReportToMediatorButtonVisible().set(true);
+                        break;
 
-                        default:
-                            log.error("State {} not handled", state.name());
-                    }
-                });
-            });
+                    case FAILED:
+                    case FAILED_AT_PEER:
+                        model.getRequestMediationButtonVisible().set(false);
+                        model.getReportToMediatorButtonVisible().set(false);
+                        break;
+
+                    default:
+                        log.error("State {} not handled", state.name());
+                }
+            }));
         }
 
         @Override

@@ -211,10 +211,8 @@ public class RestApiApplicationService extends ApplicationService {
                         if (success) {
                             setState(State.APP_INITIALIZED);
 
-                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> {
-                                networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                        networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
-                            });
+                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
 
                             log.info("ApplicationService initialized");
                         } else {
@@ -244,10 +242,8 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> bondedRolesService.shutdown())
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
-                .thenCompose(result -> {
-                    return walletService.map(Service::shutdown)
-                            .orElse(CompletableFuture.completedFuture(true));
-                })
+                .thenCompose(result -> walletService.map(Service::shutdown)
+                        .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> throwable == null)

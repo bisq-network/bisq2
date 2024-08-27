@@ -100,35 +100,34 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
 
-        networkService.getDataService().ifPresent(dataService -> {
-            dataService.getStorageService().getStoresByStoreType(AUTHENTICATED_DATA_STORE)
-                    .map(DataStorageService::getPrunedAndExpiredDataRequests)
-                    .forEach(prunedAndExpiredDataRequests -> prunedAndExpiredDataRequests.addObserver(new CollectionObserver<>() {
-                        @Override
-                        public void add(DataRequest element) {
-                            if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-                                if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
-                                    String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
-                                    // As we get called at pruning persistence which happens before initializing the services,
-                                    // We store the ids to apply the remove at out initialize method.
-                                    // For the cases when we get expired data during runtime we call removeNotification.
-                                    // For the pre-initialize state that would fail as our persisted data might be filled after
-                                    // the network data store.
-                                    prunedAndExpiredChatMessageIds.add(id);
-                                    removeNotification(id);
+        networkService.getDataService().ifPresent(dataService ->
+                dataService.getStorageService().getStoresByStoreType(AUTHENTICATED_DATA_STORE)
+                        .map(DataStorageService::getPrunedAndExpiredDataRequests)
+                        .forEach(prunedAndExpiredDataRequests -> prunedAndExpiredDataRequests.addObserver(new CollectionObserver<>() {
+                            @Override
+                            public void add(DataRequest element) {
+                                if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+                                    if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
+                                        String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
+                                        // As we get called at pruning persistence which happens before initializing the services,
+                                        // We store the ids to apply the remove at out initialize method.
+                                        // For the cases when we get expired data during runtime we call removeNotification.
+                                        // For the pre-initialize state that would fail as our persisted data might be filled after
+                                        // the network data store.
+                                        prunedAndExpiredChatMessageIds.add(id);
+                                        removeNotification(id);
+                                    }
                                 }
                             }
-                        }
 
-                        @Override
-                        public void remove(Object element) {
-                        }
+                            @Override
+                            public void remove(Object element) {
+                            }
 
-                        @Override
-                        public void clear() {
-                        }
-                    }));
-        });
+                            @Override
+                            public void clear() {
+                            }
+                        })));
     }
 
     @Override

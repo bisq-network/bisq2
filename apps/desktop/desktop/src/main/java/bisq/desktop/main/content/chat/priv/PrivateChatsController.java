@@ -173,13 +173,9 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
     }
 
     private void handlePrivateNotification(String channelId) {
-        UIThread.run(() -> {
-            channelService.findChannel(channelId).ifPresent(channel -> {
-                model.getFilteredList().stream()
-                        .filter(listItem -> listItem.getChannel() == channel)
-                        .findAny()
-                        .ifPresent(listItem -> listItem.setNumNotifications(chatNotificationService.getNumNotifications(channel)));
-            });
-        });
+        UIThread.run(() -> channelService.findChannel(channelId).ifPresent(channel -> model.getFilteredList().stream()
+                .filter(listItem -> listItem.getChannel() == channel)
+                .findAny()
+                .ifPresent(listItem -> listItem.setNumNotifications(chatNotificationService.getNumNotifications(channel)))));
     }
 }

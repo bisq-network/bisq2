@@ -108,27 +108,25 @@ public class ResourcesController implements Controller {
             return;
         }
         persistenceService.persistAllClients()
-                .whenComplete((result, throwable) -> {
-                    UIThread.run(() -> {
-                        if (throwable == null) {
-                            String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
-                            String destinationDirName = appName + "_backup_" + dateString;
-                            String destination = Paths.get(model.getBackupLocation().get(), destinationDirName).toString();
-                            if (!new File(model.getBackupLocation().get()).exists()) {
-                                new Popup().warning(Res.get("support.resources.backup.destinationNotExist", model.getBackupLocation().get())).show();
-                                return;
-                            }
-                            try {
-                                FileUtils.copyDirectory(baseDir, destination);
-                                new Popup().feedback(Res.get("support.resources.backup.success", destination)).show();
-                            } catch (IOException e) {
-                                new Popup().error(e).show();
-                            }
-                        } else {
-                            new Popup().error(throwable).show();
+                .whenComplete((result, throwable) -> UIThread.run(() -> {
+                    if (throwable == null) {
+                        String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
+                        String destinationDirName = appName + "_backup_" + dateString;
+                        String destination = Paths.get(model.getBackupLocation().get(), destinationDirName).toString();
+                        if (!new File(model.getBackupLocation().get()).exists()) {
+                            new Popup().warning(Res.get("support.resources.backup.destinationNotExist", model.getBackupLocation().get())).show();
+                            return;
                         }
-                    });
-                });
+                        try {
+                            FileUtils.copyDirectory(baseDir, destination);
+                            new Popup().feedback(Res.get("support.resources.backup.success", destination)).show();
+                        } catch (IOException e) {
+                            new Popup().error(e).show();
+                        }
+                    } else {
+                        new Popup().error(throwable).show();
+                    }
+                }));
     }
 
     void onOpenChatRules() {

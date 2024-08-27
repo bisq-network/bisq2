@@ -412,9 +412,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                                         "Date from bridge service call: {}; Date from users request: {}",
                                                 hashAsHex, date, requestDate);
                                     }
-                                }, () -> {
-                                    log.warn("Result of requestAccountAgeWitness returns empty optional. Request was: {}", request);
-                                });
+                                }, () -> log.warn("Result of requestAccountAgeWitness returns empty optional. Request was: {}", request));
                             } else {
                                 log.warn("Error at accountAgeService.findAccountAgeWitness", throwable);
                             }
@@ -467,9 +465,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                                         "Date from bridge service call: {}; Date from users request: {}",
                                                 request.getHashAsHex(), date, witnessSignDate);
                                     }
-                                }, () -> {
-                                    log.warn("Result of requestSignedWitnessDate returns empty optional. Request was: {}", request);
-                                });
+                                }, () -> log.warn("Result of requestSignedWitnessDate returns empty optional. Request was: {}", request));
                             } else {
                                 log.warn("Error at signedWitnessService.requestSignedWitnessDate", throwable);
                             }

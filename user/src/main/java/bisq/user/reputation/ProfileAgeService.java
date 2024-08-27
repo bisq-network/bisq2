@@ -179,16 +179,14 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
             persist();
 
             Set<String> profileIds = new HashSet<>(persistableStore.getProfileIds());
-            CompletableFuture.runAsync(() -> {
-                        profileIds.forEach(userProfileId -> {
-                            requestTimestamp(userProfileId);
-                            long delay = 30_000 + new Random().nextInt(90_000);
-                            try {
-                                Thread.sleep(delay);
-                            } catch (InterruptedException ignore) {
-                            }
-                        });
-                    },
+            CompletableFuture.runAsync(() -> profileIds.forEach(userProfileId -> {
+                        requestTimestamp(userProfileId);
+                        long delay = 30_000 + new Random().nextInt(90_000);
+                        try {
+                            Thread.sleep(delay);
+                        } catch (InterruptedException ignore) {
+                        }
+                    }),
                     ExecutorFactory.newSingleThreadScheduledExecutor("requestForAllProfileIdsBeforeExpired"));
             return true;
         }

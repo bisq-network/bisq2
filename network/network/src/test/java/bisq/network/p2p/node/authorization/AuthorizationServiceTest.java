@@ -18,9 +18,8 @@ public class AuthorizationServiceTest {
         AuthorizationTokenType result;
 
         // Empty myPreferredAuthorizationTokenTypes not allowed
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            AuthorizationService.selectAuthorizationTokenType(new ArrayList<>(), new ArrayList<>());
-        });
+        Assertions.assertThrows(IllegalArgumentException.class, () ->
+                AuthorizationService.selectAuthorizationTokenType(new ArrayList<>(), new ArrayList<>()));
 
         // Empty peersFeatures, we use first myPreferredAuthorizationTokenTypes item as default
         myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);

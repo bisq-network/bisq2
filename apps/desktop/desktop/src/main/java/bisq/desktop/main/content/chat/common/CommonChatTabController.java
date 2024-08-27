@@ -102,10 +102,8 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     }
 
     private void createChannels() {
-        commonPublicChatChannelService.getChannels().forEach(commonPublicChatChannel -> {
-            findOrCreateChannelItem(commonPublicChatChannel).ifPresent(channelTabButtonModel ->
-                    model.channelTabButtonModelByChannelId.put(channelTabButtonModel.getChannelId(), channelTabButtonModel));
-        });
+        commonPublicChatChannelService.getChannels().forEach(commonPublicChatChannel -> findOrCreateChannelItem(commonPublicChatChannel).ifPresent(channelTabButtonModel ->
+                model.channelTabButtonModelByChannelId.put(channelTabButtonModel.getChannelId(), channelTabButtonModel)));
     }
 
     private Optional<ChannelTabButtonModel> findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {

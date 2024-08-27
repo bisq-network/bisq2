@@ -83,18 +83,16 @@ public class ReleaseManagerController implements Controller {
                         model.getIsLauncherUpdate().get(),
                         releaseNotes,
                         model.getVersion().get())
-                .whenComplete((result, throwable) -> {
-                    UIThread.run(() -> {
-                        if (throwable != null) {
-                            new Popup().error(throwable).show();
-                        } else {
-                            model.getIsPreRelease().set(false);
-                            model.getIsLauncherUpdate().set(true);
-                            model.getReleaseNotes().set(null);
-                            model.getVersion().set(null);
-                        }
-                    });
-                });
+                .whenComplete((result, throwable) -> UIThread.run(() -> {
+                    if (throwable != null) {
+                        new Popup().error(throwable).show();
+                    } else {
+                        model.getIsPreRelease().set(false);
+                        model.getIsLauncherUpdate().set(true);
+                        model.getReleaseNotes().set(null);
+                        model.getVersion().set(null);
+                    }
+                }));
     }
 
     void onRemoveReleaseNotification(ReleaseNotification releaseNotification) {

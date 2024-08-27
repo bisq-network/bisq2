@@ -365,42 +365,38 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value) {
         // Delay to avoid ConcurrentModificationException
-        UIThread.runOnNextRenderFrame(() -> {
-            statusPins.add(value.addObserver(status -> {
-                UIThread.run(() -> {
-                    ChatMessageListItem.this.messageId = messageId;
-                    boolean shouldShowTryAgain = false;
-                    if (status != null) {
-                        Label statusLabel = new Label();
-                        statusLabel.setTooltip(new BisqTooltip(Res.get("chat.message.deliveryState." + status.name())));
-                        switch (status) {
-                            // Successful delivery
-                            case ACK_RECEIVED:
-                            case MAILBOX_MSG_RECEIVED:
-                                statusLabel.setGraphic(successfulDeliveryIcon);
-                                break;
-                            // Pending delivery
-                            case CONNECTING:
-                                statusLabel.setGraphic(connectingDeliveryIcon);
-                                break;
-                            case SENT:
-                            case TRY_ADD_TO_MAILBOX:
-                                statusLabel.setGraphic(pendingDeliveryIcon);
-                                break;
-                            case ADDED_TO_MAILBOX:
-                                statusLabel.setGraphic(addedToMailboxIcon);
-                                break;
-                            case FAILED:
-                                statusLabel.setGraphic(failedDeliveryIcon);
-                                shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
-                                break;
-                        }
-                        messageDeliveryStatusNode.set(statusLabel);
-                    }
-                    this.shouldShowTryAgain.set(shouldShowTryAgain);
-                });
-            }));
-        });
+        UIThread.runOnNextRenderFrame(() -> statusPins.add(value.addObserver(status -> UIThread.run(() -> {
+            ChatMessageListItem.this.messageId = messageId;
+            boolean shouldShowTryAgain = false;
+            if (status != null) {
+                Label statusLabel = new Label();
+                statusLabel.setTooltip(new BisqTooltip(Res.get("chat.message.deliveryState." + status.name())));
+                switch (status) {
+                    // Successful delivery
+                    case ACK_RECEIVED:
+                    case MAILBOX_MSG_RECEIVED:
+                        statusLabel.setGraphic(successfulDeliveryIcon);
+                        break;
+                    // Pending delivery
+                    case CONNECTING:
+                        statusLabel.setGraphic(connectingDeliveryIcon);
+                        break;
+                    case SENT:
+                    case TRY_ADD_TO_MAILBOX:
+                        statusLabel.setGraphic(pendingDeliveryIcon);
+                        break;
+                    case ADDED_TO_MAILBOX:
+                        statusLabel.setGraphic(addedToMailboxIcon);
+                        break;
+                    case FAILED:
+                        statusLabel.setGraphic(failedDeliveryIcon);
+                        shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
+                        break;
+                }
+                messageDeliveryStatusNode.set(statusLabel);
+            }
+            this.shouldShowTryAgain.set(shouldShowTryAgain);
+        }))));
     }
 
     private void createAndAddSubscriptionToUserReactions(UserProfileService userProfileService) {

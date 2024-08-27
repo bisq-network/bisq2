@@ -98,12 +98,10 @@ public class SupportController extends ContentTabController<SupportModel> {
     }
 
     private void updateTabButtonNotifications() {
-        UIThread.run(() -> {
-            model.getTabButtons().stream()
-                    .filter(tabButton -> tabButton.getNavigationTarget() == NavigationTarget.SUPPORT_ASSISTANCE)
-                    .findAny()
-                    .ifPresent(tabButton -> tabButton.setNumNotifications(chatNotificationService.getNumNotifications(ChatChannelDomain.SUPPORT,
-                            model.getAssistanceChannel().getId())));
-        });
+        UIThread.run(() -> model.getTabButtons().stream()
+                .filter(tabButton -> tabButton.getNavigationTarget() == NavigationTarget.SUPPORT_ASSISTANCE)
+                .findAny()
+                .ifPresent(tabButton -> tabButton.setNumNotifications(chatNotificationService.getNumNotifications(ChatChannelDomain.SUPPORT,
+                        model.getAssistanceChannel().getId()))));
     }
 }
