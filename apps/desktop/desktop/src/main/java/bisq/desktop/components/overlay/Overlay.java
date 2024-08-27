@@ -1031,7 +1031,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
             CheckBox dontShowAgainCheckBox = new CheckBox(dontShowAgainText);
             HBox.setHgrow(dontShowAgainCheckBox, Priority.NEVER);
-            buttonBox.getChildren().add(0, dontShowAgainCheckBox);
+            buttonBox.getChildren().addFirst(dontShowAgainCheckBox);
 
             dontShowAgainCheckBox.setSelected(isChecked);
             dontShowAgainService.putDontShowAgain(dontShowAgainId, isChecked);

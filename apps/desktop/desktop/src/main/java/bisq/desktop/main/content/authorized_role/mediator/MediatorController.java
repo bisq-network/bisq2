@@ -207,7 +207,7 @@ public class MediatorController implements Controller {
             selectionService.getSelectedChannel().set(null);
             mediationCaseHeader.setMediationCaseListItem(null);
         } else {
-            selectionService.getSelectedChannel().set(sortedList.get(0).getChannel());
+            selectionService.getSelectedChannel().set(sortedList.getFirst().getChannel());
             mediationCaseHeader.setMediationCaseListItem(model.getSelectedItem().get());
         }
     }

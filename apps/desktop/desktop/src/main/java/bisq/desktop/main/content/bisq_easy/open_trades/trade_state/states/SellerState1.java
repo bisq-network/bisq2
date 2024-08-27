@@ -135,7 +135,7 @@ public class SellerState1 extends BaseState {
 
         private void maybeSelectFirstAccount() {
             if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount() == null) {
-                accountService.setSelectedAccount(model.getSortedAccounts().get(0));
+                accountService.setSelectedAccount(model.getSortedAccounts().getFirst());
             }
         }
     }

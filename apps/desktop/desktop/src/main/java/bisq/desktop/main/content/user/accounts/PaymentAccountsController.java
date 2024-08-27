@@ -137,7 +137,7 @@ public class PaymentAccountsController implements Controller {
 
     private void maybeSelectFirstAccount() {
         if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount() == null) {
-            accountService.setSelectedAccount(model.getSortedAccounts().get(0));
+            accountService.setSelectedAccount(model.getSortedAccounts().getFirst());
         }
     }
 }

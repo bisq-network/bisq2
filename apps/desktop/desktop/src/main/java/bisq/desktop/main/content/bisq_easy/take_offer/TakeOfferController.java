@@ -109,8 +109,8 @@ public class TakeOfferController extends NavigationController implements InitWit
         } else {
             checkArgument(baseSidePaymentMethodSpecs.size() == 1);
             checkArgument(quoteSidePaymentMethodSpecs.size() == 1);
-            takeOfferReviewController.setBitcoinPaymentMethodSpec(baseSidePaymentMethodSpecs.get(0));
-            takeOfferReviewController.setFiatPaymentMethodSpec(quoteSidePaymentMethodSpecs.get(0));
+            takeOfferReviewController.setBitcoinPaymentMethodSpec(baseSidePaymentMethodSpecs.getFirst());
+            takeOfferReviewController.setFiatPaymentMethodSpec(quoteSidePaymentMethodSpecs.getFirst());
         }
         model.getChildTargets().add(NavigationTarget.TAKE_OFFER_REVIEW);
     }
@@ -121,7 +121,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
-        model.getSelectedChildTarget().set(model.getChildTargets().get(0));
+        model.getSelectedChildTarget().set(model.getChildTargets().getFirst());
         model.getBackButtonText().set(Res.get("action.back"));
         model.getNextButtonVisible().set(true);
         takersBaseSideAmountPin = EasyBind.subscribe(takeOfferAmountController.getTakersBaseSideAmount(),

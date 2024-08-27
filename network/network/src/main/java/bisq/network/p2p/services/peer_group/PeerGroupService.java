@@ -305,9 +305,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         long numPeers = sortedList.size();
         long numLivePeers = sortedList.stream().filter(peer -> peer.getAge() < liveAge).count();
         long numNonLivePeers = sortedList.stream().filter(peer -> peer.getAge() >= liveAge).count();
-        String range = StringUtils.formatTime(sortedList.get(0).getAge()) +
+        String range = StringUtils.formatTime(sortedList.getFirst().getAge()) +
                 " to " +
-                StringUtils.formatTime(sortedList.get(sortedList.size() - 1).getAge());
+                StringUtils.formatTime(sortedList.getLast().getAge());
         log.info("\n##########################################################################################\n" +
                         info + " peers\n" +
                         "##########################################################################################\n" +

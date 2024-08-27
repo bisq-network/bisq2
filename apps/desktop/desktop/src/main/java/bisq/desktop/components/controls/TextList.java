@@ -33,7 +33,7 @@ public abstract class TextList extends VBox {
         setFillWidth(true);
         setSpacing(vSpacing);
         List<String> list = List.of(text.split(regex));
-        if (list.size() == 1 && list.get(0).equals(text)) {
+        if (list.size() == 1 && list.getFirst().equals(text)) {
             Text contentText = new Text(text);
             if (style != null) {
                 contentText.getStyleClass().add(style);

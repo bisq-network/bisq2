@@ -94,10 +94,10 @@ public class TakeOfferPaymentController implements Controller {
         model.setBitcoinMethodVisible(model.getOfferedBitcoinPaymentMethodSpecs().size() > 1);
         model.setFiatMethodVisible(model.getOfferedFiatPaymentMethodSpecs().size() > 1);
         if (model.getOfferedBitcoinPaymentMethodSpecs().size() == 1) {
-            model.getSelectedBitcoinPaymentMethodSpec().set(model.getOfferedBitcoinPaymentMethodSpecs().get(0));
+            model.getSelectedBitcoinPaymentMethodSpec().set(model.getOfferedBitcoinPaymentMethodSpecs().getFirst());
         }
         if (model.getOfferedFiatPaymentMethodSpecs().size() == 1) {
-            model.getSelectedFiatPaymentMethodSpec().set(model.getOfferedFiatPaymentMethodSpecs().get(0));
+            model.getSelectedFiatPaymentMethodSpec().set(model.getOfferedFiatPaymentMethodSpecs().getFirst());
         }
         model.setHeadline(model.isFiatMethodVisible() && model.isBitcoinMethodVisible()
                 ? Res.get("bisqEasy.takeOffer.paymentMethods.headline.fiatAndBitcoin")

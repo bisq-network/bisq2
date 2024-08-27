@@ -294,7 +294,7 @@ public class TorControlProtocol implements AutoCloseable {
         List<String> listOf250WithData = replies.stream().filter(e -> e.startsWith("250-")).collect(Collectors.toList());
         if (!listOf250WithData.isEmpty()) {
             // TODO are there use cases where we need all 250WithData entries?
-            return listOf250WithData.iterator().next();
+            return listOf250WithData.getFirst();
         } else if (hasOK250) {
             return OK250;
         } else {

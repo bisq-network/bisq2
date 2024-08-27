@@ -206,7 +206,7 @@ public class UserProfileController implements Controller {
                     } else {
                         if (!model.getUserIdentities().isEmpty()) {
                             UIThread.runOnNextRenderFrame(() -> {
-                                UserIdentity value = model.getUserIdentities().get(0);
+                                UserIdentity value = model.getUserIdentities().getFirst();
                                 model.getSelectedUserIdentity().set(value);
                             });
                         }
