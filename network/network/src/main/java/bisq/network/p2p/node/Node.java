@@ -837,6 +837,7 @@ public class Node implements Connection.Handler {
             try {
                 Thread.sleep(devModeDelayInMs);
             } catch (Throwable t) {
+                log.error("Exception", t);
             }
         }
     }

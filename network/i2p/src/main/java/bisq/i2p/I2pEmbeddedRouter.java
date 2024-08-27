@@ -192,7 +192,7 @@ public class I2pEmbeddedRouter {
             log.trace("===========Begin Router Info===========\n{}\n===========End Router Info===========", router.getRouterInfo().toString());
         }
         catch (IllegalStateException e) {
-
+            log.error("Exception", e);
         }
     }
 
