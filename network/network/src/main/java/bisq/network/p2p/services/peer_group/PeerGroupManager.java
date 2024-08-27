@@ -128,7 +128,7 @@ public class PeerGroupManager implements Node.Listener {
     private Optional<Scheduler> maybeCreateConnectionsScheduler = Optional.empty();
 
     @Getter
-    public AtomicReference<PeerGroupManager.State> state = new AtomicReference<>(PeerGroupManager.State.NEW);
+    public final AtomicReference<PeerGroupManager.State> state = new AtomicReference<>(PeerGroupManager.State.NEW);
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     private final RetryPolicy<Boolean> retryPolicy;

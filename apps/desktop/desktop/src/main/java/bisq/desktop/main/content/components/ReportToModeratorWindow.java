@@ -121,8 +121,8 @@ public class ReportToModeratorWindow {
     @Slf4j
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        public StringProperty message = new SimpleStringProperty("");
-        public BooleanProperty reportButtonDisabled = new SimpleBooleanProperty();
+        public final StringProperty message = new SimpleStringProperty("");
+        public final BooleanProperty reportButtonDisabled = new SimpleBooleanProperty();
         @Setter
         private ChatChannelDomain chatChannelDomain;
         @Setter

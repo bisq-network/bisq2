@@ -32,7 +32,7 @@ import java.util.HashMap;
 final class CommonChatTabModel extends ContentTabModel {
     private final ChatChannelDomain chatChannelDomain;
     final ObservableMap<String, ChannelTabButtonModel> channelTabButtonModelByChannelId = FXCollections.observableMap(new HashMap<>());
-    ObjectProperty<ChannelTabButtonModel> selectedChannelTabButtonModel = new SimpleObjectProperty<>();
+    final ObjectProperty<ChannelTabButtonModel> selectedChannelTabButtonModel = new SimpleObjectProperty<>();
     ChannelTabButtonModel previousSelectedChannelTabButtonModel;
 
     CommonChatTabModel(ChatChannelDomain chatChannelDomain) {

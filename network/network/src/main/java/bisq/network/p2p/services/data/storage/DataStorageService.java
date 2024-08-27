@@ -51,7 +51,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     protected final String subDirectory;
     @Getter
-    public ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
+    public final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
     protected Optional<Integer> maxMapSize = Optional.empty();
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {

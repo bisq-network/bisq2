@@ -51,7 +51,7 @@ public class StaticFileHandler implements HttpHandler {
     @Setter
     @NonNull
     protected String rootContext;
-    ClassLoader classLoader = getClass().getClassLoader();
+    final ClassLoader classLoader = getClass().getClassLoader();
 
     public void handle(HttpExchange exchange) throws IOException {
         URI uri = exchange.getRequestURI();

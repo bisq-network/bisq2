@@ -152,7 +152,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected BisqGridPane gridPane;
 
     protected double width = DEFAULT_WIDTH;
-    protected double buttonDistance = 20;
+    protected final double buttonDistance = 20;
 
     protected boolean showReportErrorButtons;
     private boolean showBusyAnimation;
@@ -161,7 +161,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected boolean disableActionButton;
     protected boolean useBgEffect = true;
     @Getter
-    protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
+    protected final BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
 
     protected boolean useAnimation = true;
 

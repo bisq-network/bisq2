@@ -84,9 +84,15 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final VBox quotedMessageVBox, contentVBox;
     protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected ReactMenuBox reactMenuBox;
-    protected Label userName, dateTime, message;
-    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox, supportedLanguagesHBox, amountAndPriceBox,
-            paymentAndSettlementMethodsBox;
+    protected Label userName;
+    protected Label dateTime;
+    protected final Label message;
+    protected HBox userNameAndDateHBox;
+    protected final HBox messageBgHBox;
+    protected final HBox messageHBox;
+    protected final HBox supportedLanguagesHBox;
+    protected final HBox amountAndPriceBox;
+    protected final HBox paymentAndSettlementMethodsBox;
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;

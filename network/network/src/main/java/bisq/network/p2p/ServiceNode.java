@@ -146,7 +146,7 @@ public class ServiceNode implements Node.Listener {
     private final Set<ConfidentialMessageService.Listener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
     @Getter
-    public Observable<State> state = new Observable<>(State.NEW);
+    public final Observable<State> state = new Observable<>(State.NEW);
 
     ServiceNode(Config config,
                 Node.Config nodeConfig,

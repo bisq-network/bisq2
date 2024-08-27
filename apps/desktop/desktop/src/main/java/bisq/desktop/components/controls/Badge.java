@@ -55,7 +55,7 @@ public class Badge extends StackPane {
     @Getter
     @Setter
     private boolean enabled = true;
-    protected ObjectProperty<Pos> position = new SimpleObjectProperty<>(Pos.TOP_RIGHT);
+    protected final ObjectProperty<Pos> position = new SimpleObjectProperty<>(Pos.TOP_RIGHT);
     private final SimpleStringProperty text = new SimpleStringProperty("");
     private final FadeTransition transition;
 

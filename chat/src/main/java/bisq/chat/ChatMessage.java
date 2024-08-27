@@ -53,7 +53,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     protected final ChatChannelDomain chatChannelDomain;
     protected final String channelId;
     protected final Optional<String> text;
-    protected String authorUserProfileId;
+    protected final String authorUserProfileId;
     protected final Optional<Citation> citation;
     protected final long date;
     protected final boolean wasEdited;

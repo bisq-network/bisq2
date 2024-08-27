@@ -104,7 +104,7 @@ public abstract class ValidatorBase {
      * <p>
      * Supports {@link Node}s because not all things that need validating are {@link Control}s.
      */
-    protected SimpleObjectProperty<Node> srcControl = new SimpleObjectProperty<>();
+    protected final SimpleObjectProperty<Node> srcControl = new SimpleObjectProperty<>();
 
     /**
      * @see #srcControl
@@ -137,7 +137,7 @@ public abstract class ValidatorBase {
      * When <em>hasErrors</em> is true, the validator will automatically apply the {@link #PSEUDO_CLASS_ERROR :error}
      * pseudoclass to the {@link #srcControl}.
      */
-    protected ReadOnlyBooleanWrapper hasErrors = new ReadOnlyBooleanWrapper(false);
+    protected final ReadOnlyBooleanWrapper hasErrors = new ReadOnlyBooleanWrapper(false);
 
     public ReadOnlyBooleanWrapper hasErrorsProperty() {
         return hasErrors;
@@ -154,7 +154,7 @@ public abstract class ValidatorBase {
     /**
      * The error message to display when the validator is <em>not</em> "passing."
      */
-    protected SimpleStringProperty message = new SimpleStringProperty();
+    protected final SimpleStringProperty message = new SimpleStringProperty();
 
     /**
      * @see #message
@@ -179,7 +179,7 @@ public abstract class ValidatorBase {
 
 
     /***** Icon *****/
-    protected SimpleObjectProperty<Supplier<Node>> iconSupplier = new SimpleObjectProperty<>();
+    protected final SimpleObjectProperty<Supplier<Node>> iconSupplier = new SimpleObjectProperty<>();
 
     public void setIconSupplier(Supplier<Node> icon) {
         this.iconSupplier.set(icon);
