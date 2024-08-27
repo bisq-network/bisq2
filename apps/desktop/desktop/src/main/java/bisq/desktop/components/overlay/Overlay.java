@@ -49,7 +49,6 @@ import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
@@ -88,6 +87,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public static SettingsService settingsService;
     private static ShutDownHandler shutdownHandler;
     private static DontShowAgainService dontShowAgainService;
+    private ChangeListener<Scene> sceneListener;
 
     public static void init(ServiceProvider serviceProvider, Region primaryStageOwner) {
         Overlay.primaryStageOwner = primaryStageOwner;
@@ -579,16 +579,12 @@ public abstract class Overlay<T extends Overlay<T>> {
     public void display() {
         // Once our owner gets removed we also want to remove our overlay
 
-        //todo pin down
-        @SuppressWarnings("Convert2Lambda") ChangeListener<Scene> changeListener = new ChangeListener<>() {
-            @Override
-            public void changed(ObservableValue<? extends Scene> observable, Scene oldValue, Scene newValue) {
-                if (oldValue != null && newValue == null) {
-                    hide();
-                }
+        sceneListener = (observable, oldValue, newValue) -> {
+            if (oldValue != null && newValue == null) {
+                hide();
             }
         };
-        owner.sceneProperty().addListener(new WeakChangeListener<>(changeListener));
+        owner.sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
 
         Scene rootScene = owner.getScene();
         if (rootScene != null) {
