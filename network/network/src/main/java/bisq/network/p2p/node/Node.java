@@ -313,6 +313,7 @@ public class Node implements Connection.Handler {
     }
 
     public void onNewIncomingConnection(InboundConnectionChannel inboundConnectionChannel) {
+        //noinspection EmptyTryBlock
         try {
             // inboundConnectionsByAddress.put(inboundConnectionChannel.getPeerAddress(), inboundConnectionChannel);
             // DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(inboundConnectionChannel)));

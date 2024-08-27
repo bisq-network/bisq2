@@ -126,10 +126,10 @@ public class NetworkInfo {
                                 }
                             });
                             inventoryRequestAnimation = UIScheduler.run(() -> {
-                                                String dots = "";
+                                        StringBuilder dots = new StringBuilder();
                                                 long numDots = inventoryRequestAnimation.getCounter() % 6;
                                                 for (long l = 0; l < numDots; l++) {
-                                                    dots += ".";
+                                                    dots.append(".");
                                                 }
                                                 if (!inventoryRequestService.getAllDataReceived().get()) {
                                                     model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);

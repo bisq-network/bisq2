@@ -131,19 +131,17 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         if (size > 20_000) {
             String className = persistableStore.getMap().values().stream()
                     .findFirst()
-                    .map(dataRequest -> {
-                        return switch (dataRequest) {
-                            case AddAuthenticatedDataRequest addRequest ->
-                                    addRequest.getDistributedData().getClass().getSimpleName();
-                            case RemoveAuthenticatedDataRequest removeRequest -> removeRequest.getClassName();
-                            case RefreshAuthenticatedDataRequest request -> request.getClassName();
-                            case AddAppendOnlyDataRequest addRequest ->
-                                    addRequest.getAppendOnlyData().getClass().getSimpleName();
-                            case AddMailboxRequest addRequest ->
-                                    addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                            case RemoveMailboxRequest removeRequest -> removeRequest.getClassName();
-                            default -> "N/A";
-                        };
+                    .map(dataRequest -> switch (dataRequest) {
+                        case AddAuthenticatedDataRequest addRequest ->
+                                addRequest.getDistributedData().getClass().getSimpleName();
+                        case RemoveAuthenticatedDataRequest removeRequest -> removeRequest.getClassName();
+                        case RefreshAuthenticatedDataRequest request -> request.getClassName();
+                        case AddAppendOnlyDataRequest addRequest ->
+                                addRequest.getAppendOnlyData().getClass().getSimpleName();
+                        case AddMailboxRequest addRequest ->
+                                addRequest.getMailboxSequentialData().getMailboxData().getClassName();
+                        case RemoveMailboxRequest removeRequest -> removeRequest.getClassName();
+                        default -> "N/A";
                     }).orElse("N/A");
 
             log.info("Map size for {} reached > 20 000 entries. map.size()={}", className, size);

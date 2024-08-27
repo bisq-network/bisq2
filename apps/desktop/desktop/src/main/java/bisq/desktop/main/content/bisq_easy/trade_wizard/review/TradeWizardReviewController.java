@@ -85,6 +85,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TradeWizardReviewController implements Controller {
+    @SuppressWarnings("UnnecessaryUnicodeEscape")
     private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
     private final TradeWizardReviewModel model;

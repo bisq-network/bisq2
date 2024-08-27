@@ -39,24 +39,20 @@ public enum Platform {
     public static Platform getPlatform() {
         OS os = OS.getOS();
         Architecture architecture = Architecture.getArchitecture();
-        switch (os) {
-            case LINUX:
-                return switch (architecture) {
-                    case X86_64 -> LINUX_X86_64;
-                    case ARM_64 -> LINUX_ARM_64;
-                };
-            case MAC_OS:
-                return switch (architecture) {
-                    case X86_64 -> MACOS_X86_64;
-                    case ARM_64 -> MACOS_ARM_64;
-                };
-            case WINDOWS:
-                return switch (architecture) {
-                    case X86_64 -> WIN_X86_64;
-                    case ARM_64 -> WIN_ARM_64;
-                };
-        }
-        throw new IllegalStateException("Running on unsupported Platform: " + os.getCanonicalName() + "/" + architecture.getCanonicalName());
+        return switch (os) {
+            case LINUX -> switch (architecture) {
+                case X86_64 -> LINUX_X86_64;
+                case ARM_64 -> LINUX_ARM_64;
+            };
+            case MAC_OS -> switch (architecture) {
+                case X86_64 -> MACOS_X86_64;
+                case ARM_64 -> MACOS_ARM_64;
+            };
+            case WINDOWS -> switch (architecture) {
+                case X86_64 -> WIN_X86_64;
+                case ARM_64 -> WIN_ARM_64;
+            };
+        };
     }
 
     public static String getDetails() {

@@ -133,11 +133,10 @@ public class MediatorController implements Controller {
                 mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
                 model.getSelectedChannel().set(null);
                 update();
-            } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
+            } else if (chatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
                 model.getSelectedChannel().set(chatChannel);
-                BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
                 model.getListItems().stream()
-                        .filter(item -> item.getChannel().equals(channel))
+                        .filter(item -> item.getChannel().equals(bisqEasyOpenTradeChannel))
                         .findAny()
                         .ifPresent(item -> {
                             model.getSelectedItem().set(item);

@@ -62,7 +62,7 @@ import static java.math.BigInteger.ONE;
  * split into <i>k+1</i> 32-bit blocks. The blocks are masked to provide <i>n/(k+1)</i>
  * bits each and <i>n</i> bits in total. This allows working with 32-bit integers
  * throughout, for efficiency.
- *
+ * <p>
  * Author: <a href="https://github.com/stejbac">stejbac</a>
  */
 // Borrowed from: https://github.com/bisq-network/bisq

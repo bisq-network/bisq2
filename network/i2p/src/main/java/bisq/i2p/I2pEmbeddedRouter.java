@@ -94,6 +94,7 @@ public class I2pEmbeddedRouter {
         //Has the router been initialized?
         while (RouterContext.listContexts().isEmpty()) {
             try {
+                //noinspection BusyWait
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -105,6 +106,7 @@ public class I2pEmbeddedRouter {
         // Check for RUNNING state (indicating NetDB and tunnels are ready)
         while(!router.isRunning()) {
             try {
+                //noinspection BusyWait
                 Thread.sleep(1000);
                 if (!router.isAlive()) {
                     log.error("Router died while starting");
@@ -177,6 +179,7 @@ public class I2pEmbeddedRouter {
             routerContext = RouterContext.listContexts().getFirst();
             while(!router.isRunning()) {
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(1000);
                     if (!router.isAlive()) {
                         log.error("Router died while starting");

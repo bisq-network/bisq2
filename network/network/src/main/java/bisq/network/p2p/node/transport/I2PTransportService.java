@@ -134,6 +134,7 @@ public class I2PTransportService implements TransportService {
             }
             while (!I2pEmbeddedRouter.isRouterRunning()) {
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(1000);
                 } catch (InterruptedException ignore) {
                 }

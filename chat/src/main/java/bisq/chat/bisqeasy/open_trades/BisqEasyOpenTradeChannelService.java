@@ -180,7 +180,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                     .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, chatMessageType, date))
                     .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
-                    .thenApply(list -> list.getFirst());
+                    .thenApply(List::getFirst);
         } else {
             return sendMessage(shortUid, text, citation, channel, channel.getPeer(), chatMessageType, date);
         }

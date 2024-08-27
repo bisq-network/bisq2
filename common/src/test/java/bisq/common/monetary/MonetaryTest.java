@@ -230,6 +230,7 @@ public class MonetaryTest {
         assertEquals(666667, priceQuote.getValue());
         assertEquals(0.00666667, priceQuote.asDouble());
 
+        //noinspection CatchMayIgnoreException
         try {
             // overflow as we movePointRight by 12 with xmr
             xmr = Coin.asXmrFromFaceValue(15000000d);

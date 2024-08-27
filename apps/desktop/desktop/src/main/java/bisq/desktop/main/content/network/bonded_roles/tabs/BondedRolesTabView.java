@@ -77,6 +77,7 @@ public abstract class BondedRolesTabView<M extends BondedRolesTabModel, C extend
 
     protected abstract String getHeadline();
 
+    @SuppressWarnings("RedundantMethodOverride")
     @Override
     protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
         return false;
