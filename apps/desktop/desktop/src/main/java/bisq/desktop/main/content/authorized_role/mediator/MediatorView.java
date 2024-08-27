@@ -345,7 +345,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     @Getter
     @ToString
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    static class ListItem implements ActivatableTableItem, DateTableItem {
+    public static class ListItem implements ActivatableTableItem, DateTableItem {
         @EqualsAndHashCode.Include
         private final MediationCase mediationCase;
         @EqualsAndHashCode.Include
