@@ -169,20 +169,18 @@ public class ChatService implements Service {
     }
 
     public Optional<ChatChannelService<?, ?, ?>> findChatChannelService(@Nullable ChatChannel<?> chatChannel) {
-        if (chatChannel == null) {
-            return Optional.empty();
-        }
-        if (chatChannel instanceof CommonPublicChatChannel) {
-            return Optional.ofNullable(commonPublicChatChannelServices.get(chatChannel.getChatChannelDomain()));
-        } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-            return Optional.ofNullable(twoPartyPrivateChatChannelServices.get(chatChannel.getChatChannelDomain()));
-        } else if (chatChannel instanceof BisqEasyOfferbookChannel) {
-            return Optional.ofNullable(bisqEasyOfferbookChannelService);
-        } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
-            return Optional.ofNullable(bisqEasyOpenTradeChannelService);
-        } else {
-            throw new RuntimeException("Unexpected chatChannel instance. chatChannel=" + chatChannel);
-        }
+        return switch (chatChannel) {
+            case null -> Optional.empty();
+            case CommonPublicChatChannel commonPublicChatChannel ->
+                    Optional.ofNullable(commonPublicChatChannelServices.get(chatChannel.getChatChannelDomain()));
+            case TwoPartyPrivateChatChannel twoPartyPrivateChatChannel ->
+                    Optional.ofNullable(twoPartyPrivateChatChannelServices.get(chatChannel.getChatChannelDomain()));
+            case BisqEasyOfferbookChannel bisqEasyOfferbookChannel ->
+                    Optional.ofNullable(bisqEasyOfferbookChannelService);
+            case BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel ->
+                    Optional.ofNullable(bisqEasyOpenTradeChannelService);
+            default -> throw new RuntimeException("Unexpected chatChannel instance. chatChannel=" + chatChannel);
+        };
     }
 
     public Optional<TwoPartyPrivateChatChannel> createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain,

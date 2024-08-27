@@ -155,14 +155,14 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 return;
             }
 
-            if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
-                onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyBtcAddressMessage) {
-                onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyAccountDataMessage) {
-                onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) bisqEasyTradeMessage);
-            } else {
-                handleBisqEasyTradeMessage(bisqEasyTradeMessage);
+            switch (bisqEasyTradeMessage) {
+                case BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest ->
+                        onBisqEasyTakeOfferMessage(bisqEasyTakeOfferRequest);
+                case BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage ->
+                        onBisqEasyBtcAddressMessage(bisqEasyBtcAddressMessage);
+                case BisqEasyAccountDataMessage bisqEasyAccountDataMessage ->
+                        onBisqEasySendAccountDataMessage(bisqEasyAccountDataMessage);
+                default -> handleBisqEasyTradeMessage(bisqEasyTradeMessage);
             }
         }
     }

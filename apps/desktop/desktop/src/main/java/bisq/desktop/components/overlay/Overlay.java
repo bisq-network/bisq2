@@ -578,14 +578,17 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public void display() {
         // Once our owner gets removed we also want to remove our overlay
-        owner.sceneProperty().addListener(new WeakChangeListener<Scene>(new ChangeListener<Scene>() {
+
+        //todo pin down
+        ChangeListener<Scene> changeListener = new ChangeListener<>() {
             @Override
             public void changed(ObservableValue<? extends Scene> observable, Scene oldValue, Scene newValue) {
                 if (oldValue != null && newValue == null) {
                     hide();
                 }
             }
-        }));
+        };
+        owner.sceneProperty().addListener(new WeakChangeListener<>(changeListener));
 
         Scene rootScene = owner.getScene();
         if (rootScene != null) {

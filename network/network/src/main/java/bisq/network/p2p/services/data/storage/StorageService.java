@@ -206,17 +206,16 @@ public class StorageService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Optional<StorageData>> onAddDataRequest(AddDataRequest addDataRequest) {
-        if (addDataRequest instanceof AddMailboxRequest) {
-            return onAddMailboxRequest((AddMailboxRequest) addDataRequest);
-        } else if (addDataRequest instanceof AddAuthenticatedDataRequest) {
-            return onAddAuthenticatedDataRequest((AddAuthenticatedDataRequest) addDataRequest);
-        } else if (addDataRequest instanceof AddAppendOnlyDataRequest) {
-            return onAddAppendOnlyDataRequest((AddAppendOnlyDataRequest) addDataRequest);
-        } else {
-            return CompletableFuture.failedFuture(
+        return switch (addDataRequest) {
+            case AddMailboxRequest addMailboxRequest -> onAddMailboxRequest(addMailboxRequest);
+            case AddAuthenticatedDataRequest addAuthenticatedDataRequest ->
+                    onAddAuthenticatedDataRequest(addAuthenticatedDataRequest);
+            case AddAppendOnlyDataRequest addAppendOnlyDataRequest ->
+                    onAddAppendOnlyDataRequest(addAppendOnlyDataRequest);
+            case null, default -> CompletableFuture.failedFuture(
                     new IllegalArgumentException("AddRequest called with invalid addDataRequest: " +
                             addDataRequest.getClass().getSimpleName()));
-        }
+        };
     }
 
     private CompletableFuture<Optional<StorageData>> onAddMailboxRequest(AddMailboxRequest request) {
