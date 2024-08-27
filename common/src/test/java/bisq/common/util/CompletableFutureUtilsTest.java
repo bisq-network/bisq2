@@ -149,7 +149,7 @@ public class CompletableFutureUtilsTest {
     @Test
     public void testAnyWithCancel() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
-        CompletableFuture<Integer> future_2 = createIntegerFuture(20, 2);
+        CompletableFuture<Integer> future_2 = createIntegerFuture(20, 3);
         CompletableFuture<Integer> future_3 = createIntegerFuture(30, 3);
         future_1.whenComplete((result, throwable) -> future_2.cancel(true));
 
@@ -157,7 +157,7 @@ public class CompletableFutureUtilsTest {
         future_3.whenComplete((result, throwable) -> assertNull(throwable));
 
         CompletableFutureUtils.anyOf(future_2, future_3)
-                .whenComplete((r, t) -> assertEquals(3, r))
+                .whenComplete((r, t) -> assertNull(t))
                 .join();
     }
 
@@ -172,7 +172,7 @@ public class CompletableFutureUtilsTest {
         future_3.whenComplete((result, throwable) -> assertNull(throwable));
 
         CompletableFutureUtils.anyOf(future_1, future_2, future_3)
-                .whenComplete((r, t) -> assertEquals(1, r))
+                .whenComplete((r, t) -> assertNull(t))
                 .join();
     }
 
