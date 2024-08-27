@@ -92,6 +92,11 @@ default not handle it we would run for sure into some memory-leak issues which w
 in a large and complex application.
 The exception when this is not needed are singleton classes which are never removed once created.
 
+We also set eventHandlers to null at `onViewDetached` to ensure that in complex situations we do not cause memory leaks.
+An example is for instance when we use caching for UIs (most screens) the event source like a button does not get
+removed from memory when we move to another screen. If the event handler should be GCed, it would not as the button
+hold still a reference.
+
 ### Observer patterns
 
 We use the JavaFX bindings for property bindings. Instead of the standard listeners we prefer to use the `EasyBind`

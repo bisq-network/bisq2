@@ -59,7 +59,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-background-radius: 2;
-    -fx-border-style: none;;
+    -fx-border-style: none;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
@@ -700,4 +700,34 @@
 
 .bisq-input-box-text-input:focused .content {
     -fx-background-color: transparent;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * SelectableLabel                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.selectable-label {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-border-style: none;;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.selectable-label .content {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.selectable-label:focused .content {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
 }

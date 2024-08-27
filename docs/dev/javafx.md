@@ -64,8 +64,10 @@ JavaFx Binding use weak listeners inside and therefore can be considered more or
 edge cases where that listeners don't get removed and thus leading to memory leaks (weak listeners only get removed
 at a change event which is not guaranteed to happen, thus can lead to memory
 leaks). [[3](https://continuously.dev/blog/2015/02/10/the-trouble-with-weak-listeners.html)]
-If you use weak listeners or references, be sure to pin down the actual listener, otherwise it get GC'ed and lead to
-nasty bags.
+If you use weak listeners or references, be sure to pin down the actual listener, otherwise (e.g. if it was only created
+in local scope) it might get GC'ed prematurely and could lead to
+nasty bags. Though the actual listener should get GCed once the host object gets GCed. Storing it as class field in the
+host object is usually the right pattern.
 
 Another unexpected behaviour is that the `updateItem` method is called more often as needed. Be sure that your code cope
 with that accordingly.
