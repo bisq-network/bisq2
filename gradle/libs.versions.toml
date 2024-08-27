@@ -8,14 +8,14 @@
 annotations-lib = { strictly = '23.0.0' }
 
 apache-commons-lang-lib = { strictly = '3.14.0' }
-apache-httpcomponents-core-lib = { strictly = '4.4.13' }
-apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
+apache-httpcomponents-core-lib = { strictly = '4.4.16' }
+apache-httpcomponents-httpclient-lib = { strictly = '4.5.14' } # 5.3.1 would be better but has lot of API changes
 apache-tomcat-annotations-api = { strictly = '6.0.53' }
 
 assertj-core-lib = { strictly = '3.22.0' }
-bouncycastle-lib = { strictly = '1.69' } # Oldest version without known CVEs
+bouncycastle-lib = { strictly = '1.78.1' }
 
-commons-codec = { strictly = '1.13' }
+commons-codec = { strictly = '1.17.1' }
 
 chimp-jsocks-lib = { strictly = '567e1cd6' }
 chimp-jtorctl-lib = { strictly = '9b5ba203' }
@@ -29,30 +29,30 @@ fontawesomefx-materialdesignfont-lib = { strictly = '2.0.26-9.1.2' }
 fxmisc-easybind-lib = { strictly = '1.0.3' }
 fxmisc-richtextfx-lib = { strictly = '0.10.9' }
 
-glassfish-jersey-lib = { strictly = '3.0.4' }
-glassfish-jaxb-runtime-lib = { strictly = '3.0.2' }
+glassfish-jersey-lib = { strictly = '3.1.8' }
+glassfish-jaxb-runtime-lib = { strictly = '4.0.5' }
 
 google-gson-lib = { strictly = '2.9.0' }
-google-guava-lib = { strictly = '31.1-jre' }
+google-guava-lib = { strictly = '33.2.1-jre' }
 
 grpc = { strictly = '1.61.0' }
 
 i2p-lib = { strictly = '1.8.0' }
 i2p-v2 = { strictly = '2.4.0' }
 
-jackson-lib = { strictly = '2.13.3' }
+jackson-lib = { strictly = '2.17.2' }
 javacv = { strictly = '1.5.10' }
 java-dev-jna-lib = { strictly = '5.13.0' }
 jeromq-lib = { strictly = '0.5.2' }
 junit-jupiter-lib = { strictly = '5.8.2' }
 kotlindsl-plugin = { strictly = '2.1.7' }
-logback-lib = { strictly = '1.2.11' }
+logback-lib = { strictly = '1.2.13' }
 lombok-lib = { strictly = '1.18.34' }
 mockito-lib = { strictly = '4.11.0' }
 openjfx-plugin = { strictly = '0.0.13' }
 openjfx-monocle-lib = { strictly = 'jdk-12.0.1+2'}
 
-protobuf-java-lib = { strictly = '3.19.4' }
+protobuf-java-lib = { strictly = '3.25.4' }
 protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 
 sarxos-lib = { strictly = '0.3.12' }
@@ -61,13 +61,13 @@ slf4j-lib = { strictly = '1.7.36' }
 spring-boot-starter-web-lib = { strictly = '2.5.6' }
 springfox-lib = { strictly = '3.0.0' }
 
-square-moshi-lib = { strictly = '1.14.0' }
-square-okhttp-libs = { strictly = '4.10.0' }
+square-moshi-lib = { strictly = '1.15.1' }
+square-okhttp-libs = { strictly = '4.12.0' }
 
 swagger-jaxrs2-jakarta-lib = { strictly = '2.2.0' }
 testfx-junit5-lib = { strictly = '4.0.16-alpha' }
 tukaani-lib = { strictly = '1.9' }
-typesafe-config-lib = { strictly = '1.4.2' }
+typesafe-config-lib = { strictly = '1.4.3' }
 
 zxing-lib = { strictly = '3.5.3' }
 
@@ -83,8 +83,8 @@ assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-cor
 
 annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations-lib' }
 
-bouncycastle = { module = 'org.bouncycastle:bcprov-jdk15on', version.ref = 'bouncycastle-lib' }
-bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk15on', version.ref = 'bouncycastle-lib' }
+bouncycastle = { module = 'org.bouncycastle:bcprov-jdk18on', version.ref = 'bouncycastle-lib' }
+bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk18on', version.ref = 'bouncycastle-lib' }
 
 commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons-codec" }
 
