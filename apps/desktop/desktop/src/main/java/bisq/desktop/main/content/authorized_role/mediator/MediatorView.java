@@ -84,7 +84,6 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
         configTableView();
 
-
         Quadruple<Label, HBox, AnchorPane, VBox> quadruple = BisqEasyViewUtils.getTableViewContainer(Res.get("authorizedRole.mediator.table.headline"), tableView);
         HBox header = quadruple.getSecond();
         tableViewAnchorPane = quadruple.getThird();
