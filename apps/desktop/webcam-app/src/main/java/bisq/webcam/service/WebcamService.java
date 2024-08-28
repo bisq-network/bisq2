@@ -55,6 +55,7 @@ public class WebcamService implements Service {
     private final QrCodeProcessor qrCodeProcessor;
     private volatile boolean isRunning;
     private volatile boolean isStopped;
+    private Optional<ExecutorService> executor;
 
     public WebcamService() {
         this.videoSize = VideoSize.SMALL;
@@ -96,6 +97,7 @@ public class WebcamService implements Service {
             return CompletableFuture.completedFuture(true);
         }
         isRunning = false;
+        executor.ifPresent(executor -> ExecutorFactory.shutdownAndAwaitTermination(executor, 1000));
         return CompletableFuture.supplyAsync(() -> {
                     while (!isStopped) {
                         try {
@@ -127,7 +129,7 @@ public class WebcamService implements Service {
 
     public void startFrameCapture(FrameGrabber frameGrabber) {
         isRunning = true;
-        Optional<ExecutorService> executor = Optional.of(ExecutorFactory.newSingleThreadExecutor("startFrameCapture"));
+        executor = Optional.of(ExecutorFactory.newSingleThreadExecutor("startFrameCapture"));
         executor.get().submit(() -> {
             try {
                 frameGrabber.start();

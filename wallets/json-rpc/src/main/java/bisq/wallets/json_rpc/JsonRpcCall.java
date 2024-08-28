@@ -19,10 +19,16 @@ package bisq.wallets.json_rpc;
 
 import bisq.common.util.StringUtils;
 
+@SuppressWarnings("ALL")
 public class JsonRpcCall {
     private final String jsonrpc = "2.0";
+    private final String id;
+    private final String method;
+    private final Object params;
 
     public JsonRpcCall(String method, Object params) {
-        String id = StringUtils.createUid();
+        this.id = StringUtils.createUid();
+        this.method = method;
+        this.params = params;
     }
 }

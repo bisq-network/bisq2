@@ -78,11 +78,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private final CheckBox showOnlyMyMessages;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
     private Label offerDirectionFilterLabel, paymentsFilterLabel;
-    private Subscription showOfferListExpandedPin;
-    private Subscription showBuyFromOffersPin;
-    private Subscription offerListTableViewSelectionPin;
-    private Subscription activeMarketPaymentsCountPin;
-    private Subscription isCustomPaymentsSelectedPin;
+    private Subscription showOfferListExpandedPin, showBuyFromOffersPin, showMyOffersOnlyPin,
+            offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
@@ -212,7 +209,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         isCustomPaymentsSelectedPin = EasyBind.subscribe(model.getIsCustomPaymentsSelected(),
                 isSelected -> updatePaymentsSelection());
 
-        Subscription showMyOffersOnlyPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffers -> {
+        showMyOffersOnlyPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffers -> {
             if (showMyOffers) {
                 if (!showMyOffersOnlyLabel.getStyleClass().contains(ACTIVE_FILTER_CLASS)) {
                     showMyOffersOnlyLabel.getStyleClass().add(ACTIVE_FILTER_CLASS);
@@ -245,6 +242,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         showBuyFromOffersPin.unsubscribe();
         activeMarketPaymentsCountPin.unsubscribe();
         isCustomPaymentsSelectedPin.unsubscribe();
+        showMyOffersOnlyPin.unsubscribe();
 
         model.getAvailableMarketPayments().removeListener(availablePaymentsChangeListener);
         model.getSelectedMarketPayments().removeListener(selectedPaymentsChangeListener);
@@ -324,10 +322,10 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 .filter(item -> item instanceof PaymentMenuItem)
                 .map(item -> (PaymentMenuItem) item)
                 .forEach(paymentMenuItem ->
-                    paymentMenuItem.getPaymentMethod()
-                            .ifPresentOrElse(
-                                    payment -> paymentMenuItem.updateSelection(model.getSelectedMarketPayments().contains(payment)),
-                                    () -> paymentMenuItem.updateSelection(model.getIsCustomPaymentsSelected().get()))
+                        paymentMenuItem.getPaymentMethod()
+                                .ifPresentOrElse(
+                                        payment -> paymentMenuItem.updateSelection(model.getSelectedMarketPayments().contains(payment)),
+                                        () -> paymentMenuItem.updateSelection(model.getIsCustomPaymentsSelected().get()))
                 );
     }
 
