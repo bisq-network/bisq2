@@ -49,7 +49,7 @@ public class DropdownMenu extends HBox {
     @Getter
     private Label label = new Label();
     private ImageView buttonIcon;
-    // We need to pin it as used in a WeakChangeListener
+    // Need to keep a reference as used in WeakChangeListener
     @SuppressWarnings("FieldCanBeLocal")
     private ChangeListener<Number> widthPropertyChangeListener;
     private boolean isFirstRun = false;
