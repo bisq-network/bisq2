@@ -31,6 +31,7 @@ import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.event.WeakEventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -43,7 +44,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -84,6 +84,14 @@ public class MaterialTextField extends Pane {
     private final ChangeListener<Boolean> disabledListener = (observable, oldValue, newValue) -> update();
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<String> textInputControlTextListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
+    private final EventHandler<ActionEvent> iconButtonOnActionHandler = event -> ClipboardUtil.copyToClipboard(getText());
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
+    private final EventHandler<MouseEvent> textInputControlMouseEventFilter = event -> {
+        if (!getTextInputControl().isEditable()) {
+            event.consume();
+        }
+    };
 
     public MaterialTextField() {
         this(null, null, null);
@@ -200,7 +208,7 @@ public class MaterialTextField extends Pane {
         validationControl.setValidators(validator);
 
         // TODO that cause an endless loop if hasErrors is set to false in the eval method in validators (as in NumberValidator).
-        // validator.hasErrorsProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> validate()).get());
+        // validator.hasErrorsProperty().addListener((observable, oldValue, newValue) -> validate());
     }
 
     public boolean validate() {
@@ -354,8 +362,7 @@ public class MaterialTextField extends Pane {
     public void showCopyIcon() {
         setIcon(AwesomeIcon.COPY);
         setIconTooltip(Res.get("action.copyToClipboard"));
-        iconButton.setOnAction(new WeakReference<EventHandler<ActionEvent>>(e ->
-                ClipboardUtil.copyToClipboard(getText())).get());
+        iconButton.setOnAction(new WeakEventHandler<>(iconButtonOnActionHandler));
     }
 
     public void showEditIcon() {
@@ -447,14 +454,7 @@ public class MaterialTextField extends Pane {
     }
 
     public void filterMouseEventOnNonEditableText() {
-        javafx.event.EventHandler<MouseEvent> weakEventFilter = new WeakReference<>((javafx.event.EventHandler<MouseEvent>) event -> {
-            if (!textInputControl.isEditable()) {
-                event.consume();
-            }
-        }).get();
-        if (weakEventFilter != null) {
-            textInputControl.addEventFilter(MouseEvent.ANY, weakEventFilter);
-        }
+        textInputControl.addEventFilter(MouseEvent.ANY, new WeakEventHandler<>(textInputControlMouseEventFilter));
     }
 
 
