@@ -113,7 +113,7 @@ public class PopOverSkin implements Skin<PopOver> {
         closeIcon.setContentDisplay(GRAPHIC_ONLY);
         closeIcon.visibleProperty().bind(
                 popOver.closeButtonEnabledProperty().and(
-                        popOver.detachedProperty().or(popOver.headerAlwaysVisibleProperty())));
+                        popOver.isDetachedProperty().or(popOver.headerAlwaysVisibleProperty())));
         closeIcon.getStyleClass().add("icon");
         closeIcon.setAlignment(CENTER_LEFT);
         closeIcon.getGraphic().setOnMouseClicked(evt -> popOver.hide());
@@ -127,11 +127,11 @@ public class PopOverSkin implements Skin<PopOver> {
         content.setCenter(popOver.getContentNode());
         content.getStyleClass().add("content");
 
-        if (popOver.isDetached() || popOver.isHeaderAlwaysVisible()) {
+        if (popOver.getIsDetached() || popOver.isHeaderAlwaysVisible()) {
             content.setTop(titlePane);
         }
 
-        if (popOver.isDetached()) {
+        if (popOver.getIsDetached()) {
             popOver.getStyleClass().add(DETACHED_STYLE_CLASS);
             content.getStyleClass().add(DETACHED_STYLE_CLASS);
         }
@@ -139,7 +139,7 @@ public class PopOverSkin implements Skin<PopOver> {
         popOver.headerAlwaysVisibleProperty().addListener((o, oV, isVisible) -> {
             if (isVisible) {
                 content.setTop(titlePane);
-            } else if (!popOver.isDetached()) {
+            } else if (!popOver.getIsDetached()) {
                 content.setTop(null);
             }
         });
@@ -151,7 +151,7 @@ public class PopOverSkin implements Skin<PopOver> {
         popOver.contentNodeProperty().addListener(
                 (value, oldContent, newContent) -> content
                         .setCenter(newContent));
-        popOver.detachedProperty()
+        popOver.isDetachedProperty()
                 .addListener((value, oldDetached, newDetached) -> {
 
                     if (newDetached) {
@@ -205,8 +205,8 @@ public class PopOverSkin implements Skin<PopOver> {
         updatePath();
 
         final EventHandler<MouseEvent> mousePressedHandler = evt -> {
-            log.info("mousePressed:{},{}", popOver.isDetachable(), popOver.isDetached());
-            if (popOver.isDetachable() || popOver.isDetached()) {
+            log.info("mousePressed:{},{}", popOver.isDetachable(), popOver.getIsDetached());
+            if (popOver.isDetachable() || popOver.getIsDetached()) {
                 tornOff = false;
 
                 xOffset = evt.getScreenX();
@@ -217,16 +217,16 @@ public class PopOverSkin implements Skin<PopOver> {
         };
 
         final EventHandler<MouseEvent> mouseReleasedHandler = evt -> {
-            log.info("mouseReleased:tornOff{}, {}", tornOff, !getSkinnable().isDetached());
-            if (tornOff && !getSkinnable().isDetached()) {
+            log.info("mouseReleased:tornOff{}, {}", tornOff, !getSkinnable().getIsDetached());
+            if (tornOff && !getSkinnable().getIsDetached()) {
                 tornOff = false;
                 getSkinnable().detach();
             }
         };
 
         final EventHandler<MouseEvent> mouseDragHandler = evt -> {
-            log.info("mouseDrag:{},{}", popOver.isDetachable(), popOver.isDetached());
-            if (popOver.isDetachable() || popOver.isDetached()) {
+            log.info("mouseDrag:{},{}", popOver.isDetachable(), popOver.getIsDetached());
+            if (popOver.isDetachable() || popOver.getIsDetached()) {
                 double deltaX = evt.getScreenX() - xOffset;
                 double deltaY = evt.getScreenY() - yOffset;
 
@@ -617,7 +617,7 @@ public class PopOverSkin implements Skin<PopOver> {
 
     private boolean showArrow(ArrowLocation location) {
         ArrowLocation arrowLocation = getSkinnable().getArrowLocation();
-        return location.equals(arrowLocation) && !getSkinnable().isDetached()
+        return location.equals(arrowLocation) && !getSkinnable().getIsDetached()
                 && !tornOff;
     }
 
