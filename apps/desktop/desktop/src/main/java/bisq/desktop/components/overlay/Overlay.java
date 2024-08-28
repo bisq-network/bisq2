@@ -87,7 +87,6 @@ public abstract class Overlay<T extends Overlay<T>> {
     public static SettingsService settingsService;
     private static ShutDownHandler shutdownHandler;
     private static DontShowAgainService dontShowAgainService;
-    private ChangeListener<Scene> sceneListener;
 
     public static void init(ServiceProvider serviceProvider, Region primaryStageOwner) {
         Overlay.primaryStageOwner = primaryStageOwner;
@@ -191,6 +190,9 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected AnimationType animationType;
     protected Transitions.Type transitionsType;
     protected int maxChar = 2200;
+    // Need to keep a reference as used in WeakChangeListener
+    @SuppressWarnings("FieldCanBeLocal")
+    private final ChangeListener<Scene> sceneListener;
 
     public Overlay() {
         id = UUID.randomUUID().toString();
@@ -200,6 +202,12 @@ public abstract class Overlay<T extends Overlay<T>> {
             throw new RuntimeException("Subclass of Overlay<T> should be castable to T");
         }
         owner = primaryStageOwner;
+
+        sceneListener = (observable, oldValue, newValue) -> {
+            if (oldValue != null && newValue == null) {
+                hide();
+            }
+        };
     }
 
 
@@ -578,12 +586,6 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public void display() {
         // Once our owner gets removed we also want to remove our overlay
-
-        sceneListener = (observable, oldValue, newValue) -> {
-            if (oldValue != null && newValue == null) {
-                hide();
-            }
-        };
         owner.sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
 
         Scene rootScene = owner.getScene();
