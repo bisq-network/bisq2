@@ -23,6 +23,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -33,13 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
 public class ProgressBarWithLabel extends VBox {
-    private final Label label;
+    private final Label label = new Label();
     private final ProgressBar progressBar;
     private final StringProperty textProperty = new SimpleStringProperty();
     private final Subscription widthPin;
@@ -49,6 +49,11 @@ public class ProgressBarWithLabel extends VBox {
     private String ellipsis = "...";
     @Setter
     private boolean animateEllipsis = true;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> textListener = (observable, oldValue, newValue) -> label.setText(newValue + ellipsis);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> progressBarProgressListener = (observable, oldValue, newValue) ->
+            animatePostfix();
 
     public ProgressBarWithLabel() {
         this("");
@@ -63,8 +68,7 @@ public class ProgressBarWithLabel extends VBox {
         this.textProperty.set(text);
         setAlignment(Pos.CENTER_LEFT);
 
-
-        label = new Label(text + ellipsis);
+        label.setText(text + ellipsis);
         label.setMouseTransparent(true);
         label.getStyleClass().add("bisq-text-18");
 
@@ -81,12 +85,9 @@ public class ProgressBarWithLabel extends VBox {
             }
         });
 
-        textProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                label.setText(newValue + ellipsis)).get());
-
+        textProperty.addListener(new WeakChangeListener<>(textListener));
         if (animateEllipsis) {
-            progressBar.progressProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                    animatePostfix()).get());
+            progressBar.progressProperty().addListener(new WeakChangeListener<>(progressBarProgressListener));
             animatePostfix();
         }
     }

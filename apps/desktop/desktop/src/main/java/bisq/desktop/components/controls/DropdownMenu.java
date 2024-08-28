@@ -26,6 +26,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -33,6 +34,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.stage.PopupWindow;
+import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,15 +51,19 @@ public class DropdownMenu extends HBox {
     @Getter
     private Label label = new Label();
     private ImageView buttonIcon;
-    // We need to pin it as used in a WeakChangeListener
-    @SuppressWarnings("FieldCanBeLocal")
-    private ChangeListener<Number> widthPropertyChangeListener;
     private boolean isFirstRun = false;
     @Setter
     private boolean openUpwards = false;
     @Setter
     private boolean openToTheRight = false;
     private Double prefWidth = null;
+
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Window> windowListener;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> widthPropertyChangeListener;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Scene> sceneListener;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -81,6 +87,26 @@ public class DropdownMenu extends HBox {
             setAlignment(Pos.CENTER_RIGHT);
             setPadding(new Insets(0, 5, 0, 0));
         }
+
+        widthPropertyChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue.doubleValue() > INITIAL_WIDTH && !isFirstRun) {
+                isFirstRun = true;
+                // Once the contextMenu has calculated the width on the first render time we update the items
+                // so that they all have the same size.
+                prefWidth = contextMenu.getWidth() - 18; // Remove margins
+                updateMenuItemWidth();
+            }
+        };
+        windowListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                newValue.addEventHandler(WindowEvent.WINDOW_HIDING, e -> contextMenu.hide());
+            }
+        };
+        sceneListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                newValue.windowProperty().addListener(new WeakChangeListener<>(windowListener));
+            }
+        };
 
         attachListeners();
     }
@@ -139,16 +165,6 @@ public class DropdownMenu extends HBox {
         setOnMouseExited(e -> updateIcon(contextMenu.isShowing() ? activeIcon : defaultIcon));
         setOnMouseEntered(e -> updateIcon(activeIcon));
 
-        sceneProperty().addListener(new WeakChangeListener<>((observable, oldScene, newScene) -> {
-            if (newScene != null) {
-                newScene.windowProperty().addListener(new WeakChangeListener<>((obs, oldWindow, newWindow) -> {
-                    if (newWindow != null) {
-                        newWindow.addEventHandler(WindowEvent.WINDOW_HIDING, e -> contextMenu.hide());
-                    }
-                }));
-            }
-        }));
-
         contextMenu.setOnShowing(e -> {
             getStyleClass().add("dropdown-menu-active");
             updateIcon(activeIcon);
@@ -164,15 +180,7 @@ public class DropdownMenu extends HBox {
             isMenuShowing.setValue(false);
         });
 
-        widthPropertyChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue.doubleValue() > INITIAL_WIDTH && !isFirstRun) {
-                isFirstRun = true;
-                // Once the contextMenu has calculated the width on the first render time we update the items
-                // so that they all have the same size.
-                prefWidth = contextMenu.getWidth() - 18; // Remove margins
-                updateMenuItemWidth();
-            }
-        };
+        sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
         contextMenu.widthProperty().addListener(new WeakChangeListener<>(widthPropertyChangeListener));
     }
 

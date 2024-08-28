@@ -100,8 +100,8 @@ public class CompletableFutureUtilsTest {
     @Test
     public void testAllWithCancel() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
-        CompletableFuture<Integer> future_2 = createIntegerFuture(20, 2);
-        CompletableFuture<Integer> future_3 = createIntegerFuture(30, 3);
+        CompletableFuture<Integer> future_2 = createIntegerFuture(200, 2);
+        CompletableFuture<Integer> future_3 = createIntegerFuture(300, 3);
         future_1.whenComplete((result, throwable) -> {
             assertEquals(1, result);
             assertNull(throwable);
@@ -110,15 +110,16 @@ public class CompletableFutureUtilsTest {
         future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
         future_3.whenComplete((result, throwable) -> assertNotNull(throwable));
 
-        Exception exception = assertThrows(ExecutionException.class, () -> CompletableFutureUtils.allOf(future_1, future_2).get());
+        Exception exception = assertThrows(ExecutionException.class, () ->
+                CompletableFutureUtils.allOf(future_1, future_2, future_3).get());
         assertEquals(exception.getCause().getClass(), CancellationException.class);
     }
 
     @Test
     public void testAllWithException() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
-        CompletableFuture<Integer> future_2 = createFailingIntegerFuture(20, 2);
-        CompletableFuture<Integer> future_3 = createIntegerFuture(30, 3);
+        CompletableFuture<Integer> future_2 = createFailingIntegerFuture(200, 2);
+        CompletableFuture<Integer> future_3 = createIntegerFuture(300, 3);
         future_1.whenComplete((result, throwable) -> {
             assertEquals(1, result);
             assertNull(throwable);
@@ -126,7 +127,8 @@ public class CompletableFutureUtilsTest {
         future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
         future_3.whenComplete((result, throwable) -> assertNotNull(throwable));
 
-        Exception exception = assertThrows(ExecutionException.class, () -> CompletableFutureUtils.allOf(future_1, future_2).whenComplete((r, t) -> {
+        Exception exception = assertThrows(ExecutionException.class, () ->
+                CompletableFutureUtils.allOf(future_1, future_2, future_3).whenComplete((r, t) -> {
         }).get());
         assertEquals(exception.getCause().getClass(), RuntimeException.class);
     }
@@ -149,8 +151,8 @@ public class CompletableFutureUtilsTest {
     @Test
     public void testAnyWithCancel() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
-        CompletableFuture<Integer> future_2 = createIntegerFuture(20, 3);
-        CompletableFuture<Integer> future_3 = createIntegerFuture(30, 3);
+        CompletableFuture<Integer> future_2 = createIntegerFuture(200, 3);
+        CompletableFuture<Integer> future_3 = createIntegerFuture(300, 3);
         future_1.whenComplete((result, throwable) -> future_2.cancel(true));
 
         future_2.whenComplete((result, throwable) -> assertNotNull(throwable));
@@ -164,8 +166,8 @@ public class CompletableFutureUtilsTest {
     @Test
     public void testAnyWithException() {
         CompletableFuture<Integer> future_1 = createIntegerFuture(10, 1);
-        CompletableFuture<Integer> future_2 = createFailingIntegerFuture(20, 2);
-        CompletableFuture<Integer> future_3 = createIntegerFuture(30, 3);
+        CompletableFuture<Integer> future_2 = createFailingIntegerFuture(200, 2);
+        CompletableFuture<Integer> future_3 = createIntegerFuture(300, 3);
         future_1.whenComplete((result, throwable) -> assertNull(throwable));
 
         future_2.whenComplete((result, throwable) -> assertNotNull(throwable));

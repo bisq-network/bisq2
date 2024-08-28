@@ -20,7 +20,6 @@ package bisq.desktop.common.view;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Styles;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.Badge;
 import javafx.beans.property.BooleanProperty;
@@ -29,6 +28,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
@@ -39,7 +39,6 @@ import javafx.scene.layout.Pane;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 
 public class TabButton extends Pane implements Toggle {
     public static final double BADGE_PADDING = 7.5;
@@ -47,16 +46,34 @@ public class TabButton extends Pane implements Toggle {
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
     @Getter
-    private final Label label;
+    private final Label label = new Label();
     @Getter
     private final NavigationTarget navigationTarget;
+    @Getter
     private final Styles styles;
     private ImageView icon;
     private ImageView iconSelected;
     private ImageView iconHover;
     @Getter
     private final Badge numMessagesBadge;
-    private final ChangeListener<Number> labelWidthListener;
+
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> labelWidthListener = new ChangeListener<>() {
+        @Override
+        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+            if (newValue.doubleValue() > 0) {
+                numMessagesBadge.setLayoutX(label.getWidth() + BADGE_PADDING);
+            }
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> hoverListener = (ov, wasHovered, isHovered) -> {
+        if (isSelected()) return;
+        Layout.chooseStyleClass(label, getStyles().getHoover(), getStyles().getNormal(), isHovered);
+        label.setGraphic(isHovered ? iconHover : icon);
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> selectedListener = (ov, oldValue, newValue) -> setMouseTransparent(newValue);
 
     public TabButton(String title, ToggleGroup toggleGroup,
                      NavigationTarget navigationTarget,
@@ -76,9 +93,8 @@ public class TabButton extends Pane implements Toggle {
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
 
-        selectedProperty().addListener((ov, oldValue, newValue) -> setMouseTransparent(newValue));
 
-        label = new Label(title.toUpperCase());
+        label.setText(title.toUpperCase());
         label.setPadding(new Insets(7, 0, 0, 0));
         label.setMouseTransparent(true);
 
@@ -90,22 +106,9 @@ public class TabButton extends Pane implements Toggle {
 
         getChildren().addAll(label, numMessagesBadge);
 
-        hoverProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (ov, wasHovered, isHovered) -> {
-            if (isSelected()) return;
-            Layout.chooseStyleClass(label, styles.getHoover(), styles.getNormal(), isHovered);
-            label.setGraphic(isHovered ? iconHover : icon);
-        }).get());
-
-        labelWidthListener = new ChangeListener<>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                if (newValue.doubleValue() > 0) {
-                    numMessagesBadge.setLayoutX(label.getWidth() + BADGE_PADDING);
-                    UIThread.runOnNextRenderFrame(() -> label.widthProperty().removeListener(labelWidthListener));
-                }
-            }
-        };
-        label.widthProperty().addListener(labelWidthListener);
+        selectedProperty().addListener(new WeakChangeListener<>(selectedListener));
+        hoverProperty().addListener(new WeakChangeListener<>(hoverListener));
+        label.widthProperty().addListener(new WeakChangeListener<>(labelWidthListener));
     }
 
     public final void setOnAction(Runnable handler) {

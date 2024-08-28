@@ -46,8 +46,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
@@ -81,60 +79,67 @@ import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
  * </pre>
  */
 public class PopOver extends PopupControl {
-
     private static final String DEFAULT_STYLE_CLASS = "popover";
-
-    private static final Duration DEFAULT_FADE_DURATION = Duration.seconds(.2);
+    private static final Duration DEFAULT_FADE_DURATION = Duration.seconds(0.2);
 
     private double targetX;
-
     private double targetY;
-
-    private final SimpleBooleanProperty animated = new SimpleBooleanProperty(true);
+    private Window ownerWindow;
+    private final SimpleBooleanProperty isAnimated = new SimpleBooleanProperty(true);
     private final ObjectProperty<Duration> fadeInDuration = new SimpleObjectProperty<>(DEFAULT_FADE_DURATION);
     private final ObjectProperty<Duration> fadeOutDuration = new SimpleObjectProperty<>(DEFAULT_FADE_DURATION);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener repositionListener = observable -> {
+        if (isShowing() && !getIsDetached()) {
+            show(getOwnerNode(), targetX, targetY);
+            adjustWindowLocation();
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener isDetachedListener = observable -> setAutoHide(!getIsDetached());
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener hideListener = observable -> {
+        if (!getIsDetached()) {
+            hide(Duration.ZERO);
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> xListener = (value, oldX, newX) -> {
+        if (!getIsDetached()) {
+            setAnchorX(getAnchorX() + (newX.doubleValue() - oldX.doubleValue()));
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> yListener = (value, oldY, newY) -> {
+        if (!getIsDetached()) {
+            setAnchorY(getAnchorY() + (newY.doubleValue() - oldY.doubleValue()));
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
+    private final EventHandler<WindowEvent> ownerWindowCloseHandler = event -> hide(Duration.ZERO);
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    /**
-     * Creates a pop-over with a label as the content node.
-     */
     public PopOver() {
         super();
 
         getStyleClass().add(DEFAULT_STYLE_CLASS);
 
-      /*  getRoot().getStylesheets().add(
-                requireNonNull(PopOver.class.getResource("popover.css")).toExternalForm());
-*/
         setAnchorLocation(AnchorLocation.WINDOW_TOP_LEFT);
-        setOnHiding(evt -> setDetached(false));
+        setOnHiding(evt -> setIsDetached(false));
 
-        /*
-         * Create some initial content.
-         */
+        // Create some initial content.
         Label label = new Label("No content set");
         label.setPrefSize(200, 200);
         label.setPadding(new Insets(4));
         setContentNode(label);
 
-        InvalidationListener repositionListener = observable -> {
-            if (isShowing() && !isDetached()) {
-                show(getOwnerNode(), targetX, targetY);
-                adjustWindowLocation();
-            }
-        };
+        arrowSize.addListener(new WeakInvalidationListener(repositionListener));
+        cornerRadius.addListener(new WeakInvalidationListener(repositionListener));
+        arrowLocation.addListener(new WeakInvalidationListener(repositionListener));
+        arrowIndent.addListener(new WeakInvalidationListener(repositionListener));
+        headerAlwaysVisible.addListener(new WeakInvalidationListener(repositionListener));
 
-        arrowSize.addListener(repositionListener);
-        cornerRadius.addListener(repositionListener);
-        arrowLocation.addListener(repositionListener);
-        arrowIndent.addListener(repositionListener);
-        headerAlwaysVisible.addListener(repositionListener);
-
-        /*
-         * A detached popover should of course not automatically hide itself.
-         */
-        detached.addListener(it -> setAutoHide(!isDetached()));
+        // A detached popover should of course not automatically hide itself.
+        isDetached.addListener(new WeakInvalidationListener(isDetachedListener));
 
         setAutoHide(true);
     }
@@ -217,37 +222,6 @@ public class PopOver extends PopupControl {
         contentNodeProperty().set(content);
     }
 
-    private final InvalidationListener hideListener = observable -> {
-        if (!isDetached()) {
-            hide(Duration.ZERO);
-        }
-    };
-
-    private final WeakInvalidationListener weakHideListener = new WeakInvalidationListener(
-            hideListener);
-
-    private final ChangeListener<Number> xListener = (value, oldX, newX) -> {
-        if (!isDetached()) {
-            setAnchorX(getAnchorX() + (newX.doubleValue() - oldX.doubleValue()));
-        }
-    };
-
-    private final WeakChangeListener<Number> weakXListener = new WeakChangeListener<>(
-            xListener);
-
-    private final ChangeListener<Number> yListener = (value, oldY, newY) -> {
-        if (!isDetached()) {
-            setAnchorY(getAnchorY() + (newY.doubleValue() - oldY.doubleValue()));
-        }
-    };
-
-    private final WeakChangeListener<Number> weakYListener = new WeakChangeListener<>(
-            yListener);
-
-    private Window ownerWindow;
-    private final EventHandler<WindowEvent> closePopOverOnOwnerWindowCloseLambda = event -> ownerWindowClosing();
-    private final WeakEventHandler<WindowEvent> closePopOverOnOwnerWindowClose = new WeakEventHandler<>(closePopOverOnOwnerWindowCloseLambda);
-
     /**
      * Shows the pop-over in a position relative to the edges of the given owner
      * node. The position is dependent on the arrow location. If the arrow is
@@ -309,68 +283,54 @@ public class PopOver extends PopupControl {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public final void show(Window owner) {
-        super.show(owner);
-        ownerWindow = owner;
-
-        if (isAnimated()) {
-            showFadeInAnimation(getFadeInDuration());
-        }
-
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST,
-                closePopOverOnOwnerWindowClose);
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING,
-                closePopOverOnOwnerWindowClose);
+    public final void show(Window ownerWindow) {
+        super.show(ownerWindow);
+        doShow(ownerWindow);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final void show(Window ownerWindow, double anchorX, double anchorY) {
         super.show(ownerWindow, anchorX, anchorY);
+        doShow(ownerWindow);
+    }
+
+    private void doShow(Window ownerWindow) {
         this.ownerWindow = ownerWindow;
 
-        if (isAnimated()) {
+        if (getIsAnimated()) {
             showFadeInAnimation(getFadeInDuration());
         }
 
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST,
-                closePopOverOnOwnerWindowClose);
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING,
-                closePopOverOnOwnerWindowClose);
+        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, new WeakEventHandler<>(ownerWindowCloseHandler));
+        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING, new WeakEventHandler<>(ownerWindowCloseHandler));
     }
 
     /**
      * Makes the pop-over visible at the give location and associates it with
-     * the given owner node. The x and y coordinate will be the target location
+     * the given owner node. The anchorX and anchorY coordinate will be the target location
      * of the arrow of the pop-over and not the location of the window.
      *
      * @param owner the owning node
-     * @param x     the x coordinate for the pop-over arrow tip
-     * @param y     the y coordinate for the pop-over arrow tip
+     * @param anchorX     the anchorX coordinate for the pop-over arrow tip
+     * @param anchorY     the anchorY coordinate for the pop-over arrow tip
      */
     @Override
-    public final void show(Node owner, double x, double y) {
-        show(owner, x, y, getFadeInDuration());
+    public final void show(Node owner, double anchorX, double anchorY) {
+        show(owner, anchorX, anchorY, getFadeInDuration());
     }
 
     /**
      * Makes the pop-over visible at the give location and associates it with
-     * the given owner node. The x and y coordinate will be the target location
+     * the given owner node. The anchorX and anchorY coordinate will be the target location
      * of the arrow of the pop-over and not the location of the window.
      *
      * @param owner          the owning node
-     * @param x              the x coordinate for the pop-over arrow tip
-     * @param y              the y coordinate for the pop-over arrow tip
+     * @param anchorX              the anchorX coordinate for the pop-over arrow tip
+     * @param anchorY              the anchorY coordinate for the pop-over arrow tip
      * @param fadeInDuration the time it takes for the pop-over to be fully visible. This duration takes precedence over the fade-in property without setting.
      */
-    public final void show(Node owner, double x, double y,
-                           Duration fadeInDuration) {
+    public final void show(Node owner, double anchorX, double anchorY, Duration fadeInDuration) {
 
         /*
          * Calling show() a second time without first closing the pop-over
@@ -380,8 +340,8 @@ public class PopOver extends PopupControl {
             super.hide();
         }
 
-        targetX = x;
-        targetY = y;
+        targetX = anchorX;
+        targetY = anchorY;
 
         if (owner == null) {
             throw new IllegalArgumentException("owner can not be null");
@@ -391,22 +351,11 @@ public class PopOver extends PopupControl {
             fadeInDuration = DEFAULT_FADE_DURATION;
         }
 
-        /*
-         * This is all needed because children windows do not get their x and y
-         * coordinate updated when the owning window gets moved by the user.
-         */
-        if (ownerWindow != null) {
-            ownerWindow.xProperty().removeListener(weakXListener);
-            ownerWindow.yProperty().removeListener(weakYListener);
-            ownerWindow.widthProperty().removeListener(weakHideListener);
-            ownerWindow.heightProperty().removeListener(weakHideListener);
-        }
-
         ownerWindow = owner.getScene().getWindow();
-        ownerWindow.xProperty().addListener(weakXListener);
-        ownerWindow.yProperty().addListener(weakYListener);
-        ownerWindow.widthProperty().addListener(weakHideListener);
-        ownerWindow.heightProperty().addListener(weakHideListener);
+        ownerWindow.xProperty().addListener(new WeakChangeListener<>(xListener));
+        ownerWindow.yProperty().addListener(new WeakChangeListener<>(yListener));
+        ownerWindow.widthProperty().addListener(new WeakInvalidationListener(hideListener));
+        ownerWindow.heightProperty().addListener(new WeakInvalidationListener(hideListener));
 
         setOnShown(evt -> {
 
@@ -416,7 +365,7 @@ public class PopOver extends PopupControl {
              */
             getScene().addEventHandler(MOUSE_CLICKED, mouseEvent -> {
                 if (mouseEvent.getTarget().equals(getScene().getRoot())) {
-                    if (!isDetached()) {
+                    if (!getIsDetached()) {
                         hide();
                     }
                 }
@@ -429,17 +378,15 @@ public class PopOver extends PopupControl {
             adjustWindowLocation();
         });
 
-        super.show(owner, x, y);
+        super.show(owner, anchorX, anchorY);
 
-        if (isAnimated()) {
+        if (getIsAnimated()) {
             showFadeInAnimation(fadeInDuration);
         }
 
         // Bug fix - close popup when owner window is closing
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST,
-                closePopOverOnOwnerWindowClose);
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING,
-                closePopOverOnOwnerWindowClose);
+        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, new WeakEventHandler<>(ownerWindowCloseHandler));
+        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING, new WeakEventHandler<>(ownerWindowCloseHandler));
     }
 
     private void showFadeInAnimation(Duration fadeInDuration) {
@@ -451,10 +398,6 @@ public class PopOver extends PopupControl {
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
         fadeIn.play();
-    }
-
-    private void ownerWindowClosing() {
-        hide(Duration.ZERO);
     }
 
     /**
@@ -475,19 +418,12 @@ public class PopOver extends PopupControl {
      * @since 1.0
      */
     public final void hide(Duration fadeOutDuration) {
-        //We must remove EventFilter in order to prevent memory leak.
-        if (ownerWindow != null) {
-            ownerWindow.removeEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST,
-                    closePopOverOnOwnerWindowClose);
-            ownerWindow.removeEventFilter(WindowEvent.WINDOW_HIDING,
-                    closePopOverOnOwnerWindowClose);
-        }
         if (fadeOutDuration == null) {
             fadeOutDuration = DEFAULT_FADE_DURATION;
         }
 
         if (isShowing()) {
-            if (isAnimated()) {
+            if (getIsAnimated()) {
                 // Fade Out
                 Node skinNode = getSkin().getNode();
 
@@ -564,7 +500,7 @@ public class PopOver extends PopupControl {
      */
     public final void detach() {
         if (isDetachable()) {
-            setDetached(true);
+            setIsDetached(true);
         }
     }
 
@@ -662,7 +598,7 @@ public class PopOver extends PopupControl {
         return detachableProperty().get();
     }
 
-    private final BooleanProperty detached = new SimpleBooleanProperty(this,
+    private final BooleanProperty isDetached = new SimpleBooleanProperty(this,
             "detached", false);
 
     /**
@@ -672,29 +608,29 @@ public class PopOver extends PopupControl {
      *
      * @return the detached property
      */
-    public final BooleanProperty detachedProperty() {
-        return detached;
+    public final BooleanProperty isDetachedProperty() {
+        return isDetached;
     }
 
     /**
      * Sets the value of the detached property.
      *
-     * @param detached if true the pop-over will change its appearance to "detached"
+     * @param isDetached if true the pop-over will change its appearance to "detached"
      *                 mode
-     * @see #detachedProperty()
+     * @see #isDetachedProperty()
      */
-    public final void setDetached(boolean detached) {
-        detachedProperty().set(detached);
+    public final void setIsDetached(boolean isDetached) {
+        isDetachedProperty().set(isDetached);
     }
 
     /**
      * Returns the value of the detached property.
      *
      * @return true if the pop-over is currently detached.
-     * @see #detachedProperty()
+     * @see #isDetachedProperty()
      */
-    public final boolean isDetached() {
-        return detachedProperty().get();
+    public final boolean getIsDetached() {
+        return isDetachedProperty().get();
     }
 
     private final DoubleProperty arrowSize = new SimpleDoubleProperty(this,
@@ -935,27 +871,27 @@ public class PopOver extends PopupControl {
      *
      * @return the "animated" property
      */
-    public final BooleanProperty animatedProperty() {
-        return animated;
+    public final BooleanProperty isAnimatedProperty() {
+        return isAnimated;
     }
 
     /**
      * Returns the value of the "animated" property.
      *
      * @return true if the PopOver will be shown and hidden with a short fade animation
-     * @see #animatedProperty()
+     * @see #isAnimatedProperty()
      */
-    public final boolean isAnimated() {
-        return animatedProperty().get();
+    public final boolean getIsAnimated() {
+        return isAnimatedProperty().get();
     }
 
     /**
      * Sets the value of the "animated" property.
      *
-     * @param animated if true the PopOver will be shown and hidden with a short fade animation
-     * @see #animatedProperty()
+     * @param isAnimated if true the PopOver will be shown and hidden with a short fade animation
+     * @see #isAnimatedProperty()
      */
-    public final void setAnimated(boolean animated) {
-        animatedProperty().set(animated);
+    public final void setIsAnimated(boolean isAnimated) {
+        isAnimatedProperty().set(isAnimated);
     }
 }

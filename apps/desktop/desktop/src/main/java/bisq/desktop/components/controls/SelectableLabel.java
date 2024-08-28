@@ -17,10 +17,11 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.WeakListChangeListener;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
@@ -30,29 +31,40 @@ import java.util.List;
 
 /**
  * As Label or Text are not selectable and TextField does not support wrapping we use a custom component which
- * displays the Label and when the user clicks into it, we show a TextArea with exact the same size and style as the
- * Label to add support for both selection and wrapped text.
+ * uses a Label for layout and then apply its size and style to a TextArea and swap it.
  * <p>
  * We want to keep the API mirrored to the Label. With more usage we will add more support for the Label API.
+ * When setting size affecting properties, we need to add support for resizing the TextField. Currently, it is expected
+ * that the text is set at initialization.
  */
 @Slf4j
 public class SelectableLabel extends StackPane {
     private final Label label = new Label();
     private final TextArea textArea = new TextArea();
-
     boolean isInSelectionMode;
-
-    // Pin down the listeners to not get GCed before our object gets GCed
-    @SuppressWarnings("FieldCanBeLocal")
-    private final ChangeListener<Boolean> textAreaFocusListener;
-    @SuppressWarnings("FieldCanBeLocal")
-    private final ChangeListener<Boolean> rootFocusListener;
-    @SuppressWarnings("FieldCanBeLocal")
-    private final ListChangeListener<String> styleClassListener;
-
-    // As we remove some WeakChangeListeners we keep them as class fields
-    private final WeakChangeListener<Boolean> weakRootFocusListener;
-    private final WeakChangeListener<Boolean> weakTextAreaFocusListener;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ListChangeListener<String> styleClassListener = c -> {
+        c.next();
+        if (c.wasAdded()) {
+            List<? extends String> addedSubList = c.getAddedSubList();
+            label.getStyleClass().addAll(addedSubList);
+            textArea.getStyleClass().addAll(addedSubList);
+        } else if (c.wasRemoved()) {
+            List<? extends String> removedList = c.getRemoved();
+            label.getStyleClass().removeAll(removedList);
+            textArea.getStyleClass().removeAll(removedList);
+        }
+    };
+    private final ChangeListener<Number> labelHeightListener = (observable, oldValue, newValue) -> {
+        if (label.getHeight() > 0) {
+            if (label.getWidth() > 0) {
+                swap();
+            } else {
+                // Not expected as height is set before width
+                UIThread.runOnNextRenderFrame(this::swap);
+            }
+        }
+    };
 
     public SelectableLabel() {
         this("");
@@ -60,67 +72,25 @@ public class SelectableLabel extends StackPane {
 
     public SelectableLabel(String text) {
         getChildren().add(label);
-
         label.setText(text);
+        label.setCursor(Cursor.TEXT);
         textArea.setText(text);
-
         textArea.getStyleClass().addAll("selectable-label", "hide-vertical-scrollbar");
-
-        label.setOnMouseClicked(e -> {
-            setInSelectionMode(true);
-            requestFocus();
-        });
-        textAreaFocusListener = (observableValue, oldValue, newValue) -> {
-            if (oldValue) {
-                setInSelectionMode(false);
-            }
-        };
-        weakTextAreaFocusListener = new WeakChangeListener<>(textAreaFocusListener);
-
-        rootFocusListener = (observableValue, oldValue, newValue) -> {
-            if (textArea.isFocused()) {
-                textArea.focusedProperty().addListener(weakTextAreaFocusListener);
-            } else if (oldValue) {
-                setInSelectionMode(false);
-            }
-        };
-        weakRootFocusListener = new WeakChangeListener<>(rootFocusListener);
-
-        styleClassListener = c -> {
-            c.next();
-            if (c.wasAdded()) {
-                List<? extends String> addedSubList = c.getAddedSubList();
-                label.getStyleClass().addAll(addedSubList);
-                textArea.getStyleClass().addAll(addedSubList);
-            } else if (c.wasRemoved()) {
-                List<? extends String> removedList = c.getRemoved();
-                label.getStyleClass().removeAll(removedList);
-                textArea.getStyleClass().removeAll(removedList);
-            }
-        };
+        label.heightProperty().addListener(labelHeightListener);
         getStyleClass().addListener(new WeakListChangeListener<>(styleClassListener));
     }
 
-    private void setInSelectionMode(boolean inSelectionMode) {
-        isInSelectionMode = inSelectionMode;
-        if (isInSelectionMode) {
-            getChildren().remove(label);
-            getChildren().add(textArea);
-            // using prefWidth/prefHeight does not force the same size
-            textArea.setMinWidth(label.getWidth());
-            textArea.setMaxWidth(textArea.getMinWidth());
-            textArea.setMinHeight(label.getHeight());
-            textArea.setMaxHeight(textArea.getMinHeight());
-            textArea.deselect();
-            focusedProperty().addListener(weakRootFocusListener);
-        } else {
-            focusedProperty().removeListener(weakRootFocusListener);
-            textArea.focusedProperty().removeListener(weakTextAreaFocusListener);
-            getChildren().remove(textArea);
-            getChildren().add(label);
-        }
+    private void swap() {
+        label.heightProperty().removeListener(labelHeightListener);
+        textArea.setMinWidth(label.getWidth());
+        textArea.setMaxWidth(textArea.getMinWidth());
+        textArea.setMinHeight(label.getHeight());
+        textArea.setMaxHeight(textArea.getMinHeight());
+        getChildren().remove(label);
+        getChildren().add(textArea);
     }
 
+    // If we support change of text after initialization we need to adjust the size of the textArea
     // Label API
     public void setText(String value) {
         label.setText(value);

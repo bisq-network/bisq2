@@ -24,11 +24,14 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.WeakListChangeListener;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.WeakEventHandler;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
@@ -50,7 +53,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -67,6 +69,43 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected TextInputControl editor;
     @Getter
     private final BooleanProperty isValidSelection;
+
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> editorFocusListener = (observable, oldValue, newValue) -> {
+        if (!oldValue && newValue) {
+            removeFilter();
+            forceRedraw();
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ListChangeListener<T> itemsListener = c -> setAutocompleteItems(getItems());
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
+    private final EventHandler<KeyEvent> popupContentEventHandler = event -> {
+        if (event.getCode() == KeyCode.SPACE) {
+            event.consume();
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
+    private final EventHandler<KeyEvent> materialTextFieldEventHandler = event -> {
+        if (event.getCode() == KeyCode.DOWN ||
+                event.getCode() == KeyCode.UP ||
+                event.getCode() == KeyCode.ENTER) {
+            event.consume();
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
+    private final EventHandler<KeyEvent> editorEventHandler = event -> UIThread.runOnNextRenderFrame(() -> {
+        String query = editor.getText();
+        boolean exactMatch = list.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
+        if (!exactMatch) {
+            if (query.isEmpty()) {
+                removeFilter();
+            } else {
+                filterBy(query);
+            }
+            forceRedraw();
+        }
+    });
 
     public AutoCompleteComboBox() {
         this(FXCollections.observableArrayList());
@@ -87,7 +126,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         this.isValidSelection = new SimpleBooleanProperty(true);
 
         createDefaultSkin();
-
         setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
@@ -117,7 +155,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
         // todo (investigate, low prio) does not update items when we change list so add a handler here for a quick fix
         // need to figure out why its not updating
-        items.addListener(new WeakReference<>((ListChangeListener<T>) c -> setAutocompleteItems(items)).get());
+        items.addListener(new WeakListChangeListener<>(itemsListener));
     }
 
     public void validateOnNoItemSelectedWithMessage(String message) {
@@ -222,36 +260,14 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     // was to work around UX glitches related to (starting) editing text when comboBox
     // had specific item selected.
     protected void setupFocusHandler() {
-        editor.focusedProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
-            if (!oldValue && newValue) {
-                removeFilter();
-                forceRedraw();
-            }
-        }).get());
+        editor.focusedProperty().addListener(new WeakChangeListener<>(editorFocusListener));
     }
 
     protected void registerKeyHandlers() {
         // By default, pressing [SPACE] caused editor text to reset. The solution
         // is to suppress relevant event on the underlying ListViewSkin.
-        EventHandler<KeyEvent> weakEventFilter = new WeakReference<>((EventHandler<KeyEvent>) event -> {
-            if (event.getCode() == KeyCode.SPACE) {
-                event.consume();
-            }
-        }).get();
-        if (weakEventFilter != null) {
-            skin.getPopupContent().addEventFilter(KeyEvent.ANY, weakEventFilter);
-        }
-
-        EventHandler<KeyEvent> weakEventFilter2 = new WeakReference<>((EventHandler<KeyEvent>) event -> {
-            if (event.getCode() == KeyCode.DOWN ||
-                    event.getCode() == KeyCode.UP ||
-                    event.getCode() == KeyCode.ENTER) {
-                event.consume();
-            }
-        }).get();
-        if (weakEventFilter2 != null) {
-            skin.materialTextField.addEventFilter(KeyEvent.ANY, weakEventFilter2);
-        }
+        skin.getPopupContent().addEventFilter(KeyEvent.ANY, new WeakEventHandler<>(popupContentEventHandler));
+        skin.materialTextField.addEventFilter(KeyEvent.ANY, new WeakEventHandler<>(materialTextFieldEventHandler));
     }
 
     protected void filterBy(String query) {
@@ -272,22 +288,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     }
 
     protected void reactToQueryChanges() {
-        EventHandler<KeyEvent> weakEventHandler = new WeakReference<>((EventHandler<KeyEvent>) event ->
-                UIThread.runOnNextRenderFrame(() -> {
-                    String query = editor.getText();
-                    boolean exactMatch = list.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
-                    if (!exactMatch) {
-                        if (query.isEmpty()) {
-                            removeFilter();
-                        } else {
-                            filterBy(query);
-                        }
-                        forceRedraw();
-                    }
-                })).get();
-        if (weakEventHandler != null) {
-            editor.addEventFilter(KeyEvent.KEY_RELEASED, weakEventHandler);
-        }
+        editor.addEventFilter(KeyEvent.KEY_RELEASED, new WeakEventHandler<>(editorEventHandler));
     }
 
     protected void removeFilter() {
@@ -334,8 +335,18 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected final AutoCompleteComboBox<T> comboBox;
         protected final Pane buttonPane;
         private final DropShadow dropShadow;
+        @Nullable
         protected ListView<T> listView;
-
+        @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+        // Hack to get access to background and insert our polygon
+        private final ChangeListener<Parent> listViewParentListener = (observable, oldValue, newValue) -> {
+            if (newValue != null && listView != null && listView.getParent() != null) {
+                Parent rootPopup = listView.getParent().getParent();
+                if (rootPopup instanceof Pane && ((Pane) rootPopup).getChildren().size() == 1) {
+                    ((Pane) rootPopup).getChildren().addFirst(listBackground);
+                }
+            }
+        };
         protected double arrowX_l = DEFAULT_ARROW_X_L;
         protected double arrowX_m = DEFAULT_ARROW_X_M;
         protected double arrowX_r = DEFAULT_ARROW_X_R;
@@ -374,10 +385,16 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
             listBackground.setFill(Paint.valueOf("#212121"));
             listBackground.setEffect(dropShadow);
+
+
         }
 
         @Override
-        protected double computePrefHeight(double width, double topInset, double rightInset, double bottomInset, double leftInset) {
+        protected double computePrefHeight(double width,
+                                           double topInset,
+                                           double rightInset,
+                                           double bottomInset,
+                                           double leftInset) {
             // another hack...
             double computed = super.computePrefHeight(width, topInset, rightInset, bottomInset, leftInset);
             return Math.max(computed, buttonPane.getHeight());
@@ -396,21 +413,11 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             // Hack to get listView from base class and put it into a container with the listBackground below.
             if (listView == null) {
                 Node node = super.getPopupContent();
-                if (node instanceof ListView) {
-                    //noinspection unchecked,rawtypes
-                    listView = (ListView) node;
+                if (node instanceof ListView<?> listViewNode) {
+                    //noinspection unchecked
+                    listView = (ListView<T>) listViewNode;
                     listView.setId("bisq-combo-box-list-view");
-
-                    // Hack to get access to background and insert our polygon
-                    listView.parentProperty().addListener(new WeakReference<>(
-                            (ChangeListener<Parent>) (observable, oldValue, newValue) -> {
-                                if (newValue != null && listView.getParent() != null) {
-                                    Parent rootPopup = listView.getParent().getParent();
-                                    if (rootPopup instanceof Pane && ((Pane) rootPopup).getChildren().size() == 1) {
-                                        ((Pane) rootPopup).getChildren().addFirst(listBackground);
-                                    }
-                                }
-                            }).get());
+                    listView.parentProperty().addListener(new WeakChangeListener<>(listViewParentListener));
                 } else {
                     log.error("Node is expected to be of type ListView. node={}", node);
                 }

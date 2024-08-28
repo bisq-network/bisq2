@@ -20,6 +20,7 @@ package bisq.desktop.components.controls;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -29,8 +30,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.text.Text;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.lang.ref.WeakReference;
 
 /**
  * TextArea does not support of adjustment of height based on the text content.
@@ -48,30 +47,31 @@ public class BisqTextArea extends TextArea {
     @Setter
     private double scrollHideThreshold = SCROLL_HIDE_THRESHOLD;
     private boolean initialized;
-    private final InvalidationListener textChangeListener = o -> adjustHeight();
     private ScrollPane selectorScrollPane;
     private Text selectorText;
 
-    public BisqTextArea() {
-        setWrapText(true);
-
-        // We use a weakReference for the sceneChangeListener to avoid leaking when our instance is gone
-        sceneProperty().addListener(new WeakReference<>((ChangeListener<Scene>) (observable, oldValue, newValue) -> {
-            if (newValue == null) {
-                // When we get removed from the display graph we remove the textChangeListener. 
-                // We delay that to the next render frame to avoid potential ConcurrentModificationExceptions 
-                // at the listener collections.
-                UIThread.runOnNextRenderFrame(() -> textProperty().removeListener(textChangeListener));
-            } else {
-                initialized = false;
-                layoutChildren();
-            }
-        }).get());
-    }
+    private final InvalidationListener textChangeListener = o -> adjustHeight();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Scene> sceneListener = (observable, oldValue, newValue) -> {
+        if (newValue == null) {
+            // When we get removed from the display graph we remove the textChangeListener.
+            // We delay that to the next render frame to avoid potential ConcurrentModificationExceptions
+            // at the listener collections.
+            UIThread.runOnNextRenderFrame(() -> textProperty().removeListener(textChangeListener));
+        } else {
+            initialized = false;
+            layoutChildren();
+        }
+    };
 
     public BisqTextArea(String text) {
         this();
         setText(text);
+    }
+
+    public BisqTextArea() {
+        setWrapText(true);
+        sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
     }
 
     public void setInitialHeight(double initialHeight) {
@@ -90,6 +90,7 @@ public class BisqTextArea extends TextArea {
                     super.layoutChildren();
                 } catch (Throwable t) {
                     t.printStackTrace();
+                    //TODO why we call super.layoutChildren(); here?
                     super.layoutChildren();
                 }
             }
@@ -97,10 +98,10 @@ public class BisqTextArea extends TextArea {
             if (!initialized) {
                 this.selectorScrollPane = scrollPane;
                 Node lookupTextNode = lookup(SELECTOR_TEXT);
-                if (lookupTextNode instanceof Text aTextNode) {
-                    // If we use a promptText the input field is not the aTextNode we find by the lookup,
+                if (lookupTextNode instanceof Text textNode) {
+                    // If we use a promptText the input field is not the textNode we find by the lookup,
                     // but it's inside a region... A pain to work with those closed components... 
-                    Parent parent = aTextNode.getParent();
+                    Parent parent = textNode.getParent();
                     parent.setStyle("-fx-background-color: transparent; -fx-border-color: transparent");
                     if (parent.getChildrenUnmodifiable().size() == 4) {
                         Node thirdNode = parent.getChildrenUnmodifiable().get(2);
@@ -113,7 +114,7 @@ public class BisqTextArea extends TextArea {
                             }
                         }
                     } else {
-                        this.selectorText = aTextNode;
+                        this.selectorText = textNode;
                     }
                     textProperty().addListener(textChangeListener);
                     scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);

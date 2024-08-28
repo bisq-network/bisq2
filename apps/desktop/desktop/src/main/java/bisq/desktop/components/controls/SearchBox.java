@@ -20,6 +20,7 @@ package bisq.desktop.components.controls;
 import bisq.i18n.Res;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.TextField;
@@ -27,8 +28,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.lang.ref.WeakReference;
 
 @Slf4j
 @Getter
@@ -39,6 +38,8 @@ public class SearchBox extends HBox {
     private String activeStyle = "search-box-active";
     private String iconId = "search-dimmed";
     private String activeIconId = "search-white";
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> searchFieldFocusListener = (observable, oldValue, newValue) -> applyStyle(newValue);
 
     public SearchBox() {
         setAlignment(Pos.CENTER_LEFT);
@@ -54,7 +55,7 @@ public class SearchBox extends HBox {
         HBox.setMargin(searchIcon, new Insets(0, -3, 0, 7));
         getChildren().addAll(searchIcon, searchField);
 
-        searchField.focusedProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) -> applyStyle(newValue)).get());
+        searchField.focusedProperty().addListener(new WeakChangeListener<>(searchFieldFocusListener));
         applyStyle(searchField.isFocused());
     }
 

@@ -20,8 +20,10 @@ package bisq.desktop.components.controls;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
@@ -41,6 +43,11 @@ public class DrawerMenu extends HBox {
     @Getter
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
     private ImageView buttonIcon;
+
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Scene> sceneListener;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> itemsVisibleListener;
 
     public DrawerMenu(String defaultIconId, String hoverIconId, String activeIconId) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -67,6 +74,26 @@ public class DrawerMenu extends HBox {
         getChildren().addAll(menuButton, itemsHBox);
         getStyleClass().add("drawer-menu");
 
+        sceneListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                newValue.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                    if (itemsHBox.isVisible() && !clickedOnDrawerMenu(e)) {
+                        hideMenu();
+                        e.consume();
+                    }
+                });
+            }
+        };
+        itemsVisibleListener = (observable, oldValue, newValue) -> {
+            if (itemsHBox.isVisible()) {
+                getStyleClass().add("drawer-menu-active");
+                isMenuShowing.setValue(true);
+            } else {
+                getStyleClass().remove("drawer-menu-active");
+                updateIcon(defaultIcon);
+                isMenuShowing.setValue(false);
+            }
+        };
         attachListeners();
     }
 
@@ -115,27 +142,8 @@ public class DrawerMenu extends HBox {
             }
         });
 
-        itemsHBox.visibleProperty().addListener(change -> {
-            if (itemsHBox.isVisible()) {
-                getStyleClass().add("drawer-menu-active");
-                isMenuShowing.setValue(true);
-            } else {
-                getStyleClass().remove("drawer-menu-active");
-                updateIcon(defaultIcon);
-                isMenuShowing.setValue(false);
-            }
-        });
-
-        sceneProperty().addListener(new WeakChangeListener<>((observable, oldScene, newScene) -> {
-            if (newScene != null) {
-                newScene.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-                    if (itemsHBox.isVisible() && !clickedOnDrawerMenu(e)) {
-                        hideMenu();
-                        e.consume();
-                    }
-                });
-            }
-        }));
+        itemsHBox.visibleProperty().addListener(new WeakChangeListener<>(itemsVisibleListener));
+        sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
     }
 
     private void updateIcon(ImageView newIcon) {
