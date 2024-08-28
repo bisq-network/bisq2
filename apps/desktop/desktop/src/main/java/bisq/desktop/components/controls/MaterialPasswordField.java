@@ -24,15 +24,23 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.control.skin.TextFieldSkin;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 
 public class MaterialPasswordField extends MaterialTextField {
     private BooleanProperty isMasked;
     private final ObjectProperty<CharSequence> password = new SimpleObjectProperty<>();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> textListener = (observable, oldValue, newValue) -> password.set(newValue);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<CharSequence> passwordListener = (observable, oldValue, newValue) -> {
+        if ((newValue == null || newValue.isEmpty()) && !textProperty().isBound()) {
+            setText("");
+        }
+    };
 
     public MaterialPasswordField() {
         this(null, null, null);
@@ -49,16 +57,8 @@ public class MaterialPasswordField extends MaterialTextField {
     public MaterialPasswordField(@Nullable String description, @Nullable String prompt, @Nullable String help) {
         super(description, prompt, help);
 
-        textProperty().addListener(new WeakReference<>(
-                (ChangeListener<String>) (observable, oldValue, newValue) -> password.set(newValue)).get());
-
-        password.addListener(new WeakReference<>(
-                (ChangeListener<CharSequence>) (observable, oldValue, newValue) -> {
-                    if ((newValue == null || newValue.isEmpty()) && !textProperty().isBound()) {
-                        setText("");
-                    }
-                }).get());
-
+        textProperty().addListener(new WeakChangeListener<>(textListener));
+        password.addListener(new WeakChangeListener<>(passwordListener));
         password.set(getText());
     }
 
@@ -97,26 +97,27 @@ public class MaterialPasswordField extends MaterialTextField {
         private final PasswordFieldWithCopyEnabled textField;
         private final BisqIconButton iconButton;
         private final MaterialPasswordField materialPasswordField;
+        @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+        private final ChangeListener<Boolean> passwordFieldIsMaskedListener = (observable, oldValue, newValue) -> handleIsMaskedChange(newValue);
 
-        public VisiblePasswordFieldSkin(PasswordFieldWithCopyEnabled textField, MaterialPasswordField materialPasswordField) {
+        public VisiblePasswordFieldSkin(PasswordFieldWithCopyEnabled textField,
+                                        MaterialPasswordField passwordField) {
             super(textField);
 
             this.textField = textField;
-            this.materialPasswordField = materialPasswordField;
+            this.materialPasswordField = passwordField;
 
-            // We get called from the constructor of materialPasswordField, some fields might not be initiated yet, 
+            // We get called from the constructor of passwordField, some fields might not be initiated yet,
             // so we need to take care of which fields we access.
-            materialPasswordField.isMaskedProperty().addListener(
-                    new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) ->
-                            handleIsMaskedChange(newValue)).get());
-            iconButton = materialPasswordField.getIconButton();
+            passwordField.isMaskedProperty().addListener(new WeakChangeListener<>(passwordFieldIsMaskedListener));
+            iconButton = passwordField.getIconButton();
             iconButton.setOnAction(e -> {
-                boolean isMasked = !materialPasswordField.isMasked();
-                materialPasswordField.setIsMasked(isMasked);
+                boolean isMasked = !passwordField.isMasked();
+                passwordField.setIsMasked(isMasked);
                 handleIsMaskedChange(isMasked);
             });
 
-            UIThread.runOnNextRenderFrame(() -> materialPasswordField.setIcon(AwesomeIcon.EYE_OPEN));
+            UIThread.runOnNextRenderFrame(() -> passwordField.setIcon(AwesomeIcon.EYE_OPEN));
         }
 
         private void handleIsMaskedChange(boolean isMasked) {
