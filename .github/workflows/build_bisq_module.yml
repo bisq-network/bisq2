@@ -30,7 +30,7 @@ jobs:
       - name: Gradle Build Action
         uses: gradle/gradle-build-action@v3.5.0
         with:
-          arguments: build --scan
+          arguments: clean build --scan
           build-root-directory: ${{ inputs.build-root-dir }}
           gradle-executable: ./gradlew
-          gradle-version: 8.8
+          gradle-version: 8.9
