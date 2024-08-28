@@ -50,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -73,6 +72,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             favouriteMarketsPin, showMarketSelectionListCollapsedSettingsPin,
             changedNotificationPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin;
+    private final ListChangeListener<? super MarketChannelItem> marketChannelItemListener = c -> updateFilteredMarketChannelItems();
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -162,9 +162,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                     updateFilteredMarketChannelItems();
                 }));
 
-        model.getMarketChannelItems().addListener(new WeakReference<>(
-                (ListChangeListener<? super MarketChannelItem>) c -> updateFilteredMarketChannelItems()
-        ).get());
+        model.getMarketChannelItems().addListener(marketChannelItemListener);
 
         MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MARKET_SORT_TYPE).map(name ->
                         ProtobufUtils.enumFromProto(MarketSortType.class, name, MarketSortType.NUM_OFFERS))
@@ -238,6 +236,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedMarketSortTypePin.unsubscribe();
         favouriteMarketsPin.unbind();
         changedNotificationPin.unbind();
+
+        model.getMarketChannelItems().removeListener(marketChannelItemListener);
 
         resetSelectedChildTarget();
     }
