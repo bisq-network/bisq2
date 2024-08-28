@@ -1,6 +1,6 @@
 package bisq.gradle.tasks.download
 
-import bisq.gradle.tasks.PerOsUrlProvider
+import bisq.gradle.tasks.PerPlatformUrlProvider
 import bisq.gradle.tasks.signature.SignatureVerificationTask
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
@@ -14,7 +14,7 @@ class SignedBinaryDownloader(
     private val binaryName: String,
     private val version: Property<String>,
 
-    private val perOsUrlProvider: (String) -> PerOsUrlProvider,
+    private val perPlatformUrlProvider: (String) -> PerPlatformUrlProvider,
     private val downloadDirectory: String,
 
     private val pgpFingerprintToKeyUrlMap: Map<String, URL>
@@ -23,7 +23,7 @@ class SignedBinaryDownloader(
     private val downloadTaskFactory = DownloadTaskFactory(project, downloadDirectory)
 
     fun registerTasks() {
-        val binaryDownloadUrl: Provider<String> = version.map { perOsUrlProvider(it).url }
+        val binaryDownloadUrl: Provider<String> = version.map { perPlatformUrlProvider(it).url }
         val binaryDownloadTask =
             downloadTaskFactory.registerDownloadTask("download${binaryName}Binary", binaryDownloadUrl)
 
