@@ -121,14 +121,10 @@ public class BisqEasyOfferbookUtil {
                 } else {
                     numOffers.textProperty().unbind();
                     marketDetailsTooltip.textProperty().unbind();
-                    if (formattedNumOffersBindings != null) {
-                        formattedNumOffersBindings.dispose();
-                        formattedNumOffersBindings = null;
-                    }
-                    if (formattedTooltipBinding != null) {
-                        formattedTooltipBinding.dispose();
-                        formattedTooltipBinding = null;
-                    }
+                    formattedNumOffersBindings.dispose();
+                    formattedNumOffersBindings = null;
+                    formattedTooltipBinding.dispose();
+                    formattedTooltipBinding = null;
                     favouriteLabel.setOnMouseClicked(null);
 
                     setGraphic(null);

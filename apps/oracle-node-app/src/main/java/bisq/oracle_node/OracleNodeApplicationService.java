@@ -89,8 +89,7 @@ public class OracleNodeApplicationService extends ApplicationService {
                 .whenComplete((success, throwable) -> {
                     if (success) {
                         bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> {
-                            networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
+                            networkService.getNetworkLoadService().ifPresent(service -> service.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
                         });
                         log.info("NetworkApplicationService initialized");
                     } else {

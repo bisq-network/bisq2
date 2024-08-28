@@ -212,8 +212,7 @@ public class RestApiApplicationService extends ApplicationService {
                             setState(State.APP_INITIALIZED);
 
                             bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> {
-                                networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                        networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
+                                networkService.getNetworkLoadService().ifPresent(service -> service.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
                             });
 
                             log.info("ApplicationService initialized");

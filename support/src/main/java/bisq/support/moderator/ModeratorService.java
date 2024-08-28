@@ -49,6 +49,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -79,7 +80,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
-    private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
+    private final Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices;
     private final BannedUserService bannedUserService;
     private final boolean staticPublicKeysProvided;
     private final ChatService chatService;
@@ -94,7 +95,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
-        twoPartyPrivateChatChannelService = chatService.getTwoPartyPrivateChatChannelService();
+        twoPartyPrivateChatChannelServices = chatService.getTwoPartyPrivateChatChannelServices();
         bannedUserService = userService.getBannedUserService();
         staticPublicKeysProvided = config.isStaticPublicKeysProvided();
         this.chatService = chatService;
@@ -188,13 +189,21 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
                                                             UserProfile userProfile,
                                                             Optional<String> citationMessage,
                                                             boolean isReportingUser) {
+        if (chatChannelDomain == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
+                chatChannelDomain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES) {
+            chatChannelDomain = ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT;
+        }
         ChatChannelSelectionService selectionServices = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
-        return twoPartyPrivateChatChannelService.findOrCreateChannel(chatChannelDomain, userProfile)
+        if (!twoPartyPrivateChatChannelServices.containsKey(chatChannelDomain)) {
+            return CompletableFuture.failedFuture(new RuntimeException("No twoPartyPrivateChatChannelService present for " + chatChannelDomain));
+        }
+        TwoPartyPrivateChatChannelService channelService = twoPartyPrivateChatChannelServices.get(chatChannelDomain);
+        return channelService.findOrCreateChannel(chatChannelDomain, userProfile)
                 .map(channel -> {
                     selectionServices.selectChannel(channel);
 
                     if (channel.getChatMessages().isEmpty() && isReportingUser) {
-                        return twoPartyPrivateChatChannelService.sendTextMessage(Res.get("authorizedRole.moderator.replyMsg"),
+                        return channelService.sendTextMessage(Res.get("authorizedRole.moderator.replyMsg"),
                                 citationMessage.map(msg -> new Citation(userProfile.getId(), msg)),
                                 channel);
                     } else {

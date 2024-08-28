@@ -279,18 +279,6 @@
     -fx-image: url("/images/navigation/nav-bisq-easy-hover.png");
 }
 
-#nav-reputation {
-    -fx-image: url("/images/navigation/nav-reputation.png");
-}
-
-#nav-reputation-active {
-    -fx-image: url("/images/navigation/nav-reputation-active.png");
-}
-
-#nav-reputation-hover {
-    -fx-image: url("/images/navigation/nav-reputation-hover.png");
-}
-
 #nav-community {
     -fx-image: url("/images/navigation/nav-community.png");
 }
@@ -301,6 +289,18 @@
 
 #nav-community-hover {
     -fx-image: url("/images/navigation/nav-community-hover.png");
+}
+
+#nav-events {
+    -fx-image: url("/images/navigation/nav-events.png");
+}
+
+#nav-events-active {
+    -fx-image: url("/images/navigation/nav-events-active.png");
+}
+
+#nav-events-hover {
+    -fx-image: url("/images/navigation/nav-events-hover.png");
 }
 
 #nav-learn {
@@ -325,18 +325,6 @@
 
 #nav-markets-hover {
     -fx-image: url("/images/navigation/nav-markets-hover.png");
-}
-
-#nav-network {
-    -fx-image: url("/images/navigation/nav-network.png");
-}
-
-#nav-network-active {
-    -fx-image: url("/images/navigation/nav-network-active.png");
-}
-
-#nav-network-hover {
-    -fx-image: url("/images/navigation/nav-network-hover.png");
 }
 
 #nav-settings {
@@ -466,10 +454,6 @@
 
 #learn {
     -fx-image: url("/images/onboarding/learn.png");
-}
-
-#reputation-ribbon {
-    -fx-image: url("/images/onboarding/reputation-ribbon.png");
 }
 
 #dollar-btc {

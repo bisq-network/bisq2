@@ -117,16 +117,6 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     @Override
-    public ChatChannelDomain getChatChannelDomain() {
-        return chatChannelDomain.migrate();
-    }
-
-    @Override
-    public String getChannelId() {
-        return CommonPublicChatChannel.Migration.migrateChannelId(channelId);
-    }
-
-    @Override
     public double getCostFactor() {
         return 0.3;
     }

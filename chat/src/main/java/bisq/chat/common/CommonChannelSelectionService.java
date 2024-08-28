@@ -22,6 +22,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.pub.PublicChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.persistence.PersistenceService;
@@ -39,14 +40,14 @@ import java.util.stream.Stream;
 @Slf4j
 @Getter
 public class CommonChannelSelectionService extends ChatChannelSelectionService {
-    private final Optional<TwoPartyPrivateChatChannelService> privateChatChannelService;
-    private final CommonPublicChatChannelService publicChatChannelService;
+    private final TwoPartyPrivateChatChannelService privateChatChannelService;
+    private final PublicChatChannelService<?, ?, ?, ?> publicChatChannelService;
     private final UserIdentityService userIdentityService;
     private Optional<TwoPartyPrivateChatChannel> lastSelectedPrivateChannel = Optional.empty();
 
     public CommonChannelSelectionService(PersistenceService persistenceService,
-                                         Optional<TwoPartyPrivateChatChannelService> privateChatChannelService,
-                                         CommonPublicChatChannelService publicChatChannelService,
+                                         TwoPartyPrivateChatChannelService privateChatChannelService,
+                                         PublicChatChannelService<?, ?, ?, ?> publicChatChannelService,
                                          ChatChannelDomain chatChannelDomain,
                                          UserIdentityService userIdentityService) {
         super(persistenceService, chatChannelDomain);
@@ -60,7 +61,8 @@ public class CommonChannelSelectionService extends ChatChannelSelectionService {
         if (selectedChannel.get() == null) {
             publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
         }
-        privateChatChannelService.ifPresent(service -> lastSelectedPrivateChannel = service.getChannels().stream().findFirst());
+
+        lastSelectedPrivateChannel = privateChatChannelService.getChannels().stream().findFirst();
 
         return super.initialize();
     }
@@ -72,7 +74,9 @@ public class CommonChannelSelectionService extends ChatChannelSelectionService {
             lastSelectedPrivateChannel = Optional.empty();
         } else if (chatChannel instanceof PublicChatChannel) {
             publicChatChannelService.removeExpiredMessages(chatChannel);
-        } else if (chatChannel instanceof TwoPartyPrivateChatChannel privateChatChannel) {
+        } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+            TwoPartyPrivateChatChannel privateChatChannel = (TwoPartyPrivateChatChannel) chatChannel;
+
             lastSelectedPrivateChannel = Optional.of(privateChatChannel);
             userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
         }
@@ -82,6 +86,6 @@ public class CommonChannelSelectionService extends ChatChannelSelectionService {
     @Override
     protected Stream<ChatChannel<?>> getAllChatChannels() {
         return Stream.concat(publicChatChannelService.getChannels().stream(),
-                privateChatChannelService.stream().flatMap(service -> service.getChannels().stream()));
+                privateChatChannelService.getChannels().stream());
     }
 }

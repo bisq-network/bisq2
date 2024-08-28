@@ -173,21 +173,7 @@ public class MediatorController implements Controller {
 
     void onToggleClosedCases() {
         model.getShowClosedCases().set(!model.getShowClosedCases().get());
-        applyShowClosedCasesChange();
-    }
-
-    private void closeCaseHandler() {
-        applyShowClosedCasesChange();
-    }
-
-    private void reOpenCaseHandler() {
-        applyShowClosedCasesChange();
-    }
-
-    private void applyShowClosedCasesChange() {
         mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-        // Need a predicate change to trigger a list update
-        applyFilteredListPredicate(!model.getShowClosedCases().get());
         applyFilteredListPredicate(model.getShowClosedCases().get());
     }
 
@@ -223,5 +209,13 @@ public class MediatorController implements Controller {
                 myUserIdentity,
                 mediationRequest.getRequester(),
                 mediationRequest.getPeer());
+    }
+
+    private void closeCaseHandler() {
+        onToggleClosedCases();
+    }
+
+    private void reOpenCaseHandler() {
+        onToggleClosedCases();
     }
 }

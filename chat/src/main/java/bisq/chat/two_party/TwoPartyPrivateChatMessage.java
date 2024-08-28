@@ -31,8 +31,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
@@ -57,7 +57,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
                                       long date,
                                       boolean wasEdited,
                                       ChatMessageType chatMessageType,
-                                      Set<TwoPartyPrivateChatMessageReaction> reactions) {
+                                      List<TwoPartyPrivateChatMessageReaction> reactions) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -111,18 +111,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 privateChatMessage.getChatMessageReactionsList().stream()
                         .map(TwoPartyPrivateChatMessageReaction::fromProto)
-                        .collect(Collectors.toSet())
+                        .collect(Collectors.toList())
         );
-    }
-
-    @Override
-    public ChatChannelDomain getChatChannelDomain() {
-        return chatChannelDomain.migrate();
-    }
-
-    @Override
-    public String getChannelId() {
-        return TwoPartyPrivateChatChannel.Migration.migrateChannelId(channelId);
     }
 
     @Override

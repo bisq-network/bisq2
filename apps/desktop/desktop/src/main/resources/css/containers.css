@@ -413,12 +413,6 @@
 .titled-pane > .content > .scroll-pane > .scroll-bar {
 }
 
-.titled-pane > *.content {
-    -fx-border-color: null;
-    -fx-border-insets: 0;
-    -fx-background-color: null;
-}
-
 
 /*******************************************************************************
  *                                                                             *

@@ -403,25 +403,23 @@ public class MaterialTextField extends Pane {
     }
 
     protected void onInputTextFieldFocus(boolean focus) {
-        if (textInputControl.isEditable()) {
-            if (focus) {
-                resetValidation();
-                selectionLine.setPrefWidth(0);
-                selectionLine.setOpacity(1);
-                Transitions.animateWidth(selectionLine, getWidth());
-            } else {
-                Transitions.fadeOut(selectionLine, 200);
-                stringConverter.ifPresent(stringConverter -> {
-                    try {
-                        setText(stringConverter.toString(stringConverter.fromString(getText())));
-                    } catch (Exception ignore) {
-                    }
-                });
-                validate();
-            }
-            onMouseExited();
-            update();
+        if (focus && textInputControl.isEditable()) {
+            resetValidation();
+            selectionLine.setPrefWidth(0);
+            selectionLine.setOpacity(1);
+            Transitions.animateWidth(selectionLine, getWidth());
+        } else {
+            Transitions.fadeOut(selectionLine, 200);
+            stringConverter.ifPresent(stringConverter -> {
+                try {
+                    setText(stringConverter.toString(stringConverter.fromString(getText())));
+                } catch (Exception ignore) {
+                }
+            });
+            validate();
         }
+        onMouseExited();
+        update();
     }
 
     protected void onWidthChanged(double width) {

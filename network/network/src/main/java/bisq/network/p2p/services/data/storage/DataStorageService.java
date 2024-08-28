@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
@@ -50,8 +49,6 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     private final String storeKey;
     @Getter
     protected final String subDirectory;
-    @Getter
-    public ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
     protected Optional<Integer> maxMapSize = Optional.empty();
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
@@ -78,14 +75,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
         int maxSize = getMaxMapSize();
         Map<ByteArray, T> pruned = map.entrySet().stream()
-                .filter(entry -> {
-                    T dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
-                        prunedAndExpiredDataRequests.add(dataRequest);
-                    }
-                    return !isExpired;
-                })
+                .filter(entry -> !entry.getValue().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(maxSize)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

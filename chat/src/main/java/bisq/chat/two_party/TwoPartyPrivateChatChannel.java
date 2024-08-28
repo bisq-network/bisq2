@@ -18,22 +18,19 @@
 package bisq.chat.two_party;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.notifications.ChatChannelNotificationType;
+import bisq.chat.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateChatChannel;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
@@ -41,8 +38,8 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     public static String createId(ChatChannelDomain chatChannelDomain, String userProfileId1, String userProfileId2) {
         List<String> userIds = Stream.of(userProfileId1, userProfileId2)
                 .sorted()
-                .toList();
-        return chatChannelDomain.migrate().name().toLowerCase() + "." + userIds.get(0) + "-" + userIds.get(1);
+                .collect(Collectors.toList());
+        return chatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "-" + userIds.get(1);
     }
 
     @Getter
@@ -55,7 +52,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                 chatChannelDomain,
                 peer,
                 myUserIdentity,
-                new HashSet<>(),
+                new ArrayList<>(),
                 ChatChannelNotificationType.ALL
         );
     }
@@ -64,9 +61,10 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                                        ChatChannelDomain chatChannelDomain,
                                        UserProfile peer,
                                        UserIdentity myUserIdentity,
-                                       Set<TwoPartyPrivateChatMessage> chatMessages,
+                                       List<TwoPartyPrivateChatMessage> chatMessages,
                                        ChatChannelNotificationType chatChannelNotificationType) {
         super(id, chatChannelDomain, myUserIdentity, chatMessages, chatChannelNotificationType);
+
         this.peer = peer;
     }
 
@@ -89,7 +87,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
                 proto.getChatMessagesList().stream()
                         .map(TwoPartyPrivateChatMessage::fromProto)
-                        .collect(Collectors.toSet()),
+                        .collect(Collectors.toList()),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType())
         );
     }
@@ -100,35 +98,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ChatChannelDomain getChatChannelDomain() {
-        return chatChannelDomain.migrate();
-    }
-
-    @Override
-    public String getId() {
-        return Migration.migrateChannelId(id);
-    }
-
-    @Override
     public String getDisplayString() {
         return getPeer().getUserName();
-    }
-
-    @Slf4j
-    public static class Migration {
-        public static String migrateChannelId(String chatChannelId) {
-            try {
-                String[] tokens = chatChannelId.split("\\.");
-                String chatChannelDomainName = tokens[0].toUpperCase();
-                ChatChannelDomain chatChannelDomain = ChatChannelDomain.valueOf(chatChannelDomainName).migrate();
-                String[] peers = tokens[1].split("-");
-                String userProfileId1 = peers[0];
-                String userProfileId2 = peers[1];
-                return createId(chatChannelDomain, userProfileId1, userProfileId2);
-            } catch (Exception e) {
-                log.error("Cannot migrate chatChannelId from chatChannelId={}.", chatChannelId, e);
-                throw e;
-            }
-        }
     }
 }

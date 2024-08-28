@@ -32,6 +32,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
@@ -46,7 +47,6 @@ import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -69,7 +69,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class ServiceNodesByTransport {
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<TransportType> supportedTransportTypes;
-    @Getter
     private final AuthorizationService authorizationService;
 
     public ServiceNodesByTransport(Map<TransportType, TransportConfig> configByTransportType,
@@ -86,7 +85,8 @@ public class ServiceNodesByTransport {
                                    EquihashProofOfWorkService equihashProofOfWorkService,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
-                                   Optional<ResendMessageService> resendMessageService) {
+                                   Optional<ResendMessageService> resendMessageService,
+                                   NetworkLoadSnapshot networkLoadSnapshot) {
         this.supportedTransportTypes = supportedTransportTypes;
 
         authorizationService = new AuthorizationService(authorizationServiceConfig,
@@ -113,14 +113,15 @@ public class ServiceNodesByTransport {
                     nodeConfig,
                     peerGroupServiceConfig,
                     inventoryServiceConfig,
-                    keyBundleService,
-                    persistenceService,
                     dataService,
                     messageDeliveryStatusService,
                     resendMessageService,
+                    keyBundleService,
+                    persistenceService,
                     authorizationService,
                     seedAddresses,
-                    transportType);
+                    transportType,
+                    networkLoadSnapshot);
             map.put(transportType, serviceNode);
         });
     }

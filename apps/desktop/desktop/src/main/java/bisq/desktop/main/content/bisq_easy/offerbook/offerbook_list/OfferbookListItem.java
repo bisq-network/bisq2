@@ -123,6 +123,7 @@ public class OfferbookListItem {
         }
     }
 
+
     private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
         List<FiatPaymentMethod> paymentMethods =
                 PaymentMethodSpecUtil.getPaymentMethods(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());

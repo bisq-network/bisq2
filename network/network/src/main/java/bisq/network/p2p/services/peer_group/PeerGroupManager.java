@@ -210,7 +210,7 @@ public class PeerGroupManager implements Node.Listener {
                         config.getHouseKeepingInterval() / 1000);
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
                         .periodically(config.getHouseKeepingInterval() / 4, config.getHouseKeepingInterval(), MILLISECONDS)
-                        .name(getClass().getSimpleName() + "-" + nodeInfo));
+                        .name("PeerGroupService.scheduler-" + nodeInfo));
                 keepAliveService.initialize();
                 networkLoadExchangeService.initialize();
                 setState(State.RUNNING);

@@ -56,7 +56,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                                   NavigationTarget navigationTarget) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
 
-        channelService = chatService.getTwoPartyPrivateChatChannelService();
+        channelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         reputationService = serviceProvider.getUserService().getReputationService();

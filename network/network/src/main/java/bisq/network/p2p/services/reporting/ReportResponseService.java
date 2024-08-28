@@ -50,6 +50,10 @@ public class ReportResponseService implements Node.Listener {
         this.dataService = dataService;
         this.networkLoadSnapshot = networkLoadSnapshot;
 
+        initialize();
+    }
+
+    public void initialize() {
         node.addListener(this);
     }
 

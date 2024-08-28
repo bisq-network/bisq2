@@ -30,6 +30,7 @@ import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.confidential.resend.ResendMessageData;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -72,6 +73,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final KeyBundleService keyBundleService;
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final Optional<ResendMessageService> resendMessageService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<EnvelopePayloadMessage> processedEnvelopePayloadMessages = new HashSet<>();
     private volatile boolean isShutdownInProgress;
@@ -79,11 +81,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     public ConfidentialMessageService(NodesById nodesById,
                                       KeyBundleService keyBundleService,
                                       Optional<DataService> dataService,
-                                      Optional<MessageDeliveryStatusService> messageDeliveryStatusService) {
+                                      Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
+                                      Optional<ResendMessageService> resendMessageService) {
         this.nodesById = nodesById;
         this.keyBundleService = keyBundleService;
         this.dataService = dataService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
+        this.resendMessageService = resendMessageService;
 
         nodesById.addNodeListener(this);
         dataService.ifPresent(service -> service.addListener(this));

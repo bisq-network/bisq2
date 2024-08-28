@@ -29,7 +29,6 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -139,9 +138,6 @@ public class ServiceNode implements Node.Listener {
     private Optional<InventoryService> inventoryService = Optional.empty();
     @Getter
     private Optional<DataNetworkService> dataNetworkService = Optional.empty();
-    @Getter
-    private Optional<NetworkLoadService> networkLoadService = Optional.empty();
-
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<ConfidentialMessageService.Listener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
@@ -152,26 +148,26 @@ public class ServiceNode implements Node.Listener {
                 Node.Config nodeConfig,
                 PeerGroupManager.Config peerGroupServiceConfig,
                 InventoryService.Config inventoryServiceConfig,
-                KeyBundleService keyBundleService,
-                PersistenceService persistenceService,
                 Optional<DataService> dataService,
                 Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                 Optional<ResendMessageService> resendMessageService,
+                KeyBundleService keyBundleService,
+                PersistenceService persistenceService,
                 AuthorizationService authorizationService,
                 Set<Address> seedNodeAddresses,
-                TransportType transportType) {
+                TransportType transportType,
+                NetworkLoadSnapshot networkLoadSnapshot) {
         this.config = config;
         this.nodeConfig = nodeConfig;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
         this.inventoryServiceConfig = inventoryServiceConfig;
-        this.keyBundleService = keyBundleService;
-        this.dataService = dataService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
+        this.dataService = dataService;
         this.resendMessageService = resendMessageService;
+        this.keyBundleService = keyBundleService;
         this.seedNodeAddresses = seedNodeAddresses;
         this.transportType = transportType;
-
-        this.networkLoadSnapshot = new NetworkLoadSnapshot();
+        this.networkLoadSnapshot = networkLoadSnapshot;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
@@ -239,7 +235,8 @@ public class ServiceNode implements Node.Listener {
                 Optional.of(new ConfidentialMessageService(nodesById,
                         keyBundleService,
                         dataService,
-                        messageDeliveryStatusService)) :
+                        messageDeliveryStatusService,
+                        resendMessageService)) :
                 Optional.empty();
 
         reportRequestService = supportedServices.contains(ServiceNode.SupportedService.REPORT_REQUEST) ?
@@ -252,15 +249,6 @@ public class ServiceNode implements Node.Listener {
                 Optional.of(new ReportResponseService(defaultNode,
                         dataService.orElseThrow(),
                         networkLoadSnapshot)) :
-                Optional.empty();
-
-        networkLoadService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
-                supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
-                supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
-                Optional.of(new NetworkLoadService(this,
-                        dataService.orElseThrow().getStorageService(),
-                        networkLoadSnapshot,
-                        peerGroupServiceConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
                 Optional.empty();
 
         setState(State.INITIALIZING);

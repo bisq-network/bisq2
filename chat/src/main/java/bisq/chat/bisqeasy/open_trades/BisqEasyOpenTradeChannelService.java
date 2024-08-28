@@ -23,7 +23,7 @@ import bisq.chat.Citation;
 import bisq.chat.priv.PrivateGroupChatChannelService;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.chat.reactions.Reaction;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -40,8 +40,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -205,7 +205,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     }
 
     @Override
-    public ObservableSet<BisqEasyOpenTradeChannel> getChannels() {
+    public ObservableArray<BisqEasyOpenTradeChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
@@ -232,7 +232,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 channel.getMediator(),
                 ChatMessageType.PROTOCOL_LOG_MESSAGE,
                 Optional.empty(),
-                new HashSet<>());
+                new ArrayList<>());
         channel.addChatMessage(tradeLogMessage);
     }
 
@@ -280,7 +280,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 mediator,
                 chatMessageType,
                 Optional.empty(),
-                new HashSet<>());
+                new ArrayList<>());
     }
 
     //todo (refactor, low prio)

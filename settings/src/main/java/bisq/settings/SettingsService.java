@@ -89,7 +89,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getShowOfferListExpanded().addObserver(value -> persist());
         getShowMarketSelectionListCollapsed().addObserver(value -> persist());
         getBackupLocation().addObserver(value -> persist());
-        getShowMyOffersOnly().addObserver(value -> persist());
 
         isInitialized = true;
 
@@ -222,10 +221,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<String> getBackupLocation() {
         return persistableStore.backupLocation;
-    }
-
-    public Observable<Boolean> getShowMyOffersOnly() {
-        return persistableStore.showMyOffersOnly;
     }
 
 

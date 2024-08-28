@@ -18,12 +18,12 @@
 package bisq.chat.priv;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.notifications.ChatChannelNotificationType;
+import bisq.chat.ChatChannelNotificationType;
 import bisq.user.identity.UserIdentity;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.Set;
+import java.util.List;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
@@ -32,7 +32,7 @@ public abstract class PrivateGroupChatChannel<M extends PrivateChatMessage<?>> e
     protected PrivateGroupChatChannel(String id,
                                       ChatChannelDomain chatChannelDomain,
                                       UserIdentity myUserIdentity,
-                                      Set<M> chatMessages,
+                                      List<M> chatMessages,
                                       ChatChannelNotificationType chatChannelNotificationType) {
         super(id, chatChannelDomain, myUserIdentity, chatMessages, chatChannelNotificationType);
     }

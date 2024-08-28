@@ -36,18 +36,15 @@ public class Res {
     private static final List<String> BUNDLE_NAMES = List.of(
             "default",
             "application",
-            "bisq_easy",
-            "reputation",
-            "trade_apps",
-            "academy",
             "chat",
-            "support",
+            "trade_apps",
+            "bisq_easy",
+            "academy",
             "user",
-            "network",
-            "settings",
-            "wallet",
             "authorized_role",
-            "payment_method"
+            "payment_method",
+            "wallet",
+            "settings"
     );
 
     private static final List<ResourceBundle> bundles = new ArrayList<>();

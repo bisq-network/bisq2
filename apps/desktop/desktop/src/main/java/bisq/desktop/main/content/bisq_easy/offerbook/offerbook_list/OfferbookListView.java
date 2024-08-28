@@ -24,7 +24,6 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -36,28 +35,25 @@ import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import com.google.common.base.Joiner;
-import javafx.collections.ListChangeListener;
-import javafx.collections.SetChangeListener;
-import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.Optional;
 
 @Slf4j
 public class OfferbookListView extends bisq.desktop.common.view.View<VBox, OfferbookListModel, OfferbookListController> {
@@ -65,21 +61,15 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private static final double COLLAPSED_LIST_WIDTH = BisqEasyOfferbookView.COLLAPSED_LIST_WIDTH;
     private static final double HEADER_HEIGHT = BaseChatView.HEADER_HEIGHT;
     private static final double LIST_CELL_HEIGHT = BisqEasyOfferbookView.LIST_CELL_HEIGHT;
-    private static final String ACTIVE_FILTER_CLASS = "active-filter";
 
-    private final Label title, showMyOffersOnlyLabel;
+    private final Label title, offerListByDirectionFilter;
     private final BisqTableView<OfferbookListItem> tableView;
     private final BisqTooltip titleTooltip;
-    private final HBox header, showOnlyMyMessagesHBox;
+    private final HBox header;
     private final ImageView offerListWhiteIcon, offerListGreyIcon, offerListGreenIcon;
-    private final DropdownMenu offerDirectionFilterMenu, paymentsFilterMenu;
-    private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
-    private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
-    private final CheckBox showOnlyMyMessages;
-    private DropdownBisqMenuItem buyFromOffers, sellToOffers;
-    private Label offerDirectionFilterLabel, paymentsFilterLabel;
-    private Subscription showOfferListExpandedPin, showBuyFromOffersPin, showMyOffersOnlyPin,
-            offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
+    private final DropdownMenu filterDropdownMenu;
+    private final DropdownMenuItem buyFromOffers, sellToOffers;
+    private Subscription showOfferListExpandedPin, showBuyFromOffersPin, offerListTableViewSelectionPin;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
@@ -100,20 +90,18 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         header.setMaxHeight(HEADER_HEIGHT);
         header.getStyleClass().add("chat-header-title");
 
-        availablePaymentsChangeListener = change -> updateMarketPaymentFilters();
-        selectedPaymentsChangeListener = change -> updatePaymentsSelection();
-        offerDirectionFilterMenu = createAndGetOffersDirectionFilterMenu();
-        paymentsFilterMenu = createAndGetPaymentsFilterDropdownMenu();
-        showMyOffersOnlyLabel = new Label(Res.get("bisqEasy.offerbook.offerList.table.filters.showMyOffersOnly"));
-        showOnlyMyMessages = new CheckBox();
-        showOnlyMyMessagesHBox = new HBox(5, showOnlyMyMessages, showMyOffersOnlyLabel);
-        showOnlyMyMessagesHBox.getStyleClass().add("offerbook-subheader-checkbox");
-        showOnlyMyMessagesHBox.setAlignment(Pos.CENTER);
+        filterDropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        filterDropdownMenu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
+        offerListByDirectionFilter = new Label();
+        filterDropdownMenu.setLabel(offerListByDirectionFilter);
+        buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
+        sellToOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
+        filterDropdownMenu.addMenuItems(buyFromOffers, sellToOffers);
 
-        HBox subheader = new HBox(10);
+        HBox subheader = new HBox();
         subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getStyleClass().add("offer-list-subheader");
-        subheader.getChildren().addAll(offerDirectionFilterMenu, paymentsFilterMenu, showOnlyMyMessagesHBox);
+        subheader.getChildren().add(filterDropdownMenu);
 
         tableView = new BisqTableView<>(model.getSortedOfferbookListItems());
         tableView.getStyleClass().add("offers-list");
@@ -129,15 +117,12 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
     @Override
     protected void onViewAttached() {
-        paymentsFilterLabel.textProperty().bind(model.getPaymentFilterTitle());
-        showOnlyMyMessages.selectedProperty().bindBidirectional(model.getShowMyOffersOnly());
-
         showOfferListExpandedPin = EasyBind.subscribe(model.getShowOfferListExpanded(), showOfferListExpanded -> {
             if (showOfferListExpanded != null) {
                 tableView.setVisible(showOfferListExpanded);
                 tableView.setManaged(showOfferListExpanded);
-                offerDirectionFilterMenu.setVisible(showOfferListExpanded);
-                offerDirectionFilterMenu.setManaged(showOfferListExpanded);
+                filterDropdownMenu.setVisible(showOfferListExpanded);
+                filterDropdownMenu.setManaged(showOfferListExpanded);
                 title.setGraphic(offerListGreyIcon);
                 if (showOfferListExpanded) {
                     header.setAlignment(Pos.CENTER_LEFT);
@@ -150,12 +135,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                     root.getStyleClass().add("chat-container");
                     title.setText(Res.get("bisqEasy.offerbook.offerList"));
                     titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip"));
-                    Transitions.expansionAnimation(root, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH, () -> {
-                        paymentsFilterMenu.setVisible(true);
-                        paymentsFilterMenu.setManaged(true);
-                        showOnlyMyMessagesHBox.setVisible(true);
-                        showOnlyMyMessagesHBox.setManaged(true);
-                    });
+                    Transitions.expansionAnimation(root, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH);
                     title.setOnMouseExited(e -> title.setGraphic(offerListGreenIcon));
                 } else {
                     Transitions.expansionAnimation(root, EXPANDED_OFFER_LIST_WIDTH, COLLAPSED_LIST_WIDTH + 20, () -> {
@@ -171,10 +151,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                         titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip"));
                         title.setGraphic(offerListGreyIcon);
                         title.setOnMouseExited(e -> title.setGraphic(offerListGreyIcon));
-                        paymentsFilterMenu.setVisible(false);
-                        paymentsFilterMenu.setManaged(false);
-                        showOnlyMyMessagesHBox.setVisible(false);
-                        showOnlyMyMessagesHBox.setManaged(false);
                     });
                 }
             }
@@ -185,44 +161,16 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
         showBuyFromOffersPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyFromOffers -> {
             if (showBuyFromOffers != null) {
-                offerDirectionFilterLabel.getStyleClass().clear();
+                offerListByDirectionFilter.getStyleClass().clear();
                 if (showBuyFromOffers) {
-                    offerDirectionFilterLabel.setText(sellToOffers.getLabelText());
-                    offerDirectionFilterLabel.getStyleClass().add("sell-to-offers");
+                    offerListByDirectionFilter.setText(sellToOffers.getLabelText());
+                    offerListByDirectionFilter.getStyleClass().add("sell-to-offers");
                 } else {
-                    offerDirectionFilterLabel.setText(buyFromOffers.getLabelText());
-                    offerDirectionFilterLabel.getStyleClass().add("buy-from-offers");
+                    offerListByDirectionFilter.setText(buyFromOffers.getLabelText());
+                    offerListByDirectionFilter.getStyleClass().add("buy-from-offers");
                 }
             }
         });
-
-        activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
-            if (count.intValue() != 0) {
-                if (!paymentsFilterLabel.getStyleClass().contains(ACTIVE_FILTER_CLASS)) {
-                    paymentsFilterLabel.getStyleClass().add(ACTIVE_FILTER_CLASS);
-                }
-            } else {
-                paymentsFilterLabel.getStyleClass().remove(ACTIVE_FILTER_CLASS);
-            }
-        });
-
-        isCustomPaymentsSelectedPin = EasyBind.subscribe(model.getIsCustomPaymentsSelected(),
-                isSelected -> updatePaymentsSelection());
-
-        showMyOffersOnlyPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffers -> {
-            if (showMyOffers) {
-                if (!showMyOffersOnlyLabel.getStyleClass().contains(ACTIVE_FILTER_CLASS)) {
-                    showMyOffersOnlyLabel.getStyleClass().add(ACTIVE_FILTER_CLASS);
-                }
-            } else {
-                showMyOffersOnlyLabel.getStyleClass().remove(ACTIVE_FILTER_CLASS);
-            }
-        });
-
-        model.getAvailableMarketPayments().addListener(availablePaymentsChangeListener);
-        updateMarketPaymentFilters();
-        model.getSelectedMarketPayments().addListener(selectedPaymentsChangeListener);
-        updatePaymentsSelection();
 
         title.setOnMouseEntered(e -> title.setGraphic(offerListWhiteIcon));
         title.setOnMouseClicked(e -> controller.toggleOfferList());
@@ -234,17 +182,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
     @Override
     protected void onViewDetached() {
-        paymentsFilterLabel.textProperty().unbind();
-        showOnlyMyMessages.selectedProperty().unbindBidirectional(model.getShowMyOffersOnly());
-
         showOfferListExpandedPin.unsubscribe();
         offerListTableViewSelectionPin.unsubscribe();
         showBuyFromOffersPin.unsubscribe();
-        activeMarketPaymentsCountPin.unsubscribe();
-        isCustomPaymentsSelectedPin.unsubscribe();
-
-        model.getAvailableMarketPayments().removeListener(availablePaymentsChangeListener);
-        model.getSelectedMarketPayments().removeListener(selectedPaymentsChangeListener);
 
         title.setOnMouseEntered(null);
         title.setOnMouseExited(null);
@@ -253,79 +193,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         sellToOffers.setOnAction(null);
 
         title.setTooltip(null);
-
-        cleanUpPaymentsFilterMenu();
-    }
-
-    private DropdownMenu createAndGetOffersDirectionFilterMenu() {
-        DropdownMenu menu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        menu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
-        menu.setOpenToTheRight(true);
-        offerDirectionFilterLabel = new Label();
-        menu.setLabel(offerDirectionFilterLabel);
-        buyFromOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
-        sellToOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
-        menu.addMenuItems(buyFromOffers, sellToOffers);
-        return menu;
-    }
-
-    private DropdownMenu createAndGetPaymentsFilterDropdownMenu() {
-        DropdownMenu menu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        menu.getStyleClass().add("dropdown-offer-list-payment-filter-menu");
-        menu.setOpenToTheRight(true);
-        paymentsFilterLabel = new Label();
-        menu.setLabel(paymentsFilterLabel);
-        return menu;
-    }
-
-    private void updateMarketPaymentFilters() {
-        cleanUpPaymentsFilterMenu();
-
-        model.getAvailableMarketPayments().forEach(payment -> {
-            ImageView paymentIcon = ImageUtil.getImageViewById(payment.getName());
-            Label paymentLabel = new Label(payment.getDisplayString(), paymentIcon);
-            paymentLabel.setGraphicTextGap(10);
-            PaymentMenuItem paymentItem = new PaymentMenuItem(payment, paymentLabel);
-            paymentItem.setHideOnClick(false);
-            paymentItem.setOnAction(e -> controller.togglePaymentFilter(payment, paymentItem.isSelected()));
-            paymentsFilterMenu.addMenuItems(paymentItem);
-        });
-
-        StackPane customPaymentIcon = BisqEasyViewUtils.getCustomPaymentMethodIcon("C");
-        Label customPaymentLabel = new Label(
-                Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.customPayments"), customPaymentIcon);
-        customPaymentLabel.setGraphicTextGap(10);
-        PaymentMenuItem customItem = new PaymentMenuItem(null, customPaymentLabel);
-        customItem.setHideOnClick(false);
-        customItem.setOnAction(e -> controller.toggleCustomPaymentFilter(customItem.isSelected()));
-        paymentsFilterMenu.addMenuItems(customItem);
-
-        SeparatorMenuItem separator = new SeparatorMenuItem();
-        DropdownBisqMenuItem clearFilters = new DropdownBisqMenuItem("delete-t-grey", "delete-t-white",
-                Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.clearFilters"));
-        clearFilters.setHideOnClick(false);
-        clearFilters.setOnAction(e -> controller.clearPaymentFilters());
-        paymentsFilterMenu.addMenuItems(separator, clearFilters);
-    }
-
-    private void cleanUpPaymentsFilterMenu() {
-        paymentsFilterMenu.getMenuItems().stream()
-                .filter(item -> item instanceof PaymentMenuItem)
-                .map(item -> (PaymentMenuItem) item)
-                .forEach(PaymentMenuItem::dispose);
-        paymentsFilterMenu.clearMenuItems();
-    }
-
-    private void updatePaymentsSelection() {
-        paymentsFilterMenu.getMenuItems().stream()
-                .filter(item -> item instanceof PaymentMenuItem)
-                .map(item -> (PaymentMenuItem) item)
-                .forEach(paymentMenuItem ->
-                        paymentMenuItem.getPaymentMethod()
-                                .ifPresentOrElse(
-                                        payment -> paymentMenuItem.updateSelection(model.getSelectedMarketPayments().contains(payment)),
-                                        () -> paymentMenuItem.updateSelection(model.getIsCustomPaymentsSelected().get()))
-                );
     }
 
     private void configOffersTableView() {
@@ -381,6 +248,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 .comparator(Comparator.comparing(OfferbookListItem::getBitcoinPaymentMethodsAsString))
                 .build());
     }
+
 
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getUserProfileCellFactory() {
@@ -537,36 +405,5 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 }
             }
         };
-    }
-
-    @Getter
-    private static final class PaymentMenuItem extends DropdownMenuItem {
-        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
-
-        private final Optional<FiatPaymentMethod> paymentMethod;
-
-        private PaymentMenuItem(FiatPaymentMethod paymentMethod, Label displayLabel) {
-            super("check-white", "check-white", displayLabel);
-
-            this.paymentMethod = Optional.ofNullable(paymentMethod);
-            getStyleClass().add("dropdown-menu-item");
-            updateSelection(false);
-            initialize();
-        }
-
-        public void initialize() {
-        }
-
-        public void dispose() {
-            setOnAction(null);
-        }
-
-        void updateSelection(boolean isSelected) {
-            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
-        }
-
-        boolean isSelected() {
-            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
-        }
     }
 }

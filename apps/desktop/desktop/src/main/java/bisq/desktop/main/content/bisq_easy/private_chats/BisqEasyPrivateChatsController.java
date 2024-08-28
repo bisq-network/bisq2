@@ -31,6 +31,11 @@ public final class BisqEasyPrivateChatsController extends PrivateChatsController
     }
 
     @Override
+    public void createDependencies(ChatChannelDomain chatChannelDomain) {
+        selectionService = chatService.getBisqEasyPrivateChatChannelSelectionService();
+    }
+
+    @Override
     public BisqEasyPrivateChatsModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
         return new BisqEasyPrivateChatsModel(chatChannelDomain);
     }

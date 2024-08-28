@@ -23,7 +23,7 @@ import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
@@ -37,8 +37,8 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -82,7 +82,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableSet<TwoPartyPrivateChatChannel> getChannels() {
+    public ObservableArray<TwoPartyPrivateChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
@@ -149,7 +149,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 new Date().getTime(),
                 wasEdited,
                 chatMessageType,
-                new HashSet<>());
+                new ArrayList<>());
     }
 
     @Override

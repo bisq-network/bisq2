@@ -17,7 +17,7 @@
 
 package bisq.chat.bisqeasy.offerbook;
 
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Getter
 public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyOfferbookChannelStore> {
-    private final ObservableSet<BisqEasyOfferbookChannel> channels = new ObservableSet<>();
+    private final ObservableArray<BisqEasyOfferbookChannel> channels = new ObservableArray<>();
 
     public BisqEasyOfferbookChannelStore() {
     }

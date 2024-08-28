@@ -18,9 +18,11 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatService;
 import bisq.chat.common.CommonPublicChatChannel;
-import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
@@ -34,7 +36,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
@@ -49,13 +50,11 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final V view;
     protected final ServiceProvider serviceProvider;
     protected final ChatService chatService;
-    protected final ChatChannelSelectionService selectionService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
     protected final ChannelSidebar channelSidebar;
     protected final ChatMessageContainerController chatMessageContainerController;
     protected Subscription searchTextPin;
-    protected Pin selectedChannelPin;
 
     public BaseChatController(ServiceProvider serviceProvider,
                               ChatChannelDomain chatChannelDomain,
@@ -64,7 +63,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
         this.serviceProvider = serviceProvider;
         chatService = serviceProvider.getChatService();
-        selectionService = chatService.getChatChannelSelectionService(chatChannelDomain);
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
 
@@ -85,27 +83,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         view = createAndGetView();
     }
 
-    @Override
-    public void onActivate() {
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
-        model.getSearchText().set("");
-        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
-            if (searchText == null || searchText.isEmpty()) {
-                chatMessageContainerController.setSearchPredicate(item -> true);
-            } else {
-                chatMessageContainerController.setSearchPredicate(item -> item.match(searchText));
-            }
-        });
-    }
-
-    @Override
-    public void onDeactivate() {
-        selectedChannelPin.unbind();
-        searchTextPin.unsubscribe();
-    }
-
-    public void createDependencies(ChatChannelDomain chatChannelDomain) {
-    }
+    public abstract void createDependencies(ChatChannelDomain chatChannelDomain);
 
     public abstract M createAndGetModel(ChatChannelDomain chatChannelDomain);
 
