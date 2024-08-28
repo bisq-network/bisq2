@@ -87,10 +87,33 @@ public class PopOver extends PopupControl {
     private final SimpleBooleanProperty isAnimated = new SimpleBooleanProperty(true);
     private final ObjectProperty<Duration> fadeInDuration = new SimpleObjectProperty<>(DEFAULT_FADE_DURATION);
     private final ObjectProperty<Duration> fadeOutDuration = new SimpleObjectProperty<>(DEFAULT_FADE_DURATION);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener repositionListener = observable -> {
+        if (isShowing() && !getIsDetached()) {
+            show(getOwnerNode(), targetX, targetY);
+            adjustWindowLocation();
+        }
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener isDetachedListener = observable -> setAutoHide(!getIsDetached());
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener hideListener = observable -> {
+        if (!getIsDetached()) {
+            hide(Duration.ZERO);
+        }
+    };
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final InvalidationListener repositionListener;
+    private final ChangeListener<Number> xListener = (value, oldX, newX) -> {
+        if (!getIsDetached()) {
+            setAnchorX(getAnchorX() + (newX.doubleValue() - oldX.doubleValue()));
+        }
+    };
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final InvalidationListener isDetachedListener;
+    private final ChangeListener<Number> yListener = (value, oldY, newY) -> {
+        if (!getIsDetached()) {
+            setAnchorY(getAnchorY() + (newY.doubleValue() - oldY.doubleValue()));
+        }
+    };
 
     public PopOver() {
         super();
@@ -106,21 +129,13 @@ public class PopOver extends PopupControl {
         label.setPadding(new Insets(4));
         setContentNode(label);
 
-        repositionListener = observable -> {
-            if (isShowing() && !getIsDetached()) {
-                show(getOwnerNode(), targetX, targetY);
-                adjustWindowLocation();
-            }
-        };
-        WeakInvalidationListener weakRepositionListener = new WeakInvalidationListener(repositionListener);
-        arrowSize.addListener(weakRepositionListener);
-        cornerRadius.addListener(weakRepositionListener);
-        arrowLocation.addListener(weakRepositionListener);
-        arrowIndent.addListener(weakRepositionListener);
-        headerAlwaysVisible.addListener(weakRepositionListener);
+        arrowSize.addListener(new WeakInvalidationListener(repositionListener));
+        cornerRadius.addListener(new WeakInvalidationListener(repositionListener));
+        arrowLocation.addListener(new WeakInvalidationListener(repositionListener));
+        arrowIndent.addListener(new WeakInvalidationListener(repositionListener));
+        headerAlwaysVisible.addListener(new WeakInvalidationListener(repositionListener));
 
         // A detached popover should of course not automatically hide itself.
-        isDetachedListener = observable -> setAutoHide(!getIsDetached());
         isDetached.addListener(new WeakInvalidationListener(isDetachedListener));
 
         setAutoHide(true);
@@ -204,29 +219,6 @@ public class PopOver extends PopupControl {
         contentNodeProperty().set(content);
     }
 
-    private final InvalidationListener hideListener = observable -> {
-        if (!getIsDetached()) {
-            hide(Duration.ZERO);
-        }
-    };
-
-    private final WeakInvalidationListener weakHideListener = new WeakInvalidationListener(hideListener);
-
-    private final ChangeListener<Number> xListener = (value, oldX, newX) -> {
-        if (!getIsDetached()) {
-            setAnchorX(getAnchorX() + (newX.doubleValue() - oldX.doubleValue()));
-        }
-    };
-
-    private final WeakChangeListener<Number> weakXListener = new WeakChangeListener<>(xListener);
-
-    private final ChangeListener<Number> yListener = (value, oldY, newY) -> {
-        if (!getIsDetached()) {
-            setAnchorY(getAnchorY() + (newY.doubleValue() - oldY.doubleValue()));
-        }
-    };
-
-    private final WeakChangeListener<Number> weakYListener = new WeakChangeListener<>(yListener);
 
     private Window ownerWindow;
     private final EventHandler<WindowEvent> closePopOverOnOwnerWindowCloseLambda = event -> ownerWindowClosing();
@@ -375,22 +367,11 @@ public class PopOver extends PopupControl {
             fadeInDuration = DEFAULT_FADE_DURATION;
         }
 
-        /*
-         * This is all needed because children windows do not get their x and y
-         * coordinate updated when the owning window gets moved by the user.
-         */
-        if (ownerWindow != null) {
-            ownerWindow.xProperty().removeListener(weakXListener);
-            ownerWindow.yProperty().removeListener(weakYListener);
-            ownerWindow.widthProperty().removeListener(weakHideListener);
-            ownerWindow.heightProperty().removeListener(weakHideListener);
-        }
-
         ownerWindow = owner.getScene().getWindow();
-        ownerWindow.xProperty().addListener(weakXListener);
-        ownerWindow.yProperty().addListener(weakYListener);
-        ownerWindow.widthProperty().addListener(weakHideListener);
-        ownerWindow.heightProperty().addListener(weakHideListener);
+        ownerWindow.xProperty().addListener(new WeakChangeListener<>(xListener));
+        ownerWindow.yProperty().addListener(new WeakChangeListener<>(yListener));
+        ownerWindow.widthProperty().addListener(new WeakInvalidationListener(hideListener));
+        ownerWindow.heightProperty().addListener(new WeakInvalidationListener(hideListener));
 
         setOnShown(evt -> {
 
