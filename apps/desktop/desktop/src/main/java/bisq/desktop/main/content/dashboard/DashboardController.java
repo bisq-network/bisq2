@@ -34,7 +34,9 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.ref.WeakReference;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class DashboardController implements Controller {
@@ -45,9 +47,9 @@ public class DashboardController implements Controller {
     private final UserProfileService userProfileService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin;
+    private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin;
+    private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
-    private Pin isNotificationVisiblePin;
 
     public DashboardController(ServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -67,9 +69,9 @@ public class DashboardController implements Controller {
         getNumUserProfilesPin = userProfileService.getNumUserProfiles().addObserver(numUserProfiles ->
                 UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
 
-        // We listen on all channels, also hidden ones and use a weak reference listener
-        bisqEasyOfferbookChannelService.getChannels().forEach(publicTradeChannel ->
-                publicTradeChannel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateOffersOnline).get()));
+        channelsPins.addAll(bisqEasyOfferbookChannelService.getChannels().stream()
+                .map(channel -> channel.getChatMessages().addObserver(this::updateOffersOnline))
+                .collect(Collectors.toSet()));
 
         // We trigger a call of updateOffersOnline for each channel when registering our observer. But we only want one call, 
         // so we block execution of the code inside updateOffersOnline to only call it once.
@@ -86,6 +88,8 @@ public class DashboardController implements Controller {
         marketPricePin.unbind();
         getNumUserProfilesPin.unbind();
         isNotificationVisiblePin.unbind();
+        channelsPins.forEach(Pin::unbind);
+        channelsPins.clear();
     }
 
     public void onBuildReputation() {
