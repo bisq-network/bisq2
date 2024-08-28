@@ -27,6 +27,7 @@ import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -62,10 +63,27 @@ public class MaterialTextField extends Pane {
     protected final Label errorLabel = new Label();
     @Getter
     private final BisqIconButton iconButton = new BisqIconButton();
-    private ChangeListener<Number> iconButtonHeightListener;
     protected final ValidationControl validationControl;
     private final BooleanProperty isValid = new SimpleBooleanProperty(false);
     private Optional<StringConverter<Number>> stringConverter = Optional.empty();
+
+    private ChangeListener<Number> iconButtonHeightListener;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged((double) newValue);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> textInputControlFocusListener = (observable, oldValue, newValue) -> onInputTextFieldFocus(newValue);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> descriptionLabelTextListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> promptTextListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> helpListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> textInputControlEditableListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> disabledListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> textInputControlTextListener = (observable, oldValue, newValue) -> update();
 
     public MaterialTextField() {
         this(null, null, null);
@@ -135,25 +153,15 @@ public class MaterialTextField extends Pane {
 
         getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel, errorLabel);
 
-        widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                onWidthChanged((double) newValue)).get());
 
-        textInputControl.focusedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                onInputTextFieldFocus(newValue)).get());
-        descriptionLabel.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
-        promptTextProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
-        helpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
-        textInputControl.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                update()).get());
-        disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                update()).get());
-        widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                layoutIconButton()).get());
-        textInputControl.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
+        widthProperty().addListener(new WeakChangeListener<>(widthListener));
+        textInputControl.focusedProperty().addListener(new WeakChangeListener<>(textInputControlFocusListener));
+        descriptionLabel.textProperty().addListener(new WeakChangeListener<>(descriptionLabelTextListener));
+        promptTextProperty().addListener(new WeakChangeListener<>(promptTextListener));
+        helpProperty().addListener(new WeakChangeListener<>(helpListener));
+        textInputControl.editableProperty().addListener(new WeakChangeListener<>(textInputControlEditableListener));
+        disabledProperty().addListener(new WeakChangeListener<>(disabledListener));
+        textInputControl.textProperty().addListener(new WeakChangeListener<>(textInputControlTextListener));
 
         bg.setOnMousePressed(e -> textInputControl.requestFocus());
         bg.setOnMouseEntered(e -> onMouseEntered());
@@ -435,6 +443,7 @@ public class MaterialTextField extends Pane {
             helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
             errorLabel.setPrefWidth(width - 2 * errorLabel.getLayoutX());
         }
+        layoutIconButton();
     }
 
     public void filterMouseEventOnNonEditableText() {
