@@ -20,36 +20,37 @@ package bisq.desktop.components.controls.validator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import lombok.extern.slf4j.Slf4j;
-
-import java.lang.ref.WeakReference;
 
 @Slf4j
 public class SettableErrorValidator extends ValidatorBase {
-    private final BooleanProperty invalid = new SimpleBooleanProperty();
+    private final BooleanProperty isInvalid = new SimpleBooleanProperty();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> isInvalidListener = (observable, oldValue, newValue) -> eval();
 
     public SettableErrorValidator() {
         super();
 
-        invalid.addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> eval()).get());
+        isInvalid.addListener(new WeakChangeListener<>(isInvalidListener));
     }
 
     @Override
     protected void eval() {
-        hasErrors.set(getInvalid());
+        hasErrors.set(getIsInvalid());
     }
 
-    public boolean getInvalid() {
-        return invalid.get();
+    public boolean getIsInvalid() {
+        return isInvalid.get();
     }
 
-    public BooleanProperty invalidProperty() {
-        return invalid;
+    public BooleanProperty isInvalidProperty() {
+        return isInvalid;
     }
 
-    public void setInvalid(boolean invalid) {
-        log.error("setInvalid {}", invalid);
-        this.invalid.set(invalid);
+    public void setIsInvalid(boolean isInvalid) {
+        log.error("setInvalid {}", isInvalid);
+        this.isInvalid.set(isInvalid);
         eval();
     }
 }

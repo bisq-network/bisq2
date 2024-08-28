@@ -396,7 +396,7 @@ public class BuyerState1a extends BaseState {
             sendButton.disableProperty().bind(model.getSendButtonDisabled());
             sendButton.defaultButtonProperty().bind(model.getBitcoinPaymentValidator().hasErrorsProperty().not());
             webcamStateValidator.messageProperty().bind(model.getWebcamErrorMessage());
-            webcamStateValidator.invalidProperty().bind(model.getWebcamErrorMessage().isEmpty().not());
+            webcamStateValidator.isInvalidProperty().bind(model.getWebcamErrorMessage().isEmpty().not());
 
             qrCodeDetectedFromWebcamPin = EasyBind.subscribe(model.getQrCodeDetectedFromWebcam(), qrCodeDetectedFromWebcam -> {
                 if (qrCodeDetectedFromWebcam != null && qrCodeDetectedFromWebcam) {
@@ -436,7 +436,7 @@ public class BuyerState1a extends BaseState {
             sendButton.disableProperty().unbind();
             sendButton.defaultButtonProperty().unbind();
             webcamStateValidator.messageProperty().unbind();
-            webcamStateValidator.invalidProperty().unbind();
+            webcamStateValidator.isInvalidProperty().unbind();
 
             qrCodeDetectedFromWebcamPin.unsubscribe();
             webcamStateVisiblePin.unsubscribe();
