@@ -47,10 +47,10 @@ public class BisqTextArea extends TextArea {
     @Setter
     private double scrollHideThreshold = SCROLL_HIDE_THRESHOLD;
     private boolean initialized;
-    private final InvalidationListener textChangeListener = o -> adjustHeight();
     private ScrollPane selectorScrollPane;
     private Text selectorText;
 
+    private final InvalidationListener textChangeListener = o -> adjustHeight();
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Scene> sceneListener = (observable, oldValue, newValue) -> {
         if (newValue == null) {
@@ -90,6 +90,7 @@ public class BisqTextArea extends TextArea {
                     super.layoutChildren();
                 } catch (Throwable t) {
                     t.printStackTrace();
+                    //TODO why we call super.layoutChildren(); here?
                     super.layoutChildren();
                 }
             }
@@ -97,10 +98,10 @@ public class BisqTextArea extends TextArea {
             if (!initialized) {
                 this.selectorScrollPane = scrollPane;
                 Node lookupTextNode = lookup(SELECTOR_TEXT);
-                if (lookupTextNode instanceof Text aTextNode) {
-                    // If we use a promptText the input field is not the aTextNode we find by the lookup,
+                if (lookupTextNode instanceof Text textNode) {
+                    // If we use a promptText the input field is not the textNode we find by the lookup,
                     // but it's inside a region... A pain to work with those closed components... 
-                    Parent parent = aTextNode.getParent();
+                    Parent parent = textNode.getParent();
                     parent.setStyle("-fx-background-color: transparent; -fx-border-color: transparent");
                     if (parent.getChildrenUnmodifiable().size() == 4) {
                         Node thirdNode = parent.getChildrenUnmodifiable().get(2);
@@ -113,7 +114,7 @@ public class BisqTextArea extends TextArea {
                             }
                         }
                     } else {
-                        this.selectorText = aTextNode;
+                        this.selectorText = textNode;
                     }
                     textProperty().addListener(textChangeListener);
                     scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
