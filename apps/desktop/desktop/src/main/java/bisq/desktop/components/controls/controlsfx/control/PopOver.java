@@ -84,6 +84,7 @@ public class PopOver extends PopupControl {
 
     private double targetX;
     private double targetY;
+    private Window ownerWindow;
     private final SimpleBooleanProperty isAnimated = new SimpleBooleanProperty(true);
     private final ObjectProperty<Duration> fadeInDuration = new SimpleObjectProperty<>(DEFAULT_FADE_DURATION);
     private final ObjectProperty<Duration> fadeOutDuration = new SimpleObjectProperty<>(DEFAULT_FADE_DURATION);
@@ -114,6 +115,8 @@ public class PopOver extends PopupControl {
             setAnchorY(getAnchorY() + (newY.doubleValue() - oldY.doubleValue()));
         }
     };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakWindowEvent
+    private final EventHandler<WindowEvent> ownerWindowCloseHandler = event -> hide(Duration.ZERO);
 
     public PopOver() {
         super();
@@ -219,11 +222,6 @@ public class PopOver extends PopupControl {
         contentNodeProperty().set(content);
     }
 
-
-    private Window ownerWindow;
-    private final EventHandler<WindowEvent> closePopOverOnOwnerWindowCloseLambda = event -> ownerWindowClosing();
-    private final WeakEventHandler<WindowEvent> closePopOverOnOwnerWindowClose = new WeakEventHandler<>(closePopOverOnOwnerWindowCloseLambda);
-
     /**
      * Shows the pop-over in a position relative to the edges of the given owner
      * node. The position is dependent on the arrow location. If the arrow is
@@ -285,68 +283,54 @@ public class PopOver extends PopupControl {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public final void show(Window owner) {
-        super.show(owner);
-        ownerWindow = owner;
-
-        if (getIsAnimated()) {
-            showFadeInAnimation(getFadeInDuration());
-        }
-
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST,
-                closePopOverOnOwnerWindowClose);
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING,
-                closePopOverOnOwnerWindowClose);
+    public final void show(Window ownerWindow) {
+        super.show(ownerWindow);
+        doShow(ownerWindow);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final void show(Window ownerWindow, double anchorX, double anchorY) {
         super.show(ownerWindow, anchorX, anchorY);
+        doShow(ownerWindow);
+    }
+
+    private void doShow(Window ownerWindow) {
         this.ownerWindow = ownerWindow;
 
         if (getIsAnimated()) {
             showFadeInAnimation(getFadeInDuration());
         }
 
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST,
-                closePopOverOnOwnerWindowClose);
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING,
-                closePopOverOnOwnerWindowClose);
+        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, new WeakEventHandler<>(ownerWindowCloseHandler));
+        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING, new WeakEventHandler<>(ownerWindowCloseHandler));
     }
 
     /**
      * Makes the pop-over visible at the give location and associates it with
-     * the given owner node. The x and y coordinate will be the target location
+     * the given owner node. The anchorX and anchorY coordinate will be the target location
      * of the arrow of the pop-over and not the location of the window.
      *
      * @param owner the owning node
-     * @param x     the x coordinate for the pop-over arrow tip
-     * @param y     the y coordinate for the pop-over arrow tip
+     * @param anchorX     the anchorX coordinate for the pop-over arrow tip
+     * @param anchorY     the anchorY coordinate for the pop-over arrow tip
      */
     @Override
-    public final void show(Node owner, double x, double y) {
-        show(owner, x, y, getFadeInDuration());
+    public final void show(Node owner, double anchorX, double anchorY) {
+        show(owner, anchorX, anchorY, getFadeInDuration());
     }
 
     /**
      * Makes the pop-over visible at the give location and associates it with
-     * the given owner node. The x and y coordinate will be the target location
+     * the given owner node. The anchorX and anchorY coordinate will be the target location
      * of the arrow of the pop-over and not the location of the window.
      *
      * @param owner          the owning node
-     * @param x              the x coordinate for the pop-over arrow tip
-     * @param y              the y coordinate for the pop-over arrow tip
+     * @param anchorX              the anchorX coordinate for the pop-over arrow tip
+     * @param anchorY              the anchorY coordinate for the pop-over arrow tip
      * @param fadeInDuration the time it takes for the pop-over to be fully visible. This duration takes precedence over the fade-in property without setting.
      */
-    public final void show(Node owner, double x, double y,
-                           Duration fadeInDuration) {
+    public final void show(Node owner, double anchorX, double anchorY, Duration fadeInDuration) {
 
         /*
          * Calling show() a second time without first closing the pop-over
@@ -356,8 +340,8 @@ public class PopOver extends PopupControl {
             super.hide();
         }
 
-        targetX = x;
-        targetY = y;
+        targetX = anchorX;
+        targetY = anchorY;
 
         if (owner == null) {
             throw new IllegalArgumentException("owner can not be null");
@@ -394,17 +378,15 @@ public class PopOver extends PopupControl {
             adjustWindowLocation();
         });
 
-        super.show(owner, x, y);
+        super.show(owner, anchorX, anchorY);
 
         if (getIsAnimated()) {
             showFadeInAnimation(fadeInDuration);
         }
 
         // Bug fix - close popup when owner window is closing
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST,
-                closePopOverOnOwnerWindowClose);
-        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING,
-                closePopOverOnOwnerWindowClose);
+        ownerWindow.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, new WeakEventHandler<>(ownerWindowCloseHandler));
+        ownerWindow.addEventFilter(WindowEvent.WINDOW_HIDING, new WeakEventHandler<>(ownerWindowCloseHandler));
     }
 
     private void showFadeInAnimation(Duration fadeInDuration) {
@@ -416,10 +398,6 @@ public class PopOver extends PopupControl {
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
         fadeIn.play();
-    }
-
-    private void ownerWindowClosing() {
-        hide(Duration.ZERO);
     }
 
     /**
@@ -440,13 +418,6 @@ public class PopOver extends PopupControl {
      * @since 1.0
      */
     public final void hide(Duration fadeOutDuration) {
-        //We must remove EventFilter in order to prevent memory leak.
-        if (ownerWindow != null) {
-            ownerWindow.removeEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST,
-                    closePopOverOnOwnerWindowClose);
-            ownerWindow.removeEventFilter(WindowEvent.WINDOW_HIDING,
-                    closePopOverOnOwnerWindowClose);
-        }
         if (fadeOutDuration == null) {
             fadeOutDuration = DEFAULT_FADE_DURATION;
         }
