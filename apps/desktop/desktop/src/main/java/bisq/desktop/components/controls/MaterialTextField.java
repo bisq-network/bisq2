@@ -83,10 +83,7 @@ public class MaterialTextField extends Pane {
         this(description, prompt, help, null);
     }
 
-    public MaterialTextField(@Nullable String description,
-                             @Nullable String prompt,
-                             @Nullable String help,
-                             @Nullable String value) {
+    public MaterialTextField(@Nullable String description, @Nullable String prompt, @Nullable String help, @Nullable String value) {
         bg.getStyleClass().add("material-text-field-bg");
 
         line.setPrefHeight(1);

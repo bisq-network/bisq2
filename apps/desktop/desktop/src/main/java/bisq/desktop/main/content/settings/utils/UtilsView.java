@@ -131,7 +131,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
     }
 
     private void onBackupButtonPressed() {
-        if (backupLocation.validate()) {
+        if(backupLocation.validate()) {
             controller.onBackup();
         }
     }

@@ -200,8 +200,7 @@ public class MediatorController implements Controller {
         }
     }
 
-    private BisqEasyOpenTradeChannel findOrCreateChannel(MediationRequest mediationRequest,
-                                                         UserIdentity myUserIdentity) {
+    private BisqEasyOpenTradeChannel findOrCreateChannel(MediationRequest mediationRequest, UserIdentity myUserIdentity) {
         BisqEasyContract contract = mediationRequest.getContract();
         return bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
                 mediationRequest.getTradeId(),

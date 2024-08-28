@@ -80,9 +80,7 @@ public class TransportTypeController implements Controller {
 
         nodeListener = new Node.Listener() {
             @Override
-            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage,
-                                  Connection connection,
-                                  NetworkId networkId) {
+            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
             }
 
             @Override

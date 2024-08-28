@@ -26,6 +26,7 @@ import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;

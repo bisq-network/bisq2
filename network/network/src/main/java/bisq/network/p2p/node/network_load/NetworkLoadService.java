@@ -86,8 +86,7 @@ public class NetworkLoadService {
                 .collect(Collectors.toList());
     }
 
-    private static double calculateLoad(List<ConnectionMetrics> allConnectionMetrics,
-                                        List<? extends DataRequest> dataRequests) {
+    private static double calculateLoad(List<ConnectionMetrics> allConnectionMetrics, List<? extends DataRequest> dataRequests) {
         long numConnections = allConnectionMetrics.size();
         long sentBytesOfLastHour = allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getSentBytesOfLastHour)

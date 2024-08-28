@@ -53,9 +53,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     private final CommonChannelSelectionService chatChannelSelectionService;
     private Pin selectedChannelPin, changedChatNotificationPin;
 
-    public CommonChatTabController(ServiceProvider serviceProvider,
-                                   ChatChannelDomain chatChannelDomain,
-                                   NavigationTarget navigationTarget) {
+    public CommonChatTabController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
         super(new CommonChatTabModel(chatChannelDomain), navigationTarget, serviceProvider);
 
         ChatService chatService = serviceProvider.getChatService();

@@ -26,7 +26,8 @@ import java.io.*;
 import java.security.SignatureException;
 import java.util.Iterator;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PgPUtils {

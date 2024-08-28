@@ -30,8 +30,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import static bisq.security.pow.hashcash.HashCashProofOfWorkService.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static bisq.security.pow.hashcash.HashCashProofOfWorkService.numberOfLeadingZeros;
+import static bisq.security.pow.hashcash.HashCashProofOfWorkService.toNumLeadingZeros;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HashCashProofOfWorkServiceTest {
 

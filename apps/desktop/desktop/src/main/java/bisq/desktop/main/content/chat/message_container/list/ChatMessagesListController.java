@@ -658,9 +658,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
     }
 
-    private void publishPrivateChatMessageReaction(ChatMessage chatMessage,
-                                                   ChatChannel<?> chatChannel,
-                                                   Reaction reaction,
+    private void publishPrivateChatMessageReaction(ChatMessage chatMessage, ChatChannel<?> chatChannel, Reaction reaction,
                                                    Optional<ChatMessageReaction> messageReaction) {
         boolean isRemoved = false;
         if (messageReaction.isPresent() && messageReaction.get() instanceof PrivateChatMessageReaction) {

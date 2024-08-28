@@ -311,9 +311,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         return button;
     }
 
-    private LeftNavSubButton createSubmenuNavigationButton(String title,
-                                                           NavigationTarget navigationTarget,
-                                                           LeftNavButton parentButton) {
+    private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget, LeftNavButton parentButton) {
         LeftNavSubButton button = new LeftNavSubButton(title, toggleGroup, navigationTarget, parentButton);
         setupButtonHandler(navigationTarget, button);
         VBox.setVgrow(button, Priority.ALWAYS);

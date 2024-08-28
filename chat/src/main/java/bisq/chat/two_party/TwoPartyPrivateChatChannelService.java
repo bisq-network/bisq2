@@ -86,8 +86,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         return persistableStore.getChannels();
     }
 
-    public Optional<TwoPartyPrivateChatChannel> findOrCreateChannel(ChatChannelDomain chatChannelDomain,
-                                                                    UserProfile peer) {
+    public Optional<TwoPartyPrivateChatChannel> findOrCreateChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
         synchronized (this) {
             UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity();
             return findChannel(chatChannelDomain, peer, myUserIdentity.getId())
@@ -153,8 +152,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     }
 
     @Override
-    protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer,
-                                                                           UserIdentity myUserIdentity) {
+    protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
         return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
     }
 
@@ -193,9 +191,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         });
     }
 
-    private Optional<TwoPartyPrivateChatChannel> findChannel(ChatChannelDomain chatChannelDomain,
-                                                             UserProfile peer,
-                                                             String myUserIdentityId) {
+    private Optional<TwoPartyPrivateChatChannel> findChannel(ChatChannelDomain chatChannelDomain, UserProfile peer, String myUserIdentityId) {
         return findChannel(TwoPartyPrivateChatChannel.createId(chatChannelDomain, peer.getId(), myUserIdentityId));
     }
 }

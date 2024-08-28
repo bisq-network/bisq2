@@ -38,7 +38,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static bisq.network.p2p.node.ConnectionException.Reason.*;
+import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
+import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
 
 @Slf4j
 public class ConnectionHandshakeInitiator {

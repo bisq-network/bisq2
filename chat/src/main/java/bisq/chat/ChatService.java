@@ -197,8 +197,7 @@ public class ChatService implements Service {
         }
     }
 
-    public Optional<TwoPartyPrivateChatChannel> createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain,
-                                                                                          UserProfile peer) {
+    public Optional<TwoPartyPrivateChatChannel> createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
         if (chatChannelDomain == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
                 chatChannelDomain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES) {
             Optional<TwoPartyPrivateChatChannel> optionalChannel = twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT).findOrCreateChannel(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT, peer);
@@ -251,8 +250,7 @@ public class ChatService implements Service {
                         chatChannelDomain));
     }
 
-    private void addToCommonPublicChatChannelServices(ChatChannelDomain chatChannelDomain,
-                                                      List<CommonPublicChatChannel> channels) {
+    private void addToCommonPublicChatChannelServices(ChatChannelDomain chatChannelDomain, List<CommonPublicChatChannel> channels) {
         commonPublicChatChannelServices.put(chatChannelDomain,
                 new CommonPublicChatChannelService(persistenceService,
                         networkService,

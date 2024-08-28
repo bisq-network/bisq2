@@ -24,10 +24,10 @@ import bisq.wallets.bitcoind.zmq.BitcoindRawTxProcessor;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
-import bisq.wallets.core.model.AddressType;
-import bisq.wallets.json_rpc.JsonRpcClient;
-import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.RpcConfig;
+import bisq.wallets.core.model.AddressType;
+import bisq.wallets.json_rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
 

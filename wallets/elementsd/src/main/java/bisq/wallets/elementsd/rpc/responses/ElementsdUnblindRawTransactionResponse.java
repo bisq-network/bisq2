@@ -19,6 +19,7 @@ package bisq.wallets.elementsd.rpc.responses;
 
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
+import lombok.Setter;
 
 public class ElementsdUnblindRawTransactionResponse extends JsonRpcResponse<ElementsdUnblindRawTransactionResponse.Result> {
     @Getter

@@ -37,7 +37,8 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 import static bisq.bisq_easy.NavigationTarget.CREATE_BISQ_EASY_PAYMENT_ACCOUNT;
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PaymentAccountsController implements Controller {

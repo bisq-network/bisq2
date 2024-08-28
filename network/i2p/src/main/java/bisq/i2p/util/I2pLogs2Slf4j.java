@@ -55,7 +55,7 @@ public class I2pLogs2Slf4j extends Log {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        if (null != lvl) {
+        if(null != lvl) {
             if (lvl == ch.qos.logback.classic.Level.ALL ||
                     lvl == ch.qos.logback.classic.Level.DEBUG ||
                     lvl == ch.qos.logback.classic.Level.TRACE) {
@@ -79,8 +79,7 @@ public class I2pLogs2Slf4j extends Log {
         if(translatedPriority.toInt() == Level.ERROR.toInt())
             delegate.error(msg);
         if(translatedPriority.toInt() == Level.INFO.toInt())
-            delegate.info(msg);
-        ;
+            delegate.info(msg);;
     }
 
     @Override

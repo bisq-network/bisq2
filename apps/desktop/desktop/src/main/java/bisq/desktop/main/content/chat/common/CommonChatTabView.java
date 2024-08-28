@@ -34,7 +34,7 @@ final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonC
         model.getChannelTabButtonModelByChannelId().values().stream()
                 .sorted(model.getChannelTabButtonComparator())
                 .forEach(channel -> addTab(channel.getChannelTitle(), channel.getNavigationTarget())
-                );
+        );
         addTab(Res.get("chat.private.title"), model.getPrivateChatsNavigationTarget());
     }
 

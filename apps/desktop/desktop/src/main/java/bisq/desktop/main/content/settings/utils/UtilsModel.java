@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class UtilsModel implements Model {
-    private final StringProperty backupLocation = new SimpleStringProperty();
-    private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
-    private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
+   private final StringProperty backupLocation = new SimpleStringProperty();
+   private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
+   private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
 }
