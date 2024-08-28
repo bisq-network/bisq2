@@ -191,7 +191,11 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Transitions.Type transitionsType;
     protected int maxChar = 2200;
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final ChangeListener<Scene> sceneListener;
+    private final ChangeListener<Scene>   sceneListener = (observable, oldValue, newValue) -> {
+        if (oldValue != null && newValue == null) {
+            hide();
+        }
+    };
 
     public Overlay() {
         id = UUID.randomUUID().toString();
@@ -202,11 +206,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
         owner = primaryStageOwner;
 
-        sceneListener = (observable, oldValue, newValue) -> {
-            if (oldValue != null && newValue == null) {
-                hide();
-            }
-        };
+
     }
 
 
