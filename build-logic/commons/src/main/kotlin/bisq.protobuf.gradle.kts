@@ -10,13 +10,37 @@ repositories {
 
 val versionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 dependencies {
-    versionCatalog.findLibrary("protobuf-java").ifPresent {
-        implementation(it)
-    }
+    implementation("com.google.protobuf:protobuf-java:4.27.3")
 }
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.19.4"
+        artifact = "com.google.protobuf:protoc:4.27.3"
+    }
+//    generateProtoTasks {
+//        all().forEach { task ->
+//            task.builtins {
+//                create("java") {
+//                    option("lite")
+//                }
+//            }
+//        }
+//    }
+}
+
+tasks.withType<JavaCompile> {
+    dependsOn(tasks.named("generateProto"))
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir("build/generated/source/proto/main/java")
+        }
+    }
+    test {
+        java {
+            srcDir("build/generated/source/proto/test/java")
+        }
     }
 }

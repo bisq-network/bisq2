@@ -2,6 +2,7 @@ plugins {
     id("bisq.java-library")
     id("bisq.grpc")
     id 'application'
+    id("bisq.gradle.packaging.ProGuardPlugin") version "0.1.0"
 }
 
 dependencies {
@@ -11,7 +12,7 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.19.1"
+        artifact = "com.google.protobuf:protoc:4.27.3"
     }
 
     plugins {

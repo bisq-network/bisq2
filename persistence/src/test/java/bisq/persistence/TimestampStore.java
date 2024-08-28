@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Getter
 @Slf4j
 public final class TimestampStore implements PersistableStore<TimestampStore> {
-    @Getter
     private final Map<String, Long> timestampsByProfileId = new ConcurrentHashMap<>();
 
     public TimestampStore() {

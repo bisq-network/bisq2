@@ -1,5 +1,6 @@
 plugins {
     id("bisq.java-library")
+    id("bisq.gradle.packaging.ProGuardPlugin") version "0.1.0"
     application
 }
 
@@ -24,6 +25,9 @@ dependencies {
 }
 
 tasks {
+    installDist {
+        dependsOn("proguardTask") // Ensure that ProGuard runs before installation
+    }
     distZip {
         enabled = false
     }

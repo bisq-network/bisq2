@@ -11,15 +11,30 @@
 
    On macOS and Linux, execute:
    ```sh
-   ./gradlew build
+   ./gradlew clean build
    ```
 
    On Windows:
    ```cmd
-   gradlew.bat build
+   gradlew.bat clean build
    ```
 
-   If you prefer to skip tests to speed up the building process, just append `-x test` to the previous commands.
+   If you prefer to skip proguard (use non proguarded jars) to speed up the building process, add `-x proguardTask` to the previous commands.
+   If you prefer to skip tests to speed up the building process, add `-x test` to the previous commands.
+
+3. **Generate Seed Node & Desktop App Binaries**
+
+   Seed Node:
+   ```sh
+   ./gradlew :apps:seed-node-app:clean :apps:seed-node-app:installDist
+   ```
+   Desktop:
+   ```sh
+   ./gradlew :apps:desktop:desktop-app:clean :apps:desktop:desktop-app:installDist
+   ```
+   
+   **For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
+
 
 ### Important notes
 

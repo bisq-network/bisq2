@@ -1,6 +1,7 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
+        mavenCentral()
     }
     includeBuild("build-logic")
 }
@@ -22,11 +23,11 @@ toolchainManagement {
 rootProject.name = "bisq"
 
 include("account")
+include("common")
 include("application")
 include("bisq-easy")
 include("bonded-roles")
 include("chat")
-include("common")
 include("contract")
 include("daemon")
 include("identity")

@@ -4,6 +4,9 @@ plugins {
 
 dependencies {
     constraints {
+        api("com.guardsquare:proguard-gradle") {
+            version { require("7.5.0") }
+        }
         api("org.checkerframework:checker-qual") {
             version { require("3.13.0") }
         }
