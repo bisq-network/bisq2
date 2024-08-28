@@ -158,7 +158,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
                     boolean isCustomPaymentMethod = fiatPaymentMethod.isCustomPaymentMethod();
                     if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
                         maybeAddFiatPaymentMethod(fiatPaymentMethod);
-                    } else {
+                    } else if (isCustomPaymentMethod) {
                         maybeAddCustomFiatPaymentMethod(fiatPaymentMethod);
                     }
                 }));
@@ -168,7 +168,10 @@ public class TradeWizardPaymentMethodsController implements Controller {
                         return;
                     }
                     BitcoinPaymentMethod bitcoinPaymentMethod = BitcoinPaymentMethodUtil.getPaymentMethod(name);
-                    maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
+                    boolean isCustomPaymentMethod = bitcoinPaymentMethod.isCustomPaymentMethod();
+                    if (!isCustomPaymentMethod) {
+                        maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
+                    }
                 }));
         maybeAddOnChainPaymentMethodAsSelected();
     }
@@ -311,7 +314,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
         // To ensure backwards compatibility we need to drop custom fiat payment methods if the user has more than 3,
         // which is the max allowed number of custom fiat payment methods per market
         while (model.getAddedCustomFiatPaymentMethods().size() > MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS) {
-            model.getAddedCustomFiatPaymentMethods().remove(model.getAddedCustomBitcoinPaymentMethods().size() - 1);
+            model.getAddedCustomFiatPaymentMethods().remove(model.getAddedCustomFiatPaymentMethods().size() - 1);
         }
     }
 
