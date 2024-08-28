@@ -37,6 +37,7 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -57,7 +58,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.lang.ref.WeakReference;
 import java.util.Map;
 
 @Slf4j
@@ -110,13 +110,12 @@ public class UserProfileSelection {
         private final View view;
         private final UserIdentityService userIdentityService;
         private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
-        private final ListChangeListener<ListItem> listChangeListener;
         private Pin selectedUserProfilePin, userProfilesPin, chatChannelSelectionPin, navigationPin, isPrivateChannelPin;
+        private final ListChangeListener<ListItem> userProfilesListener = change -> updateShouldUseComboBox();
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             chatChannelSelectionServices = serviceProvider.getChatService().getChatChannelSelectionServices();
-            listChangeListener = change -> updateShouldUseComboBox();
 
             model = new Model();
             view = new View(model, this, iconSize, useMaterialStyle);
@@ -132,7 +131,7 @@ public class UserProfileSelection {
 
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
 
-            model.getUserProfiles().addListener(listChangeListener);
+            model.getUserProfiles().addListener(userProfilesListener);
             isPrivateChannelPin = FxBindings.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldUseComboBox());
         }
 
@@ -141,7 +140,7 @@ public class UserProfileSelection {
             // Need to clear list otherwise we get issues with binding when multiple 
             // instances are used.
             model.getUserProfiles().clear();
-            model.getUserProfiles().removeListener(listChangeListener);
+            model.getUserProfiles().removeListener(userProfilesListener);
 
             selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
@@ -444,48 +443,53 @@ public class UserProfileSelection {
         private final static int ARROW_WIDTH = 10;
         private final static int ARROW_ICON_PADDING = 10;
         private final static int TEXT_PADDING = 6;
-        private final Label label;
-        private final ImageView catHashImageView;
+        private final Label userNameLabel = new Label();
+        ;
+        private final ImageView catHashImageView = new ImageView();
+        private final UserProfileComboBox userProfileComboBox;
         private int iconSize;
         private boolean isLeftAligned;
+        @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+        private final ChangeListener<UserProfileSelection.ListItem> selectedItemListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                UserIdentity userIdentity = newValue.getUserIdentity();
+                if (userIdentity != null) {
+                    catHashImageView.setImage(CatHash.getImage(userIdentity.getUserProfile(),
+                            catHashImageView.getFitWidth()));
+                    userNameLabel.setText(getUserProfileComboBox().getConverter().toString(newValue));
+                    buttonPane.layout();
+                }
+            }
+        };
+        @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+        ChangeListener<Number> userNameLabelWidthListener = (observable, oldValue, newValue) -> {
+            if (newValue.doubleValue() > 0) {
+                getUserProfileComboBox().setComboBoxWidth(getUserProfileComboBox().calculateWidth(userNameLabel));
+            }
+        };
 
         public UserProfileSkin(ComboBox<ListItem> control, String description, String prompt) {
             super(control, description, prompt);
+
+            this.userProfileComboBox = (UserProfileComboBox) control;
 
             int offset = 5;
             arrowX_l = DEFAULT_ARROW_X_L - offset;
             arrowX_m = DEFAULT_ARROW_X_M - offset;
             arrowX_r = DEFAULT_ARROW_X_R - offset;
 
-            catHashImageView = new ImageView();
             catHashImageView.setLayoutY(7);
 
-            label = new Label();
-
-            buttonPane.getChildren().setAll(label, arrow, catHashImageView);
+            buttonPane.getChildren().setAll(userNameLabel, arrow, catHashImageView);
             buttonPane.setCursor(Cursor.HAND);
             buttonPane.setLayoutY(-UserProfileComboBox.Y_OFFSET);
 
-            //todo Fix WeakReference
-            control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>((ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
-                if (newValue != null) {
-                    UserIdentity userIdentity = newValue.userIdentity;
-                    if (userIdentity != null) {
-                        catHashImageView.setImage(CatHash.getImage(userIdentity.getUserProfile(),
-                                catHashImageView.getFitWidth()));
-                        label.setText(control.getConverter().toString(newValue));
-                        buttonPane.layout();
-                    }
-                }
-            }).get());
+            control.getSelectionModel().selectedItemProperty().addListener(new WeakChangeListener<>(selectedItemListener));
+            userNameLabel.widthProperty().addListener(new WeakChangeListener<>(userNameLabelWidthListener));
+        }
 
-            UserProfileComboBox userProfileComboBox = (UserProfileComboBox) control;
-            ChangeListener<Number> userNameLabelWidthListener = (observable, oldValue, newValue) -> {
-                if (newValue.doubleValue() > 0) {
-                    userProfileComboBox.setComboBoxWidth(userProfileComboBox.calculateWidth(label));
-                }
-            };
-            label.widthProperty().addListener(userNameLabelWidthListener);
+        private UserProfileComboBox getUserProfileComboBox() {
+            return userProfileComboBox;
         }
 
         void setIconSize(int iconSize) {
@@ -497,12 +501,12 @@ public class UserProfileSelection {
         void setUseMaterialStyle(boolean useMaterialStyle) {
             if (useMaterialStyle) {
                 arrow.setLayoutY(14);
-                label.getStyleClass().add("material-text-field");
-                label.setLayoutY(5.5);
+                userNameLabel.getStyleClass().add("material-text-field");
+                userNameLabel.setLayoutY(5.5);
             } else {
                 arrow.setLayoutY(19);
-                label.getStyleClass().add("bisq-text-19");
-                label.setLayoutY(14);
+                userNameLabel.getStyleClass().add("bisq-text-19");
+                userNameLabel.setLayoutY(14);
             }
         }
 
@@ -516,7 +520,7 @@ public class UserProfileSelection {
 
         private void setMaxComboBoxWidth(double width) {
             setComboBoxWidth(width);
-            label.setMaxWidth(width - iconSize - 80);
+            userNameLabel.setMaxWidth(width - iconSize - 80);
         }
 
         @Override
@@ -530,18 +534,18 @@ public class UserProfileSelection {
             super.layoutChildren(x, y, w, h);
 
             if (isLeftAligned) {
-                if (label.getWidth() > 0) {
+                if (userNameLabel.getWidth() > 0) {
                     double iconX = buttonPane.getPrefWidth() - ICON_PADDING - iconSize;
                     catHashImageView.setX(iconX);
                     double arrowX = iconX - ARROW_ICON_PADDING - ARROW_WIDTH;
                     arrow.setLayoutX(arrowX);
-                    label.setLayoutX(arrowX - TEXT_PADDING - label.getWidth());
+                    userNameLabel.setLayoutX(arrowX - TEXT_PADDING - userNameLabel.getWidth());
                 }
             } else {
-                if (label.getWidth() > 0) {
+                if (userNameLabel.getWidth() > 0) {
                     catHashImageView.setX(ICON_PADDING);
                     arrow.setLayoutX(ICON_PADDING + iconSize + ARROW_ICON_PADDING);
-                    label.setLayoutX(ICON_PADDING + iconSize + ARROW_ICON_PADDING + ARROW_WIDTH + TEXT_PADDING);
+                    userNameLabel.setLayoutX(ICON_PADDING + iconSize + ARROW_ICON_PADDING + ARROW_WIDTH + TEXT_PADDING);
                 }
             }
         }
