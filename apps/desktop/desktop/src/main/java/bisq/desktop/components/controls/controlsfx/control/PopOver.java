@@ -115,7 +115,7 @@ public class PopOver extends PopupControl {
             setAnchorY(getAnchorY() + (newY.doubleValue() - oldY.doubleValue()));
         }
     };
-    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakWindowEvent
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
     private final EventHandler<WindowEvent> ownerWindowCloseHandler = event -> hide(Duration.ZERO);
 
     public PopOver() {

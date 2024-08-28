@@ -69,16 +69,43 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected TextInputControl editor;
     @Getter
     private final BooleanProperty isValidSelection;
+
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final ChangeListener<Boolean> editorFocusListener;
+    private final ChangeListener<Boolean> editorFocusListener = (observable, oldValue, newValue) -> {
+        if (!oldValue && newValue) {
+            removeFilter();
+            forceRedraw();
+        }
+    };
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final ListChangeListener<T> itemsListener;
+    private final ListChangeListener<T> itemsListener = c -> setAutocompleteItems(getItems());
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
-    private final EventHandler<KeyEvent> popupContentEventFilter;
+    private final EventHandler<KeyEvent> popupContentEventHandler = event -> {
+        if (event.getCode() == KeyCode.SPACE) {
+            event.consume();
+        }
+    };
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
-    private final EventHandler<KeyEvent> materialTextFieldEventFilter;
+    private final EventHandler<KeyEvent> materialTextFieldEventHandler = event -> {
+        if (event.getCode() == KeyCode.DOWN ||
+                event.getCode() == KeyCode.UP ||
+                event.getCode() == KeyCode.ENTER) {
+            event.consume();
+        }
+    };
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
-    private final EventHandler<KeyEvent> editorEventFilter;
+    private final EventHandler<KeyEvent> editorEventHandler = event -> UIThread.runOnNextRenderFrame(() -> {
+        String query = editor.getText();
+        boolean exactMatch = list.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
+        if (!exactMatch) {
+            if (query.isEmpty()) {
+                removeFilter();
+            } else {
+                filterBy(query);
+            }
+            forceRedraw();
+        }
+    });
 
     public AutoCompleteComboBox() {
         this(FXCollections.observableArrayList());
@@ -98,41 +125,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         this.prompt = prompt;
         this.isValidSelection = new SimpleBooleanProperty(true);
 
-        editorFocusListener = (observable, oldValue, newValue) -> {
-            if (!oldValue && newValue) {
-                removeFilter();
-                forceRedraw();
-            }
-        };
-
-        popupContentEventFilter = event -> {
-            if (event.getCode() == KeyCode.SPACE) {
-                event.consume();
-            }
-        };
-        materialTextFieldEventFilter = event -> {
-            if (event.getCode() == KeyCode.DOWN ||
-                    event.getCode() == KeyCode.UP ||
-                    event.getCode() == KeyCode.ENTER) {
-                event.consume();
-            }
-        };
-        editorEventFilter = event -> UIThread.runOnNextRenderFrame(() -> {
-            String query = editor.getText();
-            boolean exactMatch = list.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
-            if (!exactMatch) {
-                if (query.isEmpty()) {
-                    removeFilter();
-                } else {
-                    filterBy(query);
-                }
-                forceRedraw();
-            }
-        });
-
-
         createDefaultSkin();
-
         setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
@@ -162,7 +155,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
         // todo (investigate, low prio) does not update items when we change list so add a handler here for a quick fix
         // need to figure out why its not updating
-        itemsListener = c -> setAutocompleteItems(items);
         items.addListener(new WeakListChangeListener<>(itemsListener));
     }
 
@@ -274,8 +266,8 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected void registerKeyHandlers() {
         // By default, pressing [SPACE] caused editor text to reset. The solution
         // is to suppress relevant event on the underlying ListViewSkin.
-        skin.getPopupContent().addEventFilter(KeyEvent.ANY, new WeakEventHandler<>(popupContentEventFilter));
-        skin.materialTextField.addEventFilter(KeyEvent.ANY, new WeakEventHandler<>(materialTextFieldEventFilter));
+        skin.getPopupContent().addEventFilter(KeyEvent.ANY, new WeakEventHandler<>(popupContentEventHandler));
+        skin.materialTextField.addEventFilter(KeyEvent.ANY, new WeakEventHandler<>(materialTextFieldEventHandler));
     }
 
     protected void filterBy(String query) {
@@ -296,7 +288,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     }
 
     protected void reactToQueryChanges() {
-        editor.addEventFilter(KeyEvent.KEY_RELEASED, new WeakEventHandler<>(editorEventFilter));
+        editor.addEventFilter(KeyEvent.KEY_RELEASED, new WeakEventHandler<>(editorEventHandler));
     }
 
     protected void removeFilter() {
@@ -346,7 +338,15 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         @Nullable
         protected ListView<T> listView;
         @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-        private final ChangeListener<Parent> listViewParentListener;
+        // Hack to get access to background and insert our polygon
+        private final ChangeListener<Parent> listViewParentListener = (observable, oldValue, newValue) -> {
+            if (newValue != null && listView != null && listView.getParent() != null) {
+                Parent rootPopup = listView.getParent().getParent();
+                if (rootPopup instanceof Pane && ((Pane) rootPopup).getChildren().size() == 1) {
+                    ((Pane) rootPopup).getChildren().addFirst(listBackground);
+                }
+            }
+        };
         protected double arrowX_l = DEFAULT_ARROW_X_L;
         protected double arrowX_m = DEFAULT_ARROW_X_M;
         protected double arrowX_r = DEFAULT_ARROW_X_R;
@@ -387,15 +387,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             listBackground.setEffect(dropShadow);
 
 
-            // Hack to get access to background and insert our polygon
-            listViewParentListener = (observable, oldValue, newValue) -> {
-                if (newValue != null && listView != null && listView.getParent() != null) {
-                    Parent rootPopup = listView.getParent().getParent();
-                    if (rootPopup instanceof Pane && ((Pane) rootPopup).getChildren().size() == 1) {
-                        ((Pane) rootPopup).getChildren().addFirst(listBackground);
-                    }
-                }
-            };
         }
 
         @Override
