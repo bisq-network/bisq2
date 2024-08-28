@@ -88,7 +88,8 @@ public class NetworkLoadExchangeService implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof NetworkLoadExchangeRequest request) {
+        if (envelopePayloadMessage instanceof NetworkLoadExchangeRequest) {
+            NetworkLoadExchangeRequest request = (NetworkLoadExchangeRequest) envelopePayloadMessage;
             NetworkLoad peersNetworkLoad = request.getNetworkLoad();
             log.debug("Received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
                     request.getNonce(), peersNetworkLoad, connection.getPeerAddress());

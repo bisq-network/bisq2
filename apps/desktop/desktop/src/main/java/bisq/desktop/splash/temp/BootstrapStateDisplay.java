@@ -23,8 +23,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.common.TransportType;
+import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -110,11 +110,15 @@ public class BootstrapStateDisplay {
         }
 
         private String getIconId(TransportType transportType) {
-            return switch (transportType) {
-                case TOR -> "tor";
-                case I2P -> "i2p";
-                default -> "clearnet";
-            };
+            switch (transportType) {
+                case TOR:
+                    return "tor";
+                case I2P:
+                    return "i2p";
+                case CLEAR:
+                default:
+                    return "clearnet";
+            }
         }
 
         void onToggleDetails() {

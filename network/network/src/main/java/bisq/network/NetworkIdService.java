@@ -148,27 +148,35 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
 
     private int getPortByTransport(String tag, TransportType transportType) {
         boolean isDefault = tag.equals("default");
-        /*  return isDefault ?
+        switch (transportType) {
+            case TOR:
+                return isDefault ?
+                        defaultPortByTransportType.computeIfAbsent(TransportType.TOR, key -> NetworkUtils.selectRandomPort()) :
+                        NetworkUtils.selectRandomPort();
+            case I2P:
+                  /*  return isDefault ?
                             defaultPorts.computeIfAbsent(TransportType.I2P, key-> NetworkUtils.selectRandomPort()) :
                             NetworkUtils.selectRandomPort();*/
-        return switch (transportType) {
-            case TOR -> isDefault ?
-                    defaultPortByTransportType.computeIfAbsent(TransportType.TOR, key -> NetworkUtils.selectRandomPort()) :
-                    NetworkUtils.selectRandomPort();
-            case I2P -> throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR -> isDefault ?
-                    defaultPortByTransportType.computeIfAbsent(TransportType.CLEAR, key -> NetworkUtils.findFreeSystemPort()) :
-                    NetworkUtils.findFreeSystemPort();
-        };
+                throw new RuntimeException("I2P not unsupported yet");
+            case CLEAR:
+                return isDefault ?
+                        defaultPortByTransportType.computeIfAbsent(TransportType.CLEAR, key -> NetworkUtils.findFreeSystemPort()) :
+                        NetworkUtils.findFreeSystemPort();
+        }
+        throw new RuntimeException("getPortByTransport called with unsupported transportType " + transportType);
     }
 
     private Address getAddressByTransport(KeyBundle keyBundle, int port, TransportType transportType) {
-        //return new Address(keyBundle.getI2pKeyPair().getDestination(), port);
-        return switch (transportType) {
-            case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P -> throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR -> Address.localHost(port);
-        };
+        switch (transportType) {
+            case TOR:
+                return new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
+            case I2P:
+                //return new Address(keyBundle.getI2pKeyPair().getDestination(), port);
+                throw new RuntimeException("I2P not unsupported yet");
+            case CLEAR:
+                return Address.localHost(port);
+        }
+        throw new RuntimeException("getAddressByTransport called with unsupported transportType " + transportType);
     }
 
     private void tryToBackupCorruptedStoreFile() {

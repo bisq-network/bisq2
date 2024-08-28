@@ -42,7 +42,6 @@ public class TorNetwork {
     private final Set<TorNode> relays = new HashSet<>();
     private final Set<TorNode> clients = new HashSet<>();
 
-    // TODO Never queried
     private final Set<Process> allTorProcesses = new HashSet<>();
 
     private int dirAuthIndex;

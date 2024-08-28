@@ -19,7 +19,6 @@ package bisq.wallets.json_rpc;
 
 import bisq.common.util.StringUtils;
 
-@SuppressWarnings("ALL")
 public class JsonRpcCall {
     private final String jsonrpc = "2.0";
     private final String id;

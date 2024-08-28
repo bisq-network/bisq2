@@ -39,9 +39,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
     private final MaterialTextField statement;
     private final MaterialTextArea terms;
     private final Button saveButton, cancelButton;
-    private final Label nickName;
-    private final Label nym;
-    private final Label feedbackLabel;
+    private final Label headlineLabel, nickName, nym, feedbackLabel;
     protected final ProgressIndicator createProfileIndicator;
 
     public CreateNewProfileStep2View(CreateNewProfileStep2Model model, CreateNewProfileStep2Controller controller) {
@@ -52,7 +50,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-        Label headlineLabel = new Label(Res.get("user.userProfile.new.step2.headline"));
+        headlineLabel = new Label(Res.get("user.userProfile.new.step2.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("user.userProfile.new.step2.subTitle"));

@@ -37,10 +37,14 @@ public enum ChatChannelNotificationType implements ProtoEnum {
     }
 
     public static ChatChannelNotificationType fromChatNotificationType(ChatNotificationType chatNotificationType) {
-        return switch (chatNotificationType) {
-            case ALL -> ChatChannelNotificationType.ALL;
-            case MENTION -> ChatChannelNotificationType.MENTION;
-            default -> ChatChannelNotificationType.OFF;
-        };
+        switch (chatNotificationType) {
+            case ALL:
+                return ChatChannelNotificationType.ALL;
+            case MENTION:
+                return ChatChannelNotificationType.MENTION;
+            case OFF:
+            default:
+                return ChatChannelNotificationType.OFF;
+        }
     }
 }

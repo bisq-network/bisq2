@@ -36,7 +36,7 @@ public class PriceUtilTest {
 
         offerPriceQuote = PriceQuote.fromFiatPrice(55000, "USD");
         offset = PriceUtil.getPercentageToMarketPrice(marketPriceQuote, offerPriceQuote);
-        log.error("{}", offset);
+        log.error("" + offset);
 
         assertEquals(0.1d, offset);
 

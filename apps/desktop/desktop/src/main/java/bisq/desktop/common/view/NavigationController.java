@@ -128,14 +128,16 @@ public abstract class NavigationController implements Controller {
     protected Optional<Controller> findController(NavigationTarget navigationTarget, Optional<Object> data) {
         if (controllerCache.containsKey(navigationTarget)) {
             Controller controller = controllerCache.get(navigationTarget);
-            if (controller instanceof InitWithDataController<?> initWithDataController) {
+            if (controller instanceof InitWithDataController) {
+                InitWithDataController<?> initWithDataController = (InitWithDataController<?>) controller;
                 data.ifPresent(initWithDataController::initWithObject);
             }
             return Optional.of(controller);
         } else {
             return createController(navigationTarget)
                     .map(controller -> {
-                        if (controller instanceof InitWithDataController<?> initWithDataController) {
+                        if (controller instanceof InitWithDataController) {
+                            InitWithDataController<?> initWithDataController = (InitWithDataController<?>) controller;
                             data.ifPresent(initWithDataController::initWithObject);
                         }
                         if (controller.useCaching()) {

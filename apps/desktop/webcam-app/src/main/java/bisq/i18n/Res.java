@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -44,7 +45,7 @@ public class Res {
         bundles.addAll(
                 BUNDLE_NAMES.stream()
                         .map(bundleName -> ResourceBundle.getBundle(bundleName, locale))
-                        .toList()
+                        .collect(Collectors.toList())
         );
     }
 
@@ -68,7 +69,7 @@ public class Res {
                         }
                     });
         } catch (MissingResourceException e) {
-            log.warn("Missing resource for key: {}", key, e);
+            log.warn("Missing resource for key: " + key, e);
             return "[" + key + "!!!]";
         }
     }

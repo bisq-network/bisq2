@@ -51,7 +51,7 @@ public class BisqTextFieldWithCopyIcon extends AnchorPane {
         copyIcon.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
-            if (text != null && !text.isEmpty()) {
+            if (text != null && text.length() > 0) {
                 String copyText = text;
                 if (copyWithoutCurrencyPostFix) {
                     String[] strings = text.split(" ");

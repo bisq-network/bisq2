@@ -76,7 +76,8 @@ public class UpdaterService implements Service {
 
             @Override
             public void remove(Object element) {
-                if (element instanceof ReleaseNotification toRemove) {
+                if (element instanceof ReleaseNotification) {
+                    ReleaseNotification toRemove = (ReleaseNotification) element;
                     if (releaseNotification.get() != null) {
                         if (toRemove.equals(releaseNotification.get())) {
                             releaseNotification.set(null);

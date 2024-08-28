@@ -67,7 +67,7 @@ public class ComboBoxWithSearch<T> {
     private UIScheduler fixPositionsScheduler;
     private final Pane root;
     protected final Polygon listBackground = new Polygon();
-    protected final double arrowOffset;
+    protected double arrowOffset = 31.5;
 
     public ComboBoxWithSearch(Region owner,
                               ObservableList<T> items,

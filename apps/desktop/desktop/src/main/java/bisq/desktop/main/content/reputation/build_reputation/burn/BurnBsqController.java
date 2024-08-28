@@ -53,12 +53,20 @@ public class BurnBsqController extends TabController<BurnBsqModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return switch (navigationTarget) {
-            case BURN_BSQ_TAB_1 -> Optional.of(new BurnBsqTab1Controller(serviceProvider));
-            case BURN_BSQ_TAB_2 -> Optional.of(new BurnBsqTab2Controller(serviceProvider));
-            case BURN_BSQ_TAB_3 -> Optional.of(new BurnBsqTab3Controller(serviceProvider));
-            default -> Optional.empty();
-        };
+        switch (navigationTarget) {
+            case BURN_BSQ_TAB_1: {
+                return Optional.of(new BurnBsqTab1Controller(serviceProvider));
+            }
+            case BURN_BSQ_TAB_2: {
+                return Optional.of(new BurnBsqTab2Controller(serviceProvider));
+            }
+            case BURN_BSQ_TAB_3: {
+                return Optional.of(new BurnBsqTab3Controller(serviceProvider));
+            }
+            default: {
+                return Optional.empty();
+            }
+        }
     }
 
     void onClose() {

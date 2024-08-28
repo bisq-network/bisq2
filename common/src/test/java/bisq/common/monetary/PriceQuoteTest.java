@@ -29,7 +29,7 @@ public class PriceQuoteTest {
         Coin btc = Coin.asBtcFromFaceValue(1.0);
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary quoteSideMonetary = priceQuote.toQuoteSideMonetary(btc);
-        assertInstanceOf(Fiat.class, quoteSideMonetary);
+        assertTrue(quoteSideMonetary instanceof Fiat);
         assertEquals(500000000, quoteSideMonetary.value);
 
         btc = Coin.asBtcFromFaceValue(2.0);

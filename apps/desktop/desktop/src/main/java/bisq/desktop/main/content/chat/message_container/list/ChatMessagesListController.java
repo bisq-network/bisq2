@@ -144,7 +144,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             }
         });
 
-        layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> handleScrollValueChanged());
+        layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> {
+            handleScrollValueChanged();
+        });
 
         applyScrollValue(1);
     }
@@ -344,15 +346,17 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private void doDeleteMessage(ChatMessage chatMessage, UserIdentity userIdentity) {
         checkArgument(chatMessage instanceof PublicChatMessage);
 
-        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             chatService.getBisqEasyOfferbookChannelService().deleteChatMessage(bisqEasyOfferbookMessage, userIdentity.getNetworkIdWithKeyPair())
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            log.error("We got an error at doDeleteMessage", throwable);
+                            log.error("We got an error at doDeleteMessage: " + throwable);
                         }
                     });
-        } else if (chatMessage instanceof CommonPublicChatMessage commonPublicChatMessage) {
+        } else if (chatMessage instanceof CommonPublicChatMessage) {
             CommonPublicChatChannelService commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain());
+            CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
             commonPublicChatChannelService.findChannel(chatMessage)
                     .ifPresent(channel -> commonPublicChatChannelService.deleteChatMessage(commonPublicChatMessage, userIdentity.getNetworkIdWithKeyPair()));
         }
@@ -375,16 +379,19 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
 
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             chatService.getBisqEasyOfferbookChannelService().publishEditedChatMessage(bisqEasyOfferbookMessage, editedText, userIdentity);
-        } else if (chatMessage instanceof CommonPublicChatMessage commonPublicChatMessage) {
+        } else if (chatMessage instanceof CommonPublicChatMessage) {
+            CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
             chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain()).publishEditedChatMessage(commonPublicChatMessage, editedText, userIdentity);
         }
     }
 
     public void onReportUser(ChatMessage chatMessage) {
         ChatChannelDomain chatChannelDomain = model.getSelectedChannel().get().getChatChannelDomain();
-        if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
+        if (chatMessage instanceof PrivateChatMessage) {
+            PrivateChatMessage privateChatMessage = (PrivateChatMessage) chatMessage;
             Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
                     new ReportToModeratorWindow.InitData(privateChatMessage.getSenderUserProfile(), chatChannelDomain));
         } else {
@@ -536,7 +543,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             }
 
             boolean offerOnlyPredicate = true;
-            if (item.getChatMessage() instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+            if (item.getChatMessage() instanceof BisqEasyOfferbookMessage) {
+                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
                 offerOnlyPredicate = !offerOnly || bisqEasyOfferbookMessage.hasBisqEasyOffer();
             }
             // We do not display the take offer message as it has no text and is used only for sending the offer

@@ -269,7 +269,9 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 if (progressLabelAnimationScheduler != null) {
                     progressLabelAnimationScheduler.stop();
                 }
-                progressLabelAnimationScheduler = UIScheduler.run(() -> progressLabelAnimation = Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
+                progressLabelAnimationScheduler = UIScheduler.run(() -> {
+                            progressLabelAnimation = Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2);
+                        })
                         .after(Transitions.DEFAULT_DURATION / 2);
             } else {
                 label.setOpacity(1);

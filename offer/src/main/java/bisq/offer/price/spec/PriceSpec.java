@@ -30,11 +30,20 @@ public interface PriceSpec extends NetworkProto {
     bisq.offer.protobuf.PriceSpec toProto(boolean serializeForHash);
 
     static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
-        return switch (proto.getMessageCase()) {
-            case FIXPRICE -> FixPriceSpec.fromProto(proto.getFixPrice());
-            case FLOATPRICE -> FloatPriceSpec.fromProto(proto.getFloatPrice());
-            case MARKETPRICE -> MarketPriceSpec.fromProto(proto.getMarketPrice());
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        switch (proto.getMessageCase()) {
+            case FIXPRICE: {
+                return FixPriceSpec.fromProto(proto.getFixPrice());
+            }
+            case FLOATPRICE: {
+                return FloatPriceSpec.fromProto(proto.getFloatPrice());
+            }
+            case MARKETPRICE: {
+                return MarketPriceSpec.fromProto(proto.getMarketPrice());
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

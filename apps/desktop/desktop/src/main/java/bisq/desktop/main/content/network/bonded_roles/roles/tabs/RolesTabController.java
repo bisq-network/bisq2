@@ -42,18 +42,25 @@ public class RolesTabController extends BondedRolesTabController<RolesTabModel> 
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return switch (navigationTarget) {
-            case REGISTER_MEDIATOR ->
-                    Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.MEDIATOR));
-            case REGISTER_ARBITRATOR ->
-                    Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.ARBITRATOR));
-            case REGISTER_MODERATOR ->
-                    Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.MODERATOR));
-            case REGISTER_SECURITY_MANAGER ->
-                    Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.SECURITY_MANAGER));
-            case REGISTER_RELEASE_MANAGER ->
-                    Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.RELEASE_MANAGER));
-            default -> Optional.empty();
-        };
+        switch (navigationTarget) {
+            case REGISTER_MEDIATOR: {
+                return Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.MEDIATOR));
+            }
+            case REGISTER_ARBITRATOR: {
+                return Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.ARBITRATOR));
+            }
+            case REGISTER_MODERATOR: {
+                return Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.MODERATOR));
+            }
+            case REGISTER_SECURITY_MANAGER: {
+                return Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.SECURITY_MANAGER));
+            }
+            case REGISTER_RELEASE_MANAGER: {
+                return Optional.of(new RoleRegistrationController(serviceProvider, BondedRoleType.RELEASE_MANAGER));
+            }
+            default: {
+                return Optional.empty();
+            }
+        }
     }
 }

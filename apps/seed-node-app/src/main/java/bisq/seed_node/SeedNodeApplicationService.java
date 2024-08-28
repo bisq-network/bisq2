@@ -83,8 +83,10 @@ public class SeedNodeApplicationService extends ApplicationService {
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
-                        bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
+                        bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> {
+                            networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
+                        });
                         log.info("SeedNodeApplicationService initialized");
                     } else {
                         log.error("Initializing SeedNodeApplicationService failed", throwable);

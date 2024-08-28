@@ -150,26 +150,30 @@ public class TradeWizardPaymentMethodsController implements Controller {
         maybeRemoveCustomFiatPaymentMethods();
 
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
-                .ifPresent(names -> List.of(names.split(",")).forEach(name -> {
-                    if (name.isEmpty()) {
-                        return;
-                    }
-                    FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
-                    boolean isCustomPaymentMethod = fiatPaymentMethod.isCustomPaymentMethod();
-                    if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
-                        maybeAddFiatPaymentMethod(fiatPaymentMethod);
-                    } else {
-                        maybeAddCustomFiatPaymentMethod(fiatPaymentMethod);
-                    }
-                }));
+                .ifPresent(names -> {
+                    List.of(names.split(",")).forEach(name -> {
+                        if (name.isEmpty()) {
+                            return;
+                        }
+                        FiatPaymentMethod fiatPaymentMethod = FiatPaymentMethodUtil.getPaymentMethod(name);
+                        boolean isCustomPaymentMethod = fiatPaymentMethod.isCustomPaymentMethod();
+                        if (!isCustomPaymentMethod && isPredefinedPaymentMethodsContainName(name)) {
+                            maybeAddFiatPaymentMethod(fiatPaymentMethod);
+                        } else {
+                            maybeAddCustomFiatPaymentMethod(fiatPaymentMethod);
+                        }
+                    });
+                });
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_BITCOIN_METHODS)
-                .ifPresent(names -> List.of(names.split(",")).forEach(name -> {
-                    if (name.isEmpty()) {
-                        return;
-                    }
-                    BitcoinPaymentMethod bitcoinPaymentMethod = BitcoinPaymentMethodUtil.getPaymentMethod(name);
-                    maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
-                }));
+                .ifPresent(names -> {
+                    List.of(names.split(",")).forEach(name -> {
+                        if (name.isEmpty()) {
+                            return;
+                        }
+                        BitcoinPaymentMethod bitcoinPaymentMethod = BitcoinPaymentMethodUtil.getPaymentMethod(name);
+                        maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
+                    });
+                });
         maybeAddOnChainPaymentMethodAsSelected();
     }
 

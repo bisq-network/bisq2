@@ -155,7 +155,7 @@ public class BitcoindPsbtMultiSigIntegrationTests {
         return xPub.split("]")[1].split("/")[0];
     }
 
-    private BitcoindWallet createWatchOnlyDescriptorWallet(String walletPrefix) {
+    private BitcoindWallet createWatchOnlyDescriptorWallet(String walletPrefix) throws MalformedURLException {
         String walletName = walletPrefix + "_watch_only_descriptor_wallet";
         daemon.createOrLoadWatchOnlyWallet(walletName);
         return new BitcoindWallet(daemon, rpcConfig, walletName);

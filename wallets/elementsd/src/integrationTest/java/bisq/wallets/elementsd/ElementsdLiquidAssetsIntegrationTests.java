@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Optional;
 
 public class ElementsdLiquidAssetsIntegrationTests extends SharedElementsdInstanceTests {
@@ -44,7 +45,7 @@ public class ElementsdLiquidAssetsIntegrationTests extends SharedElementsdInstan
     }
 
     @Test
-    public void sendOneLiquidAssetToAddress() throws InterruptedException {
+    public void sendOneLiquidAssetToAddress() throws MalformedURLException, InterruptedException {
         ElementsdIssueAssetResponse issueAssetResponse = elementsdMinerWallet.issueAsset(
                 Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), 2, 1
         );

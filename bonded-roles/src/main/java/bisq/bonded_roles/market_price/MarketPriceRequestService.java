@@ -191,18 +191,20 @@ public class MarketPriceRequestService {
             scheduler.stop();
             scheduler = null;
         }
-        scheduler = Scheduler.run(() -> request().whenComplete((result, throwable) -> {
-            if (throwable != null) {
-                if (scheduler != null) {
-                    scheduler.stop();
-                    scheduler = null;
+        scheduler = Scheduler.run(() -> {
+            request().whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    if (scheduler != null) {
+                        scheduler.stop();
+                        scheduler = null;
+                    }
+                    // Increase delay (up to 30 sec.) for retry each time it fails by 5 sec.
+                    initialDelay += 5;
+                    initialDelay = Math.min(30, initialDelay);
+                    startRequesting();
                 }
-                // Increase delay (up to 30 sec.) for retry each time it fails by 5 sec.
-                initialDelay += 5;
-                initialDelay = Math.min(30, initialDelay);
-                startRequesting();
-            }
-        })).periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
+            });
+        }).periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
     }
 
     private CompletableFuture<Void> request() {
@@ -273,7 +275,8 @@ public class MarketPriceRequestService {
                         failedProviders.add(provider);
                         selectedProvider.set(selectNextProvider());
 
-                        if (rootCause instanceof HttpException httpException) {
+                        if (rootCause instanceof HttpException) {
+                            HttpException httpException = (HttpException) rootCause;
                             int responseCode = httpException.getResponseCode();
                             // If not server error we pass the error to the client
                             if (responseCode < 500) {

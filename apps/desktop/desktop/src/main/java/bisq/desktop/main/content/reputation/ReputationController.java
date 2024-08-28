@@ -41,11 +41,19 @@ public class ReputationController extends ContentTabController<ReputationModel> 
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return switch (navigationTarget) {
-            case BUILD_REPUTATION -> Optional.of(new BuildReputationController(serviceProvider));
-            case REPUTATION_RANKING -> Optional.of(new ReputationListController(serviceProvider));
-            case REPUTATION_SCORE -> Optional.of(new ReputationScoreController(serviceProvider));
-            default -> Optional.empty();
-        };
+        switch (navigationTarget) {
+            case BUILD_REPUTATION: {
+                return Optional.of(new BuildReputationController(serviceProvider));
+            }
+            case REPUTATION_RANKING: {
+                return Optional.of(new ReputationListController(serviceProvider));
+            }
+            case REPUTATION_SCORE: {
+                return Optional.of(new ReputationScoreController(serviceProvider));
+            }
+            default: {
+                return Optional.empty();
+            }
+        }
     }
 }

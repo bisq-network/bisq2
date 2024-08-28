@@ -253,12 +253,12 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddMailboxRequest)
                     .map(authenticatedDataRequest -> (AddMailboxRequest) authenticatedDataRequest)
                     .map(e -> e.getMailboxSequentialData().getMailboxData().getClassName())
-                    .toList();
+                    .collect(Collectors.toList());
             var removed = persisted.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveMailboxRequest)
                     .map(authenticatedDataRequest -> (RemoveMailboxRequest) authenticatedDataRequest)
                     .map(RemoveMailboxRequest::getClassName)
-                    .toList();
+                    .collect(Collectors.toList());
             var className = Stream.concat(added.stream(), removed.stream())
                     .findAny().orElse(persistence.getFileName().replace("Store", ""));
             log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",

@@ -59,13 +59,23 @@ public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return switch (navigationTarget) {
-            case BISQ_EASY_GUIDE_WELCOME -> Optional.of(new BisqEasyGuideWelcomeController(serviceProvider));
-            case BISQ_EASY_GUIDE_SECURITY -> Optional.of(new BisqEasyGuideSecurityController(serviceProvider));
-            case BISQ_EASY_GUIDE_PROCESS -> Optional.of(new BisqEasyGuideProcessController(serviceProvider));
-            case BISQ_EASY_GUIDE_RULES -> Optional.of(new BisqEasyGuideRulesController(serviceProvider));
-            default -> Optional.empty();
-        };
+        switch (navigationTarget) {
+            case BISQ_EASY_GUIDE_WELCOME: {
+                return Optional.of(new BisqEasyGuideWelcomeController(serviceProvider));
+            }
+            case BISQ_EASY_GUIDE_SECURITY: {
+                return Optional.of(new BisqEasyGuideSecurityController(serviceProvider));
+            }
+            case BISQ_EASY_GUIDE_PROCESS: {
+                return Optional.of(new BisqEasyGuideProcessController(serviceProvider));
+            }
+            case BISQ_EASY_GUIDE_RULES: {
+                return Optional.of(new BisqEasyGuideRulesController(serviceProvider));
+            }
+            default: {
+                return Optional.empty();
+            }
+        }
     }
 
     void onClose() {

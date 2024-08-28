@@ -25,11 +25,16 @@ import java.util.function.Predicate;
 @Getter
 public class MarketFilterPredicate {
     public static Predicate<MarketChannelItem> getPredicate(BisqEasyMarketFilter bisqEasyMarketFilter) {
-        return switch (bisqEasyMarketFilter) {
-            case ALL -> item -> true;
-            case FAVOURITES -> item -> item.getIsFavourite().get();
-            case WITH_OFFERS -> item -> item.getNumOffers().get() > 0;
-        };
+        switch (bisqEasyMarketFilter) {
+            case ALL:
+                return item -> true;
+            case FAVOURITES:
+                return item -> item.getIsFavourite().get();
+            case WITH_OFFERS:
+                return item -> item.getNumOffers().get() > 0;
+            default:
+                throw new IllegalArgumentException("Unexpected enum " + bisqEasyMarketFilter);
+        }
     }
 }
 

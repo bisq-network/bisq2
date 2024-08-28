@@ -26,6 +26,7 @@ import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetAddressInfoResponse;
 import org.junit.jupiter.api.Test;
 
+import java.net.MalformedURLException;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ElementsdSendUnconfirmedTxIntegrationTests extends SharedElementsdInstanceTests {
     @Test
-    public void sendOneLBtcToAddress() throws InterruptedException {
+    public void sendOneLBtcToAddress() throws MalformedURLException, InterruptedException {
         peginBtc(20);
         var receiverWallet = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 

@@ -57,6 +57,7 @@ public class MediatorController implements Controller {
     protected final UserProfileService userProfileService;
     protected final ChatMessageContainerController chatMessageContainerController;
 
+    private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationCaseHeader mediationCaseHeader;
     private final MediatorService mediatorService;
@@ -69,7 +70,7 @@ public class MediatorController implements Controller {
         chatService = serviceProvider.getChatService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        BisqEasyOpenTradeChannelService channelService = chatService.getBisqEasyOpenTradeChannelService();
+        channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesSelectionService();
         mediatorService = serviceProvider.getSupportService().getMediatorService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
@@ -126,25 +127,28 @@ public class MediatorController implements Controller {
                 })
                 .to(mediatorService.getMediationCases());
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(chatChannel -> UIThread.run(() -> {
-            if (chatChannel == null) {
-                model.getSelectedItem().set(null);
-                mediationCaseHeader.setMediationCaseListItem(null);
-                mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                model.getSelectedChannel().set(null);
-                update();
-            } else if (chatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
-                model.getSelectedChannel().set(chatChannel);
-                model.getListItems().stream()
-                        .filter(item -> item.getChannel().equals(bisqEasyOpenTradeChannel))
-                        .findAny()
-                        .ifPresent(item -> {
-                            model.getSelectedItem().set(item);
-                            mediationCaseHeader.setMediationCaseListItem(item);
-                            mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                        });
-            }
-        }));
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(chatChannel -> {
+            UIThread.run(() -> {
+                if (chatChannel == null) {
+                    model.getSelectedItem().set(null);
+                    mediationCaseHeader.setMediationCaseListItem(null);
+                    mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+                    model.getSelectedChannel().set(null);
+                    update();
+                } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
+                    model.getSelectedChannel().set(chatChannel);
+                    BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
+                    model.getListItems().stream()
+                            .filter(item -> item.getChannel().equals(channel))
+                            .findAny()
+                            .ifPresent(item -> {
+                                model.getSelectedItem().set(item);
+                                mediationCaseHeader.setMediationCaseListItem(item);
+                                mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+                            });
+                }
+            });
+        });
 
         update();
 
@@ -205,7 +209,7 @@ public class MediatorController implements Controller {
             selectionService.getSelectedChannel().set(null);
             mediationCaseHeader.setMediationCaseListItem(null);
         } else {
-            selectionService.getSelectedChannel().set(sortedList.getFirst().getChannel());
+            selectionService.getSelectedChannel().set(sortedList.get(0).getChannel());
             mediationCaseHeader.setMediationCaseListItem(model.getSelectedItem().get());
         }
     }

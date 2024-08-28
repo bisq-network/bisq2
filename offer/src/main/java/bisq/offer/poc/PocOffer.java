@@ -123,7 +123,7 @@ public final class PocOffer implements DistributedData {
         if (protocolTypes.isEmpty()) {
             return Optional.empty();
         } else if (protocolTypes.size() == 1) {
-            return Optional.of(protocolTypes.getFirst());
+            return Optional.of(protocolTypes.get(0));
         } else {
             throw new IllegalStateException("Multiple protocolTypes are not supported yet. protocolTypes=" + protocolTypes);
         }

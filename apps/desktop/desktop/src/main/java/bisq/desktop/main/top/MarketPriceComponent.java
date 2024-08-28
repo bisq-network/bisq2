@@ -352,12 +352,16 @@ public class MarketPriceComponent {
 
         public String getSource() {
             MarketPrice.Source source = marketPrice.getSource();
-            return switch (source) {
-                case PERSISTED -> Res.get("component.marketPrice.source." + source);
-                case PROPAGATED_IN_NETWORK ->
-                        Res.get("component.marketPrice.source." + source, getMarketPriceProvidingOracle());
-                case REQUESTED_FROM_PRICE_NODE -> Res.get("component.marketPrice.source." + source, getProviderUrl());
-            };
+            switch (source) {
+                case PERSISTED:
+                    return Res.get("component.marketPrice.source." + source);
+                case PROPAGATED_IN_NETWORK:
+                    return Res.get("component.marketPrice.source." + source, getMarketPriceProvidingOracle());
+                case REQUESTED_FROM_PRICE_NODE:
+                    return Res.get("component.marketPrice.source." + source, getProviderUrl());
+                default:
+                    throw new RuntimeException("Unsupported source: " + source.name());
+            }
         }
 
         @Override

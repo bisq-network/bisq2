@@ -58,7 +58,6 @@ public class ElectrumXServerRegtestProcess extends DaemonProcess {
         envMap.put("NET", "regtest");
 
         RpcConfig bitcoindRpcConfig = serverConfig.getBitcoindRpcConfig();
-        //noinspection HttpUrlsUsage
         envMap.put("DAEMON_URL",
                 "http://" + bitcoindRpcConfig.getUser() + ":" + bitcoindRpcConfig.getPassword() +
                         "@" + bitcoindRpcConfig.getHostname() + ":" + bitcoindRpcConfig.getPort());

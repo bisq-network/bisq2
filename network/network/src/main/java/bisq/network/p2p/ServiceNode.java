@@ -112,6 +112,7 @@ public class ServiceNode implements Node.Listener {
     private final PeerGroupService peerGroupService;
     private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final Optional<ResendMessageService> resendMessageService;
     private final KeyBundleService keyBundleService;
     private final Set<Address> seedNodeAddresses;
     @Getter
@@ -145,7 +146,7 @@ public class ServiceNode implements Node.Listener {
     private final Set<ConfidentialMessageService.Listener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
     @Getter
-    public final Observable<State> state = new Observable<>(State.NEW);
+    public Observable<State> state = new Observable<>(State.NEW);
 
     ServiceNode(Config config,
                 Node.Config nodeConfig,
@@ -166,6 +167,7 @@ public class ServiceNode implements Node.Listener {
         this.keyBundleService = keyBundleService;
         this.dataService = dataService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
+        this.resendMessageService = resendMessageService;
         this.seedNodeAddresses = seedNodeAddresses;
         this.transportType = transportType;
 

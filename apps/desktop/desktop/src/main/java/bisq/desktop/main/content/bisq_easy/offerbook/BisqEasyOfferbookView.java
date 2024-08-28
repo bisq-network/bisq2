@@ -489,7 +489,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             return;
         }
 
-        //noinspection unchecked
         sortAndFilterMarketsMenu.getMenuItems().stream()
                 .filter(menuItem -> menuItem instanceof SortAndFilterMarketsDropdownMenuItem &&
                         ((SortAndFilterMarketsDropdownMenuItem<?>) menuItem).getMenuItem() instanceof BisqEasyMarketFilter)
@@ -504,7 +503,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             return;
         }
 
-        //noinspection unchecked
         sortAndFilterMarketsMenu.getMenuItems().stream()
                 .filter(menuItem -> menuItem instanceof SortAndFilterMarketsDropdownMenuItem &&
                         ((SortAndFilterMarketsDropdownMenuItem<?>) menuItem).getMenuItem() instanceof MarketSortType)

@@ -106,10 +106,14 @@ public class MainController extends NavigationController {
     @SuppressWarnings("SwitchStatementWithTooFewBranches")
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return switch (navigationTarget) {
-            case CONTENT -> Optional.of(new ContentController(serviceProvider));
-            default -> Optional.empty();
-        };
+        switch (navigationTarget) {
+            case CONTENT: {
+                return Optional.of(new ContentController(serviceProvider));
+            }
+            default: {
+                return Optional.empty();
+            }
+        }
     }
 
     @Override

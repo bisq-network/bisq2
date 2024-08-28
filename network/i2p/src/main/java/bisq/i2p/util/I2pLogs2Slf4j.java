@@ -25,7 +25,7 @@ public class I2pLogs2Slf4j extends Log {
 
     public I2pLogs2Slf4j(Class<?> cls) {
         super(cls);
-        delegate = LoggerFactory.getLogger(cls.getName());
+        delegate = (Logger) LoggerFactory.getLogger(cls.getName());
         level = findLevel(delegate);
     }
 
@@ -55,14 +55,16 @@ public class I2pLogs2Slf4j extends Log {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        if (lvl == ch.qos.logback.classic.Level.ALL ||
-                lvl == ch.qos.logback.classic.Level.DEBUG ||
-                lvl == ch.qos.logback.classic.Level.TRACE) {
-            return Level.DEBUG;
-        } else if (lvl == ch.qos.logback.classic.Level.ERROR) {
-            return Level.ERROR;
-        } else if (lvl == ch.qos.logback.classic.Level.WARN) {
-            return Level.WARN;
+        if (null != lvl) {
+            if (lvl == ch.qos.logback.classic.Level.ALL ||
+                    lvl == ch.qos.logback.classic.Level.DEBUG ||
+                    lvl == ch.qos.logback.classic.Level.TRACE) {
+                return Level.DEBUG;
+            } else if (lvl == ch.qos.logback.classic.Level.ERROR) {
+                return Level.ERROR;
+            } else if (lvl == ch.qos.logback.classic.Level.WARN) {
+                return Level.WARN;
+            }
         }
         return Level.INFO;
     }
@@ -78,6 +80,7 @@ public class I2pLogs2Slf4j extends Log {
             delegate.error(msg);
         if(translatedPriority.toInt() == Level.INFO.toInt())
             delegate.info(msg);
+        ;
     }
 
     @Override

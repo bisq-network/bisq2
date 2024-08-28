@@ -29,10 +29,17 @@ public interface AmountSpec extends NetworkProto {
     }
 
     static AmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
-        return switch (proto.getMessageCase()) {
-            case FIXEDAMOUNTSPEC -> FixedAmountSpec.fromProto(proto.getFixedAmountSpec());
-            case RANGEAMOUNTSPEC -> RangeAmountSpec.fromProto(proto.getRangeAmountSpec());
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        switch (proto.getMessageCase()) {
+            case FIXEDAMOUNTSPEC: {
+                return FixedAmountSpec.fromProto(proto.getFixedAmountSpec());
+            }
+            case RANGEAMOUNTSPEC: {
+                return RangeAmountSpec.fromProto(proto.getRangeAmountSpec());
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

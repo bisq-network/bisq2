@@ -198,17 +198,22 @@ public class TradeStateController implements Controller {
 
     void onInterruptTrade() {
         BisqEasyTrade trade = model.getBisqEasyTrade().get();
-        String message = switch (model.getTradeCloseType()) {
-            case REJECT -> Res.get("bisqEasy.openTrades.rejectTrade.warning");
-            case CANCEL -> {
+        String message;
+        switch (model.getTradeCloseType()) {
+            case REJECT:
+                message = Res.get("bisqEasy.openTrades.rejectTrade.warning");
+                break;
+            case CANCEL:
                 String part2 = Res.get("bisqEasy.openTrades.cancelTrade.warning.part2");
-                yield trade.isSeller()
+                message = trade.isSeller()
                         ? Res.get("bisqEasy.openTrades.cancelTrade.warning.seller", part2)
                         : Res.get("bisqEasy.openTrades.cancelTrade.warning.buyer", part2);
-            }
-            // We hide close button at the top-pane at the complete screen
-            default -> throw new RuntimeException("Unexpected TradeCloseType " + model.getTradeCloseType());
-        };
+                break;
+            case COMPLETED:
+                // We hide close button at the top-pane at the complete screen
+            default:
+                throw new RuntimeException("Unexpected TradeCloseType " + model.getTradeCloseType());
+        }
 
         new Popup().warning(message)
                 .actionButtonText(Res.get("confirmation.yes"))

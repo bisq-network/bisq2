@@ -67,7 +67,6 @@ public class AccountAgeScoreSimulation {
                 try {
                     model.getAge().set(Integer.parseInt(ageAsString));
                 } catch (Exception e) {
-                    log.error("Exception", e);
                 }
             });
 

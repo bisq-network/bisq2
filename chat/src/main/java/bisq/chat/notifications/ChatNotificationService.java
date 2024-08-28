@@ -100,34 +100,35 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
 
-        networkService.getDataService().ifPresent(dataService ->
-                dataService.getStorageService().getStoresByStoreType(AUTHENTICATED_DATA_STORE)
-                        .map(DataStorageService::getPrunedAndExpiredDataRequests)
-                        .forEach(prunedAndExpiredDataRequests -> prunedAndExpiredDataRequests.addObserver(new CollectionObserver<>() {
-                            @Override
-                            public void add(DataRequest element) {
-                                if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-                                    if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
-                                        String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
-                                        // As we get called at pruning persistence which happens before initializing the services,
-                                        // We store the ids to apply the remove at out initialize method.
-                                        // For the cases when we get expired data during runtime we call removeNotification.
-                                        // For the pre-initialize state that would fail as our persisted data might be filled after
-                                        // the network data store.
-                                        prunedAndExpiredChatMessageIds.add(id);
-                                        removeNotification(id);
-                                    }
+        networkService.getDataService().ifPresent(dataService -> {
+            dataService.getStorageService().getStoresByStoreType(AUTHENTICATED_DATA_STORE)
+                    .map(DataStorageService::getPrunedAndExpiredDataRequests)
+                    .forEach(prunedAndExpiredDataRequests -> prunedAndExpiredDataRequests.addObserver(new CollectionObserver<>() {
+                        @Override
+                        public void add(DataRequest element) {
+                            if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+                                if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
+                                    String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
+                                    // As we get called at pruning persistence which happens before initializing the services,
+                                    // We store the ids to apply the remove at out initialize method.
+                                    // For the cases when we get expired data during runtime we call removeNotification.
+                                    // For the pre-initialize state that would fail as our persisted data might be filled after
+                                    // the network data store.
+                                    prunedAndExpiredChatMessageIds.add(id);
+                                    removeNotification(id);
                                 }
                             }
+                        }
 
-                            @Override
-                            public void remove(Object element) {
-                            }
+                        @Override
+                        public void remove(Object element) {
+                        }
 
-                            @Override
-                            public void clear() {
-                            }
-                        })));
+                        @Override
+                        public void clear() {
+                        }
+                    }));
+        });
     }
 
     @Override
@@ -359,7 +360,8 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
                 @Override
                 public void remove(Object message) {
-                    if (message instanceof ChatMessage chatMessage) {
+                    if (message instanceof ChatMessage) {
+                        ChatMessage chatMessage = (ChatMessage) message;
                         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
                         removeNotification(id);
                     }
@@ -415,7 +417,8 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }*/
 
         // If user has set "Show offers only" in settings we mark messages as consumed
-        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             if (settingsService.getOffersOnly().get() && !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
                 consumeNotification(chatNotification);
                 return;
@@ -426,16 +429,24 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         if (notificationType == ChatChannelNotificationType.GLOBAL_DEFAULT) {
             notificationType = ChatChannelNotificationType.fromChatNotificationType(settingsService.getChatNotificationType().get());
         }
-        boolean shouldSendNotification = switch (notificationType) {
-            case GLOBAL_DEFAULT -> throw new RuntimeException("GLOBAL_DEFAULT not possible here");
-            case ALL -> true;
-            case MENTION ->
+        boolean shouldSendNotification;
+        switch (notificationType) {
+            case GLOBAL_DEFAULT:
+                throw new RuntimeException("GLOBAL_DEFAULT not possible here");
+            case ALL:
+                shouldSendNotification = true;
+                break;
+            case MENTION:
                 // We treat citations also like mentions
-                    userIdentityService.getUserIdentities().stream()
-                            .anyMatch(userIdentity -> chatMessage.wasMentioned(userIdentity) ||
-                                    chatMessage.wasCited(userIdentity));
-            default -> false;
-        };
+                shouldSendNotification = userIdentityService.getUserIdentities().stream()
+                        .anyMatch(userIdentity -> chatMessage.wasMentioned(userIdentity) ||
+                                chatMessage.wasCited(userIdentity));
+                break;
+            case OFF:
+            default:
+                shouldSendNotification = false;
+                break;
+        }
 
         if (shouldSendNotification) {
             addNotification(chatNotification);

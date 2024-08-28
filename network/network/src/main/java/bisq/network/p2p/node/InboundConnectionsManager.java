@@ -85,7 +85,8 @@ public class InboundConnectionsManager {
 
     public void acceptNewConnection(SelectionKey selectionKey) {
         SocketChannel newConnectionSocketChannel = null;
-        try (ServerSocketChannel nextReadySocketChannel = (ServerSocketChannel) selectionKey.channel()) {
+        try {
+            ServerSocketChannel nextReadySocketChannel = (ServerSocketChannel) selectionKey.channel();
             newConnectionSocketChannel = nextReadySocketChannel.accept();
             log.info("Accepted new inbound connection with peer: {}", newConnectionSocketChannel.getRemoteAddress());
 

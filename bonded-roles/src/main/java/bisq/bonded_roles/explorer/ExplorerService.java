@@ -214,7 +214,8 @@ public class ExplorerService {
                 failedProviders.add(provider);
                 selectedProvider.set(selectNextProvider());
 
-                if (rootCause instanceof HttpException httpException) {
+                if (rootCause instanceof HttpException) {
+                    HttpException httpException = (HttpException) rootCause;
                     int responseCode = httpException.getResponseCode();
                     // If not server error we pass the error to the client
                     if (responseCode < 500) {

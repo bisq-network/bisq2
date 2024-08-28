@@ -58,7 +58,7 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
             }
         });
 
-        dateTimeHBox.getChildren().addFirst(messageStatusHbox);
+        dateTimeHBox.getChildren().add(0, messageStatusHbox);
     }
 
     @Override

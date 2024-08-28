@@ -32,7 +32,7 @@ public class NetworkEnvelopeSocket implements Closeable {
     private final InputStream inputStream;
     private final OutputStream outputStream;
 
-    public NetworkEnvelopeSocket(PeerSocket socket) {
+    public NetworkEnvelopeSocket(PeerSocket socket) throws IOException {
         this.socket = socket;
         this.inputStream = socket.getInputStream();
         this.outputStream = socket.getOutputStream();

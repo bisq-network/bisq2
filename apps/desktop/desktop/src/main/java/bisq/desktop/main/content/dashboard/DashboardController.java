@@ -104,10 +104,12 @@ public class DashboardController implements Controller {
         Market selectedMarket = marketPriceService.getSelectedMarket().get();
         if (selectedMarket != null) {
             marketPriceService.findMarketPrice(selectedMarket)
-                    .ifPresent(marketPrice -> UIThread.run(() -> {
-                        model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true));
-                        model.getMarketCode().set(marketPrice.getMarket().getMarketCodes());
-                    }));
+                    .ifPresent(marketPrice -> {
+                        UIThread.run(() -> {
+                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true));
+                            model.getMarketCode().set(marketPrice.getMarket().getMarketCodes());
+                        });
+                    });
         }
     }
 

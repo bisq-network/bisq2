@@ -48,8 +48,10 @@ public class TopPanelController implements Controller {
 
     @Override
     public void onActivate() {
-        walletService.ifPresent(walletService -> balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
-                .to(walletService.getBalance()));
+        walletService.ifPresent(walletService -> {
+            balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
+                    .to(walletService.getBalance());
+        });
     }
 
     @Override

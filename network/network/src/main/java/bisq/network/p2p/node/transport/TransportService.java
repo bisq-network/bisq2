@@ -32,11 +32,16 @@ import java.util.concurrent.CompletableFuture;
 public interface TransportService {
 
     static TransportService create(TransportType transportType, TransportConfig config) {
-        return switch (transportType) {
-            case TOR -> new TorTransportService(config);
-            case I2P -> new I2PTransportService(config);
-            case CLEAR -> new ClearNetTransportService(config);
-        };
+        switch (transportType) {
+            case TOR:
+                return new TorTransportService(config);
+            case I2P:
+                return new I2PTransportService(config);
+            case CLEAR:
+                return new ClearNetTransportService(config);
+            default:
+                throw new RuntimeException("Unhandled transportType");
+        }
     }
 
     void initialize();

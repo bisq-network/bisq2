@@ -124,7 +124,9 @@ public class TorHttpClient extends BaseHttpClient {
             context.setAttribute("socks.address", socksAddress);
 
             HttpUriRequest request = getHttpUriRequest(httpMethod, baseUrl, param);
-            optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));
+            optionalHeader.ifPresent(header -> {
+                request.setHeader(header.getFirst(), header.getSecond());
+            });
 
             try (CloseableHttpResponse httpResponse = closeableHttpClient.execute(request, context)) {
                 String response = inputStreamToString(httpResponse.getEntity().getContent());

@@ -72,12 +72,18 @@ public class LeavePrivateChatManager {
 
     private PrivateChatChannelService<?, ? extends PrivateChatMessage<?>, ? extends PrivateChatChannel<?>, ?> findChannelService(
             ChatChannelDomain chatChannelDomain) {
-        return switch (chatChannelDomain) {
-            case BISQ_EASY_OFFERBOOK ->
-                    throw new IllegalArgumentException("BISQ_EASY_OFFERBOOK is not supported at LeavePrivateChatChannelService");
-            case BISQ_EASY_OPEN_TRADES -> bisqEasyOpenTradeChannelService;
-            case BISQ_EASY_PRIVATE_CHAT, DISCUSSION, EVENTS, SUPPORT ->
-                    twoPartyPrivateChatChannelServices.get(chatChannelDomain);
-        };
+        switch (chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK:
+                throw new IllegalArgumentException("BISQ_EASY_OFFERBOOK is not supported at LeavePrivateChatChannelService");
+            case BISQ_EASY_OPEN_TRADES:
+                return bisqEasyOpenTradeChannelService;
+            case BISQ_EASY_PRIVATE_CHAT:
+            case DISCUSSION:
+            case EVENTS:
+            case SUPPORT:
+                return twoPartyPrivateChatChannelServices.get(chatChannelDomain);
+            default:
+                throw new IllegalArgumentException("Not supported chatChannelDomain " + chatChannelDomain);
+        }
     }
 }

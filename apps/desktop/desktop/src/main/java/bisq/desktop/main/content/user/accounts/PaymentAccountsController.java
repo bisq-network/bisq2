@@ -60,15 +60,17 @@ public class PaymentAccountsController implements Controller {
     public void onActivate() {
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-        accountsPin = accountService.getAccounts().addObserver(() -> UIThread.run(() -> {
-            model.setAllAccounts(accountService.getAccounts());
-            maybeSelectFirstAccount();
-            model.getNoAccountsSetup().set(!accountService.hasAccounts());
-            model.getHeadline().set(accountService.hasAccounts() ?
-                    Res.get("user.paymentAccounts.headline") :
-                    Res.get("user.paymentAccounts.noAccounts.headline")
-            );
-        }));
+        accountsPin = accountService.getAccounts().addObserver(() -> {
+            UIThread.run(() -> {
+                model.setAllAccounts(accountService.getAccounts());
+                maybeSelectFirstAccount();
+                model.getNoAccountsSetup().set(!accountService.hasAccounts());
+                model.getHeadline().set(accountService.hasAccounts() ?
+                        Res.get("user.paymentAccounts.headline") :
+                        Res.get("user.paymentAccounts.noAccounts.headline")
+                );
+            });
+        });
 
         selectedAccountPin = FxBindings.bind(model.selectedAccountProperty())
                 .to(accountService.selectedAccountAsObservable());
@@ -137,7 +139,7 @@ public class PaymentAccountsController implements Controller {
 
     private void maybeSelectFirstAccount() {
         if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount() == null) {
-            accountService.setSelectedAccount(model.getSortedAccounts().getFirst());
+            accountService.setSelectedAccount(model.getSortedAccounts().get(0));
         }
     }
 }

@@ -85,7 +85,7 @@ public class TorController {
 
     public CompletableFuture<Void> publishAsync(TorKeyPair torKeyPair,
                                                 int onionServicePort,
-                                                int localPort) {
+                                                int localPort) throws InterruptedException {
         String onionAddress = torKeyPair.getOnionAddress();
         if (publishOnionAddressServiceMap.containsKey(onionAddress) && publishOnionAddressServiceMap.get(onionAddress).getFuture().isPresent()) {
             return publishOnionAddressServiceMap.get(onionAddress).getFuture().get();

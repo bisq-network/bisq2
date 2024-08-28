@@ -26,8 +26,7 @@ import java.io.*;
 import java.security.SignatureException;
 import java.util.Iterator;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 @Slf4j
 public class PgPUtils {
@@ -62,7 +61,8 @@ public class PgPUtils {
         try (InputStream inputStream = PGPUtil.getDecoderStream(new FileInputStream(sigFile))) {
             PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(inputStream, new JcaKeyFingerprintCalculator());
             Object signatureObject = pgpObjectFactory.nextObject();
-            if (signatureObject instanceof PGPSignatureList signatureList) {
+            if (signatureObject instanceof PGPSignatureList) {
+                PGPSignatureList signatureList = (PGPSignatureList) signatureObject;
                 checkArgument(!signatureList.isEmpty(), "signatureList must not be empty");
                 return signatureList.get(0);
             } else if (signatureObject instanceof PGPSignature) {

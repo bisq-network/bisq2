@@ -124,9 +124,11 @@ public class NetworkLoadService {
         numSentMessagesByClassName = new TreeMap<>();
         allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getNumSentMessagesByClassName)
-                .forEach(map -> map.forEach((name, value) ->
-                        numSentMessagesByClassName.computeIfAbsent(name, key -> new AtomicLong())
-                                .addAndGet(value.get())));
+                .forEach(map -> {
+                    map.forEach((name, value) ->
+                            numSentMessagesByClassName.computeIfAbsent(name, key -> new AtomicLong())
+                                    .addAndGet(value.get()));
+                });
         StringBuilder numSentMessagesByClassNameBuilder = new StringBuilder();
         numSentMessagesByClassName.forEach((key, value) -> {
             numSentMessagesByClassNameBuilder.append("\n    - ");
@@ -138,9 +140,11 @@ public class NetworkLoadService {
         numReceivedMessagesByClassName = new TreeMap<>();
         allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getNumReceivedMessagesByClassName)
-                .forEach(map -> map.forEach((name, value) ->
-                        numReceivedMessagesByClassName.computeIfAbsent(name, key -> new AtomicLong())
-                                .addAndGet(value.get())));
+                .forEach(map -> {
+                    map.forEach((name, value) ->
+                            numReceivedMessagesByClassName.computeIfAbsent(name, key -> new AtomicLong())
+                                    .addAndGet(value.get()));
+                });
         StringBuilder numReceivedMessagesByClassNameBuilder = new StringBuilder();
         numReceivedMessagesByClassName.forEach((key, value) -> {
             numReceivedMessagesByClassNameBuilder.append("\n    - ");
@@ -152,9 +156,11 @@ public class NetworkLoadService {
         numSentDistributedDataByClassName = new TreeMap<>();
         allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getNumSentDistributedDataByClassName)
-                .forEach(map -> map.forEach((name, value) ->
-                        numSentDistributedDataByClassName.computeIfAbsent(name, key -> new AtomicLong())
-                                .addAndGet(value.get())));
+                .forEach(map -> {
+                    map.forEach((name, value) ->
+                            numSentDistributedDataByClassName.computeIfAbsent(name, key -> new AtomicLong())
+                                    .addAndGet(value.get()));
+                });
         StringBuilder numSentDistributedDataByClassNameBuilder = new StringBuilder();
         numSentDistributedDataByClassName.forEach((key, value) -> {
             numSentDistributedDataByClassNameBuilder.append("\n    - ");
@@ -166,9 +172,11 @@ public class NetworkLoadService {
         numReceivedDistributedDataByClassName = new TreeMap<>();
         allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getNumReceivedDistributedDataByClassName)
-                .forEach(map -> map.forEach((name, value) ->
-                        numReceivedDistributedDataByClassName.computeIfAbsent(name, key -> new AtomicLong())
-                                .addAndGet(value.get())));
+                .forEach(map -> {
+                    map.forEach((name, value) ->
+                            numReceivedDistributedDataByClassName.computeIfAbsent(name, key -> new AtomicLong())
+                                    .addAndGet(value.get()));
+                });
         StringBuilder numReceivedDistributedDataByClassNameBuilder = new StringBuilder();
         numReceivedDistributedDataByClassName.forEach((key, value) -> {
             numReceivedDistributedDataByClassNameBuilder.append("\n    - ");

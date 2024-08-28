@@ -40,7 +40,7 @@ public class BitcoindExtension implements BeforeAllCallback, ExtensionContext.St
         }
     }
 
-    public BitcoindExtension() {
+    public BitcoindExtension() throws IOException {
     }
 
     @Override

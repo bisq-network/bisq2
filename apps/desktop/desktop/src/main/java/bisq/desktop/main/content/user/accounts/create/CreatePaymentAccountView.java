@@ -36,6 +36,7 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
     private final MaterialTextField accountName;
     private final MaterialTextArea accountData;
     private final Button saveButton, cancelButton;
+    private final Label headlineLabel;
 
     public CreatePaymentAccountView(CreatePaymentAccountModel model, CreatePaymentAccountController controller) {
         super(new VBox(), model, controller);
@@ -46,7 +47,7 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
         int width = 600;
-        Label headlineLabel = new Label(Res.get("user.paymentAccounts.createAccount.headline"));
+        headlineLabel = new Label(Res.get("user.paymentAccounts.createAccount.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("user.paymentAccounts.createAccount.subtitle"));

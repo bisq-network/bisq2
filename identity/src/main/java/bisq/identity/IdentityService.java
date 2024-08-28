@@ -90,21 +90,23 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
         CompletableFuture<Boolean> result = new CompletableFuture<>();
         AtomicInteger failures = new AtomicInteger();
-        map.forEach((transportType, future) -> future.whenComplete((node, throwable) -> {
-            if (throwable == null && node != null) {
-                // After each successful initialisation of the default node on a transport we start to
-                // initialize the active identities for that transport
-                initializeActiveIdentities(transportType);
-                if (!result.isDone()) {
-                    result.complete(true);
+        map.forEach((transportType, future) -> {
+            future.whenComplete((node, throwable) -> {
+                if (throwable == null && node != null) {
+                    // After each successful initialisation of the default node on a transport we start to
+                    // initialize the active identities for that transport
+                    initializeActiveIdentities(transportType);
+                    if (!result.isDone()) {
+                        result.complete(true);
+                    }
+                } else if (!result.isDone()) {
+                    if (failures.incrementAndGet() == map.size()) {
+                        // All failed
+                        result.completeExceptionally(new RuntimeException("Default node initialization on all transports failed"));
+                    }
                 }
-            } else if (!result.isDone()) {
-                if (failures.incrementAndGet() == map.size()) {
-                    // All failed
-                    result.completeExceptionally(new RuntimeException("Default node initialization on all transports failed"));
-                }
-            }
-        }));
+            });
+        });
         return result;
     }
 

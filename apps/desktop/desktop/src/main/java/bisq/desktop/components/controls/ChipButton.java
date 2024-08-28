@@ -99,7 +99,7 @@ public class ChipButton extends HBox {
     }
 
     public void setLeftIcon(Node icon) {
-        getChildren().addFirst(icon);
+        getChildren().add(0, icon);
     }
 
     public void setRightIcon(Node icon) {

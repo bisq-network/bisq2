@@ -47,7 +47,7 @@ public class BitcoindRegtestBlockMiner implements BisqProcess {
     }
 
     @Override
-    public void start() {
+    public void start() throws InterruptedException {
         zmqListeners.registerNewBlockMinedListener(newBlockMinedListener);
     }
 

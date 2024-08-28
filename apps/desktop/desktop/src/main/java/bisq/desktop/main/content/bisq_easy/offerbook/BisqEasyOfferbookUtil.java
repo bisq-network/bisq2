@@ -163,8 +163,9 @@ public class BisqEasyOfferbookUtil {
 
                     TableRow<MarketChannelItem> tableRow = getTableRow();
                     if (tableRow != null) {
-                        selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), isSelectedMarket ->
-                                marketLogo.setEffect(isSelectedMarket ? MarketChannelItem.SELECTED : MarketChannelItem.DIMMED));
+                        selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), isSelectedMarket -> {
+                            marketLogo.setEffect(isSelectedMarket ? MarketChannelItem.SELECTED : MarketChannelItem.DIMMED);
+                        });
                     }
 
                     StackPane pane = new StackPane(marketLogo, numMessagesBadge);

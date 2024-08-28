@@ -86,8 +86,8 @@ public class Transitions {
     private static final Interpolator DEFAULT_INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
     @Setter
     private static SettingsService settingsService;
-    private static final Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
-    private static final Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
+    private static Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
+    private static Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
 
     public static FadeTransition fadeIn(Node node) {
         return fadeIn(node, DEFAULT_DURATION);
@@ -334,12 +334,13 @@ public class Transitions {
         if (node != null) {
             node.setMouseTransparent(false);
             Effect effect = node.getEffect();
-            if (effect instanceof GaussianBlur gaussianBlur) {
+            if (effect instanceof GaussianBlur) {
                 if (node.getId() == null) {
                     node.setId(StringUtils.createUid());
                 }
                 Timeline timeline = new Timeline();
                 removeEffectTimeLineByNodeId.put(node.getId(), timeline);
+                GaussianBlur gaussianBlur = (GaussianBlur) effect;
                 KeyValue kv1 = new KeyValue(gaussianBlur.radiusProperty(), 0.0);
                 KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
                 timeline.getKeyFrames().add(kf1);
@@ -409,7 +410,8 @@ public class Transitions {
         slideOutRight(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
-                if (parent instanceof Pane pane) {
+                if (parent instanceof Pane) {
+                    Pane pane = (Pane) parent;
                     pane.getChildren().remove(nodeOut);
                 }
             }
@@ -423,7 +425,8 @@ public class Transitions {
         slideOutLeft(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
-                if (parent instanceof Pane pane) {
+                if (parent instanceof Pane) {
+                    Pane pane = (Pane) parent;
                     pane.getChildren().remove(nodeOut);
                 }
             }
@@ -464,7 +467,8 @@ public class Transitions {
                 }
                 Parent parent = nodeOut.getParent();
                 if (parent != null) {
-                    if (parent instanceof Pane pane) {
+                    if (parent instanceof Pane) {
+                        Pane pane = (Pane) parent;
                         pane.getChildren().remove(nodeOut);
                     }
                 }

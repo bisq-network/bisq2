@@ -34,7 +34,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class ContractService implements Service {
 
+    private final SecurityService securityService;
+
     public ContractService(SecurityService securityService) {
+        this.securityService = securityService;
     }
 
 

@@ -37,11 +37,15 @@ public abstract class InventoryFilter implements NetworkProto {
     }
 
     public static InventoryFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {
-        return switch (proto.getMessageCase()) {
-            case HASHSETFILTER -> HashSetFilter.fromProto(proto);
-            case MINISKETCHFILTER -> MiniSketchFilter.fromProto(proto);
-            default -> throw new UnresolvableProtobufMessageException(proto);
-        };
+        switch (proto.getMessageCase()) {
+            case HASHSETFILTER: {
+                return HashSetFilter.fromProto(proto);
+            }
+            case MINISKETCHFILTER: {
+                return MiniSketchFilter.fromProto(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 
     @Override

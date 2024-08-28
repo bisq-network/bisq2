@@ -73,6 +73,8 @@ public class I2pService {
         String myDestination = getMyDestinationFromSession(session);
         if (usingExistingKey) {
             log.info("Created I2P server with existing key: {}", myDestination);
+        } else {
+            log.info("Created I2P server with existing key: {}", myDestination);
         }
 
         return manager;

@@ -19,7 +19,7 @@ package bisq.security.keys;
 
 public class I2pKeyGeneration {
     public static byte[] generatePrivateKey() {
-        @SuppressWarnings("UnnecessaryLocalVariable") byte[] privateKey = new byte[32];
+        byte[] privateKey = new byte[32];
         //todo (deferred) impl
         return privateKey;
     }
@@ -30,7 +30,7 @@ public class I2pKeyGeneration {
     }
 
     private static byte[] getPublicKey(byte[] privateKey) {
-        @SuppressWarnings("UnnecessaryLocalVariable") byte[] publicKey = new byte[32];
+        byte[] publicKey = new byte[32];
         //todo (deferred) impl
         return publicKey;
     }

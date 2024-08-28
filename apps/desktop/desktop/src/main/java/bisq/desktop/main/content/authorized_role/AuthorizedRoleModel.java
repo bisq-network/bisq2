@@ -39,6 +39,6 @@ public class AuthorizedRoleModel extends ContentTabModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return authorizedBondedRoles.isEmpty() ?
                 NavigationTarget.MEDIATOR :
-                NavigationTarget.valueOf(authorizedBondedRoles.getFirst().name());
+                NavigationTarget.valueOf(authorizedBondedRoles.get(0).name());
     }
 }

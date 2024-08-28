@@ -94,11 +94,17 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
     }
 
     public static BankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return switch (proto.getCountryBasedAccountPayload().getBankAccountPayload().getMessageCase()) {
-            case ACHTRANSFERACCOUNTPAYLOAD -> AchTransferAccountPayload.fromProto(proto);
-            case NATIONALBANKACCOUNTPAYLOAD -> NationalBankAccountPayload.fromProto(proto);
-            case CASHDEPOSITACCOUNTPAYLOAD -> CashDepositAccountPayload.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        switch (proto.getCountryBasedAccountPayload().getBankAccountPayload().getMessageCase()) {
+            case ACHTRANSFERACCOUNTPAYLOAD:
+                return AchTransferAccountPayload.fromProto(proto);
+            case NATIONALBANKACCOUNTPAYLOAD:
+                return NationalBankAccountPayload.fromProto(proto);
+            case CASHDEPOSITACCOUNTPAYLOAD:
+                return CashDepositAccountPayload.fromProto(proto);
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 }

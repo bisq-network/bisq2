@@ -60,6 +60,7 @@ public class WebcamApp extends Application {
     private QrCodeSender qrCodeSender;
     private WebcamView webcamView;
     private boolean imageDetected;
+    private Scene scene;
 
     public WebcamApp() {
         webcamService = new WebcamService();
@@ -123,7 +124,7 @@ public class WebcamApp extends Application {
 
     private void setupStage(Stage primaryStage) {
         webcamView = new WebcamView(this::onRety);
-        Scene scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
+        scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
         scene.setFill(Paint.valueOf("#1c1c1c"));
         scene.getStylesheets().addAll(requireNonNull(this.getClass().getResource("/css/base.css")).toExternalForm(),
                 requireNonNull(this.getClass().getResource("/css/webapp.css")).toExternalForm());
@@ -196,23 +197,21 @@ public class WebcamApp extends Application {
 
     private void handleError(Throwable throwable) {
         String errorMessage = getErrorMessage(throwable);
-        Platform.runLater(() -> webcamView.applyErrorMessage(Res.get("errorHeadline"), errorMessage));
+        Platform.runLater(() -> {
+            webcamView.applyErrorMessage(Res.get("errorHeadline"), errorMessage);
+        });
     }
 
     private static String getErrorMessage(Throwable throwable) {
-        return switch (throwable) {
-            case CompletionException completionException when throwable.getCause() instanceof WebcamException ->
-                    ((WebcamException) throwable.getCause()).getLocalizedErrorMessage();
-            case WebcamException webcamException -> webcamException.getLocalizedErrorMessage();
-            case TimeoutException timeoutException -> Res.get("TimeoutException", throwable.getMessage());
-            case null, default -> {
-                if (throwable != null) {
-                    yield throwable.toString();
-                } else {
-                    yield "throwable was null";
-                }
-            }
-        };
+        if (throwable instanceof CompletionException && throwable.getCause() instanceof WebcamException) {
+            return ((WebcamException) throwable.getCause()).getLocalizedErrorMessage();
+        } else if (throwable instanceof WebcamException) {
+            return ((WebcamException) throwable).getLocalizedErrorMessage();
+        } else if (throwable instanceof TimeoutException) {
+            return Res.get("TimeoutException", throwable.getMessage());
+        } else {
+            return throwable.toString();
+        }
     }
 }
 

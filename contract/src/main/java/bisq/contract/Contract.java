@@ -62,11 +62,19 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
     }
 
     public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) {
-        return switch (proto.getMessageCase()) {
-            case TWOPARTYCONTRACT -> TwoPartyContract.fromProto(proto);
-            case MULTIPARTYCONTRACT -> MultiPartyContract.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        switch (proto.getMessageCase()) {
+            case TWOPARTYCONTRACT: {
+                return TwoPartyContract.fromProto(proto);
+            }
+            case MULTIPARTYCONTRACT: {
+                return MultiPartyContract.fromProto(proto);
+            }
+
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 
     public abstract Party getTaker();

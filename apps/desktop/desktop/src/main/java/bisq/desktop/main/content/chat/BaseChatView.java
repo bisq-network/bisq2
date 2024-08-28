@@ -39,7 +39,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();
-    protected final Label channelIcon = new Label();
+    protected Label channelIcon = new Label();
     protected DropdownBisqMenuItem helpButton, infoButton;
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();

@@ -67,7 +67,6 @@ public class SignedWitnessScoreSimulation {
                 try {
                     model.getAge().set(Integer.parseInt(ageAsString));
                 } catch (Exception e) {
-                    log.error("Exception", e);
                 }
             });
 

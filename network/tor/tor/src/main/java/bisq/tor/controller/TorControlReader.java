@@ -86,7 +86,7 @@ public class TorControlReader implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public void close() throws Exception {
         isStopped = true;
         workerThread.ifPresent(Thread::interrupt);
     }

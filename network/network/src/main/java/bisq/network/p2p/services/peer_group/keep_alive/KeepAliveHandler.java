@@ -64,7 +64,8 @@ class KeepAliveHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof Pong pong) {
+        if (envelopePayloadMessage instanceof Pong) {
+            Pong pong = (Pong) envelopePayloadMessage;
             if (pong.getRequestNonce() == nonce) {
                 String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
                 log.info("Received Pong after {} from {} with nonce {}. Connection={}",

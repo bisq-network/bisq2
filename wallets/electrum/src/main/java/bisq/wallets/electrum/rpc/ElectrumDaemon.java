@@ -21,7 +21,7 @@ import bisq.wallets.electrum.rpc.calls.*;
 import bisq.wallets.electrum.rpc.responses.*;
 import bisq.wallets.json_rpc.JsonRpcClient;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,7 +85,7 @@ public class ElectrumDaemon {
 
     public List<ElectrumListUnspentResponse> listUnspent() {
         var rpcCall = new ElectrumListUnspentRpcCall();
-        return Collections.singletonList(rpcClient.call(rpcCall));
+        return Arrays.asList(rpcClient.call(rpcCall));
     }
 
     public void loadWallet(Optional<String> password) {

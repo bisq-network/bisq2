@@ -84,8 +84,9 @@ public class BisqTextArea extends TextArea {
     @Override
     protected void layoutChildren() {
         Node lookupNode = lookup(SELECTOR_SCROLL_PANE);
-        if (lookupNode instanceof ScrollPane scrollPane) {
-            if (!scrollPane.getChildrenUnmodifiable().isEmpty()) {
+        if (lookupNode instanceof ScrollPane) {
+            ScrollPane selectorScrollPane = (ScrollPane) lookupNode;
+            if (!selectorScrollPane.getChildrenUnmodifiable().isEmpty()) {
                 try {
                     super.layoutChildren();
                 } catch (Throwable t) {
@@ -95,18 +96,20 @@ public class BisqTextArea extends TextArea {
             }
 
             if (!initialized) {
-                this.selectorScrollPane = scrollPane;
+                this.selectorScrollPane = selectorScrollPane;
                 Node lookupTextNode = lookup(SELECTOR_TEXT);
-                if (lookupTextNode instanceof Text aTextNode) {
+                if (lookupTextNode instanceof Text) {
+                    Text aTextNode = (Text) lookupTextNode;
                     // If we use a promptText the input field is not the aTextNode we find by the lookup,
                     // but it's inside a region... A pain to work with those closed components... 
                     Parent parent = aTextNode.getParent();
                     parent.setStyle("-fx-background-color: transparent; -fx-border-color: transparent");
                     if (parent.getChildrenUnmodifiable().size() == 4) {
                         Node thirdNode = parent.getChildrenUnmodifiable().get(2);
-                        if (thirdNode instanceof Group group) {
+                        if (thirdNode instanceof Group) {
+                            Group group = (Group) thirdNode;
                             if (!group.getChildren().isEmpty()) {
-                                Node node = group.getChildren().getFirst();
+                                Node node = group.getChildren().get(0);
                                 if (node instanceof Text) {
                                     this.selectorText = (Text) node;
                                 }
@@ -116,7 +119,7 @@ public class BisqTextArea extends TextArea {
                         this.selectorText = aTextNode;
                     }
                     textProperty().addListener(textChangeListener);
-                    scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                    selectorScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
                     adjustHeight();
                     initialized = true;
                 }

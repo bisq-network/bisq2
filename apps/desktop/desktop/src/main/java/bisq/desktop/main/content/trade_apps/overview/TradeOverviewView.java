@@ -71,8 +71,7 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
         GridPaneUtil.setGridPaneMultiColumnsConstraints(mainProtocolsPane, 6);
         root.add(mainProtocolsPane, 0, 2, 2, 1);
 
-        mainProtocolsPane.getRowCount();
-        int rowCount;
+        int rowCount = mainProtocolsPane.getRowCount();
         int index = 0;
         for (ProtocolListItem protocol : model.getMainProtocols()) {
             int columnIndex = index % 2;
@@ -95,7 +94,7 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
         GridPaneUtil.setGridPaneMultiColumnsConstraints(moreProtocolsPane, 6);
         root.add(moreProtocolsPane, 0, root.getRowCount(), 2, 1);
 
-        moreProtocolsPane.getRowCount();
+        rowCount = moreProtocolsPane.getRowCount();
         index = 0;
         for (ProtocolListItem protocol : model.getMoreProtocols()) {
             int columnIndex = index % 2;

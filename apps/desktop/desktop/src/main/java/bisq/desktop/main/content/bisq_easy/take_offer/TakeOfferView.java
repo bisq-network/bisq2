@@ -138,15 +138,15 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
     protected void onViewAttached() {
         if (model.isPaymentMethodVisible()) {
             Label paymentMethod = createAndGetProgressLabel(Res.get("bisqEasy.takeOffer.progress.method"));
-            progressLabelList.addFirst(paymentMethod);
-            progressBox.getChildren().addFirst(getHLine());
-            progressBox.getChildren().addFirst(paymentMethod);
+            progressLabelList.add(0, paymentMethod);
+            progressBox.getChildren().add(0, getHLine());
+            progressBox.getChildren().add(0, paymentMethod);
         }
         if (model.isAmountVisible()) {
             Label amount = createAndGetProgressLabel(Res.get("bisqEasy.takeOffer.progress.amount"));
-            progressLabelList.addFirst(amount);
-            progressBox.getChildren().addFirst(getHLine());
-            progressBox.getChildren().addFirst(amount);
+            progressLabelList.add(0, amount);
+            progressBox.getChildren().add(0, getHLine());
+            progressBox.getChildren().add(0, amount);
         }
 
         nextButton.textProperty().bind(model.getNextButtonText());

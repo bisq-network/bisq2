@@ -40,6 +40,7 @@ public class VersionDistributionController implements Controller {
     private final VersionDistributionModel model;
     @Getter
     private final VersionDistributionView view;
+    private final ServiceProvider serviceProvider;
     @Getter
     private final Optional<TransportController> clearNetController = Optional.empty();
     @Getter
@@ -49,6 +50,7 @@ public class VersionDistributionController implements Controller {
     private final UserProfileService userProfileService;
 
     public VersionDistributionController(ServiceProvider serviceProvider) {
+        this.serviceProvider = serviceProvider;
         userProfileService = serviceProvider.getUserService().getUserProfileService();
 
         model = new VersionDistributionModel();

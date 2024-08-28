@@ -169,10 +169,12 @@ public class UserProfileController implements Controller {
             return;
         }
         userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
-                .thenAccept(result -> UIThread.runOnNextRenderFrame(() -> {
-                    UserIdentity value = userIdentityService.getSelectedUserIdentity();
-                    model.getSelectedUserIdentity().set(value);
-                }));
+                .thenAccept(result -> {
+                    UIThread.runOnNextRenderFrame(() -> {
+                        UserIdentity value = userIdentityService.getSelectedUserIdentity();
+                        model.getSelectedUserIdentity().set(value);
+                    });
+                });
     }
 
     private boolean noNewChangesToBeSaved(UserIdentity userIdentity) {
@@ -206,7 +208,7 @@ public class UserProfileController implements Controller {
                     } else {
                         if (!model.getUserIdentities().isEmpty()) {
                             UIThread.runOnNextRenderFrame(() -> {
-                                UserIdentity value = model.getUserIdentities().getFirst();
+                                UserIdentity value = model.getUserIdentities().get(0);
                                 model.getSelectedUserIdentity().set(value);
                             });
                         }

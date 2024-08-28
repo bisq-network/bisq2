@@ -97,7 +97,8 @@ public class SellerState1 extends BaseState {
                     }));
             selectedAccountPin = accountService.selectedAccountAsObservable().addObserver(account ->
                     UIThread.run(() -> {
-                        if (account instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
+                        if (account instanceof UserDefinedFiatAccount) {
+                            UserDefinedFiatAccount userDefinedFiatAccount = (UserDefinedFiatAccount) account;
                             model.selectedAccountProperty().set(userDefinedFiatAccount);
                             model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());
                         }
@@ -135,7 +136,7 @@ public class SellerState1 extends BaseState {
 
         private void maybeSelectFirstAccount() {
             if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount() == null) {
-                accountService.setSelectedAccount(model.getSortedAccounts().getFirst());
+                accountService.setSelectedAccount(model.getSortedAccounts().get(0));
             }
         }
     }

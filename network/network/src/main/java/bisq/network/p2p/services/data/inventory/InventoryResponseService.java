@@ -56,7 +56,8 @@ public class InventoryResponseService implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof InventoryRequest request) {
+        if (envelopePayloadMessage instanceof InventoryRequest) {
+            InventoryRequest request = (InventoryRequest) envelopePayloadMessage;
             handleInventoryRequest(request, connection);
         }
     }

@@ -135,34 +135,42 @@ public final class NetworkServiceConfig {
     private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path baseDir) {
         Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase());
         Path dataDir;
-        return switch (transportType) {
-            case TOR -> {
+        switch (transportType) {
+            case TOR:
                 dataDir = baseDir.resolve("tor");
-                yield TorTransportConfig.from(dataDir, transportConfig);
-            }
-            case I2P -> {
+                return TorTransportConfig.from(dataDir, transportConfig);
+            case I2P:
                 dataDir = baseDir.resolve("i2p");
-                yield I2PTransportService.Config.from(dataDir, transportConfig);
-            }
-            case CLEAR -> {
+                return I2PTransportService.Config.from(dataDir, transportConfig);
+            case CLEAR:
                 dataDir = baseDir;
-                yield ClearNetTransportService.Config.from(dataDir, transportConfig);
-            }
-        };
+                return ClearNetTransportService.Config.from(dataDir, transportConfig);
+            default:
+                throw new RuntimeException("Unhandled case. type=" + transportType);
+        }
     }
 
     private static Set<Address> getSeedAddresses(TransportType transportType, Config config) {
-        return switch (transportType) {
-            case TOR -> ConfigUtil.getStringList(config, "tor").stream()
-                    .map(Address::fromFullAddress).
-                    collect(Collectors.toSet());
-            case I2P -> ConfigUtil.getStringList(config, "i2p").stream()
-                    .map(Address::fromFullAddress)
-                    .collect(Collectors.toSet());
-            case CLEAR -> ConfigUtil.getStringList(config, "clear").stream()
-                    .map(Address::fromFullAddress)
-                    .collect(Collectors.toSet());
-        };
+        switch (transportType) {
+            case TOR: {
+                return ConfigUtil.getStringList(config, "tor").stream()
+                        .map(Address::fromFullAddress).
+                        collect(Collectors.toSet());
+            }
+            case I2P: {
+                return ConfigUtil.getStringList(config, "i2p").stream()
+                        .map(Address::fromFullAddress)
+                        .collect(Collectors.toSet());
+            }
+            case CLEAR: {
+                return ConfigUtil.getStringList(config, "clear").stream()
+                        .map(Address::fromFullAddress)
+                        .collect(Collectors.toSet());
+            }
+            default: {
+                throw new RuntimeException("Unhandled case. transportType=" + transportType);
+            }
+        }
     }
 
     private final String baseDir;

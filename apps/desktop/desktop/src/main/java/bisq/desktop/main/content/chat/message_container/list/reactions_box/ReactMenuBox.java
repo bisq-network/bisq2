@@ -66,6 +66,7 @@ public class ReactMenuBox extends DrawerMenu {
 
     private void addItemListener(ReactionItem reactionItem, ReactionMenuItem reactionMenuItem) {
         ChangeListener<Boolean> booleanChangeListener = (obs, oldValue, newValue) -> reactionMenuItem.setIsReactionSelected(newValue);
+        ;
         reactionItem.getSelected().addListener(booleanChangeListener);
         itemSelectedChangeListener.put(reactionItem, booleanChangeListener);
     }

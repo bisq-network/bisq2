@@ -73,14 +73,16 @@ public abstract class BondedRolesRegistrationController implements Controller {
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
-                userIdentity -> UIThread.run(() -> {
-                    model.getSelectedChatUserIdentity().set(userIdentity);
-                    if (userIdentity != null) {
-                        model.getProfileId().set(userIdentity.getId());
-                        model.setAuthorizedPublicKey(userIdentity.getUserProfile().getPubKeyAsHex());
-                    }
-                    applyRequestCancellationButtonVisible();
-                })
+                userIdentity -> {
+                    UIThread.run(() -> {
+                        model.getSelectedChatUserIdentity().set(userIdentity);
+                        if (userIdentity != null) {
+                            model.getProfileId().set(userIdentity.getId());
+                            model.setAuthorizedPublicKey(userIdentity.getUserProfile().getPubKeyAsHex());
+                        }
+                        applyRequestCancellationButtonVisible();
+                    });
+                }
         );
         bondedRoleSetPin = authorizedBondedRolesService.getBondedRoles().addObserver(() -> UIThread.run(this::applyRequestCancellationButtonVisible));
         applyRequestRegistrationButtonDisabledBinding();

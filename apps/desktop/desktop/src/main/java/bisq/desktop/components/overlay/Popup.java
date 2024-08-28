@@ -59,7 +59,8 @@ public class Popup extends Overlay<Popup> {
         private static void queueForDisplay(Popup popup) {
             boolean result = popups.offer(popup);
             if (!result) {
-                log.warn("The capacity is full with popups in the queue.\n\tNot added new popup={}", popup);
+                log.warn("The capacity is full with popups in the queue.\n\t" +
+                        "Not added new popup=" + popup);
             }
             displayNext();
         }

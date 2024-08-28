@@ -41,11 +41,19 @@ public class UserController extends ContentTabController<UserModel> {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return switch (navigationTarget) {
-            case USER_PROFILE -> Optional.of(new UserProfileController(serviceProvider));
-            case PASSWORD -> Optional.of(new PasswordController(serviceProvider));
-            case BISQ_EASY_PAYMENT_ACCOUNTS -> Optional.of(new PaymentAccountsController(serviceProvider));
-            default -> Optional.empty();
-        };
+        switch (navigationTarget) {
+            case USER_PROFILE: {
+                return Optional.of(new UserProfileController(serviceProvider));
+            }
+            case PASSWORD: {
+                return Optional.of(new PasswordController(serviceProvider));
+            }
+            case BISQ_EASY_PAYMENT_ACCOUNTS: {
+                return Optional.of(new PaymentAccountsController(serviceProvider));
+            }
+            default: {
+                return Optional.empty();
+            }
+        }
     }
 }

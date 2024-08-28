@@ -27,9 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatRulesController implements Controller {
     @Getter
     private final ChatRulesView view;
+    private final ChatRulesModel model;
 
     public ChatRulesController(ServiceProvider serviceProvider) {
-        ChatRulesModel model = new ChatRulesModel();
+        model = new ChatRulesModel();
         view = new ChatRulesView(model, this);
     }
 

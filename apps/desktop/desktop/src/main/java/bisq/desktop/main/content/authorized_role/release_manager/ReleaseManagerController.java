@@ -41,6 +41,7 @@ public class ReleaseManagerController implements Controller {
     private final ReleaseManagerView view;
     private final ReleaseManagerModel model;
     private final UserIdentityService userIdentityService;
+    private final UserProfileService userProfileService;
     private final ReleaseNotificationsService releaseNotificationsService;
     private final ReleaseManagerService releaseManagerService;
     private Pin getReleaseNotificationsPin;
@@ -48,7 +49,7 @@ public class ReleaseManagerController implements Controller {
     public ReleaseManagerController(ServiceProvider serviceProvider) {
         releaseManagerService = serviceProvider.getSupportService().getReleaseManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
         releaseNotificationsService = serviceProvider.getBondedRolesService().getReleaseNotificationsService();
         RoleInfo roleInfo = new RoleInfo(serviceProvider);
         model = new ReleaseManagerModel();
@@ -82,16 +83,18 @@ public class ReleaseManagerController implements Controller {
                         model.getIsLauncherUpdate().get(),
                         releaseNotes,
                         model.getVersion().get())
-                .whenComplete((result, throwable) -> UIThread.run(() -> {
-                    if (throwable != null) {
-                        new Popup().error(throwable).show();
-                    } else {
-                        model.getIsPreRelease().set(false);
-                        model.getIsLauncherUpdate().set(true);
-                        model.getReleaseNotes().set(null);
-                        model.getVersion().set(null);
-                    }
-                }));
+                .whenComplete((result, throwable) -> {
+                    UIThread.run(() -> {
+                        if (throwable != null) {
+                            new Popup().error(throwable).show();
+                        } else {
+                            model.getIsPreRelease().set(false);
+                            model.getIsLauncherUpdate().set(true);
+                            model.getReleaseNotes().set(null);
+                            model.getVersion().set(null);
+                        }
+                    });
+                });
     }
 
     void onRemoveReleaseNotification(ReleaseNotification releaseNotification) {

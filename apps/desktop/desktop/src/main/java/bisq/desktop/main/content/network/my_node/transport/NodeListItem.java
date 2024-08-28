@@ -83,6 +83,10 @@ public class NodeListItem implements ActivatableTableItem {
             public void onDisconnect(Connection connection, CloseReason closeReason) {
                 UIThread.run(() -> numConnections.set(String.valueOf(node.getAllConnections().count())));
             }
+
+            @Override
+            public void onStateChange(Node.State state) {
+            }
         };
     }
 

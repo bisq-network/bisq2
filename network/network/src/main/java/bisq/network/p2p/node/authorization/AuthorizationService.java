@@ -128,13 +128,13 @@ public class AuthorizationService {
                                                                List<Feature> peersFeatures) {
         checkArgument(!myPreferredAuthorizationTokenTypes.isEmpty(), "myPreferredAuthorizationTokenTypes must not be empty");
         if (peersFeatures.isEmpty()) {
-            return myPreferredAuthorizationTokenTypes.getFirst();
+            return myPreferredAuthorizationTokenTypes.get(0);
         }
         List<AuthorizationTokenType> peersAuthorizationTokenTypes = toAuthorizationTypes(peersFeatures);
         return myPreferredAuthorizationTokenTypes.stream()
                 .filter(peersAuthorizationTokenTypes::contains)
                 .findFirst()
-                .orElse(peersAuthorizationTokenTypes.getFirst());
+                .orElse(peersAuthorizationTokenTypes.get(0));
     }
 
     private static List<AuthorizationTokenType> toAuthorizationTypes(List<Feature> features) {

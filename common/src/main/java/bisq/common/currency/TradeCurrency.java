@@ -67,11 +67,15 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
     }
 
     public static TradeCurrency fromProto(bisq.common.protobuf.TradeCurrency proto) {
-        return switch (proto.getMessageCase()) {
-            case CRYPTOCURRENCY -> CryptoCurrency.fromProto(proto);
-            case FIATCURRENCY -> FiatCurrency.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        switch (proto.getMessageCase()) {
+            case CRYPTOCURRENCY:
+                return CryptoCurrency.fromProto(proto);
+            case FIATCURRENCY:
+                return FiatCurrency.fromProto(proto);
+            case MESSAGE_NOT_SET:
+                throw new UnresolvableProtobufMessageException(proto);
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
 
     public abstract String getDisplayName();
