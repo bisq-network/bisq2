@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -35,13 +36,22 @@ import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 
 @Slf4j
 public class ChipButton extends HBox {
     private final ToggleButton toggleButton;
     @Nullable
     private Runnable onActionHandler;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> toggleButtonSelectedListener = (observable, oldValue, newValue) -> {
+        removeStyles();
+        if (newValue) {
+            getStyleClass().add("chips-button-selected");
+        }
+        if (onActionHandler != null) {
+            onActionHandler.run();
+        }
+    };
 
     public ChipButton(String text) {
         setAlignment(Pos.CENTER_LEFT);
@@ -55,15 +65,7 @@ public class ChipButton extends HBox {
         HBox.setHgrow(toggleButton, Priority.ALWAYS);
         getChildren().add(toggleButton);
 
-        toggleButton.selectedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> {
-            removeStyles();
-            if (newValue) {
-                getStyleClass().add("chips-button-selected");
-            }
-            if (onActionHandler != null) {
-                onActionHandler.run();
-            }
-        }).get());
+        toggleButton.selectedProperty().addListener(new WeakChangeListener<>(toggleButtonSelectedListener));
 
         setOnMousePressed(e -> {
             removeStyles();
