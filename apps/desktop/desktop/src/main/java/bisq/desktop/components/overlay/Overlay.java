@@ -190,8 +190,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected AnimationType animationType;
     protected Transitions.Type transitionsType;
     protected int maxChar = 2200;
-    // Need to keep a reference as used in WeakChangeListener
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Scene> sceneListener;
 
     public Overlay() {

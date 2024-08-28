@@ -44,11 +44,9 @@ public class DrawerMenu extends HBox {
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
     private ImageView buttonIcon;
 
-    // Need to keep a reference as used in WeakChangeListener
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Scene> sceneListener;
-    // Need to keep a reference as used in WeakChangeListener
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Boolean> itemsVisibleListener;
 
     public DrawerMenu(String defaultIconId, String hoverIconId, String activeIconId) {

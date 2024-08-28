@@ -58,14 +58,11 @@ public class DropdownMenu extends HBox {
     private boolean openToTheRight = false;
     private Double prefWidth = null;
 
-    // Need to keep a reference as used in WeakChangeListener
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Window> windowListener;
-    // Need to keep a reference as used in WeakChangeListener
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Number> widthPropertyChangeListener;
-    // Need to keep a reference as used in WeakChangeListener
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Scene> sceneListener;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {

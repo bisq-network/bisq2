@@ -43,11 +43,11 @@ public class SelectableLabel extends StackPane {
     boolean isInSelectionMode;
 
     // Pin down the listeners to not get GCed before our object gets GCed
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Boolean> textAreaFocusListener;
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ChangeListener<Boolean> rootFocusListener;
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ListChangeListener<String> styleClassListener;
 
     // As we remove some WeakChangeListeners we keep them as class fields
