@@ -49,6 +49,9 @@ public class DropdownMenu extends HBox {
     @Getter
     private Label label = new Label();
     private ImageView buttonIcon;
+    // We need to pin it as used in a WeakChangeListener
+    @SuppressWarnings("FieldCanBeLocal")
+    private ChangeListener<Number> widthPropertyChangeListener;
     private boolean isFirstRun = false;
     @Setter
     private boolean openUpwards = false;
@@ -161,11 +164,7 @@ public class DropdownMenu extends HBox {
             isMenuShowing.setValue(false);
         });
 
-        // Once the contextMenu has calculated the width on the first render time we update the items
-        // so that they all have the same size.
-        // Remove margins
-        // We need to pin it as used in a WeakChangeListener
-        ChangeListener<Number> widthPropertyChangeListener = (observable, oldValue, newValue) -> {
+        widthPropertyChangeListener = (observable, oldValue, newValue) -> {
             if (newValue.doubleValue() > INITIAL_WIDTH && !isFirstRun) {
                 isFirstRun = true;
                 // Once the contextMenu has calculated the width on the first render time we update the items
