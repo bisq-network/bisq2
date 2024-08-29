@@ -31,11 +31,14 @@ import javafx.scene.layout.VBox;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class AcademyBaseView<M extends Model, C extends Controller> extends View<VBox, M, C> {
+    private final VBox contentBox;
     protected final Label headline;
     protected final Hyperlink learnMore;
 
     public AcademyBaseView(M model, C controller) {
         super(new VBox(10), model, controller);
+
+        contentBox = new VBox();
 
         String key = getKey();
         headline = new Label(Res.get("academy.overview." + key));
@@ -49,15 +52,17 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
         VBox.setMargin(learnMore, new Insets(25, 0, 0,0));
 
         VBox.setMargin(headline, new Insets(0, 0, 0, 0));
-        root.getChildren().add(headline);
-        root.setPadding(new Insets(0, 40, 40, 40));
+        contentBox.getChildren().add(headline);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     protected Label addHeadlineLabel(String headlineKey) {
         Label label = new Label(Res.get(headlineKey));
         label.getStyleClass().addAll("font-size-16", "font-light");
         label.setWrapText(true);
-        root.getChildren().add(label);
+        contentBox.getChildren().add(label);
         return label;
     }
 
@@ -65,7 +70,7 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
         Label label = new Label(Res.get(subheadlineKey));
         label.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
         label.setWrapText(true);
-        root.getChildren().add(label);
+        contentBox.getChildren().add(label);
     }
 
     protected Label addContentLabel(String contentKey) {
@@ -73,13 +78,13 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
         label.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         label.setWrapText(true);
         VBox.setMargin(label, new Insets(25, 0, 0, 0));
-        root.getChildren().add(label);
+        contentBox.getChildren().add(label);
         return label;
     }
 
     protected void addLearnMoreHyperlink() {
-        checkArgument(!root.getChildren().contains(learnMore));
-        root.getChildren().add(learnMore);
+        checkArgument(!contentBox.getChildren().contains(learnMore));
+        contentBox.getChildren().add(learnMore);
     }
 
     protected void setHeadlineMargin(Label headlineLabel) {
