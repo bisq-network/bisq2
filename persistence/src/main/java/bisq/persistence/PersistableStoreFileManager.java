@@ -64,7 +64,7 @@ public class PersistableStoreFileManager {
         }
     }
 
-    public void tryToBackupCurrentStoreFile() {
+    public void backup() {
         backupService.ifPresent(BackupService::backup);
     }
 
