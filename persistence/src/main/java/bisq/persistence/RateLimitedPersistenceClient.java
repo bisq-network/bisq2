@@ -58,9 +58,9 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
             dropped = false;
             return getPersistence()
                     .persistAsync(getPersistableStore().getClone())
-                    .handle((r, t) -> {
+                    .handle((nil, throwable) -> {
                         writeInProgress = false;
-                        return true;
+                        return throwable == null;
                     });
         }
     }
