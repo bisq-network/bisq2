@@ -583,8 +583,8 @@
 
 .bisq-common-bg {
     -fx-background-color: -bisq-dark-grey-20;
-    -fx-background-radius: 16 16 16 16;
-    -fx-padding: 20;
+    -fx-background-radius: 8 8 8 8;
+    -fx-padding: 50;
 }
 
 #chat-message-quote-box-peer-msg {
