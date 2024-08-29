@@ -164,6 +164,10 @@ public class FileUtils {
                 }));
     }
 
+    public static void makeDirs(Path dirPath) throws IOException {
+        makeDirs(dirPath.toFile());
+    }
+
     public static void makeDirs(String dirPath) throws IOException {
         makeDirs(new File(dirPath));
     }
@@ -291,6 +295,18 @@ public class FileUtils {
         try (Stream<Path> stream = Files.list(Paths.get(dirPath))) {
             return stream
                     .filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .collect(Collectors.toSet());
+        } catch (IOException e) {
+            log.error(e.toString(), e);
+            return new HashSet<>();
+        }
+    }
+    public static Set<String> listDirectories(String dirPath) {
+        try (Stream<Path> stream = Files.list(Paths.get(dirPath))) {
+            return stream
+                    .filter(Files::isDirectory)
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .collect(Collectors.toSet());
