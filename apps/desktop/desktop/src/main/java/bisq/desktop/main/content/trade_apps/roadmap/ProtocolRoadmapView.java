@@ -70,12 +70,15 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
         VBox.setMargin(tradeOffsHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(con, new Insets(20, 0, 15, 0));
 
-        root.setPadding(new Insets(0, 40, 40, 40));
-        root.getChildren().addAll(headline, subHeadline,
+        VBox contentBox = new VBox();
+        contentBox.getChildren().addAll(headline, subHeadline,
                 overviewHeadline, overview,
                 releaseHeadline, release,
                 tradeOffsHeadline, pro, con,
                 learnMore);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
