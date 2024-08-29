@@ -17,14 +17,15 @@
 
 package bisq.persistence;
 
+import bisq.persistence.backup.BackupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Slf4j
 public class PersistableStoreFileManager {
@@ -35,16 +36,22 @@ public class PersistableStoreFileManager {
     @Getter
     private final Path storeFilePath;
     private final Path parentDirectoryPath;
+    private final Optional<BackupService> backupService;
 
     private final Path backupFilePath;
     @Getter
     private final Path tempFilePath;
 
     public PersistableStoreFileManager(Path storeFilePath) {
+        this(storeFilePath, BackupService.Priority.NONE);
+    }
+
+    public PersistableStoreFileManager(Path storeFilePath, BackupService.Priority backupPriority) {
         this.storeFilePath = storeFilePath;
         this.parentDirectoryPath = storeFilePath.getParent();
         this.backupFilePath = createBackupFilePath();
         this.tempFilePath = createTempFilePath();
+        backupService = backupPriority == BackupService.Priority.NONE ? Optional.empty() : Optional.of(new BackupService(storeFilePath, backupPriority));
     }
 
     public void createParentDirectoriesIfNotExisting() {
@@ -57,21 +64,8 @@ public class PersistableStoreFileManager {
         }
     }
 
-    public void tryToBackupCurrentStoreFile() throws IOException {
-        File storeFile = storeFilePath.toFile();
-        if (!storeFile.exists()) {
-            return;
-        }
-
-        File backupFile = backupFilePath.toFile();
-        if (backupFile.exists()) {
-            Files.delete(backupFilePath);
-        }
-
-        boolean isSuccess = storeFilePath.toFile().renameTo(backupFile);
-        if (!isSuccess) {
-            throw new IOException("Couldn't rename " + storeFilePath + " to " + backupFilePath);
-        }
+    public void tryToBackupCurrentStoreFile() {
+        backupService.ifPresent(BackupService::backup);
     }
 
     public void restoreBackupFileIfCurrentFileNotExisting() {

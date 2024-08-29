@@ -62,15 +62,12 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
-
         try {
             writeStoreToTempFile(persistableStore);
             storeFileManager.tryToBackupCurrentStoreFile();
             storeFileManager.renameTempFileToCurrentFile();
-
         } catch (CouldNotSerializePersistableStore e) {
             log.error("Couldn't serialize {}", persistableStore, e);
-
         } catch (Exception e) {
             log.error("Couldn't write persistable store to disk. Trying restore backup.", e);
             storeFileManager.restoreBackupFileIfCurrentFileNotExisting();

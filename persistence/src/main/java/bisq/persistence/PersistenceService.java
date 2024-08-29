@@ -19,6 +19,7 @@ package bisq.persistence;
 
 import bisq.common.proto.PersistableProto;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.persistence.backup.BackupService;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,23 +45,31 @@ public class PersistenceService {
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                                  DbSubDirectory dbSubDirectory,
                                                                                  PersistableStore<T> persistableStore) {
-        return getOrCreatePersistence(client, dbSubDirectory.getDbPath(), persistableStore.getClass().getSimpleName(), persistableStore);
+        return getOrCreatePersistence(client,
+                dbSubDirectory,
+                persistableStore.getClass().getSimpleName(),
+                persistableStore);
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                                  DbSubDirectory dbSubDirectory,
                                                                                  String fileName,
                                                                                  PersistableStore<T> persistableStore) {
-        return getOrCreatePersistence(client, dbSubDirectory.getDbPath(), fileName, persistableStore);
+        return getOrCreatePersistence(client,
+                dbSubDirectory.getDbPath(),
+                fileName,
+                persistableStore,
+                BackupService.toPriority(dbSubDirectory));
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                                  String subDir,
                                                                                  String fileName,
-                                                                                 PersistableStore<T> persistableStore) {
+                                                                                 PersistableStore<T> persistableStore,
+                                                                                 BackupService.Priority backupPriority) {
         PersistableStoreResolver.addResolver(persistableStore.getResolver());
         clients.add(client);
-        Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName);
+        Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName, backupPriority);
         persistenceInstances.add(persistence);
         return persistence;
     }
