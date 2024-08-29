@@ -248,6 +248,7 @@ public abstract class BubbleMessageBox extends MessageBox {
                     String languageCode = offer.getSupportedLanguageCodes().get(i).toUpperCase();
                     Label codeLabel = (i == codesCount - 1) ? new Label(languageCode) : new Label(languageCode + ",");
                     codeLabel.setTooltip(new BisqTooltip(LanguageRepository.getDisplayString(languageCode)));
+                    codeLabel.getStyleClass().add("text-fill-white");
                     hBox.getChildren().add(codeLabel);
                 }
             }
