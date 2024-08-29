@@ -102,8 +102,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public CompletableFuture<Boolean> persist() {
         // We don't want to call persist from the addObserver calls at initialize
         if (isInitialized) {
-            return getPersistence().persistAsync(getPersistableStore().getClone())
-                    .handle((r, t) -> true);
+            return PersistenceClient.super.persist();
         } else {
             return CompletableFuture.completedFuture(true);
         }
