@@ -22,6 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -30,6 +31,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -40,6 +42,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.bisq_easy.NavigationTarget.CREATE_PROFILE_STEP1;
 
@@ -53,10 +56,12 @@ public class UserProfileController implements Controller {
     private final ProfileAgeService profileAgeService;
     private final BisqEasyService bisqEasyService;
     private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
+    private UIScheduler livenessUpateScheduler;
 
     public UserProfileController(ServiceProvider serviceProvider) {
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        reputationService = serviceProvider.getUserService().getReputationService();
+        UserService userService = serviceProvider.getUserService();
+        userIdentityService = userService.getUserIdentityService();
+        reputationService = userService.getReputationService();
         profileAgeService = reputationService.getProfileAgeService();
         bisqEasyService = serviceProvider.getBisqEasyService();
 
@@ -88,6 +93,23 @@ public class UserProfileController implements Controller {
                         model.getProfileAge().set(profileAgeService.getProfileAge(userIdentity.getUserProfile())
                                 .map(TimeFormatter::formatAgeInDays)
                                 .orElse(Res.get("data.na")));
+
+                        if (livenessUpateScheduler != null) {
+                            livenessUpateScheduler.stop();
+                            livenessUpateScheduler = null;
+                        }
+                        livenessUpateScheduler = UIScheduler.run(() -> {
+                                    long publishDate = userProfile.getPublishDate();
+                                    if (publishDate == 0) {
+                                        model.getLivenessState().set(Res.get("data.na"));
+                                    } else {
+                                        long age = Math.max(0, System.currentTimeMillis() - publishDate);
+                                        String formattedAge = TimeFormatter.formatAge(age);
+                                        model.getLivenessState().set(Res.get("user.userProfile.livenessState.ageDisplay", formattedAge));
+                                    }
+                                })
+                                .periodically(0, 1, TimeUnit.SECONDS);
+
                     });
                 }
         );
@@ -100,6 +122,10 @@ public class UserProfileController implements Controller {
         selectedUserProfilePin.unbind();
         reputationChangedPin.unbind();
         model.getSelectedUserIdentity().set(null);
+        if (livenessUpateScheduler != null) {
+            livenessUpateScheduler.stop();
+            livenessUpateScheduler = null;
+        }
     }
 
     public void onSelected(UserIdentity userIdentity) {

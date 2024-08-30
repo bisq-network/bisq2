@@ -40,11 +40,15 @@ public final class BaseSideFixedAmountSpec extends FixedAmountSpec implements Ba
     }
 
     @Override
-    public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setFixedAmountSpec(
-                        getFixedAmountSpecBuilder().setBaseSideFixedAmountSpec(
-                                bisq.offer.protobuf.BaseSideFixedAmountSpec.newBuilder()))
-                .build();
+    public bisq.offer.protobuf.AmountSpec.Builder getBuilder(boolean serializeForHash) {
+        return getAmountSpecBuilder(serializeForHash).setFixedAmountSpec(
+                getFixedAmountSpecBuilder(serializeForHash).setBaseSideFixedAmountSpec(
+                        bisq.offer.protobuf.BaseSideFixedAmountSpec.newBuilder()));
+    }
+
+    @Override
+    public bisq.offer.protobuf.AmountSpec toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static BaseSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {

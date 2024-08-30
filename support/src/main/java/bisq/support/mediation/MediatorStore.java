@@ -42,12 +42,16 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
     }
 
     @Override
-    public bisq.support.protobuf.MediatorStore toProto() {
+    public bisq.support.protobuf.MediatorStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.MediatorStore.newBuilder()
                 .addAllMediationCases(mediationCases.stream()
-                        .map((MediationCase::toProto))
-                        .collect(Collectors.toSet()))
-                .build();
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toSet()));
+    }
+
+    @Override
+    public bisq.support.protobuf.MediatorStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static MediatorStore fromProto(bisq.support.protobuf.MediatorStore proto) {

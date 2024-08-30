@@ -18,11 +18,13 @@
 package bisq.desktop.main.content.settings.utils;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.common.util.FileUtils;
-import bisq.common.util.OsUtils;
+import bisq.common.file.FileUtils;
+import bisq.common.observable.Pin;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
@@ -30,6 +32,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,10 +51,13 @@ public class UtilsController implements Controller {
     private final String baseDir;
     private final String appName;
     private final PersistenceService persistenceService;
+    private final SettingsService settingsService;
+    private Pin backupLocationPin;
 
     public UtilsController(ServiceProvider serviceProvider) {
         baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
         appName = serviceProvider.getConfig().getAppName();
+        settingsService = serviceProvider.getSettingsService();
         persistenceService = serviceProvider.getPersistenceService();
 
         model = new UtilsModel();
@@ -61,34 +67,46 @@ public class UtilsController implements Controller {
     @Override
     public void onActivate() {
         model.getBackupButtonDefault().bind(model.getBackupLocation().isEmpty().not());
+        model.getBackupButtonDisabled().bind(model.getBackupLocation().isEmpty());
+        backupLocationPin = FxBindings.bindBiDir(model.getBackupLocation())
+                .to(settingsService.getBackupLocation());
+
     }
 
     @Override
     public void onDeactivate() {
+        model.getBackupButtonDefault().unbind();
+        model.getBackupButtonDisabled().unbind();
+        backupLocationPin.unbind();
     }
 
     void onOpenLogFile() {
-        OsUtils.open(Path.of(baseDir, "bisq.log").toFile());
+        PlatformUtils.open(Path.of(baseDir, "bisq.log").toFile());
+    }
+
+    void onOpenTorLogFile() {
+        PlatformUtils.open(Path.of(baseDir, "tor", "debug.log").toFile());
     }
 
     void onOpenDataDir() {
-        OsUtils.open(baseDir);
+        PlatformUtils.open(baseDir);
     }
 
     void onSetBackupLocation() {
         String path = model.getBackupLocation().get();
         if (StringUtils.isEmpty(path)) {
-            path = OsUtils.getHomeDirectory();
+            path = PlatformUtils.getHomeDirectory();
         }
-        File directory = FileChooserUtil.chooseDirectory(getView().getRoot().getScene(),
-                path,
-                Res.get("settings.utils.backup.selectLocation"));
-        if (directory != null) {
-            model.getBackupLocation().set(directory.getAbsolutePath());
-        }
+        String title = Res.get("settings.utils.backup.selectLocation");
+        FileChooserUtil.chooseDirectory(getView().getRoot().getScene(), path, title)
+                .ifPresent(directory -> model.getBackupLocation().set(directory.getAbsolutePath()));
     }
 
     void onBackup() {
+        if (StringUtils.isEmpty(model.getBackupLocation().get())) {
+            model.getBackupLocation().set(null);
+            return;
+        }
         persistenceService.persistAllClients()
                 .whenComplete((result, throwable) -> {
                     UIThread.run(() -> {

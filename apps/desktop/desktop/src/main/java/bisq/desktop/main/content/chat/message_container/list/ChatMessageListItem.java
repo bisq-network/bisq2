@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.chat.message_container.list;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -25,12 +27,20 @@ import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.Reaction;
+import bisq.common.currency.Market;
+import bisq.common.data.Pair;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -39,8 +49,13 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.Direction;
+import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
+import bisq.offer.payment_method.PaymentMethodSpecUtil;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -50,11 +65,12 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,45 +81,50 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static bisq.chat.ChatMessageType.LEAVE;
-import static bisq.chat.ChatMessageType.PROTOCOL_LOG_MESSAGE;
+import static bisq.chat.ChatMessageType.*;
 import static bisq.desktop.main.content.chat.message_container.ChatMessageContainerView.EDITED_POST_FIX;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChannel<M>> implements Comparable<ChatMessageListItem<M, C>> {
+    private static final List<Reaction> REACTION_DISPLAY_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN,
+            Reaction.HAPPY, Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
+
+    @EqualsAndHashCode.Include
     private final M chatMessage;
+    @EqualsAndHashCode.Include
     private final C chatChannel;
+
     private final String message;
     private final String date;
     private final Optional<Citation> citation;
     private final Optional<UserProfile> senderUserProfile;
     private final String nym;
     private final String nickName;
-    @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
-    @EqualsAndHashCode.Exclude
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean offerAlreadyTaken;
-    @EqualsAndHashCode.Exclude
-    private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
-    @EqualsAndHashCode.Exclude
-    private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
-    @EqualsAndHashCode.Exclude
-    @Nullable
-    private MessageDeliveryStatus messageDeliveryStatus;
-    @EqualsAndHashCode.Exclude
     @Nullable
     private String messageId;
-    @EqualsAndHashCode.Exclude
-    private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
-    @EqualsAndHashCode.Exclude
-    private final Set<Pin> mapPins = new HashSet<>();
-    @EqualsAndHashCode.Exclude
-    private final Set<Pin> statusPins = new HashSet<>();
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
+    private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
+
+    // Delivery status
+    private final Set<Pin> mapPins = new HashSet<>();
+    private final Set<Pin> statusPins = new HashSet<>();
+    private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
+    private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
+    private final Optional<ResendMessageService> resendMessageService;
+    private ImageView successfulDeliveryIcon, connectingDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
+    private BisqMenuItem tryAgainMenuItem;
+
+    // Reactions
+    private final Pin userIdentityPin;
+    private final HashMap<Reaction, ReactionItem> userReactions = new HashMap<>();
+    private Optional<Pin> userReactionsPin = Optional.empty();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -118,9 +139,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         this.chatChannel = chatChannel;
         this.marketPriceService = marketPriceService;
         this.userIdentityService = userIdentityService;
+        this.resendMessageService = resendMessageService;
 
-        if (chatMessage instanceof PrivateChatMessage) {
-            senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
+        if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
+            senderUserProfile = Optional.of(userProfileService.getManagedUserProfile(privateChatMessage.getSenderUserProfile()));
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         }
@@ -135,8 +157,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         reputationScoreDisplay.setReputationScore(reputationScore);
 
-        if (chatMessage instanceof BisqEasyOfferbookMessage &&
-                ((BisqEasyOfferbookMessage) chatMessage).hasBisqEasyOffer()) {
+        if (isBisqEasyPublicChatMessageWithOffer()) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             message = getLocalizedOfferBookMessage(bisqEasyOfferbookMessage);
             if (bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
@@ -155,94 +176,11 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             offerAlreadyTaken = false;
         }
 
-        mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
-            @Override
-            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
-                if (messageId.equals(chatMessage.getId())) {
-                    // Delay to avoid ConcurrentModificationException
-                    UIThread.runOnNextRenderFrame(() -> {
-                        statusPins.add(value.addObserver(status -> {
-                            UIThread.run(() -> {
-                                messageDeliveryStatus = status;
-                                ChatMessageListItem.this.messageId = messageId;
-                                if (status != null) {
-                                    messageDeliveryStatusIconColor = Optional.empty();
-                                    messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
-                                    switch (status) {
-                                        case CONNECTING:
-                                            // -bisq-mid-grey-20: #808080;
-                                            messageDeliveryStatusIconColor = Optional.of("#808080");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
-                                            break;
-                                        case SENT:
-                                            // -bisq-light-grey-50: #eaeaea;
-                                            messageDeliveryStatusIconColor = Optional.of("#eaeaea");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_RIGHT);
-                                            break;
-                                        case ACK_RECEIVED:
-                                            // -bisq2-green-dim-50: #2b5724;
-                                            messageDeliveryStatusIconColor = Optional.of("#2b5724");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
-                                            break;
-                                        case TRY_ADD_TO_MAILBOX:
-                                            // -bisq2-yellow-dim-30: #915b15;
-                                            messageDeliveryStatusIconColor = Optional.of("#915b15");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
-                                            break;
-                                        case ADDED_TO_MAILBOX:
-                                            // -bisq2-yellow-dim-30: #915b15;
-                                            messageDeliveryStatusIconColor = Optional.of("#915b15");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
-                                            break;
-                                        case MAILBOX_MSG_RECEIVED:
-                                            // -bisq2-green-dim-50: #2b5724;
-                                            messageDeliveryStatusIconColor = Optional.of("#2b5724");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
-                                            break;
-                                        case FAILED:
-                                            if (resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false)) {
-                                                // -bisq2-yellow: #d0831f;
-                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.REFRESH);
-                                                messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()) + " " + Res.get("chat.message.resendMessage"));
-                                                break;
-                                            } else {
-                                                // -bisq2-red: #d23246;
-                                                messageDeliveryStatusIconColor = Optional.of("#d23246");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
-                                                break;
-                                            }
-                                    }
-                                }
-                            });
-                        }));
-                    });
-                }
-            }
+        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::onUserIdentity));
 
-            @Override
-            public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
-                map.forEach(this::put);
-            }
-
-            @Override
-            public void remove(Object key) {
-            }
-
-            @Override
-            public void clear() {
-            }
-        }));
-    }
-
-    private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
-        BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
-        String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        return BisqEasyServiceUtil.createBasicOfferBookMessage(marketPriceService,
-                bisqEasyOffer.getMarket(),
-                fiatPaymentMethods,
-                bisqEasyOffer.getAmountSpec(),
-                bisqEasyOffer.getPriceSpec());
+        createAndAddSubscriptionToUserReactions(userProfileService);
+        initializeDeliveryStatusIcons();
+        addSubscriptionToMessageDeliveryStatus(networkService);
     }
 
     @Override
@@ -262,6 +200,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     public void dispose() {
         mapPins.forEach(Pin::unbind);
         statusPins.forEach(Pin::unbind);
+        userReactionsPin.ifPresent(Pin::unbind);
+        userIdentityPin.unbind();
     }
 
     public boolean hasTradeChatOffer() {
@@ -323,6 +263,36 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return reputationScoreDisplay.getNumberOfStars();
     }
 
+    public Optional<Pair<String, String>> getBisqEasyOfferAmountAndPriceSpec() {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOffer offer = ((BisqEasyOfferbookMessage) chatMessage).getBisqEasyOffer().orElseThrow();
+            AmountSpec amountSpec = offer.getAmountSpec();
+            PriceSpec priceSpec = offer.getPriceSpec();
+            boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
+            Market market = offer.getMarket();
+            String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
+            String priceSpecAsString = BisqEasyServiceUtil.getFormattedPriceSpec(priceSpec);
+            return Optional.of(new Pair<>(quoteAmountAsString, priceSpecAsString));
+        }
+        return Optional.empty();
+    }
+
+    public List<FiatPaymentMethod> getBisqEasyOfferPaymentMethods() {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOffer offer = ((BisqEasyOfferbookMessage) chatMessage).getBisqEasyOffer().orElseThrow();
+            return PaymentMethodSpecUtil.getPaymentMethods(offer.getQuoteSidePaymentMethodSpecs());
+        }
+        return Collections.emptyList();
+    }
+
+    public List<BitcoinPaymentMethod> getBisqEasyOfferSettlementMethods() {
+        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            BisqEasyOffer offer = ((BisqEasyOfferbookMessage) chatMessage).getBisqEasyOffer().orElseThrow();
+            return PaymentMethodSpecUtil.getPaymentMethods(offer.getBaseSidePaymentMethodSpecs());
+        }
+        return Collections.emptyList();
+    }
+
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
         if (chatMessage instanceof BisqEasyOfferMessage) {
             BisqEasyOfferMessage bisqEasyOfferMessage = (BisqEasyOfferMessage) chatMessage;
@@ -333,7 +303,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return false;
     }
 
-    private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage, String separator, Function<String, String> toStringFunction) {
+    private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage,
+                                             String separator,
+                                             Function<String, String> toStringFunction) {
         return chatMessage.getBisqEasyOffer()
                 .map(BisqEasyOffer::getSupportedLanguageCodes)
                 .map(supportedLanguageCodes -> Joiner.on(separator)
@@ -341,5 +313,146 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                 .map(toStringFunction)
                                 .collect(Collectors.toList())))
                 .orElse("");
+    }
+
+    private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
+        BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
+        String btcPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
+        String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        return BisqEasyServiceUtil.createBasicOfferBookMessage(marketPriceService,
+                bisqEasyOffer.getMarket(),
+                btcPaymentMethods,
+                fiatPaymentMethods,
+                bisqEasyOffer.getAmountSpec(),
+                bisqEasyOffer.getPriceSpec());
+    }
+
+    private void initializeDeliveryStatusIcons() {
+        successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
+        connectingDeliveryIcon = ImageUtil.getImageViewById("connecting-grey");
+        pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
+        addedToMailboxIcon = ImageUtil.getImageViewById("mailbox-grey");
+        failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
+        tryAgainMenuItem = new BisqMenuItem("try-again-grey", "try-again-white");
+        tryAgainMenuItem.useIconOnly(22);
+        tryAgainMenuItem.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
+    }
+
+    private void addSubscriptionToMessageDeliveryStatus(NetworkService networkService) {
+        mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
+                if (messageId.equals(chatMessage.getId())) {
+                    updateMessageStatus(messageId, value);
+                }
+            }
+
+            @Override
+            public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
+                map.forEach(this::put);
+            }
+
+            @Override
+            public void remove(Object key) {
+            }
+
+            @Override
+            public void clear() {
+            }
+        }));
+
+    }
+
+    private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value) {
+        // Delay to avoid ConcurrentModificationException
+        UIThread.runOnNextRenderFrame(() -> {
+            statusPins.add(value.addObserver(status -> {
+                UIThread.run(() -> {
+                    ChatMessageListItem.this.messageId = messageId;
+                    boolean shouldShowTryAgain = false;
+                    if (status != null) {
+                        Label statusLabel = new Label();
+                        statusLabel.setTooltip(new BisqTooltip(Res.get("chat.message.deliveryState." + status.name())));
+                        switch (status) {
+                            // Successful delivery
+                            case ACK_RECEIVED:
+                            case MAILBOX_MSG_RECEIVED:
+                                statusLabel.setGraphic(successfulDeliveryIcon);
+                                break;
+                            // Pending delivery
+                            case CONNECTING:
+                                statusLabel.setGraphic(connectingDeliveryIcon);
+                                break;
+                            case SENT:
+                            case TRY_ADD_TO_MAILBOX:
+                                statusLabel.setGraphic(pendingDeliveryIcon);
+                                break;
+                            case ADDED_TO_MAILBOX:
+                                statusLabel.setGraphic(addedToMailboxIcon);
+                                break;
+                            case FAILED:
+                                statusLabel.setGraphic(failedDeliveryIcon);
+                                shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
+                                break;
+                        }
+                        messageDeliveryStatusNode.set(statusLabel);
+                    }
+                    this.shouldShowTryAgain.set(shouldShowTryAgain);
+                });
+            }));
+        });
+    }
+
+    private void createAndAddSubscriptionToUserReactions(UserProfileService userProfileService) {
+        if (!chatMessage.canShowReactions()) {
+            return;
+        }
+
+        // Create all the ReactionItems
+        UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        Arrays.stream(Reaction.values()).forEach(reaction -> userReactions.put(reaction,
+                new ReactionItem(reaction, selectedUserProfile, isMyMessage())));
+
+        // Subscribe to changes
+        userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(ChatMessageReaction element) {
+                Reaction reaction = getReactionFromOrdinal(element.getReactionId());
+                UIThread.run(() -> {
+                    if (userReactions.containsKey(reaction)) {
+                        userProfileService.findUserProfile(element.getUserProfileId())
+                                .filter(profile -> !userProfileService.isChatUserIgnored(profile))
+                                .ifPresent(profile -> userReactions.get(reaction).addUser(element, profile));
+                    }
+                });
+            }
+
+            @Override
+            public void remove(Object element) {
+                ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
+                Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
+                UIThread.run(() -> {
+                    if (userReactions.containsKey(reaction)) {
+                        userProfileService.findUserProfile(chatMessageReaction.getUserProfileId())
+                                .ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
+                    }
+                });
+            }
+
+            @Override
+            public void clear() {
+                UIThread.run(userReactions::clear);
+            }
+        }));
+    }
+
+    private static Reaction getReactionFromOrdinal(int ordinal) {
+        checkArgument(ordinal >= 0 && ordinal < Reaction.values().length, "Invalid reaction id: " + ordinal);
+        return Reaction.values()[ordinal];
+    }
+
+    private void onUserIdentity() {
+        UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        userReactions.forEach((key, value) -> value.setSelectedUserProfile(selectedUserProfile));
     }
 }

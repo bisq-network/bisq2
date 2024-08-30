@@ -41,19 +41,21 @@ i2p-lib = { strictly = '1.8.0' }
 i2p-v2 = { strictly = '2.4.0' }
 
 jackson-lib = { strictly = '2.13.3' }
+javacv = { strictly = '1.5.10' }
 java-dev-jna-lib = { strictly = '5.13.0' }
 jeromq-lib = { strictly = '0.5.2' }
 junit-jupiter-lib = { strictly = '5.8.2' }
 kotlindsl-plugin = { strictly = '2.1.7' }
 logback-lib = { strictly = '1.2.11' }
-lombok-lib = { strictly = '1.18.22' }
+lombok-lib = { strictly = '1.18.34' }
 mockito-lib = { strictly = '4.11.0' }
-openjfx-plugin = { strictly = '0.0.12' }
+openjfx-plugin = { strictly = '0.0.13' }
 openjfx-monocle-lib = { strictly = 'jdk-12.0.1+2'}
 
 protobuf-java-lib = { strictly = '3.19.4' }
 protobuf-gradle-plugin-lib = { strictly = '0.9.3' }
 
+sarxos-lib = { strictly = '0.3.12' }
 shadow-plugin = { strictly = '7.1.2' }
 slf4j-lib = { strictly = '1.7.36' }
 spring-boot-starter-web-lib = { strictly = '2.5.6' }
@@ -67,6 +69,7 @@ testfx-junit5-lib = { strictly = '4.0.16-alpha' }
 tukaani-lib = { strictly = '1.9' }
 typesafe-config-lib = { strictly = '1.4.2' }
 
+zxing-lib = { strictly = '3.5.3' }
 
 # Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
@@ -120,6 +123,7 @@ jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref
 jackson-annotations = { module = 'com.fasterxml.jackson.core:jackson-annotations', version.ref = 'jackson-lib' }
 jackson-databind = { module = 'com.fasterxml.jackson.core:jackson-databind', version.ref = 'jackson-lib' }
 
+javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-lib' }
 jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
@@ -135,6 +139,7 @@ protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'p
 protobuf-gradle-plugin = { module = 'com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
 protobuf-java-util = { module = 'com.google.protobuf:protobuf-java-util', version.ref = 'protobuf-java-lib' }
 
+sarxos = { module = 'com.github.sarxos:webcam-capture', version.ref = 'sarxos-lib' }
 slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
 spring-boot-starter-web = { module = 'org.springframework.boot:spring-boot-starter-web', version.ref = 'spring-boot-starter-web-lib' }
 
@@ -149,6 +154,8 @@ swagger-jaxrs2-jakarta = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta',
 testfx-junit5 = { module = 'org.testfx:testfx-junit5', version.ref = 'testfx-junit5-lib' }
 tukaani = { module = 'org.tukaani:xz', version.ref = 'tukaani-lib' }
 typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config-lib' }
+
+zxing = { module = 'com.google.zxing:javase', version.ref = 'zxing-lib' }
 
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'
@@ -170,3 +177,4 @@ springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swa
 kotlindsl = { id = 'org.gradle.kotlin.kotlin-dsl', version.ref = 'kotlindsl-plugin' }
 openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx-plugin' }
 shadow = { id = 'com.github.johnrengelman.shadow', version.ref = 'shadow-plugin' }
+gradle-javacpp-platform = { id = "org.bytedeco.gradle-javacpp-platform", version.ref = "javacv" }

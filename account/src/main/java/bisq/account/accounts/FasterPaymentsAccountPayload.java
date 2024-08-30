@@ -30,12 +30,19 @@ public final class FasterPaymentsAccountPayload extends AccountPayload {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        return getAccountPayloadBuilder()
-                .setFasterPaymentsAccountPayload(bisq.account.protobuf.FasterPaymentsAccountPayload.newBuilder()
-                        .setSortCode(sortCode)
-                        .setAccountNr(accountNr))
-                .build();
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return getAccountPayloadBuilder(serializeForHash)
+                .setFasterPaymentsAccountPayload(toFasterPaymentsAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.FasterPaymentsAccountPayload toFasterPaymentsAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getFasterPaymentsAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.FasterPaymentsAccountPayload.Builder getFasterPaymentsAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.FasterPaymentsAccountPayload.newBuilder()
+                .setSortCode(sortCode)
+                .setAccountNr(accountNr);
     }
 
     public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload account) {

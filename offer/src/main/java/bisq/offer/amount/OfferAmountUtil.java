@@ -21,8 +21,7 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.offer.Offer;
-import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.amount.spec.AmountSpecUtil;
+import bisq.offer.amount.spec.*;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
 
@@ -201,5 +200,35 @@ public class OfferAmountUtil {
                         .flatMap(baseAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
                                 .map(quote -> quote.toQuoteSideMonetary(baseAmount))
                         ));
+    }
+
+    public static Optional<QuoteSideAmountSpec> updateQuoteSideAmountSpecWithPriceSpec(MarketPriceService marketPriceService,
+                                                                                       QuoteSideAmountSpec amountSpec,
+                                                                                       PriceSpec priceSpec,
+                                                                                       Market market) {
+
+        if (amountSpec instanceof FixedAmountSpec) {
+            return OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market)
+                    .flatMap(amount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                            .map(quote -> quote.toQuoteSideMonetary(amount)))
+                    .map(Monetary::getValue)
+                    .map(QuoteSideFixedAmountSpec::new);
+        } else if (amountSpec instanceof RangeAmountSpec) {
+            Optional<Long> minQuoteSideAmount = OfferAmountUtil.findBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market)
+                    .flatMap(minAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                            .map(quote -> quote.toQuoteSideMonetary(minAmount)))
+                    .map(Monetary::getValue);
+            Optional<Long> maxQuoteSideAmount = OfferAmountUtil.findBaseSideMaxAmount(marketPriceService, amountSpec, priceSpec, market)
+                    .flatMap(maxAmount -> PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                            .map(quote -> quote.toQuoteSideMonetary(maxAmount)))
+                    .map(Monetary::getValue);
+            if (minQuoteSideAmount.isPresent() && maxQuoteSideAmount.isPresent()) {
+                return Optional.of(new QuoteSideRangeAmountSpec(minQuoteSideAmount.get(), maxQuoteSideAmount.get()));
+            } else {
+                return Optional.empty();
+            }
+        } else {
+            throw new RuntimeException("Unsupported amountSpec: {}" + amountSpec);
+        }
     }
 }

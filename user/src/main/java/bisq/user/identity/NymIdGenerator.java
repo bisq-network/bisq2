@@ -17,8 +17,8 @@
 
 package bisq.user.identity;
 
+import bisq.common.file.FileUtils;
 import bisq.common.util.ByteArrayUtils;
-import bisq.common.util.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 

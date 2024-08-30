@@ -17,7 +17,7 @@
 
 package bisq.desktop.splash;
 
-import bisq.common.util.Version;
+import bisq.common.platform.Version;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.splash.temp.BootstrapStateDisplay;
 import javafx.beans.property.DoubleProperty;

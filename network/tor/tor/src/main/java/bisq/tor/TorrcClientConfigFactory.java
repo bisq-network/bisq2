@@ -34,16 +34,13 @@ public class TorrcClientConfigFactory {
 
     private final boolean isTestNetwork;
     private final Path dataDir;
-    private final int socksPort;
     private final PasswordDigest hashedControlPassword;
 
     public TorrcClientConfigFactory(boolean isTestNetwork,
                                     Path dataDir,
-                                    int socksPort,
                                     PasswordDigest hashedControlPassword) {
         this.isTestNetwork = isTestNetwork;
         this.dataDir = dataDir;
-        this.socksPort = socksPort;
         this.hashedControlPassword = hashedControlPassword;
     }
 
@@ -62,14 +59,12 @@ public class TorrcClientConfigFactory {
 
         return ClientTorrcGenerator.builder()
                 .baseTorrcConfigGenerator(baseTorrcGenerator)
-                .socksPort(socksPort)
                 .build();
     }
 
     private TorrcConfigGenerator baseTorrcGenerator() {
         return BaseTorrcGenerator.builder()
                 .dataDirPath(dataDir)
-                .controlPortWriteFile(dataDir.resolve(NativeTorProcess.CONTROL_DIR_NAME).resolve("control"))
                 .hashedControlPassword(hashedControlPassword.getHashedPassword())
                 .isTestNetwork(isTestNetwork)
                 .build();

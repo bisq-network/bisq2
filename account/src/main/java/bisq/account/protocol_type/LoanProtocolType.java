@@ -17,14 +17,14 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum LoanProtocolType implements ProtocolType {
     COLLATERALIZED,
     REPUTATION;
 
     @Override
-    public bisq.account.protobuf.LoanProtocolType toProto() {
+    public bisq.account.protobuf.LoanProtocolType toProtoEnum() {
         return bisq.account.protobuf.LoanProtocolType.valueOf(getProtobufEnumPrefix() + name());
     }
 

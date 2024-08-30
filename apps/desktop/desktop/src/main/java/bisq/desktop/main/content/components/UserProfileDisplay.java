@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import javafx.geometry.Pos;
@@ -34,13 +33,10 @@ import javax.annotation.Nullable;
 @Slf4j
 public class UserProfileDisplay extends HBox {
     public static final double DEFAULT_ICON_SIZE = 30;
-    @Getter
-    private final BisqTooltip tooltip;
     private final UserProfileIcon userProfileIcon;
     private final ReputationScoreDisplay reputationScoreDisplay;
     @Getter
     private final Label userName;
-    private UserProfile userProfile;
 
     public UserProfileDisplay() {
         this(null, DEFAULT_ICON_SIZE);
@@ -67,13 +63,8 @@ public class UserProfileDisplay extends HBox {
         VBox vBox = new VBox(userName, reputationScoreDisplay);
         vBox.setFillWidth(true);
         vBox.setAlignment(Pos.CENTER_LEFT);
-        
         HBox.setHgrow(vBox, Priority.ALWAYS);
         getChildren().addAll(userProfileIcon, vBox);
-
-        tooltip = new BisqTooltip();
-        tooltip.getStyleClass().add("medium-dark-tooltip");
-        Tooltip.install(this, tooltip);
 
         if (userProfile != null) {
             setUserProfile(userProfile);
@@ -81,37 +72,35 @@ public class UserProfileDisplay extends HBox {
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile) {
-        this.userProfile = userProfile;
-        userName.setText(userProfile != null ? userProfile.getUserName() : null);
         userProfileIcon.setUserProfile(userProfile);
         applyTooltip();
+        if (userProfile != null) {
+            userName.setText(userProfile.getUserName());
+        }
+    }
+
+    public void dispose() {
+        userProfileIcon.dispose();
+        setReputationScore(null);
     }
 
     private void applyTooltip() {
-        tooltip.setText(getTooltipText());
+        userProfileIcon.getTooltip().setText(getTooltipText());
     }
 
     public String getTooltipText() {
-        String userProfileTooltip = userProfile != null
-                ? userProfile.getTooltipString() :
-                "";
         String reputationTooltip = reputationScoreDisplay != null ?
                 "\n" + reputationScoreDisplay.getTooltipString() :
                 "";
-        return userProfileTooltip + reputationTooltip;
-    }
-
-    public void setReputationScoreScale(double scale) {
-        reputationScoreDisplay.setScale(scale);
-    }
-
-    public void setIconSize(double size) {
-        userProfileIcon.setFitWidth(size);
-        userProfileIcon.setFitHeight(size);
+        return userProfileIcon.getTooltipText() + reputationTooltip;
     }
 
     public void setReputationScore(@Nullable ReputationScore reputationScore) {
         reputationScoreDisplay.setReputationScore(reputationScore);
         applyTooltip();
+    }
+
+    public Tooltip getTooltip() {
+        return userProfileIcon.getTooltip();
     }
 }

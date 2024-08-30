@@ -32,7 +32,6 @@ import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
 import bisq.support.moderator.ModeratorService;
-import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
@@ -113,16 +112,8 @@ public class BannedUserProfileTable {
                     });
         }
 
-        void onBan(ReportToModeratorMessage message) {
-            moderatorService.banReportedUser(message);
-        }
-
         void onRemoveBan(BannedUserProfileData data) {
             moderatorService.unBanReportedUser(data);
-        }
-
-        void onDeleteMessage(ReportToModeratorMessage message) {
-            moderatorService.deleteReportToModeratorMessage(message);
         }
 
         private void navigateToChannel(ChatChannelDomain chatChannelDomain) {
@@ -207,7 +198,7 @@ public class BannedUserProfileTable {
         private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userName = new Label();
-                private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+                private final UserProfileIcon userProfileIcon = new UserProfileIcon();
                 private final HBox hBox = new HBox(10, userProfileIcon, userName);
 
                 {
@@ -224,6 +215,7 @@ public class BannedUserProfileTable {
                         userProfileIcon.setUserProfile(item.getUserProfile());
                         setGraphic(hBox);
                     } else {
+                        userProfileIcon.dispose();
                         setGraphic(null);
                     }
                 }
@@ -269,14 +261,17 @@ public class BannedUserProfileTable {
         }
 
         @Getter
-        @EqualsAndHashCode
+        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         private static class ListItem {
+            @EqualsAndHashCode.Include
             private final BannedUserProfileData bannedUserProfileData;
+
             private final UserProfile userProfile;
             private final String userName;
 
             private ListItem(BannedUserProfileData bannedUserProfileData) {
                 this.bannedUserProfileData = bannedUserProfileData;
+
                 userProfile = bannedUserProfileData.getUserProfile();
                 userName = userProfile.getUserName();
             }

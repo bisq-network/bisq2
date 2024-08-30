@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.services.peer_group.Peer;
@@ -38,6 +39,8 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
     @Setter
     public static long maxNumPeers;
     private final int nonce;
+    @ExcludeForHash
+    @EqualsAndHashCode.Exclude
     private final List<Peer> peers;
 
     public PeerExchangeRequest(int nonce, List<Peer> peers) {
@@ -55,14 +58,22 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setPeerExchangeRequest(
-                        bisq.network.protobuf.PeerExchangeRequest.newBuilder()
-                                .setNonce(nonce)
-                                .addAllPeers(peers.stream()
-                                        .map(Peer::toProto)
-                                        .collect(Collectors.toList())))
-                .build();
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setPeerExchangeRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.PeerExchangeRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.PeerExchangeRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.PeerExchangeRequest.newBuilder()
+                .setNonce(nonce)
+                .addAllPeers(peers.stream()
+                        .map(peer -> peer.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
     }
 
     public static PeerExchangeRequest fromProto(bisq.network.protobuf.PeerExchangeRequest proto) {

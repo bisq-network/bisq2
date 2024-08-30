@@ -2,10 +2,9 @@ package bisq.account.accounts;
 
 import bisq.account.protobuf.Account;
 import bisq.account.protobuf.AccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
 import bisq.account.protobuf.InteracETransferAccount;
 import bisq.account.protobuf.InteracETransferAccountPayload;
-import bisq.account.protobuf.PaymentMethod;
+import bisq.account.protobuf.*;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,15 +38,15 @@ class InteracETransferAccountTest {
     );
 
     @Test
-    void toProto() {
-        var result = ACCOUNT.toProto();
+    void testToProto() {
+        var result = ACCOUNT.completeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(PROTO);
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.InteracETransferAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

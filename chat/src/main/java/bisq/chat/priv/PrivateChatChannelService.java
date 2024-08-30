@@ -18,6 +18,8 @@
 package bisq.chat.priv;
 
 import bisq.chat.*;
+import bisq.chat.reactions.PrivateChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -32,17 +34,22 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class PrivateChatChannelService<
-        M extends PrivateChatMessage,
+        R extends PrivateChatMessageReaction,
+        M extends PrivateChatMessage<R>,
         C extends PrivateChatChannel<M>,
         S extends PersistableStore<S>
         > extends ChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
+    private final Set<R> unprocessedReactions = new HashSet<>();
 
     public PrivateChatChannelService(NetworkService networkService,
                                      UserService userService,
@@ -123,8 +130,9 @@ public abstract class PrivateChatChannelService<
     }
 
     protected CompletableFuture<SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver, long date) {
+        String encoded = Res.encode("chat.privateChannel.message.leave", channel.getMyUserIdentity().getUserProfile().getUserName());
         return sendMessage(StringUtils.createUid(),
-                Res.get("chat.privateChannel.message.leave", channel.getMyUserIdentity().getUserProfile().getUserName()),
+                encoded,
                 Optional.empty(),
                 channel,
                 receiver,
@@ -140,12 +148,87 @@ public abstract class PrivateChatChannelService<
                 " [" + ((PrivateChatChannel<?>) chatChannel).getMyUserIdentity().getUserName() + "]";
     }
 
+    protected CompletableFuture<SendMessageResult> sendMessageReaction(M message,
+                                                                       C chatChannel,
+                                                                       UserProfile receiver,
+                                                                       Reaction reaction,
+                                                                       String messageReactionId,
+                                                                       boolean isRemoved) {
+        UserIdentity myUserIdentity = chatChannel.getMyUserIdentity();
+        if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+        if (isPeerBanned(receiver)) {
+            return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
+        }
+
+        R chatMessageReaction = createAndGetNewPrivateChatMessageReaction(message, myUserIdentity.getUserProfile(),
+                receiver, reaction, messageReactionId, isRemoved);
+
+        addMessageReaction(chatMessageReaction, message);
+
+        NetworkId receiverNetworkId = receiver.getNetworkId();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
+        return networkService.confidentialSend(chatMessageReaction, receiverNetworkId, senderNetworkIdWithKeyPair);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract void processMessage(M message);
+    protected void processMessage(M message) {
+        if (canProcessMessage(message)) {
+            findChannel(message)
+                    .or(() -> {
+                        // We prevent to send leave messages after a peer has left, but there might be still
+                        // race conditions where that might happen, so we check at receiving the message as well, so that
+                        // in cases we would get a leave message as first message (e.g. after having closed the channel)
+                        // we do not create a channel.
+                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                            log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
+                                    "sent a leave message around the same time as we have closed the channel.");
+                            return Optional.empty();
+                        } else {
+                            return createNewChannelFromReceivedMessage(message);
+                        }
+                    })
+                    .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+        }
+    }
+
+    protected boolean canProcessMessage(M message) {
+        return canHandleChannelDomain(message) && isValid(message);
+    }
+
+    protected abstract Optional<C> createNewChannelFromReceivedMessage(M message);
+
+    protected void addMessageAndProcessQueuedReactions(M message, C channel) {
+        addMessage(message, channel);
+        // Check if there are any reactions that should be added to existing messages
+        processQueuedReactions();
+    }
+
+    protected void processMessageReaction(R messageReaction) {
+        findChannel(messageReaction.getChatChannelId())
+                .flatMap(channel -> channel.getChatMessages().stream()
+                        .filter(message -> message.getId().equals(messageReaction.getChatMessageId()))
+                        .findFirst())
+                .ifPresentOrElse(
+                        message -> addMessageReaction(messageReaction, message),
+                        () -> unprocessedReactions.add(messageReaction));
+    }
+
+    protected void processQueuedReactions() {
+        long now = new Date().getTime();
+        unprocessedReactions.forEach(reaction -> {
+            unprocessedReactions.remove(reaction);
+            long age = now - reaction.getDate();
+            if (age < reaction.getMetaData().getTtl()) {
+                processMessageReaction(reaction);
+            }
+        });
+    }
 
     @Override
     protected boolean isValid(M message) {
@@ -171,4 +254,11 @@ public abstract class PrivateChatChannelService<
                                                            long time,
                                                            boolean wasEdited,
                                                            ChatMessageType chatMessageType);
+
+    protected abstract R createAndGetNewPrivateChatMessageReaction(M message,
+                                                                   UserProfile senderUserProfile,
+                                                                   UserProfile receiverUserProfile,
+                                                                   Reaction reaction,
+                                                                   String messageReactionId,
+                                                                   boolean isRemoved);
 }

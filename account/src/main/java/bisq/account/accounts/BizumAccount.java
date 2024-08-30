@@ -22,11 +22,17 @@ public final class BizumAccount extends CountryBasedAccount<BizumAccountPayload,
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setBizumAccount(bisq.account.protobuf.BizumAccount.newBuilder()))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setBizumAccount(
+                toBizumAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.BizumAccount toBizumAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getBizumAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.BizumAccount.Builder getBizumAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.BizumAccount.newBuilder();
     }
 
     public static BizumAccount fromProto(Account proto) {

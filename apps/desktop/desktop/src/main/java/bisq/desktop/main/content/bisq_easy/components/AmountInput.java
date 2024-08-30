@@ -158,9 +158,9 @@ public abstract class AmountInput {
                 model.code.set("");
                 return;
             }
-            model.code.set(
-                    model.isBaseCurrency ?
-                            model.selectedMarket.getBaseCurrencyCode() : model.selectedMarket.getQuoteCurrencyCode());
+            model.code.set(model.isBaseCurrency
+                    ? model.selectedMarket.getBaseCurrencyCode()
+                    : model.selectedMarket.getQuoteCurrencyCode());
         }
 
         protected void adjustTextFieldStyle() {
@@ -243,6 +243,8 @@ public abstract class AmountInput {
             codeLabel.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
             applyAmount(model.amount.get());
+            textInput.requestFocus();
+            textInput.selectRange(textInput.getLength(), textInput.getLength());
         }
 
         @Override

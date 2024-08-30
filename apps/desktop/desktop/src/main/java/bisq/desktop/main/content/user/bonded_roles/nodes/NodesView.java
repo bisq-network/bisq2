@@ -130,7 +130,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                 if (item != null && !empty) {
                     String addressString = item.getAddress();
                     address.setText(addressString);
-                    address.setTooltip(new BisqTooltip(addressString, true));
+                    address.setTooltip(new BisqTooltip(addressString, BisqTooltip.Style.DARK));
                     icon.setOnAction(e -> new Popup()
                             .headline(Res.get("user.bondedRoles.table.columns.node.address.popup.headline"))
                             .message(item.getAddressInfoJson())

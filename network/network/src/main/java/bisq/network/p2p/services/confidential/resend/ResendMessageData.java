@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.confidential.resend;
 
+import bisq.common.observable.Observable;
 import bisq.common.proto.NetworkProto;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -51,7 +52,8 @@ public class ResendMessageData implements NetworkProto {
     private final NetworkId receiverNetworkId;
     private final KeyPair senderKeyPair;
     private final NetworkId senderNetworkId;
-    private final MessageDeliveryStatus messageDeliveryStatus;
+    @EqualsAndHashCode.Exclude
+    private final Observable<MessageDeliveryStatus> messageDeliveryStatus = new Observable<>();
     private final long date;
 
     public ResendMessageData(AckRequestingMessage ackRequestingMessage,
@@ -80,7 +82,7 @@ public class ResendMessageData implements NetworkProto {
         this.receiverNetworkId = receiverNetworkId;
         this.senderKeyPair = senderKeyPair;
         this.senderNetworkId = senderNetworkId;
-        this.messageDeliveryStatus = messageDeliveryStatus;
+        this.messageDeliveryStatus.set(messageDeliveryStatus);
         this.date = date;
 
         verify();
@@ -93,15 +95,19 @@ public class ResendMessageData implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.ResendMessageData toProto() {
+    public bisq.network.protobuf.ResendMessageData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.ResendMessageData.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.ResendMessageData.newBuilder()
-                .setEnvelopePayloadMessage(envelopePayloadMessage.toProto())
-                .setReceiverNetworkId(receiverNetworkId.toProto())
+                .setEnvelopePayloadMessage(envelopePayloadMessage.toProto(serializeForHash))
+                .setReceiverNetworkId(receiverNetworkId.toProto(serializeForHash))
                 .setSenderKeyPair(KeyPairProtoUtil.toProto(senderKeyPair))
-                .setSenderNetworkId(senderNetworkId.toProto())
-                .setMessageDeliveryStatus(messageDeliveryStatus.toProto())
-                .setDate(date)
-                .build();
+                .setSenderNetworkId(senderNetworkId.toProto(serializeForHash))
+                .setMessageDeliveryStatus(messageDeliveryStatus.get().toProtoEnum())
+                .setDate(date);
     }
 
     public static ResendMessageData fromProto(bisq.network.protobuf.ResendMessageData proto) {

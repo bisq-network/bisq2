@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
+import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -60,7 +61,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     @Getter
     protected final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     @Getter
-    protected final Observable<String> userProfileIdOfUpdatedScore = new Observable<>();
+    protected final Observable<Pair<String, Long>> userProfileIdScorePair = new Observable<>();
 
     public SourceReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
@@ -92,11 +93,11 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         findRelevantData(authorizedData.getAuthorizedDistributedData())
                 .ifPresent(data -> {
-                    if (isAuthorized(authorizedData)) {
+                    if (isAuthorized(authorizedData) && isValidVersion(data)) {
                         ByteArray providedHash = getDataKey(data);
-                        // To avoid ConcurrentModificationException
-                        List<UserProfile> userProfiles = new ArrayList<>(userProfileService.getUserProfileById().values());
-                        userProfiles.stream()
+                        // Clone to avoid ConcurrentModificationException
+                        Collection<UserProfile> values = new ArrayList<>(userProfileService.getUserProfileById().values());
+                        values.stream()
                                 .filter(userProfile -> getUserProfileKey(userProfile).equals(providedHash))
                                 .forEach(userProfile -> {
                                     ByteArray hash = getUserProfileKey(userProfile);
@@ -109,6 +110,10 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
                                 });
                     }
                 });
+    }
+
+    protected boolean isValidVersion(T data) {
+        return true;
     }
 
     protected abstract Optional<T> findRelevantData(AuthorizedDistributedData authorizedDistributedData);
@@ -125,7 +130,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected void putScore(String userProfileId, Set<T> dataSet) {
         long score = dataSet.stream().mapToLong(this::calculateScore).sum();
         scoreByUserProfileId.put(userProfileId, score);
-        userProfileIdOfUpdatedScore.set(userProfileId);
+        userProfileIdScorePair.set(new Pair<>(userProfileId, score));
     }
 
     protected boolean send(UserIdentity userIdentity, EnvelopePayloadMessage request) {

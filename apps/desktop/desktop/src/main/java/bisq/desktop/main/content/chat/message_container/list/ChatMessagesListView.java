@@ -66,12 +66,12 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         super(new CustomStackPane(), model, controller);
 
         listView = new ListView<>(model.getSortedChatMessages());
-        listView.getStyleClass().add("chat-messages-list-view");
+        listView.getStyleClass().addAll("chat-messages-list-view", "force-hide-horizontal-scrollbar");
 
         VBox placeholder = ChatUtil.createEmptyChatPlaceholder(placeholderTitle, placeholderDescription);
         listView.setPlaceholder(placeholder);
 
-        listView.setCellFactory(new ChatMessageListCellFactory(controller, model));
+        listView.setCellFactory(new ChatMessageListCellFactory(controller));
 
         // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
         listView.setSelectionModel(new NoSelectionModel<>());
@@ -98,9 +98,13 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         root.getChildren().addAll(listView, scrollDownBackground, scrollDownBadge);
     }
 
+    public void scrollToChatMessage(ChatMessageListItem<?,?> chatMessageListItem) {
+        listView.scrollTo(chatMessageListItem);
+    }
+
     @Override
     protected void onViewAttached() {
-        ListViewUtil.findScrollbarAsync(listView, Orientation.VERTICAL, 1000).whenComplete((scrollBar, throwable) -> {
+        ListViewUtil.findScrollbarAsync(listView, Orientation.VERTICAL, 3000).whenComplete((scrollBar, throwable) -> {
             if (throwable != null) {
                 log.error("Find scrollbar failed", throwable);
                 return;
@@ -119,8 +123,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         scrollDownBackground.managedProperty().bind(model.getShowScrolledDownButton());
 
         scrollDownBadge.textProperty().bind(model.getNumUnReadMessages());
-
         scrollDownBadge.setOpacity(0);
+
         showScrolledDownButtonPin = EasyBind.subscribe(model.getShowScrolledDownButton(), showScrolledDownButton -> {
             if (showScrolledDownButton == null) {
                 return;

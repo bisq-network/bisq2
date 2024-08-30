@@ -1,5 +1,6 @@
 package bisq.gradle.tasks.signature
 
+import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPUtil
@@ -9,6 +10,7 @@ import org.bouncycastle.util.encoders.Hex
 import org.gradle.api.GradleException
 import java.io.ByteArrayInputStream
 import java.net.URL
+import java.security.InvalidKeyException
 
 class PpgPublicKeyParser(
     private val primaryKeyFingerprint: String,
@@ -76,14 +78,21 @@ class PpgPublicKeyParser(
         subKeys.forEach { subKey ->
             var hasValidSignature = false
             subKey.keySignatures.forEach { signature ->
-                signature.init(
-                    JcaPGPContentVerifierBuilderProvider().setProvider("BC"),
-                    masterKey!!
-                )
-                val isSubKeySignedByMasterKey = signature.verifyCertification(masterKey!!, subKey)
+                try {
+                    signature.init(
+                        JcaPGPContentVerifierBuilderProvider().setProvider("BC"),
+                        masterKey!!
+                    )
+                    val isSubKeySignedByMasterKey = signature.verifyCertification(masterKey!!, subKey)
 
-                if (isSubKeySignedByMasterKey) {
-                    hasValidSignature = true
+                    if (isSubKeySignedByMasterKey) {
+                        hasValidSignature = true
+                    }
+                } catch (e: PGPException) {
+                    if (e.underlyingException is InvalidKeyException) {
+                        println("Warning: Can't verify subkey `${subKey.keyID}` with masterkey `${masterKey!!.keyID}`.")
+                        hasValidSignature = true
+                    }
                 }
             }
 

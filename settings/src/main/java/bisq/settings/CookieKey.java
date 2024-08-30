@@ -17,17 +17,10 @@
 
 package bisq.settings;
 
-import bisq.common.util.ProtobufUtils;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
-// Used for persistence of Cookie. We use enum name as key.
 public enum CookieKey {
     STAGE_X,
     STAGE_Y,
@@ -47,12 +40,13 @@ public enum CookieKey {
     PERMIT_OPENING_BROWSER,
     USE_TRANSIENT_NOTIFICATIONS,
     MARKETS_FILTER,
-    MARKET_SORT_TYPE;
+    MARKET_SORT_TYPE,
+    SELECTED_MARKET_CODES,
+    CREATE_OFFER_BITCOIN_METHODS,
+    TAKE_OFFER_SELECTED_BITCOIN_METHOD,
+    TAKE_OFFER_SELECTED_FIAT_METHOD(true);
 
-    @Setter
     @Getter
-    @Nullable
-    private String subKey;
     private final boolean useSubKey;
 
     CookieKey(boolean useSubKey) {
@@ -61,37 +55,5 @@ public enum CookieKey {
 
     CookieKey() {
         this(false);
-    }
-
-    public boolean isUseSubKey() {
-        if (useSubKey) {
-            checkArgument(subKey != null,
-                    "If the enum has useSubKey set the subKey must not be null. CookieKey=" + this);
-        }
-        return useSubKey;
-    }
-
-    // We do not use protobuf for the enum for more flexibility
-    String getKeyForProto() {
-        String key = name();
-        if (isUseSubKey()) {
-            key = key + "." + subKey;
-        }
-        return key;
-    }
-
-    @Nullable
-    static CookieKey fromProto(String key) {
-        String[] tokens = key.split("\\.");
-        String name = tokens[0];
-        CookieKey cookieKey = ProtobufUtils.enumFromProto(CookieKey.class, name);
-        if (cookieKey != null && tokens.length > 1) {
-            String subKey = tokens[1];
-            checkArgument(cookieKey.useSubKey,
-                    "If the subKey is not null, the enum must have useSubKey set to true. CookieKey=" +
-                            cookieKey + ". subKey=" + subKey);
-            cookieKey.setSubKey(subKey);
-        }
-        return cookieKey;
     }
 }

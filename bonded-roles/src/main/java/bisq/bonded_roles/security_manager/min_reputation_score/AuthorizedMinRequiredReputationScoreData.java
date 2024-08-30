@@ -18,6 +18,7 @@
 package bisq.bonded_roles.security_manager.min_reputation_score;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -41,16 +42,42 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedMinRequiredReputationScoreData implements AuthorizedDistributedData {
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    private static final int VERSION = 1;
+
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
     private final long date;
     private final long minRequiredReputationScore;
     private final String securityManagerProfileId;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedMinRequiredReputationScoreData(long date,
                                                     long minRequiredReputationScore,
                                                     String securityManagerProfileId,
                                                     boolean staticPublicKeysProvided) {
+        this(VERSION,
+                date,
+                minRequiredReputationScore,
+                securityManagerProfileId,
+                staticPublicKeysProvided);
+    }
+
+    public AuthorizedMinRequiredReputationScoreData(int version,
+                                                     long date,
+                                                     long minRequiredReputationScore,
+                                                     String securityManagerProfileId,
+                                                     boolean staticPublicKeysProvided) {
+        this.version = version;
         this.date = date;
         this.minRequiredReputationScore = minRequiredReputationScore;
         this.securityManagerProfileId = securityManagerProfileId;
@@ -66,20 +93,28 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData toProto() {
-        bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.Builder builder = bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.newBuilder()
+    public bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.Builder getBuilder(boolean serializeForHash) {
+        return bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.newBuilder()
                 .setDate(date)
                 .setMinRequiredReputationScore(minRequiredReputationScore)
                 .setSecurityManagerProfileId(securityManagerProfileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
-        return builder.build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedMinRequiredReputationScoreData fromProto(bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData proto) {
-        return new AuthorizedMinRequiredReputationScoreData(proto.getDate(),
+        return new AuthorizedMinRequiredReputationScoreData(
+                proto.getVersion(),
+                proto.getDate(),
                 proto.getMinRequiredReputationScore(),
                 proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

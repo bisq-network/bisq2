@@ -31,7 +31,7 @@ message TradeParty {
   optional contract.ContractSignatureData contractSignatureData = 2;
   oneof message {
     BisqEasyTradeParty bisqEasyTradeParty = 20;
-    MultisigTradeParty multisigTradeParty = 21;
+    BisqMuSigTradeParty bisqMuSigTradeParty = 21;
     SubmarineTradeParty submarineTradeParty = 22;
   }
 }
@@ -58,7 +58,7 @@ message Trade {
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 30;
-    MultisigTrade multisigTrade = 31;
+    BisqMuSigTrade bisqMuSigTrade = 31;
     SubmarineTrade submarineTrade = 32;
   }
 }
@@ -71,7 +71,7 @@ message TradeMessage {
   oneof message {
     BisqEasyTradeMessage bisqEasyTradeMessage = 20;
     SubmarineTradeMessage submarineTradeMessage = 21;
-    MultisigTradeMessage multisigTradeMessage = 23;
+    BisqMuSigTradeMessage bisqMuSigTradeMessage = 23;
   }
 }
 
@@ -81,8 +81,8 @@ message BisqEasyTradeParty {
 
 message BisqEasyTrade {
   optional string paymentAccountData = 1;
-  optional string btcAddress = 2;
-  optional string txId = 3;
+  optional string bitcoinPaymentData = 2;
+  optional string paymentProof = 3;
   optional contract.Role interruptTradeInitiator = 4;
 }
 
@@ -120,13 +120,13 @@ message BisqEasyAccountDataMessage {
 message BisqEasyConfirmFiatSentMessage {
 }
 message BisqEasyBtcAddressMessage {
-  string btcAddress = 1;
+  string bitcoinPaymentData = 1;
   offer.Offer bisqEasyOffer = 2;
 }
 message BisqEasyConfirmFiatReceiptMessage {
 }
 message BisqEasyConfirmBtcSentMessage {
-  string txId = 1;
+  optional string paymentProof = 1;
 }
 message BisqEasyRejectTradeMessage {
 }
@@ -138,16 +138,16 @@ message BisqEasyReportErrorMessage {
 }
 
 
-// MultiSig
-message MultisigTradeMessage{
+// BisqMuSig
+message BisqMuSigTradeMessage{
 }
-message MultisigTradeParty {
-}
-
-message MultisigTrade {
+message BisqMuSigTradeParty {
 }
 
-message MultisigTradeStore {
+message BisqMuSigTrade {
+}
+
+message BisqMuSigTradeStore {
   map<string, Trade> tradeById = 1;
 }
 

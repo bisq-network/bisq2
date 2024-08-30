@@ -1,6 +1,7 @@
 package bisq.desktop.main.content.chat.message_container;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -13,6 +14,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -70,17 +72,18 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
 
-        inputField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                event.consume();
-                if (event.isShiftDown()) {
-                    inputField.appendText(System.getProperty("line.separator"));
+        inputField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                keyEvent.consume();
+                if (keyEvent.isShiftDown()) {
+                    inputField.appendText(System.lineSeparator());
                 } else if (!inputField.getText().isEmpty()) {
                     controller.onSendMessage(inputField.getText().trim());
                     inputField.clear();
                 }
             }
         });
+
         sendButton.setOnAction(event -> {
             controller.onSendMessage(inputField.getText().trim());
             inputField.clear();
@@ -98,6 +101,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
         userMentionPopup.init();
+
+        UIThread.runOnNextRenderFrame(inputField::requestFocus);
     }
 
     @Override
@@ -142,7 +147,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         HBox.setMargin(sendButton, new Insets(0, 0, 5, 0));
         sendButton.setMinWidth(30);
         sendButton.setMaxWidth(30);
-        sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), true));
+        sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), BisqTooltip.Style.DARK));
 
         HBox sendMessageBox = new HBox(inputField, sendButton);
         sendMessageBox.getStyleClass().add("chat-send-message-box");

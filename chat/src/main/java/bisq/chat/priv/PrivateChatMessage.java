@@ -21,8 +21,11 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
@@ -31,6 +34,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -40,13 +44,15 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage, AckRequestingMessage {
+public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends ChatMessage implements MailboxMessage,
+        ExternalNetworkMessage, AckRequestingMessage {
     // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiverUserProfileId
     @EqualsAndHashCode.Exclude
     protected final String receiverUserProfileId;
     protected final UserProfile senderUserProfile;
     @EqualsAndHashCode.Exclude
     protected final NetworkId receiverNetworkId;
+    protected final ObservableSet<R> chatMessageReactions = new ObservableSet<>();
 
     protected PrivateChatMessage(String messageId,
                                  ChatChannelDomain chatChannelDomain,
@@ -58,7 +64,8 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                                  Optional<Citation> citation,
                                  long date,
                                  boolean wasEdited,
-                                 ChatMessageType chatMessageType) {
+                                 ChatMessageType chatMessageType,
+                                 List<R> reactions) {
         this(messageId,
                 chatChannelDomain,
                 channelId,
@@ -69,7 +76,8 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                 citation,
                 date,
                 wasEdited,
-                chatMessageType);
+                chatMessageType,
+                reactions);
     }
 
     protected PrivateChatMessage(String messageId,
@@ -82,7 +90,8 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                                  Optional<Citation> citation,
                                  long date,
                                  boolean wasEdited,
-                                 ChatMessageType chatMessageType) {
+                                 ChatMessageType chatMessageType,
+                                 List<R> reactions) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -92,11 +101,23 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                 date,
                 wasEdited,
                 chatMessageType);
+
         this.receiverUserProfileId = receiverUserProfileId;
         this.senderUserProfile = senderUserProfile;
         this.receiverNetworkId = receiverNetworkId;
 
+        chatMessageReactions.addAll(reactions);
+
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
+    }
+
+    // We are an ExternalNetworkMessage, toValueProto and getValueBuilder are our entry points
+    @Override
+    abstract public bisq.chat.protobuf.ChatMessage.Builder getValueBuilder(boolean serializeForHash);
+
+    @Override
+    public bisq.chat.protobuf.ChatMessage toValueProto(boolean serializeForHash) {
+        return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     @Override
@@ -107,5 +128,21 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
     @Override
     public NetworkId getReceiver() {
         return receiverNetworkId;
+    }
+
+    public void addPrivateChatMessageReaction(R newReaction) {
+        getChatMessageReactions().stream()
+                .filter(privateChatReaction -> privateChatReaction.matches(newReaction))
+                .findFirst()
+                .ifPresentOrElse(
+                        existingPrivateChatReaction -> {
+                            if (newReaction.getDate() > existingPrivateChatReaction.getDate()) {
+                                // only update if more recent
+                                getChatMessageReactions().remove(existingPrivateChatReaction);
+                                getChatMessageReactions().add(newReaction);
+                            }
+                        },
+                        () -> getChatMessageReactions().add(newReaction)
+                );
     }
 }

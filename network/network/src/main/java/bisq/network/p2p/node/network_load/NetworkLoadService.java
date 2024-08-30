@@ -17,8 +17,9 @@
 
 package bisq.network.p2p.node.network_load;
 
+import bisq.common.data.ByteUnit;
+import bisq.common.proto.Proto;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.ByteUnit;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.node.Connection;
@@ -32,7 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -110,20 +113,55 @@ public class NetworkLoadService {
                 .map(ConnectionMetrics::getNumMessagesReceivedOfLastHour)
                 .mapToLong(e -> e)
                 .sum();
-        long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
+        long networkDatabaseSize = dataRequests.stream().mapToLong(Proto::getSerializedSize).sum();
+
+        Map<String, AtomicLong> numSentMessagesByMessageClassName = new TreeMap<>();
+        allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getNumSentMessagesByMessageClassName)
+                .forEach(map -> {
+                    map.forEach((name, value) -> {
+                        numSentMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
+                        numSentMessagesByMessageClassName.get(name).addAndGet(value.get());
+                    });
+                });
+        StringBuilder numSentMsgPerClassName = new StringBuilder();
+        numSentMessagesByMessageClassName.forEach((key, value) -> {
+            numSentMsgPerClassName.append("\n - ");
+            numSentMsgPerClassName.append(key);
+            numSentMsgPerClassName.append(": ");
+            numSentMsgPerClassName.append(value.get());
+        });
+
+        Map<String, AtomicLong> numReceivedMessagesByMessageClassName = new TreeMap<>();
+        allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getNumReceivedMessagesByMessageClassName)
+                .forEach(map -> {
+                    map.forEach((name, value) -> {
+                        numReceivedMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
+                        numReceivedMessagesByMessageClassName.get(name).addAndGet(value.get());
+                    });
+                });
+        StringBuilder numRecMsgPerClassName = new StringBuilder();
+        numReceivedMessagesByMessageClassName.forEach((key, value) -> {
+            numRecMsgPerClassName.append("\n - ");
+            numRecMsgPerClassName.append(key);
+            numRecMsgPerClassName.append(": ");
+            numRecMsgPerClassName.append(value.get());
+        });
 
         StringBuilder sb = new StringBuilder("\n\n////////////////////////////////////////////////////////////////////////////////////////////////////");
         sb.append("\nNetwork statistics").append(("\n////////////////////////////////////////////////////////////////////////////////////////////////////"))
                 .append("\nNumber of Connections: ").append(numConnections)
                 .append("\nNumber of messages sent in last hour: ").append(numMessagesSentOfLastHour)
+                .append("\nNumber of messages sent by class name:").append(numSentMsgPerClassName)
                 .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
+                .append("\nNumber of messages received by class name:").append(numRecMsgPerClassName)
                 .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
-                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toKB(sentBytesOfLastHour)).append(" KB")
-                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toKB(receivedBytesOfLastHour)).append(" KB")
+                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toMB(sentBytesOfLastHour)).append(" MB")
+                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toMB(receivedBytesOfLastHour)).append(" MB")
                 .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
                 .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
-                .append("\n////////////////////////////////////////////////////////////////////////////////////////////////////\n");
-        log.info(sb.toString());
+                .append("\n////////////////////////////////////////////////////////////////////////////////////////////////////");
 
         double MAX_NUM_CON = 30;
         double NUM_CON_WEIGHT = 0.1;
@@ -157,7 +195,7 @@ public class NetworkLoadService {
         double DB_WEIGHT = 0.3;
         double networkDatabaseSizeImpact = networkDatabaseSize / MAX_DB_SIZE * DB_WEIGHT;
 
-        double sum = numConnectionsImpact +
+        double load = numConnectionsImpact +
                 sentBytesImpact +
                 spentSendTimeImpact +
                 numMessagesSentImpact +
@@ -165,18 +203,23 @@ public class NetworkLoadService {
                 deserializeTimeImpact +
                 numMessagesReceivedImpact +
                 networkDatabaseSizeImpact;
-        sb = new StringBuilder("\n");
-        sb.append("numConnectionsImpact=").append(numConnectionsImpact);
-        sb.append("\nsentBytesImpact=").append(sentBytesImpact);
-        sb.append("\nspentSendTimeImpact=").append(spentSendTimeImpact);
-        sb.append("\nnumMessagesSentImpact=").append(numMessagesSentImpact);
-        sb.append("\nreceivedBytesImpact=").append(receivedBytesImpact);
-        sb.append("\ndeserializeTimeImpact=").append(deserializeTimeImpact);
-        sb.append("\nnumMessagesReceivedImpact=").append(numMessagesReceivedImpact);
-        sb.append("\nnetworkDatabaseSizeImpact=").append(networkDatabaseSizeImpact);
-        sb.append("\nsum=").append(sum);
-        log.debug(sb.toString());
+        sb.append("\n\n----------------------------------------------------------------------------------------------------")
+                .append("\nCalculated network load:")
+                .append(("\n----------------------------------------------------------------------------------------------------"))
+                .append("\nnumConnectionsImpact=").append(numConnectionsImpact)
+                .append("\nsentBytesImpact=").append(sentBytesImpact)
+                .append("\nspentSendTimeImpact=").append(spentSendTimeImpact)
+                .append("\nnumMessagesSentImpact=").append(numMessagesSentImpact)
+                .append("\nreceivedBytesImpact=").append(receivedBytesImpact)
+                .append("\ndeserializeTimeImpact=").append(deserializeTimeImpact)
+                .append("\nnumMessagesReceivedImpact=").append(numMessagesReceivedImpact)
+                .append("\nnetworkDatabaseSizeImpact=").append(networkDatabaseSizeImpact)
+                .append("\nNetwork load=").append(load)
+                .append("\n----------------------------------------------------------------------------------------------------\n");
+        log.info(sb.toString());
 
-        return MathUtils.bounded(0, 1, sum);
+        //TODO load calculation has some bugs at spentSendTimeImpact. Until fixed we limit load to 0.1 to avoid high difficulty
+        return MathUtils.bounded(0, 0.1, load);
+        //return MathUtils.bounded(0, 1, load);
     }
 }

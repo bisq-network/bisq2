@@ -22,14 +22,11 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
@@ -42,43 +39,39 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MyOfferMessageBox extends BubbleMessageBox {
     private final Label myOfferTitle;
-    private DropdownMenuItem removeOffer;
-    private Label copyIcon;
+    private BisqMenuItem removeOffer;
 
     public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                             ChatMessagesListController controller, ChatMessagesListModel model) {
-        super(item, list, controller, model);
+                             ChatMessagesListController controller) {
+        super(item, list, controller);
 
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
+        userProfileIconVbox.getChildren().addAll(item.getReputationScoreDisplay(), Spacer.fillVBox(), supportedLanguagesHBox);
+        supportedLanguagesHBox.setAlignment(Pos.CENTER);
+        userProfileIconVbox.setSpacing(10);
+        userProfileIconVbox.setAlignment(Pos.CENTER);
+        item.getReputationScoreDisplay().setScale(0.8);
+        item.getReputationScoreDisplay().setAlignment(Pos.CENTER);
 
-        // Dropdown menu
-        DropdownMenu dropdownMenu = createAndGetDropdownMenu();
-
-        // My offer title
         myOfferTitle = createAndGetMyOfferTitle();
 
-        // Message
-        message.getStyleClass().add("chat-my-offer-message");
-
         // Offer content
-        VBox offerMessage = new VBox(10, myOfferTitle, message);
-        HBox offerContent = new HBox(15, offerMessage, userProfileIconVbox);
-        offerContent.setAlignment(Pos.CENTER);
-        VBox messageContent = new VBox(5, offerContent, dropdownMenu);
-        messageContent.setAlignment(Pos.CENTER_RIGHT);
+        VBox offerMessage = new VBox(10, myOfferTitle, amountAndPriceBox, Spacer.fillVBox(), paymentAndSettlementMethodsBox);
+        HBox messageContent = new HBox(30, offerMessage, userProfileIconVbox);
+        VBox.setMargin(paymentAndSettlementMethodsBox, new Insets(3, 0, 0, 0));
 
         // Message background
         messageBgHBox.getStyleClass().add("chat-my-offer-message-bg");
         messageBgHBox.getChildren().setAll(messageContent);
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
-        // Reactions
-        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyIcon);
+        // Actions
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), copyAction, removeOffer);
 
         contentVBox.setAlignment(Pos.CENTER_RIGHT);
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
     }
 
     @Override
@@ -91,28 +84,19 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void setUpReactions() {
-        copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
-        reactionsHBox.setVisible(false);
+    protected void setUpActions() {
+        super.setUpActions();
+
+        removeOffer = new BisqMenuItem("delete-t-grey", "delete-t-red");
+        removeOffer.useIconOnly();
+        removeOffer.setTooltip(Res.get("offer.deleteOffer"));
+        HBox.setMargin(removeOffer, ACTION_ITEMS_MARGIN);
     }
 
     @Override
-    protected void addReactionsHandlers() {
-        copyIcon.setOnMouseClicked(e -> onCopyMessage(String.format("%s\n%s", myOfferTitle.getText(), message.getText())));
-    }
-
-    private DropdownMenu createAndGetDropdownMenu() {
-        removeOffer = new DropdownMenuItem("delete-bin-red-lit-10", "delete-bin-red",
-                Res.get("offer.deleteOffer"));
+    protected void addActionsHandlers() {
+        copyAction.setOnAction(e -> onCopyMessage(String.format("%s\n%s", myOfferTitle.getText(), message.getText())));
         removeOffer.setOnAction(e -> controller.onDeleteMessage(item.getChatMessage()));
-        removeOffer.getStyleClass().add("red-menu-item");
-
-        DropdownMenu dropdownMenu = new DropdownMenu("ellipsis-h-grey", "ellipsis-h-white", true);
-        dropdownMenu.setVisible(item.isPublicChannel());
-        dropdownMenu.setManaged(item.isPublicChannel());
-        dropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));
-        dropdownMenu.addMenuItems(removeOffer);
-        return dropdownMenu;
     }
 
     private Label createAndGetMyOfferTitle() {
@@ -131,7 +115,8 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    public void cleanup() {
+    public void dispose() {
+        copyAction.setOnAction(null);
         removeOffer.setOnAction(null);
     }
 }

@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.network.p2p.node.Feature;
 
 import java.util.Optional;
@@ -39,7 +39,7 @@ public enum InventoryFilterType implements ProtoEnum {
     }
 
     @Override
-    public bisq.network.protobuf.InventoryFilterType toProto() {
+    public bisq.network.protobuf.InventoryFilterType toProtoEnum() {
         return bisq.network.protobuf.InventoryFilterType.valueOf(getProtobufEnumPrefix() + name());
     }
 

@@ -18,7 +18,7 @@
 package bisq.chat;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 
 public enum ChatChannelDomain implements ProtoEnum {
@@ -30,7 +30,7 @@ public enum ChatChannelDomain implements ProtoEnum {
     SUPPORT;
 
     @Override
-    public bisq.chat.protobuf.ChatChannelDomain toProto() {
+    public bisq.chat.protobuf.ChatChannelDomain toProtoEnum() {
         return bisq.chat.protobuf.ChatChannelDomain.valueOf(getProtobufEnumPrefix() + name());
     }
 

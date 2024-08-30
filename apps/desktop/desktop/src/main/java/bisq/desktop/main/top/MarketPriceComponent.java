@@ -17,11 +17,14 @@
 
 package bisq.desktop.main.top;
 
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -30,6 +33,8 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ComboBoxWithSearch;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.i18n.Res;
+import bisq.network.common.Address;
+import bisq.network.identity.NetworkId;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
@@ -62,8 +67,8 @@ import java.util.stream.Collectors;
 public class MarketPriceComponent {
     private final Controller controller;
 
-    public MarketPriceComponent(MarketPriceService marketPriceService) {
-        controller = new Controller(marketPriceService);
+    public MarketPriceComponent(ServiceProvider serviceProvider) {
+        controller = new Controller(serviceProvider);
     }
 
     public Pane getRoot() {
@@ -77,8 +82,8 @@ public class MarketPriceComponent {
         private final MarketPriceService marketPriceService;
         private Pin selectedMarketPin, marketPricePin;
 
-        private Controller(MarketPriceService marketPriceService) {
-            this.marketPriceService = marketPriceService;
+        private Controller(ServiceProvider serviceProvider) {
+            marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
 
             model = new Model();
             view = new View(model, this);
@@ -90,7 +95,7 @@ public class MarketPriceComponent {
                     UIThread.run(() -> {
                         List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
                                 .flatMap(market -> marketPriceService.findMarketPrice(market).stream())
-                                .map(ListItem::new)
+                                .map(marketPrice -> new ListItem(marketPrice, marketPriceService))
                                 .collect(Collectors.toList());
                         model.items.setAll(list);
 
@@ -220,10 +225,8 @@ public class MarketPriceComponent {
                         staleIcon.setManaged(isStale);
                         staleIcon.setVisible(isStale);
                         String isStalePostFix = isStale ? Res.get("component.marketPrice.tooltip.isStale") : "";
-
                         tooltip.setText(Res.get("component.marketPrice.tooltip",
-                                item.provider,
-                                item.source,
+                                item.getSource(),
                                 item.getAgeInSeconds(),
                                 item.date,
                                 isStalePostFix));
@@ -283,16 +286,13 @@ public class MarketPriceComponent {
                         staleIcon.setManaged(isStale);
                         staleIcon.setVisible(isStale);
                         String isStalePostFix = isStale ? Res.get("component.marketPrice.tooltip.isStale") : "";
-
-                        Tooltip.install(hBox, tooltip);
                         String tooltipText = Res.get("component.marketPrice.tooltip",
-                                item.provider,
-                                item.source,
+                                item.getSource(),
                                 item.getAgeInSeconds(),
                                 item.date,
                                 isStalePostFix);
                         tooltip.setText(tooltipText);
-
+                        Tooltip.install(hBox, tooltip);
                         setGraphic(hBox);
                     } else {
                         Tooltip.uninstall(hBox, tooltip);
@@ -304,21 +304,22 @@ public class MarketPriceComponent {
     }
 
     @Slf4j
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class ListItem {
+        @EqualsAndHashCode.Include
         private final MarketPrice marketPrice;
+
         private final String price;
         private final String codes;
-        private final String provider;
         private final String date;
-        private final String source;
+        private final MarketPriceService marketPriceService;
 
-        private ListItem(MarketPrice marketPrice) {
+        private ListItem(MarketPrice marketPrice, MarketPriceService marketPriceService) {
             this.marketPrice = marketPrice;
+            this.marketPriceService = marketPriceService;
+
             codes = marketPrice.getMarket().getMarketCodes();
             price = PriceFormatter.format(marketPrice.getPriceQuote(), true);
-            provider = marketPrice.getProviderName();
-            source = Res.get("component.marketPrice.source." + marketPrice.getSource());
             date = DateFormatter.formatDateTime(marketPrice.getTimestamp());
         }
 
@@ -328,6 +329,35 @@ public class MarketPriceComponent {
 
         public String getAgeInSeconds() {
             return TimeFormatter.getAgeInSeconds(marketPrice.getAge());
+        }
+
+        public String getProviderUrl() {
+            return marketPriceService.getMarketPriceRequestService().getMostRecentProvider()
+                    .map(MarketPriceRequestService.Provider::getBaseUrl)
+                    .orElse(Res.get("data.na"));
+        }
+
+        public String getMarketPriceProvidingOracle() {
+            return marketPriceService.getMarketPriceProvidingOracle()
+                    .map(AuthorizedBondedRole::getNetworkId)
+                    .map(NetworkId::getAddressByTransportTypeMap)
+                    .flatMap(map -> map.values().stream().findAny())
+                    .map(Address::getFullAddress)
+                    .orElse(Res.get("data.na"));
+        }
+
+        public String getSource() {
+            MarketPrice.Source source = marketPrice.getSource();
+            switch (source) {
+                case PERSISTED:
+                    return Res.get("component.marketPrice.source." + source);
+                case PROPAGATED_IN_NETWORK:
+                    return Res.get("component.marketPrice.source." + source, getMarketPriceProvidingOracle());
+                case REQUESTED_FROM_PRICE_NODE:
+                    return Res.get("component.marketPrice.source." + source, getProviderUrl());
+                default:
+                    throw new RuntimeException("Unsupported source: " + source.name());
+            }
         }
 
         @Override

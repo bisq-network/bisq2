@@ -26,8 +26,11 @@ import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -86,11 +89,15 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
             // AddAppendOnlyDataRequest does not use a seq nr.
             return new HashSetFilterEntry(hash, 0);
         } else if (dataRequest instanceof AddAuthenticatedDataRequest) {
-            // AddMailboxRequest extends AddAuthenticatedDataRequest so its covered here as well
             sequenceNumber = ((AddAuthenticatedDataRequest) dataRequest).getAuthenticatedSequentialData().getSequenceNumber();
         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-            // RemoveMailboxRequest extends RemoveAuthenticatedDataRequest so its covered here as well
             sequenceNumber = ((RemoveAuthenticatedDataRequest) dataRequest).getSequenceNumber();
+        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
+            sequenceNumber = ((RefreshAuthenticatedDataRequest) dataRequest).getSequenceNumber();
+        } else if (dataRequest instanceof AddMailboxRequest) {
+            sequenceNumber = ((AddMailboxRequest) dataRequest).getSequenceNumber();
+        } else if (dataRequest instanceof RemoveMailboxRequest) {
+            sequenceNumber = ((RemoveMailboxRequest) dataRequest).getSequenceNumber();
         }
         return new HashSetFilterEntry(hash, sequenceNumber);
     }

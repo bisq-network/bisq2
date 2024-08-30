@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 
 public class ReputationDetailsPopup extends VBox {
     private final BisqTableView<ListItem> tableView;
+    private final UserProfileIcon userProfileIcon;
 
     public ReputationDetailsPopup(UserProfile userProfile,
                                   ReputationScore reputationScore,
@@ -60,7 +61,7 @@ public class ReputationDetailsPopup extends VBox {
         Optional.ofNullable(proofOfBurnService.getDataSetByHash().get(userProfile.getProofOfBurnKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
                         .map(data -> new ListItem(ReputationSource.BURNED_BSQ,
-                                data.getTime(),
+                                data.getBlockTime(),
                                 proofOfBurnService.calculateScore(data),
                                 data.getAmount()))
                         .collect(Collectors.toList())));
@@ -69,7 +70,7 @@ public class ReputationDetailsPopup extends VBox {
         Optional.ofNullable(bondedReputationService.getDataSetByHash().get(userProfile.getBondedReputationKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
                         .map(data -> new ListItem(ReputationSource.BSQ_BOND,
-                                data.getTime(),
+                                data.getBlockTime(),
                                 bondedReputationService.calculateScore(data),
                                 Optional.of(data.getAmount()),
                                 Optional.of(data.getLockTime())))
@@ -103,13 +104,12 @@ public class ReputationDetailsPopup extends VBox {
         setPrefWidth(1000);
         configTableView();
 
-        UserProfileIcon userProfileIcon = new UserProfileIcon(40);
+        userProfileIcon = new UserProfileIcon(40);
         userProfileIcon.setUserProfile(userProfile);
 
         Label userName = new Label(userProfile.getNickName());
         userName.setId("chat-user-name");
-        Tooltip tooltip = new BisqTooltip(userProfile.getUserName());
-        tooltip.getStyleClass().add("medium-dark-tooltip");
+        Tooltip tooltip = new BisqTooltip(userProfile.getUserName(), BisqTooltip.Style.MEDIUM_DARK);
         userName.setTooltip(tooltip);
 
         HBox row1 = new HBox(20, userProfileIcon, userName);
@@ -122,7 +122,7 @@ public class ReputationDetailsPopup extends VBox {
 
         MaterialTextField ranking = new MaterialTextField(Res.get("user.reputation.ranking"));
         ranking.setEditable(false);
-        ranking.setText(String.valueOf(reputationScore.getRanking()));
+        ranking.setText(reputationScore.getRankingAsString());
         ranking.setMaxWidth(400);
 
         HBox row2 = new HBox(20, totalScore, ranking);
@@ -140,6 +140,7 @@ public class ReputationDetailsPopup extends VBox {
 
     public void dispose() {
         tableView.dispose();
+        userProfileIcon.dispose();
     }
 
     private void configTableView() {
@@ -173,32 +174,41 @@ public class ReputationDetailsPopup extends VBox {
                 .build());
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     static class ListItem implements DateTableItem {
+        @EqualsAndHashCode.Include
         private final ReputationSource reputationSource;
-        private final long date, age, amount, score, lockTime;
+        @EqualsAndHashCode.Include
+        private final long date, score, amount, lockTime;
+
+        private final long age;
         private final String dateString, timeString, sourceString, ageString, amountString, scoreString, lockTimeString;
 
-        public ListItem(ReputationSource reputationSource, long date, long score) {
-            this(reputationSource, date, score, Optional.empty(), Optional.empty());
+        public ListItem(ReputationSource reputationSource, long blockTime, long score) {
+            this(reputationSource, blockTime, score, Optional.empty(), Optional.empty());
         }
 
-        public ListItem(ReputationSource reputationSource, long date, long score, long amount) {
-            this(reputationSource, date, score, Optional.of(amount), Optional.empty());
+        public ListItem(ReputationSource reputationSource, long blockTime, long score, long amount) {
+            this(reputationSource, blockTime, score, Optional.of(amount), Optional.empty());
         }
 
-        public ListItem(ReputationSource reputationSource, long date, long score, Optional<Long> optionalAmount, Optional<Long> optionalLockTime) {
+        public ListItem(ReputationSource reputationSource,
+                        long blockTime,
+                        long score,
+                        Optional<Long> optionalAmount,
+                        Optional<Long> optionalLockTime) {
             this.reputationSource = reputationSource;
-            this.date = date;
-            dateString = DateFormatter.formatDate(date);
-            timeString = DateFormatter.formatTime(date);
-            this.amount = optionalAmount.orElse(0L);
+            this.date = blockTime;
             this.score = score;
+            this.amount = optionalAmount.orElse(0L);
             this.lockTime = optionalLockTime.orElse(0L);
-            age = TimeFormatter.getAgeInDays(date);
-            sourceString = Res.get("user.reputation.source." + reputationSource.name());
-            ageString = TimeFormatter.formatAgeInDays(date);
+
+            dateString = DateFormatter.formatDate(blockTime);
+            timeString = DateFormatter.formatTime(blockTime);
+            age = TimeFormatter.getAgeInDays(blockTime);
+            sourceString = reputationSource.getDisplayString();
+            ageString = TimeFormatter.formatAgeInDays(blockTime);
             amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.fromValue(amount, "BSQ"))).orElse("-");
             scoreString = String.valueOf(score);
             lockTimeString = optionalLockTime.map(String::valueOf).orElse("-");

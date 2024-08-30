@@ -19,9 +19,16 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.*;
+import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.MyOfferMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.MyTextMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.PeerLeftMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.PeerOfferMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.PeerTextMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.TradePeerLefMessageBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -38,11 +45,9 @@ final class ChatMessageListCellFactory
         implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
         ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>> {
     private final ChatMessagesListController controller;
-    private final ChatMessagesListModel model;
 
-    public ChatMessageListCellFactory(ChatMessagesListController controller, ChatMessagesListModel model) {
+    public ChatMessageListCellFactory(ChatMessagesListController controller) {
         this.controller = controller;
-        this.model = model;
     }
 
     @Override
@@ -87,7 +92,7 @@ final class ChatMessageListCellFactory
 
             private void cleanup() {
                 if (messageBox != null) {
-                    messageBox.cleanup();
+                    messageBox.dispose();
                 }
 
                 if (listWidthPropertyPin != null) {
@@ -125,7 +130,11 @@ final class ChatMessageListCellFactory
     private MessageBox createMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                      ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         if (item.isLeaveChatMessage()) {
-            return new LeaveChatMessageBox(item, controller);
+            if (item.getChatMessage() instanceof BisqEasyOpenTradeMessage) {
+                return new TradePeerLefMessageBox(item, controller);
+            } else {
+                return new PeerLeftMessageBox(item, controller);
+            }
         }
 
         if (item.isMyMessage()) {
@@ -133,16 +142,16 @@ final class ChatMessageListCellFactory
                 return new MyProtocolLogMessageBox(item, controller);
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
-                        ? new MyOfferMessageBox(item, list, controller, model)
-                        : new MyTextMessageBox(item, list, controller, model);
+                        ? new MyOfferMessageBox(item, list, controller)
+                        : new MyTextMessageBox(item, list, controller);
             }
         } else {
             if (item.isProtocolLogMessage()) {
                 return new PeerProtocolLogMessageBox(item);
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
-                        ? new PeerOfferMessageBox(item, list, controller, model)
-                        : new PeerTextMessageBox(item, list, controller, model);
+                        ? new PeerOfferMessageBox(item, list, controller)
+                        : new PeerTextMessageBox(item, list, controller);
             }
         }
     }

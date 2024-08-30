@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -28,21 +29,23 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.offer.Offer;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.AmountSpecUtil;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
@@ -53,6 +56,7 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -61,11 +65,15 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeWizardAmountController implements Controller {
+    private static final PriceSpec MARKET_PRICE_SPEC = new MarketPriceSpec();
+
     private final TradeWizardAmountModel model;
     @Getter
     private final TradeWizardAmountView view;
@@ -73,14 +81,15 @@ public class TradeWizardAmountController implements Controller {
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final Region owner;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyService bisqEasyService;
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
-            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
+            maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin;
 
-    public TradeWizardAmountController(ServiceProvider serviceProvider) {
+    public TradeWizardAmountController(ServiceProvider serviceProvider, Region owner) {
         settingsService = serviceProvider.getSettingsService();
         bisqEasyService = serviceProvider.getBisqEasyService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -88,6 +97,7 @@ public class TradeWizardAmountController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
+        this.owner = owner;
         model = new TradeWizardAmountModel();
 
         minAmountComponent = new AmountComponent(serviceProvider, true);
@@ -125,34 +135,85 @@ public class TradeWizardAmountController implements Controller {
         model.setMarket(market);
     }
 
+    public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
+        if (bitcoinPaymentMethods != null) {
+            model.setBitcoinPaymentMethods(bitcoinPaymentMethods);
+        }
+    }
+
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             model.setFiatPaymentMethods(fiatPaymentMethods);
         }
     }
 
-    public void setPriceSpec(PriceSpec priceSpec) {
-        model.setPriceSpec(priceSpec);
-        PriceQuote priceQuote;
-        if (priceSpec instanceof FixPriceSpec) {
-            priceQuote = ((FixPriceSpec) priceSpec).getPriceQuote();
-            minAmountComponent.setQuote(priceQuote);
-            maxOrFixAmountComponent.setQuote(priceQuote);
+    public boolean validate() {
+        // No errorMessage set yet... We reset the amount to a valid value in case input is invalid
+        if (model.getErrorMessage().get() == null) {
+            return true;
         } else {
-            Optional<PriceQuote> marketPriceQuote = getMarketPriceQuote();
-            if (marketPriceQuote.isPresent()) {
-                if (priceSpec instanceof FloatPriceSpec) {
-                    double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
-                    priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
-                } else {
-                    priceQuote = marketPriceQuote.get();
-                }
-                minAmountComponent.setQuote(priceQuote);
-                maxOrFixAmountComponent.setQuote(priceQuote);
-            } else {
-                log.error("marketPriceQuote not present");
-            }
+            new Popup().invalid(model.getErrorMessage().get())
+                    .owner(owner)
+                    .show();
+            return false;
         }
+    }
+
+    public void updateQuoteSideAmountSpecWithPriceSpec(PriceSpec priceSpec) {
+        if (priceSpec == null) {
+            return;
+        }
+
+        QuoteSideAmountSpec amountSpec = model.getQuoteSideAmountSpec().get();
+        if (amountSpec == null) {
+            return;
+        }
+        Market market = model.getMarket();
+        if (market == null) {
+            log.warn("market is null at updateQuoteSideAmountSpecWithPriceSpec");
+            return;
+        }
+        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, market);
+        if (priceQuote.isEmpty()) {
+            log.warn("priceQuote is empty at updateQuoteSideAmountSpecWithPriceSpec");
+            return;
+        }
+        model.getPriceQuote().set(priceQuote.get());
+        minAmountComponent.setQuote(priceQuote.get());
+        maxOrFixAmountComponent.setQuote(priceQuote.get());
+
+        OfferAmountUtil.updateQuoteSideAmountSpecWithPriceSpec(marketPriceService, amountSpec, priceSpec, market)
+                .ifPresent(quoteSideAmountSpec -> {
+                    // TODO we do not change min/max amounts if price has changed as its confusing to user.
+                    // we prefer that users could breach the min/max defined in the AmountComponent
+                    // the min/max as btc amount is anyway not great. better would be a market specific min/max.
+                    //todo Move AmountComponent.MIN_RANGE_BASE_SIDE_VALUE to config
+                  /*  long minQuoteSideValueValue =  PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                            .map(priceQuote -> priceQuote.toQuoteSideMonetary(AmountComponent.MIN_RANGE_BASE_SIDE_VALUE))
+                            .map(Monetary::getValue)
+                            .orElseThrow();
+                    long maxQuoteSideValueValue =  PriceUtil.findQuote(marketPriceService, priceSpec, market)
+                            .map(priceQuote -> priceQuote.toQuoteSideMonetary(AmountComponent.MAX_RANGE_BASE_SIDE_VALUE))
+                            .map(Monetary::getValue)
+                            .orElseThrow();
+                    if (quoteSideAmountSpec instanceof QuoteSideFixedAmountSpec) {
+                        QuoteSideFixedAmountSpec fixedAmountSpec = (QuoteSideFixedAmountSpec) quoteSideAmountSpec;
+                        if (fixedAmountSpec.getAmount() < minQuoteSideValueValue) {
+                            quoteSideAmountSpec = new QuoteSideFixedAmountSpec(minQuoteSideValueValue);
+                        } else if (fixedAmountSpec.getAmount() > maxQuoteSideValueValue) {
+                            quoteSideAmountSpec = new QuoteSideFixedAmountSpec(maxQuoteSideValueValue);
+                        }
+                    } else if (quoteSideAmountSpec instanceof QuoteSideRangeAmountSpec) {
+                        QuoteSideRangeAmountSpec rangeAmountSpec = (QuoteSideRangeAmountSpec) quoteSideAmountSpec;
+                        long minAmount = Math.max(minQuoteSideValueValue, rangeAmountSpec.getMinAmount());
+                        long maxAmount = Math.min(maxQuoteSideValueValue, rangeAmountSpec.getMaxAmount());
+                        checkArgument(minAmount <= maxAmount);
+                        quoteSideAmountSpec = new QuoteSideRangeAmountSpec(minAmount, maxAmount);
+                    } else {
+                        throw new RuntimeException("Unsupported amountSpec: {}" + quoteSideAmountSpec);
+                    }*/
+                    model.getQuoteSideAmountSpec().set(quoteSideAmountSpec);
+                });
     }
 
     public void reset() {
@@ -161,8 +222,8 @@ public class TradeWizardAmountController implements Controller {
         model.reset();
     }
 
-    public ReadOnlyObjectProperty<AmountSpec> getAmountSpec() {
-        return model.getAmountSpec();
+    public ReadOnlyObjectProperty<QuoteSideAmountSpec> getQuoteSideAmountSpec() {
+        return model.getQuoteSideAmountSpec();
     }
 
     public ReadOnlyBooleanProperty getIsMinAmountEnabled() {
@@ -171,6 +232,9 @@ public class TradeWizardAmountController implements Controller {
 
     @Override
     public void onActivate() {
+        if (model.getPriceQuote().get() == null && minAmountComponent.getQuote().get() != null) {
+            model.getPriceQuote().set(minAmountComponent.getQuote().get());
+        }
         model.setHeadline(model.getDirection().isBuy() ?
                 Res.get("bisqEasy.tradeWizard.amount.headline.buyer") :
                 Res.get("bisqEasy.tradeWizard.amount.headline.seller"));
@@ -233,22 +297,34 @@ public class TradeWizardAmountController implements Controller {
 
         applyAmountSpec();
 
-        if (model.getDirection().isSell()) {
-            // Use sellers trade price
-            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
-            maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.price"));
+        if (model.isCreateOfferMode()) {
+            Optional<PriceQuote> marketPriceQuote = getMarketPriceQuote();
+            if (model.getPriceQuote().get() != null &&
+                    marketPriceQuote.isPresent() &&
+                    !model.getPriceQuote().get().equals(marketPriceQuote.get())) {
+                model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.selectedPrice"));
+            } else {
+                model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice"));
+            }
         } else {
             // Use best price of matching offer if any match found, otherwise market price.
-            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount") + "\n";
-            if (!model.isCreateOfferMode()) {
-                applyBestOfferQuote();
-                maxOrFixAmountComponent.setTooltip(model.getBestOffersPrice()
-                        .map(bestOffersPrice -> btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice", PriceFormatter.formatWithCode(bestOffersPrice)))
-                        .orElse(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice")));
-            } else {
-                maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
-            }
+            Optional<String> bestOffersPriceTooltip = findBestOfferQuote()
+                    .map(bestOffersPrice -> Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice",
+                            PriceFormatter.formatWithCode(bestOffersPrice)));
+            String marketPriceTooltipWithMaybeBuyerInfo = String.format("%s%s",
+                    Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice"),
+                    model.getDirection().isSell() ? "" : "\n" + Res.get("bisqEasy.component.amount.baseSide.tooltip.buyerInfo"));
+
+            //todo
+            model.getPriceTooltip().set(bestOffersPriceTooltip.orElse(marketPriceTooltipWithMaybeBuyerInfo));
         }
+
+        priceTooltipPin = EasyBind.subscribe(model.getPriceTooltip(), priceTooltip -> {
+            if (priceTooltip != null) {
+                minAmountComponent.setTooltip(priceTooltip);
+                maxOrFixAmountComponent.setTooltip(priceTooltip);
+            }
+        });
     }
 
     @Override
@@ -258,6 +334,7 @@ public class TradeWizardAmountController implements Controller {
         maxAmountCompQuoteSideAmountPin.unsubscribe();
         minAmountCompBaseSideAmountPin.unsubscribe();
         minAmountCompQuoteSideAmountPin.unsubscribe();
+        priceTooltipPin.unsubscribe();
     }
 
     void onToggleMinAmountVisibility() {
@@ -303,31 +380,45 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void applyFixedAmountSpec(long maxOrFixAmount) {
-        model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+        model.getQuoteSideAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
     }
 
     private void applyRangeAmountSpec(long minAmount, long maxOrFixAmount) {
-        model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
+        model.getQuoteSideAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
     }
 
-    private void applyBestOfferQuote() {
+    private Optional<PriceQuote> findBestOfferQuote() {
+        // Only used in wizard mode where we do not show min/max amounts
         Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(model.getMarket());
-        if (optionalChannel.isPresent() && model.getMarket() != null) {
-            Optional<PriceQuote> bestOffersPrice = optionalChannel.get().getChatMessages().stream()
-                    .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                    .filter(chatMessage -> filterOffers(chatMessage.getBisqEasyOffer().get()))
-                    .map(chatMessage -> chatMessage.getBisqEasyOffer().get().getPriceSpec())
-                    .flatMap(priceSpec -> PriceUtil.findQuote(marketPriceService, priceSpec, model.getMarket()).or(this::getMarketPriceQuote).stream())
-                    .min(Comparator.comparing(PriceQuote::getValue));
-            model.setBestOffersPrice(bestOffersPrice);
-            if (bestOffersPrice.isPresent()) {
-                maxOrFixAmountComponent.setQuote(bestOffersPrice.get());
-            } else {
-                getMarketPriceQuote().ifPresent(maxOrFixAmountComponent::setQuote);
-            }
-            AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
-                    .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> maxOrFixAmountComponent.setQuoteSideAmount(amount)));
+        if (optionalChannel.isEmpty() || model.getMarket() == null) {
+            return Optional.empty();
         }
+
+        List<BisqEasyOffer> bisqEasyOffers = optionalChannel.get().getChatMessages().stream()
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
+                .filter(this::filterOffers)
+                .collect(Collectors.toList());
+        boolean isSellOffer = bisqEasyOffers.stream()
+                .map(Offer::getDirection)
+                .map(Direction::isSell)
+                .findAny()
+                .orElse(false);
+        Stream<PriceQuote> priceQuoteStream = bisqEasyOffers.stream()
+                .map(Offer::getPriceSpec)
+                .flatMap(priceSpec -> PriceUtil.findQuote(marketPriceService, priceSpec, model.getMarket()).or(this::getMarketPriceQuote).stream());
+        Optional<PriceQuote> bestOffersPrice = isSellOffer
+                ? priceQuoteStream.min(Comparator.comparing(PriceQuote::getValue))
+                : priceQuoteStream.max(Comparator.comparing(PriceQuote::getValue));
+        if (bestOffersPrice.isPresent()) {
+            maxOrFixAmountComponent.setQuote(bestOffersPrice.get());
+        } else {
+            getMarketPriceQuote().ifPresent(maxOrFixAmountComponent::setQuote);
+        }
+        AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getQuoteSideAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
+                .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> maxOrFixAmountComponent.setQuoteSideAmount(amount)));
+
+        return bestOffersPrice;
     }
 
     // Used for finding best price quote of available matching offers
@@ -355,34 +446,37 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getAmountSpec().get(), model.getPriceSpec(), model.getMarket());
+            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
             Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
             if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                 return false;
             }
 
-            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getAmountSpec().get(), model.getPriceSpec(), model.getMarket());
+            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
             Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
             if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                 return false;
             }
 
-            List<String> paymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
-            List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getFiatPaymentMethods());
-            List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
-            if (quoteSidePaymentMethodNames.stream().noneMatch(paymentMethodNames::contains)) {
+            List<String> bitcoinPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getBaseSidePaymentMethodSpecs());
+            List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(model.getBitcoinPaymentMethods());
+            List<String> baseSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(baseSidePaymentMethodSpecs);
+            if (baseSidePaymentMethodNames.stream().noneMatch(bitcoinPaymentMethodNames::contains)) {
                 return false;
             }
 
-            if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+            List<String> fiatPaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
+            List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(model.getFiatPaymentMethods());
+            List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(quoteSidePaymentMethodSpecs);
+            if (quoteSidePaymentMethodNames.stream().noneMatch(fiatPaymentMethodNames::contains)) {
+                return false;
+            }
+
+            return BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
                     bisqEasyService,
                     userIdentityService,
                     userProfileService,
-                    peersOffer)) {
-                return false;
-            }
-
-            return true;
+                    peersOffer);
         } catch (Throwable t) {
             log.error("Error at TakeOfferPredicate", t);
             return false;

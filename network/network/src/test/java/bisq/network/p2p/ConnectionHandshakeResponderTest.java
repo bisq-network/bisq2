@@ -17,7 +17,8 @@
 
 package bisq.network.p2p;
 
-import bisq.common.util.FileUtils;
+import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileUtils;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -41,9 +42,8 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class ConnectionHandshakeResponderTest {
 
@@ -57,7 +57,7 @@ public class ConnectionHandshakeResponderTest {
 
     public ConnectionHandshakeResponderTest() throws IOException {
         supportedTransportTypes.add(TransportType.CLEAR);
-        this.responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes, new ArrayList<>());
+        this.responderCapability = createCapability(Address.localHost(1234), supportedTransportTypes);
         this.authorizationService = createAuthorizationService();
         this.handshakeResponder = new ConnectionHandshakeResponder(
                 banList,
@@ -139,11 +139,8 @@ public class ConnectionHandshakeResponderTest {
 
         when(banList.isBanned(Address.localHost(1234))).thenReturn(true);
 
-        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
-
-        assertThat(exception.getMessage())
-                .containsIgnoringCase("Peer")
-                .containsIgnoringCase("quarantine");
+        ConnectionException exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
+        assertEquals(exception.getReason(), ConnectionException.Reason.ADDRESS_BANNED);
     }
 
     @Test
@@ -166,7 +163,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void correctPoW() throws IOException {
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
+        Capability peerCapability = createCapability(Address.localHost(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
@@ -184,12 +181,16 @@ public class ConnectionHandshakeResponderTest {
     }
 
     private NetworkEnvelope createValidRequest() {
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
+        Capability peerCapability = createCapability(Address.localHost(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
                 0, new ArrayList<>());
         return new NetworkEnvelope(token, request);
+    }
+
+    private static Capability createCapability(Address address, List<TransportType> supportedTransportTypes) {
+        return new Capability(Capability.VERSION, address, supportedTransportTypes, new ArrayList<>(), ApplicationVersion.getVersion().getVersionAsString());
     }
 }

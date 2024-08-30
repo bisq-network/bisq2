@@ -40,10 +40,16 @@ public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyO
     }
 
     @Override
-    public bisq.chat.protobuf.BisqEasyOpenTradeChannelStore toProto() {
-        bisq.chat.protobuf.BisqEasyOpenTradeChannelStore.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(BisqEasyOpenTradeChannel::toProto).collect(Collectors.toList()));
-        return builder.build();
+    public bisq.chat.protobuf.BisqEasyOpenTradeChannelStore.Builder getBuilder(boolean serializeForHash) {
+        return bisq.chat.protobuf.BisqEasyOpenTradeChannelStore.newBuilder()
+                .addAllChannels(channels.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.chat.protobuf.BisqEasyOpenTradeChannelStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static BisqEasyOpenTradeChannelStore fromProto(bisq.chat.protobuf.BisqEasyOpenTradeChannelStore proto) {

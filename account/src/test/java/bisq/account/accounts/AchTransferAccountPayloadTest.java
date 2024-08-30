@@ -4,10 +4,12 @@ import bisq.account.protobuf.AccountPayload;
 import bisq.account.protobuf.AchTransferAccountPayload;
 import bisq.account.protobuf.BankAccountPayload;
 import bisq.account.protobuf.CountryBasedAccountPayload;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Slf4j
 class AchTransferAccountPayloadTest {
 
     private static final AccountPayload PROTO = bisq.account.protobuf.AccountPayload.newBuilder()
@@ -46,12 +48,12 @@ class AchTransferAccountPayloadTest {
             );
 
     @Test
-    void toProto() {
-        assertEquals(PROTO, PAYLOAD.toProto());
+    void testToProto() {
+        assertEquals(PROTO, PAYLOAD.completeProto());
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         assertEquals(PAYLOAD, bisq.account.accounts.AchTransferAccountPayload.fromProto(PROTO));
     }
 

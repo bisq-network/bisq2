@@ -23,18 +23,19 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-@Builder
 public class BaseTorrcGenerator implements TorrcConfigGenerator {
     private static final String CONTROL_PORT_WRITE_TO_FILE_CONFIG_KEY = "ControlPortWriteToFile";
+    public static final String CONTROL_DIR_NAME = "control";
 
     private final Path dataDirPath;
     private final Path controlPortWriteFile;
     private final String hashedControlPassword;
     private final boolean isTestNetwork;
 
-    public BaseTorrcGenerator(Path dataDirPath, Path controlPortWriteFile, String hashedControlPassword, boolean isTestNetwork) {
+    @Builder
+    public BaseTorrcGenerator(Path dataDirPath, String hashedControlPassword, boolean isTestNetwork) {
         this.dataDirPath = dataDirPath;
-        this.controlPortWriteFile = controlPortWriteFile;
+        this.controlPortWriteFile = dataDirPath.resolve(CONTROL_DIR_NAME).resolve("control");
         this.hashedControlPassword = hashedControlPassword;
         this.isTestNetwork = isTestNetwork;
     }

@@ -21,6 +21,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -32,21 +33,21 @@ public class BisqIconButton extends Button {
     public static Button createCopyIconButton() {
         Button button = AwesomeDude.createIconButton(AwesomeIcon.COPY);
         button.getStyleClass().add("icon-button");
-        button.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard"), true));
+        button.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard"), BisqTooltip.Style.DARK));
         return button;
     }
 
     public static Button createDeleteIconButton() {
         Button button = AwesomeDude.createIconButton(AwesomeIcon.REMOVE_SIGN);
         button.getStyleClass().add("icon-button");
-        button.setTooltip(new BisqTooltip(Res.get("action.delete"), true));
+        button.setTooltip(new BisqTooltip(Res.get("action.delete"), BisqTooltip.Style.DARK));
         return button;
     }
 
     public static Button createInfoIconButton(String tooltipText) {
         Button button = AwesomeDude.createIconButton(AwesomeIcon.INFO_SIGN);
         button.getStyleClass().add("icon-button");
-        button.setTooltip(new BisqTooltip(tooltipText, true));
+        button.setTooltip(new BisqTooltip(tooltipText, BisqTooltip.Style.DARK));
         return button;
     }
 
@@ -123,6 +124,14 @@ public class BisqIconButton extends Button {
 
     public void setIcon(AwesomeIcon icon) {
         setGraphic(AwesomeDude.createIconLabel(icon));
+    }
+
+    public void setIcon(ImageView imageView) {
+        setGraphic(imageView);
+    }
+
+    public void setIcon(Node node) {
+        setGraphic(node);
     }
 
     public void setIcon(AwesomeIcon icon, String iconSize) {

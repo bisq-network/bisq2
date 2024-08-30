@@ -52,10 +52,14 @@ public final class MiniSketchFilter extends InventoryFilter {
     }
 
     @Override
-    public bisq.network.protobuf.InventoryFilter toProto() {
+    public bisq.network.protobuf.InventoryFilter toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryFilter.Builder getBuilder(boolean serializeForHash) {
         return getInventoryFilterBuilder().setMiniSketchFilter(
-                        bisq.network.protobuf.MiniSketchFilter.newBuilder())
-                .build();
+                bisq.network.protobuf.MiniSketchFilter.newBuilder());
     }
 
     public static MiniSketchFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {

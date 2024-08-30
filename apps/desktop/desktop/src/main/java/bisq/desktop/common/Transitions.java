@@ -993,4 +993,36 @@ public class Transitions {
     public static boolean getUseAnimations() {
         return settingsService.getUseAnimations().get();
     }
+
+    public static void expansionAnimation(Pane pane, double initialWidth, double finalWidth) {
+        expansionAnimation(pane, initialWidth, finalWidth, null);
+    }
+
+    public static void expansionAnimation(Pane pane, double initialWidth, double finalWidth, @Nullable Runnable finishedHandler) {
+        if (getUseAnimations()) {
+            Timeline widthExpansion = new Timeline(
+                    new KeyFrame(Duration.millis(0),
+                            new KeyValue(pane.prefWidthProperty(), initialWidth, Interpolator.LINEAR),
+                            new KeyValue(pane.minWidthProperty(), initialWidth, Interpolator.LINEAR),
+                            new KeyValue(pane.maxWidthProperty(), initialWidth, Interpolator.LINEAR)
+                    ),
+                    new KeyFrame(Duration.millis(200),
+                            new KeyValue(pane.prefWidthProperty(), finalWidth, Interpolator.EASE_OUT),
+                            new KeyValue(pane.minWidthProperty(), finalWidth, Interpolator.EASE_OUT),
+                            new KeyValue(pane.maxWidthProperty(), finalWidth, Interpolator.EASE_OUT)
+                    )
+            );
+            widthExpansion.play();
+            if (finishedHandler != null) {
+                widthExpansion.setOnFinished(actionEvent -> finishedHandler.run());
+            }
+        } else {
+            pane.setPrefWidth(finalWidth);
+            pane.setMinWidth(finalWidth);
+            pane.setMaxWidth(finalWidth);
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
+        }
+    }
 }

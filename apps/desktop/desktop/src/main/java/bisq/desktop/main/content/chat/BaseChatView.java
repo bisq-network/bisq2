@@ -23,7 +23,8 @@ import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -34,7 +35,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatModel, BaseChatController<?, ?>> {
-    protected final static double HEADER_HEIGHT = 61;
+    public final static double HEADER_HEIGHT = 61;
 
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();

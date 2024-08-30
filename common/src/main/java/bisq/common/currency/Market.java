@@ -34,6 +34,10 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
 
     private final String baseCurrencyCode;
     private final String quoteCurrencyCode;
+
+    // The baseCurrencyName and quoteCurrencyName are using the US locale in case they are Fiat currencies, thus they
+    // are immutable with the code (therefor we don't need the ExcludeForHash annotation)
+    // For display purposes we use getQuoteCurrencyDisplayName() and getBaseCurrencyDisplayName()
     @EqualsAndHashCode.Exclude
     private final String baseCurrencyName;
     @EqualsAndHashCode.Exclude
@@ -60,13 +64,17 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     }
 
     @Override
-    public bisq.common.protobuf.Market toProto() {
+    public bisq.common.protobuf.Market.Builder getBuilder(boolean serializeForHash) {
         return bisq.common.protobuf.Market.newBuilder()
                 .setBaseCurrencyCode(baseCurrencyCode)
                 .setQuoteCurrencyCode(quoteCurrencyCode)
                 .setBaseCurrencyName(baseCurrencyName)
-                .setQuoteCurrencyName(quoteCurrencyName)
-                .build();
+                .setQuoteCurrencyName(quoteCurrencyName);
+    }
+
+    @Override
+    public bisq.common.protobuf.Market toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static Market fromProto(bisq.common.protobuf.Market proto) {
@@ -76,9 +84,21 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
                 proto.getQuoteCurrencyName());
     }
 
+    public String getQuoteCurrencyDisplayName() {
+        return FiatCurrency.isFiat(quoteCurrencyCode)
+                ? FiatCurrencyRepository.getDisplayName(quoteCurrencyCode).orElse(quoteCurrencyName)
+                : quoteCurrencyName;
+    }
+
+    public String getBaseCurrencyDisplayName() {
+        return FiatCurrency.isFiat(baseCurrencyCode)
+                ? FiatCurrencyRepository.getDisplayName(baseCurrencyCode).orElse(baseCurrencyName)
+                : baseCurrencyName;
+    }
+
     //todo (refactor, low prio) make static utils
-    public String getNonBitcoinCurrency() {
-        return isFiat() ? quoteCurrencyName : baseCurrencyName;
+    public String getFiatCurrencyName() {
+        return isFiat() ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
     }
 
     public boolean isFiat() {
@@ -89,13 +109,13 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
         return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
     }
 
-    public String getMarketName() {
-        return baseCurrencyName + QUOTE_SEPARATOR + quoteCurrencyName;
+    public String getMarketDisplayName() {
+        return getBaseCurrencyDisplayName() + QUOTE_SEPARATOR + getQuoteCurrencyDisplayName();
     }
 
     @Override
     public String toString() {
-        return getNonBitcoinCurrency() + " (" + getMarketCodes() + ")";
+        return getFiatCurrencyName() + " (" + getMarketCodes() + ")";
     }
 
     @Override

@@ -17,7 +17,8 @@
 
 package bisq.network.p2p;
 
-import bisq.common.util.FileUtils;
+import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
@@ -91,7 +92,7 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         OutputStream outputStream = Channels.newOutputStream(serverToClientSocketChannel);
-        requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
+        requestNetworkEnvelope.writeDelimitedTo(outputStream);
 
         List<NetworkEnvelope> receivedNetworkEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
         assertThat(receivedNetworkEnvelopes).containsExactly(requestNetworkEnvelope);
@@ -102,8 +103,8 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         OutputStream outputStream = Channels.newOutputStream(serverToClientSocketChannel);
-        requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
-        requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
+        requestNetworkEnvelope.writeDelimitedTo(outputStream);
+        requestNetworkEnvelope.writeDelimitedTo(outputStream);
 
         List<NetworkEnvelope> receivedNetworkEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
         assertThat(receivedNetworkEnvelopes)
@@ -116,7 +117,7 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        requestNetworkEnvelope.toProto().writeDelimitedTo(byteArrayOutputStream);
+        requestNetworkEnvelope.writeDelimitedTo(byteArrayOutputStream);
 
         byte[] messageInBytes = byteArrayOutputStream.toByteArray();
         // 176 bytes
@@ -137,7 +138,7 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        requestNetworkEnvelope.toProto().writeDelimitedTo(byteArrayOutputStream);
+        requestNetworkEnvelope.writeDelimitedTo(byteArrayOutputStream);
 
         byte[] messageInBytes = byteArrayOutputStream.toByteArray();
         // 176 bytes
@@ -172,7 +173,7 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         OutputStream outputStream = Channels.newOutputStream(serverToClientSocketChannel);
-        requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
+        requestNetworkEnvelope.writeDelimitedTo(outputStream);
 
         // read first 100 bytes
         List<NetworkEnvelope> receivedNetworkEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
@@ -187,11 +188,11 @@ public class NetworkEnvelopeSocketChannelTests {
         List<TransportType> supportedTransportTypes = new ArrayList<>(1);
         supportedTransportTypes.add(TransportType.CLEAR);
 
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
+        Capability peerCapability = createCapability(Address.localHost(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationService authorizationService = createAuthorizationService();
 
-        Capability responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes, new ArrayList<>());
+        Capability responderCapability = createCapability(Address.localHost(1234), supportedTransportTypes);
 
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
@@ -217,4 +218,7 @@ public class NetworkEnvelopeSocketChannelTests {
                 Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 
+    private static Capability createCapability(Address address, List<TransportType> supportedTransportTypes) {
+        return new Capability(Capability.VERSION, address, supportedTransportTypes, new ArrayList<>(), ApplicationVersion.getVersion().getVersionAsString());
+    }
 }

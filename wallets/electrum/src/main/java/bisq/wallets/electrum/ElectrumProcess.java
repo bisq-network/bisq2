@@ -17,7 +17,8 @@
 
 package bisq.wallets.electrum;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.OS;
+import bisq.common.platform.PlatformUtils;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.process.BisqProcess;
@@ -49,8 +50,8 @@ public class ElectrumProcess implements BisqProcess {
     public void start() {
         if (!binaryPath.toFile().exists()) {
             unpackArchive();
-            if (OsUtils.isLinux()) {
-                OsUtils.makeBinaryExecutable(binaryPath);
+            if (OS.isLinux()) {
+                PlatformUtils.makeBinaryExecutable(binaryPath);
             }
         }
         createAndStartProcess();
@@ -90,15 +91,15 @@ public class ElectrumProcess implements BisqProcess {
     }
 
     public static String getBinarySuffix() {
-        switch (OsUtils.getOperatingSystem()) {
+        switch (OS.getOS()) {
             case LINUX:
                 return ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX;
-            case MAC:
+            case MAC_OS:
                 return ElectrumBinaryExtractor.MAC_OS_BINARY_SUFFIX;
-            case WIN:
+            case WINDOWS:
                 return ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX;
             default:
-                throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OsUtils.getOSName());
+                throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OS.getOsName());
         }
     }
 
@@ -117,16 +118,16 @@ public class ElectrumProcess implements BisqProcess {
         //todo defined in gradle, we could let gradle write the version to a file which we read
         String version = "4.2.2";
         // File name: electrum-4.2.2.dmg / electrum-4.2.2.exe / electrum-4.2.2-x86_64.AppImage
-        switch (OsUtils.getOperatingSystem()) {
+        switch (OS.getOS()) {
             case LINUX:
                 return destDirPath.resolve("electrum-" + version + "-x86_64." + binarySuffix);
-            case MAC:
+            case MAC_OS:
                 return destDirPath.resolve("Electrum." + binarySuffix)
                         .resolve("Contents/MacOS/run_electrum");
-            case WIN:
+            case WINDOWS:
                 return destDirPath.resolve("electrum-" + version + "." + binarySuffix);
             default:
-                throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OsUtils.getOSName());
+                throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OS.getOsName());
         }
     }
 }

@@ -41,6 +41,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     private final Optional<String> channelAdminId;
     private final List<String> channelModeratorIds;
     private final String channelTitle;
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final String description;
 
     public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelTitle) {
@@ -69,13 +70,12 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     }
 
     @Override
-    public bisq.chat.protobuf.ChatChannel toProto() {
+    public bisq.chat.protobuf.ChatChannel.Builder getBuilder(boolean serializeForHash) {
         bisq.chat.protobuf.CommonPublicChatChannel.Builder builder = bisq.chat.protobuf.CommonPublicChatChannel.newBuilder()
                 .setChannelTitle(channelTitle)
                 .addAllChannelModeratorIds(channelModeratorIds);
         channelAdminId.ifPresent(builder::setChannelAdminId);
-        return getChatChannelBuilder()
-                .setCommonPublicChatChannel(builder).build();
+        return getChatChannelBuilder().setCommonPublicChatChannel(builder);
     }
 
     public static CommonPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,

@@ -34,11 +34,25 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class BisqEasyTradeMessage extends TradeMessage {
-    protected final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
 
     protected BisqEasyTradeMessage(String id, String tradeId, String protocolVersion, NetworkId sender, NetworkId receiver) {
         super(id, tradeId, protocolVersion, sender, receiver);
     }
+
+    @Override
+    public bisq.trade.protobuf.TradeMessage.Builder getValueBuilder(boolean serializeForHash) {
+        return getTradeMessageBuilder(serializeForHash)
+                .setBisqEasyTradeMessage(toBisqEasyTradeMessageProto(serializeForHash));
+    }
+
+    protected bisq.trade.protobuf.BisqEasyTradeMessage toBisqEasyTradeMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyTradeMessage.Builder builder = getBisqEasyTradeMessageBuilder(serializeForHash);
+        return resolveBuilder(builder, serializeForHash).build();
+    }
+
+    abstract protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash);
 
     public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         switch (proto.getBisqEasyTradeMessage().getMessageCase()) {

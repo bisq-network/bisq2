@@ -19,8 +19,11 @@ package bisq.settings;
 
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
+import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
+import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
+import bisq.common.locale.LocaleRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
@@ -32,6 +35,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -81,6 +85,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getFavouriteMarkets().addObserver(this::persist);
         getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(value -> persist());
         getMaxTradePriceDeviation().addObserver(value -> persist());
+        getShowBuyOffers().addObserver(value -> persist());
+        getShowOfferListExpanded().addObserver(value -> persist());
+        getShowMarketSelectionListCollapsed().addObserver(value -> persist());
+        getBackupLocation().addObserver(value -> persist());
+
         isInitialized = true;
 
         if (DevMode.isDevMode() && getMinRequiredReputationScore().get() == DEFAULT_MIN_REQUIRED_REPUTATION_SCORE) {
@@ -114,8 +123,15 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     @Override
     public void onPersistedApplied(SettingsStore persisted) {
-        LanguageRepository.setDefaultLanguage(getLanguageCode().get());
-        Res.setLanguage(getLanguageCode().get());
+        String languageCode = getLanguageCode().get();
+
+        LanguageRepository.setDefaultLanguage(languageCode);
+        Res.setLanguage(languageCode);
+        Locale currentLocale = LocaleRepository.getDefaultLocale();
+        Locale newLocale = new Locale(languageCode, currentLocale.getCountry(), currentLocale.getVariant());
+        LocaleRepository.setDefaultLocale(newLocale);
+        CountryRepository.applyDefaultLocale(newLocale);
+        FiatCurrencyRepository.setLocale(newLocale);
     }
 
 
@@ -191,6 +207,22 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.favouriteMarkets;
     }
 
+    public Observable<Boolean> getShowBuyOffers() {
+        return persistableStore.showBuyOffers;
+    }
+
+    public Observable<Boolean> getShowOfferListExpanded() {
+        return persistableStore.showOfferListExpanded;
+    }
+
+    public Observable<Boolean> getShowMarketSelectionListCollapsed() {
+        return persistableStore.showMarketSelectionListCollapsed;
+    }
+
+    public Observable<String> getBackupLocation() {
+        return persistableStore.backupLocation;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // DontShowAgainMap
@@ -210,29 +242,31 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void setCookie(CookieKey key, boolean value) {
-        getCookie().putAsBoolean(key, value);
-        persist();
-        updateCookieChangedFlag();
+        setCookie(key, null, value);
     }
 
     public void setCookie(CookieKey key, String subKey, boolean value) {
-        key.setSubKey(subKey);
-        setCookie(key, value);
-    }
-
-    public void setCookie(CookieKey key, double value) {
-        getCookie().putAsDouble(key, value);
+        getCookie().putAsBoolean(key, subKey, value);
         persist();
         updateCookieChangedFlag();
     }
 
+    public void setCookie(CookieKey key, double value) {
+        setCookie(key, null, value);
+    }
+
     public void setCookie(CookieKey key, String subKey, double value) {
-        key.setSubKey(subKey);
-        setCookie(key, value);
+        getCookie().putAsDouble(key, subKey, value);
+        persist();
+        updateCookieChangedFlag();
     }
 
     public void setCookie(CookieKey key, String value) {
-        getCookie().putAsString(key, value);
+        setCookie(key, null, value);
+    }
+
+    public void setCookie(CookieKey key, @Nullable String subKey, String value) {
+        getCookie().putAsString(key, subKey, value);
         persist();
         updateCookieChangedFlag();
     }
@@ -242,15 +276,9 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void removeCookie(CookieKey key, @Nullable String subKey) {
-        key.setSubKey(subKey);
-        getCookie().remove(key);
+        getCookie().remove(key, subKey);
         persist();
         updateCookieChangedFlag();
-    }
-
-    public void setCookie(CookieKey key, String subKey, String value) {
-        key.setSubKey(subKey);
-        setCookie(key, value);
     }
 
     private void updateCookieChangedFlag() {

@@ -16,6 +16,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.util.Callback;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,14 +107,18 @@ public class ChatMentionPopupMenu extends BisqPopup {
     }
 
     @Getter
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class ListItem implements Comparable<ListItem> {
         public static final double CELL_HEIGHT = 30;
 
+        @EqualsAndHashCode.Include
         private final UserProfile userProfile;
+
         private final String userName;
 
         public ListItem(UserProfile userProfile) {
             this.userProfile = userProfile;
+
             userName = userProfile.getUserName();
         }
 

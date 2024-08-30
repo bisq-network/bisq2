@@ -22,8 +22,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.NetworkService;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -79,16 +79,23 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof UserProfile) {
-            processUserProfileAdded((UserProfile) distributedData);
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            processUserProfileAddedOrRefreshed(userProfile);
         }
     }
 
-
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        processUserProfileRemoved(authenticatedData);
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            processUserProfileRemoved(userProfile);
+        }
+    }
+
+    @Override
+    public void onAuthenticatedDataRefreshed(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+            processUserProfileAddedOrRefreshed(userProfile);
+        }
     }
 
 
@@ -98,6 +105,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
 
     public Optional<UserProfile> findUserProfile(String id) {
         return Optional.ofNullable(getUserProfileById().get(id));
+    }
+
+    // We update the publishDate in our managed userProfiles. Only if the userProfile is not found we return
+    // the one used for requesting
+    public UserProfile getManagedUserProfile(UserProfile userProfile) {
+        return findUserProfile(userProfile.getId()).orElse(userProfile);
     }
 
     public List<UserProfile> getUserProfiles() {
@@ -139,9 +152,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
     }
 
-    private void processUserProfileAdded(UserProfile userProfile) {
-        Optional<UserProfile> optionalUserProfile = findUserProfile(userProfile.getId());
-        if (optionalUserProfile.isEmpty() || !optionalUserProfile.get().equals(userProfile)) {
+    private void processUserProfileAddedOrRefreshed(UserProfile userProfile) {
+        Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
+        if (existingUserProfile.isEmpty() || !existingUserProfile.get().equals(userProfile)) {
             if (verifyUserProfile(userProfile)) {
                 ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
                 synchronized (persistableStore) {
@@ -150,22 +163,30 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                 }
                 numUserProfiles.set(userProfileById.values().size());
                 persist();
+
+                double updated = getUserProfiles().stream()
+                        .mapToLong(UserProfile::getVersion)
+                        .average()
+                        .orElse(0);
+                if (updated >= 0.5) {
+                    Node.setPreferredVersion(1);
+                }
+            }
+        } else {
+            if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
+                existingUserProfile.get().setPublishDate(userProfile.getPublishDate());
             }
         }
     }
 
-    private void processUserProfileRemoved(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof UserProfile) {
-            UserProfile userProfile = (UserProfile) distributedData;
-            ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
-            synchronized (persistableStore) {
-                removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
-                userProfileById.remove(userProfile.getId());
-            }
-            numUserProfiles.set(userProfileById.values().size());
-            persist();
+    private void processUserProfileRemoved(UserProfile userProfile) {
+        ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
+        synchronized (persistableStore) {
+            removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
+            userProfileById.remove(userProfile.getId());
         }
+        numUserProfiles.set(userProfileById.values().size());
+        persist();
     }
 
     private boolean verifyUserProfile(UserProfile userProfile) {
@@ -182,15 +203,15 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return true;
     }
 
-
     private Map<String, Set<String>> getNymsByNickName() {
         return persistableStore.getNymsByNickName();
     }
 
     public ObservableHashMap<String, UserProfile> getUserProfileById() {
-        return persistableStore.getUserProfileById();
+        synchronized (persistableStore) {
+            return persistableStore.getUserProfileById();
+        }
     }
-
 
     private void addNymToNickNameHashMap(String nym, String nickName) {
         Map<String, Set<String>> nymsByNickName = getNymsByNickName();

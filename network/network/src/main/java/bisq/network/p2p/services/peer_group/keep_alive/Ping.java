@@ -40,8 +40,18 @@ public final class Ping implements EnvelopePayloadMessage, Request {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setPing(bisq.network.protobuf.Ping.newBuilder().setNonce(nonce)).build();
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setPing(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.Ping toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.Ping.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.Ping.newBuilder().setNonce(nonce);
     }
 
     public static Ping fromProto(bisq.network.protobuf.Ping proto) {

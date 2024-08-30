@@ -43,7 +43,6 @@ public class TorNode {
 
     private final Path dataDir;
 
-    private final int controlPort;
     private final int orPort;
     private final int dirPort;
 
@@ -58,11 +57,10 @@ public class TorNode {
     private Optional<String> relayKeyFingerprint = Optional.empty();
 
     @Builder
-    public TorNode(Type type, String nickname, Path dataDir, int controlPort, int orPort, int dirPort) {
+    public TorNode(Type type, String nickname, Path dataDir, int orPort, int dirPort) {
         this.type = type;
         this.nickname = nickname;
         this.dataDir = dataDir;
-        this.controlPort = controlPort;
         this.orPort = orPort;
         this.dirPort = dirPort;
         this.keysPath = dataDir.resolve("keys");

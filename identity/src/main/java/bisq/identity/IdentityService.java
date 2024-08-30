@@ -19,6 +19,8 @@ package bisq.identity;
 
 
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
+import bisq.network.NetworkIdService;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
@@ -52,6 +54,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private final KeyBundleService keyBundleService;
     private final NetworkService networkService;
     private final Object lock = new Object();
+    private final NetworkIdService networkIdService;
+    @Getter
+    private final Observable<RuntimeException> fatalException = new Observable<>();
 
     public IdentityService(PersistenceService persistenceService,
                            KeyBundleService keyBundleService,
@@ -59,6 +64,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.keyBundleService = keyBundleService;
         this.networkService = networkService;
+        networkIdService = networkService.getNetworkIdService();
     }
 
 
@@ -121,7 +127,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Identity getOrCreateDefaultIdentity() {
-        return persistableStore.getDefaultIdentity()
+        Optional<Identity> defaultIdentity = persistableStore.getDefaultIdentity();
+        defaultIdentity.ifPresent(this::maybeRecoverNetworkId);
+        return defaultIdentity
                 .orElseGet(() -> {
                     Identity identity = createIdentity(DEFAULT_IDENTITY_TAG);
                     synchronized (lock) {
@@ -137,7 +145,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      */
     public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(identityTag, keyPair);
-        NetworkId networkId = networkService.getOrCreateNetworkId(keyBundle, identityTag);
+        NetworkId networkId = networkIdService.getOrCreateNetworkId(keyBundle, identityTag);
         Identity identity = new Identity(identityTag, networkId, keyBundle);
 
         synchronized (lock) {
@@ -204,7 +212,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private void initializeActiveIdentities(TransportType transportType) {
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
-                .forEach(identity -> networkService.supplyInitializedNode(transportType, identity.getNetworkId()));
+                .forEach(identity -> {
+                    maybeRecoverNetworkId(identity);
+                    networkService.supplyInitializedNode(transportType, identity.getNetworkId());
+                });
     }
 
     private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag, Identity identity) {
@@ -220,7 +231,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Identity createIdentity(String identityTag) {
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
         KeyBundle keyBundle = keyBundleService.getOrCreateKeyBundle(keyId);
-        NetworkId networkId = networkService.getOrCreateNetworkId(keyBundle, identityTag);
+        NetworkId networkId = networkIdService.getOrCreateNetworkId(keyBundle, identityTag);
         return new Identity(identityTag, networkId, keyBundle);
     }
 
@@ -243,5 +254,25 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     Identity getOrCreateIdentity(String identityTag) {
         return findActiveIdentity(identityTag)
                 .orElseGet(() -> createAndInitializeNewActiveIdentity(identityTag).join());
+    }
+
+    private void maybeRecoverNetworkId(Identity identity) {
+        networkIdService.findNetworkId(identity.getTag())
+                .ifPresent(fromNetworkIdStore -> {
+                    NetworkId fromIdentityStore = identity.getNetworkId();
+                    if (!fromNetworkIdStore.equals(fromIdentityStore)) {
+                        String errorMessage = "Data inconsistency detected.\n" +
+                                "The inconsistent data got restored and requires a restart of the application.\n" +
+                                "Details:\n" +
+                                "The persisted networkId from our identity store does not match the persisted networkId from the networkIdStore.\n" +
+                                "The issue could have happened if the cache directory was deleted in versions before 2.1.0. " +
+                                "In that case the networkId from networkIdService got assigned a new random port.\n" +
+                                "Data:\n" +
+                                "FromIdentityStore=" + fromIdentityStore + "\nFromNetworkIdStore=" + fromNetworkIdStore;
+                        log.error(errorMessage);
+                        networkIdService.recoverInvalidNetworkIds(fromIdentityStore, identity.getTag());
+                        fatalException.set(new RuntimeException(errorMessage));
+                    }
+                });
     }
 }

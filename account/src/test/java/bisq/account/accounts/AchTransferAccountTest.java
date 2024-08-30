@@ -6,8 +6,7 @@ import bisq.account.protobuf.BankAccount;
 import bisq.account.protobuf.BankAccountPayload;
 import bisq.account.protobuf.CountryBasedAccount;
 import bisq.account.protobuf.CountryBasedAccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
+import bisq.account.protobuf.*;
 import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
@@ -54,8 +53,8 @@ class AchTransferAccountTest {
                     new bisq.common.locale.Region("regionCode", "regionName")));
 
     @Test
-    void toProto() {
-        var result = ACCOUNT.toProto();
+    void testToProto() {
+        var result = ACCOUNT.completeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("creationDate_", "memoizedHashCode")
@@ -63,7 +62,7 @@ class AchTransferAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = AchTransferAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

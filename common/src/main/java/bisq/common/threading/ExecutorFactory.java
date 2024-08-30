@@ -17,7 +17,7 @@
 
 package bisq.common.threading;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -28,17 +28,17 @@ import java.util.concurrent.*;
 public class ExecutorFactory {
     public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
 
-    public static void shutdownAndAwaitTermination(ExecutorService executor) {
-        shutdownAndAwaitTermination(executor, 100);
+    public static boolean shutdownAndAwaitTermination(ExecutorService executor) {
+        return shutdownAndAwaitTermination(executor, 100);
     }
 
-    public static void shutdownAndAwaitTermination(ExecutorService executor, long timeoutMs) {
-        shutdownAndAwaitTermination(executor, timeoutMs, TimeUnit.MILLISECONDS);
+    public static boolean shutdownAndAwaitTermination(ExecutorService executor, long timeoutMs) {
+        return shutdownAndAwaitTermination(executor, timeoutMs, TimeUnit.MILLISECONDS);
     }
 
-    public static void shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
+    public static boolean shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
         //noinspection UnstableApiUsage
-        MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit);
+        return MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit);
     }
 
     public static ExecutorService newSingleThreadExecutor(String name) {
@@ -91,7 +91,7 @@ public class ExecutorFactory {
      * Used when queuing is desired.
      */
     public static ExecutorService newFixedThreadPool(String name) {
-        return newFixedThreadPool(name, OsUtils.availableProcessors());
+        return newFixedThreadPool(name, PlatformUtils.availableProcessors());
     }
 
     public static ExecutorService newFixedThreadPool(String name, int numThreads) {

@@ -34,11 +34,16 @@ public final class ByteArrayMapEntry implements PersistableProto {
         this.value = value;
     }
 
-    public bisq.common.protobuf.ByteArrayMapEntry toProto() {
+    @Override
+    public bisq.common.protobuf.ByteArrayMapEntry toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.common.protobuf.ByteArrayMapEntry.Builder getBuilder(boolean serializeForHash) {
         return bisq.common.protobuf.ByteArrayMapEntry.newBuilder()
-                .setKey(key.toProto())
-                .setValue(value.toProto())
-                .build();
+                .setKey(key.toProto(serializeForHash))
+                .setValue(value.toProto(serializeForHash));
     }
 
     public static ByteArrayMapEntry fromProto(bisq.common.protobuf.ByteArrayMapEntry proto) {

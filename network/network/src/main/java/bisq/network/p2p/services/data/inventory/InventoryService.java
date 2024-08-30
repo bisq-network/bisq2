@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataService;
@@ -42,13 +42,14 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 @Slf4j
 public class InventoryService {
-
     @Getter
     public static final class Config {
         private final int maxSizeInKb;  // Default config value is 2000 (about 2MB)
-        private final long repeatRequestInterval;
+        private final long repeatRequestInterval; // Default 10 min
         private final int maxSeedsForRequest;
         private final int maxPeersForRequest;
+        private final int maxPendingRequestsAtStartup; // Default 5
+        private final int maxPendingRequestsAtPeriodicRequests; // Default 2
         private final List<InventoryFilterType> myPreferredFilterTypes; // Lower list index means higher preference
 
         public static Config from(com.typesafe.config.Config config) {
@@ -56,6 +57,8 @@ public class InventoryService {
                     SECONDS.toMillis(config.getLong("repeatRequestIntervalInSeconds")),
                     config.getInt("maxSeedsForRequest"),
                     config.getInt("maxPeersForRequest"),
+                    config.getInt("maxPendingRequestsAtStartup"),
+                    config.getInt("maxPendingRequestsAtPeriodicRequests"),
                     new ArrayList<>(config.getEnumList(InventoryFilterType.class, "myPreferredFilterTypes")));
         }
 
@@ -63,16 +66,23 @@ public class InventoryService {
                       long repeatRequestInterval,
                       int maxSeedsForRequest,
                       int maxPeersForRequest,
+                      int maxPendingRequestsAtStartup,
+                      int maxPendingRequestsAtPeriodicRequests,
                       List<InventoryFilterType> myPreferredFilterTypes) {
             this.maxSizeInKb = maxSizeInKb;
             this.repeatRequestInterval = repeatRequestInterval;
             this.maxSeedsForRequest = maxSeedsForRequest;
             this.maxPeersForRequest = maxPeersForRequest;
+            this.maxPendingRequestsAtStartup = maxPendingRequestsAtStartup;
+            this.maxPendingRequestsAtPeriodicRequests = maxPendingRequestsAtPeriodicRequests;
             this.myPreferredFilterTypes = myPreferredFilterTypes;
         }
     }
 
+    @Getter
+    private final Config config;
     private final InventoryResponseService inventoryResponseService;
+    @Getter
     private final InventoryRequestService inventoryRequestService;
 
     public InventoryService(Config config,
@@ -80,6 +90,7 @@ public class InventoryService {
                             PeerGroupManager peerGroupManager,
                             DataService dataService,
                             Set<Feature> features) {
+        this.config = config;
         int maxSize = (int) Math.round(ByteUnit.KB.toBytes(config.getMaxSizeInKb()));
         Inventory.setMaxSize(maxSize);
         Map<InventoryFilterType, FilterService<? extends InventoryFilter>> supportedFilterServices = new HashMap<>();

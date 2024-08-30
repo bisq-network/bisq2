@@ -22,21 +22,24 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;
-import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
 
@@ -44,7 +47,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
+public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
     public static BisqEasyOpenTradeMessage createTakeOfferMessage(String tradeId,
                                                                   String channelId,
                                                                   UserProfile senderUserProfile,
@@ -61,7 +64,9 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 bisqEasyOffer);
     }
 
-    private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    // Metadata needs to be symmetric with BisqEasyOpenTradeMessageReaction.
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;
@@ -79,7 +84,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                                     boolean wasEdited,
                                     Optional<UserProfile> mediator,
                                     ChatMessageType chatMessageType,
-                                    Optional<BisqEasyOffer> bisqEasyOffer) {
+                                    Optional<BisqEasyOffer> bisqEasyOffer,
+                                    List<BisqEasyOpenTradeMessageReaction> reactions) {
         this(tradeId,
                 messageId,
                 ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
@@ -93,7 +99,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 wasEdited,
                 mediator,
                 chatMessageType,
-                bisqEasyOffer);
+                bisqEasyOffer,
+                reactions);
     }
 
     private BisqEasyOpenTradeMessage(String tradeId,
@@ -109,14 +116,13 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                                      boolean wasEdited,
                                      Optional<UserProfile> mediator,
                                      ChatMessageType chatMessageType,
-                                     Optional<BisqEasyOffer> bisqEasyOffer) {
+                                     Optional<BisqEasyOffer> bisqEasyOffer,
+                                     List<BisqEasyOpenTradeMessageReaction> reactions) {
         super(messageId, chatChannelDomain, channelId, senderUserProfile, receiverUserProfileId,
-                receiverNetworkId, text, citation, date, wasEdited, chatMessageType);
+                receiverNetworkId, text, citation, date, wasEdited, chatMessageType, reactions);
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //908
     }
 
     private BisqEasyOpenTradeMessage(String tradeId,
@@ -137,31 +143,35 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 Optional.empty(),
                 new Date().getTime(),
                 false,
-                chatMessageType);
+                chatMessageType,
+                new ArrayList<>());
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //884
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
-                .build();
+    public bisq.chat.protobuf.ChatMessage.Builder getValueBuilder(boolean serializeForHash) {
+        return getChatMessageBuilder(serializeForHash)
+                .setBisqEasyOpenTradeMessage(toBisqEasyOpenTradeMessageProto(serializeForHash));
     }
 
-    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
-        bisq.chat.protobuf.BisqEasyOpenTradeMessage.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeMessage.newBuilder()
+    private bisq.chat.protobuf.BisqEasyOpenTradeMessage toBisqEasyOpenTradeMessageProto(boolean serializeForHash) {
+        return resolveBuilder(getBisqEasyOpenTradeMessageBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.chat.protobuf.BisqEasyOpenTradeMessage.Builder getBisqEasyOpenTradeMessageBuilder(boolean serializeForHash) {
+        var builder = bisq.chat.protobuf.BisqEasyOpenTradeMessage.newBuilder()
                 .setTradeId(tradeId)
                 .setReceiverUserProfileId(receiverUserProfileId)
-                .setReceiverNetworkId(receiverNetworkId.toProto())
-                .setSender(senderUserProfile.toProto());
-        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto()));
-        return getChatMessageBuilder()
-                .setBisqEasyOpenTradeMessage(builder)
-                .build();
+                .setReceiverNetworkId(receiverNetworkId.toProto(serializeForHash))
+                .setSender(senderUserProfile.toProto(serializeForHash))
+                .addAllChatMessageReactions(chatMessageReactions.stream()
+                        .map(reaction -> reaction.getValueBuilder(serializeForHash).build())
+                        .collect(Collectors.toList()));
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(serializeForHash)));
+        bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto(serializeForHash)));
+        return builder;
     }
 
     public static BisqEasyOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
@@ -189,7 +199,10 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 baseProto.getWasEdited(),
                 mediator,
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                bisqEasyOffer
+                bisqEasyOffer,
+                protoMessage.getChatMessageReactionsList().stream()
+                        .map(BisqEasyOpenTradeMessageReaction::fromProto)
+                        .collect(Collectors.toList())
         );
     }
 
@@ -203,4 +216,14 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
         return bisqEasyOffer.isPresent();
     }
 
+    @Override
+    public boolean canShowReactions() {
+        return true;
+    }
+
+    @Override
+    public void addChatMessageReaction(ChatMessageReaction newReaction) {
+        BisqEasyOpenTradeMessageReaction newBisqEasyOpenTradeReaction = (BisqEasyOpenTradeMessageReaction) newReaction;
+        addPrivateChatMessageReaction(newBisqEasyOpenTradeReaction);
+    }
 }

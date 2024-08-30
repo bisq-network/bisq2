@@ -21,17 +21,19 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.user.profile.UserProfile;
-import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
@@ -40,8 +42,10 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
-    private final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPartyPrivateChatMessageReaction> {
+    // Metadata needs to be symmetric with TwoPartyPrivateChatMessageReaction.
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
@@ -53,7 +57,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                       Optional<Citation> citation,
                                       long date,
                                       boolean wasEdited,
-                                      ChatMessageType chatMessageType) {
+                                      ChatMessageType chatMessageType,
+                                      List<TwoPartyPrivateChatMessageReaction> reactions) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -64,31 +69,34 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 citation,
                 date,
                 wasEdited,
-                chatMessageType);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //1245
+                chatMessageType,
+                reactions);
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
-                .build();
+    public bisq.chat.protobuf.ChatMessage.Builder getValueBuilder(boolean serializeForHash) {
+        return getChatMessageBuilder(serializeForHash)
+                .setTwoPartyPrivateChatMessage(toTwoPartyPrivateChatMessageProto(serializeForHash));
     }
 
-    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
-        return getChatMessageBuilder()
-                .setTwoPartyPrivateChatMessage(bisq.chat.protobuf.TwoPartyPrivateChatMessage.newBuilder()
-                        .setReceiverUserProfileId(receiverUserProfileId)
-                        .setReceiverNetworkId(receiverNetworkId.toProto())
-                        .setSender(senderUserProfile.toProto()))
-                .build();
+    private bisq.chat.protobuf.TwoPartyPrivateChatMessage toTwoPartyPrivateChatMessageProto(boolean serializeForHash) {
+        return resolveBuilder(getTwoPartyPrivateChatMessageBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.chat.protobuf.TwoPartyPrivateChatMessage.Builder getTwoPartyPrivateChatMessageBuilder(boolean serializeForHash) {
+        return bisq.chat.protobuf.TwoPartyPrivateChatMessage.newBuilder()
+                .setReceiverUserProfileId(receiverUserProfileId)
+                .setReceiverNetworkId(receiverNetworkId.toProto(serializeForHash))
+                .setSender(senderUserProfile.toProto(serializeForHash))
+                .addAllChatMessageReactions(chatMessageReactions.stream()
+                        .map(reaction -> reaction.getValueBuilder(serializeForHash).build())
+                        .collect(Collectors.toList()));
     }
 
     public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
+        Optional<Citation> citation = baseProto.hasCitation()
+                ? Optional.of(Citation.fromProto(baseProto.getCitation()))
+                : Optional.empty();
         bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
         return new TwoPartyPrivateChatMessage(
                 baseProto.getId(),
@@ -101,11 +109,26 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()));
+                ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                privateChatMessage.getChatMessageReactionsList().stream()
+                        .map(TwoPartyPrivateChatMessageReaction::fromProto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @Override
     public double getCostFactor() {
         return getCostFactor(0.1, 0.3);
+    }
+
+    @Override
+    public boolean canShowReactions() {
+        return true;
+    }
+
+    @Override
+    public void addChatMessageReaction(ChatMessageReaction newReaction) {
+        TwoPartyPrivateChatMessageReaction newTwoPartyReaction = (TwoPartyPrivateChatMessageReaction) newReaction;
+        addPrivateChatMessageReaction(newTwoPartyReaction);
     }
 }

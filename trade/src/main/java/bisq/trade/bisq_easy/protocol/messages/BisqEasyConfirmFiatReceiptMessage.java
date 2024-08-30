@@ -44,12 +44,18 @@ public final class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessag
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyConfirmFiatReceiptMessage(
-                                bisq.trade.protobuf.BisqEasyConfirmFiatReceiptMessage.newBuilder()))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyConfirmFiatReceiptMessage(toBisqEasyConfirmFiatReceiptMessageProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyConfirmFiatReceiptMessage toBisqEasyConfirmFiatReceiptMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyConfirmFiatReceiptMessage.Builder builder = getBisqEasyConfirmFiatReceiptMessageBuilder(serializeForHash);
+        return resolveBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyConfirmFiatReceiptMessage.Builder getBisqEasyConfirmFiatReceiptMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyConfirmFiatReceiptMessage.newBuilder();
     }
 
     public static BisqEasyConfirmFiatReceiptMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

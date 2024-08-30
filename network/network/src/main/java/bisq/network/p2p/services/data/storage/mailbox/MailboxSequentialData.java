@@ -17,19 +17,19 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Date;
 
 @Getter
-@ToString
 @EqualsAndHashCode
 public final class MailboxSequentialData implements NetworkProto {
     private final MailboxData mailboxData;
@@ -38,6 +38,7 @@ public final class MailboxSequentialData implements NetworkProto {
     private final byte[] receiversPubKeyBytes;
     private final long created;
     private final int sequenceNumber;
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final PublicKey receiversPubKey;
 
     public MailboxSequentialData(MailboxData mailboxData,
@@ -95,15 +96,19 @@ public final class MailboxSequentialData implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.MailboxSequentialData toProto() {
+    public bisq.network.protobuf.MailboxSequentialData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.MailboxSequentialData.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.MailboxSequentialData.newBuilder()
-                .setMailboxData(mailboxData.toProto())
+                .setMailboxData(mailboxData.toProto(serializeForHash))
                 .setSenderPublicKeyHash(ByteString.copyFrom(senderPublicKeyHash))
                 .setReceiversPubKeyHash(ByteString.copyFrom(receiversPublicKeyHash))
                 .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes))
                 .setCreated(created)
-                .setSequenceNumber(sequenceNumber)
-                .build();
+                .setSequenceNumber(sequenceNumber);
     }
 
     public static MailboxSequentialData fromProto(bisq.network.protobuf.MailboxSequentialData proto) {
@@ -131,5 +136,18 @@ public final class MailboxSequentialData implements NetworkProto {
 
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());
+    }
+
+    @Override
+    public String toString() {
+        return "MailboxSequentialData{" +
+                "sequenceNumber=" + sequenceNumber +
+                ", created=" + new Date(created) + " (" + created + ")" +
+                ", senderPublicKeyHash=" + Hex.encode(senderPublicKeyHash) +
+                ", receiversPublicKeyHash=" + Hex.encode(receiversPublicKeyHash) +
+                ", receiversPubKeyBytes=" + Hex.encode(receiversPubKeyBytes) +
+                ", receiversPubKey=" + Hex.encode(receiversPubKey.getEncoded()) +
+                ", mailboxData=" + mailboxData +
+                '}';
     }
 }

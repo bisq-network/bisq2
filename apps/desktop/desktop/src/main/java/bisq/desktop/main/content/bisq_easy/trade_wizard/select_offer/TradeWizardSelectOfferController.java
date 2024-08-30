@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
@@ -34,7 +35,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpec;
@@ -123,6 +124,13 @@ public class TradeWizardSelectOfferController implements Controller {
         }
     }
 
+    public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
+        if (bitcoinPaymentMethods != null) {
+            model.setBitcoinPaymentMethods(bitcoinPaymentMethods);
+            resetSelectedOffer();
+        }
+    }
+
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             model.setFiatPaymentMethods(fiatPaymentMethods);
@@ -130,9 +138,9 @@ public class TradeWizardSelectOfferController implements Controller {
         }
     }
 
-    public void setAmountSpec(AmountSpec amountSpec) {
+    public void setQuoteSideAmountSpec(QuoteSideAmountSpec amountSpec) {
         if (amountSpec != null) {
-            model.setAmountSpec(amountSpec);
+            model.setQuoteSideAmountSpec(amountSpec);
             resetSelectedOffer();
         }
     }
@@ -152,7 +160,7 @@ public class TradeWizardSelectOfferController implements Controller {
     public void onActivate() {
         Direction direction = model.getDirection();
         Market market = model.getMarket();
-        AmountSpec amountSpec = model.getAmountSpec();
+        QuoteSideAmountSpec amountSpec = model.getQuoteSideAmountSpec();
         PriceSpec priceSpec = model.getPriceSpec();
 
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
@@ -271,15 +279,15 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
-                Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
-                if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
+                Monetary myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec(), model.getPriceSpec(), model.getMarket()).orElseThrow();
+                Monetary peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer).orElseThrow();
+                if (myQuoteSideMinOrFixedAmount.isGreaterThan(peersQuoteSideMaxOrFixedAmount, myQuoteSideMinOrFixedAmount.getLowPrecision())) {
                     return false;
                 }
 
-                Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
-                Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
-                if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
+                Monetary myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec(), model.getPriceSpec(), model.getMarket()).orElseThrow();
+                Monetary peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer).orElseThrow();
+                if (myQuoteSideMaxOrFixedAmount.isLessThan(peersQuoteSideMinOrFixedAmount, myQuoteSideMaxOrFixedAmount.getLowPrecision())) {
                     return false;
                 }
 
@@ -289,9 +297,18 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                Set<FiatPaymentMethod> takersPaymentMethodSet = new HashSet<>(model.getFiatPaymentMethods());
+                Set<BitcoinPaymentMethod> takersBitcoinPaymentMethodSet = new HashSet<>(model.getBitcoinPaymentMethods());
+                List<BitcoinPaymentMethod> matchingBitcoinPaymentMethods = peersOffer.getBaseSidePaymentMethodSpecs().stream()
+                        .filter(e -> takersBitcoinPaymentMethodSet.contains(e.getPaymentMethod()))
+                        .map(PaymentMethodSpec::getPaymentMethod)
+                        .collect(Collectors.toList());
+                if (matchingBitcoinPaymentMethods.isEmpty()) {
+                    return false;
+                }
+
+                Set<FiatPaymentMethod> takersFiatPaymentMethodSet = new HashSet<>(model.getFiatPaymentMethods());
                 List<FiatPaymentMethod> matchingFiatPaymentMethods = peersOffer.getQuoteSidePaymentMethodSpecs().stream()
-                        .filter(e -> takersPaymentMethodSet.contains(e.getPaymentMethod()))
+                        .filter(e -> takersFiatPaymentMethodSet.contains(e.getPaymentMethod()))
                         .map(PaymentMethodSpec::getPaymentMethod)
                         .collect(Collectors.toList());
                 if (matchingFiatPaymentMethods.isEmpty()) {

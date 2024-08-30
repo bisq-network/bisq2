@@ -20,10 +20,17 @@ public final class CashByMailAccount extends Account<CashByMailAccountPayload, F
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCashByMailAccount(bisq.account.protobuf.CashByMailAccount.newBuilder())
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setCashByMailAccount(toCashByMailAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.CashByMailAccount toCashByMailAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getCashByMailAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.CashByMailAccount.Builder getCashByMailAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.CashByMailAccount.newBuilder();
     }
 
     public static CashByMailAccount fromProto(bisq.account.protobuf.Account proto) {

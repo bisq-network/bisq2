@@ -26,6 +26,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -38,8 +39,8 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
     private final MaterialTextField statement;
     private final MaterialTextArea terms;
     private final Button saveButton, cancelButton;
-    private final Label nickName, nym;
-    protected final Label headlineLabel;
+    private final Label headlineLabel, nickName, nym, feedbackLabel;
+    protected final ProgressIndicator createProfileIndicator;
 
     public CreateNewProfileStep2View(CreateNewProfileStep2Model model, CreateNewProfileStep2Controller controller) {
         super(new VBox(25), model, controller);
@@ -97,7 +98,20 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
 
-        HBox buttons = new HBox(20, cancelButton, saveButton);
+        createProfileIndicator = new ProgressIndicator();
+        createProfileIndicator.setProgress(0);
+        createProfileIndicator.setMaxWidth(24);
+        createProfileIndicator.setMaxHeight(24);
+        createProfileIndicator.setManaged(false);
+        createProfileIndicator.setVisible(false);
+
+        feedbackLabel = new Label(Res.get("onboarding.createProfile.createProfile.busy"));
+        feedbackLabel.setManaged(false);
+        feedbackLabel.setVisible(false);
+        feedbackLabel.getStyleClass().add("bisq-text-18");
+
+        HBox.setMargin(feedbackLabel, new Insets(0, 0, 0, -10));
+        HBox buttons = new HBox(20, cancelButton, saveButton, createProfileIndicator, feedbackLabel);
         buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(40, 0, 0, 0));
@@ -117,6 +131,13 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nym.textProperty().bind(model.getNym());
         terms.textProperty().bindBidirectional(model.getTerms());
         statement.textProperty().bindBidirectional(model.getStatement());
+        saveButton.disableProperty().bind(model.getSaveButtonDisabled());
+        createProfileIndicator.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        createProfileIndicator.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        createProfileIndicator.progressProperty().bind(model.getCreateProfileProgress());
+        feedbackLabel.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        feedbackLabel.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
+
         saveButton.setOnAction((event) -> controller.onSave());
         cancelButton.setOnAction((event) -> controller.onCancel());
     }
@@ -128,6 +149,13 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nym.textProperty().unbind();
         terms.textProperty().unbindBidirectional(model.getTerms());
         statement.textProperty().unbindBidirectional(model.getStatement());
+        createProfileIndicator.managedProperty().unbind();
+        createProfileIndicator.visibleProperty().unbind();
+        createProfileIndicator.progressProperty().unbind();
+        feedbackLabel.managedProperty().unbind();
+        feedbackLabel.visibleProperty().unbind();
+
+        saveButton.disableProperty().unbind();
         saveButton.setOnAction(null);
         cancelButton.setOnAction(null);
     }

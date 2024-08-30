@@ -323,9 +323,10 @@ public class UserProfileSelection {
         }
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     public static class ListItem {
+        @EqualsAndHashCode.Include
         private final UserIdentity userIdentity;
 
         private ListItem(UserIdentity userIdentity) {
@@ -345,8 +346,12 @@ public class UserProfileSelection {
 
         private boolean isLeftAligned;
 
-        public UserProfileComboBox(ObservableList<ListItem> items, String description, int iconSize, boolean useMaterialStyle) {
+        public UserProfileComboBox(ObservableList<ListItem> items,
+                                   String description,
+                                   int iconSize,
+                                   boolean useMaterialStyle) {
             super(items, description);
+
             this.iconSize = iconSize;
             ((UserProfileSkin) skin).setIconSize(iconSize);
             ((UserProfileSkin) skin).setUseMaterialStyle(useMaterialStyle);

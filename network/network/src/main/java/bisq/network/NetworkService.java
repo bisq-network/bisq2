@@ -23,7 +23,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.NetworkUtils;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
@@ -41,13 +40,17 @@ import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageData;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -56,9 +59,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
-import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.keys.PubKey;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -72,6 +73,8 @@ import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static bisq.network.common.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.Listener;
@@ -95,7 +98,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Set<TransportType> supportedTransportTypes;
     @Getter
     private final Map<TransportType, Integer> defaultPortByTransportType;
-    private final KeyBundleService keyBundleService;
+    @Getter
+    private final NetworkIdService networkIdService;
     private final HttpClientsByTransport httpClientsByTransport;
     @Getter
     private final Optional<DataService> dataService;
@@ -122,9 +126,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
         defaultPortByTransportType = config.getDefaultPortByTransportType();
-        this.keyBundleService = keyBundleService;
         NetworkEnvelope.setNetworkVersion(config.getVersion());
 
+        networkIdService = new NetworkIdService(persistenceService, keyBundleService, supportedTransportTypes, defaultPortByTransportType);
         httpClientsByTransport = new HttpClientsByTransport();
 
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
@@ -169,14 +173,17 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.of(new NetworkLoadService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadSnapshot)) :
                 Optional.empty();
 
-        persistence = persistenceService.getOrCreatePersistence(this,
-                DbSubDirectory.CACHE,
-                persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
     }
 
     @Override
     public void onPersistedApplied(NetworkServiceStore persisted) {
         serviceNodesByTransport.addSeedNodes(persistableStore.getSeedNodes());
+        //noinspection deprecation
+        Map<String, NetworkId> networkIdByTag = persisted.getNetworkIdByTag();
+        if (!networkIdByTag.isEmpty()) {
+            networkIdService.migrateFromDeprecatedStore(networkIdByTag);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +193,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        NetworkId defaultNetworkId = getOrCreateDefaultNetworkId();
+        NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
         initializedDefaultNodeByTransport.putAll(serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId));
 
         // We use anyOf to complete as soon as we got at least one transport node initialized
@@ -259,11 +266,26 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
                                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        return anySuppliedInitializedNode(senderNetworkIdWithKeyPair.getNetworkId())
+        KeyPair senderKeyPair = senderNetworkIdWithKeyPair.getKeyPair();
+        NetworkId senderNetworkId = senderNetworkIdWithKeyPair.getNetworkId();
+        // Before sending, we might need to establish a new connection to the peer. As that could take soe time,
+        // we apply here already the CONNECTING MessageDeliveryStatus so that the UI can give visual feedback about
+        // the state.
+        if (envelopePayloadMessage instanceof AckRequestingMessage ackRequestingMessage) {
+            resendMessageService.ifPresent(resendService ->
+                    resendService.registerResendMessageData(new ResendMessageData(ackRequestingMessage,
+                            receiverNetworkId,
+                            senderKeyPair,
+                            senderNetworkId,
+                            MessageDeliveryStatus.CONNECTING,
+                            System.currentTimeMillis())));
+        }
+
+        return anySuppliedInitializedNode(senderNetworkId)
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
-                                senderNetworkIdWithKeyPair.getKeyPair(),
-                                senderNetworkIdWithKeyPair.getNetworkId()),
+                                senderKeyPair,
+                                senderNetworkId),
                         NETWORK_IO_POOL));
     }
 
@@ -281,21 +303,47 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 NETWORK_IO_POOL);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Add/remove data
+    // AuthenticatedData
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
-        checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+    public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData,
+                                                                       KeyPair keyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when publishAuthenticatedData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
 
-    public CompletableFuture<BroadcastResult> removeAuthenticatedData(DistributedData distributedData, KeyPair ownerKeyPair) {
-        checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
+    public CompletableFuture<BroadcastResult> refreshAuthenticatedData(DistributedData distributedData,
+                                                                       KeyPair keyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when refreshAuthenticatedData is called.");
+        DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
+        return dataService.get().refreshAuthenticatedData(authenticatedData, keyPair);
+    }
+
+    public CompletableFuture<BroadcastResult> removeAuthenticatedData(DistributedData distributedData,
+                                                                      KeyPair ownerKeyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when removeAuthenticatedData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
     }
+
+    public Optional<Long> findCreationDate(DistributedData distributedData, Predicate<DistributedData> predicate) {
+        return dataService.flatMap(dataService -> dataService.getStorageService().getOrCreateAuthenticatedDataStore(distributedData.getClassName()).join()
+                .getPersistableStore().getMap().values().stream()
+                .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
+                .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
+                .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                .filter(sequentialData -> predicate.test(sequentialData.getAuthenticatedData().getDistributedData()))
+                .map(AuthenticatedSequentialData::getCreated)
+                .findAny());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // AuthorizedData
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                                                                     KeyPair keyPair) {
@@ -307,8 +355,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                                                     PrivateKey authorizedPrivateKey,
                                                                     PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+        log.info("Publish authorizedData: {}", authorizedDistributedData.getClassName());
         try {
-            byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
+            byte[] signature = SignatureUtil.sign(authorizedDistributedData.serializeForHash(), authorizedPrivateKey);
             AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, Optional.of(signature), authorizedPublicKey);
             return dataService.get().addAuthorizedData(authorizedData, keyPair);
         } catch (GeneralSecurityException e) {
@@ -330,6 +379,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, authorizedPublicKey);
         return dataService.get().removeAuthorizedData(authorizedData, ownerKeyPair);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // AppendOnlyData
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadcastResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
@@ -433,66 +487,28 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // NetworkId
+    // Check peer's online state (In case of Tor it checks if the onionservice is published)
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public NetworkId getOrCreateDefaultNetworkId() {
-        // keyBundleService creates the defaultKeyBundle at initialize, and is called before we get initialized
-        KeyBundle keyBundle = keyBundleService.findDefaultKeyBundle().orElseThrow();
-        return getOrCreateNetworkId(keyBundle, "default");
+    public CompletableFuture<Map<TransportType, Boolean>> isPeerOnline(NetworkId networkId,
+                                                                       AddressByTransportTypeMap peer) {
+        return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer),
+                NETWORK_IO_POOL);
     }
 
-    public NetworkId getOrCreateNetworkId(KeyBundle keyBundle, String tag) {
-        return persistableStore.findNetworkId(tag)
-                .orElseGet(() -> createNetworkId(keyBundle, tag));
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Expose pending ResendMessageData and ConfidentialMessageService for higher level services
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Set<ResendMessageData> getPendingResendMessageDataSet() {
+        return resendMessageService.map(ResendMessageService::getPendingResendMessageDataSet).orElse(new HashSet<>());
     }
 
-    private NetworkId createNetworkId(KeyBundle keyBundle, String tag) {
-        AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
-        supportedTransportTypes.forEach(transportType -> {
-            int port = getPortByTransport(tag, transportType);
-            Address address = getAddressByTransport(keyBundle, port, transportType);
-            addressByTransportTypeMap.put(transportType, address);
-        });
-
-        KeyPair keyPair = keyBundle.getKeyPair();
-        PubKey pubKey = new PubKey(keyPair.getPublic(), keyBundle.getKeyId());
-        NetworkId networkId = new NetworkId(addressByTransportTypeMap, pubKey);
-        persistableStore.getNetworkIdByTag().put(tag, networkId);
-        persist();
-        return networkId;
-    }
-
-    private int getPortByTransport(String tag, TransportType transportType) {
-        boolean isDefault = tag.equals("default");
-        switch (transportType) {
-            case TOR:
-                return isDefault ?
-                        defaultPortByTransportType.computeIfAbsent(TransportType.TOR, key -> NetworkUtils.selectRandomPort()) :
-                        NetworkUtils.selectRandomPort();
-            case I2P:
-                  /*  return isDefault ?
-                            defaultPorts.computeIfAbsent(TransportType.I2P, key-> NetworkUtils.selectRandomPort()) :
-                            NetworkUtils.selectRandomPort();*/
-                throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR:
-                return isDefault ?
-                        defaultPortByTransportType.computeIfAbsent(TransportType.CLEAR, key -> NetworkUtils.findFreeSystemPort()) :
-                        NetworkUtils.findFreeSystemPort();
-        }
-        throw new RuntimeException("getPortByTransport called with unsupported transportType " + transportType);
-    }
-
-    private Address getAddressByTransport(KeyBundle keyBundle, int port, TransportType transportType) {
-        switch (transportType) {
-            case TOR:
-                return new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
-            case I2P:
-                //return new Address(keyBundle.getI2pKeyPair().getDestination(), port);
-                throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR:
-                return Address.localHost(port);
-        }
-        throw new RuntimeException("getAddressByTransport called with unsupported transportType " + transportType);
+    public Set<ConfidentialMessageService> getConfidentialMessageServices() {
+        return serviceNodesByTransport.getAllServices().stream()
+                .filter(serviceNode -> serviceNode.getConfidentialMessageService().isPresent())
+                .map(serviceNode -> serviceNode.getConfidentialMessageService().get())
+                .collect(Collectors.toSet());
     }
 }

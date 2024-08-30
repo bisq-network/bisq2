@@ -17,64 +17,94 @@
 
 package bisq.desktop.main.content.chat.message_container.list.message_box;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.desktop.common.Icons;
+import bisq.chat.reactions.Reaction;
+import bisq.common.data.Pair;
+import bisq.common.locale.LanguageRepository;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
+import bisq.desktop.main.content.chat.message_container.list.reactions_box.ActiveReactionsDisplayBox;
+import bisq.desktop.main.content.chat.message_container.list.reactions_box.ReactMenuBox;
+import bisq.desktop.main.content.chat.message_container.list.reactions_box.ToggleReaction;
 import bisq.desktop.main.content.components.UserProfileIcon;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import bisq.i18n.Res;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.Tooltip;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 public abstract class BubbleMessageBox extends MessageBox {
-    protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
-    protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
+    private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
+    protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
+    protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 50;
+    protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
+    private static final List<Reaction> REACTIONS_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
+            Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
+    private static final int MAX_NUM_SUPPORTED_LANGUAGES = 5;
 
+    private final Subscription showHighlightedPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
-    protected final ChatMessagesListModel model;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
-    protected final HBox reactionsHBox = new HBox(20);
+    protected final HBox actionsHBox = new HBox(5);
     protected final VBox quotedMessageVBox, contentVBox;
-    protected Label supportedLanguages, userName, dateTime, message;
-    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
+    private Subscription reactMenuPin;
+    protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
+    protected ReactMenuBox reactMenuBox;
+    protected Label userName, dateTime, message;
+    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox, supportedLanguagesHBox, amountAndPriceBox,
+            paymentAndSettlementMethodsBox;
     protected VBox userProfileIconVbox;
+    protected BisqMenuItem copyAction;
+    protected DropdownMenu moreActionsMenu;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                            ChatMessagesListController controller,
-                            ChatMessagesListModel model) {
+                            ChatMessagesListController controller) {
         this.item = item;
         this.list = list;
         this.controller = controller;
-        this.model = model;
 
         setUpUserNameAndDateTime();
         setUpUserProfileIcon();
         setUpReactions();
-        addReactionsHandlers();
+        setUpActions();
+        addActionsHandlers();
         addOnMouseEventHandlers();
 
-        supportedLanguages = createAndGetSupportedLanguagesLabel();
-        quotedMessageVBox = createAndGetQuotedMessageVBox();
+        supportedLanguagesHBox = createAndGetSupportedLanguagesBox();
+        amountAndPriceBox = createAndGetAmountAndPriceBox();
+        paymentAndSettlementMethodsBox = createAndGetPaymentAndSettlementMethodsBox();
+        quotedMessageVBox = createAndGetQuotedMessageBox();
         handleQuoteMessageBox();
         message = createAndGetMessage();
         messageBgHBox = createAndGetMessageBackground();
@@ -85,8 +115,17 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         contentVBox = new VBox();
         contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+        contentVBox.getStyleClass().add("chat-message-content-box");
         getChildren().setAll(contentVBox);
         setAlignment(Pos.CENTER);
+
+        showHighlightedPin = EasyBind.subscribe(item.getShowHighlighted(), showHighlighted -> {
+            if (showHighlighted) {
+                messageBgHBox.getStyleClass().add(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
+            } else {
+                messageBgHBox.getStyleClass().remove(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
+            }
+        });
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -94,8 +133,8 @@ public abstract class BubbleMessageBox extends MessageBox {
         userName.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
         dateTime = new Label();
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
-        dateTime.setVisible(false);
         dateTime.setText(item.getDate());
+        dateTime.setVisible(false);
     }
 
     private void setUpUserProfileIcon() {
@@ -108,51 +147,153 @@ public abstract class BubbleMessageBox extends MessageBox {
 
             userProfileIcon.setUserProfile(author);
             userProfileIcon.setCursor(Cursor.HAND);
-            Tooltip.install(userProfileIcon, new BisqTooltip(author.getTooltipString()));
             userProfileIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
         });
     }
 
-    protected void setUpReactions() {
+    private void setUpReactions() {
+        // Active Reactions Display
+        ToggleReaction toggleReactionDisplayMenuFunction = reactionItem ->
+                controller.onReactMessage(item.getChatMessage(), reactionItem.getReaction(), item.getChatChannel());
+        activeReactionsDisplayHBox = new ActiveReactionsDisplayBox(item.getUserReactions().values(), toggleReactionDisplayMenuFunction);
+
+        // React Menu
+        ToggleReaction toggleReactionReactMenuFunction = reactionItem -> {
+            controller.onReactMessage(item.getChatMessage(), reactionItem.getReaction(), item.getChatChannel());
+            reactMenuBox.hideMenu();
+        };
+        reactMenuBox = new ReactMenuBox(item.getUserReactions(), REACTIONS_ORDER, toggleReactionReactMenuFunction,
+                "react-grey", "react-white", "react-green");
+        reactMenuBox.setTooltip(Res.get("action.react"));
+        reactMenuBox.setVisible(item.getChatMessage().canShowReactions());
+        reactMenuBox.setManaged(item.getChatMessage().canShowReactions());
+
+        reactMenuPin = EasyBind.subscribe(reactMenuBox.getIsMenuShowing(), isShowing -> {
+            if (!isShowing && !isHover()) {
+                showDateTimeAndActionsMenu(false);
+            }
+        });
     }
 
-    protected void addReactionsHandlers() {
+    protected void setUpActions() {
+        copyAction = new BisqMenuItem("copy-grey", "copy-white");
+        copyAction.useIconOnly();
+        copyAction.setTooltip(Res.get("action.copyToClipboard"));
+        actionsHBox.setVisible(false);
+        HBox.setMargin(copyAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(reactMenuBox, ACTION_ITEMS_MARGIN);
+    }
+
+    protected void addActionsHandlers() {
     }
 
     private void addOnMouseEventHandlers() {
-        setOnMouseEntered(e -> {
-            if (model.getSelectedChatMessageForMoreOptionsPopup().get() != null) {
-                return;
-            }
-            dateTime.setVisible(true);
-            reactionsHBox.setVisible(true);
-        });
-
-        setOnMouseExited(e -> {
-            if (model.getSelectedChatMessageForMoreOptionsPopup().get() == null) {
-                dateTime.setVisible(false);
-                reactionsHBox.setVisible(false);
-            }
-        });
+        setOnMouseEntered(e -> showDateTimeAndActionsMenu(true));
+        setOnMouseExited(e -> showDateTimeAndActionsMenu(false));
     }
 
     @Override
-    public void cleanup() {
+    public void dispose() {
         setOnMouseEntered(null);
         setOnMouseExited(null);
+
+        showHighlightedPin.unsubscribe();
+        reactMenuPin.unsubscribe();
+
+        activeReactionsDisplayHBox.dispose();
+        reactMenuBox.dispose();
+        userProfileIcon.dispose();
     }
 
-    private Label createAndGetSupportedLanguagesLabel() {
-        Label label = new Label();
-        if (item.isBisqEasyPublicChatMessageWithOffer()) {
-            BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
-            label.setText(item.getSupportedLanguageCodes(chatMessage));
-            label.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(chatMessage)));
+    private void showDateTimeAndActionsMenu(boolean shouldShow) {
+        if (shouldShow) {
+            if ((moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) || reactMenuBox.getIsMenuShowing().get()) {
+                return;
+            }
+            dateTime.setVisible(true);
+            actionsHBox.setVisible(true);
+        } else {
+            if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenuBox.getIsMenuShowing().get()) {
+                dateTime.setVisible(false);
+                actionsHBox.setVisible(false);
+            }
         }
+    }
+
+    private HBox createAndGetSupportedLanguagesBox() {
+        HBox hBox = new HBox(3);
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            Label iconLabel = new Label(":", ImageUtil.getImageViewById("language-grey"));
+            iconLabel.setGraphicTextGap(3);
+            iconLabel.setTooltip(new BisqTooltip(Res.get("chat.message.supportedLanguages.Tooltip")));
+            hBox.getChildren().add(iconLabel);
+            BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
+            if (chatMessage.getBisqEasyOffer().isPresent()) {
+                BisqEasyOffer offer = chatMessage.getBisqEasyOffer().get();
+                int codesCount = Math.min(offer.getSupportedLanguageCodes().size(), MAX_NUM_SUPPORTED_LANGUAGES);
+                for (int i = 0; i < codesCount; i++) {
+                    String languageCode = offer.getSupportedLanguageCodes().get(i).toUpperCase();
+                    Label codeLabel = (i == codesCount - 1) ? new Label(languageCode) : new Label(languageCode + ",");
+                    codeLabel.setTooltip(new BisqTooltip(LanguageRepository.getDisplayString(languageCode)));
+                    hBox.getChildren().add(codeLabel);
+                }
+            }
+        }
+        return hBox;
+    }
+
+    private HBox createAndGetAmountAndPriceBox() {
+        HBox hBox = new HBox(5);
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            Optional<Pair<String, String>> amountAndPriceSpec = item.getBisqEasyOfferAmountAndPriceSpec();
+            if (amountAndPriceSpec.isPresent()) {
+                Label amount = new Label(amountAndPriceSpec.get().getFirst());
+                amount.getStyleClass().add("text-fill-white");
+                Label price = new Label(amountAndPriceSpec.get().getSecond());
+                price.getStyleClass().add("text-fill-white");
+                Label connector = new Label("@");
+                hBox.getChildren().addAll(amount, connector, price);
+            }
+        }
+        return hBox;
+    }
+
+    private HBox createAndGetPaymentAndSettlementMethodsBox() {
+        HBox hBox = new HBox(8);
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            for (FiatPaymentMethod fiatPaymentMethod : item.getBisqEasyOfferPaymentMethods()) {
+                hBox.getChildren().add(createMethodLabel(fiatPaymentMethod));
+            }
+
+            ImageView icon = ImageUtil.getImageViewById("interchangeable-grey");
+            Label interchangeableIcon = new Label();
+            interchangeableIcon.setGraphic(icon);
+            interchangeableIcon.setPadding(new Insets(0, 0, 1, 0));
+            hBox.getChildren().add(interchangeableIcon);
+
+            for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBisqEasyOfferSettlementMethods()) {
+                Label label = createMethodLabel(bitcoinPaymentMethod);
+                ColorAdjust colorAdjust = new ColorAdjust();
+                colorAdjust.setBrightness(-0.2);
+                label.setEffect(colorAdjust);
+                hBox.getChildren().add(label);
+            }
+        }
+        hBox.setAlignment(Pos.BOTTOM_LEFT);
+        return hBox;
+    }
+
+    private Label createMethodLabel(PaymentMethod<?> paymentMethod) {
+        Node icon = !paymentMethod.isCustomPaymentMethod()
+                ? ImageUtil.getImageViewById(paymentMethod.getName())
+                : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
+        Label label = new Label();
+        label.setGraphic(icon);
+        label.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
         return label;
     }
 
-    private VBox createAndGetQuotedMessageVBox() {
+    private VBox createAndGetQuotedMessageBox() {
         VBox vBox = new VBox(5);
         vBox.setVisible(false);
         vBox.setManaged(false);
@@ -207,16 +348,9 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private HBox createAndGetMessageBox() {
-        HBox hBox = new HBox();
+        HBox hBox = new HBox(5);
         VBox.setMargin(hBox, new Insets(10, 0, 0, 0));
         return hBox;
-    }
-
-    protected static Label getIconWithToolTip(AwesomeIcon icon, String tooltipString) {
-        Label iconLabel = Icons.getIcon(icon);
-        iconLabel.setCursor(Cursor.HAND);
-        iconLabel.setTooltip(new BisqTooltip(tooltipString, true));
-        return iconLabel;
     }
 
     protected static void onCopyMessage(ChatMessage chatMessage) {

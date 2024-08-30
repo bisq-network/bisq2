@@ -17,7 +17,7 @@
 
 package bisq.desktop.common.standby;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.OS;
 import bisq.desktop.ServiceProvider;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class PreventStandbyModeService {
 
     public PreventStandbyModeService(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
-        preventStandbyMode = OsUtils.isLinux() ? Inhibitor.findExecutableInhibitor().orElse(new SoundPlayer(serviceProvider)) : new SoundPlayer(serviceProvider);
+        preventStandbyMode = OS.isLinux() ? Inhibitor.findExecutableInhibitor().orElse(new SoundPlayer(serviceProvider)) : new SoundPlayer(serviceProvider);
     }
 
     public void initialize() {

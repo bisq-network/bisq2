@@ -26,6 +26,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.network.p2p.node.ConnectionException.Reason.INVALID_NETWORK_VERSION;
+
 /**
  * Outside data structure to be sent over the wire.
  */
@@ -60,12 +62,21 @@ public final class NetworkEnvelope implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkEnvelope toProto() {
+    public bisq.network.protobuf.NetworkEnvelope toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkEnvelope completeProto() {
+        return toProto(false);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkEnvelope.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.NetworkEnvelope.newBuilder()
                 .setVersion(version)
-                .setAuthorizationToken(authorizationToken.toProto())
-                .setNetworkMessage(envelopePayloadMessage.toProto())
-                .build();
+                .setAuthorizationToken(authorizationToken.toProto(serializeForHash))
+                .setNetworkMessage(envelopePayloadMessage.toProto(serializeForHash));
     }
 
     public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {
@@ -76,7 +87,7 @@ public final class NetworkEnvelope implements NetworkProto {
 
     public void verifyVersion() throws ConnectionException {
         if (version != networkVersion) {
-            throw new ConnectionException("Invalid networkEnvelopeVersion. " +
+            throw new ConnectionException(INVALID_NETWORK_VERSION, "Invalid networkEnvelopeVersion. " +
                     "version=" + version +
                     "; networkVersion=" + networkVersion +
                     "; networkMessage=" + envelopePayloadMessage.getClass().getSimpleName());

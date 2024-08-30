@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
@@ -30,10 +31,21 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode
 public final class InventoryRequest implements BroadcastMessage, Request {
+    private static final int VERSION = 1;
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
     private final InventoryFilter inventoryFilter;
     private final int nonce;
 
+
     public InventoryRequest(InventoryFilter inventoryFilter, int nonce) {
+        this(VERSION, inventoryFilter, nonce);
+    }
+
+    private InventoryRequest(int version, InventoryFilter inventoryFilter, int nonce) {
+        this.version = version;
         this.inventoryFilter = inventoryFilter;
         this.nonce = nonce;
 
@@ -45,16 +57,26 @@ public final class InventoryRequest implements BroadcastMessage, Request {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setInventoryRequest(
-                        bisq.network.protobuf.InventoryRequest.newBuilder()
-                                .setInventoryFilter(inventoryFilter.toProto())
-                                .setNonce(nonce))
-                .build();
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setInventoryRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.InventoryRequest.newBuilder()
+                .setVersion(version)
+                .setInventoryFilter(inventoryFilter.toProto(serializeForHash))
+                .setNonce(nonce);
     }
 
     public static InventoryRequest fromProto(bisq.network.protobuf.InventoryRequest proto) {
-        return new InventoryRequest(InventoryFilter.fromProto(proto.getInventoryFilter()),
+        return new InventoryRequest(proto.getVersion(),
+                InventoryFilter.fromProto(proto.getInventoryFilter()),
                 proto.getNonce());
     }
 

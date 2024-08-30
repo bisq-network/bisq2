@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-price-model";
 
-    private final MaterialTextField percentage;
+    private final MaterialTextField percentageInput;
     private final VBox fieldsBox, learnWhyOverlay, content;
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, showLearnWhyButton, closeLearnWhyButton;
@@ -65,7 +65,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().add("bisq-text-3");
         subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(500);
+        subtitleLabel.setMaxWidth(450);
 
         // Pricing model selection
         percentagePrice = new Button(Res.get("bisqEasy.price.percentage.title"));
@@ -85,7 +85,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         pricingModels.getStyleClass().addAll("pricing-models", "bisq-text-3");
 
         // Input box
-        percentage = new MaterialTextField(Res.get("bisqEasy.price.percentage.inputBoxText"));
+        percentageInput = new MaterialTextField(Res.get("bisqEasy.price.percentage.inputBoxText"));
         fieldsBox = new VBox(20);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
         fieldsBox.setMinWidth(350);
@@ -113,12 +113,12 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
     @Override
     protected void onViewAttached() {
-        percentage.textProperty().bindBidirectional(model.getPercentageAsString());
+        percentageInput.textProperty().bindBidirectional(model.getPercentageInput());
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
         feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
 
-        percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
+        percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
 
         // FIXME: The very first time this component is used when starting the app requestFocus() is not applied.
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
@@ -155,7 +155,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
     @Override
     protected void onViewDetached() {
-        percentage.textProperty().unbindBidirectional(model.getPercentageAsString());
+        percentageInput.textProperty().unbindBidirectional(model.getPercentageInput());
         feedbackSentence.textProperty().unbind();
         feedbackBox.visibleProperty().unbind();
         feedbackBox.managedProperty().unbind();
@@ -181,18 +181,18 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentagePrice.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
         if (model.getUseFixPrice().get()) {
             fixedPrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
-            fieldsBox.getChildren().setAll(priceInput.getRoot(), percentage);
-            percentage.deselect();
-            percentage.setEditable(false);
+            fieldsBox.getChildren().setAll(priceInput.getRoot(), percentageInput);
+            percentageInput.deselect();
+            percentageInput.setEditable(false);
             priceInput.setEditable(true);
             priceInput.requestFocus();
         } else {
             percentagePrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
-            fieldsBox.getChildren().setAll(percentage, priceInput.getRoot());
+            fieldsBox.getChildren().setAll(percentageInput, priceInput.getRoot());
             priceInput.deselect();
             priceInput.setEditable(false);
-            percentage.setEditable(true);
-            percentage.requestFocus();
+            percentageInput.setEditable(true);
+            percentageInput.requestFocus();
         }
     }
 

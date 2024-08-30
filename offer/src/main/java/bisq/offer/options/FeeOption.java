@@ -18,7 +18,7 @@
 package bisq.offer.options;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,7 +33,7 @@ public final class FeeOption implements OfferOption {
         BSQ;
 
         @Override
-        public bisq.offer.protobuf.FeeOption.FeeType toProto() {
+        public bisq.offer.protobuf.FeeOption.FeeType toProtoEnum() {
             return bisq.offer.protobuf.FeeOption.FeeType.valueOf(getProtobufEnumPrefix() + name());
         }
 
@@ -60,12 +60,17 @@ public final class FeeOption implements OfferOption {
     }
 
     @Override
-    public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setFeeOption(bisq.offer.protobuf.FeeOption.newBuilder()
-                        .setFeeType(feeType.toProto())
+    public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
+        return getOfferOptionBuilder(serializeForHash)
+                .setFeeOption(bisq.offer.protobuf.FeeOption.newBuilder()
+                        .setFeeType(feeType.toProtoEnum())
                         .setBlockHeightAtFeePayment(blockHeightAtFeePayment)
-                        .setFeeTxId(feeTxId))
-                .build();
+                        .setFeeTxId(feeTxId));
+    }
+
+    @Override
+    public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) {

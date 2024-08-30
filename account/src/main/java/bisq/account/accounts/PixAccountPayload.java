@@ -18,14 +18,18 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
         super(id, paymentMethodName, countryCode);
         this.pixKey = pixKey;
     }
-
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder().setPixAccountPayload(
-                                bisq.account.protobuf.PixAccountPayload.newBuilder()
-                                        .setPixKey(pixKey)))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setPixAccountPayload(
+                toPixAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.PixAccountPayload toPixAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getPixAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.PixAccountPayload.Builder getPixAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PixAccountPayload.newBuilder().setPixKey(pixKey);
     }
 
     public static PixAccountPayload fromProto(AccountPayload proto) {

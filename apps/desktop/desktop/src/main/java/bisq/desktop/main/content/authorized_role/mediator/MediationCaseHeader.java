@@ -19,7 +19,7 @@ package bisq.desktop.main.content.authorized_role.mediator;
 
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.containers.Spacer;
@@ -70,17 +70,17 @@ public class MediationCaseHeader {
         private final View view;
         private final Model model;
         private final BisqEasyOpenTradeChannelService channelService;
-        private final BisqEasyOpenTradeSelectionService selectionService;
         private final MediatorService mediatorService;
         private final Runnable onCloseHandler;
         private final Runnable onReOpenHandler;
+        private final LeavePrivateChatManager leavePrivateChatManager;
 
         private Controller(ServiceProvider serviceProvider, Runnable onCloseHandler, Runnable onReOpenHandler) {
             this.onCloseHandler = onCloseHandler;
             this.onReOpenHandler = onReOpenHandler;
             ChatService chatService = serviceProvider.getChatService();
             channelService = chatService.getBisqEasyOpenTradeChannelService();
-            selectionService = chatService.getBisqEasyOpenTradesSelectionService();
+            leavePrivateChatManager = chatService.getLeavePrivateChatManager();
             mediatorService = serviceProvider.getSupportService().getMediatorService();
 
             model = new Model();
@@ -120,21 +120,19 @@ public class MediationCaseHeader {
         }
 
         private void doLeave() {
-            channelService.leaveChannel(model.getMediationCaseListItem().get().getChannel());
+            leavePrivateChatManager.leaveChannel(model.getMediationCaseListItem().get().getChannel());
         }
 
         private void doClose() {
             MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
-            channelService.sendSystemMessage(Res.get("authorizedRole.mediator.close.systemMessage"),
-                    listItem.getChannel());
+            channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), listItem.getChannel());
             mediatorService.closeMediationCase(listItem.getMediationCase());
             onCloseHandler.run();
         }
 
         private void doReOpen() {
             MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
-            channelService.sendSystemMessage(Res.get("authorizedRole.mediator"),
-                    listItem.getChannel());
+            channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), listItem.getChannel());
             mediatorService.reOpenMediationCase(listItem.getMediationCase());
             onReOpenHandler.run();
         }
@@ -220,13 +218,9 @@ public class MediationCaseHeader {
 
                     tradeId.getSecond().setText(item.getShortTradeId());
                 } else {
-                    makerProfileDisplay.setUserProfile(null);
-                    makerProfileDisplay.setReputationScore(null);
-                    makerProfileDisplay.getTooltip().setText(null);
+                    makerProfileDisplay.dispose();
+                    takerProfileDisplay.dispose();
                     direction.setText(null);
-                    takerProfileDisplay.setUserProfile(null);
-                    takerProfileDisplay.setReputationScore(null);
-                    takerProfileDisplay.getTooltip().setText(null);
                     tradeId.getSecond().setText(null);
                 }
             });
@@ -251,6 +245,9 @@ public class MediationCaseHeader {
             showClosedCasesPin.unsubscribe();
             openCloseButton.setOnAction(null);
             leaveButton.setOnAction(null);
+
+            makerProfileDisplay.dispose();
+            takerProfileDisplay.dispose();
         }
 
         private Triple<Text, UserProfileDisplay, VBox> getUserProfileElements(@Nullable String description) {

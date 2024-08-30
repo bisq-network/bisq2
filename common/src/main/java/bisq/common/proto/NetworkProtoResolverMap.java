@@ -17,7 +17,6 @@
 
 package bisq.common.proto;
 
-import bisq.common.util.ProtobufUtils;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
 

@@ -66,7 +66,7 @@ public class SellerState2b extends BaseState {
         }
 
         private void onConfirmFiatReceipt() {
-            sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase2b.systemMessage",
+            sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
             bisqEasyTradeService.sellerConfirmFiatReceipt(model.getBisqEasyTrade());
         }
@@ -87,10 +87,11 @@ public class SellerState2b extends BaseState {
             super(model, controller);
 
             headline = FormUtils.getHeadline();
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase2b.info"));
             fiatReceivedButton = new Button();
             fiatReceivedButton.setDefaultButton(true);
             VBox.setMargin(fiatReceivedButton, new Insets(5, 0, 10, 0));
-            root.getChildren().addAll(headline, fiatReceivedButton);
+            root.getChildren().addAll(headline, info, fiatReceivedButton);
         }
 
         @Override

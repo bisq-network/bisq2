@@ -18,7 +18,7 @@
 package bisq.bonded_roles;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.ToString;
@@ -52,7 +52,7 @@ public enum BondedRoleType implements ProtoEnum {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.BondedRoleType toProto() {
+    public bisq.bonded_roles.protobuf.BondedRoleType toProtoEnum() {
         return bisq.bonded_roles.protobuf.BondedRoleType.valueOf(getProtobufEnumPrefix() + name());
     }
 

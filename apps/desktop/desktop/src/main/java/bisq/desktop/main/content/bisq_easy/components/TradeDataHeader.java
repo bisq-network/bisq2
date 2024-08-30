@@ -29,6 +29,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ObjectProperty;
@@ -71,11 +72,13 @@ public class TradeDataHeader {
         private final Model model;
         private final ReputationService reputationService;
         private final ServiceProvider serviceProvider;
+        private final UserProfileService userProfileService;
         private Subscription channelPin;
 
         private Controller(ServiceProvider serviceProvider, String peerDescription) {
             this.serviceProvider = serviceProvider;
             reputationService = serviceProvider.getUserService().getReputationService();
+            userProfileService = serviceProvider.getUserService().getUserProfileService();
 
             model = new Model(peerDescription);
             view = new View(model, this);
@@ -101,7 +104,7 @@ public class TradeDataHeader {
 
                 UserProfile peerUserProfile = channel.getPeer();
                 model.getReputationScore().set(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
-                model.getUserProfile().set(peerUserProfile);
+                model.getPeersUserProfile().set(peerUserProfile);
                 model.getTradeId().set(bisqEasyTrade.getShortId());
 
                 long baseSideAmount = bisqEasyTrade.getContract().getBaseSideAmount();
@@ -143,7 +146,7 @@ public class TradeDataHeader {
 
         private final ObjectProperty<BisqEasyOpenTradeChannel> channel = new SimpleObjectProperty<>();
         private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
-        private final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
+        private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
         private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
         private final StringProperty direction = new SimpleStringProperty();
         private final StringProperty leftAmountDescription = new SimpleStringProperty();
@@ -212,7 +215,7 @@ public class TradeDataHeader {
             rightAmount.getFirst().getThird().textProperty().bind(model.getRightCode());
             tradeId.getSecond().textProperty().bind(model.getTradeId());
 
-            userProfilePin = EasyBind.subscribe(model.getUserProfile(), peersUserProfileDisplay::setUserProfile);
+            userProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), peersUserProfileDisplay::setUserProfile);
             reputationScorePin = EasyBind.subscribe(model.getReputationScore(), peersUserProfileDisplay::setReputationScore);
         }
 
@@ -229,6 +232,8 @@ public class TradeDataHeader {
 
             userProfilePin.unsubscribe();
             reputationScorePin.unsubscribe();
+
+            peersUserProfileDisplay.dispose();
         }
 
         private Triple<Text, Text, VBox> getElements() {

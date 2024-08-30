@@ -19,6 +19,7 @@ package bisq.bonded_roles.security_manager.alert;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -44,9 +45,14 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedAlertData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public final static int MAX_MESSAGE_LENGTH = 1000;
 
-    private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
     private final String id;
     private final long date;
     private final AlertType alertType;
@@ -57,6 +63,13 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     private final Optional<String> minVersion;
     private final Optional<AuthorizedBondedRole> bannedRole;
     private final String securityManagerProfileId;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedAlertData(String id,
@@ -70,6 +83,33 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                                Optional<AuthorizedBondedRole> bannedRole,
                                String securityManagerProfileId,
                                boolean staticPublicKeysProvided) {
+        this(VERSION,
+                id,
+                date,
+                alertType,
+                headline,
+                message,
+                haltTrading,
+                requireVersionForTrading,
+                minVersion,
+                bannedRole,
+                securityManagerProfileId,
+                staticPublicKeysProvided);
+    }
+
+    public AuthorizedAlertData(int version,
+                                String id,
+                                long date,
+                                AlertType alertType,
+                                Optional<String> headline,
+                                Optional<String> message,
+                                boolean haltTrading,
+                                boolean requireVersionForTrading,
+                                Optional<String> minVersion,
+                                Optional<AuthorizedBondedRole> bannedRole,
+                                String securityManagerProfileId,
+                                boolean staticPublicKeysProvided) {
+        this.version = version;
         this.id = id;
         this.date = date;
         this.alertType = alertType;
@@ -83,7 +123,6 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         verify();
-        toProto();
     }
 
     @Override
@@ -96,15 +135,16 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedAlertData toProto() {
+    public bisq.bonded_roles.protobuf.AuthorizedAlertData.Builder getBuilder(boolean serializeForHash) {
         bisq.bonded_roles.protobuf.AuthorizedAlertData.Builder builder = bisq.bonded_roles.protobuf.AuthorizedAlertData.newBuilder()
                 .setId(id)
                 .setDate(date)
-                .setAlertType(alertType.toProto())
+                .setAlertType(alertType.toProtoEnum())
                 .setHaltTrading(haltTrading)
                 .setRequireVersionForTrading(requireVersionForTrading)
                 .setSecurityManagerProfileId(securityManagerProfileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
         message.ifPresent(builder::setMessage);
         headline.ifPresent(headline -> {
             // We only set the headline if defaultHeadline is present (not AlertType.BAN) and
@@ -117,13 +157,20 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
             });
         });
         minVersion.ifPresent(builder::setMinVersion);
-        bannedRole.ifPresent(authorizedBondedRole -> builder.setBannedRole(authorizedBondedRole.toProto()));
-        return builder.build();
+        bannedRole.ifPresent(authorizedBondedRole -> builder.setBannedRole(authorizedBondedRole.toProto(serializeForHash)));
+        return builder;
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.AuthorizedAlertData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto) {
         AlertType alertType = AlertType.fromProto(proto.getAlertType());
-        return new AuthorizedAlertData(proto.getId(),
+        return new AuthorizedAlertData(
+                proto.getVersion(),
+                proto.getId(),
                 proto.getDate(),
                 alertType,
                 proto.hasHeadline() ? Optional.of(proto.getHeadline()) : getDefaultHeadline(alertType),

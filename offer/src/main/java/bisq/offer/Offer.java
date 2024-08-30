@@ -26,7 +26,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.multisig.MultisigOffer;
+import bisq.offer.bisq_musig.BisqMuSigOffer;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -101,21 +101,29 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
     }
 
     @Override
-    public abstract bisq.offer.protobuf.Offer toProto();
+    public abstract bisq.offer.protobuf.Offer toProto(boolean serializeForHash);
 
-    protected bisq.offer.protobuf.Offer.Builder getOfferBuilder() {
+    protected bisq.offer.protobuf.Offer.Builder getOfferBuilder(boolean serializeForHash) {
         return bisq.offer.protobuf.Offer.newBuilder()
                 .setId(id)
                 .setDate(date)
-                .setMakerNetworkId(makerNetworkId.toProto())
-                .setDirection(direction.toProto())
-                .setMarket(market.toProto())
-                .setAmountSpec(amountSpec.toProto())
-                .setPriceSpec(priceSpec.toProto())
-                .addAllProtocolTypes(protocolTypes.stream().map(TradeProtocolType::toProto).collect(Collectors.toList()))
-                .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
-                .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
-                .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()));
+                .setMakerNetworkId(makerNetworkId.toProto(serializeForHash))
+                .setDirection(direction.toProtoEnum())
+                .setMarket(market.toProto(serializeForHash))
+                .setAmountSpec(amountSpec.toProto(serializeForHash))
+                .setPriceSpec(priceSpec.toProto(serializeForHash))
+                .addAllProtocolTypes(protocolTypes.stream()
+                        .map(TradeProtocolType::toProtoEnum)
+                        .collect(Collectors.toList()))
+                .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()))
+                .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()))
+                .addAllOfferOptions(offerOptions.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
     }
 
 
@@ -124,8 +132,8 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
             case BISQEASYOFFER: {
                 return BisqEasyOffer.fromProto(proto);
             }
-            case MULTISIGOFFER: {
-                return MultisigOffer.fromProto(proto);
+            case BISQMUSIGOFFER: {
+                return BisqMuSigOffer.fromProto(proto);
             }
             case SUBMARINEOFFER: {
                 return SubmarineOffer.fromProto(proto);

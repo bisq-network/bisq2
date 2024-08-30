@@ -21,12 +21,10 @@ import bisq.chat.ChatChannelDomain;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.user.profile.UserProfile;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,10 +38,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class ReportToModeratorMessage implements MailboxMessage {
+public final class ReportToModeratorMessage implements MailboxMessage, ExternalNetworkMessage {
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long date;
     private final String reporterUserProfileId;
     private final UserProfile accusedUserProfile;
@@ -72,21 +71,18 @@ public final class ReportToModeratorMessage implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toReportToModeratorMessageProto())))
-                .build();
-    }
-
-    public bisq.support.protobuf.ReportToModeratorMessage toReportToModeratorMessageProto() {
-        bisq.support.protobuf.ReportToModeratorMessage.Builder builder = bisq.support.protobuf.ReportToModeratorMessage.newBuilder()
+    public bisq.support.protobuf.ReportToModeratorMessage.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.support.protobuf.ReportToModeratorMessage.newBuilder()
                 .setDate(date)
                 .setReporterUserProfileId(reporterUserProfileId)
-                .setAccusedUserProfile(accusedUserProfile.toProto())
+                .setAccusedUserProfile(accusedUserProfile.toProto(serializeForHash))
                 .setMessage(message)
-                .setChatChannelDomain(chatChannelDomain.toProto());
-        return builder.build();
+                .setChatChannelDomain(chatChannelDomain.toProtoEnum());
+    }
+
+    @Override
+    public bisq.support.protobuf.ReportToModeratorMessage toValueProto(boolean serializeForHash) {
+        return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     public static ReportToModeratorMessage fromProto(bisq.support.protobuf.ReportToModeratorMessage proto) {
@@ -97,7 +93,7 @@ public final class ReportToModeratorMessage implements MailboxMessage {
                 ChatChannelDomain.fromProto(proto.getChatChannelDomain()));
     }
 
-    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.support.protobuf.ReportToModeratorMessage proto = any.unpack(bisq.support.protobuf.ReportToModeratorMessage.class);

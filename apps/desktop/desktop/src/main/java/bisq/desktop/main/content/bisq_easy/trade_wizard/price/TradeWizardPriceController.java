@@ -27,21 +27,17 @@ import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
-import bisq.offer.price.spec.MarketPriceSpec;
-import bisq.offer.price.spec.PriceSpec;
-import bisq.offer.price.spec.PriceSpecUtil;
+import bisq.offer.price.spec.*;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 import static bisq.presentation.formatters.PercentageFormatter.formatToPercentWithSymbol;
@@ -53,16 +49,16 @@ public class TradeWizardPriceController implements Controller {
     @Getter
     private final TradeWizardPriceView view;
     private final PriceInput priceInput;
+    private final Region owner;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
-    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin;
-    @Nullable
-    private Popup invalidPricePopup;
+    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin;
 
-    public TradeWizardPriceController(ServiceProvider serviceProvider) {
+    public TradeWizardPriceController(ServiceProvider serviceProvider, Region owner) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
+        this.owner = owner;
         model = new TradeWizardPriceModel();
         view = new TradeWizardPriceView(model, this, priceInput);
     }
@@ -90,28 +86,39 @@ public class TradeWizardPriceController implements Controller {
         model.reset();
     }
 
-    public boolean isValid() {
-        return model.getInvalidPriceErrorMessage().get() == null;
-    }
-
-    public void handleInvalidInput() {
-        maybeShowPopup();
+    public boolean validate() {
+        if (model.getErrorMessage().get() == null) {
+            return true;
+        } else {
+            new Popup().invalid(model.getErrorMessage().get())
+                    .owner(owner)
+                    .show();
+            return false;
+        }
     }
 
     @Override
     public void onActivate() {
         settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
                 .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
+        if (model.getPriceSpec().get() == null) {
+            model.getPriceSpec().set(new MarketPriceSpec());
+        }
 
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
         isPriceInvalidPin = EasyBind.subscribe(priceInput.getValidationResult(), validationResult -> {
             if (validationResult != null && !validationResult.isValid) {
-                model.getInvalidPriceErrorMessage().set(validationResult.errorMessage);
+                model.getErrorMessage().set(validationResult.errorMessage);
                 model.setLastValidPriceQuote(null);
-                maybeShowPopup();
             }
         });
         priceSpecPin = EasyBind.subscribe(model.getPriceSpec(), this::updateFeedback);
+
+        percentageInputPin = EasyBind.subscribe(model.getPercentageInput(), percentageInput -> {
+            if (percentageInput != null) {
+                onPercentageInput(percentageInput);
+            }
+        });
 
         String marketCodes = model.getMarket().getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.price.tradePrice.inputBoxText", marketCodes));
@@ -128,43 +135,55 @@ public class TradeWizardPriceController implements Controller {
         priceInputPin.unsubscribe();
         isPriceInvalidPin.unsubscribe();
         priceSpecPin.unsubscribe();
+        percentageInputPin.unsubscribe();
     }
 
     void onPercentageFocussed(boolean focussed) {
+        model.setFocused(focussed);
         if (!focussed) {
             try {
-                String input = model.getPercentageAsString().get();
-                if (input == null || input.trim().isEmpty()) {
-                    model.getInvalidPriceErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.notSet"));
-                    return;
-                }
-                model.getInvalidPriceErrorMessage().set(null);
-                double percentage = parse(input);
-                if (!validatePercentage(percentage)) {
-                    return;
-                }
+                double percentage = parse(model.getPercentageInput().get());
+                String percentageAsString = formatToPercentWithSymbol(percentage);
                 // Need to change the value first otherwise it does not trigger an update
-                model.getPercentageAsString().set("");
-                model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
-                Optional<PriceQuote> marketPriceQuote = findMarketPriceQuote();
-                if (marketPriceQuote.isPresent()) {
-                    PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
-                    if (validateQuote(priceQuote)) {
-                        priceInput.setQuote(priceQuote);
-                    } else {
-                        return;
-                    }
-                } else {
-                    log.error("marketPriceQuote is not present");
-                }
-                applyPriceSpec();
-            } catch (NumberFormatException e) {
-                model.getInvalidPriceErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
-                maybeShowPopup();
+                model.getPercentageInput().set("");
+                model.getPercentageInput().set(percentageAsString);
+                onPercentageInput(percentageAsString);
             } catch (Exception e) {
-                model.getInvalidPriceErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.exception", e.getMessage()));
-                maybeShowPopup();
+                model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
             }
+        }
+    }
+
+    private void onPercentageInput(String percentageAsString) {
+        if (model.isFocused() || model.getMarket() == null) {
+            return;
+        }
+        if (percentageAsString == null || percentageAsString.trim().isEmpty()) {
+            return;
+        }
+
+        model.getErrorMessage().set(null);
+        try {
+            double percentage = parse(percentageAsString);
+            if (!validatePercentage(percentage)) {
+                return;
+            }
+            Optional<PriceQuote> marketPriceQuote = findMarketPriceQuote();
+            if (marketPriceQuote.isPresent()) {
+                PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
+                if (validateQuote(priceQuote)) {
+                    priceInput.setQuote(priceQuote);
+                } else {
+                    return;
+                }
+            } else {
+                log.error("marketPriceQuote is not present");
+            }
+            applyPriceSpec();
+        } catch (NumberFormatException e) {
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
+        } catch (Exception e) {
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.exception", e.getMessage()));
         }
     }
 
@@ -211,7 +230,7 @@ public class TradeWizardPriceController implements Controller {
     private void onQuoteInput(PriceQuote priceQuote) {
         if (priceQuote == null) {
             model.getPercentage().set(0);
-            model.getPercentageAsString().set("");
+            model.getPercentageInput().set("");
             return;
         }
         if (validateQuote(priceQuote)) {
@@ -225,7 +244,7 @@ public class TradeWizardPriceController implements Controller {
     private void applyPercentageFromQuote(PriceQuote priceQuote) {
         double percentage = getPercentage(priceQuote);
         model.getPercentage().set(percentage);
-        model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
+        model.getPercentageInput().set(formatToPercentWithSymbol(percentage));
     }
 
     private boolean validateQuote(PriceQuote priceQuote) {
@@ -234,11 +253,10 @@ public class TradeWizardPriceController implements Controller {
 
     private boolean validatePercentage(double percentage) {
         if (percentage >= -0.1 && percentage <= 0.5) {
-            model.getInvalidPriceErrorMessage().set(null);
+            model.getErrorMessage().set(null);
             return true;
         } else {
-            model.getInvalidPriceErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.outOfRange"));
-            maybeShowPopup();
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.outOfRange"));
             return false;
         }
     }
@@ -251,8 +269,7 @@ public class TradeWizardPriceController implements Controller {
             }
             return optionalPercentage.orElse(0d);
         } catch (Exception e) {
-            model.getInvalidPriceErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.outOfRange"));
-            maybeShowPopup();
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.outOfRange"));
             return 0;
         }
     }
@@ -276,18 +293,6 @@ public class TradeWizardPriceController implements Controller {
                     priceInput.setQuote(newPriceQuote);
                 }
             });
-        }
-    }
-
-    private void maybeShowPopup() {
-        if (invalidPricePopup == null && model.getInvalidPriceErrorMessage().get() != null) {
-            invalidPricePopup = new Popup();
-            invalidPricePopup.warning(model.getInvalidPriceErrorMessage().get())
-                    .onClose(() -> {
-                        invalidPricePopup = null;
-                        resetInvalidPrice();
-                    })
-                    .show();
         }
     }
 

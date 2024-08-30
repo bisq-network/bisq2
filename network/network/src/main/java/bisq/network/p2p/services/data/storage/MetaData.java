@@ -52,9 +52,13 @@ public final class MetaData implements NetworkProto {
     public static final int HIGH_PRIORITY = 1;
     public static final int HIGHEST_PRIORITY = 2;
 
+    // How long data are kept in the storage map
     private final long ttl;
+    // Used for inventory request priority of delivery if inventory size exceeds limit
     private final int priority;
+    // Used for name of storage file, for lookup of the store for a given distributedData object and for logging
     private final String className;
+    // Max file size of the storage file
     private final int maxMapSize;
 
     public MetaData(String className) {
@@ -88,13 +92,17 @@ public final class MetaData implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.MetaData toProto() {
+    public bisq.network.protobuf.MetaData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.MetaData.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.MetaData.newBuilder()
                 .setTtl(ttl)
                 .setPriority(priority)
                 .setClassName(className)
-                .setMaxMapSize(maxMapSize)
-                .build();
+                .setMaxMapSize(maxMapSize);
     }
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {

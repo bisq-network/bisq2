@@ -31,6 +31,8 @@ message UserProfile {
   string terms = 4;
   string statement = 5;
   sint32 avatarVersion = 6;
+  sint32 version = 7;
+  string applicationVersion = 8;
 }
 
 message UserIdentity {
@@ -44,7 +46,7 @@ message UserIdentityStore {
   optional string selectedUserIdentityId = 2;
   optional security.EncryptedData encryptedData = 3;
   optional security.ScryptParameters scryptParameters = 4;
-  sint64 lastUserProfilePublishingDate = 5;
+  sint64 lastUserProfilePublishingDate = 5  [deprecated = true]; // Not used anymore in v2.1.0
 }
 
 message NymList {
@@ -106,43 +108,52 @@ message AuthorizeTimestampRequest {
   string profileId = 1;
 }
 
-
 message AuthorizedProofOfBurnData {
   sint64 amount = 1;
-  sint64 time = 2;
+  sint64 blockTime = 2;
   bytes hash = 3;
   bool staticPublicKeysProvided = 4;
+  sint32 version = 5;
+  sint32 blockHeight = 6;
+  string txId = 7;
 }
 
 message AuthorizedBondedReputationData {
   sint64 amount = 1;
-  sint64 time = 2;
+  sint64 blockTime = 2;
   bytes hash = 3;
   sint64 lockTime = 4;
   bool staticPublicKeysProvided = 5;
+  sint32 version = 6;
+  sint32 blockHeight = 7;
+  string txId = 8;
 }
 
 message AuthorizedAccountAgeData {
   string profileId = 1;
   sint64 date = 2;
   bool staticPublicKeysProvided = 3;
+  sint32 version = 4;
 }
 
 message AuthorizedSignedWitnessData {
   string profileId = 1;
   sint64 witnessSignDate = 2;
   bool staticPublicKeysProvided = 3;
+  sint32 version = 4;
 }
 
 message AuthorizedTimestampData {
   string profileId = 1;
   sint64 date = 2;
   bool staticPublicKeysProvided = 3;
+  sint32 version = 4;
 }
 
 message BannedUserProfileData {
   UserProfile userProfile = 1;
   bool staticPublicKeysProvided = 2;
+  sint32 version = 3;
 }
 message BannedUserStore {
   repeated BannedUserProfileData bannedUserProfileDataSet = 1;

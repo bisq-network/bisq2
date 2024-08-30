@@ -39,7 +39,9 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyOfferbookMessage extends PublicChatMessage implements BisqEasyOfferMessage {
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    // Metadata needs to be symmetric with BisqEasyOfferbookMessageReaction.
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyOfferbookMessage(String channelId,
@@ -81,14 +83,22 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 wasEdited,
                 chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //768
     }
 
-    public bisq.chat.protobuf.ChatMessage toProto() {
+    @Override
+    public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash) {
+        return getChatMessageBuilder(serializeForHash)
+                .setBisqEasyOfferbookMessage(toBisqEasyOfferbookMessageProto(serializeForHash));
+    }
+
+    private bisq.chat.protobuf.BisqEasyOfferbookMessage toBisqEasyOfferbookMessageProto(boolean serializeForHash) {
+        return resolveBuilder(getBisqEasyOfferbookMessageBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder getBisqEasyOfferbookMessageBuilder(boolean serializeForHash) {
         bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder builder = bisq.chat.protobuf.BisqEasyOfferbookMessage.newBuilder();
-        bisqEasyOffer.ifPresent(e -> builder.setBisqEasyOffer(e.toProto()));
-        return getChatMessageBuilder().setBisqEasyOfferbookMessage(builder).build();
+        bisqEasyOffer.ifPresent(e -> builder.setBisqEasyOffer(e.toProto(serializeForHash)));
+        return builder;
     }
 
     public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
@@ -122,5 +132,10 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     @Override
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
+    }
+
+    @Override
+    public boolean canShowReactions() {
+        return bisqEasyOffer.isEmpty();
     }
 }

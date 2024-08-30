@@ -38,4 +38,13 @@ public class ClassUtils {
             return Optional.empty();
         }
     }
+
+    public static String getClassName(Class<?> clazz) {
+        String name = clazz.getSimpleName();
+        Class<?> enclosingClass = clazz.getEnclosingClass();
+        if (enclosingClass != null) {
+            name = enclosingClass.getSimpleName() + "." + name;
+        }
+        return name;
+    }
 }

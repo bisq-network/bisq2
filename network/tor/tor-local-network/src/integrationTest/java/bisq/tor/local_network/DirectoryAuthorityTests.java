@@ -43,7 +43,6 @@ public class DirectoryAuthorityTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_1")
                 .dataDir(tempDir)
-                .controlPort(NetworkUtils.findFreeSystemPort())
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
@@ -62,7 +61,6 @@ public class DirectoryAuthorityTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_1")
                 .dataDir(firstDaDataDir)
-                .controlPort(NetworkUtils.findFreeSystemPort())
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
@@ -73,7 +71,6 @@ public class DirectoryAuthorityTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_2")
                 .dataDir(secondDaDataDir)
-                .controlPort(NetworkUtils.findFreeSystemPort())
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
@@ -84,7 +81,6 @@ public class DirectoryAuthorityTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_3")
                 .dataDir(thirdDaDataDir)
-                .controlPort(NetworkUtils.findFreeSystemPort())
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();

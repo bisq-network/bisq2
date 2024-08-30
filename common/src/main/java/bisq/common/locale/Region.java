@@ -34,11 +34,16 @@ public final class Region implements PersistableProto {
         this.name = name;
     }
 
-    public bisq.common.protobuf.Region toProto() {
+    @Override
+    public bisq.common.protobuf.Region toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.common.protobuf.Region.Builder getBuilder(boolean serializeForHash) {
         return bisq.common.protobuf.Region.newBuilder()
                 .setCode(code)
-                .setName(name)
-                .build();
+                .setName(name);
     }
 
     public static Region fromProto(bisq.common.protobuf.Region proto) {

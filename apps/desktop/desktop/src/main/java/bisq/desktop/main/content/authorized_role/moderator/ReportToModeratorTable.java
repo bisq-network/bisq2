@@ -138,13 +138,13 @@ public class ReportToModeratorTable {
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
                     break;
                 case DISCUSSION:
-                    Navigation.navigateTo(NavigationTarget.DISCUSSION);
+                    Navigation.navigateTo(NavigationTarget.DISCUSSION_PRIVATECHATS);
                     break;
                 case EVENTS:
-                    Navigation.navigateTo(NavigationTarget.EVENTS);
+                    Navigation.navigateTo(NavigationTarget.EVENTS_PRIVATECHATS);
                     break;
                 case SUPPORT:
-                    Navigation.navigateTo(NavigationTarget.SUPPORT);
+                    Navigation.navigateTo(NavigationTarget.SUPPORT_PRIVATECHATS);
                     break;
             }
         }
@@ -156,7 +156,6 @@ public class ReportToModeratorTable {
     private static class Model implements bisq.desktop.common.view.Model {
         private BondedRole bondedRole;
         private final ObservableList<View.ReportListItem> listItems = FXCollections.observableArrayList();
-
     }
 
     @Slf4j
@@ -241,7 +240,7 @@ public class ReportToModeratorTable {
         private Callback<TableColumn<ReportListItem, ReportListItem>, TableCell<ReportListItem, ReportListItem>> getReporterUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userNameLabel = new Label();
-                private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+                private final UserProfileIcon userProfileIcon = new UserProfileIcon();
                 private final Button button = new Button();
                 private final HBox hBox = new HBox(10, userProfileIcon, userNameLabel, Spacer.fillHBox(), button);
 
@@ -258,14 +257,15 @@ public class ReportToModeratorTable {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty && item.getReporterUserProfile().isPresent()) {
-                        String userName = item.getReporterUserName();
-                        UserProfile userProfile = item.getReporterUserProfile().get();
-                        userNameLabel.setText(userName);
-                        userProfileIcon.setUserProfile(userProfile);
-                        button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(userName, 8));
-                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile, true));
+                        String reporterUserName = item.getReporterUserName();
+                        userNameLabel.setText(reporterUserName);
+                        UserProfile reporterUserProfile = item.getReporterUserProfile().get();
+                        userProfileIcon.setUserProfile(reporterUserProfile);
+                        button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(reporterUserName, 8));
+                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), reporterUserProfile, true));
                         setGraphic(hBox);
                     } else {
+                        userProfileIcon.dispose();
                         button.setOnAction(null);
                         setGraphic(null);
                     }
@@ -276,7 +276,7 @@ public class ReportToModeratorTable {
         private Callback<TableColumn<ReportListItem, ReportListItem>, TableCell<ReportListItem, ReportListItem>> getAccusedUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userNameLabel = new Label();
-                private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+                private final UserProfileIcon userProfileIcon = new UserProfileIcon();
                 private final Button button = new Button();
                 private final HBox hBox = new HBox(10, userProfileIcon, userNameLabel, Spacer.fillHBox(), button);
 
@@ -293,14 +293,15 @@ public class ReportToModeratorTable {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        String userName = item.getAccusedUserName();
-                        UserProfile userProfile = item.getAccusedUserProfile();
-                        userNameLabel.setText(userName);
-                        userProfileIcon.setUserProfile(userProfile);
-                        button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(userName, 8));
-                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile, false));
+                        String accusedUserName = item.getAccusedUserName();
+                        userNameLabel.setText(accusedUserName);
+                        UserProfile accusedUserProfile = item.getAccusedUserProfile();
+                        userProfileIcon.setUserProfile(accusedUserProfile);
+                        button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(accusedUserName, 8));
+                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), accusedUserProfile, false));
                         setGraphic(hBox);
                     } else {
+                        userProfileIcon.dispose();
                         button.setOnAction(null);
                         setGraphic(null);
                     }
@@ -328,7 +329,7 @@ public class ReportToModeratorTable {
                     if (item != null && !empty) {
                         message.setText(item.getMessage());
                         message.setMaxHeight(30);
-                        message.setTooltip(new BisqTooltip(item.getMessage(), true));
+                        message.setTooltip(new BisqTooltip(item.getMessage(), BisqTooltip.Style.DARK));
 
                         icon.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getMessage()));
                         setGraphic(hBox);
@@ -343,6 +344,10 @@ public class ReportToModeratorTable {
         private Callback<TableColumn<ReportListItem, ReportListItem>, TableCell<ReportListItem, ReportListItem>> getBanCellFactory() {
             return column -> new TableCell<>() {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.table.ban"));
+
+                {
+                    button.setDefaultButton(true);
+                }
 
                 @Override
                 public void updateItem(final ReportListItem item, boolean empty) {
@@ -384,18 +389,21 @@ public class ReportToModeratorTable {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         @Getter
-        @EqualsAndHashCode
+        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         private static class ReportListItem implements DateTableItem {
+            @EqualsAndHashCode.Include
             private final ReportToModeratorMessage reportToModeratorMessage;
+
             private final long date;
             private final String dateString, timeString, message, reporterUserName, accusedUserName, chatChannelDomain;
             private final Optional<UserProfile> reporterUserProfile;
             private final UserProfile accusedUserProfile;
 
-            private ReportListItem(ReportToModeratorMessage reportToModeratorMessage, ServiceProvider serviceProvider) {
-                UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
+            private ReportListItem(ReportToModeratorMessage reportToModeratorMessage,
+                                   ServiceProvider serviceProvider) {
                 this.reportToModeratorMessage = reportToModeratorMessage;
 
+                UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
                 String reporterUserProfileId = reportToModeratorMessage.getReporterUserProfileId();
                 reporterUserProfile = userProfileService.findUserProfile(reporterUserProfileId);
                 reporterUserName = reporterUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));

@@ -17,7 +17,8 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -26,6 +27,10 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +50,7 @@ class InventoryHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Inventory> future = new CompletableFuture<>();
     private final int nonce;
+    private long requestTs;
 
     InventoryHandler(Node node, Connection connection) {
         this.node = node;
@@ -55,6 +61,7 @@ class InventoryHandler implements Connection.Listener {
     }
 
     CompletableFuture<Inventory> request(InventoryFilter inventoryFilter) {
+        requestTs = System.currentTimeMillis();
         log.info("Send InventoryRequest to {} with {}", connection.getPeerAddress(), inventoryFilter.getDetails());
         InventoryRequest inventoryRequest = new InventoryRequest(inventoryFilter, nonce);
         runAsync(() -> node.send(inventoryRequest, connection), NetworkService.NETWORK_IO_POOL)
@@ -76,8 +83,9 @@ class InventoryHandler implements Connection.Listener {
                 removeListeners();
                 future.complete(response.getInventory());
             } else {
-                log.warn("{} received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
+                log.warn("Received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Peer address={}",
+                        connection.getPeerAddress(), response.getRequestNonce(), nonce,
+                        connection.getPeerAddress().getFullAddress());
             }
         }
     }
@@ -91,10 +99,22 @@ class InventoryHandler implements Connection.Listener {
                     String payloadName = dataRequest.getClass().getSimpleName();
                     if (dataRequest instanceof AddAuthenticatedDataRequest) {
                         AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                        payloadName = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
+                        payloadName = addRequest.getDistributedData().getClass().getSimpleName();
+                    } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
+                        RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                        payloadName = removeRequest.getClassName();
+                    } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
+                        RefreshAuthenticatedDataRequest request = (RefreshAuthenticatedDataRequest) dataRequest;
+                        payloadName = request.getClassName();
                     } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
                         AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
                         payloadName = addRequest.getAppendOnlyData().getClass().getSimpleName();
+                    } else if (dataRequest instanceof AddMailboxRequest) {
+                        AddMailboxRequest addRequest = (AddMailboxRequest) dataRequest;
+                        payloadName = addRequest.getMailboxSequentialData().getMailboxData().getClassName();
+                    } else if (dataRequest instanceof RemoveMailboxRequest) {
+                        RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) dataRequest;
+                        payloadName = removeRequest.getClassName();
                     }
                     dataRequestMap.putIfAbsent(dataRequestName, new HashMap<>());
                     Map<String, AtomicInteger> payloadMap = dataRequestMap.get(dataRequestName);
@@ -116,10 +136,14 @@ class InventoryHandler implements Connection.Listener {
         if (report.isEmpty()) {
             report = "No items received";
         }
-        String maxSizeReached = inventory.isMaxSizeReached() ? "; \nResponse got truncated because max size was reached" : "";
-        String size = ByteUnit.BYTE.toKB((double) inventory.getSerializedSize().orElse(0)) + " KB";
+        String maxSizeReached = inventory.isMaxSizeReached()
+                ? "Still missing data. Response got truncated because max size was reached"
+                : "All data received from peer";
+        String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
+        String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
         log.info("\n##########################################################################################\n" +
                 "Received " + size + " of inventory data from: " + connection.getPeerAddress().getFullAddress() +
+                " after " + passed + "; \n" +
                 maxSizeReached +
                 "\n##########################################################################################\n" +
                 report +

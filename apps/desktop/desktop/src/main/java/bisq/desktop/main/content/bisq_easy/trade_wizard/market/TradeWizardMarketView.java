@@ -120,7 +120,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
                 .left()
                 .minWidth(120)
-                .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyName))
+                .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyDisplayName))
                 .setCellFactory(getNameCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
@@ -154,12 +154,10 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
                 if (item != null && !empty) {
                     label.setGraphic(item.getMarketLogo());
-                    String quoteCurrencyName = item.getQuoteCurrencyName();
+                    String quoteCurrencyName = item.getQuoteCurrencyDisplayName();
                     label.setText(quoteCurrencyName);
                     if (quoteCurrencyName.length() > 20) {
                         Tooltip tooltip = new BisqTooltip(quoteCurrencyName);
-                        // Force font color as color from css gets shadowed by parent
-                        tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
                         label.setTooltip(tooltip);
                     }
 
@@ -172,25 +170,32 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         };
     }
 
-    @EqualsAndHashCode
+
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     static class MarketListItem {
+        @EqualsAndHashCode.Include
         private final Market market;
-        private final String quoteCurrencyName;
+        @EqualsAndHashCode.Include
         private final int numOffersAsInteger;
+        @EqualsAndHashCode.Include
         private final int numUsersAsInteger;
+
+        private final String quoteCurrencyDisplayName;
         private final String numOffers;
         private final String numUsers;
-        @EqualsAndHashCode.Exclude
+
+        //TOD move to cell
         private final Node marketLogo;
 
         MarketListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
             this.market = market;
-            quoteCurrencyName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndName();
-            this.numOffers = String.valueOf(numOffersAsInteger);
             this.numOffersAsInteger = numOffersAsInteger;
-            this.numUsers = String.valueOf(numUsersAsInteger);
             this.numUsersAsInteger = numUsersAsInteger;
+
+            this.numOffers = String.valueOf(numOffersAsInteger);
+            quoteCurrencyDisplayName = new FiatCurrency(market.getQuoteCurrencyCode()).getCodeAndDisplayName();
+            this.numUsers = String.valueOf(numUsersAsInteger);
             marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
             marketLogo.setCache(true);
             marketLogo.setCacheHint(CacheHint.SPEED);

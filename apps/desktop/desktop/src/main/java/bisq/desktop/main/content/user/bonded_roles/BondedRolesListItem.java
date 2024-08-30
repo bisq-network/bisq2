@@ -26,6 +26,7 @@ import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
 import com.google.gson.GsonBuilder;
 import lombok.EqualsAndHashCode;
@@ -40,29 +41,34 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
 @ToString
 public class BondedRolesListItem {
+    @EqualsAndHashCode.Include
+    private final BondedRole bondedRole;
+
     private final Optional<UserProfile> userProfile;
     private final String roleTypeString;
-    private final String bondUserName;
-    private final String signature;
-    private final String userProfileId;
-    private final String userName;
     private final BondedRoleType bondedRoleType;
+    private final String bondUserName;
+    private final String userProfileId;
+    private final String signature;
+    private final String userName;
     private final String address;
     private final String addressInfoJson;
-    @EqualsAndHashCode.Exclude
     private final String isBanned;
     private final boolean staticPublicKeysProvided;
     private final boolean isRootNode;
     private final boolean isRootSeedNode;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService, NetworkService networkService) {
+        this.bondedRole = bondedRole;
+
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
         isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
-        userProfile = userService.getUserProfileService().findUserProfile(authorizedBondedRoleData.getProfileId());
+        UserProfileService userProfileService = userService.getUserProfileService();
+        userProfile = userProfileService.findUserProfile(authorizedBondedRoleData.getProfileId());
         userProfileId = userProfile.map(UserProfile::getId).orElse(Res.get("data.na"));
         userName = userProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
         bondUserName = authorizedBondedRoleData.getBondUserName();

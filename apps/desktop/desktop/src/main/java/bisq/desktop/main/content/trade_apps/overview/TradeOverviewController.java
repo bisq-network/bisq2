@@ -63,17 +63,17 @@ public class TradeOverviewController implements Controller {
                 new Pair<>(10000L, 700000L),
                 ""
         );
-        ProtocolListItem multisig = new ProtocolListItem(TradeAppsAttributes.Type.MULTISIG,
-                NavigationTarget.MULTISIG,
-                TradeProtocolType.MULTISIG,
+        ProtocolListItem bisqMuSig = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_MU_SIG,
+                NavigationTarget.BISQ_MU_SIG,
+                TradeProtocolType.BISQ_MU_SIG,
                 new Pair<>(10000L, 700000L),
-                "Q3/24"
+                "Q4/24"
         );
         ProtocolListItem submarine = new ProtocolListItem(TradeAppsAttributes.Type.SUBMARINE,
                 NavigationTarget.SUBMARINE,
                 TradeProtocolType.SUBMARINE,
                 new Pair<>(10000L, 700000L),
-                "Q4/24"
+                "Q2/25"
         );
         ProtocolListItem liquidFiat = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_LIGHTNING,
                 NavigationTarget.BISQ_LIGHTNING,
@@ -82,17 +82,17 @@ public class TradeOverviewController implements Controller {
                 "Q2/25"
         );
         return List.of(bisqEasy,
-                multisig,
+                bisqMuSig,
                 submarine,
                 liquidFiat);
     }
 
     private List<ProtocolListItem> getMoreProtocols() {
-        ProtocolListItem liquidMultisig = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_MULTISIG,
+        ProtocolListItem liquidMuSig = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_MU_SIG,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
-                TradeProtocolType.LIQUID_MULTISIG,
+                TradeProtocolType.LIQUID_MU_SIG,
                 new Pair<>(10000L, 700000L),
-                "Q4/24"
+                "Q2/25"
         );
         ProtocolListItem moneroSwap = new ProtocolListItem(TradeAppsAttributes.Type.MONERO_SWAP,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
@@ -112,7 +112,7 @@ public class TradeOverviewController implements Controller {
                 new Pair<>(10000L, 700000L),
                 "Q3/25"
         );
-        return List.of(liquidMultisig,
+        return List.of(liquidMuSig,
                 moneroSwap,
                 liquidSwap,
                 bsqSwap);

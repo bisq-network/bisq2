@@ -1,7 +1,7 @@
 package bisq.network.p2p.node;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 /**
  * Features are used to signal which features the node supports. Those might be variations of different implementations
@@ -14,7 +14,7 @@ public enum Feature implements ProtoEnum {
     AUTHORIZATION_EQUI_HASH;
 
     @Override
-    public bisq.network.protobuf.Feature toProto() {
+    public bisq.network.protobuf.Feature toProtoEnum() {
         return bisq.network.protobuf.Feature.valueOf(getProtobufEnumPrefix() + name());
     }
 

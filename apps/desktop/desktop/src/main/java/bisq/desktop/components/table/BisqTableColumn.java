@@ -20,6 +20,7 @@ package bisq.desktop.components.table;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
+import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -28,6 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -38,7 +40,6 @@ import java.util.function.Function;
 
 @Slf4j
 public class BisqTableColumn<S> extends TableColumn<S, S> {
-
     public enum DefaultCellFactory {
         TEXT,
         TEXT_INPUT,
@@ -65,7 +66,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, TextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
-    private final Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
+    @Getter
+    private boolean includeForCsv;
 
     public static class Builder<S> {
         private Optional<String> title = Optional.empty();
@@ -82,6 +84,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Comparator<S>> comparator = Optional.empty();
         private Optional<TableColumn.SortType> sortType = Optional.empty();
         private boolean isSortable = true;
+        private boolean includeForCsv = true;
         private DefaultCellFactory defaultCellFactory = DefaultCellFactory.TEXT;
         private Consumer<S> onActionHandler = item -> {
         };
@@ -103,8 +106,12 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                 titleProperty.ifPresent(tableColumn::applyTitleProperty);
             }
             tableColumn.isVisibleFunction = isVisibleFunction;
+
             minWidth.ifPresent(tableColumn::setMinWidth);
+            // We set prefWidth to the minWidth
+            minWidth.ifPresent(tableColumn::setPrefWidth);
             maxWidth.ifPresent(tableColumn::setMaxWidth);
+
             tableColumn.value = value;
             tableColumn.valueSupplier = valueSupplier;
             tableColumn.tooltipSupplier = tooltipSupplier;
@@ -116,11 +123,15 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             tableColumn.buttonClass = buttonClass;
             tableColumn.updateItemWithButtonHandler = updateItemWithButtonHandler;
             tableColumn.updateItemWithInputTextFieldHandler = updateItemWithInputTextFieldHandler;
+            tableColumn.includeForCsv = includeForCsv;
             if (left) {
                 tableColumn.getStyleClass().add("left");
-            }
-            if (right) {
+                // Hack to apply alignment to header. See: https://stackoverflow.com/questions/23576867/javafx-how-to-align-only-one-column-header-in-tableview
+                tableColumn.setId("left");
+            } else if (right) {
                 tableColumn.getStyleClass().add("right");
+                // Hack to apply alignment to header. See: https://stackoverflow.com/questions/23576867/javafx-how-to-align-only-one-column-header-in-tableview
+                tableColumn.setId("right");
             }
 
             tableColumn.setSortable(isSortable);
@@ -215,6 +226,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
+        public Builder<S> includeForCsv(boolean value) {
+            this.includeForCsv = value;
+            return this;
+        }
+
         public Builder<S> defaultCellFactory(DefaultCellFactory defaultCellFactory) {
             this.defaultCellFactory = defaultCellFactory;
             return this;
@@ -285,6 +301,26 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         }
     }
 
+    public String getHeaderForCsv() {
+        return titleLabel.getText();
+    }
+
+    // If custom cellFactories are used we need to set any of the value supplier methods in the builder for providing
+    // the data for csv export
+    public String resolveValueForCsv(S item) {
+        if (value.isPresent()) {
+            return value.get();
+        } else if (valueSupplier.isPresent()) {
+            return valueSupplier.get().apply(item);
+        } else if (valuePropertySupplier.isPresent()) {
+            return valuePropertySupplier.get().apply(item).get();
+        } else if (valuePropertyBiDirBindingSupplier.isPresent()) {
+            return valuePropertyBiDirBindingSupplier.get().apply(item).get();
+        } else {
+            return Res.get("data.na");
+        }
+    }
+
     public void applyTitle(String title) {
         titleLabel.setText(title);
         setGraphic(titleLabel);
@@ -336,7 +372,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     @Override
                     public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
-
                             @Override
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -355,9 +390,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     }
 
                                     if (tooltipSupplier.isPresent()) {
-                                        setTooltip(new BisqTooltip(tooltipSupplier.get().apply(item), true));
+                                        setTooltip(new BisqTooltip(tooltipSupplier.get().apply(item), BisqTooltip.Style.DARK));
                                     } else if (tooltipPropertySupplier.isPresent()) {
-                                        BisqTooltip tooltip = new BisqTooltip(true);
+                                        BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
                                         tooltipPropertySupplier.ifPresent(supplier ->
                                                 tooltip.textProperty().bind(supplier.apply(item)));
                                         setTooltip(tooltip);
@@ -378,8 +413,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<S, S> call(TableColumn<S,
-                            S> column) {
+                    public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
 
                             private final TextField textField = new TextField();

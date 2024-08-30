@@ -1,6 +1,6 @@
 package bisq.application;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -41,7 +41,11 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         if (applicationService != null) {
             applicationService.shutdown()
                     .thenRun(() -> {
-                        shutDownHandlers.forEach(Runnable::run);
+                        try {
+                            shutDownHandlers.forEach(Runnable::run);
+                        } catch (Exception e) {
+                            log.error("Exception at running shutDownHandlers", e);
+                        }
                         exitJvm();
                     });
         } else {
@@ -55,7 +59,7 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
 
     protected void exitJvm() {
         log.info("Exiting JVM");
-        System.exit(OsUtils.EXIT_SUCCESS);
+        System.exit(PlatformUtils.EXIT_SUCCESS);
     }
 
     @Override

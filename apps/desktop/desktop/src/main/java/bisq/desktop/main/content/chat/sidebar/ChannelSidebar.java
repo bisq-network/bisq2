@@ -147,7 +147,7 @@ public class ChannelSidebar {
             if (userProfileIdsOfParticipantsPin != null) {
                 userProfileIdsOfParticipantsPin.unbind();
             }
-            userProfileIdsOfParticipantsPin = chatChannel.getUserProfileIdsOfParticipants().addObserver(new CollectionObserver<>() {
+            userProfileIdsOfParticipantsPin = chatChannel.getUserProfileIdsOfActiveParticipants().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(String userProfileId) {
                     boolean ignored = ignoredChatUserIds.contains(userProfileId);
@@ -179,7 +179,8 @@ public class ChannelSidebar {
                 model.description.set(commonPublicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = commonPublicChatChannel.getChannelAdminId()
-                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin).map(userProfile -> new ChannelSidebarUserProfile(bannedUserService, userProfile)))
+                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin)
+                                .map(userProfile -> new ChannelSidebarUserProfile(bannedUserService, userProfile)))
                         .stream()
                         .findAny();
                 model.moderators.setAll(commonPublicChatChannel.getChannelModeratorIds().stream()
@@ -290,7 +291,8 @@ public class ChannelSidebar {
             closeButton.setOnAction(null);
         }
 
-        private Callback<ListView<ChannelSidebarUserProfile>, ListCell<ChannelSidebarUserProfile>> getCellFactory(Controller controller) {
+        private Callback<ListView<ChannelSidebarUserProfile>, ListCell<ChannelSidebarUserProfile>> getCellFactory(
+                Controller controller) {
             return new Callback<>() {
                 @Override
                 public ListCell<ChannelSidebarUserProfile> call(ListView<ChannelSidebarUserProfile> list) {

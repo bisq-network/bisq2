@@ -29,9 +29,11 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.reactions.*;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.OfferMessage;
 import bisq.support.mediation.MediationRequest;
@@ -51,6 +53,7 @@ public class ResolverConfig {
         // Register resolvers for distributedData
         // Abstract classes
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
+        DistributedDataResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.getDistributedDataResolver());
 
         // Final classes
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
@@ -73,6 +76,7 @@ public class ResolverConfig {
         // Abstract classes
         NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.getNetworkMessageResolver());
 
         // Final classes
         NetworkMessageResolver.addResolver("user.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.getNetworkMessageResolver());
@@ -104,5 +108,14 @@ public class ResolverConfig {
         NetworkStorageWhiteList.add(BisqEasyReportErrorMessage.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
+
+        // ChatMessageReaction subclasses
+        NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);
+        NetworkStorageWhiteList.add(BisqEasyOfferbookMessageReaction.class);
+        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessageReaction.class);
+        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessageReaction.class);
+
+        // From network module. As it is used as mailbox message we add it here as well.
+        NetworkStorageWhiteList.add(AckMessage.class);
     }
 }

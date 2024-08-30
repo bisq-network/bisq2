@@ -27,7 +27,6 @@ import java.time.Instant;
 @Getter
 @ToString
 public class BootstrapEvent {
-
     private static final String DONE_TAG = "done";
 
     private final int progress;
@@ -51,7 +50,7 @@ public class BootstrapEvent {
     }
 
     public static boolean isBootstrapMessage(String type, String message) {
-        return type.equals("STATUS_CLIENT") && message.contains("BOOTSTRAP");
+        return type.equals(EventType.STATUS_CLIENT.name()) && message.contains("BOOTSTRAP");
     }
 
     public static BootstrapEvent fromEventMessage(String message) {

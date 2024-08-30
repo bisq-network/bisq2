@@ -17,14 +17,13 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.chat.ChatChannelDomain;
-import bisq.common.currency.Market;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
@@ -36,22 +35,22 @@ import java.util.function.Predicate;
 @Slf4j
 @Getter
 public final class BisqEasyOfferbookModel extends ChatModel {
-    private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowAppliedFilters = new SimpleBooleanProperty();
     private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList(p -> new Observable[]{p.getNumOffers()});
     private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
+    private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
     private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
-    private final ObjectProperty<Filters.Markets> selectedMarketsFilter = new SimpleObjectProperty<>();
-    private final ObjectProperty<Filters.OfferDirectionOrOwner> selectedOfferDirectionOrOwnerFilter = new SimpleObjectProperty<>();
-    private final ObjectProperty<Filters.PeerReputation> selectedPeerReputationFilter = new SimpleObjectProperty<>();
+    private final ObjectProperty<BisqEasyMarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
     private final StringProperty marketPrice = new SimpleStringProperty();
-    private final ObservableSet<Market> favouriteMarkets = FXCollections.observableSet();
-    private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
+    private final StringProperty fiatAmountTitle = new SimpleStringProperty();
+    private final BooleanProperty showMarketSelectionListCollapsed = new SimpleBooleanProperty();
 
+    @Setter
+    private ReadOnlyBooleanProperty showOfferListExpanded;
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;
     @Setter
@@ -59,7 +58,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     @Setter
     private Predicate<MarketChannelItem> marketFilterPredicate = marketChannelItem -> true;
     @Setter
-    private DoubleProperty favouritesTableViewHeight = new SimpleDoubleProperty(0);
+    private BooleanProperty favouritesTableViewHeightChanged = new SimpleBooleanProperty();
 
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

@@ -19,6 +19,8 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
+import bisq.common.data.Pair;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -37,9 +39,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -94,7 +94,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
                         .ifPresent(dataSetByHash::remove);
                 if (scoreByUserProfileId.containsKey(userProfileId)) {
                     scoreByUserProfileId.remove(userProfileId);
-                    userProfileIdOfUpdatedScore.set(userProfileId);
+                    userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
                 }
             }
         }
@@ -175,9 +175,21 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         // Before timeout gets triggered we request 
         long now = System.currentTimeMillis();
         if (now - persistableStore.getLastRequested() > AuthorizedTimestampData.TTL / 2) {
-            persistableStore.getProfileIds().forEach(this::requestTimestamp);
             persistableStore.setLastRequested(now);
             persist();
+
+            Set<String> profileIds = new HashSet<>(persistableStore.getProfileIds());
+            CompletableFuture.runAsync(() -> {
+                        profileIds.forEach(userProfileId -> {
+                            requestTimestamp(userProfileId);
+                            long delay = 30_000 + new Random().nextInt(90_000);
+                            try {
+                                Thread.sleep(delay);
+                            } catch (InterruptedException ignore) {
+                            }
+                        });
+                    },
+                    ExecutorFactory.newSingleThreadScheduledExecutor("requestForAllProfileIdsBeforeExpired"));
             return true;
         }
         return false;

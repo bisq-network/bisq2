@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.network_load;
 
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -38,6 +39,7 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Void> future = new CompletableFuture<>();
     private final int nonce;
+    private long requestTs;
 
     NetworkLoadExchangeHandler(Node node, Connection connection) {
         this.node = node;
@@ -49,8 +51,9 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
 
     CompletableFuture<Void> request() {
         NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
-        log.info("{} send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
-                node, connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
+        log.info("Send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
+                connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
+        requestTs = System.currentTimeMillis();
         supplyAsync(() -> node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
@@ -67,14 +70,15 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
             NetworkLoadExchangeResponse response = (NetworkLoadExchangeResponse) envelopePayloadMessage;
             if (response.getRequestNonce() == nonce) {
                 NetworkLoad peersNetworkLoad = response.getNetworkLoad();
-                log.info("{} received NetworkLoadResponse from {} with nonce {} and peers networkLoad {}. Connection={}",
-                        node, connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
+                String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
+                log.info("Received NetworkLoadResponse after {} from {} with nonce {} and peers networkLoad {}. Connection={}",
+                        passed, connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
                 removeListeners();
                 connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
                 future.complete(null);
             } else {
-                log.warn("{} received NetworkLoadResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
+                log.warn("Received NetworkLoadResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
+                        connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
             }
         }
     }

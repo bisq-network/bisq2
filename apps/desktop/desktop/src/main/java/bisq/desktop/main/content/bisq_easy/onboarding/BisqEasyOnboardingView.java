@@ -182,5 +182,4 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         GridPane.setMargin(watchVideoButton, new Insets(10, 0, 0, 0));
         gridPane.add(watchVideoButton, 1, 2);
     }
-
 }

@@ -21,6 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -30,39 +31,43 @@ import javafx.scene.layout.VBox;
 
 public class PeerProtocolLogMessageBox extends MessageBox {
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
-    protected final VBox systemMessageBg = new VBox();
+    protected final VBox tradeLogMessageBg = new VBox();
     protected final VBox contentVBox;
+    protected final HBox dateTimeHBox;
     protected final Label message, dateTime;
 
     public PeerProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
         this.item = item;
 
-        message = new Label(item.getMessage());
+        String decoded = Res.decode(item.getMessage());
+        message = new Label(decoded);
         message.getStyleClass().addAll("text-fill-white", "system-message-labels");
         message.setAlignment(Pos.CENTER);
         message.setWrapText(true);
 
         dateTime = new Label(item.getDate());
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "system-message-labels");
+        dateTimeHBox = new HBox(10, dateTime);
+        dateTimeHBox.setAlignment(Pos.CENTER);
 
-        systemMessageBg.setSpacing(5);
-        systemMessageBg.getChildren().addAll(message, dateTime);
-        systemMessageBg.setFillWidth(true);
-        systemMessageBg.setAlignment(Pos.CENTER);
-        systemMessageBg.getStyleClass().add("system-message-background");
-        HBox.setHgrow(systemMessageBg, Priority.ALWAYS);
+        tradeLogMessageBg.setSpacing(5);
+        tradeLogMessageBg.getChildren().addAll(message, dateTimeHBox);
+        tradeLogMessageBg.setFillWidth(true);
+        tradeLogMessageBg.setAlignment(Pos.CENTER);
+        tradeLogMessageBg.getStyleClass().add("system-message-background");
+        HBox.setHgrow(tradeLogMessageBg, Priority.ALWAYS);
 
         setFillWidth(true);
         HBox.setHgrow(this, Priority.ALWAYS);
         setPadding(new Insets(0));
 
-        contentVBox = new VBox(systemMessageBg);
+        contentVBox = new VBox(tradeLogMessageBg);
         contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
         getChildren().setAll(contentVBox);
         setAlignment(Pos.CENTER);
     }
 
     @Override
-    public void cleanup() {
+    public void dispose() {
     }
 }

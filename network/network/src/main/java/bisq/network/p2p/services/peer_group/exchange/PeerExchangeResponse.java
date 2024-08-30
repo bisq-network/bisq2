@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.peer_group.Peer;
@@ -38,6 +39,8 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
     @Setter
     public static long maxNumPeers;
     private final int nonce;
+    @ExcludeForHash
+    @EqualsAndHashCode.Exclude
     private final List<Peer> peers;
 
     public PeerExchangeResponse(int nonce, List<Peer> peers) {
@@ -54,16 +57,23 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
         checkArgument(peers.size() <= maxNumPeers);
     }
 
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setPeerExchangeResponse(toValueProto(serializeForHash));
+    }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setPeerExchangeResponse(
-                        bisq.network.protobuf.PeerExchangeResponse.newBuilder()
-                                .setNonce(nonce)
-                                .addAllPeers(peers.stream()
-                                        .map(Peer::toProto)
-                                        .collect(Collectors.toList())))
-                .build();
+    public bisq.network.protobuf.PeerExchangeResponse toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.PeerExchangeResponse.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.PeerExchangeResponse.newBuilder()
+                .setNonce(nonce)
+                .addAllPeers(peers.stream()
+                        .map(peer -> peer.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
     }
 
     public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto) {

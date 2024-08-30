@@ -18,6 +18,7 @@
 package bisq.user.reputation.data;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
@@ -43,16 +44,51 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    private static final int VERSION = 1;
+
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
+    private final long blockTime;
     private final long amount;
-    private final long time;
     private final byte[] hash;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
+    private final int blockHeight;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
+    private final String txId;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedProofOfBurnData(long amount, long time, byte[] hash, boolean staticPublicKeysProvided) {
+    public AuthorizedProofOfBurnData(long blockTime,
+                                     long amount,
+                                     byte[] hash,
+                                     int blockHeight,
+                                     String txId,
+                                     boolean staticPublicKeysProvided) {
+        this(VERSION, blockTime, amount, hash, blockHeight, txId, staticPublicKeysProvided);
+    }
+
+    public AuthorizedProofOfBurnData(int version,
+                                     long blockTime,
+                                     long amount,
+                                     byte[] hash,
+                                     int blockHeight,
+                                     String txId,
+                                     boolean staticPublicKeysProvided) {
+        this.version = version;
+        this.blockTime = blockTime;
         this.amount = amount;
-        this.time = time;
         this.hash = hash;
+        this.blockHeight = blockHeight;
+        this.txId = txId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         verify();
@@ -60,26 +96,40 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateDate(time);
-        NetworkDataValidation.validateHash(hash);
         checkArgument(amount > 0);
+        NetworkDataValidation.validateDate(blockTime);
+        NetworkDataValidation.validateHash(hash);
+        if (version > 0) {
+            NetworkDataValidation.validateBtcTxId(txId);
+            checkArgument(blockHeight > 0);
+        }
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedProofOfBurnData toProto() {
+    public bisq.user.protobuf.AuthorizedProofOfBurnData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedProofOfBurnData.newBuilder()
+                .setVersion(version)
                 .setAmount(amount)
-                .setTime(time)
+                .setBlockTime(blockTime)
                 .setHash(ByteString.copyFrom(hash))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setBlockHeight(blockHeight)
+                .setTxId(txId)
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.user.protobuf.AuthorizedProofOfBurnData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto) {
         return new AuthorizedProofOfBurnData(
+                proto.getVersion(),
+                proto.getBlockTime(),
                 proto.getAmount(),
-                proto.getTime(),
                 proto.getHash().toByteArray(),
+                proto.getBlockHeight(),
+                proto.getTxId(),
                 proto.getStaticPublicKeysProvided());
     }
 
@@ -120,9 +170,12 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     @Override
     public String toString() {
         return "AuthorizedProofOfBurnData{" +
+                ",\r\n                    version=" + version +
                 ",\r\n                    amount=" + amount +
-                ",\r\n                    time=" + new Date(time) +
+                ",\r\n                    blockTime=" + blockTime + " (" + new Date(blockTime) + ")" +
                 ",\r\n                    hash=" + Hex.encode(hash) +
+                ",\r\n                    blockHeight=" + blockHeight +
+                ",\r\n                    txId=" + txId +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";

@@ -61,11 +61,16 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         aggregatedNetworkLoadValues.add(networkLoad.getLoad());
         int size = aggregatedPoWDuration.size();
         if (size % 100 == 0) {
+            double averageTimePerMessage = MathUtils.roundDouble(aggregatedPoWDuration.stream().mapToLong(e -> e).average().orElse(0D), 2);
+            double accDuration = MathUtils.roundDouble(accumulatedPoWDuration / 1000, 2);
+            double averageLoad = MathUtils.roundDouble(aggregatedNetworkLoadValues.stream().mapToDouble(e -> e).average().orElse(0D), 4);
+            if (averageTimePerMessage > 1000) {
+                log.warn("Average time/message used for PoW is very high");
+            } else if (averageTimePerMessage > 300) {
+                log.warn("Average time/message used for PoW is higher as expected");
+            }
             log.info("Total time used for PoW: {} sec; Average time/message used for PoW: {} ms; Average network load value: {}; Number of messages: {}",
-                    MathUtils.roundDouble(accumulatedPoWDuration / 1000, 2),
-                    MathUtils.roundDouble(aggregatedPoWDuration.stream().mapToLong(e -> e).average().orElse(0D), 2),
-                    MathUtils.roundDouble(aggregatedNetworkLoadValues.stream().mapToDouble(e -> e).average().orElse(0D), 4),
-                    size
+                    accDuration, averageTimePerMessage, averageLoad, size
             );
             if (aggregatedPoWDuration.size() > 100_000) {
                 log.warn("aggregatedPoWDuration is getting too large. We clear the list.");
@@ -114,13 +119,28 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
 
         // Verify payload
         byte[] payload = getPayload(message);
-        if (!Arrays.equals(payload, proofOfWork.getPayload())) {
-            log.warn("Message payload not matching proof of work payload. " +
-                            "getPayload(message)={}; proofOfWork.getPayload()={}; " +
-                            "getPayload(message).length={}; proofOfWork.getPayload().length={}",
-                    StringUtils.truncate(Hex.encode(payload), 200), StringUtils.truncate(Hex.encode(proofOfWork.getPayload()), 200),
-                    payload.length, proofOfWork.getPayload().length);
-            return false;
+        byte[] proofOfWorkPayload = proofOfWork.getPayload();
+        if (!Arrays.equals(payload, proofOfWorkPayload)) {
+            // We try again with ignoring ExcludeForHash annotations by using the serialize() method.
+            byte[] payloadWithoutUsingExcludeForHash = message.serialize();
+            if (Arrays.equals(payloadWithoutUsingExcludeForHash, proofOfWorkPayload)) {
+                log.info("Proof of work payload not matching message.serializeForHash() but " +
+                        "matching message.serialize(). This is expected for certain messages from " +
+                        "nodes which do not run the latest version.");
+            } else {
+                log.warn("Message payload not matching proof of work payload. " +
+                                "getPayload(message)={};\n" +
+                                "proofOfWork.getPayload()={};\n" +
+                                "getPayload(message).length={};\n" +
+                                "proofOfWork.getPayload().length={}\n" +
+                                "message={}",
+                        StringUtils.truncate(Hex.encode(payload), 200),
+                        StringUtils.truncate(Hex.encode(proofOfWorkPayload), 200),
+                        payload.length,
+                        proofOfWorkPayload.length,
+                        StringUtils.truncate(message.toString(), 5000));
+                return false;
+            }
         }
 
         // Verify challenge
@@ -215,7 +235,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     }
 
     private byte[] getPayload(EnvelopePayloadMessage message) {
-        return message.serialize();
+        return message.serializeForHash();
     }
 
     private byte[] getChallenge(String peerAddress, int messageCounter) {

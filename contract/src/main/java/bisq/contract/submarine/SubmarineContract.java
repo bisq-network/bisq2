@@ -55,10 +55,15 @@ public class SubmarineContract extends TwoPartyContract<SubmarineOffer> {
     }
 
     @Override
-    public bisq.contract.protobuf.Contract toProto() {
+    public bisq.contract.protobuf.Contract.Builder getBuilder(boolean serializeForHash) {
         var bisqEasyContract = bisq.contract.protobuf.SubmarineContract.newBuilder();
-        var twoPartyContract = getTwoPartyContractBuilder().setSubmarineContract(bisqEasyContract);
-        return getContractBuilder().setTwoPartyContract(twoPartyContract).build();
+        var twoPartyContract = getTwoPartyContractBuilder(serializeForHash).setSubmarineContract(bisqEasyContract);
+        return getContractBuilder(serializeForHash).setTwoPartyContract(twoPartyContract);
+    }
+
+    @Override
+    public bisq.contract.protobuf.Contract toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static SubmarineContract fromProto(bisq.contract.protobuf.Contract proto) {

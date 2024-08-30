@@ -23,8 +23,9 @@ option java_multiple_files = true;
 import "common.proto";
 
 message CookieMapEntry {
-  string cookieKey = 1;
+  string key = 1;
   string value = 2;
+  optional string subKey = 3;
 }
 message Cookie {
   repeated CookieMapEntry cookieMapEntries = 1;
@@ -57,4 +58,8 @@ message SettingsStore {
   repeated common.Market favouriteMarkets = 17;
   bool ignoreMinRequiredReputationScoreFromSecManager = 18;
   double maxTradePriceDeviation = 19;
+  bool showBuyOffers = 20;
+  bool showOfferListExpanded = 21;
+  bool showMarketSelectionListCollapsed = 22;
+  string backupLocation = 23;
 }

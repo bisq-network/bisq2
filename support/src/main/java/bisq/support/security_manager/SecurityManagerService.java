@@ -35,8 +35,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -101,10 +99,8 @@ public class SecurityManagerService implements Service {
                                                    Optional<String> minVersion,
                                                    Optional<AuthorizedBondedRole> bannedRole) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        PublicKey authorizedPublicKey = keyPair.getPublic();
-        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
                 new Date().getTime(),
                 alertType,
@@ -114,12 +110,25 @@ public class SecurityManagerService implements Service {
                 requireVersionForTrading,
                 minVersion,
                 bannedRole,
-                profileId,
+                securityManagerProfileId,
                 staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(authorizedAlertData,
-                        keyPair,
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        AuthorizedAlertData oldVersion = new AuthorizedAlertData(0,
+                authorizedAlertData.getId(),
+                authorizedAlertData.getDate(),
+                authorizedAlertData.getAlertType(),
+                authorizedAlertData.getHeadline(),
+                authorizedAlertData.getMessage(),
+                authorizedAlertData.isHaltTrading(),
+                authorizedAlertData.isRequireVersionForTrading(),
+                authorizedAlertData.getMinVersion(),
+                authorizedAlertData.getBannedRole(),
+                authorizedAlertData.getSecurityManagerProfileId(),
+                authorizedAlertData.isStaticPublicKeysProvided());
+        networkService.publishAuthorizedData(oldVersion, keyPair);
+
+        return networkService.publishAuthorizedData(authorizedAlertData, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -130,35 +139,43 @@ public class SecurityManagerService implements Service {
 
     public CompletableFuture<Boolean> publishDifficultyAdjustment(double difficultyAdjustmentFactor) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        PublicKey authorizedPublicKey = keyPair.getPublic();
-        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
         AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(new Date().getTime(),
                 difficultyAdjustmentFactor,
-                profileId,
+                securityManagerProfileId,
                 staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(data,
-                        keyPair,
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        AuthorizedDifficultyAdjustmentData oldVersion = new AuthorizedDifficultyAdjustmentData(0,
+                data.getDate(),
+                data.getDifficultyAdjustmentFactor(),
+                data.getSecurityManagerProfileId(),
+                data.isStaticPublicKeysProvided());
+        networkService.publishAuthorizedData(oldVersion, keyPair);
+
+        return networkService.publishAuthorizedData(data, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
     public CompletableFuture<Boolean> publishMinRequiredReputationScore(long minRequiredReputationScore) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        PublicKey authorizedPublicKey = keyPair.getPublic();
-        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
         AuthorizedMinRequiredReputationScoreData data = new AuthorizedMinRequiredReputationScoreData(new Date().getTime(),
                 minRequiredReputationScore,
-                profileId,
+                securityManagerProfileId,
                 staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(data,
-                        keyPair,
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
+
+        // Can be removed once there are no pre 2.1.0 versions out there anymore
+        AuthorizedMinRequiredReputationScoreData oldVersion = new AuthorizedMinRequiredReputationScoreData(0,
+                data.getDate(),
+                data.getMinRequiredReputationScore(),
+                data.getSecurityManagerProfileId(),
+                data.isStaticPublicKeysProvided());
+        networkService.publishAuthorizedData(oldVersion, keyPair);
+
+        return networkService.publishAuthorizedData(data, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 

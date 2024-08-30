@@ -18,6 +18,7 @@
 package bisq.user.reputation.data;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -40,14 +41,39 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public static final long TTL = TTL_100_DAYS;
 
-    private final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
     private final String profileId;
     private final long date;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedAccountAgeData(String profileId, long date, boolean staticPublicKeysProvided) {
+    public AuthorizedAccountAgeData(String profileId,
+                                    long date,
+                                    boolean staticPublicKeysProvided) {
+        this(VERSION,
+                profileId,
+                date,
+                staticPublicKeysProvided);
+    }
+
+    public AuthorizedAccountAgeData(int version,
+                                     String profileId,
+                                     long date,
+                                     boolean staticPublicKeysProvided) {
+        this.version = version;
         this.profileId = profileId;
         this.date = date;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
@@ -62,19 +88,26 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedAccountAgeData toProto() {
+    public bisq.user.protobuf.AuthorizedAccountAgeData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedAccountAgeData.newBuilder()
                 .setProfileId(profileId)
                 .setDate(date)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setVersion(version);
+    }
+
+    @Override
+    public bisq.user.protobuf.AuthorizedAccountAgeData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedAccountAgeData fromProto(bisq.user.protobuf.AuthorizedAccountAgeData proto) {
         return new AuthorizedAccountAgeData(
+                proto.getVersion(),
                 proto.getProfileId(),
                 proto.getDate(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

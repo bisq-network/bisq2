@@ -17,10 +17,10 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -34,57 +34,64 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Date;
 
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public final class RefreshAuthenticatedDataRequest implements DataRequest {
+public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataRequest {
+    private static final int VERSION = 1;
+
     public static RefreshAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
                                                        AuthenticatedData authenticatedData,
                                                        KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
-        return new RefreshAuthenticatedDataRequest(authenticatedData.getMetaData(),
+        PublicKey publicKey = keyPair.getPublic();
+        return new RefreshAuthenticatedDataRequest(VERSION,
+                authenticatedData.getMetaData(),
                 hash,
-                keyPair.getPublic(),
+                publicKey.getEncoded(),
+                publicKey,
                 newSequenceNumber,
-                signature);
+                signature,
+                System.currentTimeMillis());
     }
 
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
     private final MetaData metaData;
+
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
+
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes; // 442 bytes
     transient private final PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;         // 47 bytes
+    private final long created;
 
-    public RefreshAuthenticatedDataRequest(MetaData metaData,
-                                           byte[] hash,
-                                           PublicKey ownerPublicKey,
-                                           int sequenceNumber,
-                                           byte[] signature) {
-        this(metaData,
-                hash,
-                ownerPublicKey.getEncoded(),
-                ownerPublicKey,
-                sequenceNumber,
-                signature);
-    }
-
-    private RefreshAuthenticatedDataRequest(MetaData metaData,
+    private RefreshAuthenticatedDataRequest(int version,
+                                            MetaData metaData,
                                             byte[] hash,
                                             byte[] ownerPublicKeyBytes,
                                             PublicKey ownerPublicKey,
                                             int sequenceNumber,
-                                            byte[] signature) {
+                                            byte[] signature,
+                                            long created) {
+        this.version = version;
         this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
+        this.created = created;
 
         verify();
     }
@@ -97,15 +104,25 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRefreshAuthenticatedDataRequest(
-                        bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
-                                .setMetaData(metaData.toProto())
-                                .setHash(ByteString.copyFrom(hash))
-                                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
-                                .setSequenceNumber(sequenceNumber)
-                                .setSignature(ByteString.copyFrom(signature))))
-                .build();
+    public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
+        return newDataRequestBuilder().setRefreshAuthenticatedDataRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.RefreshAuthenticatedDataRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.RefreshAuthenticatedDataRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
+                .setVersion(version)
+                .setMetaData(metaData.toProto(serializeForHash))
+                .setHash(ByteString.copyFrom(hash))
+                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                .setSequenceNumber(sequenceNumber)
+                .setSignature(ByteString.copyFrom(signature))
+                .setCreated(created);
     }
 
     public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto) {
@@ -113,12 +130,14 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
         try {
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
             return new RefreshAuthenticatedDataRequest(
+                    proto.getVersion(),
                     MetaData.fromProto(proto.getMetaData()),
                     proto.getHash().toByteArray(),
                     ownerPublicKeyBytes,
                     ownerPublicKey,
                     proto.getSequenceNumber(),
-                    proto.getSignature().toByteArray()
+                    proto.getSignature().toByteArray(),
+                    proto.getCreated()
             );
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
@@ -159,24 +178,24 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
     }
 
     @Override
-    public long getCreated() {
-        // Not used as not stored in map and no pruning applied
-        return 0;
-    }
-
-    @Override
     public int getMaxMapSize() {
         return metaData.getMaxMapSize();
+    }
+
+    public String getClassName() {
+        return metaData.getClassName();
     }
 
     @Override
     public String toString() {
         return "RefreshAuthenticatedDataRequest{" +
-                "\r\n     metaData=" + metaData +
+                "\r\n     version=" + version +
+                ",\r\n     metaData=" + metaData +
                 ",\r\n     hash=" + Hex.encode(hash) +
                 ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     signature=" + Hex.encode(signature) +
+                ",\r\n     created=" + new Date(created) + " (" + created + ")" +
                 "\r\n}";
     }
 }

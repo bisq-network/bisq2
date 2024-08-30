@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.list;
 
+import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.desktop.ServiceProvider;
@@ -84,7 +85,8 @@ public class ReputationListController implements Controller {
                     ReputationListView.ListItem listItem = new ReputationListView.ListItem(userProfile,
                             reputationService,
                             ReputationListController.this,
-                            model.getFilterMenuItemToggleGroup());
+                            model.getFilterMenuItemToggleGroup(),
+                            userProfileService);
                     model.getListItems().add(listItem);
                 });
             }
@@ -96,7 +98,8 @@ public class ReputationListController implements Controller {
                             .map(userProfile -> new ReputationListView.ListItem(userProfile,
                                     reputationService,
                                     ReputationListController.this,
-                                    model.getFilterMenuItemToggleGroup()))
+                                    model.getFilterMenuItemToggleGroup(),
+                                    userProfileService))
                             .collect(Collectors.toList());
                     model.getListItems().setAll(listItems);
                 });
@@ -120,13 +123,13 @@ public class ReputationListController implements Controller {
             }
         });
 
-        proofOfBurnScoreChangedFlagPin = reputationService.getProofOfBurnService().getUserProfileIdOfUpdatedScore()
+        proofOfBurnScoreChangedFlagPin = reputationService.getProofOfBurnService().getUserProfileIdScorePair()
                 .addObserver(this::updateScore);
-        bondedReputationScoreChangedFlagPin = reputationService.getBondedReputationService().getUserProfileIdOfUpdatedScore()
+        bondedReputationScoreChangedFlagPin = reputationService.getBondedReputationService().getUserProfileIdScorePair()
                 .addObserver(this::updateScore);
-        accountAgeScoreChangedFlagPin = reputationService.getAccountAgeService().getUserProfileIdOfUpdatedScore()
+        accountAgeScoreChangedFlagPin = reputationService.getAccountAgeService().getUserProfileIdScorePair()
                 .addObserver(this::updateScore);
-        signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdOfUpdatedScore()
+        signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdScorePair()
                 .addObserver(this::updateScore);
     }
 
@@ -144,6 +147,7 @@ public class ReputationListController implements Controller {
             reputationDetailsPopup = null;
         }
         model.getListItems().forEach(ReputationListView.ListItem::dispose);
+        model.getListItems().clear();
     }
 
     void onShowDetails(ReputationListView.ListItem item) {
@@ -169,21 +173,22 @@ public class ReputationListController implements Controller {
                         .map(data -> (ReputationSource) data));
     }
 
-    private void updateScore(String userProfileId) {
+    private void updateScore(Pair<String, Long> userProfileIdScorePair) {
+        if (userProfileIdScorePair == null) {
+            return;
+        }
+        String userProfileId = userProfileIdScorePair.getFirst();
         UIThread.run(() -> {
             model.getListItems().stream().filter(e -> e.getUserProfile().getId().equals(userProfileId))
                     .forEach(item -> item.applyReputationScore(userProfileId));
-            // Enforce update in view by setting to null first
-            model.getUserProfileIdOfScoreUpdate().set(null);
-            model.getUserProfileIdOfScoreUpdate().set(userProfileId);
+            model.getScoreChangeTrigger().set(!model.getScoreChangeTrigger().get());
         });
     }
 
     private void addFilterMenuItem(ReputationSource reputationSource) {
-        String title = Res.get("user.reputation.source." + reputationSource.name());
         StandardTable.FilterMenuItem<ReputationListView.ListItem> filterMenuItem = new StandardTable.FilterMenuItem<>(
                 model.getFilterMenuItemToggleGroup(),
-                title,
+                reputationSource.getDisplayString(),
                 Optional.of(reputationSource),
                 item -> item.getReputationSources().contains(reputationSource));
         model.getFilterItems().add(filterMenuItem);

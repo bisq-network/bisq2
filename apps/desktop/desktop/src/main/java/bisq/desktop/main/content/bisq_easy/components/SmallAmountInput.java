@@ -32,10 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SmallAmountInput extends AmountInput {
-
     private static final double ICON_SCALE = 0.8;
     private static final double ICON_OPACITY = 0.5;
-    private static final String DEFAULT_TOOLTIP = "bisqEasy.component.amount.baseSide.tooltip.marketPrice";
+    private static final String DEFAULT_TOOLTIP = "bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice";
     private static final String QUOTE_AMOUNT_ID = "quote-amount-text-field";
 
     public SmallAmountInput(boolean isBaseCurrency) {
@@ -65,7 +64,7 @@ public class SmallAmountInput extends AmountInput {
             iconButton.setScaleX(ICON_SCALE);
             iconButton.setScaleY(ICON_SCALE);
             iconButton.setOpacity(ICON_OPACITY);
-            tooltip = new BisqTooltip(true);
+            tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
             iconButton.setTooltip(tooltip);
             return iconButton;
         }

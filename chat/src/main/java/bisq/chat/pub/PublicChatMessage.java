@@ -21,9 +21,12 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.encoding.Hex;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,10 +35,13 @@ import java.util.Optional;
 /**
  * PublicChatMessage is added as public data to the distributed network storage.
  */
+@Getter
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
+    protected transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
+
     protected PublicChatMessage(String messageId,
                                 ChatChannelDomain chatChannelDomain,
                                 String channelId,
@@ -48,11 +54,24 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
         super(messageId, chatChannelDomain, channelId, authorUserProfileId, text, citation, date, wasEdited, chatMessageType);
     }
 
+    // We are part of other proto messages via DistributedData thus, toProto and getBuilder are our entry points
+    @Override
+    public bisq.chat.protobuf.ChatMessage toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    abstract public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash);
+
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 
         // verified as well, so we can be sure it's the sender of the message. This check prevents against 
         // impersonation attack.
         return !authorUserProfileId.equals(Hex.encode(pubKeyHash));
+    }
+
+    @Override
+    public void addChatMessageReaction(ChatMessageReaction reaction) {
+        getChatMessageReactions().add(reaction);
     }
 }

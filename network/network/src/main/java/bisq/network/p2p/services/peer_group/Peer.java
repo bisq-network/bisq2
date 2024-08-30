@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.common.Address;
@@ -39,18 +40,16 @@ import java.util.Date;
 public final class Peer implements NetworkProto, Comparable<Peer> {
     @EqualsAndHashCode.Include
     private final Address address;
-
+    @ExcludeForHash
     private final Capability capability;
+    @ExcludeForHash
     private final NetworkLoad networkLoad;
+    @ExcludeForHash
     private final boolean isOutboundConnection;
+    @ExcludeForHash
     private final long created;
 
-
-    public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection) {
-        this(capability, networkLoad, isOutboundConnection, System.currentTimeMillis());
-    }
-
-    private Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection, long created) {
+    public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection, long created) {
         this.capability = capability;
         this.networkLoad = networkLoad;
         this.isOutboundConnection = isOutboundConnection;
@@ -67,13 +66,17 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
     }
 
     @Override
-    public bisq.network.protobuf.Peer toProto() {
+    public bisq.network.protobuf.Peer toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.Peer.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.Peer.newBuilder()
-                .setCapability(capability.toProto())
-                .setNetworkLoad(networkLoad.toProto())
+                .setCapability(capability.toProto(serializeForHash))
+                .setNetworkLoad(networkLoad.toProto(serializeForHash))
                 .setIsOutboundConnection(isOutboundConnection)
-                .setCreated(created)
-                .build();
+                .setCreated(created);
     }
 
     public static Peer fromProto(bisq.network.protobuf.Peer proto) {

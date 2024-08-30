@@ -23,12 +23,21 @@ import java.util.List;
 
 @Slf4j
 public class Csv {
-    public static String toCsv(List<List<String>> data) {
+    public static String toCsv(List<String> headers, List<List<String>> data) {
         StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < headers.size(); i++) {
+            String header = headers.get(i);
+            sb.append(escapeSpecialCharacters(header));
+            if (i != headers.size() - 1) {
+                sb.append(",");
+            }
+        }
+        sb.append(System.lineSeparator());
+
         for (List<String> row : data) {
             for (int i = 0; i < row.size(); i++) {
-                sb.append(escapeSpecialCharacters(row.get(i)));
-
+                String cellData = row.get(i);
+                sb.append(escapeSpecialCharacters(cellData));
                 if (i != row.size() - 1) {
                     sb.append(",");
                 }

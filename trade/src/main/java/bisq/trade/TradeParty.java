@@ -23,7 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.identity.NetworkId;
 import bisq.trade.bisq_easy.BisqEasyTradeParty;
-import bisq.trade.multisig.MultisigTradeParty;
+import bisq.trade.bisq_musig.BisqMuSigTradeParty;
 import bisq.trade.submarine.SubmarineTradeParty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,13 +44,16 @@ public abstract class TradeParty implements PersistableProto {
         this.networkId = networkId;
     }
 
-    public abstract bisq.trade.protobuf.TradeParty toProto();
+    @Override
+    public bisq.trade.protobuf.TradeParty toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
 
-    public bisq.trade.protobuf.TradeParty.Builder getTradePartyBuilder() {
+    public bisq.trade.protobuf.TradeParty.Builder getTradePartyBuilder(boolean serializeForHash) {
         bisq.trade.protobuf.TradeParty.Builder builder = bisq.trade.protobuf.TradeParty.newBuilder()
-                .setNetworkId(networkId.toProto());
+                .setNetworkId(networkId.toProto(serializeForHash));
         Optional.ofNullable(contractSignatureData.get())
-                .ifPresent(contractSignatureData -> builder.setContractSignatureData(contractSignatureData.toProto()));
+                .ifPresent(contractSignatureData -> builder.setContractSignatureData(contractSignatureData.toProto(serializeForHash)));
         return builder;
     }
 
@@ -66,10 +69,10 @@ public abstract class TradeParty implements PersistableProto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    public static MultisigTradeParty protoToMultisigTradeParty(bisq.trade.protobuf.TradeParty proto) {
+    public static BisqMuSigTradeParty protoToBisqMuSigTradeParty(bisq.trade.protobuf.TradeParty proto) {
         switch (proto.getMessageCase()) {
-            case MULTISIGTRADEPARTY: {
-                return MultisigTradeParty.fromProto(proto);
+            case BISQMUSIGTRADEPARTY: {
+                return BisqMuSigTradeParty.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {

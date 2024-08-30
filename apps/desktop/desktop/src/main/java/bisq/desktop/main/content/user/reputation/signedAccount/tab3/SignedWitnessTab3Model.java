@@ -19,10 +19,7 @@ package bisq.desktop.main.content.user.reputation.signedAccount.tab3;
 
 import bisq.desktop.common.view.Model;
 import bisq.user.identity.UserIdentity;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,4 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 public class SignedWitnessTab3Model implements Model {
     private final ObjectProperty<UserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
     private final StringProperty pubKeyHash = new SimpleStringProperty();
+    private final StringProperty jsonData = new SimpleStringProperty();
+    private final BooleanProperty requestCertificateButtonDisabled = new SimpleBooleanProperty();
 }

@@ -20,7 +20,7 @@ package bisq.contract;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.contract.multisig.MultisigContract;
+import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.offer.Offer;
 import lombok.Getter;
@@ -36,8 +36,12 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
         this.taker = taker;
     }
 
-    protected bisq.contract.protobuf.TwoPartyContract.Builder getTwoPartyContractBuilder() {
-        return bisq.contract.protobuf.TwoPartyContract.newBuilder().setTaker(taker.toProto());
+    protected bisq.contract.protobuf.TwoPartyContract.Builder getTwoPartyContractBuilder(boolean serializeForHash) {
+        return bisq.contract.protobuf.TwoPartyContract.newBuilder().setTaker(taker.toProto(serializeForHash));
+    }
+
+    protected bisq.contract.protobuf.TwoPartyContract toTwoPartyContract(boolean serializeForHash) {
+        return resolveBuilder(getTwoPartyContractBuilder(serializeForHash), serializeForHash).build();
     }
 
     public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {
@@ -45,8 +49,8 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
             case BISQEASYCONTRACT: {
                 return BisqEasyContract.fromProto(proto);
             }
-            case MULTISIGCONTRACT: {
-                return MultisigContract.fromProto(proto);
+            case BISQMUSIGCONTRACT: {
+                return BisqMuSigContract.fromProto(proto);
             }
             case SUBMARINECONTRACT: {
                 return SubmarineContract.fromProto(proto);

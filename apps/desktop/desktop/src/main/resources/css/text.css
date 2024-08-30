@@ -40,6 +40,7 @@
 .error {
     -fx-text-fill: -bisq-error !important;
     -fx-fill: -bisq-error !important;
+    /*-fx-background-color: -bisq-error !important; might have be used in some validation context at materialtextfield but need to be moved to another error style class */
 }
 
 .hand-cursor {
@@ -523,6 +524,10 @@
     -fx-text-fill: -bisq2-yellow !important;
 }
 
+.bisq-text-yellow-dim {
+    -fx-text-fill: -bisq2-yellow-dim-10 !important;
+}
+
 .bisq-text-error {
     -fx-text-fill: -bisq-error !important;
 }
@@ -577,12 +582,6 @@
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Mono";
     -fx-font-size: 1em;
-    -fx-background-color: -bisq-dark-grey-30;
-    -fx-padding: 1 7;
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
-    -fx-border-width: 1px;
-    -fx-border-color: -bisq-dark-grey-50;
 }
 
 
@@ -648,13 +647,17 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.material-text-field-selection-line:error,
+.material-text-field-selection-line:error {
+    -fx-background-color: -bisq2-red;
+}
+
 .material-text-field-description-deselected:error,
 .material-text-field-description-read-only:error,
 .material-text-field-description-selected:error,
 .material-text-field-description-small:error,
 .material-text-field-description-big:error {
     -fx-text-fill: -bisq2-red;
+    -fx-fill: -bisq2-red;
 }
 
 .material-text-field-error {

@@ -42,4 +42,5 @@ public class CreateNewProfileStep2Model implements Model {
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
     private final BooleanProperty isEditable = new SimpleBooleanProperty();
+    private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
 }

@@ -21,9 +21,12 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.Citation;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatChannelService;
+import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -32,6 +35,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +46,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class BisqEasyOfferbookChannelService extends PublicChatChannelService<BisqEasyOfferbookMessage, BisqEasyOfferbookChannel, BisqEasyOfferbookChannelStore> {
+public class BisqEasyOfferbookChannelService extends PublicChatChannelService<BisqEasyOfferbookMessage,
+        BisqEasyOfferbookChannel, BisqEasyOfferbookChannelStore, BisqEasyOfferbookMessageReaction> {
     @Getter
     private final BisqEasyOfferbookChannelStore persistableStore = new BisqEasyOfferbookChannelStore();
     @Getter
@@ -70,6 +75,8 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof BisqEasyOfferbookMessage) {
             processRemovedMessage((BisqEasyOfferbookMessage) distributedData);
+        } else if (distributedData instanceof BisqEasyOfferbookMessageReaction) {
+            processRemovedReaction((BisqEasyOfferbookMessageReaction) distributedData);
         }
     }
 
@@ -78,6 +85,8 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof BisqEasyOfferbookMessage) {
             processAddedMessage((BisqEasyOfferbookMessage) distributedData);
+        } else if (distributedData instanceof BisqEasyOfferbookMessageReaction) {
+            processAddedReaction((BisqEasyOfferbookMessageReaction) distributedData);
         }
     }
 
@@ -153,6 +162,20 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
             allMarkets.remove(MarketRepository.getDefault());
             allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyOfferbookChannel(market)));
         }
+    }
+
+    @Override
+    protected BisqEasyOfferbookMessageReaction createChatMessageReaction(BisqEasyOfferbookMessage message,
+                                                                         Reaction reaction,
+                                                                         UserIdentity userIdentity) {
+        return new BisqEasyOfferbookMessageReaction(
+                StringUtils.createUid(),
+                userIdentity.getId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                new Date().getTime());
     }
 
     private void maybeAddPublicTradeChannel(BisqEasyOfferbookChannel channel) {

@@ -33,13 +33,18 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+// TODO used in a List, should be extracted to a ListItem
+
 @Slf4j
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserProfile> {
+    @EqualsAndHashCode.Include
     private final Controller controller;
 
     public ChannelSidebarUserProfile(BannedUserService bannedUserService, UserProfile userProfile) {
@@ -72,8 +77,11 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         return controller.model.userProfile.getUserName().compareTo(o.controller.model.userProfile.getUserName());
     }
 
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class Controller implements bisq.desktop.common.view.Controller {
+        @EqualsAndHashCode.Include
         private final Model model;
+
         private final BannedUserService bannedUserService;
         @Getter
         private final View view;
@@ -105,8 +113,11 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         }
     }
 
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class Model implements bisq.desktop.common.view.Model {
+        @EqualsAndHashCode.Include
         private final UserProfile userProfile;
+
         private boolean ignored;
         private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();

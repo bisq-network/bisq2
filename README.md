@@ -30,11 +30,11 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
    ```
 
 2. **Install Dependencies:**
-   See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+   Bisq requires JDK 22. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
 
 3. **Run desktop client:**
    ```bash
-   ./gradlew desktop:desktop-app:run
+   ./gradlew apps:desktop:desktop-app:run
    ```
 
 4. **Run desktop client with custom data directory:**
@@ -62,5 +62,3 @@ If you are a developer check out the [dev guide](./docs/dev/dev-guide.md).
 Bisq 2 is licensed under the [AGPL-3.0 license](LICENSE). All contributions are subject to this license.
 
 ![Actions Status](https://github.com/bisq-network/bisq2/actions/workflows/build.yml/badge.svg)
-
-

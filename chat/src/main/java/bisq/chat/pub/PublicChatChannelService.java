@@ -18,10 +18,13 @@
 package bisq.chat.pub;
 
 import bisq.chat.*;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.PersistableStore;
 import bisq.user.UserService;
@@ -33,9 +36,11 @@ import java.security.KeyPair;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
-public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>, S extends PersistableStore<S>>
-        extends ChatChannelService<M, C, S> implements DataService.Listener {
+public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>,
+        S extends PersistableStore<S>, R extends ChatMessageReaction> extends ChatChannelService<M, C, S> implements DataService.Listener {
 
     public PublicChatChannelService(NetworkService networkService,
                                     UserService userService,
@@ -89,8 +94,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
-                .thenCompose(nil -> networkService.publishAuthenticatedData(message, keyPair));
+        return networkService.publishAuthenticatedData(message, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,
@@ -106,6 +110,28 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     public CompletableFuture<BroadcastResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair networkIdWithKeyPair) {
         return networkService.removeAuthenticatedData(chatMessage, networkIdWithKeyPair.getKeyPair());
+    }
+
+    public CompletableFuture<BroadcastResult> publishChatMessageReaction(M message,
+                                                                         Reaction reaction,
+                                                                         UserIdentity userIdentity) {
+        if (bannedUserService.isUserProfileBanned(userIdentity.getId())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+
+        R chatMessageReaction = createChatMessageReaction(message, reaction, userIdentity);
+        checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
+
+        // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
+        addMessageReaction(chatMessageReaction, message);
+
+        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        return networkService.publishAuthenticatedData((DistributedData) chatMessageReaction, keyPair);
+    }
+
+    public CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction, NetworkIdWithKeyPair networkIdWithKeyPair) {
+        checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
+        return networkService.removeAuthenticatedData((DistributedData) chatMessageReaction, networkIdWithKeyPair.getKeyPair());
     }
 
     @Override
@@ -145,4 +171,22 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     protected abstract M createEditedChatMessage(M originalChatMessage, String editedText, UserProfile userProfile);
 
     protected abstract void maybeAddDefaultChannels();
+
+    protected void processAddedReaction(R chatMessageReaction) {
+        findChannel(chatMessageReaction.getChatChannelId())
+                .flatMap(channel -> channel.getChatMessages().stream()
+                        .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
+                        .findFirst())
+                .ifPresent(message -> addMessageReaction(chatMessageReaction, message));
+    }
+
+    protected void processRemovedReaction(R chatMessageReaction) {
+        findChannel(chatMessageReaction.getChatChannelId())
+                .flatMap(channel -> channel.getChatMessages().stream()
+                        .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
+                        .findFirst())
+                .ifPresent(message -> removeMessageReaction(chatMessageReaction, message));
+    }
+
+    protected abstract R createChatMessageReaction(M message, Reaction reaction, UserIdentity userIdentity);
 }

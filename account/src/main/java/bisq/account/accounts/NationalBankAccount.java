@@ -20,12 +20,17 @@ public class NationalBankAccount extends BankAccount<NationalBankAccountPayload>
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setBankAccount(getBankAccountBuilder().setNationalBankAccount(
-                                bisq.account.protobuf.NationalBankAccount.newBuilder())))
-                .build();
+    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {
+        return super.getBankAccountBuilder(serializeForHash).setNationalBankAccount(
+                toNationalBankAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.NationalBankAccount toNationalBankAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getNationalBankAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.NationalBankAccount.Builder getNationalBankAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.NationalBankAccount.newBuilder();
     }
 
     public static NationalBankAccount fromProto(bisq.account.protobuf.Account proto) {

@@ -41,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public final class CommonChatTabController extends ContentTabController<CommonChatTabModel> {
@@ -78,14 +77,13 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     }
 
     private ChannelTabButtonModel findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof CommonPublicChatChannel) {
-            CommonPublicChatChannel commonChannel = (CommonPublicChatChannel) chatChannel;
+        if (chatChannel instanceof CommonPublicChatChannel commonChannel) {
             if (model.channelTabButtonModelByChannelId.containsKey(chatChannel.getId())) {
                 return model.channelTabButtonModelByChannelId.get(chatChannel.getId());
             } else {
                 String targetName = channelDomain.toString() + "_" + commonChannel.getChannelTitle().toUpperCase();
                 try {
-                    return new ChannelTabButtonModel(commonChannel, commonPublicChatChannelService, NavigationTarget.valueOf(targetName));
+                    return new ChannelTabButtonModel(commonChannel, NavigationTarget.valueOf(targetName), commonPublicChatChannelService);
                 } catch (IllegalArgumentException e) {
                     log.info("Couldn't find navigation target " + targetName + " in channel domain " + channelDomain);
                 }
@@ -118,38 +116,40 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         }
 
         String channelId = notification.getChatChannelId();
-        if (isPrivateChannel(channelId)) {
+        ChatChannelDomain chatChannelDomain = notification.getChatChannelDomain();
+        if (isPrivateChannelPresent(channelId)) {
             handlePrivateNotification();
         }
 
         if (model.channelTabButtonModelByChannelId.containsKey(channelId)) {
-            updateTabButtonNotifications(channelId, chatNotificationService.getNumNotifications(channelId));
+            updateTabButtonNotifications(chatChannelDomain, channelId);
         }
     }
 
-    private void updateTabButtonNotifications(String channelId, long newCount) {
+    private void updateTabButtonNotifications(ChatChannelDomain chatChannelDomain, String channelId) {
         UIThread.run(() -> {
             ChannelTabButtonModel channelTabButtonModel = model.channelTabButtonModelByChannelId.get(channelId);
             model.getTabButtons().stream()
                     .filter(tabButton -> channelTabButtonModel.getNavigationTarget() == tabButton.getNavigationTarget())
                     .findAny()
-                    .ifPresent(tabButton -> tabButton.setNumNotifications(newCount));
+                    .ifPresent(tabButton -> tabButton.setNumNotifications(chatNotificationService.getNumNotifications(chatChannelDomain, channelId)));
         });
     }
 
-    private boolean isPrivateChannel(String channelId) {
+    private boolean isPrivateChannelPresent(String channelId) {
         return twoPartyPrivateChatChannelService.findChannel(channelId).isPresent();
     }
 
     private void handlePrivateNotification() {
-        AtomicLong count = new AtomicLong();
-        twoPartyPrivateChatChannelService.getChannels().forEach(channel ->
-                count.addAndGet(chatNotificationService.getNotConsumedNotifications(channel.getId()).count()));
-        UIThread.run(() ->
-                model.getTabButtons().stream()
-                        .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())
-                        .findAny()
-                        .ifPresent(tabButton -> tabButton.setNumNotifications(count.get()))
+        UIThread.run(() -> {
+            long numNotifications = twoPartyPrivateChatChannelService.getChannels().stream()
+                    .flatMap(chatNotificationService::getNotConsumedNotifications)
+                    .count();
+                    model.getTabButtons().stream()
+                            .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())
+                            .findAny()
+                            .ifPresent(tabButton -> tabButton.setNumNotifications(numNotifications));
+                }
         );
     }
 

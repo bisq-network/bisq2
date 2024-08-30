@@ -18,7 +18,7 @@
 package bisq.settings;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum ChatNotificationType implements ProtoEnum {
     ALL,
@@ -26,7 +26,7 @@ public enum ChatNotificationType implements ProtoEnum {
     OFF;
 
     @Override
-    public bisq.settings.protobuf.ChatNotificationType toProto() {
+    public bisq.settings.protobuf.ChatNotificationType toProtoEnum() {
         return bisq.settings.protobuf.ChatNotificationType.valueOf(getProtobufEnumPrefix() + name());
     }
 

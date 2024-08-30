@@ -26,6 +26,8 @@ import lombok.Getter;
 
 import java.util.StringTokenizer;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @EqualsAndHashCode
 @Getter
 public final class Address implements NetworkProto, Comparable<Address> {
@@ -33,20 +35,16 @@ public final class Address implements NetworkProto, Comparable<Address> {
         return new Address("127.0.0.1", port);
     }
 
+    public static Address fromFullAddress(String fullAddress) {
+        StringTokenizer st = new StringTokenizer(fullAddress, ":");
+        String host = maybeConvertLocalHost(st.nextToken());
+        checkArgument(st.hasMoreTokens(), "Full address need to contain the port after the ':'. fullAddress=" + fullAddress);
+        int port = Integer.parseInt(st.nextToken());
+        return new Address(host, port);
+    }
+
     private final String host;
     private final int port;
-
-    public Address(String fullAddress) {
-        StringTokenizer st = new StringTokenizer(fullAddress, ":");
-        this.host = maybeConvertLocalHost(st.nextToken());
-        if (st.hasMoreTokens()) {
-            this.port = Integer.parseInt(st.nextToken());
-        } else {
-            this.port = -1;
-        }
-
-        verify();
-    }
 
     public Address(String host, int port) {
         this.host = maybeConvertLocalHost(host);
@@ -73,11 +71,15 @@ public final class Address implements NetworkProto, Comparable<Address> {
     }
 
     @Override
-    public bisq.network.common.protobuf.Address toProto() {
+    public bisq.network.common.protobuf.Address toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.common.protobuf.Address.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.common.protobuf.Address.newBuilder()
                 .setHost(host)
-                .setPort(port)
-                .build();
+                .setPort(port);
     }
 
     public static Address fromProto(bisq.network.common.protobuf.Address proto) {
@@ -110,7 +112,7 @@ public final class Address implements NetworkProto, Comparable<Address> {
         }
     }
 
-    private String maybeConvertLocalHost(String host) {
+    private static String maybeConvertLocalHost(String host) {
         return host.equals("localhost") ? "127.0.0.1" : host;
     }
 

@@ -17,21 +17,22 @@
 
 package bisq.application;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
+import bisq.common.application.OptionUtils;
 import bisq.common.application.Service;
 import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.file.FileUtils;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
-import bisq.common.util.FileUtils;
-import bisq.common.util.MemoryReport;
-import bisq.common.util.OsUtils;
-import bisq.common.util.Version;
+import bisq.common.platform.MemoryReport;
+import bisq.common.platform.PlatformUtils;
+import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
-import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,7 +44,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -51,35 +51,35 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class ApplicationService implements Service {
+    private static String resolveAppName(String[] args, com.typesafe.config.Config config) {
+        return OptionUtils.findOptionValue(args, "--app-name")
+                .or(() -> {
+                    Optional<String> value = OptionUtils.findOptionValue(args, "--appName");
+                    if (value.isPresent()) {
+                        System.out.println("Warning: Use `--app-name` instead of deprecated `--appName`");
+                    }
+                    return value;
+                })
+                .orElseGet(() -> {
+                    if (config.hasPath("appName")) {
+                        return config.getString("appName");
+                    } else {
+                        return "Bisq2";
+                    }
+                });
+    }
+
     @Getter
     @ToString
     @EqualsAndHashCode
     public static final class Config {
         private static Config from(com.typesafe.config.Config config, String[] args) {
-            String appName = "Bisq2";
-            if (config.hasPath("appName")) {
-                appName = config.getString("appName");
-            }
-
-            Optional<Path> dataDir = Optional.empty();
-            for (String arg : args) {
-                if (arg.startsWith("--appName")) {
-                    appName = arg.split("=")[1];
-                }
-
-                if (arg.startsWith("--data-dir")) {
-                    dataDir = Optional.of(
-                            Paths.get(arg.split("=")[1])
-                    );
-                }
-            }
-
-            Path appDataDir = dataDir.orElse(
-                    OsUtils.getUserDataDir().resolve(appName)
-            );
+            String appName = resolveAppName(args, config);
+            Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
+                    .map(Path::of)
+                    .orElse(PlatformUtils.getUserDataDir().resolve(appName));
             return new Config(appDataDir,
                     appName,
-                    config.getString("version"),
                     config.getBoolean("devMode"),
                     config.getString("keyIds"),
                     config.getBoolean("ignoreSigningKeyInResourcesCheck"),
@@ -88,7 +88,6 @@ public abstract class ApplicationService implements Service {
 
         private final Path baseDir;
         private final String appName;
-        private final Version version;
         private final boolean devMode;
         private final List<String> keyIds;
         private final boolean ignoreSigningKeyInResourcesCheck;
@@ -96,14 +95,12 @@ public abstract class ApplicationService implements Service {
 
         public Config(Path baseDir,
                       String appName,
-                      String version,
                       boolean devMode,
                       String keyIds,
                       boolean ignoreSigningKeyInResourcesCheck,
                       boolean ignoreSignatureVerification) {
             this.baseDir = baseDir;
             this.appName = appName;
-            this.version = new Version(version);
             this.devMode = devMode;
             // We want to use the keyIds at the DesktopApplicationLauncher as a simple format. 
             // Using the typesafe format with indexes would require a more complicate parsing as we do not use 
@@ -123,8 +120,26 @@ public abstract class ApplicationService implements Service {
     private FileLock instanceLock;
 
     public ApplicationService(String configFileName, String[] args) {
-        com.typesafe.config.Config typesafeConfig = ConfigFactory.load(configFileName);
-        typesafeConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
+        com.typesafe.config.Config defaultTypesafeConfig = ConfigFactory.load(configFileName);
+        defaultTypesafeConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
+
+        String appName = resolveAppName(args, defaultTypesafeConfig.getConfig("application"));
+        Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
+                .map(Path::of)
+                .orElse(PlatformUtils.getUserDataDir().resolve(appName));
+        File customConfigFile = Path.of(appDataDir.toString(), "bisq.conf").toFile();
+        com.typesafe.config.Config typesafeConfig;
+        boolean customConfigProvided = customConfigFile.exists();
+        if (customConfigProvided) {
+            try {
+                typesafeConfig = ConfigFactory.parseFile(customConfigFile).withFallback(defaultTypesafeConfig);
+            } catch (Exception e) {
+                System.err.println("Error when reading custom config file " + ExceptionUtil.getRootCauseMessage(e));
+                throw new RuntimeException(e);
+            }
+        } else {
+            typesafeConfig = defaultTypesafeConfig;
+        }
 
         typesafeAppConfig = typesafeConfig.getConfig("application");
         config = Config.from(typesafeAppConfig, args);
@@ -138,10 +153,12 @@ public abstract class ApplicationService implements Service {
         checkInstanceLock();
 
         LogSetup.setup(dataDir.resolve("bisq").toString());
-        LogSetup.setLevel(Level.INFO);
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", config.getBaseDir());
-        log.info("Version: {}", config.getVersion());
+        log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
+        if (customConfigProvided) {
+            log.info("Using custom config file");
+        }
 
         MemoryReport.printPeriodically();
 

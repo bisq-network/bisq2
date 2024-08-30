@@ -32,7 +32,7 @@ import java.util.Optional;
 public abstract class ChatController<V extends ChatView<V, M>, M extends ChatModel>
         extends BaseChatController<V, M> implements Controller {
     protected ChatChannelSelectionService selectionService;
-    private Pin selectedChannelPin;
+    protected Pin selectedChannelPin;
 
     public ChatController(ServiceProvider serviceProvider,
                           ChatChannelDomain chatChannelDomain,

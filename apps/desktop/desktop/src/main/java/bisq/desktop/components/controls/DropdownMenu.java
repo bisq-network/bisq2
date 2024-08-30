@@ -18,6 +18,8 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
@@ -33,19 +35,27 @@ import javafx.scene.layout.HBox;
 import javafx.stage.PopupWindow;
 import javafx.stage.WindowEvent;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Collection;
 
 public class DropdownMenu extends HBox {
     public static final Double INITIAL_WIDTH = 24.0;
-    @Getter
-    private final Label label = new Label();
+
     private final ImageView defaultIcon, activeIcon;
+    @Getter
+    private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
     private final ContextMenu contextMenu = new ContextMenu();
+    @Getter
+    private Label label = new Label();
     private ImageView buttonIcon;
     // We need to pin it as used in a WeakChangeListener
     private ChangeListener<Number> widthPropertyChangeListener;
     private boolean isFirstRun = false;
+    @Setter
+    private boolean openUpwards = false;
+    @Setter
+    private boolean openToTheRight = false;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -77,12 +87,17 @@ public class DropdownMenu extends HBox {
         label.setText(text);
     }
 
+    public void setLabel(Label label) {
+        this.label = label;
+        getChildren().set(0, label);
+    }
+
     private void toggleContextMenu() {
         if (!contextMenu.isShowing()) {
-            contextMenu.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
-            Bounds bounds = this.localToScreen(this.getBoundsInLocal());
-            double x = bounds.getMaxX();
-            double y = bounds.getMaxY() + 3;
+            contextMenu.setAnchorLocation(getAnchorLocation());
+            Bounds bounds = localToScreen(getBoundsInLocal());
+            double x = openToTheRight ? bounds.getMinX() : bounds.getMaxX();
+            double y = openUpwards ? bounds.getMinY() - 3 : bounds.getMaxY() + 3;
             contextMenu.show(this, x, y);
         } else {
             contextMenu.hide();
@@ -118,7 +133,7 @@ public class DropdownMenu extends HBox {
     }
 
     private void attachListeners() {
-        setOnMouseClicked(event -> toggleContextMenu());
+        setOnMouseClicked(e -> toggleContextMenu());
         setOnMouseExited(e -> updateIcon(contextMenu.isShowing() ? activeIcon : defaultIcon));
         setOnMouseEntered(e -> updateIcon(activeIcon));
 
@@ -135,11 +150,12 @@ public class DropdownMenu extends HBox {
         contextMenu.setOnShowing(e -> {
             getStyleClass().add("dropdown-menu-active");
             updateIcon(activeIcon);
-
+            isMenuShowing.setValue(true);
         });
         contextMenu.setOnHidden(e -> {
             getStyleClass().remove("dropdown-menu-active");
             updateIcon(defaultIcon);
+            isMenuShowing.setValue(false);
         });
 
         widthPropertyChangeListener = (observable, oldValue, newValue) -> {
@@ -163,6 +179,18 @@ public class DropdownMenu extends HBox {
             getChildren().remove(buttonIcon);
             buttonIcon = newIcon;
             getChildren().add(buttonIcon);
+        }
+    }
+
+    private PopupWindow.AnchorLocation getAnchorLocation() {
+        if (!openUpwards) {
+            return openToTheRight
+                    ? PopupWindow.AnchorLocation.WINDOW_TOP_LEFT
+                    : PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT;
+        } else {
+            return openToTheRight
+                    ? PopupWindow.AnchorLocation.WINDOW_BOTTOM_LEFT
+                    : PopupWindow.AnchorLocation.WINDOW_BOTTOM_RIGHT;
         }
     }
 }

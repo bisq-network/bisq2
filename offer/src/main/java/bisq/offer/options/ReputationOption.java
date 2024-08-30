@@ -38,11 +38,16 @@ public final class ReputationOption implements OfferOption {
     }
 
     @Override
-    public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setReputationOption(
+    public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
+        return getOfferOptionBuilder(serializeForHash)
+                .setReputationOption(
                         bisq.offer.protobuf.ReputationOption.newBuilder()
-                                .setRequiredTotalReputationScore(requiredTotalReputationScore))
-                .build();
+                                .setRequiredTotalReputationScore(requiredTotalReputationScore));
+    }
+
+    @Override
+    public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto) {

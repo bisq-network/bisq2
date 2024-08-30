@@ -139,20 +139,20 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
     }
 
     @Override
-    public bisq.chat.protobuf.ChatChannel toProto() {
+    public bisq.chat.protobuf.ChatChannel.Builder getBuilder(boolean serializeForHash) {
         bisq.chat.protobuf.BisqEasyOpenTradeChannel.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeChannel.newBuilder()
                 .setTradeId(tradeId)
-                .setBisqEasyOffer(bisqEasyOffer.toProto())
-                .setMyUserIdentity(myUserIdentity.toProto())
+                .setBisqEasyOffer(bisqEasyOffer.toProto(serializeForHash))
+                .setMyUserIdentity(myUserIdentity.toProto(serializeForHash))
                 .addAllTraders(getTraders().stream()
-                        .map(UserProfile::toProto)
+                        .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .setIsInMediation(isInMediation())
                 .addAllChatMessages(chatMessages.stream()
-                        .map(BisqEasyOpenTradeMessage::toChatMessageProto)
+                        .map(e -> e.toValueProto(serializeForHash))
                         .collect(Collectors.toList()));
-        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        return getChatChannelBuilder().setBisqEasyOpenTradeChannel(builder).build();
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(serializeForHash)));
+        return getChatChannelBuilder().setBisqEasyOpenTradeChannel(builder);
     }
 
     public static BisqEasyOpenTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
@@ -212,11 +212,12 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
         if (changed) {
             String authorUserProfileId = chatMessage.getAuthorUserProfileId();
 
+
             // todo (refactor, low prio) we get called from inside constructor at fromProto. should be redesigned
             // If we received a leave message the user got removed from userProfileIdsOfParticipants
             // In that case we remove them from userProfileIdsOfSendingLeaveMessage as well to avoid sending a 
             // leave message.
-            if (!userProfileIdsOfParticipants.contains(authorUserProfileId)) {
+            if (!userProfileIdsOfActiveParticipants.contains(authorUserProfileId)) {
                 userProfileIdsOfSendingLeaveMessage.remove(authorUserProfileId);
             }
         }

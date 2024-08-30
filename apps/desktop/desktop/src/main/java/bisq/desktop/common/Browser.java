@@ -17,7 +17,7 @@
 
 package bisq.desktop.common;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.overlay.Popup;
@@ -39,15 +39,19 @@ public class Browser {
     @Nullable
     private static HostServices hostServices;
     private static SettingsService settingsService;
+    private static DontShowAgainService dontShowAgainService;
 
-    public static void initialize(HostServices hostServices, SettingsService settingsService) {
+    public static void initialize(HostServices hostServices,
+                                  SettingsService settingsService,
+                                  DontShowAgainService dontShowAgainService) {
         Browser.hostServices = hostServices;
         Browser.settingsService = settingsService;
+        Browser.dontShowAgainService = dontShowAgainService;
     }
 
     public static void open(String url) {
         String id = HYPERLINKS_OPEN_IN_BROWSER;
-        if (DontShowAgainService.showAgain(id)) {
+        if (dontShowAgainService.showAgain(id)) {
             new Popup().headline(Res.get("hyperlinks.openInBrowser.attention.headline"))
                     .feedback(Res.get("hyperlinks.openInBrowser.attention", url))
                     .closeButtonText(Res.get("hyperlinks.openInBrowser.no"))
@@ -76,7 +80,7 @@ public class Browser {
     }
 
     public static boolean hyperLinksGetCopiesWithoutPopup() {
-        return !DontShowAgainService.showAgain(Browser.HYPERLINKS_OPEN_IN_BROWSER) &&
+        return !dontShowAgainService.showAgain(Browser.HYPERLINKS_OPEN_IN_BROWSER) &&
                 !settingsService.getCookie().asBoolean(CookieKey.PERMIT_OPENING_BROWSER).orElse(false);
     }
 
@@ -88,7 +92,7 @@ public class Browser {
             log.info("Error at opening {} with hostServices.showDocument. We try to open it via OsUtils.browse.", url, e);
 
             try {
-                OsUtils.browse(url);
+                PlatformUtils.browse(url);
             } catch (Exception e2) {
                 log.error("Error at opening {} with OsUtils.browse.", url, e);
             }

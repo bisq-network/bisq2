@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.settings.network;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -24,7 +25,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Accordion;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TitledPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +38,7 @@ import java.util.Optional;
 @Slf4j
 public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> {
     private final Accordion accordion;
+    private final HBox versionDistributionHBox;
 
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller,
                            Optional<Node> clear,
@@ -45,26 +50,53 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
         root.setAlignment(Pos.TOP_LEFT);
 
         root.setFillWidth(true);
+
+        versionDistributionHBox = new HBox(20);
+        Label myVersionAndCommitHash = new Label(Res.get("settings.network.myVersionAndCommitHash",
+                ApplicationVersion.getVersion().getVersionAsString(),
+                ApplicationVersion.getBuildCommitShortHash()));
+        VBox versionsVBox = new VBox(15, versionDistributionHBox, myVersionAndCommitHash);
+
         accordion = new Accordion();
 
-        clear.ifPresent(childRoot -> {
-            TitledPane titledPane = new TitledPane(Res.get("settings.network.clearNet"), childRoot);
-            accordion.getPanes().add(titledPane);
-        });
+        accordion.getPanes().add(new TitledPane(Res.get("settings.network.versions.headline"), versionsVBox));
+
+        clear.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.clearNet"), childRoot)));
         tor.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.tor"), childRoot)));
         i2p.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.i2p"), childRoot)));
 
         root.getChildren().add(accordion);
     }
 
+
     @Override
     protected void onViewAttached() {
-        if (!accordion.getPanes().isEmpty()) {
+        versionDistributionHBox.getChildren().clear();
+        model.getVersionDistribution().forEach(pair -> addVersion(pair.getFirst(), pair.getSecond()));
+
+        if (accordion.getPanes().size() > 1) {
+            UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(1).setExpanded(true));
+        } else if (!accordion.getPanes().isEmpty()) {
             UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(0).setExpanded(true));
         }
     }
 
     @Override
     protected void onViewDetached() {
+    }
+
+    private void addVersion(String version, double percentage) {
+        if (percentage == 1) {
+            // We want to avoid the check style shown when 100% is reached
+            percentage = 0.999999999999;
+        }
+        ProgressIndicator progressIndicator = new ProgressIndicator(percentage);
+        progressIndicator.setMinSize(100, 100);
+        Label label = new Label(Res.get("settings.network.versionDistribution.version", version, "67"));
+        VBox vBox = new VBox(10, label, progressIndicator);
+        vBox.setAlignment(Pos.CENTER);
+        vBox.getStyleClass().add("bisq-box-1");
+        vBox.setPadding(new Insets(10));
+        versionDistributionHBox.getChildren().add(vBox);
     }
 }

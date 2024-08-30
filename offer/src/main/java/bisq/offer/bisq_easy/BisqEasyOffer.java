@@ -1,6 +1,23 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.offer.bisq_easy;
 
-
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
@@ -39,6 +56,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          Market market,
                          AmountSpec amountSpec,
                          PriceSpec priceSpec,
+                         List<BitcoinPaymentMethod> bitcoinPaymentMethods,
                          List<FiatPaymentMethod> fiatPaymentMethods,
                          String makersTradeTerms,
                          long requiredTotalReputationScore,
@@ -51,7 +69,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 amountSpec,
                 priceSpec,
                 List.of(TradeProtocolType.BISQ_EASY),
-                PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
+                PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(bitcoinPaymentMethods),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
                 OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
                 supportedLanguageCodes
@@ -95,10 +113,14 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
     }
 
     @Override
-    public bisq.offer.protobuf.Offer toProto() {
-        return getOfferBuilder().setBisqEasyOffer(
-                        bisq.offer.protobuf.BisqEasyOffer.newBuilder().addAllSupportedLanguageCodes(supportedLanguageCodes))
-                .build();
+    public bisq.offer.protobuf.Offer.Builder getBuilder(boolean serializeForHash) {
+        return getOfferBuilder(serializeForHash).setBisqEasyOffer(
+                bisq.offer.protobuf.BisqEasyOffer.newBuilder().addAllSupportedLanguageCodes(supportedLanguageCodes));
+    }
+
+    @Override
+    public bisq.offer.protobuf.Offer toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static BisqEasyOffer fromProto(bisq.offer.protobuf.Offer proto) {

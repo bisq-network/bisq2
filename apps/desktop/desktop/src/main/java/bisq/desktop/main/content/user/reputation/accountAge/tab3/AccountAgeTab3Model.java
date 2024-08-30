@@ -28,6 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountAgeTab3Model implements Model {
     private final ObjectProperty<UserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
     private final StringProperty pubKeyHash = new SimpleStringProperty();
-    private final StringProperty signedMessage = new SimpleStringProperty();
+    private final StringProperty jsonData = new SimpleStringProperty();
     private final BooleanProperty requestCertificateButtonDisabled = new SimpleBooleanProperty();
 }

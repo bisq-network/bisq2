@@ -18,7 +18,7 @@
 package bisq.bonded_roles.security_manager.alert;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum AlertType implements ProtoEnum {
     INFO,
@@ -27,7 +27,7 @@ public enum AlertType implements ProtoEnum {
     BAN;
 
     @Override
-    public bisq.bonded_roles.protobuf.AlertType toProto() {
+    public bisq.bonded_roles.protobuf.AlertType toProtoEnum() {
         return bisq.bonded_roles.protobuf.AlertType.valueOf(getProtobufEnumPrefix() + name());
     }
 

@@ -1,6 +1,6 @@
 /*******************************************************************************
  *                                                                             *
- * Chat domain                                                               *
+ * Chat domain                                                                 *
  *                                                                             *
  ******************************************************************************/
 
@@ -155,17 +155,20 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.chat-message-content-box .react-menu-box .drawer-menu-items .bisq-menu-item:hover {
+    -fx-background-color: -bisq-dark-grey-50 !important;
+}
+
 /* Peer Message Background */
 .chat-message-bg-peer-message,
 .chat-peer-offer-message-bg {
-    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-color: -bisq2-peer-bubble-message;
     -fx-background-radius: 8;
 }
 
 /* Peer Offer Message */
 .chat-peer-offer-message-bg {
-    -fx-padding: 20 30 20 20;
-    -fx-min-width: 500;
+    -fx-padding: 20;
 }
 
 .chat-peer-offer-message-bg .reputation .label {
@@ -218,7 +221,7 @@
 /* My Message Background */
 .chat-message-bg-my-message,
 .chat-my-offer-message-bg {
-    -fx-background-color: #2c372b; /* -bisq2-green; saturation -70; lightness -60 */
+    -fx-background-color: -bisq2-my-bubble-message;
     -fx-background-radius: 8;
 }
 
@@ -229,9 +232,8 @@
 }
 
 .chat-my-offer-message-bg {
-    -fx-padding: 20 20 15 30;
+    -fx-padding: 20;
 }
-/* ... */
 
 .create-offer-message-my-offer {
     -fx-background-color: -bisq-dark-grey-10;
@@ -240,6 +242,13 @@
 
 .create-offer-box-my-offer {
     -fx-background-color: -bisq-dark-grey-40;
+}
+/* ... */
+
+.highlighted-message-bg {
+    -fx-border-width: 2px;
+    -fx-border-color: -bisq2-green;
+    -fx-border-radius: 8;
 }
 
 .trade-wizard-feedback-bg {
@@ -353,13 +362,6 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
-.chat-side-bar-user-profile-details {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 0.9em;
-}
-
 .chat-side-bar-user-profile-small-headline {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
@@ -372,12 +374,6 @@
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Light";
     -fx-font-size: 1em;
-}
-
-.chat-side-bar-user-profile-small-hyperlink {
-    /*  -fx-font-size: 1em;
-      -fx-font-family: "IBM Plex Light";*/
-    -fx-text-fill: -fx-light-text-color;
 }
 
 .chat-side-bar-user-profile.text-area {
@@ -538,4 +534,79 @@
 .chat-guide-headline {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.15em;
+}
+
+
+/*******************************************************************************
+ * Reactions                                                                   *
+ ******************************************************************************/
+
+.reaction-menu-item:selected,
+.button.bisq-menu-item.reaction-menu-item.icon-only:hover,
+.button.bisq-menu-item.active-reaction-menu-item:hover{
+    -fx-background-color: -bisq-mid-grey-10 !important;
+}
+
+.chat-message-content-box .drawer-menu-items {
+    -fx-spacing: 4;
+}
+
+.active-reactions-display-box {
+    -fx-spacing: 5;
+    -fx-alignment: bottom-center;
+}
+
+.button.bisq-menu-item.active-reaction-menu-item {
+    -fx-font-size: 10;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans SemiBold";
+    -fx-background-radius: 15;
+    -fx-padding: 6;
+}
+
+.button.bisq-menu-item.active-reaction-menu-item.active-reaction-selected {
+    -fx-border-width: 1px;
+    -fx-border-color: -bisq-mid-grey-20;
+    -fx-border-radius: 15;
+    -fx-padding: 5 !important;
+}
+
+.my-text-message-box-active-reactions .button.bisq-menu-item.active-reaction-menu-item,
+.my-text-message-box-active-reactions .reaction-users-popup {
+    -fx-background-color: -bisq2-my-bubble-message;
+}
+
+.peer-text-message-box-active-reactions .button.bisq-menu-item.active-reaction-menu-item,
+.peer-text-message-box-active-reactions .reaction-users-popup {
+    -fx-background-color: -bisq2-peer-bubble-message;
+}
+
+.reaction-users-popup {
+    -fx-background-radius: 8;
+    -fx-border-color: -bisq-mid-grey-10;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8;
+    -fx-padding: 10;
+    -fx-spacing: 10;
+    -fx-font-size: 1.33em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.reaction-users-popup .list-view {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 10;
+}
+
+.reaction-users-popup .list-cell:filled:selected {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+.list-view .list-cell:selected .label {
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.reaction-users-popup .list-view .list-cell {
+    -fx-padding: 0 5 0 5;
 }

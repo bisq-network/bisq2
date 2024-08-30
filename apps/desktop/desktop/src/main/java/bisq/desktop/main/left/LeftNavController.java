@@ -24,6 +24,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -65,7 +66,7 @@ public class LeftNavController implements Controller {
 
         NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
         model = new LeftNavModel(serviceProvider.getWalletService().isPresent());
-        model.setVersion("v" + serviceProvider.getConfig().getVersion().toString());
+        model.setVersion("v" + ApplicationVersion.getVersion().toString());
         view = new LeftNavView(model, this, networkInfo.getRoot());
     }
 
@@ -90,7 +91,7 @@ public class LeftNavController implements Controller {
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
         if (changedChatNotificationPin == null) {
-            chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications); // **
+            chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications);
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
         }
 
@@ -131,14 +132,14 @@ public class LeftNavController implements Controller {
             });
 
             findLeftNavButton(notification.getChatChannelDomain()).ifPresent(leftNavButton -> {
-                // Mediator handles as well ChatChannelDomain.BISQ_EASY_OPEN_TRADES notifications, but the
-                // findLeftNavButton does only return the normal chat menu items
                 NavigationTarget navigationTarget = leftNavButton.getNavigationTarget();
-                // In case we are a mediator we get the mediation notifications provided in the getNumNotifications call
-                // as the notifications use the BISQ_EASY_OPEN_TRADES channel domain. We need to subtract the
-                // numMediatorsNotConsumedNotifications to have the correct number.
-                long numNotifications = bisqEasyNotificationsService.getNumNotifications(navigationTarget)
-                        - numMediatorsNotConsumedNotifications.get();
+                long numNotifications = bisqEasyNotificationsService.getNumNotifications(navigationTarget);
+                if (notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK || notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OPEN_TRADES || notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT) {
+                    // In case we are a mediator we ignore the notifications in the BISQ_EASY_OPEN_TRADES as those
+                    // we handle in the mediation view.
+                    numNotifications = Math.max(0, numNotifications - numMediatorsNotConsumedNotifications.get());
+                }
+
                 leftNavButton.setNumNotifications(numNotifications);
                 leftNavButton.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
                 switch (notification.getChatChannelDomain()) {
@@ -188,8 +189,7 @@ public class LeftNavController implements Controller {
     private void onBondedRolesChanged() {
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-            boolean authorizedRoleVisible = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
-                            .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
+            boolean authorizedRoleVisible = authorizedBondedRolesService.getAuthorizedBondedRoleStream().anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
             if (model.getAuthorizedRoleVisible().get() && !authorizedRoleVisible &&
                     model.getSelectedNavigationTarget().get() == NavigationTarget.AUTHORIZED_ROLE) {
                 UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));

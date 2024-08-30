@@ -26,7 +26,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
@@ -48,15 +47,14 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-import static bisq.user.profile.UserProfile.MAX_LENGTH_STATEMENT;
-import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
+import static bisq.user.profile.UserProfile.*;
 
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
 
-    private static final ValidatorBase TERMS_MAX_LENGTH_VALIDATOR =
+    private static final TextMaxLengthValidator TERMS_MAX_LENGTH_VALIDATOR =
             new TextMaxLengthValidator(MAX_LENGTH_TERMS, Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS));
-    private static final ValidatorBase STATEMENT_MAX_LENGTH_VALIDATOR =
+    private static final TextMaxLengthValidator STATEMENT_MAX_LENGTH_VALIDATOR =
             new TextMaxLengthValidator(MAX_LENGTH_STATEMENT, Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT));
 
     private static final String STATEMENT_PROMPT = Res.get("user.userProfile.statement.prompt");
@@ -64,7 +62,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
-    private final MaterialTextField nymId, profileId, profileAge, reputationScoreField, statement;
+    private final MaterialTextField nymId, profileId, profileAge, livenessState, reputationScoreField, statement;
     private final ImageView catIconImageView;
     private final MaterialTextArea terms;
     private final VBox formVBox;
@@ -122,6 +120,9 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         profileAge = addField(Res.get("user.userProfile.profileAge"));
         profileAge.setIconTooltip(Res.get("user.userProfile.profileAge.tooltip"));
 
+        livenessState = addField(Res.get("user.userProfile.livenessState.description"));
+        livenessState.setIconTooltip(Res.get("user.userProfile.livenessState.tooltip"));
+
         reputationScoreField = addField(Res.get("user.userProfile.reputation"));
 
         statement = addField(Res.get("user.userProfile.statement"), STATEMENT_PROMPT);
@@ -141,8 +142,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         deleteButton = new Button(Res.get("user.userProfile.deleteProfile"));
         deleteWrapper = new SplitPane(deleteButton);
-        deleteTooltip = new BisqTooltip(Res.get("user.userProfile.deleteProfile.cannotDelete"));
-        deleteTooltip.getStyleClass().add("medium-dark-tooltip");
+        deleteTooltip = new BisqTooltip(Res.get("user.userProfile.deleteProfile.cannotDelete"), BisqTooltip.Style.MEDIUM_DARK);
 
         HBox buttonsHBox = new HBox(20, saveButton, deleteWrapper);
         formVBox.getChildren().add(buttonsHBox);
@@ -153,6 +153,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         nymId.textProperty().bind(model.getNymId());
         profileId.textProperty().bind(model.getProfileId());
         profileAge.textProperty().bind(model.getProfileAge());
+        livenessState.textProperty().bind(model.getLivenessState());
         reputationScoreField.textProperty().bind(model.getReputationScoreValue());
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
@@ -192,6 +193,37 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         }));
     }
 
+    @Override
+    protected void onViewDetached() {
+        nymId.textProperty().unbind();
+        profileId.textProperty().unbind();
+        profileAge.textProperty().unbind();
+        livenessState.textProperty().unbind();
+        reputationScoreField.textProperty().unbind();
+        statement.textProperty().unbindBidirectional(model.getStatement());
+        terms.textProperty().unbindBidirectional(model.getTerms());
+        catIconImageView.imageProperty().unbind();
+        saveButton.disableProperty().unbind();
+        deleteButton.disableProperty().unbind();
+        deleteWrapper.tooltipProperty().unbind();
+
+        reputationScorePin.unsubscribe();
+        useDeleteTooltipPin.unsubscribe();
+        selectedChatUserIdentityPin.unsubscribe();
+        isValidSelectionPin.unsubscribe();
+
+        deleteButton.setOnAction(null);
+        saveButton.setOnAction(null);
+        createNewProfileButton.setOnAction(null);
+        learnMore.setOnAction(null);
+        comboBox.setOnChangeConfirmed(null);
+        comboBox.getIsValidSelection().set(true);
+
+        comboBox.resetValidation();
+        statement.resetValidation();
+        terms.resetValidation();
+    }
+
     private void disableEditableTextBoxes() {
         statement.setEditable(false);
         statement.setPromptText("");
@@ -229,36 +261,6 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         var validStatement = statement.validate();
         var validTerms = terms.validate();
         return validComboboxSelection && validStatement && validTerms;
-    }
-
-    @Override
-    protected void onViewDetached() {
-        nymId.textProperty().unbind();
-        profileId.textProperty().unbind();
-        profileAge.textProperty().unbind();
-        reputationScoreField.textProperty().unbind();
-        statement.textProperty().unbindBidirectional(model.getStatement());
-        terms.textProperty().unbindBidirectional(model.getTerms());
-        catIconImageView.imageProperty().unbind();
-        saveButton.disableProperty().unbind();
-        deleteButton.disableProperty().unbind();
-        deleteWrapper.tooltipProperty().unbind();
-
-        reputationScorePin.unsubscribe();
-        useDeleteTooltipPin.unsubscribe();
-        selectedChatUserIdentityPin.unsubscribe();
-        isValidSelectionPin.unsubscribe();
-
-        deleteButton.setOnAction(null);
-        saveButton.setOnAction(null);
-        createNewProfileButton.setOnAction(null);
-        learnMore.setOnAction(null);
-        comboBox.setOnChangeConfirmed(null);
-        comboBox.getIsValidSelection().set(true);
-
-        comboBox.resetValidation();
-        statement.resetValidation();
-        terms.resetValidation();
     }
 
     private MaterialTextField addField(String description) {

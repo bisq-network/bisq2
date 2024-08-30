@@ -18,5 +18,6 @@ includeBuild("../..")
 include("desktop")
 include("desktop-app")
 include("desktop-app-launcher")
+include("webcam-app")
 
 rootProject.name = "desktop"

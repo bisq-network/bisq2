@@ -1,24 +1,11 @@
 /*******************************************************************************
  *                                                                             *
- * Popup                                                                  *
+ * Popup                                                                       *
  *                                                                             *
  ******************************************************************************/
 
 .bisq-popup {
     -fx-background-color: -bisq-dark-grey-20;
-}
-
-/*******************************************************************************
- *                                                                             *
- * BisqPopupMenu                                                                  *
- *                                                                             *
- ******************************************************************************/
-
-.bisq-popup-menu {
-    -fx-background-color: -bisq-dark-grey-40;
-    -fx-background-radius: 6px;
-    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 5, 5);
 }
 
 
@@ -216,6 +203,15 @@
 }
 
 .table-view .column-header.right .label {
+    -fx-alignment: center-right;
+}
+
+/* Hack to apply alignment to header. See: https://stackoverflow.com/questions/23576867/javafx-how-to-align-only-one-column-header-in-tableview */
+.table-view .column-header#left .label {
+    -fx-alignment: center-left;
+}
+
+.table-view .column-header#right .label {
     -fx-alignment: center-right;
 }
 

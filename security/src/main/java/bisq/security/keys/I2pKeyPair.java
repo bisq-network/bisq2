@@ -1,6 +1,7 @@
 package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
+import bisq.security.protobuf.I2PKeyPair;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,12 +26,16 @@ public class I2pKeyPair implements PersistableProto {
     }
 
     @Override
-    public bisq.security.protobuf.I2PKeyPair toProto() {
-        return bisq.security.protobuf.I2PKeyPair.newBuilder()
+    public bisq.security.protobuf.I2PKeyPair toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public I2PKeyPair.Builder getBuilder(boolean serializeForHash) {
+        return I2PKeyPair.newBuilder()
                 .setPrivateKey(ByteString.copyFrom(privateKey))
                 .setPublicKey(ByteString.copyFrom(publicKey))
-                .setDestination(destination)
-                .build();
+                .setDestination(destination);
     }
 
     public static I2pKeyPair fromProto(bisq.security.protobuf.I2PKeyPair proto) {

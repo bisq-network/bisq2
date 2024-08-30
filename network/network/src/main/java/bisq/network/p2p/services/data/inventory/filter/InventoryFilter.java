@@ -33,7 +33,7 @@ public abstract class InventoryFilter implements NetworkProto {
 
     public bisq.network.protobuf.InventoryFilter.Builder getInventoryFilterBuilder() {
         return bisq.network.protobuf.InventoryFilter.newBuilder()
-                .setInventoryFilterType(inventoryFilterType.toProto());
+                .setInventoryFilterType(inventoryFilterType.toProtoEnum());
     }
 
     public static InventoryFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {
@@ -49,7 +49,7 @@ public abstract class InventoryFilter implements NetworkProto {
     }
 
     @Override
-    abstract public bisq.network.protobuf.InventoryFilter toProto();
+    abstract public bisq.network.protobuf.InventoryFilter toProto(boolean serializeForHash);
 
     abstract public String getDetails();
 }

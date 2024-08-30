@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -44,20 +45,22 @@ import java.util.Optional;
 @EqualsAndHashCode
 @Slf4j
 public final class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
-    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
+    public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
+                                                   AuthenticatedData authenticatedData,
+                                                   KeyPair keyPair)
             throws GeneralSecurityException {
 
-        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
+        byte[] hashForStoreMap = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
-        int sequenceNumber = store.getSequenceNumber(hash) + 1;
+        int sequenceNumber = store.getSequenceNumber(hashForStoreMap) + 1;
         AuthenticatedSequentialData data = new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
-        byte[] serialized = data.serialize();
-        byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
-         /*  log.error("hash={}", Hex.encode(hash));
+        byte[] hashForSignature = data.serializeForHash();
+        byte[] signature = SignatureUtil.sign(hashForSignature, keyPair.getPrivate());
+         /*  log.error("hashForStoreMap={}", Hex.encode(hashForStoreMap));
         log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
         log.error("pubKeyHash={}", Hex.encode(pubKeyHash));
         log.error("sequenceNumber={}", sequenceNumber);
-        log.error("serialized={}", Hex.encode(serialized));
+        log.error("hashForSignature={}", Hex.encode(hashForSignature));
         log.error("signature={}", Hex.encode(signature));
         log.error("data={}", data);*/
         return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
@@ -69,9 +72,12 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     private final byte[] signature;
     @Getter
     private final byte[] ownerPublicKeyBytes;
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final PublicKey ownerPublicKey;
 
-    public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData, byte[] signature, PublicKey ownerPublicKey) {
+    public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
+                                       byte[] signature,
+                                       PublicKey ownerPublicKey) {
         this(authenticatedSequentialData,
                 signature,
                 ownerPublicKey.getEncoded(),
@@ -97,13 +103,22 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddAuthenticatedDataRequest(
-                bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
-                        .setAuthenticatedSequentialData(authenticatedSequentialData.toProto())
-                        .setSignature(ByteString.copyFrom(signature))
-                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)))
-        ).build();
+    public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
+        return newDataRequestBuilder().setAddAuthenticatedDataRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.AddAuthenticatedDataRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AddAuthenticatedDataRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
+                .setAuthenticatedSequentialData(authenticatedSequentialData.toProto(serializeForHash))
+                .setSignature(ByteString.copyFrom(signature))
+                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)
+                );
     }
 
     public static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto) {
@@ -124,7 +139,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public double getCostFactor() {
-        DistributedData distributedData = authenticatedSequentialData.getAuthenticatedData().getDistributedData();
+        DistributedData distributedData = authenticatedSequentialData.getDistributedData();
         double metaDataImpact = distributedData.getMetaData().getCostFactor();
         double dataImpact = distributedData.getCostFactor();
         double impact = metaDataImpact + dataImpact;
@@ -133,7 +148,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     public boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(authenticatedSequentialData.serialize(), signature, getOwnerPublicKey());
+            return !SignatureUtil.verify(authenticatedSequentialData.serializeForHash(), signature, getOwnerPublicKey());
         } catch (Exception e) {
             log.warn(e.toString(), e);
             return true;
@@ -177,6 +192,10 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Override
     public boolean isExpired() {
         return authenticatedSequentialData.isExpired();
+    }
+
+    public DistributedData getDistributedData() {
+        return authenticatedSequentialData.getDistributedData();
     }
 
     @Override

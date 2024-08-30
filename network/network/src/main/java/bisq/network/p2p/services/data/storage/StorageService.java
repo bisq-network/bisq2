@@ -29,10 +29,13 @@ import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.*;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.data.storage.mailbox.*;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -41,6 +44,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,6 +56,8 @@ public class StorageService {
         void onAdded(StorageData storageData);
 
         void onRemoved(StorageData storageData);
+
+        void onRefreshed(StorageData storageData);
     }
 
     final Map<String, AuthenticatedDataStorageService> authenticatedDataStores = new ConcurrentHashMap<>();
@@ -92,6 +98,17 @@ public class StorageService {
                                             listener.onRemoved(authenticatedData);
                                         } catch (Exception e) {
                                             log.error("Calling onRemoved at listener {} failed", listener, e);
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onRefreshed(AuthenticatedData authenticatedData) {
+                                    listeners.forEach(listener -> {
+                                        try {
+                                            listener.onRefreshed(authenticatedData);
+                                        } catch (Exception e) {
+                                            log.error("Calling onRefresh at listener {} failed", listener, e);
                                         }
                                     });
                                 }
@@ -397,6 +414,71 @@ public class StorageService {
             return dataStore.readPersisted().thenApply(nil -> dataStore);
         } else {
             return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeKey));
+        }
+    }
+
+    public <T extends AuthorizedDistributedData> void cleanupMap(String storeKey,
+                                                                 Function<AuthorizedDistributedData, Optional<T>> typeFilter) {
+        try {
+            AuthenticatedDataStorageService authenticatedDataStorageService = getOrCreateAuthenticatedDataStore(storeKey).join();
+            Map<ByteArray, AuthenticatedDataRequest> map = authenticatedDataStorageService.getPersistableStore().getMap();
+            // We create a map with the distributedData as key. The duplicated entries will get filtered by data and sequence number, so the most recent and highest seq nr is used.
+            Map<T, Map.Entry<ByteArray, AuthenticatedDataRequest>> entryByDistributedData = map.entrySet().stream()
+                    .filter(entry -> entry.getValue() instanceof AddAuthenticatedDataRequest) // We have only polluted AddAuthenticatedDataRequest, so we can ignore the RemoveAuthenticatedDataRequest
+                    .filter(entry -> {
+                        AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) entry.getValue();
+                        return addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData() instanceof AuthorizedData;
+                    })
+                    .map(entry -> {
+                        AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) entry.getValue();
+                        AuthorizedData authorizedData = (AuthorizedData) addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData();
+                        return typeFilter.apply(authorizedData.getAuthorizedDistributedData())
+                                .map(distributedData -> Maps.immutableEntry(distributedData, entry))
+                                .orElse(null);
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (oldValue, newValue) -> {
+                                if (newValue.getValue().getSequenceNumber() > oldValue.getValue().getSequenceNumber()) {
+                                    return newValue;
+                                }
+                                if (newValue.getValue().getSequenceNumber() == oldValue.getValue().getSequenceNumber()) {
+                                    if (newValue.getValue().getCreated() > oldValue.getValue().getCreated()) {
+                                        return newValue;
+                                    } else {
+                                        return oldValue;
+                                    }
+                                } else {
+                                    return oldValue;
+                                }
+                            }));
+
+            Map<ByteArray, AuthenticatedDataRequest> cleaned = entryByDistributedData.values().stream()
+                    .map(entry -> Maps.immutableEntry(entry.getKey(), entry.getValue()))
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (oldValue, newValue) -> {
+                                // We should not have merge conflicts
+                                if (newValue.getSequenceNumber() > oldValue.getSequenceNumber()) {
+                                    return newValue;
+                                }
+                                if (newValue.getSequenceNumber() == oldValue.getSequenceNumber()) {
+                                    if (newValue.getCreated() > oldValue.getCreated()) {
+                                        return newValue;
+                                    } else {
+                                        return oldValue;
+                                    }
+                                } else {
+                                    return oldValue;
+                                }
+                            }));
+            log.info("cleanupMap for {}: size of cleaned map {}; size of original map={}", storeKey, cleaned.size(), map.size());
+            map.clear();
+            map.putAll(cleaned);
+            authenticatedDataStorageService.persist();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

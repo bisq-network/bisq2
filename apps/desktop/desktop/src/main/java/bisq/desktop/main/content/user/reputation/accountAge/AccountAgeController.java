@@ -61,7 +61,7 @@ public class AccountAgeController extends TabController<AccountAgeModel> {
                 return Optional.of(new AccountAgeTab2Controller(serviceProvider));
             }
             case ACCOUNT_AGE_TAB_3: {
-                return Optional.of(new AccountAgeTab3Controller(serviceProvider, view));
+                return Optional.of(new AccountAgeTab3Controller(serviceProvider, view.getRoot()));
             }
             default: {
                 return Optional.empty();

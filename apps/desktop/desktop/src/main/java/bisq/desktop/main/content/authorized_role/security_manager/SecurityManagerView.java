@@ -454,11 +454,13 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         };
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
     public static class DifficultyAdjustmentListItem implements DateTableItem {
+        @EqualsAndHashCode.Include
         private final AuthorizedDifficultyAdjustmentData data;
+
         private final long date;
         private final String dateString, timeString, difficultyAdjustmentFactorString;
         private final double difficultyAdjustmentFactor;
@@ -473,11 +475,13 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         }
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
     public static class MinRequiredReputationScoreListItem implements DateTableItem {
+        @EqualsAndHashCode.Include
         private final AuthorizedMinRequiredReputationScoreData data;
+
         private final long date;
         private final String dateString, timeString, minRequiredReputationScoreString;
         private final double minRequiredReputationScore;
@@ -492,11 +496,13 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         }
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
     public static class AlertListItem implements DateTableItem {
+        @EqualsAndHashCode.Include
         private final AuthorizedAlertData authorizedAlertData;
+
         private final long date;
         private final String dateString, timeString, alertType, message, haltTrading, requireVersionForTrading, minVersion, bondedRoleDisplayString;
 
@@ -515,9 +521,11 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     }
 
     @Getter
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class BondedRoleListItem {
+        @EqualsAndHashCode.Include
         private final BondedRole bondedRole;
+
         private final String displayString;
 
         public BondedRoleListItem(BondedRole bondedRole, SecurityManagerController controller) {

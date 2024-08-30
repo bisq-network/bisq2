@@ -18,7 +18,7 @@
 package bisq.chat;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum ChatMessageType implements ProtoEnum {
     TEXT,
@@ -27,7 +27,7 @@ public enum ChatMessageType implements ProtoEnum {
     PROTOCOL_LOG_MESSAGE;
 
     @Override
-    public bisq.chat.protobuf.ChatMessageType toProto() {
+    public bisq.chat.protobuf.ChatMessageType toProtoEnum() {
         return bisq.chat.protobuf.ChatMessageType.valueOf(getProtobufEnumPrefix() + name());
     }
 

@@ -24,27 +24,30 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public final class CryptoCurrency extends TradeCurrency {
-    // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-    private final static String PREFIX = "✦ ";
-
     public CryptoCurrency(String code, String name) {
         super(code, name);
     }
 
-    public bisq.common.protobuf.TradeCurrency toProto() {
-        return getTradeCurrencyBuilder().setCryptoCurrency(bisq.common.protobuf.CryptoCurrency.newBuilder()).build();
-    }
-
-    public static CryptoCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto, bisq.common.protobuf.CryptoCurrency proto) {
-        return new CryptoCurrency(baseProto.getCode(), baseProto.getName());
+    @Override
+    public bisq.common.protobuf.TradeCurrency.Builder getBuilder(boolean serializeForHash) {
+        return getTradeCurrencyBuilder().setCryptoCurrency(bisq.common.protobuf.CryptoCurrency.newBuilder());
     }
 
     @Override
-    public String getDisplayPrefix() {
-        return PREFIX;
+    public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    public static CryptoCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto) {
+        return new CryptoCurrency(baseProto.getCode(), baseProto.getName());
     }
 
     public boolean isFiat() {
         return false;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return name;
     }
 }

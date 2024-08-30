@@ -1,7 +1,7 @@
 package bisq.network.p2p.node.authorization;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.network.p2p.node.Feature;
 
 import java.util.Optional;
@@ -22,7 +22,7 @@ public enum AuthorizationTokenType implements ProtoEnum {
     }
 
     @Override
-    public bisq.network.protobuf.AuthorizationTokenType toProto() {
+    public bisq.network.protobuf.AuthorizationTokenType toProtoEnum() {
         return bisq.network.protobuf.AuthorizationTokenType.valueOf(getProtobufEnumPrefix() + name());
     }
 

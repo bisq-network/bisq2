@@ -34,9 +34,9 @@ public class BisqEasyTradeParty extends TradeParty {
     }
 
     @Override
-    public bisq.trade.protobuf.TradeParty toProto() {
+    public bisq.trade.protobuf.TradeParty.Builder getBuilder(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyTradeParty.Builder builder = bisq.trade.protobuf.BisqEasyTradeParty.newBuilder();
-        return getTradePartyBuilder().setBisqEasyTradeParty(builder).build();
+        return getTradePartyBuilder(serializeForHash).setBisqEasyTradeParty(builder);
     }
 
     public static BisqEasyTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {

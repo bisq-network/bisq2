@@ -21,10 +21,10 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public interface AmountSpec extends NetworkProto {
+    @Override
+    bisq.offer.protobuf.AmountSpec toProto(boolean serializeForHash);
 
-    bisq.offer.protobuf.AmountSpec toProto();
-
-    default bisq.offer.protobuf.AmountSpec.Builder getAmountSpecBuilder() {
+    default bisq.offer.protobuf.AmountSpec.Builder getAmountSpecBuilder(boolean serializeForHash) {
         return bisq.offer.protobuf.AmountSpec.newBuilder();
     }
 

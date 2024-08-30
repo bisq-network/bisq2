@@ -17,10 +17,12 @@
 
 package bisq.desktop.main.content.user.reputation.signedAccount.tab3;
 
+import bisq.desktop.common.Layout;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.OrderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,39 +31,33 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SignedWitnessTab3View extends View<VBox, SignedWitnessTab3Model, SignedWitnessTab3Controller> {
-    private final MaterialTextField pubKeyHash;
     private final Button closeButton, backButton, requestCertificateButton;
     private final Hyperlink learnMore;
+    private MaterialTextField pubKeyHash;
+    private MaterialTextArea jsonData;
 
     public SignedWitnessTab3View(SignedWitnessTab3Model model,
                                  SignedWitnessTab3Controller controller,
                                  Pane userProfileSelection) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(20);
+        root.setSpacing(5);
         root.setAlignment(Pos.TOP_LEFT);
+        root.getStyleClass().add("account-age");
 
-        Label headline = new Label(Res.get("user.reputation.signedWitness.howToHeadline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
-
-        OrderedList info = new OrderedList(Res.get("user.reputation.signedWitness.howTo"), "bisq-text-13");
-
-        Label userProfileSelectLabel = new Label(Res.get("user.bondedRoles.userProfile.select").toUpperCase());
-        userProfileSelectLabel.getStyleClass().add("bisq-text-4");
-        userProfileSelectLabel.setAlignment(Pos.TOP_LEFT);
-
-        pubKeyHash = new MaterialTextField(Res.get("user.reputation.pubKeyHash"), "");
-        pubKeyHash.setEditable(false);
-        pubKeyHash.showCopyIcon();
+        VBox stepOne = createAndGetStepOne(userProfileSelection);
+        VBox stepTwo = createAndGetStepTwo();
+        VBox stepThree = createAndGetStepThree();
+        VBox stepFour = createAndGetStepFour();
 
         requestCertificateButton = new Button(Res.get("user.reputation.request"));
         requestCertificateButton.getStyleClass().add("outlined-button");
+        VBox.setMargin(requestCertificateButton, new Insets(-5, 0, 15, 0));
 
         backButton = new Button(Res.get("action.back"));
 
@@ -73,32 +69,95 @@ public class SignedWitnessTab3View extends View<VBox, SignedWitnessTab3Model, Si
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        VBox.setVgrow(info, Priority.ALWAYS);
-        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(userProfileSelectLabel, new Insets(10, 0, -20, 0));
-        VBox.setMargin(userProfileSelection, new Insets(0, 0, -30, 0));
-        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, info, userProfileSelectLabel, userProfileSelection, pubKeyHash, requestCertificateButton, buttons);
+        root.getChildren().addAll(stepOne, stepTwo, stepThree, stepFour, requestCertificateButton, buttons);
     }
 
     @Override
     protected void onViewAttached() {
         pubKeyHash.textProperty().bind(model.getPubKeyHash());
         pubKeyHash.getIconButton().setOnAction(e -> controller.onCopyToClipboard(pubKeyHash.getText()));
+
+        jsonData.textProperty().bindBidirectional(model.getJsonData());
+
         closeButton.setOnAction(e -> controller.onClose());
         backButton.setOnAction(e -> controller.onBack());
         learnMore.setOnAction(e -> controller.onLearnMore());
+
+        requestCertificateButton.disableProperty().bind(model.getRequestCertificateButtonDisabled());
         requestCertificateButton.setOnAction(e -> controller.onRequestAuthorization());
     }
 
     @Override
     protected void onViewDetached() {
         pubKeyHash.textProperty().unbind();
-
         pubKeyHash.getIconButton().setOnAction(null);
+
+        jsonData.textProperty().unbindBidirectional(model.getJsonData());
+
         closeButton.setOnAction(null);
         backButton.setOnAction(null);
         learnMore.setOnAction(null);
+
+        requestCertificateButton.disableProperty().unbind();
         requestCertificateButton.setOnAction(null);
+    }
+
+    private VBox createAndGetStepOne(Pane userProfileSelection) {
+        Label title = createAndGetStepLabel(Res.get("user.reputation.signedWitness.import.step1.title"));
+        Label instruction = createAndGetStepInstructionLabel(Res.get("user.reputation.signedWitness.import.step1.instruction"));
+        VBox.setMargin(userProfileSelection, new Insets(0, 0, -10, -15));
+        VBox vBox = new VBox(title, instruction, userProfileSelection, Layout.hLine());
+        vBox.getStyleClass().add("import-step");
+        VBox.setMargin(vBox, new Insets(20, 0, 0, 0));
+        return vBox;
+    }
+
+    private VBox createAndGetStepTwo() {
+        Label title = createAndGetStepLabel(Res.get("user.reputation.signedWitness.import.step2.title"));
+        Label instruction = createAndGetStepInstructionLabel(Res.get("user.reputation.signedWitness.import.step2.instruction"));
+        pubKeyHash = new MaterialTextField(Res.get("user.reputation.signedWitness.import.step2.profileId"), "");
+        pubKeyHash.setEditable(false);
+        pubKeyHash.showCopyIcon();
+        pubKeyHash.getStyleClass().add("material-field");
+        VBox.setMargin(pubKeyHash, new Insets(10, 0, 15, 2));
+        VBox vBox = new VBox(title, instruction, pubKeyHash, Layout.hLine());
+        vBox.getStyleClass().add("import-step");
+        return vBox;
+    }
+
+    private VBox createAndGetStepThree() {
+        Label title = createAndGetStepLabel(Res.get("user.reputation.signedWitness.import.step3.title"));
+        Label instructionOne = createAndGetStepInstructionLabel(Res.get("user.reputation.signedWitness.import.step3.instruction1"));
+        Label instructionTwo = createAndGetStepInstructionLabel(Res.get("user.reputation.signedWitness.import.step3.instruction2"));
+        Label instructionThree = createAndGetStepInstructionLabel(Res.get("user.reputation.signedWitness.import.step3.instruction3"));
+        VBox.setMargin(instructionThree, new Insets(0, 0, 15, 0));
+        VBox vBox = new VBox(title, instructionOne, instructionTwo, instructionThree, Layout.hLine());
+        vBox.getStyleClass().add("import-step");
+        return vBox;
+    }
+
+    private VBox createAndGetStepFour() {
+        Label title = createAndGetStepLabel(Res.get("user.reputation.signedWitness.import.step4.title"));
+        Label instruction = createAndGetStepInstructionLabel(Res.get("user.reputation.signedWitness.import.step4.instruction"));
+        jsonData = new MaterialTextArea(Res.get("user.reputation.signedWitness.import.step4.signedMessage"));
+        jsonData.setEditable(true);
+        jsonData.getStyleClass().add("material-field");
+        VBox.setMargin(jsonData, new Insets(10, 0, 15, 2));
+        UIThread.runOnNextRenderFrame(jsonData::requestFocus);
+        VBox vBox = new VBox(title, instruction, jsonData);
+        vBox.getStyleClass().add("import-step");
+        return vBox;
+    }
+
+    private Label createAndGetStepLabel(String text) {
+        Label label = new Label(text.toUpperCase());
+        label.getStyleClass().add("step-title");
+        return label;
+    }
+
+    private Label createAndGetStepInstructionLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("step-instruction");
+        return label;
     }
 }

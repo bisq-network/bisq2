@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
 
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.EqualsAndHashCode;
@@ -34,14 +34,18 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-@Getter
+
 @EqualsAndHashCode(callSuper = true)
 public final class HashSetFilter extends InventoryFilter {
     // FilterEntry has about 26 bytes (hash of 20 bytes + integer + some overhead). 200_000 items are about 4.8 MB)
     // We should aim to be much below that limit.
     public final static int MAX_ENTRIES = 200_000;
 
+    @Getter
     private final List<HashSetFilterEntry> filterEntries;
+
+    // As creating the HashSet at each request costs resources we cache it.
+    private transient Set<HashSetFilterEntry> filterEntriesAsSet;
 
     public HashSetFilter(List<HashSetFilterEntry> filterEntries) {
         this(InventoryFilterType.HASH_SET, filterEntries);
@@ -64,13 +68,17 @@ public final class HashSetFilter extends InventoryFilter {
     }
 
     @Override
-    public bisq.network.protobuf.InventoryFilter toProto() {
+    public bisq.network.protobuf.InventoryFilter toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryFilter.Builder getBuilder(boolean serializeForHash) {
         return getInventoryFilterBuilder().setHashSetFilter(
-                        bisq.network.protobuf.HashSetFilter.newBuilder()
-                                .addAllFilterEntries(filterEntries.stream()
-                                        .map(HashSetFilterEntry::toProto)
-                                        .collect(Collectors.toList())))
-                .build();
+                bisq.network.protobuf.HashSetFilter.newBuilder()
+                        .addAllFilterEntries(filterEntries.stream()
+                                .map(entry -> entry.toProto(serializeForHash))
+                                .collect(Collectors.toList())));
     }
 
     public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {
@@ -83,10 +91,13 @@ public final class HashSetFilter extends InventoryFilter {
     @Override
     public String getDetails() {
         return "HashSetFilter with " + filterEntries.size() + " filterEntries and size of " +
-                ByteUnit.BYTE.toKB(toProto().getSerializedSize());
+                ByteUnit.BYTE.toKB(getSerializedSize()) + " KB";
     }
 
     public Set<HashSetFilterEntry> getFilterEntriesAsSet() {
-        return new HashSet<>(filterEntries);
+        if (filterEntriesAsSet == null) {
+            filterEntriesAsSet = new HashSet<>(filterEntries);
+        }
+        return filterEntriesAsSet;
     }
 }

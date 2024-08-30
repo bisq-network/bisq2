@@ -49,8 +49,8 @@ class CashAppAccountTest {
     );
 
     @Test
-    void toProto() {
-        var result = ACCOUNT.toProto();
+    void testToProto() {
+        var result = ACCOUNT.completeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("creationDate_", "memoizedHashCode")
@@ -58,7 +58,7 @@ class CashAppAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.CashAppAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

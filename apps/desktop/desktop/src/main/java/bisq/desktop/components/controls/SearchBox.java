@@ -91,6 +91,14 @@ public class SearchBox extends HBox {
         return searchField.getText();
     }
 
+    public void setText(String value) {
+        searchField.setText(value);
+    }
+
+    public void clear() {
+        setText("");
+    }
+
     private void applyStyle(boolean isFocused) {
         if (isFocused) {
             searchIcon.setId(activeIconId);

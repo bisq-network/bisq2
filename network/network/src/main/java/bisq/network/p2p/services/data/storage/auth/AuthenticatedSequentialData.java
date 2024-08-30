@@ -20,10 +20,13 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Date;
 
 /**
  * Data which ensures that the sequence of add or remove request is maintained correctly.
@@ -34,10 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public final class AuthenticatedSequentialData implements NetworkProto {
     public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
-        return new AuthenticatedSequentialData(data.getAuthenticatedData(),
-                sequenceNumber,
-                data.getPubKeyHash(),
-                data.getCreated());
+        return from(data, sequenceNumber, data.getCreated());
+    }
+
+    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber, long created) {
+        return new AuthenticatedSequentialData(data.getAuthenticatedData(), sequenceNumber, data.getPubKeyHash(), created);
     }
 
     private final AuthenticatedData authenticatedData;
@@ -64,13 +68,17 @@ public final class AuthenticatedSequentialData implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.AuthenticatedSequentialData toProto() {
+    public bisq.network.protobuf.AuthenticatedSequentialData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthenticatedSequentialData.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.AuthenticatedSequentialData.newBuilder()
-                .setAuthenticatedData(authenticatedData.toProto())
+                .setAuthenticatedData(authenticatedData.toProto(serializeForHash))
                 .setSequenceNumber(sequenceNumber)
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
-                .setCreated(created)
-                .build();
+                .setCreated(created);
     }
 
     public static AuthenticatedSequentialData fromProto(bisq.network.protobuf.AuthenticatedSequentialData proto) {
@@ -88,11 +96,15 @@ public final class AuthenticatedSequentialData implements NetworkProto {
         return sequenceNumber <= seqNumberFromMap;
     }
 
+    public DistributedData getDistributedData() {
+        return authenticatedData.getDistributedData();
+    }
+
     @Override
     public String toString() {
         return "AuthenticatedSequentialData{" +
                 "\r\n          sequenceNumber=" + sequenceNumber +
-                ",\r\n          created=" + created +
+                ",\r\n          created=" + new Date(created) + " (" + created + ")" +
                 ",\r\n          pubKeyHash=" + Hex.encode(pubKeyHash) +
                 ",\r\n          authenticatedData=" + authenticatedData +
                 "\r\n}";

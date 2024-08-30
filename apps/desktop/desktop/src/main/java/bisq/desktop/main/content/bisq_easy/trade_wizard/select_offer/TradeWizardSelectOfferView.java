@@ -21,7 +21,6 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
@@ -44,7 +43,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
@@ -197,13 +195,22 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         tableView.getSortOrder().add(reputationColumn);
 
         // Price
+        Comparator<ListItem> comparator = (o1, o2) -> {
+            if (o1.getBisqEasyOffer().getDirection().isSell()) {
+                return Long.compare(o1.getPriceAsLong(), o2.getPriceAsLong());
+            } else {
+                return Long.compare(o2.getPriceAsLong(), o1.getPriceAsLong());
+            }
+        };
         if (model.getDirection().isBuy()) {
-            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+            BisqTableColumn<ListItem> priceColumn = new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("bisqEasy.tradeWizard.review.table.price", model.getMarket().getMarketCodes()))
                     .minWidth(160)
                     .valueSupplier(ListItem::getPriceDisplayString)
-                    .comparator(Comparator.comparing(ListItem::getPriceAsLong))
-                    .build());
+                    .comparator(comparator)
+                    .build();
+            tableView.getColumns().add(priceColumn);
+            tableView.getSortOrder().add(priceColumn);
         }
 
         // BTC amount
@@ -231,12 +238,12 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
                     {
                         userName.setId("chat-user-name");
-                        int size = 30;
+                        int size = 40;
                         catIcon.setFitWidth(size);
                         catIcon.setFitHeight(size);
-                        StackPane catIconWithRing = ImageUtil.addRingToNode(catIcon, size, 1.5, "-bisq-dark-grey-50");
-                        hBox = new HBox(10, catIconWithRing, userName);
-                        hBox.setAlignment(Pos.CENTER);
+                        hBox = new HBox(10, catIcon, userName);
+                        HBox.setMargin(catIcon, new Insets(0, 0, 0, 5));
+                        hBox.setAlignment(Pos.CENTER_LEFT);
                     }
 
                     @Override
@@ -292,15 +299,16 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
     }
 
     @ToString
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     static class ListItem {
+        @EqualsAndHashCode.Include
+        private final BisqEasyOffer bisqEasyOffer;
+
         private final Optional<UserProfile> authorUserProfile;
         private final String makerUserName, baseAmountDisplayString, priceDisplayString;
         private final long priceAsLong, baseAmountAsLong;
-        @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
-        private final BisqEasyOffer bisqEasyOffer;
 
         public ListItem(BisqEasyOffer bisqEasyOffer,
                         TradeWizardSelectOfferModel model,
@@ -308,12 +316,13 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         ReputationService reputationService,
                         MarketPriceService marketPriceService) {
             this.bisqEasyOffer = bisqEasyOffer;
+
             authorUserProfile = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId());
             makerUserName = authorUserProfile.map(UserProfile::getUserName).orElse("");
             priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(PriceQuote::getValue).orElse(0L);
             priceDisplayString = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer, false);
             Monetary baseAmountAsMonetary = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService,
-                            model.getAmountSpec(),
+                            model.getQuoteSideAmountSpec(),
                             bisqEasyOffer.getPriceSpec(),
                             bisqEasyOffer.getMarket())
                     .orElse(Monetary.from(0, model.getMarket().getBaseCurrencyCode()));

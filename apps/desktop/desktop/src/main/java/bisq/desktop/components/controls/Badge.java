@@ -23,7 +23,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -39,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-// TODO Consider to implement a custom Badge as the design is somehow weird
 // Derived from JfxBadge
 @Slf4j
 @DefaultProperty(value = "control")
@@ -50,23 +48,26 @@ public class Badge extends StackPane {
     private final Label label;
     @Getter
     private final StackPane badgePane;
-    private final ChangeListener<String> textListener;
     @Nullable
     @Getter
     protected Node control;
     @Getter
     @Setter
     private boolean enabled = true;
-    protected ObjectProperty<Pos> position = new SimpleObjectProperty<>();
+    protected ObjectProperty<Pos> position = new SimpleObjectProperty<>(Pos.TOP_RIGHT);
     private final SimpleStringProperty text = new SimpleStringProperty("");
     private final FadeTransition transition;
 
     public Badge() {
-        this(null);
+        this(null, Pos.TOP_RIGHT);
     }
 
     public Badge(Node control) {
         this(control, Pos.TOP_RIGHT);
+    }
+
+    public Badge(Pos position) {
+        this(null, position);
     }
 
     public Badge(Node control, Pos position) {
@@ -89,21 +90,36 @@ public class Badge extends StackPane {
         getChildren().add(badge);
         getStyleClass().add("bisq-badge");
 
+        setLabelColor("-fx-light-text-color");
         setPosition(position);
         setControl(control);
 
         // Using weak listeners here was not safe. Some update did not get processed.
-        textListener = (observable, oldValue, newValue) -> refreshBadge();
-        text.addListener(textListener);
+        // As we do not reference any external object there should not be any risk for causing a memory leak.
+        text.addListener((observable, oldValue, newValue) -> {
+            if (oldValue == null || !oldValue.equals(newValue)) {
+                refreshBadge();
+            }
+        });
     }
 
-    public void dispose() {
-        text.removeListener(textListener);
+    // For unknown reasons the color of the style class is not applied in certain context (when used in list items)
+    // when applying the styleClass.
+    // Setting the style via `setStyle` works (taken from `.bisq-badge .badge-pane .label`).
+    public void setLabelColor(String color) {
+        label.setStyle("-fx-font-size: 0.85em; " +
+                "-fx-text-fill: " + color + " !important; " +
+                "-fx-font-family: \"IBM Plex Sans SemiBold\";");
+    }
+
+    public void setLabelStyle(String style) {
+        label.setStyle(style);
     }
 
     private void refreshBadge() {
         int textLength = text.get() != null ? text.get().length() : 0;
-        boolean show = enabled && textLength > 0;
+        boolean hasDisplay = label.getGraphic() != null || textLength > 0;
+        boolean show = enabled && hasDisplay;
         badge.setVisible(show);
         badge.setManaged(show);
         if (show) {
@@ -144,10 +160,13 @@ public class Badge extends StackPane {
     }
 
     public Pos getPosition() {
-        return position == null ? Pos.TOP_RIGHT : position.get();
+        return position.get();
     }
 
     public void setPosition(Pos position) {
+        if (position == null) {
+            position = Pos.TOP_RIGHT;
+        }
         this.position.set(position);
         StackPane.setAlignment(badge, position);
     }
@@ -156,14 +175,12 @@ public class Badge extends StackPane {
         return this.position;
     }
 
-
     public final String getText() {
         return text.get();
     }
 
     public final void setText(String value) {
         text.set(value);
-        refreshBadge();
     }
 
     public final StringProperty textProperty() {

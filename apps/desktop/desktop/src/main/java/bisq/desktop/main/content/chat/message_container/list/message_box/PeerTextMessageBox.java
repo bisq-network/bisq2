@@ -21,39 +21,37 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqPopup;
-import bisq.desktop.components.controls.BisqPopupMenu;
-import bisq.desktop.components.controls.BisqPopupMenuItem;
+import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 public class PeerTextMessageBox extends BubbleMessageBox {
-    protected Label replyIcon, pmIcon, moreOptionsIcon;
+    private Subscription isMenuShowingPin;
+    protected BisqMenuItem replyAction, openPrivateChatAction;
+    protected DropdownMenuItem ignoreUserMenuItem, reportUserMenuItem;
 
     public PeerTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                               ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                              ChatMessagesListController controller, ChatMessagesListModel model) {
-        super(item, list, controller, model);
+                              ChatMessagesListController controller) {
+        super(item, list, controller);
 
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
-        messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
-        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, moreOptionsIcon, Spacer.fillHBox());
+        activeReactionsDisplayHBox.getStyleClass().add("peer-text-message-box-active-reactions");
+        messageHBox.getChildren().setAll(messageBgHBox, activeReactionsDisplayHBox, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, reactMenuBox, moreActionsMenu, Spacer.fillHBox());
 
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
 
     @Override
@@ -65,31 +63,53 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void setUpReactions() {
-        replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
-        pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
-        moreOptionsIcon = getIconWithToolTip(AwesomeIcon.ELLIPSIS_HORIZONTAL, Res.get("chat.message.moreOptions"));
-        HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
-        HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
-        HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
-        reactionsHBox.setVisible(false);
+    protected void setUpActions() {
+        super.setUpActions();
+
+        replyAction = new BisqMenuItem("reply-grey", "reply-white");
+        replyAction.useIconOnly();
+        replyAction.setTooltip(Res.get("chat.message.reply"));
+        openPrivateChatAction = new BisqMenuItem("open-p-chat-grey", "open-p-chat-white");
+        openPrivateChatAction.useIconOnly();
+        openPrivateChatAction.setTooltip(Res.get("chat.message.privateMessage"));
+
+        // More actions dropdown menu
+        ignoreUserMenuItem = new DropdownMenuItem("ignore-grey", "ignore-white",
+                Res.get("chat.message.contextMenu.ignoreUser"));
+        reportUserMenuItem = new DropdownMenuItem("report-grey", "report-white",
+                Res.get("chat.message.contextMenu.reportUser"));
+        moreActionsMenu = new DropdownMenu("more-actions-grey", "more-actions-white", true);
+        moreActionsMenu.setTooltip(Res.get("chat.message.moreOptions"));
+        moreActionsMenu.addMenuItems(ignoreUserMenuItem, reportUserMenuItem);
+        moreActionsMenu.setOpenToTheRight(true);
+
+        HBox.setMargin(replyAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(openPrivateChatAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(moreActionsMenu, ACTION_ITEMS_MARGIN);
     }
 
     @Override
-    protected void addReactionsHandlers() {
+    protected void addActionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
-        moreOptionsIcon.setOnMouseClicked(e -> onOpenMoreOptions(pmIcon, chatMessage, () -> {
-            reactionsHBox.setVisible(false);
-            model.getSelectedChatMessageForMoreOptionsPopup().set(null);
-        }));
-        replyIcon.setOnMouseClicked(e -> controller.onReply(chatMessage));
-        pmIcon.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
 
-        replyIcon.setVisible(true);
-        replyIcon.setManaged(true);
+        replyAction.setOnAction(e -> controller.onReply(chatMessage));
+        openPrivateChatAction.setOnAction(e -> controller.onOpenPrivateChannel(chatMessage));
+        copyAction.setOnAction(e -> onCopyMessage(chatMessage));
+        ignoreUserMenuItem.setOnAction(e -> controller.onIgnoreUser(chatMessage));
+        reportUserMenuItem.setOnAction(e -> controller.onReportUser(chatMessage));
 
-        pmIcon.setVisible(chatMessage instanceof PublicChatMessage);
-        pmIcon.setManaged(chatMessage instanceof PublicChatMessage);
+        replyAction.setVisible(true);
+        replyAction.setManaged(true);
+
+        openPrivateChatAction.setVisible(chatMessage instanceof PublicChatMessage);
+        openPrivateChatAction.setManaged(chatMessage instanceof PublicChatMessage);
+
+        isMenuShowingPin = EasyBind.subscribe(moreActionsMenu.getIsMenuShowing(), isShowing -> {
+           if (!isShowing && !isHover()) {
+               dateTime.setVisible(false);
+               actionsHBox.setVisible(false);
+           }
+        });
     }
 
     protected void setUpPeerMessage() {
@@ -101,7 +121,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         // Message
         quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
         message.setAlignment(Pos.CENTER_LEFT);
-        message.maxWidthProperty().bind(list.widthProperty().subtract(140));//165
+        message.maxWidthProperty().bind(list.widthProperty().subtract(140));
         VBox messageVBox = new VBox(quotedMessageVBox, message);
         HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
 
@@ -110,40 +130,23 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox);
     }
 
-    private void onOpenMoreOptions(Node owner, ChatMessage chatMessage, Runnable onClose) {
-        if (chatMessage.equals(model.getSelectedChatMessageForMoreOptionsPopup().get())) {
-            return;
-        }
-        model.getSelectedChatMessageForMoreOptionsPopup().set(chatMessage);
-
-        List<BisqPopupMenuItem> items = new ArrayList<>();
-        items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.copyMessage"),
-                () -> onCopyMessage(chatMessage)));
-
-        if (chatMessage instanceof PublicChatMessage) {
-            items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.ignoreUser"),
-                    () -> controller.onIgnoreUser(chatMessage)));
-        }
-        items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.reportUser"),
-                () -> controller.onReportUser(chatMessage)));
-
-        BisqPopupMenu menu = new BisqPopupMenu(items, onClose);
-        menu.setAlignment(BisqPopup.Alignment.LEFT);
-        menu.show(owner);
-    }
-
     @Override
-    public void cleanup() {
-        super.cleanup();
+    public void dispose() {
+        super.dispose();
 
         message.maxWidthProperty().unbind();
 
         userName.setOnMouseClicked(null);
         userProfileIcon.setOnMouseClicked(null);
-        replyIcon.setOnMouseClicked(null);
-        pmIcon.setOnMouseClicked(null);
-        moreOptionsIcon.setOnMouseClicked(null);
 
-        userProfileIcon.releaseResources();
+        replyAction.setOnAction(null);
+        openPrivateChatAction.setOnAction(null);
+        copyAction.setOnAction(null);
+        ignoreUserMenuItem.setOnAction(null);
+        reportUserMenuItem.setOnAction(null);
+
+        userProfileIcon.dispose();
+
+        isMenuShowingPin.unsubscribe();
     }
 }

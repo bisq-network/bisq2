@@ -17,8 +17,13 @@
 
 package bisq.chat.notifications;
 
-import bisq.chat.*;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelNotificationType;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
+import bisq.chat.ChatUtil;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
@@ -37,7 +42,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SendNotificationService;
+import bisq.presentation.notifications.SystemNotificationService;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -46,11 +51,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -68,13 +74,14 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     @Getter
     private final Persistence<ChatNotificationsStore> persistence;
     private final ChatService chatService;
-    private final SendNotificationService sendNotificationService;
+    private final SystemNotificationService systemNotificationService;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     // changedNotification contains the ChatNotification which was added, removed or got the consumed flag changed
     @Getter
     private final Observable<ChatNotification> changedNotification = new Observable<>();
+    private final Map<ChatChannelDomain, Predicate<ChatNotification>> predicateByChatChannelDomain = new HashMap<>();
     private final Map<String, Pin> chatMessagesByChannelIdPins = new ConcurrentHashMap<>();
     private final long startUpDateTime = System.currentTimeMillis();
     @Setter
@@ -82,13 +89,13 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     public ChatNotificationService(PersistenceService persistenceService,
                                    ChatService chatService,
-                                   SendNotificationService sendNotificationService,
+                                   SystemNotificationService systemNotificationService,
                                    SettingsService settingsService,
                                    UserIdentityService userIdentityService,
                                    UserProfileService userProfileService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         this.chatService = chatService;
-        this.sendNotificationService = sendNotificationService;
+        this.systemNotificationService = systemNotificationService;
         this.settingsService = settingsService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
@@ -134,18 +141,29 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Consume notifications
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void consume(String channelId) {
-        getNotConsumedNotifications(channelId)
-                .forEach(this::consumeNotification);
+    public void consume(ChatChannel<?> channel) {
+        consume(channel.getChatChannelDomain(), channel.getId());
+    }
+
+    public void consume(ChatChannelDomain chatChannelDomain) {
+        getNotConsumedNotifications(chatChannelDomain).forEach(this::consumeNotification);
+    }
+
+    public void consume(ChatChannelDomain chatChannelDomain, String chatChannelId) {
+        getNotConsumedNotifications(chatChannelDomain, chatChannelId).forEach(this::consumeNotification);
     }
 
     public void consumeAllNotifications() {
-        getNotConsumedNotifications()
-                .forEach(this::consumeNotification);
+        getNotConsumedNotifications().forEach(this::consumeNotification);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Not consumed notifications
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Stream<ChatNotification> getNotConsumedNotifications() {
         synchronized (persistableStore) {
@@ -153,28 +171,67 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }
     }
 
+    public Stream<ChatNotification> getNotConsumedNotifications(ChatChannel<?> channel) {
+        return getNotConsumedNotifications(channel.getChatChannelDomain(), channel.getId());
+    }
+
     public Stream<ChatNotification> getNotConsumedNotifications(ChatChannelDomain chatChannelDomain) {
         return getNotConsumedNotifications()
-                .filter(chatNotification -> chatNotification.getChatChannelDomain() == chatChannelDomain);
+                .filter(chatNotification -> chatNotification.getChatChannelDomain() == chatChannelDomain)
+                .filter(chatNotification -> findPredicate(chatChannelDomain)
+                        .map(predicate -> predicate.test(chatNotification))
+                        .orElse(true));
     }
 
-    public Stream<ChatNotification> getNotConsumedNotifications(String channelId) {
+    public Stream<ChatNotification> getNotConsumedNotifications(ChatChannelDomain chatChannelDomain,
+                                                                String chatChannelId) {
+        // We filter early for the channelId to avoid unnecessary calls on the predicates
         return getNotConsumedNotifications()
-                .filter(chatNotification -> chatNotification.getChatChannelId().equals(channelId));
+                .filter(chatNotification -> chatNotification.getChatChannelId().equals(chatChannelId))
+                .filter(chatNotification -> chatNotification.getChatChannelDomain() == chatChannelDomain)
+                .filter(this::testChatChannelDomainPredicate);
     }
 
-    public Set<String> getTradeIdsOfNotConsumedNotifications() {
-        return getNotConsumedNotifications(ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                .flatMap(chatNotification -> chatNotification.getTradeId().stream())
-                .collect(Collectors.toSet());
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Number of not consumed notifications
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public long getNumNotifications(ChatChannel<?> channel) {
+        return getNumNotifications(channel.getChatChannelDomain(), channel.getId());
     }
 
     public long getNumNotifications(ChatChannelDomain chatChannelDomain) {
         return getNotConsumedNotifications(chatChannelDomain).count();
     }
 
-    public long getNumNotifications(String channelId) {
-        return getNotConsumedNotifications(channelId).count();
+    public long getNumNotifications(ChatChannelDomain chatChannelDomain, String chatChannelId) {
+        return getNotConsumedNotifications(chatChannelDomain, chatChannelId).count();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ChatChannelDomain based Predicate
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void putPredicate(ChatChannelDomain chatChannelDomain, Predicate<ChatNotification> predicate) {
+        predicateByChatChannelDomain.put(chatChannelDomain, predicate);
+        // We use the changedNotification observable for triggering updates. We could make predicateByChatChannelDomain
+        // an ObservableHashMap but then all clients need to handle both observables.
+        // Seems better to use the below hack to force an update on changedNotification.
+        ChatNotification temp = changedNotification.get();
+        changedNotification.set(null);
+        changedNotification.set(temp);
+    }
+
+    public Optional<Predicate<ChatNotification>> findPredicate(ChatChannelDomain chatChannelDomain) {
+        return Optional.ofNullable(predicateByChatChannelDomain.get(chatChannelDomain));
+    }
+
+    public Boolean testChatChannelDomainPredicate(ChatNotification chatNotification) {
+        return findPredicate(chatNotification.getChatChannelDomain())
+                .map(predicate -> predicate.test(chatNotification))
+                .orElse(true);
     }
 
 
@@ -288,13 +345,27 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
     private <M extends ChatMessage> void onMessageAdded(ChatChannel<M> chatChannel, M chatMessage) {
+        if (chatMessage.isMyMessage(userIdentityService)) {
+            return;
+        }
+
+        if (chatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
+            // TAKE_BISQ_EASY_OFFER does not result in any text message but is a signal message only, thus we don't
+            // use it for notifications
+            return;
+        }
+
+        if (userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId())) {
+            // If we un-ignore later we will get the notifications of the previously banned messages.
+            // We might consider to consume the notification to avoid that.
+            return;
+        }
+
         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
         ChatNotification chatNotification = persistableStore.findNotification(id)
                 .orElseGet(() -> createNotification(id, chatChannel, chatMessage));
 
-        // At first start-up when user has not setup their profile yet, we set all notifications as consumed
-        if (!userIdentityService.hasUserIdentities()) {
-            consumeNotification(chatNotification);
+        if (isConsumed(chatNotification)) {
             return;
         }
 
@@ -302,20 +373,18 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             return;
         }
 
-        if (chatMessage.isMyMessage(userIdentityService)) {
-            return;
-        }
-
-        if (userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId())) {
+        // At first start-up when user has not setup their profile yet, we set all notifications as consumed
+        if (!userIdentityService.hasUserIdentities()) {
+            consumeNotification(chatNotification);
             return;
         }
 
         // For BisqEasyOfferbookChannels we add it to consumed to not get them shown when switching to a new channel
-        if (chatChannel instanceof BisqEasyOfferbookChannel &&
+        /*if (chatChannel instanceof BisqEasyOfferbookChannel &&
                 !chatService.getChatChannelSelectionService(chatChannel.getChatChannelDomain()).getSelectedChannel().get().equals(chatChannel)) {
             consumeNotification(chatNotification);
             return;
-        }
+        }*/
 
         // If user has set "Show offers only" in settings we mark messages as consumed
         if (chatMessage instanceof BisqEasyOfferbookMessage) {
@@ -351,16 +420,18 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
         if (shouldSendNotification) {
             addNotification(chatNotification);
-            maybeSendSystemNotification(chatNotification);
+            maybeShowSystemNotification(chatNotification);
         } else {
             consumeNotification(chatNotification);
         }
     }
 
-    private <M extends ChatMessage> ChatNotification createNotification(String id, ChatChannel<M> chatChannel, M chatMessage) {
-        Optional<UserProfile> senderUserProfile = chatMessage instanceof PrivateChatMessage ?
-                Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile()) :
-                userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
+    private <M extends ChatMessage> ChatNotification createNotification(String id,
+                                                                        ChatChannel<M> chatChannel,
+                                                                        M chatMessage) {
+        Optional<UserProfile> senderUserProfile = chatMessage instanceof PrivateChatMessage
+                ? Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile())
+                : userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         String title, message;
         if (chatMessage instanceof BisqEasyOpenTradeMessage &&
                 chatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
@@ -375,7 +446,13 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             String userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
             String channelInfo = ChatUtil.getChannelNavigationPath(chatChannel);
             title = StringUtils.truncate(userName, 20) + " (" + channelInfo + ")";
-            message = StringUtils.truncate(chatMessage.getText(), 210);
+            String text = chatMessage.getText();
+            if (chatMessage instanceof BisqEasyOpenTradeMessage &&
+                    chatMessage.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE) {
+                // We have encoded the i18n key so that we can show log messages in the users language.
+                text = Res.decode(text);
+            }
+            message = StringUtils.truncate(text, 210);
         }
         return new ChatNotification(id,
                 title,
@@ -385,10 +462,13 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 senderUserProfile);
     }
 
-    private void maybeSendSystemNotification(ChatNotification chatNotification) {
-        if (!isApplicationFocussed && isReceivedAfterStartUp(chatNotification)) {
-            sendNotificationService.send(chatNotification);
+    private void maybeShowSystemNotification(ChatNotification chatNotification) {
+        if (!isApplicationFocussed &&
+                isReceivedAfterStartUp(chatNotification) &&
+                testChatChannelDomainPredicate(chatNotification)) {
+            systemNotificationService.show(chatNotification);
         }
+        getNotConsumedNotifications(chatNotification.getChatChannelDomain(), chatNotification.getChatChannelId());
     }
 
     private boolean isReceivedAfterStartUp(ChatNotification chatNotification) {

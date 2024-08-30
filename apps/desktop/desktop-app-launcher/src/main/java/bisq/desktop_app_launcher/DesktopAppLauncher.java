@@ -17,13 +17,13 @@
 
 package bisq.desktop_app_launcher;
 
+import bisq.common.application.BuildVersion;
 import bisq.common.logging.LogSetup;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
 import bisq.updater.DownloadedFilesVerification;
 import bisq.updater.UpdaterUtils;
-import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -37,8 +37,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-import static bisq.updater.UpdaterUtils.UPDATES_DIR;
-import static bisq.updater.UpdaterUtils.readVersionFromVersionFile;
+import static bisq.updater.UpdaterUtils.*;
 
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.
@@ -61,7 +60,6 @@ import static bisq.updater.UpdaterUtils.readVersionFromVersionFile;
  */
 @Slf4j
 public class DesktopAppLauncher {
-    private static final String VERSION = "2.0.3";
     private static final String APP_NAME = "Bisq2";
     private static final String FINGER_PRINT_ALEJANDRO_GARCIA = "E222AA02"; // B493 3191 06CC 3D1F 252E  19CB F806 F422 E222 AA02
     private static final String FINGER_PRINT_HENRIK_JANNSEN = "387C8307"; // B8A5 D214 ADFA A387 A14C  8BCF 02AA 2BAE 387C 8307
@@ -83,12 +81,11 @@ public class DesktopAppLauncher {
     private DesktopAppLauncher(String[] args) throws Exception {
         options = new Options(args);
         String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
-        String appDataDir = OsUtils.getUserDataDir().resolve(appName).toAbsolutePath().toString();
+        String appDataDir = PlatformUtils.getUserDataDir().resolve(appName).toAbsolutePath().toString();
         LogSetup.setup(Paths.get(appDataDir, "bisq").toString());
-        LogSetup.setLevel(Level.INFO);
         String version = UpdaterUtils.readVersionFromVersionFile(appDataDir)
                 .or(options::getVersion)
-                .orElse(DesktopAppLauncher.VERSION);
+                .orElse(BuildVersion.VERSION);
         updatesDir = appDataDir + File.separator + UPDATES_DIR + File.separator + version;
         jarFileName = UpdaterUtils.getJarFileName(version);
         jarPath = updatesDir + File.separator + jarFileName;
@@ -103,12 +100,12 @@ public class DesktopAppLauncher {
             invokeJar();
         } else {
             Optional<String> fromVersionFile = readVersionFromVersionFile(appDataDir);
-            if (fromVersionFile.isPresent() && !fromVersionFile.get().equals(VERSION)) {
+            if (fromVersionFile.isPresent() && !fromVersionFile.get().equals(BuildVersion.VERSION)) {
                 Optional<String> versionFromArgs = options.getValue("version");
                 log.warn("We found a version file with version {} but it does not match our version. versionFromArgs={}; DesktopAppLauncher.VERSION={}; ",
-                        fromVersionFile.get(), versionFromArgs, VERSION);
+                        fromVersionFile.get(), versionFromArgs, BuildVersion.VERSION);
             }
-            log.info("No jar file found. Run default Bisq application with version " + VERSION);
+            log.info("No jar file found. Run default Bisq application with version " + BuildVersion.VERSION);
             DesktopApp.main(args);
         }
     }

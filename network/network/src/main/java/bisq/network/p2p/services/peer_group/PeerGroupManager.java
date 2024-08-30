@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peer_group;
 
 import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
@@ -44,8 +45,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 
 @Slf4j
 public class PeerGroupManager implements Node.Listener {
@@ -205,11 +205,11 @@ public class PeerGroupManager implements Node.Listener {
             case NEW:
                 setState(PeerGroupManager.State.STARTING);
                 // blocking
-                peerExchangeService.startInitialPeerExchange(1);
-                log.info("{} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
-                        nodeInfo, config.getHouseKeepingInterval());
+                peerExchangeService.startInitialPeerExchange();
+                log.info("Completed startInitialPeerExchange. Start periodic tasks with interval: {} sec",
+                        config.getHouseKeepingInterval() / 1000);
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
-                        .periodically(config.getHouseKeepingInterval())
+                        .periodically(config.getHouseKeepingInterval() / 4, config.getHouseKeepingInterval(), MILLISECONDS)
                         .name("PeerGroupService.scheduler-" + nodeInfo));
                 keepAliveService.initialize();
                 networkLoadExchangeService.initialize();
@@ -290,9 +290,9 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(this::allowDisconnect)
                 .filter(this::hasNoPendingRequests)
                 .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
-                .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
+                .peek(inbound -> log.info("{}: Send CloseConnectionMessage as we have an " +
                                 "outbound connection with the same address.",
-                        node, inbound.getPeerAddress()))
+                        inbound.getPeerAddress()))
                 .forEach(inbound -> node.closeConnectionGracefully(inbound, CloseReason.DUPLICATE_CONNECTION));
     }
 
@@ -305,9 +305,9 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(peerGroupService::isSeed)
                 .sorted(comparingForSkip())
                 .skip(config.getMaxSeeds())
-                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
+                .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too " +
                                 "many connections to seeds.",
-                        node, connection.getPeerAddress()))
+                        connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS_TO_SEEDS));
     }
 
@@ -320,9 +320,9 @@ public class PeerGroupManager implements Node.Listener {
                 .sorted(comparingForSkip())
                 .filter(connection -> connection.createdBefore(maxAgeDate))
                 .skip(minNumConnectedPeers)
-                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
+                .peek(connection -> log.info("{}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
-                        node, connection.getPeerAddress()))
+                        connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.AGED_CONNECTION));
     }
 
@@ -332,8 +332,8 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(this::allowDisconnect)
                 .sorted(comparingForSkip())
                 .skip(peerGroupService.getMaxInboundConnections())
-                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
-                        node, connection.getPeerAddress()))
+                .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too many inbound connections.",
+                        connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
     }
 
@@ -343,8 +343,8 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(this::allowDisconnect)
                 .sorted(comparingForSkip())
                 .skip(peerGroupService.getMaxNumConnectedPeers())
-                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
-                        node, connection.getPeerAddress()))
+                .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too many connections.",
+                        connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS));
     }
 
@@ -362,9 +362,9 @@ public class PeerGroupManager implements Node.Listener {
 
         // We use the peer exchange protocol for establishing new connections.
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
-        log.info("We have not sufficient connections and call peerExchangeService.doFurtherPeerExchange");
+        log.info("We have not sufficient connections and call peerExchangeService.extendPeerGroup");
         // It is an async call. We do not wait for the result.
-        peerExchangeService.extendPeerGroup();
+        peerExchangeService.extendPeerGroupAsync();
     }
 
     private void maybeRemoveReportedPeers() {
@@ -373,18 +373,23 @@ public class PeerGroupManager implements Node.Listener {
         if (exceeding > 0) {
             reportedPeers.sort(Comparator.comparing(Peer::getDate));
             List<Peer> outDated = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
-            log.info("Remove {} reported peers: {}", outDated.size(), outDated);
+            log.info("Remove {} reported peers: {}", outDated.size(), StringUtils.truncate(outDated.toString(), 500));
             peerGroupService.removeReportedPeers(outDated);
         }
     }
 
     private void maybeRemovePersistedPeers() {
-        List<Peer> persistedPeers = new ArrayList<>(peerGroupService.getPersistedPeers());
-        int exceeding = persistedPeers.size() - config.getMaxPersisted();
-        if (exceeding > 0) {
-            persistedPeers.sort(Comparator.comparing(Peer::getDate));
-            List<Peer> outDated = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
-            log.info("Remove {} persisted peers: {}", outDated.size(), outDated);
+        List<Peer> outDated = peerGroupService.getPersistedPeers().stream()
+                .sorted()
+                .skip(config.getMaxPersisted())
+                .collect(Collectors.toList());
+        if (!outDated.isEmpty()) {
+            log.info("Remove {} persisted peers: {}",
+                    outDated.size(),
+                    outDated.stream()
+                            .sorted()
+                            .map(e -> "Age: " + StringUtils.formatTime(e.getAge()))
+                            .collect(Collectors.toList()));
             peerGroupService.removePersistedPeers(outDated);
         }
     }

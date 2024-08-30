@@ -19,18 +19,23 @@ package bisq.bisq_easy;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageData;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SendNotificationService;
+import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -41,8 +46,12 @@ import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 @Slf4j
 @Getter
@@ -60,14 +69,16 @@ public class BisqEasyService implements Service {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final SendNotificationService sendNotificationService;
+    private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final Observable<Long> minRequiredReputationScore = new Observable<>();
+    private final MarketPriceService marketPriceService;
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDiffAdjustmentValueOrDefaultPin, minRequiredReputationScorePin,
-            ignoreMinRequiredReputationScoreFromSecManagerPin, mostRecentMinRequiredReputationScoreOrDefaultPin;
+            ignoreMinRequiredReputationScoreFromSecManagerPin, mostRecentMinRequiredReputationScoreOrDefaultPin,
+            selectedMarketPin;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -82,7 +93,7 @@ public class BisqEasyService implements Service {
                            ChatService chatService,
                            SettingsService settingsService,
                            SupportService supportService,
-                           SendNotificationService sendNotificationService,
+                           SystemNotificationService systemNotificationService,
                            TradeService tradeService) {
         this.persistenceService = persistenceService;
         this.securityService = securityService;
@@ -90,6 +101,7 @@ public class BisqEasyService implements Service {
         this.networkService = networkService;
         this.identityService = identityService;
         this.bondedRolesService = bondedRolesService;
+        marketPriceService = bondedRolesService.getMarketPriceService();
         this.accountService = accountService;
         this.offerService = offerService;
         this.contractService = contractService;
@@ -97,12 +109,14 @@ public class BisqEasyService implements Service {
         this.chatService = chatService;
         this.settingsService = settingsService;
         this.supportService = supportService;
-        this.sendNotificationService = sendNotificationService;
+        this.systemNotificationService = systemNotificationService;
         this.tradeService = tradeService;
         userIdentityService = userService.getUserIdentityService();
 
         bisqEasyNotificationsService = new BisqEasyNotificationsService(chatService.getChatNotificationService(),
-                supportService.getMediatorService());
+                supportService.getMediatorService(),
+                chatService.getBisqEasyOfferbookChannelService(),
+                settingsService);
     }
 
 
@@ -120,11 +134,22 @@ public class BisqEasyService implements Service {
         ignoreMinRequiredReputationScoreFromSecManagerPin = settingsService.getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(e -> applyMinRequiredReputationScore());
         mostRecentMinRequiredReputationScoreOrDefaultPin = bondedRolesService.getMinRequiredReputationScoreService().getMostRecentValueOrDefault().addObserver(e -> applyMinRequiredReputationScore());
 
+        settingsService.getCookie().asString(CookieKey.SELECTED_MARKET_CODES)
+                .flatMap(MarketRepository::findAnyFiatMarketByMarketCodes)
+                .ifPresentOrElse(marketPriceService::setSelectedMarket,
+                        () -> marketPriceService.setSelectedMarket(MarketRepository.getDefault()));
+
+        selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(market -> {
+            if (market != null) {
+                settingsService.setCookie(CookieKey.SELECTED_MARKET_CODES, market.getMarketCodes());
+            }
+        });
+
         return bisqEasyNotificationsService.initialize();
     }
 
-
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         if (difficultyAdjustmentFactorPin != null) {
             difficultyAdjustmentFactorPin.unbind();
             ignoreDiffAdjustmentFromSecManagerPin.unbind();
@@ -132,8 +157,11 @@ public class BisqEasyService implements Service {
             minRequiredReputationScorePin.unbind();
             ignoreMinRequiredReputationScoreFromSecManagerPin.unbind();
             mostRecentMinRequiredReputationScoreOrDefaultPin.unbind();
+            selectedMarketPin.unbind();
         }
-        return bisqEasyNotificationsService.shutdown();
+
+        return getStorePendingMessagesInMailboxFuture()
+                .thenCompose(e -> bisqEasyNotificationsService.shutdown());
     }
 
     public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {
@@ -146,6 +174,43 @@ public class BisqEasyService implements Service {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted"));
         }
         return userIdentityService.deleteUserIdentity(userIdentity);
+    }
+
+
+    // At shutdown, we store all pending messages (CONNECT, SENT or TRY_ADD_TO_MAILBOX state) in the mailbox.
+    // We wait until all broadcast futures are completed or timeout if it takes longer as expected.
+    private CompletableFuture<Boolean> getStorePendingMessagesInMailboxFuture() {
+        return CompletableFutureUtils.allOf(getStorePendingMessagesInMailboxFutures())
+                .orTimeout(20, TimeUnit.SECONDS)
+                .handle((broadcastResultList, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("flushPendingMessagesToMailboxAtShutdown failed", throwable);
+                        return false;
+                    } else {
+                        log.info("All broadcast futures at getStorePendingMessagesInMailboxFuture completed. broadcastResultList={}", broadcastResultList);
+                        try {
+                            // We delay a bit before continuing shutdown process. Usually we only have 1 pending message...
+                            Thread.sleep(100 + broadcastResultList.size() * 500L);
+                        } catch (InterruptedException ignore) {
+                        }
+                        return true;
+                    }
+                });
+    }
+
+    private Stream<CompletableFuture<bisq.network.p2p.services.data.broadcast.BroadcastResult>> getStorePendingMessagesInMailboxFutures() {
+        Set<ResendMessageData> pendingResendMessageDataSet = networkService.getPendingResendMessageDataSet();
+        return networkService.getConfidentialMessageServices().stream()
+                .flatMap(confidentialMessageService ->
+                        pendingResendMessageDataSet.stream()
+                                .flatMap(resendMessageData ->
+                                        userIdentityService.findUserIdentity(resendMessageData.getSenderNetworkId().getId())
+                                                .map(userIdentity -> userIdentity.getNetworkIdWithKeyPair().getKeyPair())
+                                                .flatMap(senderKeyPair -> confidentialMessageService.flushPendingMessagesToMailboxAtShutdown(resendMessageData, senderKeyPair)).stream()
+                                )
+                )
+                .flatMap(sendConfidentialMessageResult -> sendConfidentialMessageResult.getMailboxFuture().stream())
+                .flatMap(Collection::stream);
     }
 
     private void applyDifficultyAdjustmentFactor() {

@@ -25,7 +25,10 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
@@ -33,6 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class NetworkServiceStore implements PersistableStore<NetworkServiceStore> {
     private final Set<AddressByTransportTypeMap> seedNodes = new CopyOnWriteArraySet<>();
+    @Deprecated(since = "2.1.0") // Moved to NetworkIdStore
     private final Map<String, NetworkId> networkIdByTag = new ConcurrentHashMap<>();
 
     public NetworkServiceStore() {
@@ -44,15 +48,19 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
     }
 
     @Override
-    public bisq.network.protobuf.NetworkServiceStore toProto() {
+    public bisq.network.protobuf.NetworkServiceStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkServiceStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.NetworkServiceStore.newBuilder()
                 .addAllSeedNodes(seedNodes.stream()
-                        .map(AddressByTransportTypeMap::toProto)
+                        .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .putAllNetworkIdByTag(networkIdByTag.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().toProto())))
-                .build();
+                                e -> e.getValue().toProto(serializeForHash))));
     }
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto) {
@@ -94,11 +102,8 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
         return seedNodes;
     }
 
+    @Deprecated(since = "2.1.0")
     Map<String, NetworkId> getNetworkIdByTag() {
         return networkIdByTag;
-    }
-
-    Optional<NetworkId> findNetworkId(String tag) {
-        return Optional.ofNullable(networkIdByTag.get(tag));
     }
 }

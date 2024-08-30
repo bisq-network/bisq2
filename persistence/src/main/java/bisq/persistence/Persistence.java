@@ -36,10 +36,13 @@ public class Persistence<T extends PersistableStore<T>> {
 
     @Getter
     private final Path storePath;
+    @Getter
+    private final String fileName;
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
     public Persistence(String directory, String fileName) {
+        this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
         storePath = Path.of(directory, storageFileName + EXTENSION);
         var storeFileManager = new PersistableStoreFileManager(storePath);
@@ -56,12 +59,13 @@ public class Persistence<T extends PersistableStore<T>> {
 
     public CompletableFuture<Void> persistAsync(T serializable) {
         return CompletableFuture.runAsync(() -> {
-            Thread.currentThread().setName("Persistence.persist-" + storePath);
+            Thread.currentThread().setName("Persistence.persist-" + fileName);
             persist(serializable);
         }, executorService);
     }
 
     public CompletableFuture<Void> flush() {
+        //todo does not do anything...
         return CompletableFuture.runAsync(() -> Thread.currentThread().setName("Flush-Persistence.persist-" + storePath), executorService);
     }
 

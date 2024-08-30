@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ListViewUtil {
@@ -20,9 +21,6 @@ public class ListViewUtil {
                     // and cause an IllegalAccessError on Apple Silicon macs.
                     // VirtualScrollBar inherits from ScrollBar which is in the 
                     // accessible `javafx.scene.control package`.
-                    // We still wrap it with an exception handler as it is not tested yet with 
-                    // Apple Silicon macs.
-                    // See https://github.com/bisq-network/bisq2/issues/1697
                     try {
                         return node instanceof ScrollBar;
                     } catch (IllegalAccessError e) {
@@ -35,7 +33,9 @@ public class ListViewUtil {
                 .findFirst();
     }
 
-    public static CompletableFuture<Optional<ScrollBar>> findScrollbarAsync(ListView<?> listView, Orientation orientation, long timeout) {
+    public static CompletableFuture<Optional<ScrollBar>> findScrollbarAsync(ListView<?> listView,
+                                                                            Orientation orientation,
+                                                                            long timeout) {
         Optional<ScrollBar> scrollbar = findScrollbar(listView, orientation);
         if (scrollbar.isPresent()) {
             return CompletableFuture.completedFuture(scrollbar);
@@ -43,19 +43,32 @@ public class ListViewUtil {
         CompletableFuture<Optional<ScrollBar>> future = new CompletableFuture<>();
         future.orTimeout(timeout, TimeUnit.MILLISECONDS);
 
-        delayedScrollbarLookup(listView, orientation, future);
+        AtomicInteger numRecursions = new AtomicInteger();
+        AtomicInteger delay = new AtomicInteger(20);
+        delayedScrollbarLookup(listView, orientation, future, numRecursions, delay);
 
         return future;
     }
 
-    private static void delayedScrollbarLookup(ListView<?> listView, Orientation orientation, CompletableFuture<Optional<ScrollBar>> future) {
+    private static void delayedScrollbarLookup(ListView<?> listView,
+                                               Orientation orientation,
+                                               CompletableFuture<Optional<ScrollBar>> future,
+                                               AtomicInteger numRecursions,
+                                               AtomicInteger delay) {
         UIScheduler.run(() -> {
-            Optional<ScrollBar> scrollbar2 = findScrollbar(listView, orientation);
-            if (scrollbar2.isPresent()) {
-                future.complete(scrollbar2);
+            Optional<ScrollBar> scrollbar = findScrollbar(listView, orientation);
+            if (scrollbar.isPresent()) {
+                future.complete(scrollbar);
             } else if (!future.isDone()) {
-                delayedScrollbarLookup(listView, orientation, future);
+                if (numRecursions.get() < 200) {
+                    numRecursions.incrementAndGet();
+                    delay.addAndGet(5);
+                    delayedScrollbarLookup(listView, orientation, future, numRecursions, delay);
+                } else {
+                    log.warn("delayedScrollbarLookup failed: last delay={}; numRecursions={}", delay, numRecursions);
+                    future.completeExceptionally(new RuntimeException("Max. number of recursive calls at delayedScrollbarLookup reached."));
+                }
             }
-        }).after(20);
+        }).after(delay.get());
     }
 }

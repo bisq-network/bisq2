@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Coin extends Monetary {
 
     public static Coin parse(String string, String code) {
-        return parse(string, code, deriveExponent(code));
+        return parse(string, code, derivePrecision(code));
     }
 
     public static Coin parse(String string, String code, int precision) {
@@ -65,8 +65,8 @@ public final class Coin extends Monetary {
         if (tokens.length == 2) {
             String code = tokens[1];
             if (TradeCurrency.isMaybeCrypto(code)) {
-                int exponent = deriveExponent(code);
-                return parse(tokens[0], code, exponent);
+                int precision = derivePrecision(code);
+                return parse(tokens[0], code, precision);
             }
         }
         throw new IllegalArgumentException("input could not be parsed. Expected: number value + space + currency code (e.g. 234.12 USD)");
@@ -89,6 +89,21 @@ public final class Coin extends Monetary {
     /**
      * @param value Value as smallest unit the Coin object can represent.
      */
+    public static Coin asBsqFromValue(long value) {
+        return new Coin(value, "BSQ", 2);
+    }
+
+    /**
+     * @param faceValue Coin value as face value. E.g. 1.123456789012 XMR
+     */
+    public static Coin asBsqFromFaceValue(double faceValue) {
+        return new Coin(faceValue, "BSQ", 2);
+    }
+
+
+    /**
+     * @param value Value as smallest unit the Coin object can represent.
+     */
     public static Coin asXmrFromValue(long value) {
         return new Coin(value, "XMR", 12);
     }
@@ -104,15 +119,15 @@ public final class Coin extends Monetary {
      * @param value Value as smallest unit the Coin object can represent.
      */
     public static Coin fromValue(long value, String code) {
-        return new Coin(value, code, deriveExponent(code));
+        return new Coin(value, code, derivePrecision(code));
     }
 
     /**
      * @param faceValue Coin value as face value. E.g. 1.12345678 BTC
      */
     public static Coin fromFaceValue(double faceValue, String code) {
-        int exponent = deriveExponent(code);
-        return new Coin(faceValue, code, exponent);
+        int precision = derivePrecision(code);
+        return new Coin(faceValue, code, precision);
     }
 
     /**
@@ -140,8 +155,14 @@ public final class Coin extends Monetary {
         super(id, value, code, precision, lowPrecision);
     }
 
-    public bisq.common.protobuf.Monetary toProto() {
-        return getMonetaryBuilder().setCoin(bisq.common.protobuf.Coin.newBuilder()).build();
+    @Override
+    public bisq.common.protobuf.Monetary toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.common.protobuf.Monetary.Builder getBuilder(boolean serializeForHash) {
+        return getMonetaryBuilder().setCoin(bisq.common.protobuf.Coin.newBuilder());
     }
 
     public static Coin fromProto(bisq.common.protobuf.Monetary baseProto) {
@@ -175,7 +196,7 @@ public final class Coin extends Monetary {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
     }
 
-    private static int deriveExponent(String code) {
+    private static int derivePrecision(String code) {
         if (code.equals("XMR")) return 12;
         if (code.equals("BSQ")) return 2;
         return 8;

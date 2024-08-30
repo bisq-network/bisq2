@@ -42,6 +42,8 @@
     -you-tube-red: #fc0d1b;
 
     /* Bisq2 App Colors */
+    -bisq2-green-lit-20: #77be6c;
+    -bisq2-green-lit-10: #66b65a;
     -bisq2-green: #56ae48; /* rgb(86, 174, 72) */
     -bisq2-green-dim-10: #4d9c40;
     -bisq2-green-dim-20: #448b39;
@@ -52,6 +54,8 @@
     -bisq2-green-dim-70: #193415;
     -bisq2-green-dim-80: #11220e;
     -bisq2-green-dim-90: #081107;
+
+    -bisq2-green-desaturated: #2c372b; /* -bisq2-green; saturation -70; lightness -60 */
 
     -bisq2-yellow: #d0831f;
     -bisq2-yellow-dim-10: #bb751b;
@@ -130,4 +134,12 @@
                 -fx-mid-text-color,
                 -fx-dark-text-color
         );
+
+    -bisq2-my-bubble-message: -bisq2-green-desaturated;
+    -bisq2-peer-bubble-message: -bisq-dark-grey-40;
+}
+
+/* Avoid color artefacts at antialias */
+.text {
+    -fx-font-smoothing-type: gray;
 }

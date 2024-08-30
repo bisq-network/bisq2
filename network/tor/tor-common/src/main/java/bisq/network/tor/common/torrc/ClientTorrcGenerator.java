@@ -24,17 +24,15 @@ import java.util.Map;
 @Builder
 public class ClientTorrcGenerator implements TorrcConfigGenerator {
     private final TorrcConfigGenerator baseTorrcConfigGenerator;
-    private final int socksPort;
 
-    public ClientTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator, int socksPort) {
+    public ClientTorrcGenerator(TorrcConfigGenerator baseTorrcConfigGenerator) {
         this.baseTorrcConfigGenerator = baseTorrcConfigGenerator;
-        this.socksPort = socksPort;
     }
 
     @Override
     public Map<String, String> generate() {
         Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
-        torConfigMap.put("SocksPort", String.valueOf(socksPort));
+        torConfigMap.put("SocksPort", "auto");
         return torConfigMap;
     }
 }

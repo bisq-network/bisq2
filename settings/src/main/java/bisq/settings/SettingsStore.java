@@ -22,6 +22,7 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -54,6 +55,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
     final Observable<Boolean> ignoreMinRequiredReputationScoreFromSecManager = new Observable<>();
     final Observable<Double> maxTradePriceDeviation = new Observable<>();
+    final Observable<Boolean> showBuyOffers = new Observable<>();
+    final Observable<Boolean> showOfferListExpanded = new Observable<>();
+    final Observable<Boolean> showMarketSelectionListCollapsed = new Observable<>();
+    final Observable<String> backupLocation = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -74,7 +79,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 new HashSet<>(),
                 false,
-                SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION);
+                SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION,
+                false,
+                false,
+                false,
+                PlatformUtils.getHomeDirectory());
     }
 
     public SettingsStore(Cookie cookie,
@@ -95,7 +104,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean ignoreDiffAdjustmentFromSecManager,
                          Set<Market> favouriteMarkets,
                          boolean ignoreMinRequiredReputationScoreFromSecManager,
-                         double maxTradePriceDeviation) {
+                         double maxTradePriceDeviation,
+                         boolean showBuyOffers,
+                         boolean showOfferListExpanded,
+                         boolean showMarketSelectionListCollapsed,
+                         String backupLocation) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -115,19 +128,23 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.favouriteMarkets.setAll(favouriteMarkets);
         this.ignoreMinRequiredReputationScoreFromSecManager.set(ignoreMinRequiredReputationScoreFromSecManager);
         this.maxTradePriceDeviation.set(maxTradePriceDeviation);
+        this.showBuyOffers.set(showBuyOffers);
+        this.showOfferListExpanded.set(showOfferListExpanded);
+        this.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
+        this.backupLocation.set(backupLocation);
     }
 
     @Override
-    public bisq.settings.protobuf.SettingsStore toProto() {
+    public bisq.settings.protobuf.SettingsStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.settings.protobuf.SettingsStore.newBuilder()
-                .setCookie(cookie.toProto())
+                .setCookie(cookie.toProto(serializeForHash))
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setUseAnimations(useAnimations.get())
-                .setSelectedMarket(selectedMarket.get().toProto())
+                .setSelectedMarket(selectedMarket.get().toProto(serializeForHash))
                 .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
-                .setChatNotificationType(chatNotificationType.get().toProto())
+                .setChatNotificationType(chatNotificationType.get().toProtoEnum())
                 .setIsTacAccepted(isTacAccepted.get())
                 .addAllConsumedAlertIds(new ArrayList<>(consumedAlertIds))
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
@@ -136,10 +153,18 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
                 .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
-                .addAllFavouriteMarkets(favouriteMarkets.stream().map(Market::toProto).collect(Collectors.toList()))
+                .addAllFavouriteMarkets(favouriteMarkets.stream().map(market -> market.toProto(serializeForHash)).collect(Collectors.toList()))
                 .setIgnoreMinRequiredReputationScoreFromSecManager(ignoreMinRequiredReputationScoreFromSecManager.get())
                 .setMaxTradePriceDeviation(maxTradePriceDeviation.get())
-                .build();
+                .setShowBuyOffers(showBuyOffers.get())
+                .setShowOfferListExpanded(showOfferListExpanded.get())
+                .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get())
+                .setBackupLocation(backupLocation.get());
+    }
+
+    @Override
+    public bisq.settings.protobuf.SettingsStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
@@ -170,7 +195,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(proto.getFavouriteMarketsList().stream()
                         .map(Market::fromProto).collect(Collectors.toSet())),
                 proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
-                maxTradePriceDeviation);
+                maxTradePriceDeviation,
+                proto.getShowBuyOffers(),
+                proto.getShowOfferListExpanded(),
+                proto.getShowMarketSelectionListCollapsed(),
+                proto.getBackupLocation());
     }
 
     @Override
@@ -204,7 +233,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 ignoreDiffAdjustmentFromSecManager.get(),
                 new HashSet<>(favouriteMarkets),
                 ignoreMinRequiredReputationScoreFromSecManager.get(),
-                maxTradePriceDeviation.get());
+                maxTradePriceDeviation.get(),
+                showBuyOffers.get(),
+                showOfferListExpanded.get(),
+                showMarketSelectionListCollapsed.get(),
+                backupLocation.get());
     }
 
     @Override
@@ -228,7 +261,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             ignoreDiffAdjustmentFromSecManager.set(persisted.ignoreDiffAdjustmentFromSecManager.get());
             favouriteMarkets.setAll(persisted.favouriteMarkets);
             ignoreMinRequiredReputationScoreFromSecManager.set(persisted.ignoreMinRequiredReputationScoreFromSecManager.get());
-            maxTradePriceDeviation.set(persisted.toProto().getMaxTradePriceDeviation());
+            maxTradePriceDeviation.set(persisted.maxTradePriceDeviation.get());
+            showBuyOffers.set(persisted.showBuyOffers.get());
+            showOfferListExpanded.set(persisted.showOfferListExpanded.get());
+            showMarketSelectionListCollapsed.set(persisted.showMarketSelectionListCollapsed.get());
+            backupLocation.set(persisted.backupLocation.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

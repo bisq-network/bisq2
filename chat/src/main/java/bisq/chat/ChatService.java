@@ -28,6 +28,7 @@ import bisq.chat.common.CommonChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
@@ -35,7 +36,7 @@ import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.SendNotificationService;
+import bisq.presentation.notifications.SystemNotificationService;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
@@ -65,12 +66,13 @@ public class ChatService implements Service {
     private final Map<ChatChannelDomain, CommonPublicChatChannelService> commonPublicChatChannelServices = new HashMap<>();
     private final Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices = new HashMap<>();
     private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices = new HashMap<>();
+    private final LeavePrivateChatManager leavePrivateChatManager;
 
     public ChatService(PersistenceService persistenceService,
                        NetworkService networkService,
                        UserService userService,
                        SettingsService settingsService,
-                       SendNotificationService sendNotificationService) {
+                       SystemNotificationService systemNotificationService) {
         this.persistenceService = persistenceService;
         this.networkService = networkService;
         this.userService = userService;
@@ -79,7 +81,7 @@ public class ChatService implements Service {
 
         chatNotificationService = new ChatNotificationService(persistenceService,
                 this,
-                sendNotificationService,
+                systemNotificationService,
                 settingsService,
                 userIdentityService,
                 userProfileService);
@@ -130,6 +132,11 @@ public class ChatService implements Service {
                         new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, "reports")));
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.SUPPORT);
         addToChatChannelSelectionServices(ChatChannelDomain.SUPPORT);
+
+        leavePrivateChatManager = new LeavePrivateChatManager(bisqEasyOpenTradeChannelService,
+                twoPartyPrivateChatChannelServices,
+                chatChannelSelectionServices,
+                chatNotificationService);
     }
 
     @Override
@@ -155,6 +162,7 @@ public class ChatService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyOfferbookChannelService.shutdown(),
                 bisqEasyOpenTradeChannelService.shutdown()));
         list.addAll(commonPublicChatChannelServices.values().stream()

@@ -36,7 +36,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Getter
@@ -62,6 +61,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final Identity myIdentity;
     private final P taker;
     private final P maker;
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final TradeRole tradeRole;
     private final Observable<C> contract = new Observable<>();
     private final Observable<String> errorMessage = new Observable<>();
@@ -100,15 +100,15 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.maker = maker;
     }
 
-    protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
+    protected bisq.trade.protobuf.Trade.Builder getTradeBuilder(boolean serializeForHash) {
         bisq.trade.protobuf.Trade.Builder builder = bisq.trade.protobuf.Trade.newBuilder()
                 .setId(id)
-                .setTradeRole(tradeRole.toProto())
-                .setMyIdentity(myIdentity.toProto())
-                .setTaker(taker.toProto())
-                .setMaker(maker.toProto())
+                .setTradeRole(tradeRole.toProtoEnum())
+                .setMyIdentity(myIdentity.toProto(serializeForHash))
+                .setTaker(taker.toProto(serializeForHash))
+                .setMaker(maker.toProto(serializeForHash))
                 .setState(getState().name());
-        Optional.ofNullable(contract.get()).ifPresent(contract -> builder.setContract(contract.toProto()));
+        Optional.ofNullable(contract.get()).ifPresent(contract -> builder.setContract(contract.toProto(serializeForHash)));
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);

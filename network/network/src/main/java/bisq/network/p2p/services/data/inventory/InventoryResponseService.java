@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -31,6 +31,7 @@ import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 @Slf4j
 public class InventoryResponseService implements Node.Listener {
@@ -71,19 +72,35 @@ public class InventoryResponseService implements Node.Listener {
 
     private void handleInventoryRequest(InventoryRequest request, Connection connection) {
         InventoryFilter inventoryFilter = request.getInventoryFilter();
-        double size = ByteUnit.BYTE.toKB(inventoryFilter.toProto().getSerializedSize());
+        double size = ByteUnit.BYTE.toKB(inventoryFilter.getSerializedSize());
         log.info("Received an InventoryRequest from peer {}. Size: {} kb. Filter details: {}",
                 connection.getPeerAddress(), size, inventoryFilter.getDetails());
 
         InventoryFilterType inventoryFilterType = inventoryFilter.getInventoryFilterType();
         if (filterServiceMap.containsKey(inventoryFilterType)) {
             FilterService<? extends InventoryFilter> filterService = filterServiceMap.get(inventoryFilterType);
-            Inventory inventory = filterService.createInventory(inventoryFilter);
+            long ts = System.currentTimeMillis();
+            int requestersVersion = request.getVersion();
+
+            // We filter out version 1 objects in Add/Remove DataRequest objects which would break the hash when requested from old nodes (pre v.2.1.0)
+            // This code can be removed once there are no old nodes expected in the network anymore.
+            Predicate<Integer> predicate = distributedDataVersion -> requestersVersion > 0 || distributedDataVersion == 0;
+
+            Inventory inventory = filterService.createInventory(inventoryFilter, predicate);
+
+            // The requestersVersion param can be removed once there are no old nodes expected in the network anymore.
+            InventoryResponse inventoryResponse = new InventoryResponse(requestersVersion, inventory, request.getNonce());
+
             NetworkService.NETWORK_IO_POOL.submit(() -> {
                 try {
-                    node.send(new InventoryResponse(inventory, request.getNonce()), connection);
+                    node.send(inventoryResponse, connection);
+                    log.info("Successfully sent an InventoryResponse to peer {} with {} kb. Took {} ms",
+                            connection.getPeerAddress(),
+                            ByteUnit.BYTE.toKB(inventory.getSerializedSize()),
+                            System.currentTimeMillis() - ts);
                 } catch (Exception e) {
-                    log.warn("Error at send InventoryResponse. {}", ExceptionUtil.getMessageOrToString(e));
+                    log.warn("Error at sending InventoryResponse to {}. {}", connection.getPeerAddress(),
+                            ExceptionUtil.getRootCauseMessage(e));
                 }
             });
         } else {

@@ -19,7 +19,7 @@ package bisq.trade.submarine;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
@@ -67,9 +67,13 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
     }
 
     @Override
-    public bisq.trade.protobuf.Trade toProto() {
-        return getTradeBuilder().setSubmarineTrade(bisq.trade.protobuf.SubmarineTrade.newBuilder())
-                .build();
+    public bisq.trade.protobuf.Trade.Builder getBuilder(boolean serializeForHash) {
+        return getTradeBuilder(serializeForHash).setSubmarineTrade(bisq.trade.protobuf.SubmarineTrade.newBuilder());
+    }
+
+    @Override
+    public bisq.trade.protobuf.Trade toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static SubmarineTrade fromProto(bisq.trade.protobuf.Trade proto) {

@@ -29,6 +29,8 @@ message Capability {
   network.common.Address address = 1;
   repeated string supportedTransportTypes = 2;
   repeated Feature features = 3;
+  sint32 version = 4;
+  string applicationVersion = 5;
 }
 
 enum InventoryFilterType{
@@ -152,15 +154,17 @@ message AckMessage {
 message InventoryRequest {
   InventoryFilter inventoryFilter = 1;
   sint32 nonce = 2;
+  sint32 version = 3;
 }
 
 message InventoryResponse {
   Inventory inventory = 1;
   sint32 requestNonce = 2;
+  sint32 version = 3;
 }
 
 message ExternalNetworkMessage {
-  google.protobuf.Any any = 1;
+  google.protobuf.Any payload = 1;
 }
 
 
@@ -239,6 +243,7 @@ message RemoveAuthenticatedDataRequest {
   sint32 sequenceNumber = 4;
   bytes signature = 5;
   sint64 created = 6;
+  sint32 version = 7;
 }
 message RefreshAuthenticatedDataRequest {
   MetaData metaData = 1;
@@ -246,11 +251,14 @@ message RefreshAuthenticatedDataRequest {
   bytes ownerPublicKeyBytes = 3;
   sint32 sequenceNumber = 4;
   bytes signature = 5;
+  sint32 version = 6;
+  sint64 created = 7;
 }
 
 message MailboxData {
   ConfidentialMessage confidentialMessage = 1;
   MetaData metaData = 2;
+  sint32 version = 3;
 }
 message MailboxSequentialData {
   MailboxData mailboxData = 1;
@@ -271,6 +279,7 @@ message RemoveMailboxRequest {
   bytes receiverPublicKeyBytes = 3;
   bytes signature = 4;
   sint64 created = 5;
+  sint32 version = 6;
 }
 
 message AddAppendOnlyDataRequest {
@@ -323,7 +332,7 @@ enum MessageDeliveryStatus {
 
 message DataStore {
   message MapEntry {
-    .common.ByteArray key = 1;
+    .common.ByteArray key = 1; // The leading dot is needed to distinguish between common module and network.common
     DataRequest value = 2;
   }
   repeated MapEntry mapEntries = 1;
@@ -331,7 +340,11 @@ message DataStore {
 
 message NetworkServiceStore {
   repeated network.common.AddressByTransportTypeMap seedNodes = 1;
-  map<string, network.identity.NetworkId> networkIdByTag = 2;
+  map<string, network.identity.NetworkId> networkIdByTag = 2 [deprecated = true]; // Moved to NetworkIdStore
+}
+
+message NetworkIdStore {
+  map<string, network.identity.NetworkId> networkIdByTag = 1;
 }
 
 message MessageDeliveryStatusStore {

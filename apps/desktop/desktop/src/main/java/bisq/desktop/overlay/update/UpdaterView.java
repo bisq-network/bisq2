@@ -104,7 +104,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         configTableView();
 
         VBox.setMargin(releaseNotes, new Insets(-10, 0, 10, 0));
-        VBox.setMargin(downloadUrl, new Insets(-20, 0, 20, -5));
+        VBox.setMargin(downloadUrl, new Insets(-20, 0, 20, 0));
         VBox.setMargin(verificationInfo, new Insets(-10, 0, 0, 0));
         root.getChildren().addAll(headline, releaseNotesHeadline,
                 releaseNotes, furtherInfo, downloadUrl,
@@ -267,16 +267,19 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
     }
 
     @Getter
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     static class ListItem {
-        private final String fileName;
+        @EqualsAndHashCode.Include
         private final DownloadItem downloadItem;
+
+        private final String fileName;
         private final DoubleProperty progress = new SimpleDoubleProperty();
         private final BooleanProperty showVerified = new SimpleBooleanProperty(true);
 
         ListItem(DownloadItem downloadItem) {
-            fileName = downloadItem.getDestinationFile().getName();
             this.downloadItem = downloadItem;
+
+            fileName = downloadItem.getDestinationFile().getName();
             FxBindings.bind(progress).to(downloadItem.getProgress());
             showVerified.set(UpdaterUtils.isDownloadedFile(downloadItem.getSourceFileName()));
         }

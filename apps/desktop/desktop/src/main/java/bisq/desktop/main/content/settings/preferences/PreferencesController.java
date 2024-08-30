@@ -22,7 +22,7 @@ import bisq.bonded_roles.security_manager.min_reputation_score.MinRequiredReputa
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.OS;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -33,6 +33,7 @@ import bisq.settings.ChatNotificationType;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import bisq.updater.UpdaterService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -47,6 +48,8 @@ public class PreferencesController implements Controller {
     private final ChatNotificationService chatNotificationService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
     private final MinRequiredReputationScoreService minRequiredReputationScoreService;
+    private final DontShowAgainService dontShowAgainService;
+    private final UpdaterService updaterService;
 
     private Pin chatNotificationTypePin, useAnimationsPin, preventStandbyModePin, offerOnlyPin, closeMyOfferWhenTakenPin,
             supportedLanguageCodesPin, minRequiredReputationScorePin, ignoreDiffAdjustmentFromSecManagerPin,
@@ -60,6 +63,8 @@ public class PreferencesController implements Controller {
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         minRequiredReputationScoreService = serviceProvider.getBondedRolesService().getMinRequiredReputationScoreService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
+        updaterService = serviceProvider.getUpdaterService();
         model = new PreferencesModel();
         view = new PreferencesView(model, this);
     }
@@ -134,10 +139,13 @@ public class PreferencesController implements Controller {
 
         model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
         notifyForPreReleasePin = EasyBind.subscribe(model.getNotifyForPreRelease(),
-                value -> settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, value));
+                value -> {
+                    settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, value);
+                    updaterService.reapplyAllReleaseNotifications();
+                });
 
         // Currently we support transient notifications only for Linux
-        if (OsUtils.isLinux()) {
+        if (OS.isLinux()) {
             model.setUseTransientNotificationsVisible(true);
             model.getUseTransientNotifications().set(settingsService.getCookie().asBoolean(CookieKey.USE_TRANSIENT_NOTIFICATIONS).orElse(true));
             useTransientNotificationsPin = EasyBind.subscribe(model.getUseTransientNotifications(),
@@ -193,7 +201,7 @@ public class PreferencesController implements Controller {
     }
 
     void onResetDontShowAgain() {
-        DontShowAgainService.resetDontShowAgain();
+        dontShowAgainService.resetDontShowAgain();
     }
 
     void onClearNotifications() {

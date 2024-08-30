@@ -17,6 +17,7 @@
 
 package bisq.tor.process;
 
+import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -29,16 +30,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class NativeTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
-    public static final String CONTROL_DIR_NAME = "control";
 
     private final Path torDataDirPath;
     private final Path torBinaryPath;
     private final Path torrcPath;
     private Optional<Process> process = Optional.empty();
 
-    public NativeTorProcess(Path torDataDirPath) {
+    public NativeTorProcess(Path torBinaryPath, Path torDataDirPath) {
+        this.torBinaryPath = torBinaryPath;
         this.torDataDirPath = torDataDirPath;
-        this.torBinaryPath = torDataDirPath.resolve("tor");
         this.torrcPath = torDataDirPath.resolve("torrc");
     }
 
@@ -49,12 +49,15 @@ public class NativeTorProcess {
         String ownerPid = Pid.getMyPid();
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
-                "-f", absoluteTorrcPathAsString,
+                "--torrc-file", absoluteTorrcPathAsString,
+                "--defaults-torrc", absoluteTorrcPathAsString,
                 ARG_OWNER_PID, ownerPid
         );
 
-        Map<String, String> environment = processBuilder.environment();
-        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
+        if (torBinaryPath.startsWith(torDataDirPath)) {
+            Map<String, String> environment = processBuilder.environment();
+            environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
+        }
 
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
@@ -83,8 +86,22 @@ public class NativeTorProcess {
         });
     }
 
+    public static Optional<Path> getSystemTorPath() {
+        String pathEnvironmentVariable = System.getenv("PATH");
+        String[] searchPaths = pathEnvironmentVariable.split(":");
+
+        for (var path : searchPaths) {
+            File torBinary = new File(path, "tor");
+            if (torBinary.exists()) {
+                return Optional.of(torBinary.toPath());
+            }
+        }
+
+        return Optional.empty();
+    }
+
     private void createTorControlDirectory() {
-        File controlDirFile = torDataDirPath.resolve(CONTROL_DIR_NAME).toFile();
+        File controlDirFile = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).toFile();
         if (!controlDirFile.exists()) {
             boolean isSuccess = controlDirFile.mkdirs();
             if (!isSuccess) {

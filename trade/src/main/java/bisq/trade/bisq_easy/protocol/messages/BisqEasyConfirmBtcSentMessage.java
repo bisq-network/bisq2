@@ -24,22 +24,24 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
-    private final String txId;
+    private final Optional<String> paymentProof;
 
     public BisqEasyConfirmBtcSentMessage(String id,
                                          String tradeId,
                                          String protocolVersion,
                                          NetworkId sender,
                                          NetworkId receiver,
-                                         String txId) {
+                                         Optional<String> paymentProof) {
         super(id, tradeId, protocolVersion, sender, receiver);
 
-        this.txId = txId;
+        this.paymentProof = paymentProof;
 
         verify();
     }
@@ -49,17 +51,24 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
         super.verify();
 
         // We tolerate non-btc txId data as well
-        NetworkDataValidation.validateText(txId, 1000);
+        paymentProof.ifPresent(paymentProof -> NetworkDataValidation.validateText(paymentProof, 1000));
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyConfirmBtcSentMessage(
-                                bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.newBuilder()
-                                        .setTxId(txId)))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyConfirmBtcSentMessage(toBisqEasyConfirmBtcSentMessageProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage toBisqEasyConfirmBtcSentMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.Builder builder = getBisqEasyConfirmBtcSentMessageBuilder(serializeForHash);
+        return resolveBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.Builder getBisqEasyConfirmBtcSentMessageBuilder(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.Builder builder = bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.newBuilder();
+        paymentProof.ifPresent(builder::setPaymentProof);
+        return builder;
     }
 
     public static BisqEasyConfirmBtcSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
@@ -70,7 +79,7 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyConfirmBtcSentMessage.getTxId());
+                bisqEasyConfirmBtcSentMessage.hasPaymentProof() ? Optional.of(bisqEasyConfirmBtcSentMessage.getPaymentProof()) : Optional.empty());
     }
 
     @Override

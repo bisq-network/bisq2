@@ -11,10 +11,10 @@ interface PerOsUrlProvider {
         get() = urlPrefix + getUrlSuffix()
 
     private fun getUrlSuffix() =
-        when (getOS()) {
-            OS.LINUX -> linuxUrl
-            OS.MAC_OS -> macOsUrl
-            OS.WINDOWS -> windowsUrl
-        }
+            when (getOS()) {
+                OS.LINUX -> linuxUrl
+                OS.MAC_OS -> macOsUrl
+                OS.WINDOWS -> windowsUrl
+            }
 
 }

@@ -44,11 +44,16 @@ public final class FiatPaymentOption implements OfferOption {
     }
 
     @Override
-    public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setFiatPaymentOption(bisq.offer.protobuf.FiatPaymentOption.newBuilder()
+    public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
+        return getOfferOptionBuilder(serializeForHash)
+                .setFiatPaymentOption(bisq.offer.protobuf.FiatPaymentOption.newBuilder()
                         .setCountyCodeOfBank(countyCodeOfBank)
-                        .setBankName(bankName))
-                .build();
+                        .setBankName(bankName));
+    }
+
+    @Override
+    public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static FiatPaymentOption fromProto(bisq.offer.protobuf.FiatPaymentOption proto) {

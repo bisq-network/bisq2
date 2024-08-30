@@ -20,6 +20,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.common.currency.Market;
 import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -42,8 +43,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 @Slf4j
 public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferRequest> implements TradeMessageSender<BisqEasyTrade> {
@@ -126,8 +126,10 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
                 .selectMediator(takersOffer.getMakersUserProfileId(), trade.getTaker().getNetworkId().getId());
         checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match. " +
-                        "mediator={}, takersContract.getMediator()={}",
-                mediator, takersContract.getMediator());
+                "\nmediator=" + mediator +
+                "\ntakersContract.getMediator()=" + takersContract.getMediator());
+
+        log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         try {
@@ -137,18 +139,20 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         }
     }
 
-    private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
+    private void commitToModel(ContractSignatureData takersContractSignatureData,
+                               ContractSignatureData makersContractSignatureData) {
         trade.getTaker().getContractSignatureData().set(takersContractSignatureData);
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }
 
     private void validateAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {
         MarketPriceService marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-        MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(takersOffer.getMarket());
+        Market market = takersOffer.getMarket();
+        MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(market);
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService,
-                takersContract.getAgreedPriceSpec(), takersOffer.getMarket());
+                takersContract.getAgreedPriceSpec(), market);
         Optional<Monetary> amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
-                takersOffer.getMarket().getQuoteCurrencyCode())));
+                market.getQuoteCurrencyCode())));
 
         checkArgument(amount.isPresent(), "No priceQuote present. Might be that no market price is available. marketPrice=" + marketPrice);
 
@@ -200,7 +204,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 "myAmount=" + myAmount + "\n" +
                 "errorThreshold=" + errorThreshold + "\n" +
                 "marketPrice=" + marketPrice.getPriceQuote().getValue() + "\n" +
-                "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L);
+                "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L) + "\n" +
+                "takersContract=" + takersContract;
         if (throwException) {
             log.error(message + details);
             throw new IllegalArgumentException(message);

@@ -30,17 +30,15 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
-import bisq.presentation.notifications.SendNotificationService;
+import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
-import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,7 +79,7 @@ public class RestApiApplicationService extends ApplicationService {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final SendNotificationService sendNotificationService;
+    private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
 
@@ -93,12 +91,12 @@ public class RestApiApplicationService extends ApplicationService {
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
         switch (bitcoinWalletSelection) {
-            case BITCOIND:
+           /* case BITCOIND:
                 walletService = Optional.of(new BitcoinWalletService(BitcoinWalletService.Config.from(bitcoinWalletConfig.getConfig("bitcoind")), getPersistenceService()));
                 break;
             case ELECTRUM:
                 walletService = Optional.of(new ElectrumWalletService(ElectrumWalletService.Config.from(bitcoinWalletConfig.getConfig("electrum")), config.getBaseDir()));
-                break;
+                break;*/
             case NONE:
             default:
                 walletService = Optional.empty();
@@ -117,7 +115,6 @@ public class RestApiApplicationService extends ApplicationService {
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                config.getVersion(),
                 persistenceService,
                 networkService);
 
@@ -125,8 +122,7 @@ public class RestApiApplicationService extends ApplicationService {
 
         contractService = new ContractService(securityService);
 
-        userService = new UserService(UserService.Config.from(getConfig("user")),
-                persistenceService,
+        userService = new UserService(persistenceService,
                 securityService,
                 identityService,
                 networkService,
@@ -134,7 +130,7 @@ public class RestApiApplicationService extends ApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        sendNotificationService = new SendNotificationService(config.getBaseDir(), settingsService);
+        systemNotificationService = new SystemNotificationService(config.getBaseDir(), settingsService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -142,7 +138,7 @@ public class RestApiApplicationService extends ApplicationService {
                 networkService,
                 userService,
                 settingsService,
-                sendNotificationService);
+                systemNotificationService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService, networkService, chatService, userService, bondedRolesService);
@@ -163,7 +159,7 @@ public class RestApiApplicationService extends ApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                sendNotificationService,
+                systemNotificationService,
                 tradeService);
 
     }
@@ -203,7 +199,7 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
-                .thenCompose(result -> sendNotificationService.initialize())
+                .thenCompose(result -> systemNotificationService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
@@ -239,7 +235,7 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
-                .thenCompose(result -> sendNotificationService.shutdown())
+                .thenCompose(result -> systemNotificationService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())

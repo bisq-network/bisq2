@@ -37,7 +37,7 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
-import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -77,7 +77,7 @@ public class MediatorController implements Controller {
 
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, e -> {
         });
-        mediationCaseHeader = new MediationCaseHeader(serviceProvider, this::updateFilteredList, this::updateFilteredList);
+        mediationCaseHeader = new MediationCaseHeader(serviceProvider, this::closeCaseHandler, this::reOpenCaseHandler);
 
         model = new MediatorModel();
         view = new MediatorView(model, this, mediationCaseHeader.getRoot(), chatMessageContainerController.getView().getRoot());
@@ -173,8 +173,8 @@ public class MediatorController implements Controller {
 
     void onToggleClosedCases() {
         model.getShowClosedCases().set(!model.getShowClosedCases().get());
-        applyFilteredListPredicate(model.getShowClosedCases().get());
         mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+        applyFilteredListPredicate(model.getShowClosedCases().get());
     }
 
     private void applyFilteredListPredicate(boolean showClosedCases) {
@@ -187,17 +187,15 @@ public class MediatorController implements Controller {
     }
 
     private void update() {
-        FilteredList<MediatorView.ListItem> filteredList = model.getListItems().getFilteredList();
-        boolean isEmpty = filteredList.isEmpty();
+        // The sortedList is already sorted by date (triggered by the usage of the dateColumn)
+        SortedList<MediatorView.ListItem> sortedList = model.getListItems().getSortedList();
+        boolean isEmpty = sortedList.isEmpty();
         model.getNoOpenCases().set(isEmpty);
-        if (selectionService.getSelectedChannel().get() == null &&
-                !channelService.getChannels().isEmpty() &&
-                !filteredList.isEmpty()) {
-            selectionService.getSelectedChannel().set(filteredList.get(0).getChannel());
-        }
         if (isEmpty) {
+            selectionService.getSelectedChannel().set(null);
             mediationCaseHeader.setMediationCaseListItem(null);
         } else {
+            selectionService.getSelectedChannel().set(sortedList.get(0).getChannel());
             mediationCaseHeader.setMediationCaseListItem(model.getSelectedItem().get());
         }
     }
@@ -212,9 +210,11 @@ public class MediatorController implements Controller {
                 mediationRequest.getPeer());
     }
 
-    // The filtered list predicate does not get evaluated until the predicate gets changed.
-    private void updateFilteredList() {
-        model.getListItems().setPredicate(e -> true);
-        applyFilteredListPredicate(model.getShowClosedCases().get());
+    private void closeCaseHandler() {
+        onToggleClosedCases();
+    }
+
+    private void reOpenCaseHandler() {
+        onToggleClosedCases();
     }
 }

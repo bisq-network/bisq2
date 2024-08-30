@@ -26,13 +26,18 @@ public class MediationCase implements PersistableProto {
     }
 
     @Override
-    public bisq.support.protobuf.MediationCase toProto() {
+    public bisq.support.protobuf.MediationCase.Builder getBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.MediationCase.newBuilder()
-                .setMediationRequest(mediationRequest.toMediationRequestProto())
+                .setMediationRequest(mediationRequest.toValueProto(serializeForHash))
                 .setRequestDate(requestDate)
-                .setIsClosed(isClosed.get())
-                .build();
+                .setIsClosed(isClosed.get());
     }
+
+    @Override
+    public bisq.support.protobuf.MediationCase toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
 
     public static MediationCase fromProto(bisq.support.protobuf.MediationCase proto) {
         return new MediationCase(MediationRequest.fromProto(proto.getMediationRequest()),

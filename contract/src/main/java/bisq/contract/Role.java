@@ -18,7 +18,7 @@
 package bisq.contract;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum Role implements ProtoEnum {
     MAKER,
@@ -26,7 +26,7 @@ public enum Role implements ProtoEnum {
     ESCROW_AGENT;
 
     @Override
-    public bisq.contract.protobuf.Role toProto() {
+    public bisq.contract.protobuf.Role toProtoEnum() {
         return bisq.contract.protobuf.Role.valueOf(getProtobufEnumPrefix() + name());
     }
 

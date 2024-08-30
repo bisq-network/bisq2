@@ -19,6 +19,7 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
+import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
@@ -44,6 +45,7 @@ public class ReputationService implements Service {
     private final Observable<String> changedUserProfileScore = new Observable<>();
     private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     private final ProfileAgeService profileAgeService;
+    private final NetworkService networkService;
 
     public ReputationService(PersistenceService persistenceService,
                              NetworkService networkService,
@@ -51,6 +53,7 @@ public class ReputationService implements Service {
                              UserProfileService userProfileService,
                              BannedUserService bannedUserService,
                              AuthorizedBondedRolesService authorizedBondedRolesService) {
+        this.networkService = networkService;
         proofOfBurnService = new ProofOfBurnService(networkService,
                 userIdentityService,
                 userProfileService,
@@ -80,11 +83,11 @@ public class ReputationService implements Service {
                 bannedUserService,
                 authorizedBondedRolesService);
 
-        proofOfBurnService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
-        bondedReputationService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
-        accountAgeService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
-        signedWitnessService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
-        profileAgeService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
+        proofOfBurnService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
+        bondedReputationService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
+        accountAgeService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
+        signedWitnessService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
+        profileAgeService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
     }
 
 
@@ -94,6 +97,9 @@ public class ReputationService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
+        ReputationDataUtil.cleanupMap(networkService);
+
         return proofOfBurnService.initialize()
                 .thenCompose(r -> bondedReputationService.initialize())
                 .thenCompose(r -> accountAgeService.initialize())
@@ -114,8 +120,12 @@ public class ReputationService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public ReputationScore getReputationScore(String userProfileId) {
+        return findReputationScore(userProfileId).orElse(new ReputationScore(0, 0, scoreByUserProfileId.size()));
+    }
+
     public ReputationScore getReputationScore(UserProfile userProfile) {
-        return findReputationScore(userProfile).orElse(ReputationScore.NONE);
+        return findReputationScore(userProfile).orElse(new ReputationScore(0, 0, scoreByUserProfileId.size()));
     }
 
     public Optional<ReputationScore> findReputationScore(UserProfile userProfile) {
@@ -130,14 +140,14 @@ public class ReputationService implements Service {
         double fiveSystemScore = getFiveSystemScore(score);
         int index = getIndex(score, scoreByUserProfileId.values());
         int rank = scoreByUserProfileId.size() - index;
-        double relativeRanking = (index + 1) / (double) scoreByUserProfileId.size();
-        return Optional.of(new ReputationScore(score, fiveSystemScore, rank, relativeRanking));
+        return Optional.of(new ReputationScore(score, fiveSystemScore, rank));
     }
 
-    private void onUserProfileScoreChanged(String userProfileId) {
-        if (userProfileId == null) {
+    private void onUserProfileScoreChanged(Pair<String, Long> userProfileIdScorePair) {
+        if (userProfileIdScorePair == null) {
             return;
         }
+        String userProfileId = userProfileIdScorePair.getFirst();
         long score = proofOfBurnService.getScore(userProfileId) +
                 bondedReputationService.getScore(userProfileId) +
                 accountAgeService.getScore(userProfileId) +

@@ -17,12 +17,17 @@
 
 package bisq.common.observable;
 
+import lombok.EqualsAndHashCode;
+
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
+@EqualsAndHashCode
 public class Observable<S> implements ReadOnlyObservable<S> {
     private S value;
+
+    @EqualsAndHashCode.Exclude
     private final Set<Consumer<S>> observers = new CopyOnWriteArraySet<>();
 
     public Observable() {
@@ -57,8 +62,6 @@ public class Observable<S> implements ReadOnlyObservable<S> {
 
     @Override
     public String toString() {
-        return "Observable{" +
-                "\r\n     value=" + value +
-                "\r\n}";
+        return "Observable{value=" + value + '}';
     }
 }

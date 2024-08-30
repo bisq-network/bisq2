@@ -43,10 +43,15 @@ public final class ChatChannelSelectionStore implements PersistableStore<ChatCha
     }
 
     @Override
-    public bisq.chat.protobuf.ChatChannelSelectionStore toProto() {
+    public bisq.chat.protobuf.ChatChannelSelectionStore.Builder getBuilder(boolean serializeForHash) {
         bisq.chat.protobuf.ChatChannelSelectionStore.Builder builder = bisq.chat.protobuf.ChatChannelSelectionStore.newBuilder();
         Optional.ofNullable(selectedChannelId).ifPresent(builder::setSelectedChannelId);
-        return builder.build();
+        return builder;
+    }
+
+    @Override
+    public bisq.chat.protobuf.ChatChannelSelectionStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static ChatChannelSelectionStore fromProto(bisq.chat.protobuf.ChatChannelSelectionStore proto) {

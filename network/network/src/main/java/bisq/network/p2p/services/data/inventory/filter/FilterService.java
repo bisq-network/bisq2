@@ -18,9 +18,10 @@
 package bisq.network.p2p.services.data.inventory.filter;
 
 import bisq.common.data.ByteArray;
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.Inventory;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -56,15 +58,15 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     abstract protected boolean isAddAppendOnlyDataRequestMissing(T filter, Map.Entry<ByteArray, AddAppendOnlyDataRequest> entry);
 
-    public Inventory createInventory(InventoryFilter inventoryFilter) {
+    public Inventory createInventory(InventoryFilter inventoryFilter, Predicate<Integer> predicate) {
         final AtomicInteger accumulatedSize = new AtomicInteger();
         final AtomicBoolean maxSizeReached = new AtomicBoolean();
         // The type is not defined at compile time, thus we do a safe cast
         T filter = safeCast(inventoryFilter);
-        List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached);
+        List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached, predicate);
 
         if (!maxSizeReached.get()) {
-            dataRequests.addAll(getMailboxRequests(filter, accumulatedSize, maxSizeReached));
+            dataRequests.addAll(getMailboxRequests(filter, accumulatedSize, maxSizeReached, predicate));
         }
 
         if (!maxSizeReached.get()) {
@@ -80,7 +82,8 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     private List<DataRequest> getAuthenticatedDataRequests(T filter,
                                                            AtomicInteger accumulatedSize,
-                                                           AtomicBoolean maxSizeReached) {
+                                                           AtomicBoolean maxSizeReached,
+                                                           Predicate<Integer> predicate) {
         List<AddAuthenticatedDataRequest> addRequests = new ArrayList<>();
         List<RemoveAuthenticatedDataRequest> removeRequests = new ArrayList<>();
         storageService.getAuthenticatedDataStoreMaps().flatMap(map -> map.entrySet().stream())
@@ -88,20 +91,27 @@ public abstract class FilterService<T extends InventoryFilter> {
                     if (isAuthenticatedDataRequestMissing(filter, mapEntry)) {
                         AuthenticatedDataRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                            addRequests.add((AddAuthenticatedDataRequest) dataRequest);
+                            AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) dataRequest;
+                            DistributedData distributedData = addAuthenticatedDataRequest.getDistributedData();
+                            if (predicate.test(distributedData.getVersion())) {
+                                addRequests.add(addAuthenticatedDataRequest);
+                            }
                         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                            removeRequests.add((RemoveAuthenticatedDataRequest) dataRequest);
+                            RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                            if (predicate.test(removeAuthenticatedDataRequest.getVersion())) {
+                                removeRequests.add(removeAuthenticatedDataRequest);
+                            }
                         }
                         // Refresh is ignored
                     }
                 });
 
         List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getMetaData().getPriority(),
-                        o1.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getMetaData().getPriority()))
+                .sorted((o1, o2) -> Integer.compare(o2.getDistributedData().getMetaData().getPriority(),
+                        o1.getDistributedData().getMetaData().getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                     }
                     return !maxSizeReached.get();
                 })
@@ -113,7 +123,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                     .sorted((o1, o2) -> Integer.compare(o2.getMetaData().getPriority(), o1.getMetaData().getPriority()))
                     .filter(request -> {
                         if (!maxSizeReached.get()) {
-                            maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                            maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                         }
                         return !maxSizeReached.get();
                     })
@@ -125,7 +135,8 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     private List<DataRequest> getMailboxRequests(T filter,
                                                  AtomicInteger accumulatedSize,
-                                                 AtomicBoolean maxSizeReached) {
+                                                 AtomicBoolean maxSizeReached,
+                                                 Predicate<Integer> predicate) {
         List<AddMailboxRequest> addRequests = new ArrayList<>();
         List<RemoveMailboxRequest> removeRequests = new ArrayList<>();
         storageService.getMailboxStoreMaps().flatMap(map -> map.entrySet().stream())
@@ -133,26 +144,24 @@ public abstract class FilterService<T extends InventoryFilter> {
                     if (isMailboxRequestMissing(filter, mapEntry)) {
                         MailboxRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddMailboxRequest) {
-                            addRequests.add((AddMailboxRequest) dataRequest);
+                            AddMailboxRequest addMailboxRequest = (AddMailboxRequest) dataRequest;
+                            if (predicate.test(addMailboxRequest.getMailboxSequentialData().getMailboxData().getVersion())) {
+                                addRequests.add(addMailboxRequest);
+                            }
                         } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            removeRequests.add((RemoveMailboxRequest) dataRequest);
+                            RemoveMailboxRequest removeMailboxRequest = (RemoveMailboxRequest) dataRequest;
+                            if (predicate.test(removeMailboxRequest.getVersion())) {
+                                removeRequests.add(removeMailboxRequest);
+                            }
                         }
                     }
-                  /*  if (!hashSetFilter.getFilterEntries().contains(toFilterEntry(mapEntry))) {
-                        MailboxRequest dataRequest = mapEntry.getValue();
-                        if (dataRequest instanceof AddMailboxRequest) {
-                            addRequests.add((AddMailboxRequest) dataRequest);
-                        } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            removeRequests.add((RemoveMailboxRequest) dataRequest);
-                        }
-                    }*/
                 });
         List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
                 .sorted((o1, o2) -> Integer.compare(o2.getMailboxSequentialData().getMailboxData().getMetaData().getPriority(),
                         o1.getMailboxSequentialData().getMailboxData().getMetaData().getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                     }
                     return !maxSizeReached.get();
                 })
@@ -163,7 +172,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                     .sorted((o1, o2) -> Integer.compare(o2.getMetaData().getPriority(), o1.getMetaData().getPriority()))
                     .filter(request -> {
                         if (!maxSizeReached.get()) {
-                            maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                            maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                         }
                         return !maxSizeReached.get();
                     })
@@ -183,7 +192,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                         o1.getAppendOnlyData().getMetaData().getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                     }
                     return !maxSizeReached.get();
                 })

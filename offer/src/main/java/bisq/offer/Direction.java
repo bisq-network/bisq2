@@ -18,7 +18,7 @@
 package bisq.offer;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 
 public enum Direction implements ProtoEnum {
@@ -26,7 +26,7 @@ public enum Direction implements ProtoEnum {
     SELL;
 
     @Override
-    public bisq.offer.protobuf.Direction toProto() {
+    public bisq.offer.protobuf.Direction toProtoEnum() {
         return bisq.offer.protobuf.Direction.valueOf(getProtobufEnumPrefix() + name());
     }
 

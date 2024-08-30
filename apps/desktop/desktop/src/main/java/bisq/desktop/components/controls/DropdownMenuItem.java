@@ -17,36 +17,25 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.common.utils.ImageUtil;
-import javafx.geometry.Pos;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.scene.control.CustomMenuItem;
-import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import lombok.Getter;
 
 public class DropdownMenuItem extends CustomMenuItem {
-    private static final String ICON_CSS_STYLE = "menu-item-icon";
-
-    private final HBox content;
-    private final Label label;
-    private ImageView defaultIcon, activeIcon, buttonIcon;
+    @Getter
+    private final BisqMenuItem bisqMenuItem;
 
     public DropdownMenuItem(String defaultIconId, String activeIconId, String text) {
-        label = new Label(text);
-        content = new HBox(8, label);
-        content.getStyleClass().add("dropdown-menu-item-content");
-        content.setAlignment(Pos.CENTER_LEFT);
-        setContent(content);
+        bisqMenuItem = new BisqMenuItem(defaultIconId, activeIconId, text);
+        bisqMenuItem.getStyleClass().add("dropdown-menu-item-content");
+        setContent(bisqMenuItem);
 
-        if (defaultIconId != null && activeIconId != null) {
-            defaultIcon = ImageUtil.getImageViewById(defaultIconId);
-            activeIcon = ImageUtil.getImageViewById(activeIconId);
-            defaultIcon.getStyleClass().add(ICON_CSS_STYLE);
-            activeIcon.getStyleClass().add(ICON_CSS_STYLE);
-            buttonIcon = defaultIcon;
-            content.getChildren().add(0, buttonIcon);
-            attachListeners();
-        }
+        // Using DropdownMenuItem.setOnAction leads to duplicate execution of the handler on MacOS 14.5 / M3.
+        // Might be a bug in the MacOS specific JavaFX libraries as other devs could not reproduce the issue.
+        // Using an eventFilter and consuming the event solves the issue.
+        // This happens only when bisqMenuItem is used inside the DropdownMenuItem
+        bisqMenuItem.addEventFilter(ActionEvent.ANY, Event::consume);
     }
 
     public DropdownMenuItem(String text) {
@@ -58,34 +47,18 @@ public class DropdownMenuItem extends CustomMenuItem {
     }
 
     public void setLabelText(String text) {
-        label.setText(text);
+        bisqMenuItem.setText(text);
     }
 
     public Double getWidth() {
-        return content.getWidth();
+        return bisqMenuItem.getWidth();
     }
 
     public void updateWidth(Double width) {
-        content.setPrefWidth(width);
+        bisqMenuItem.setPrefWidth(width);
     }
 
     public String getLabelText() {
-        return label.getText();
-    }
-
-    private void attachListeners() {
-        content.setOnMouseEntered(e -> updateIcon(activeIcon));
-        content.setOnMouseExited(e -> updateIcon(defaultIcon));
-        content.setOnMouseClicked(e -> updateIcon(defaultIcon));
-    }
-
-    private void updateIcon(ImageView newIcon) {
-        if (buttonIcon != newIcon) {
-            content.getChildren().remove(buttonIcon);
-            buttonIcon = newIcon;
-            if (buttonIcon != null) {
-                content.getChildren().add(0, buttonIcon);
-            }
-        }
+        return bisqMenuItem.getText();
     }
 }

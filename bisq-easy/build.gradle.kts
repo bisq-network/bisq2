@@ -19,8 +19,10 @@ dependencies {
     implementation(project(":presentation"))
 
     implementation("network:network")
-    implementation("wallets:electrum")
-    implementation("wallets:bitcoind")
+    implementation("network:network-identity")
+    implementation("wallets:core")
+    // implementation("wallets:electrum")
+    // implementation("wallets:bitcoind")
 
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)

@@ -1,7 +1,12 @@
 package bisq.desktop.main.content.chat.message_container;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatService;
+import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
@@ -24,6 +29,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -105,12 +111,8 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         chatMessagesListController.setSearchPredicate(predicate);
     }
 
-    public void setBisqEasyOfferDirectionOrOwnerFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        chatMessagesListController.setBisqEasyOfferDirectionOrOwnerFilterPredicate(predicate);
-    }
-
-    public void setBisqEasyPeerReputationFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        chatMessagesListController.setBisqEasyPeerReputationFilterPredicate(predicate);
+    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
+        chatMessagesListController.highlightOfferChatMessage(message);
     }
 
 
@@ -281,12 +283,14 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
     private void maybeSwitchUserProfile() {
-        if (model.getUserProfileSelectionVisible().get()) {
-            List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
-            if (!myUserProfilesInChannel.isEmpty()) {
-                userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
+        UIThread.run(() -> {
+            if (model.getUserProfileSelectionVisible().get()) {
+                List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
+                if (!myUserProfilesInChannel.isEmpty()) {
+                    userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
+                }
             }
-        }
+        });
     }
 
     private List<UserIdentity> getMyUserProfilesInChannel() {

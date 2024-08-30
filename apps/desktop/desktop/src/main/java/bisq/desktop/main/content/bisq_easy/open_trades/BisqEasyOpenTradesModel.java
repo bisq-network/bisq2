@@ -17,9 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.BaseChatModel;
+import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,12 +30,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public final class BisqEasyOpenTradesModel extends BaseChatModel {
+public final class BisqEasyOpenTradesModel extends ChatModel {
     private final BooleanProperty noOpenTrades = new SimpleBooleanProperty();
     private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
     private final BooleanProperty tradeRulesAccepted = new SimpleBooleanProperty();
     private final BooleanProperty chatVisible = new SimpleBooleanProperty();
     private final BooleanProperty tradeStateVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isAnyTradeInMediation = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
     private final ObjectProperty<BisqEasyOpenTradesView.ListItem> selectedItem = new SimpleObjectProperty<>();
@@ -48,17 +48,13 @@ public final class BisqEasyOpenTradesModel extends BaseChatModel {
         super(chatChannelDomain);
     }
 
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
-    }
-
     void reset() {
         noOpenTrades.set(false);
         tradeWelcomeVisible.set(false);
         tradeRulesAccepted.set(false);
         chatVisible.set(false);
         tradeStateVisible.set(false);
+        isAnyTradeInMediation.set(false);
         chatWindowTitle.set(null);
         chatWindow.set(null);
         selectedItem.set(null);

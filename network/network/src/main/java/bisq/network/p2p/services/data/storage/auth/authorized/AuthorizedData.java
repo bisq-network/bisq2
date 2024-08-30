@@ -45,6 +45,7 @@ public final class AuthorizedData extends AuthenticatedData {
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
+    // At remove, we do not need to authorizedPublicKey as the normal keypair is used to verify right to remove.
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                           PublicKey authorizedPublicKey) {
         this(authorizedDistributedData, Optional.empty(), authorizedPublicKey, authorizedPublicKey.getEncoded());
@@ -75,11 +76,33 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     @Override
-    public bisq.network.protobuf.AuthenticatedData toProto() {
+    public byte[] serializeForHash() {
+        // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
+        return getAuthenticatedDataBuilder(true).setAuthorizedData(
+                        bisq.network.protobuf.AuthorizedData.newBuilder()
+                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
+                .build().toByteArray();
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthenticatedData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthenticatedData.Builder getBuilder(boolean serializeForHash) {
+        return getAuthenticatedDataBuilder(serializeForHash).setAuthorizedData(toValueProto(serializeForHash));
+    }
+
+    public bisq.network.protobuf.AuthorizedData toValueProto(boolean serializeForHash) {
+        return resolveBuilder(getValueBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    public bisq.network.protobuf.AuthorizedData.Builder getValueBuilder(boolean serializeForHash) {
         bisq.network.protobuf.AuthorizedData.Builder builder = bisq.network.protobuf.AuthorizedData.newBuilder()
                 .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes));
         signature.ifPresent(signature -> builder.setSignature(ByteString.copyFrom(signature)));
-        return getAuthenticatedDataBuilder().setAuthorizedData(builder).build();
+        return builder;
     }
 
     public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
@@ -106,15 +129,6 @@ public final class AuthorizedData extends AuthenticatedData {
         }
     }
 
-    // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
-    @Override
-    public byte[] serialize() {
-        return getAuthenticatedDataBuilder().setAuthorizedData(
-                        bisq.network.protobuf.AuthorizedData.newBuilder()
-                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
-                .build().toByteArray();
-    }
-
     public AuthorizedDistributedData getAuthorizedDistributedData() {
         return (AuthorizedDistributedData) distributedData;
     }
@@ -122,7 +136,7 @@ public final class AuthorizedData extends AuthenticatedData {
     public boolean isNotAuthorized() {
         try {
             AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
-            if (!SignatureUtil.verify(distributedData.serialize(), signature.orElseThrow(), authorizedPublicKey)) {
+            if (!SignatureUtil.verify(distributedData.serializeForHash(), signature.orElseThrow(), authorizedPublicKey)) {
                 return true;
             }
 

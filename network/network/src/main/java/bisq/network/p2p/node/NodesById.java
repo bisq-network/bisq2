@@ -29,14 +29,8 @@ import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundleService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -110,7 +104,9 @@ public class NodesById implements Node.Listener {
         return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, address);
     }
 
-    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
+    public Connection send(NetworkId senderNetworkId,
+                           EnvelopePayloadMessage envelopePayloadMessage,
+                           Connection connection) {
         return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, connection);
     }
 
@@ -138,6 +134,10 @@ public class NodesById implements Node.Listener {
 
     public Optional<Node> findNode(NetworkId networkId) {
         return Optional.ofNullable(map.get(networkId));
+    }
+
+    public boolean isPeerOnline(NetworkId networkId, Address address) {
+        return getOrCreateNode(networkId).isPeerOnline(address);
     }
 
     public Collection<Node> getAllNodes() {

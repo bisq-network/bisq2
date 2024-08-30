@@ -25,12 +25,12 @@ class SepaAccountPayloadTest {
             "id", "paymentMethodName", "holderName", "iban", "bic", "countryCode");
 
     @Test
-    void toProto() {
-        assertEquals(PROTO, PAYLOAD.toProto());
+    void testToProto() {
+        assertEquals(PROTO, PAYLOAD.completeProto());
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         assertEquals(PAYLOAD, bisq.account.accounts.SepaAccountPayload.fromProto(PROTO));
     }
 }

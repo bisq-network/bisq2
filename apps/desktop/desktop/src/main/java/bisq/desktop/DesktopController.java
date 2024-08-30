@@ -35,12 +35,17 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
 import bisq.desktop.splash.SplashController;
+import bisq.identity.IdentityService;
 import bisq.settings.Cookie;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import bisq.user.RepublishUserProfileService;
 import bisq.user.identity.UserIdentityService;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Screen;
 import lombok.Getter;
@@ -71,7 +76,10 @@ public class DesktopController extends NavigationController {
     private final UserIdentityService userIdentityService;
     private final ChatNotificationService chatNotificationService;
     private final ServiceProvider serviceProvider;
-    private PreventStandbyModeService preventStandbyModeService;
+    private final DontShowAgainService dontShowAgainService;
+    private final PreventStandbyModeService preventStandbyModeService;
+    private final RepublishUserProfileService republishUserProfileService;
+    private final IdentityService identityService;
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
@@ -81,6 +89,7 @@ public class DesktopController extends NavigationController {
                              JavaFxApplicationData applicationJavaFxApplicationData,
                              Runnable onActivatedHandler) {
         super(NavigationTarget.PRIMARY_STAGE);
+
         this.applicationServiceState = applicationServiceState;
         this.applicationJavaFxApplicationData = applicationJavaFxApplicationData;
         this.serviceProvider = serviceProvider;
@@ -89,6 +98,10 @@ public class DesktopController extends NavigationController {
         settingsService = serviceProvider.getSettingsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
+        preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
+        republishUserProfileService = serviceProvider.getUserService().getRepublishUserProfileService();
+        identityService = serviceProvider.getIdentityService();
     }
 
     public void init() {
@@ -98,10 +111,9 @@ public class DesktopController extends NavigationController {
 
         splashController = new SplashController(applicationServiceState, serviceProvider);
 
-        Browser.initialize(applicationJavaFxApplicationData.getHostServices(), serviceProvider.getSettingsService());
+        Browser.initialize(applicationJavaFxApplicationData.getHostServices(), settingsService, dontShowAgainService);
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
-        preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
 
         Navigation.init(settingsService);
         Overlay.init(serviceProvider, viewRoot);
@@ -111,6 +123,12 @@ public class DesktopController extends NavigationController {
         view.showStage();
 
         new OverlayController(serviceProvider, viewRoot);
+
+        identityService.getFatalException().addObserver(exception -> {
+            if (exception != null) {
+                UIThread.run(() -> new Popup().error(exception).hideCloseButton().useShutDownButton().show());
+            }
+        });
 
         EasyBind.subscribe(viewRoot.getScene().getWindow().focusedProperty(), chatNotificationService::setApplicationFocussed);
     }
@@ -155,6 +173,10 @@ public class DesktopController extends NavigationController {
         } else {
             maybeShowLockScreen();
         }
+
+        Scene scene = view.getRoot().getScene();
+        scene.addEventFilter(MouseEvent.MOUSE_MOVED, e -> republishUserProfileService.userActivityDetected());
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> republishUserProfileService.userActivityDetected());
 
         onActivatedHandler.run();
     }
@@ -212,7 +234,7 @@ public class DesktopController extends NavigationController {
         boolean hasUserIdentities = serviceProvider.getUserService().getUserIdentityService().hasUserIdentities();
 
         if (!hasUserIdentities) {
-            if (DontShowAgainService.showAgain(WELCOME)) {
+            if (dontShowAgainService.showAgain(WELCOME)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
             } else {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
