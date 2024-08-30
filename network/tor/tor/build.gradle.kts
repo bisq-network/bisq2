@@ -5,7 +5,7 @@ plugins {
 }
 
 tor {
-    version.set("12.0.5")
+    version.set("13.5.2")
 }
 
 sourceSets {
