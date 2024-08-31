@@ -32,6 +32,13 @@ public class MarketRepository {
         );
     }
 
+    public static Market getUSDBitcoinMarket() {
+        return getAllFiatMarkets().stream()
+                .filter(e -> e.getQuoteCurrencyCode().equals("USD"))
+                .findAny()
+                .orElseThrow();
+    }
+
     public static Market getBsqMarket() {
         return new Market("BSQ", "BTC", "BSQ", "Bitcoin");
     }

@@ -41,6 +41,7 @@ import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.limits.TradeAmountLimits;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
@@ -133,6 +134,7 @@ public class TradeWizardAmountController implements Controller {
         minAmountComponent.setMarket(market);
         maxOrFixAmountComponent.setMarket(market);
         model.setMarket(market);
+        applyMinMaxRange();
     }
 
     public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
@@ -232,6 +234,8 @@ public class TradeWizardAmountController implements Controller {
 
     @Override
     public void onActivate() {
+        applyMinMaxRange();
+
         if (model.getPriceQuote().get() == null && minAmountComponent.getQuote().get() != null) {
             model.getPriceQuote().set(minAmountComponent.getQuote().get());
         }
@@ -485,5 +489,14 @@ public class TradeWizardAmountController implements Controller {
 
     private Optional<PriceQuote> getMarketPriceQuote() {
         return marketPriceService.findMarketPriceQuote(model.getMarket());
+    }
+
+    private void applyMinMaxRange() {
+        TradeAmountLimits.getMinQuoteSideTradeAmount(marketPriceService, model.getMarket()).ifPresent(minRangeValue -> {
+            TradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, model.getMarket()).ifPresent(maxRangeValue -> {
+                minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+            });
+        });
     }
 }
