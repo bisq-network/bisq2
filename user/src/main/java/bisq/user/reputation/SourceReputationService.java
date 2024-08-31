@@ -46,6 +46,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public abstract class SourceReputationService<T extends AuthorizedDistributedData> implements Service, AuthorizedBondedRolesService.Listener {
     protected static final long DAY_AS_MS = TimeUnit.DAYS.toMillis(1);
+    public static final double MAX_BOOST_FACTOR = 1;
+    public static final int MAX_BOOST_DAYS = 365;
+    public static final double MAX_BOOST_PERIOD = TimeUnit.DAYS.toMillis(MAX_BOOST_DAYS);
 
     public static long getAgeInDays(long date) {
         return (System.currentTimeMillis() - date) / DAY_AS_MS;
@@ -151,5 +154,12 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     protected boolean isAuthorized(AuthorizedData authorizedData) {
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
+    }
+
+    protected static double getAdjustedAgeFactor(long eventTime) {
+        checkArgument(eventTime >= 0);
+        long age = Math.max(0, System.currentTimeMillis() - eventTime);
+        double ageFactor = Math.min(1, age / MAX_BOOST_PERIOD);
+        return 1 + MAX_BOOST_FACTOR * ageFactor;
     }
 }

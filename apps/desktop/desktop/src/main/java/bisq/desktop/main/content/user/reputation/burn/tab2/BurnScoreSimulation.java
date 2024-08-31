@@ -124,7 +124,7 @@ public class BurnScoreSimulation {
             amount = getInputField("user.reputation.sim.burnAmount");
             score = getField(Res.get("user.reputation.sim.score"));
             ageField = getInputField("user.reputation.sim.age");
-            simAgeSlider = new AgeSlider(0, ProofOfBurnService.AGE_FOR_FULL_WEIGHT_DAYS, 0);
+            simAgeSlider = new AgeSlider(0, ProofOfBurnService.MAX_BOOST_DAYS, 0);
             VBox.setMargin(simAgeSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
             root.getChildren().addAll(simHeadline,
                     amount,

@@ -40,9 +40,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class ProofOfBurnService extends SourceReputationService<AuthorizedProofOfBurnData> {
     public static final long WEIGHT = 100;
-    public static final double INITIAL_AGE_FACTOR = 0.1;
-    public static final int AGE_FOR_FULL_WEIGHT_DAYS = 100;
-    public static final double AGE_FOR_FULL_WEIGHT = TimeUnit.DAYS.toMillis(AGE_FOR_FULL_WEIGHT_DAYS);
 
     public ProofOfBurnService(NetworkService networkService,
                               UserIdentityService userIdentityService,
@@ -85,12 +82,9 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
 
     public static long doCalculateScore(long amount, long blockTime) {
         checkArgument(amount >= 0);
-        checkArgument(blockTime >= 0);
-        // Allow max 4 hours in the future
-        checkArgument(blockTime < System.currentTimeMillis() + TimeUnit.HOURS.toMillis(4));
-        long age = Math.max(0, System.currentTimeMillis() - blockTime);
-        double ageFactor = Math.min(1, age / AGE_FOR_FULL_WEIGHT);
-        double adjustedAgeFactor = INITIAL_AGE_FACTOR + (1 - INITIAL_AGE_FACTOR) * ageFactor;
+        checkArgument(blockTime < System.currentTimeMillis() + TimeUnit.HOURS.toMillis(4),
+                "blockTime must not be more then 4 hours in future");
+        double adjustedAgeFactor = getAdjustedAgeFactor(blockTime);
         return MathUtils.roundDoubleToLong(amount / 100d * WEIGHT * adjustedAgeFactor);
     }
 }

@@ -161,7 +161,8 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     public static long doCalculateScore(long ageInDays) {
         checkArgument(ageInDays >= 0);
         long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
-        return MathUtils.roundDoubleToLong(boundedAgeInDays * WEIGHT);
+        double adjustedAgeFactor = getAdjustedAgeFactor(ageInDays);
+        return MathUtils.roundDoubleToLong(boundedAgeInDays * WEIGHT * adjustedAgeFactor);
     }
 
     public boolean requestAuthorization(String json) {
