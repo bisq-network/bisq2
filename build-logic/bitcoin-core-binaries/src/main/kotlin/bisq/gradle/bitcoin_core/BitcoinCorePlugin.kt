@@ -1,9 +1,11 @@
 package bisq.gradle.bitcoin_core
 
 import bisq.gradle.tasks.PgpFingerprint
+import bisq.gradle.tasks.download.DownloadTaskFactory
 import bisq.gradle.tasks.download.SignedBinaryDownloader
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.create
 
 
@@ -58,6 +60,10 @@ class BitcoinCorePlugin : Plugin<Project> {
             )
         )
         hashFileDownloader.registerTasks()
+
+        val binaryDownloadUrl: Provider<String> = extension.version.map { BitcoinCoreBinaryUrlProvider(it).url }
+        val downloadTaskFactory = DownloadTaskFactory(project, DOWNLOADS_DIR)
+        downloadTaskFactory.registerDownloadTask("downloadBitcoinCore", binaryDownloadUrl)
     }
 
     private fun filenameAndFingerprint(filename: String, fingerprint: String) =
