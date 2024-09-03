@@ -167,7 +167,8 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
             return 0;
         }
         long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
-        return MathUtils.roundDoubleToLong(boundedAgeInDays * WEIGHT);
+        double ageBoostFactor = getAgeBoostFactor(ageInDays);
+        return MathUtils.roundDoubleToLong(boundedAgeInDays * WEIGHT * ageBoostFactor);
     }
 
     private boolean doRequestAuthorization(String json) {

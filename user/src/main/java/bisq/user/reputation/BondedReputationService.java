@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -75,11 +76,14 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     @Override
     public long calculateScore(AuthorizedBondedReputationData data) {
         checkArgument(data.getLockTime() >= LOCK_TIME);
-        return doCalculateScore(data.getAmount());
+        return doCalculateScore(data.getAmount(), data.getBlockTime());
     }
 
-    public static long doCalculateScore(long amount) {
+    public static long doCalculateScore(long amount, long blockTime) {
         checkArgument(amount >= 0);
-        return MathUtils.roundDoubleToLong(amount / 100d * WEIGHT);
+        checkArgument(blockTime < System.currentTimeMillis() + TimeUnit.HOURS.toMillis(4),
+                "blockTime must not be more then 4 hours in future");
+        double ageBoostFactor = getAgeBoostFactor(blockTime);
+        return MathUtils.roundDoubleToLong(amount / 100d * WEIGHT * ageBoostFactor);
     }
 }
