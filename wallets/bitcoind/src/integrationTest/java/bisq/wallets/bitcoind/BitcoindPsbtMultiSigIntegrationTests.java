@@ -29,7 +29,6 @@ import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class BitcoindPsbtMultiSigIntegrationTests {
     }
 
     @Test
-    public void psbtMultiSigTest() throws MalformedURLException, InterruptedException {
+    public void psbtMultiSigTest() throws InterruptedException {
         var aliceWallet = regtestSetup.createAndInitializeNewWallet("alice_wallet");
         var bobWallet = regtestSetup.createAndInitializeNewWallet("bob_wallet");
         var charlieWallet = regtestSetup.createAndInitializeNewWallet("charlie_wallet");
