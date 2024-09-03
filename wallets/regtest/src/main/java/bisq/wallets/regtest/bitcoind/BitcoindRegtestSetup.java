@@ -32,7 +32,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
 public class BitcoindRegtestSetup
         extends AbstractRegtestSetup<MultiProcessCoordinator> {
@@ -86,10 +85,6 @@ public class BitcoindRegtestSetup
         return utxos.stream()
                 .filter(u -> Objects.equals(u.getAddress(), address))
                 .findFirst();
-    }
-
-    public CountDownLatch waitUntilBlocksMined(List<String> blockHashes) {
-        return remoteBitcoind.waitUntilBlocksMined(blockHashes);
     }
 
     public static RpcConfig createRpcConfig(String hostname, int port) {
