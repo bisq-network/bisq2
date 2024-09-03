@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +61,7 @@ public abstract class DaemonProcess implements BisqProcess {
         invokeStopRpcCall();
     }
 
-    private void waitUntilReady() {
+    protected void waitUntilReady() {
         FutureTask<Boolean> waitingFuture = new FutureTask<>(this::waitUntilLogContainsLines);
         Thread waitingThread = new Thread(waitingFuture);
         waitingThread.start();
@@ -79,7 +80,9 @@ public abstract class DaemonProcess implements BisqProcess {
         }
     }
 
-    protected abstract Set<String> getIsSuccessfulStartUpLogLines();
+    protected Set<String> getIsSuccessfulStartUpLogLines() {
+        return Collections.emptySet();
+    }
 
     public abstract void invokeStopRpcCall();
 
@@ -89,6 +92,7 @@ public abstract class DaemonProcess implements BisqProcess {
 
         var processBuilder = new ProcessBuilder(args);
         processBuilder.redirectErrorStream(true);
+        processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
 
         Map<String, String> environment = processBuilder.environment();
         environment.putAll(processConfig.getEnvironmentVars());
@@ -99,7 +103,9 @@ public abstract class DaemonProcess implements BisqProcess {
 
     public abstract ProcessConfig createProcessConfig();
 
-    protected abstract LogScanner getLogScanner();
+    protected LogScanner getLogScanner() {
+        return null;
+    }
 
     protected boolean waitUntilLogContainsLines() {
         try {
