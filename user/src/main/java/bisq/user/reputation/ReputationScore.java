@@ -43,7 +43,7 @@ public class ReputationScore implements Comparable<ReputationScore> {
     }
 
     public String getTooltipString() {
-        return Res.get("user.reputation.score.tooltip", totalScore, getRankingAsString());
+        return Res.get("reputation.score.tooltip", totalScore, getRankingAsString());
     }
 
     @Override
