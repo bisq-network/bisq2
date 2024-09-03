@@ -41,16 +41,19 @@ import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public class BisqEasyServiceUtil {
     public static boolean isMaker(ServiceProvider serviceProvider, BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(serviceProvider.getUserService().getUserIdentityService().getMyUserProfileIds());
     }
 
-    public static Optional<BisqEasyTrade> findTradeFromChannel(ServiceProvider serviceProvider, BisqEasyOpenTradeChannel channel) {
+    public static Optional<BisqEasyTrade> findTradeFromChannel(ServiceProvider serviceProvider,
+                                                               BisqEasyOpenTradeChannel channel) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         boolean maker = isMaker(serviceProvider, bisqEasyOffer);

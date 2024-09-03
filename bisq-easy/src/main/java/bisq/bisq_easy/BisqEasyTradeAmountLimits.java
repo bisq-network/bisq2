@@ -24,6 +24,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.user.identity.UserIdentityService;
@@ -44,6 +45,7 @@ public class BisqEasyTradeAmountLimits {
     public static final Fiat MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(600, "USD");
     public static final Fiat MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION = Fiat.fromFaceValue(25, "USD");
     private static final double REPUTAION_FACTOR = 1 / 200d;
+    public static final double TOLERANCE = 0.1;
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
@@ -59,7 +61,11 @@ public class BisqEasyTradeAmountLimits {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
                 .map(priceQuote -> priceQuote.toBaseSideMonetary(maxUsdTradeAmount))
                 .flatMap(defaultMaxBtcTradeAmount -> marketPriceService.findMarketPriceQuote(market)
-                        .map(priceQuote -> priceQuote.toQuoteSideMonetary(defaultMaxBtcTradeAmount)));
+                        .map(priceQuote -> {
+                            Monetary quoteSideMonetary = priceQuote.toQuoteSideMonetary(defaultMaxBtcTradeAmount);
+                            // quoteSideMonetary= Monetary.from(quoteSideMonetary,quoteSideMonetary.getValue()-10000*20);
+                            return quoteSideMonetary;
+                        }));
     }
 
     // TODO add BSQ/USD price into calculation to take into account the value of the investment (at burn time)
@@ -80,20 +86,54 @@ public class BisqEasyTradeAmountLimits {
                                                                  BisqEasyService bisqEasyService,
                                                                  UserIdentityService userIdentityService,
                                                                  UserProfileService userProfileService,
+                                                                 MarketPriceService marketPriceService,
                                                                  BisqEasyOffer peersOffer) {
-        if (peersOffer.getDirection().isSell()) {
-            Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
-            if (optionalMakersUserProfile.isEmpty()) {
-                return false;
+        Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
+        if (optionalMakersUserProfile.isEmpty()) {
+            return false;
+        }
+
+        // From v2.1.1 on, we check if the max or fix amount of the offer is not exceeding the reputation based limit from BisqEasyTradeAmountLimits.
+        // Otherwise, we stick with the pre v2.1.1 checks, so that old offers do not pose a security risk.
+        UserProfile makersUserProfile = optionalMakersUserProfile.get();
+        ReputationScore makersReputationScore = reputationService.getReputationScore(makersUserProfile);
+
+        // We have either a pre v2.1.1 offer or the offer was manipulated with a higher as allowed amount (or the
+        // reputation data was not well distributed, resulting in the maker having a lower reputation score of the maker as the maker had).
+        if (peersOffer.getTakersDirection().isBuy()) {
+            // Taker as buyer
+
+            Optional<Monetary> makersMaxAllowedQuoteSideTradeAmount = getMaxQuoteSideTradeAmount(marketPriceService, peersOffer.getMarket(), makersReputationScore);
+            Optional<Monetary> offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
+            log.error("makersMaxAllowedQuoteSideTradeAmount={}; offersQuoteSideMaxOrFixedAmount={}", makersMaxAllowedQuoteSideTradeAmount, offersQuoteSideMaxOrFixedAmount);
+            if (makersMaxAllowedQuoteSideTradeAmount.isPresent() && offersQuoteSideMaxOrFixedAmount.isPresent()) {
+                double makersMaxAllowedWithTolerance = MathUtils.roundDoubleToLong(makersMaxAllowedQuoteSideTradeAmount.get().getValue() * (1 + TOLERANCE));
+                log.error("makersMaxAllowedWithTolerance={}", makersMaxAllowedWithTolerance);
+                if (makersMaxAllowedWithTolerance >= offersQuoteSideMaxOrFixedAmount.get().getValue()) {
+                    log.error("Taker as buyer CASE 1: TRUE");
+                    return true;
+                }
             }
-            long makerAsSellersScore = reputationService.getReputationScore(optionalMakersUserProfile.get()).getTotalScore();
+            long makerAsSellersScore = reputationService.getReputationScore(makersUserProfile).getTotalScore();
             long myMinRequiredScore = bisqEasyService.getMinRequiredReputationScore().get();
-            // Maker as seller's score must be > than my required score (as buyer)
+            log.error("Taker as buyer CASE 2: makerAsSellersScore={}; myMinRequiredScore={}; result={}", makerAsSellersScore, myMinRequiredScore, makerAsSellersScore >= myMinRequiredScore);
             return makerAsSellersScore >= myMinRequiredScore;
         } else {
-            // My score (as offer is a buy offer, I am the seller) must be > as offers required score
+            // Taker as seller
+
+            Optional<Monetary> minAQuoteSideTradeAmount = getMinQuoteSideTradeAmount(marketPriceService, peersOffer.getMarket());
+            Optional<Monetary> offersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
+            log.error("minAQuoteSideTradeAmount={}; offersQuoteSideMinOrFixedAmount={}", minAQuoteSideTradeAmount, offersQuoteSideMinOrFixedAmount);
+            if (minAQuoteSideTradeAmount.isPresent() && offersQuoteSideMinOrFixedAmount.isPresent()) {
+                if (minAQuoteSideTradeAmount.get().isGreaterThanOrEqual(offersQuoteSideMinOrFixedAmount.get())) {
+                    log.error("Taker as seller CASE 3: TRUE");
+                    return true;
+                }
+            }
+
             long myScoreAsSeller = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
             long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer).orElse(0L);
+            log.error("Taker as seller CASE 4: myScoreAsSeller={}; offersRequiredScore={}; result={}", myScoreAsSeller, offersRequiredScore, myScoreAsSeller >= offersRequiredScore);
             return myScoreAsSeller >= offersRequiredScore;
         }
     }

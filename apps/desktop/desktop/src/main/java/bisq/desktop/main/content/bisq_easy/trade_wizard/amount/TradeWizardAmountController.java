@@ -479,6 +479,7 @@ public class TradeWizardAmountController implements Controller {
                     bisqEasyService,
                     userIdentityService,
                     userProfileService,
+                    marketPriceService,
                     peersOffer);
         } catch (Throwable t) {
             log.error("Error at TakeOfferPredicate", t);

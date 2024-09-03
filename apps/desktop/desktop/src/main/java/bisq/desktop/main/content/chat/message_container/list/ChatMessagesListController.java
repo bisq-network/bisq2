@@ -286,8 +286,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 bisqEasyService,
                 userIdentityService,
                 userProfileService,
+                marketPriceService,
                 bisqEasyOffer)) {
-            if (bisqEasyOffer.getDirection().isSell()) {
+            if (bisqEasyOffer.getTakersDirection().isBuy()) {
                 long makerAsSellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                         .map(reputationService::getReputationScore)
                         .map(ReputationScore::getTotalScore)

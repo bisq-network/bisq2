@@ -318,6 +318,7 @@ public class TradeWizardSelectOfferController implements Controller {
                         bisqEasyService,
                         userIdentityService,
                         userProfileService,
+                        marketPriceService,
                         peersOffer)) {
                     return false;
                 }
