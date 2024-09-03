@@ -23,6 +23,7 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
+import bisq.common.util.MathUtils;
 import bisq.user.reputation.ReputationScore;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +36,8 @@ public class BisqEasyTradeAmountLimits {
     public static final Fiat DEFAULT_MIN_USD_TRADE_AMOUNT = Fiat.fromFaceValue(6, "USD");
     public static final Fiat DEFAULT_MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(300, "USD");
     public static final Fiat MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(600, "USD");
+    public static final Fiat MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION = Fiat.fromFaceValue(25, "USD");
+    private static final double REPUTAION_FACTOR = 1 / 200d;
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
@@ -46,9 +49,24 @@ public class BisqEasyTradeAmountLimits {
     public static Optional<Monetary> getMaxQuoteSideTradeAmount(MarketPriceService marketPriceService,
                                                                 Market market,
                                                                 ReputationScore myReputationScore) {
+        Fiat maxUsdTradeAmount = getMaxUsdTradeAmount(myReputationScore.getTotalScore());
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
-                .map(priceQuote -> priceQuote.toBaseSideMonetary(DEFAULT_MAX_USD_TRADE_AMOUNT))
+                .map(priceQuote -> priceQuote.toBaseSideMonetary(maxUsdTradeAmount))
                 .flatMap(defaultMaxBtcTradeAmount -> marketPriceService.findMarketPriceQuote(market)
                         .map(priceQuote -> priceQuote.toQuoteSideMonetary(defaultMaxBtcTradeAmount)));
+    }
+
+    // TODO add BSQ/USD price into calculation to take into account the value of the investment (at burn time)
+    private static Fiat getMaxUsdTradeAmount(long totalScore) {
+        // A reputation score of 30k gives a max trade amount of 150 USD
+        // Upper limit is 600 USD
+        long value = Math.min(MAX_USD_TRADE_AMOUNT.getValue(), MathUtils.roundDoubleToLong(totalScore * REPUTAION_FACTOR));
+        Fiat maxUsdTradeAmount = Fiat.fromFaceValue(value, "USD");
+
+        // We tolerate up to 25 USD trade amount for users with no or low reputation (< 5000)
+        if (maxUsdTradeAmount.isLessThan(MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION)) {
+            return MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
+        }
+        return maxUsdTradeAmount;
     }
 }
