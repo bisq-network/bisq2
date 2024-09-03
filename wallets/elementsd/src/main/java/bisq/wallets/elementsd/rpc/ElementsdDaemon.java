@@ -38,7 +38,7 @@ public class ElementsdDaemon {
     }
 
     public void createOrLoadWallet(String walletName, Optional<String> passphrase) {
-        bitcoindDaemon.createOrLoadLegacyWallet(walletName, passphrase);
+        throw new UnsupportedOperationException("Bitcoin Core 25.0 removed legacy wallet support.");
     }
 
     public ElementsdDecodeRawTransactionResponse decodeRawTransaction(String txInHex) {

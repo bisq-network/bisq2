@@ -38,20 +38,16 @@ public class BitcoindDaemon {
     }
 
     public void createOrLoadWallet(String walletName, Optional<String> passphrase) {
-        createOrLoadWallet(walletName, passphrase, true, false, false);
-    }
-
-    public void createOrLoadLegacyWallet(String walletName, Optional<String> passphrase) {
-        createOrLoadWallet(walletName, passphrase, false, false, false);
+        createOrLoadWallet(walletName, passphrase, false, false);
     }
 
     public void createOrLoadWatchOnlyWallet(String walletName) {
-        createOrLoadWallet(walletName, Optional.empty(), true, true, true);
+        createOrLoadWallet(walletName, Optional.empty(), true, true);
     }
 
-    private void createOrLoadWallet(String walletName, Optional<String> passphrase, boolean descriptors, boolean disablePrivateKeys, boolean blank) {
+    private void createOrLoadWallet(String walletName, Optional<String> passphrase, boolean disablePrivateKeys, boolean blank) {
         try {
-            createWallet(walletName, passphrase.orElse(""), descriptors, disablePrivateKeys, blank);
+            createWallet(walletName, passphrase.orElse(""), disablePrivateKeys, blank);
         } catch (RpcCallFailureException e) {
             if (doesWalletExist(e)) {
                 List<String> loadedWallets = listWallets();
@@ -151,10 +147,9 @@ public class BitcoindDaemon {
         return e.getMessage().contains("Database already exists.");
     }
 
-    private void createWallet(String walletName, String passphrase, boolean descriptors, boolean disablePrivateKeys, boolean blank) {
+    private void createWallet(String walletName, String passphrase, boolean disablePrivateKeys, boolean blank) {
         var request = BitcoindCreateWalletRpcCall.Request.builder()
                 .walletName(walletName)
-                .descriptors(descriptors)
                 .disablePrivateKeys(disablePrivateKeys)
                 .blank(blank)
                 .passphrase(passphrase)
