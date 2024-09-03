@@ -21,7 +21,6 @@ import bisq.chat.pub.PublicChatMessage;
 import bisq.chat.reactions.*;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
-import bisq.common.application.DevMode;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -283,11 +282,11 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             return;
         }
 
-        if (!(DevMode.isDevMode() || BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+        if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
                 bisqEasyService,
                 userIdentityService,
                 userProfileService,
-                bisqEasyOffer))) {
+                bisqEasyOffer)) {
             if (bisqEasyOffer.getDirection().isSell()) {
                 long makerAsSellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                         .map(reputationService::getReputationScore)

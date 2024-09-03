@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.bisq_easy.components;
 
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
-import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -54,9 +54,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AmountComponent {
-    public static final Coin MIN_RANGE_BASE_SIDE_VALUE = Coin.asBtcFromValue(10000);
-    public static final Coin MAX_RANGE_BASE_SIDE_VALUE = Coin.asBtcFromValue(1000000);
-
     private final Controller controller;
 
     public AmountComponent(ServiceProvider serviceProvider,
@@ -455,9 +452,9 @@ public class AmountComponent {
         private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
 
         @Setter
-        private ObjectProperty<Monetary> minRangeMonetary = new SimpleObjectProperty<>(MIN_RANGE_BASE_SIDE_VALUE);
+        private ObjectProperty<Monetary> minRangeMonetary = new SimpleObjectProperty<>(BisqEasyTradeAmountLimits.DEFAULT_MIN_BTC_TRADE_AMOUNT);
         @Setter
-        private ObjectProperty<Monetary> maxRangeMonetary = new SimpleObjectProperty<>(MAX_RANGE_BASE_SIDE_VALUE);
+        private ObjectProperty<Monetary> maxRangeMonetary = new SimpleObjectProperty<>(BisqEasyTradeAmountLimits.DEFAULT_MAX_BTC_TRADE_AMOUNT);
         @Setter
         private ObjectProperty<Monetary> minRangeBaseSideValue = new SimpleObjectProperty<>();
         @Setter
