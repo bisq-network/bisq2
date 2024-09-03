@@ -46,6 +46,8 @@ public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<Bitco
         private int blocktime;
         @Json(name = "txid")
         private String txId;
+        @Json(name = "wtxid")
+        private String wtxId;
         private String[] walletconflicts;
         private int time;
         private int timereceived;
