@@ -17,6 +17,7 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
+import com.squareup.moshi.Json;
 import lombok.Getter;
 
 import java.util.List;
@@ -29,4 +30,6 @@ public class BitcoindDescriptor {
     private boolean internal;
     private List<Integer> range;
     private Integer next;
+    @Json(name = "next_index")
+    private Integer nextIndex;
 }
