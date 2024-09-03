@@ -1,10 +1,15 @@
 package bisq.gradle.bitcoin_core
 
 import bisq.gradle.tasks.PgpFingerprint
+import bisq.gradle.tasks.download.DownloadTaskFactory
 import bisq.gradle.tasks.download.SignedBinaryDownloader
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.register
 
 
 class BitcoinCorePlugin : Plugin<Project> {
@@ -58,6 +63,51 @@ class BitcoinCorePlugin : Plugin<Project> {
             )
         )
         hashFileDownloader.registerTasks()
+
+        val binaryDownloadUrl: Provider<String> = extension.version.map { BitcoinCoreBinaryUrlProvider(it).url }
+        val downloadTaskFactory = DownloadTaskFactory(project, DOWNLOADS_DIR)
+        val binaryDownloadTask = downloadTaskFactory
+            .registerDownloadTask("downloadBitcoinCore", binaryDownloadUrl)
+
+        val bitcoinCoreHashVerificationTask: TaskProvider<HashVerificationTask> =
+            project.tasks.register<HashVerificationTask>("verifyBitcoinCore") {
+                inputFile.set(binaryDownloadTask.flatMap { it.outputFile })
+                sha256File.set(hashFileDownloader.verifySignatureTask.flatMap { it.fileToVerify })
+                resultFile.set(project.layout.buildDirectory.file("${DOWNLOADS_DIR}/bitcoin_core.sha256.result"))
+            }
+
+        val unpackBitcoinCoreArchiveTask: TaskProvider<Copy> =
+            project.tasks.register<Copy>("unpackBitcoinCoreArchive") {
+                dependsOn(bitcoinCoreHashVerificationTask)
+
+                val inputFile = bitcoinCoreHashVerificationTask.flatMap { it.inputFile }
+                val sourceFile = inputFile.map {
+                    if (it.asFile.name.endsWith(".tar.gz")) {
+                        project.tarTree(it.asFile.absolutePath)
+                    } else {
+                        project.zipTree(it.asFile.absolutePath)
+                    }
+                }
+                from(sourceFile)
+
+                into(project.layout.buildDirectory.dir("${DOWNLOADS_DIR}/extracted"))
+            }
+
+        val copyBitcoinCoreToResourcesTask: TaskProvider<Copy> =
+            project.tasks.register<Copy>("copyBitcoinCoreToResources") {
+                dependsOn(unpackBitcoinCoreArchiveTask)
+                val sourceDirectory = extension.version.map { version ->
+                    project.layout.buildDirectory.dir("${DOWNLOADS_DIR}/extracted/bitcoin-$version/bin/")
+                }
+                from(sourceDirectory)
+                include("bitcoind*")
+                into(project.layout.buildDirectory.dir("generated/src/main/resources"))
+            }
+
+        val processResourcesTask = project.tasks.named("processResources")
+        processResourcesTask.configure {
+            dependsOn(copyBitcoinCoreToResourcesTask)
+        }
     }
 
     private fun filenameAndFingerprint(filename: String, fingerprint: String) =
