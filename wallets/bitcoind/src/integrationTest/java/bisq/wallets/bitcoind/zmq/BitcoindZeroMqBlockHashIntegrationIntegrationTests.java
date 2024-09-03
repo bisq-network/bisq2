@@ -24,8 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -34,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
 
     private final BitcoindRegtestSetup regtestSetup;
-    private final Set<String> minedBlockHashes = new CopyOnWriteArraySet<>();
     private final CountDownLatch listenerReceivedBlockHashLatch = new CountDownLatch(1);
 
     public BitcoindZeroMqBlockHashIntegrationIntegrationTests(BitcoindRegtestSetup regtestSetup) {
@@ -46,43 +43,36 @@ public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
         ZmqListeners zmqListeners = regtestSetup.getZmqListeners();
         zmqListeners.registerNewBlockMinedListener((blockHash) -> {
             log.info("Notification: New block with hash {}", blockHash);
-
-            if (minedBlockHashes.contains(blockHash)) {
-                listenerReceivedBlockHashLatch.countDown();
-            } else {
-                minedBlockHashes.add(blockHash);
-            }
+            listenerReceivedBlockHashLatch.countDown();
         });
 
-        createAndStartDaemonThread(() -> {
+        Thread thread = new Thread(() -> {
             while (true) {
                 try {
                     List<String> blockHashes = regtestSetup.mineOneBlock();
                     log.info("Mined block: {}", blockHashes);
 
-                    for (String blockHash : blockHashes) {
-                        if (minedBlockHashes.contains(blockHash)) {
-                            listenerReceivedBlockHashLatch.countDown();
-                            return;
-                        } else {
-                            minedBlockHashes.add(blockHash);
-                        }
+                    if (Thread.interrupted()) {
+                        break;
                     }
+
+                    log.info("Sleeping for 200ms before mining next block.");
+                    //noinspection BusyWait
+                    Thread.sleep(200);
+
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
         });
 
+        thread.start();
+
         boolean await = listenerReceivedBlockHashLatch.await(1, TimeUnit.MINUTES);
+        thread.interrupt();
+
         if (!await) {
             throw new IllegalStateException("Didn't connect to bitcoind after 1 minute.");
         }
-    }
-
-    private void createAndStartDaemonThread(Runnable runnable) {
-        Thread thread = new Thread(runnable);
-        thread.setDaemon(true);
-        thread.start();
     }
 }
