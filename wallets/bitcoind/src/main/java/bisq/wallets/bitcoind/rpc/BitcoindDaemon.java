@@ -117,7 +117,11 @@ public class BitcoindDaemon {
     }
 
     public String sendRawTransaction(String hexString) {
-        var request = new BitcoindSendRawTransactionRpcCall.Request(hexString);
+        return sendRawTransaction(hexString, null);
+    }
+
+    public String sendRawTransaction(String hexString, String maxBurnAmount) {
+        var request = new BitcoindSendRawTransactionRpcCall.Request(hexString, maxBurnAmount);
         var rpcCall = new BitcoindSendRawTransactionRpcCall(request);
         return rpcClient.call(rpcCall).getResult();
     }
