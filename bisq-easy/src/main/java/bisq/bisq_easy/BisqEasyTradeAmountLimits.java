@@ -24,7 +24,13 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.options.OfferOptionUtil;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -68,5 +74,27 @@ public class BisqEasyTradeAmountLimits {
             return MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
         }
         return maxUsdTradeAmount;
+    }
+
+    public static boolean offerMatchesMinRequiredReputationScore(ReputationService reputationService,
+                                                                 BisqEasyService bisqEasyService,
+                                                                 UserIdentityService userIdentityService,
+                                                                 UserProfileService userProfileService,
+                                                                 BisqEasyOffer peersOffer) {
+        if (peersOffer.getDirection().isSell()) {
+            Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
+            if (optionalMakersUserProfile.isEmpty()) {
+                return false;
+            }
+            long makerAsSellersScore = reputationService.getReputationScore(optionalMakersUserProfile.get()).getTotalScore();
+            long myMinRequiredScore = bisqEasyService.getMinRequiredReputationScore().get();
+            // Maker as seller's score must be > than my required score (as buyer)
+            return makerAsSellersScore >= myMinRequiredScore;
+        } else {
+            // My score (as offer is a buy offer, I am the seller) must be > as offers required score
+            long myScoreAsSeller = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
+            long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer).orElse(0L);
+            return myScoreAsSeller >= offersRequiredScore;
+        }
     }
 }

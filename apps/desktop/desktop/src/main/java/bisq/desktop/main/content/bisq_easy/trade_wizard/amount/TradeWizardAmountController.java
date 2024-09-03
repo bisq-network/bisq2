@@ -31,7 +31,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -476,7 +475,7 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            return BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+            return BisqEasyTradeAmountLimits.offerMatchesMinRequiredReputationScore(reputationService,
                     bisqEasyService,
                     userIdentityService,
                     userProfileService,

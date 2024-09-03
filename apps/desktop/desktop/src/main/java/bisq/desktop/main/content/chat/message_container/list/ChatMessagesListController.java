@@ -1,6 +1,7 @@
 package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bisq_easy.BisqEasyService;
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.*;
@@ -30,7 +31,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.i18n.Res;
@@ -282,7 +282,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             return;
         }
 
-        if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+        if (!BisqEasyTradeAmountLimits.offerMatchesMinRequiredReputationScore(reputationService,
                 bisqEasyService,
                 userIdentityService,
                 userProfileService,
