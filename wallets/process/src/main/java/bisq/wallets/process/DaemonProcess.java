@@ -19,7 +19,6 @@ package bisq.wallets.process;
 
 import bisq.common.file.FileUtils;
 import bisq.common.file.LogScanner;
-import bisq.wallets.core.exceptions.WalletShutdownFailedException;
 import bisq.wallets.core.exceptions.WalletStartupFailedException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,13 +57,7 @@ public abstract class DaemonProcess implements BisqProcess {
 
     @Override
     public void shutdown() {
-        try {
-            invokeStopRpcCall();
-            process.waitFor(2, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            String processName = process.info().command().orElse("<unknown process>");
-            throw new WalletShutdownFailedException("Cannot shutdown " + processName + ".", e);
-        }
+        invokeStopRpcCall();
     }
 
     private void waitUntilReady() {
