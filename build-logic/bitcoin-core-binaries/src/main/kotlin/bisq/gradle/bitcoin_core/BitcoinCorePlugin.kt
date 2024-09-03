@@ -7,6 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.register
 
 
 class BitcoinCorePlugin : Plugin<Project> {
@@ -63,7 +64,14 @@ class BitcoinCorePlugin : Plugin<Project> {
 
         val binaryDownloadUrl: Provider<String> = extension.version.map { BitcoinCoreBinaryUrlProvider(it).url }
         val downloadTaskFactory = DownloadTaskFactory(project, DOWNLOADS_DIR)
-        downloadTaskFactory.registerDownloadTask("downloadBitcoinCore", binaryDownloadUrl)
+        val binaryDownloadTask = downloadTaskFactory
+            .registerDownloadTask("downloadBitcoinCore", binaryDownloadUrl)
+
+        project.tasks.register<HashVerificationTask>("verifyBitcoinCore") {
+            inputFile.set(binaryDownloadTask.flatMap { it.outputFile })
+            sha256File.set(hashFileDownloader.verifySignatureTask.flatMap { it.fileToVerify })
+            resultFile.set(project.layout.buildDirectory.file("${DOWNLOADS_DIR}/bitcoin_core.sha256.result"))
+        }
     }
 
     private fun filenameAndFingerprint(filename: String, fingerprint: String) =
