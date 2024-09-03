@@ -32,6 +32,8 @@ public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<Bitco
     public static class Entry implements TransactionInfo {
         private boolean involvesWatchonly;
         private String address;
+        @Json(name = "parent_descs")
+        private List<String> parentDescs;
         private String category;
         private double amount;
         private String label;
