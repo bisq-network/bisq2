@@ -17,8 +17,6 @@
 
 package bisq.wallets.regtest.bitcoind;
 
-import bisq.common.file.InputStreamScanner;
-import bisq.common.file.LogScanner;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.json_rpc.JsonRpcClient;
@@ -30,20 +28,25 @@ import bisq.wallets.process.ProcessConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.ConnectException;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 public class BitcoindRegtestProcess extends DaemonProcess {
 
     @Getter
     protected final RpcConfig rpcConfig;
+    private final BitcoindDaemon bitcoindDaemon;
 
     public BitcoindRegtestProcess(RpcConfig rpcConfig, Path dataDir) {
         super(dataDir);
         this.rpcConfig = rpcConfig;
+        JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        bitcoindDaemon = new BitcoindDaemon(rpcClient);
     }
 
     @Override
@@ -74,24 +77,45 @@ public class BitcoindRegtestProcess extends DaemonProcess {
     }
 
     @Override
-    protected LogScanner getLogScanner() {
-        return new InputStreamScanner(
-                getIsSuccessfulStartUpLogLines(),
-                process.getInputStream()
-        );
+    protected void waitUntilReady() {
+        Instant timeoutInstant = Instant.now().plus(2, ChronoUnit.MINUTES);
+        int failedAttempts = 0;
+        while (true) {
+            try {
+                bitcoindDaemon.listWallets();
+                log.info("Connected to Bitcoin Core.");
+                break;
+            } catch (RpcCallFailureException e) {
+                if (e.getCause() instanceof ConnectException) {
+                    if (isAfterTimeout(timeoutInstant)) {
+                        throw new IllegalStateException("Bitcoin Core isn't ready after 2 minutes. Giving up.");
+                    }
+
+                    failedAttempts++;
+                    double msToWait = Math.min(300 * failedAttempts, 10_000);
+                    log.info("Bitcoind RPC isn't ready yet. Trying again in {}ms.", msToWait);
+                    sleepForMs(msToWait);
+                }
+            }
+        }
     }
 
-    @Override
-    protected Set<String> getIsSuccessfulStartUpLogLines() {
-        return Set.of("init message: Done loading");
+    private boolean isAfterTimeout(Instant timeoutInstant) {
+        return Instant.now().isAfter(timeoutInstant);
+    }
+
+    private void sleepForMs(double ms) {
+        try {
+            Thread.sleep((long) ms);
+        } catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
     public void invokeStopRpcCall() {
         try {
-            JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
-            var chainBackend = new BitcoindDaemon(rpcClient);
-            chainBackend.stop();
+            bitcoindDaemon.stop();
         } catch (RpcCallFailureException e) {
             log.error("Failed to send stop command to bitcoind.", e);
         }
