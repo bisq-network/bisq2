@@ -115,9 +115,7 @@ public class BitcoindRegtestProcess extends DaemonProcess {
     @Override
     public void invokeStopRpcCall() {
         try {
-            JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
-            var chainBackend = new BitcoindDaemon(rpcClient);
-            chainBackend.stop();
+            bitcoindDaemon.stop();
         } catch (RpcCallFailureException e) {
             log.error("Failed to send stop command to bitcoind.", e);
         }
