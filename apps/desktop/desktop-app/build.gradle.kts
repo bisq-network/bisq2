@@ -54,7 +54,7 @@ dependencies {
     implementation(project(":desktop"))
 
     implementation("network:network")
-    implementation("wallets:core")
+    implementation("bitcoind:core")
     // implementation("wallets:electrum")
     // implementation("wallets:bitcoind")
 

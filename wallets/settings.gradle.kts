@@ -14,14 +14,11 @@ dependencyResolutionManagement {
 }
 
 includeBuild("..")
-include("core")
+includeBuild("bitcoind")
 
-include("bitcoind")
 include("electrum")
 include("elementsd")
 
-include("json-rpc")
 include("process")
-include("regtest")
 
 rootProject.name = "wallets"

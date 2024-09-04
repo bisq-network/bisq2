@@ -39,7 +39,7 @@ dependencies {
     implementation("network:network")
     implementation("network:network-identity")
 
-    implementation("wallets:core")
+    implementation("bitcoind:core")
     // implementation("wallets:electrum")
     // implementation("wallets:bitcoind")
 
