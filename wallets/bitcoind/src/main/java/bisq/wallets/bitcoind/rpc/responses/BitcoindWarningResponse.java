@@ -20,13 +20,16 @@ package bisq.wallets.bitcoind.rpc.responses;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
 
+import java.util.Collections;
+import java.util.List;
+
 public class BitcoindWarningResponse extends JsonRpcResponse<BitcoindWarningResponse.Result> {
     @Getter
     public static class Result {
-        protected String warning;
+        protected List<String> warnings = Collections.emptyList();
 
         public boolean hasWarning() {
-            return !warning.isEmpty();
+            return !warnings.isEmpty();
         }
     }
 }

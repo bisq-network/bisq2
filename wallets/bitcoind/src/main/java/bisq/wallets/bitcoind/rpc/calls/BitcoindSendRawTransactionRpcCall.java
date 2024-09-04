@@ -32,9 +32,12 @@ public class BitcoindSendRawTransactionRpcCall extends DaemonRpcCall<BitcoindSen
     public static final class Request {
         @Json(name = "hexstring")
         private final String hexString;
+        @Json(name = "maxburnamount")
+        private final String maxBurnAmount;
 
-        public Request(String hexString) {
+        public Request(String hexString, String maxBurnAmount) {
             this.hexString = hexString;
+            this.maxBurnAmount = maxBurnAmount;
         }
     }
 

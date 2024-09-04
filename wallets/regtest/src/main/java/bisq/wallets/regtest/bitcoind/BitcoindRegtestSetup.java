@@ -65,7 +65,7 @@ public class BitcoindRegtestSetup
         return mineBlocks(1);
     }
 
-    public List<String> mineBlocks(int numberOfBlocks) throws InterruptedException {
+    public List<String> mineBlocks(int numberOfBlocks) {
         return remoteBitcoind.mineBlocks(numberOfBlocks);
     }
 
