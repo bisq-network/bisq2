@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;

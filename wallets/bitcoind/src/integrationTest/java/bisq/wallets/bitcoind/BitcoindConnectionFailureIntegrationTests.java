@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.regtest.BitcoindExtension;
 import bisq.wallets.regtest.ConnectionFailureIntegrationTests;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;

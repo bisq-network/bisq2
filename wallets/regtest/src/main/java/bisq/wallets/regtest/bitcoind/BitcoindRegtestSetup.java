@@ -17,7 +17,6 @@
 
 package bisq.wallets.regtest.bitcoind;
 
-import bisq.common.platform.OS;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
@@ -25,6 +24,7 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
 import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.AbstractRegtestSetup;
+import bisq.wallets.regtest.Os;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;
 import lombok.Getter;
 
@@ -158,7 +158,7 @@ public class BitcoindRegtestSetup
                 throw new IllegalStateException("Couldn't extract bitcoind binary.");
             }
 
-            if (OS.isLinux() || OS.isMacOs()) {
+            if (Os.isLinux() || Os.isMacOs()) {
                 isSuccess = bitcoindPath.toFile().setExecutable(true);
                 if (!isSuccess) {
                     throw new IllegalStateException("Couldn't set executable bit on bitcoind binary.");

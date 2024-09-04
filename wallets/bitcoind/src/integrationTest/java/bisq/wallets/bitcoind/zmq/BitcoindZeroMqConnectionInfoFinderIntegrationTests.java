@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind.zmq;
 
-import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
