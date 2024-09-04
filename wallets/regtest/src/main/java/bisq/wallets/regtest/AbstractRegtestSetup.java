@@ -19,7 +19,7 @@ package bisq.wallets.regtest;
 
 import bisq.common.file.FileUtils;
 import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.process.BisqProcess;
+import bisq.wallets.regtest.process.BisqProcess;
 
 import java.io.IOException;
 import java.nio.file.Path;

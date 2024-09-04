@@ -21,7 +21,7 @@ import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
-import bisq.wallets.process.BisqProcess;
+import bisq.wallets.regtest.process.BisqProcess;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

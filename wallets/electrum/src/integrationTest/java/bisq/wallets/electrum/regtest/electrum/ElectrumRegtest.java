@@ -24,7 +24,7 @@ import bisq.wallets.electrum.ElectrumProcess;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.electrum.rpc.responses.ElectrumCreateResponse;
-import bisq.wallets.process.BisqProcess;
+import bisq.wallets.regtest.process.BisqProcess;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import lombok.Getter;

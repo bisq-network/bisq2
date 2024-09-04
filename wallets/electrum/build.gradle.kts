@@ -23,7 +23,8 @@ dependencies {
     implementation("bisq:persistence")
     implementation(project(":json-rpc"))
     implementation(project(":process"))
-    
+    implementation(project(":regtest"))
+
     implementation(libs.typesafe.config)
     implementation(libs.bundles.glassfish.jersey)
 

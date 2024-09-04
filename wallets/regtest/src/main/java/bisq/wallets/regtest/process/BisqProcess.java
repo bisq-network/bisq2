@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.process;
+package bisq.wallets.regtest.process;
 
 public interface BisqProcess {
     void start() throws InterruptedException;

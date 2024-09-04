@@ -28,7 +28,7 @@ import bisq.wallets.core.model.AddressType;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.process.BisqProcess;
+import bisq.wallets.regtest.process.BisqProcess;
 import lombok.Getter;
 
 import java.util.ArrayList;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core.exceptions;
+package bisq.wallets.regtest.process;
 
 public class WalletStartupFailedException extends RuntimeException {
     public WalletStartupFailedException(String message, Throwable cause) {
