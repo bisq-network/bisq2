@@ -27,5 +27,7 @@ public class BitcoindGetBalancesResponse extends JsonRpcResponse<BitcoindGetBala
         private BitcoindGetMineBalancesResponse mine;
         @Json(name = "watchonly")
         private BitcoindGetMineBalancesResponse watchOnly;
+        @Json(name = "lastprocessedblock")
+        private BitcoindGetLastProcessedBlockBalancesResponse lastProcessedBlock;
     }
 }

@@ -26,5 +26,6 @@ public class BitcoindWalletProcessPsbtResponse extends JsonRpcResponse<BitcoindW
     public static class Result {
         private String psbt;
         private boolean complete;
+        private String hex;
     }
 }
