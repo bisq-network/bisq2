@@ -21,7 +21,7 @@ import bisq.common.file.InputStreamScanner;
 import bisq.common.file.LogScanner;
 import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.process.DaemonProcess;
-import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.regtest.process.ProcessConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;

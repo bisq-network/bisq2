@@ -24,7 +24,7 @@ import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.elementsd.ElementsdConfig;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.json_rpc.JsonRpcClient;
-import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.regtest.process.ProcessConfig;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestProcess;
 import lombok.extern.slf4j.Slf4j;
 

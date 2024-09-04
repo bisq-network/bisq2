@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.process;
+package bisq.wallets.regtest.process;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
