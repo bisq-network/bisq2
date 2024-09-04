@@ -17,6 +17,7 @@
 
 package bisq.wallets.regtest.bitcoind;
 
+import bisq.common.platform.OS;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
@@ -27,7 +28,10 @@ import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;
 import lombok.Getter;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -101,9 +105,13 @@ public class BitcoindRegtestSetup
         return createRpcConfig("127.0.0.1", port);
     }
 
-    private BitcoindRegtestProcess createBitcoindProcess() {
+    private BitcoindRegtestProcess createBitcoindProcess() throws IOException {
+        Path bitcoindBinaryDir = tmpDirPath.resolve("bitcoind_binary");
+        Path bitcoindPath = installBitcoind(bitcoindBinaryDir);
+
         Path bitcoindDataDir = tmpDirPath.resolve("bitcoind_data_dir");
         return new BitcoindRegtestProcess(
+                bitcoindPath,
                 rpcConfig,
                 bitcoindDataDir
         );
@@ -123,5 +131,41 @@ public class BitcoindRegtestSetup
 
     public ZmqListeners getZmqListeners() {
         return remoteBitcoind.getZmqListeners();
+    }
+
+    private Path installBitcoind(Path bitcoindBinaryDir) throws IOException {
+        File bitcoindBinaryDirFile = bitcoindBinaryDir.toFile();
+        boolean isSuccess = bitcoindBinaryDirFile.mkdirs();
+        if (!isSuccess) {
+            throw new IllegalStateException("Couldn't create " + bitcoindBinaryDir.toAbsolutePath() + " for " +
+                    "bitcoind installation.");
+        }
+
+        InputStream inputStream = getClass()
+                .getClassLoader()
+                .getResourceAsStream("bitcoind");
+
+        if (inputStream == null) {
+            throw new IllegalStateException("Can't read bitcoind binary from resources.");
+        }
+
+        Path bitcoindPath = bitcoindBinaryDir.resolve("bitcoind");
+        try (inputStream) {
+            Files.copy(inputStream, bitcoindPath);
+
+            boolean endOfStreamReached = inputStream.available() == 0;
+            if (!endOfStreamReached) {
+                throw new IllegalStateException("Couldn't extract bitcoind binary.");
+            }
+
+            if (OS.isLinux() || OS.isMacOs()) {
+                isSuccess = bitcoindPath.toFile().setExecutable(true);
+                if (!isSuccess) {
+                    throw new IllegalStateException("Couldn't set executable bit on bitcoind binary.");
+                }
+            }
+
+            return bitcoindPath;
+        }
     }
 }

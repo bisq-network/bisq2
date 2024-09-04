@@ -37,7 +37,7 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
     private final ElementsdConfig elementsdConfig;
 
     public ElementsdRegtestProcess(ElementsdConfig elementsdConfig, Path dataDir) {
-        super(elementsdConfig.elementsdRpcConfig(), dataDir);
+        super(null, elementsdConfig.elementsdRpcConfig(), dataDir);
         this.elementsdConfig = elementsdConfig;
     }
 
