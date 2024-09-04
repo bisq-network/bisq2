@@ -18,16 +18,14 @@ sourceSets {
 }
 
 dependencies {
-    api(project(":core"))
+    api("bitcoind:core")
+    implementation("bitcoind:json-rpc")
+    implementation("bitcoind:regtest")
 
-    implementation("bisq:persistence")
-    implementation(project(":json-rpc"))
     implementation(project(":process"))
-    implementation(project(":regtest"))
-
     implementation(libs.typesafe.config)
     implementation(libs.bundles.glassfish.jersey)
 
-    integrationTestImplementation(project(":bitcoind"))
-    integrationTestImplementation(project(":regtest"))
+    integrationTestImplementation("bitcoind:bitcoind")
+    integrationTestImplementation("bitcoind:regtest")
 }

@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":bitcoind"))
+    implementation("bitcoind:core")
+    implementation("bitcoind:bitcoind")
 
     implementation(libs.assertj.core)
     implementation(libs.junit.jupiter)

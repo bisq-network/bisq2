@@ -7,9 +7,9 @@ plugins {
 dependencies {
     implementation("bisq:persistence")
 
-    implementation(project(":core"))
-    implementation(project(":bitcoind"))
-    implementation(project(":json-rpc"))
+    implementation("bitcoind:core")
+    implementation("bitcoind:bitcoind")
+    implementation("bitcoind:json-rpc")
 
-    integrationTestImplementation(project(":regtest"))
+    integrationTestImplementation("bitcoind:regtest")
 }
