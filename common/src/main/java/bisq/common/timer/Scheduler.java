@@ -28,12 +28,10 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Scheduler implements TaskScheduler {
-
-
-    // We do not use a ScheduledThreadPoolExecutor as the queue cannot be customized. It would cause undesired behaviour 
+    // We do not use a ScheduledThreadPoolExecutor as the queue cannot be customized. It would cause undesired behaviour
     // in case we would use a static executor for all Scheduler instances and multiple schedule calls would get 
     // queued up instead of starting a new scheduler.
-    private final ScheduledExecutorService executor;
+    private Optional<ScheduledExecutorService> executor = Optional.empty();
     private final Runnable task;
     private volatile boolean stopped;
     @Getter
@@ -43,7 +41,6 @@ public class Scheduler implements TaskScheduler {
 
     private Scheduler(Runnable task) {
         this.task = task;
-        executor = ExecutorFactory.newSingleThreadScheduledExecutor(getClass().getSimpleName());
     }
 
     public static Scheduler run(Runnable task) {
@@ -51,7 +48,7 @@ public class Scheduler implements TaskScheduler {
     }
 
     public Scheduler runnableName(String runnableName) {
-        this.runnableName = Optional.of(StringUtils.truncate(runnableName, 30));
+        this.runnableName = Optional.of(StringUtils.truncate(runnableName, 50));
         return this;
     }
 
@@ -60,7 +57,11 @@ public class Scheduler implements TaskScheduler {
     }
 
     public Scheduler host(Class<?> hostClass) {
-        this.hostClassName = Optional.of(StringUtils.truncate(hostClass.getSimpleName(), 30));
+        return host(StringUtils.truncate(hostClass.getSimpleName(), 50));
+    }
+
+    public Scheduler host(String hostClassName) {
+        this.hostClassName = Optional.of(hostClassName);
         return this;
     }
 
@@ -105,11 +106,11 @@ public class Scheduler implements TaskScheduler {
             return this;
         }
         if (cycles == 1) {
-            executor.schedule(() -> {
+            executor = Optional.of(ExecutorFactory.newSingleThreadScheduledExecutor(ExecutorFactory.getThreadFactory(getThreadName(false))));
+            executor.get().schedule(() -> {
                 if (stopped) {
                     return;
                 }
-                maybeUpdateThreadName();
                 try {
                     task.run();
                 } finally {
@@ -117,11 +118,11 @@ public class Scheduler implements TaskScheduler {
                 }
             }, delay, timeUnit);
         } else {
-            executor.scheduleWithFixedDelay(() -> {
+            executor = Optional.of(ExecutorFactory.newSingleThreadScheduledExecutor(ExecutorFactory.getThreadFactory(getThreadName(true))));
+            executor.get().scheduleWithFixedDelay(() -> {
                 if (stopped) {
                     return;
                 }
-                maybeUpdateThreadName();
                 try {
                     task.run();
                 } finally {
@@ -135,16 +136,17 @@ public class Scheduler implements TaskScheduler {
         return this;
     }
 
-    private void maybeUpdateThreadName() {
-        runnableName.ifPresent(runnableName ->
-                hostClassName.ifPresentOrElse(hostClassName ->
-                                Thread.currentThread().setName(Thread.currentThread().getName() + "." + runnableName + "." + hostClassName),
-                        () -> Thread.currentThread().setName(Thread.currentThread().getName() + "." + runnableName)));
+    private String getThreadName(boolean isPeriodic) {
+        String name = isPeriodic ? "PeriodicScheduler" : "Scheduler";
+        String host = hostClassName.map(hostClassName -> "." + hostClassName).orElse("");
+        String runnable = runnableName.map(runnableName -> "." + runnableName).orElse("");
+        return name + host + runnable;
     }
 
     @Override
     public void stop() {
         stopped = true;
-        ExecutorFactory.shutdownAndAwaitTermination(executor);
+        executor.ifPresent(ExecutorFactory::shutdownAndAwaitTermination);
+        executor = Optional.empty();
     }
 }
