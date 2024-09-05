@@ -56,7 +56,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super(persistenceService, storeName, storeKey);
-        scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);
+        scheduler = Scheduler.run(this::pruneExpired)
+                .host(this)
+                .runnableName("pruneExpired")
+                .periodically(60, TimeUnit.SECONDS);
     }
 
     @Override

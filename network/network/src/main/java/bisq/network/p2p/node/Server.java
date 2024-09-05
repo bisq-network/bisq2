@@ -38,12 +38,14 @@ public final class Server {
     private volatile boolean isStopped;
     private final Future<?> future;
 
-    Server(ServerSocketResult serverSocketResult, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
+    Server(ServerSocketResult serverSocketResult,
+           Consumer<Socket> socketHandler,
+           Consumer<Exception> exceptionHandler) {
         serverSocket = serverSocketResult.getServerSocket();
         address = serverSocketResult.getAddress();
         log.debug("Create server: {}", serverSocketResult);
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName("Server.listen-" +
+            Thread.currentThread().setName(Thread.currentThread().getName() + ".Server.listen-" +
                     StringUtils.truncate(serverSocketResult.getAddress().toString()));
             try {
                 while (isNotStopped()) {
@@ -52,7 +54,7 @@ public final class Server {
                     if (isNotStopped()) {
                         // Call handler on new thread
                         NetworkService.NETWORK_IO_POOL.submit(() -> {
-                            Thread.currentThread().setName("Server.acceptSocket-" + serverSocketResult.getAddress());
+                            Thread.currentThread().setName(Thread.currentThread().getName() + ".Server.acceptSocket-" + serverSocketResult.getAddress());
                             socketHandler.accept(socket);
                         });
                     }

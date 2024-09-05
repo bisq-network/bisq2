@@ -124,7 +124,7 @@ public abstract class Connection {
         }
 
         inputHandlerFuture = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName("Connection.read-" + getThreadNameId());
+            Thread.currentThread().setName(Thread.currentThread().getName() + ".Connection.read-" + getThreadNameId());
             try {
                 while (isInputStreamActive()) {
                     var proto = networkEnvelopeSocket.receiveNextEnvelope();

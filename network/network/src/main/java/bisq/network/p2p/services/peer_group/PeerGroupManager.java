@@ -209,8 +209,9 @@ public class PeerGroupManager implements Node.Listener {
                 log.info("Completed startInitialPeerExchange. Start periodic tasks with interval: {} sec",
                         config.getHouseKeepingInterval() / 1000);
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
-                        .periodically(config.getHouseKeepingInterval() / 4, config.getHouseKeepingInterval(), MILLISECONDS)
-                        .name(getClass().getSimpleName() + "-" + nodeInfo));
+                        .host(this)
+                        .runnableName("doHouseKeeping")
+                        .periodically(config.getHouseKeepingInterval() / 4, config.getHouseKeepingInterval(), MILLISECONDS));
                 keepAliveService.initialize();
                 networkLoadExchangeService.initialize();
                 setState(State.RUNNING);

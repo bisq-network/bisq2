@@ -69,8 +69,9 @@ public class NetworkLoadService {
         this.maxNumConnectedPeers = maxNumConnectedPeers;
 
         scheduler = Scheduler.run(this::updateNetworkLoad)
-                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
-                .name(getClass().getSimpleName());
+                .host(this)
+                .runnableName("updateNetworkLoad")
+                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS);
     }
 
     public void shutdown() {

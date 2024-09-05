@@ -82,8 +82,9 @@ public class I2pEmbeddedRouter {
         }));
 
         Scheduler.run(this::checkRouterStats)
-                .periodically(30, TimeUnit.SECONDS)
-                .name("I2pStatus");
+                .host(this)
+                .runnableName("checkRouterStats")
+                .periodically(30, TimeUnit.SECONDS);
 
     }
 
