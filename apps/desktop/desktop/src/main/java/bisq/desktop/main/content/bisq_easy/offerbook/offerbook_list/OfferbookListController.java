@@ -33,6 +33,7 @@ import bisq.desktop.main.content.chat.message_container.ChatMessageContainerCont
 import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -59,6 +60,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
+    private final BannedUserService bannedUserService;
     private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin, userIdentityPin;
     private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin, showMyOffersOnlyFromModelPin;
 
@@ -70,6 +72,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         reputationService = serviceProvider.getUserService().getReputationService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
         model = new OfferbookListModel();
         view = new OfferbookListView(model, this);
     }
@@ -125,16 +128,16 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-                Optional<UserProfile> userProfile = userProfileService.findUserProfile(bisqEasyOfferbookMessage.getAuthorUserProfileId());
+                Optional<UserProfile> senderUserProfile = userProfileService.findUserProfile(bisqEasyOfferbookMessage.getAuthorUserProfileId());
                 boolean shouldAddOfferMessage = bisqEasyOfferbookMessage.hasBisqEasyOffer()
                         && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()
-                        && userProfile.isPresent();
+                        && senderUserProfile.isPresent();
                 if (shouldAddOfferMessage) {
                     UIThread.runOnNextRenderFrame(() -> {
                         if (model.getOfferbookListItems().stream()
                                 .noneMatch(item -> item.getBisqEasyOfferbookMessage().equals(bisqEasyOfferbookMessage))) {
                             OfferbookListItem item = new OfferbookListItem(bisqEasyOfferbookMessage,
-                                    userProfile.get(),
+                                    senderUserProfile.get(),
                                     reputationService,
                                     marketPriceService);
                             model.getOfferbookListItems().add(item);
@@ -246,14 +249,22 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     }
 
     private boolean shouldShowListItem(OfferbookListItem item) {
+        boolean isSenderBanned = bannedUserService.isUserProfileBanned(item.getAuthorUserProfileId())
+                || bannedUserService.isUserProfileBanned(item.getSenderUserProfile());
+        boolean isSenderIgnored = userProfileService.getIgnoredUserProfileIds().contains(item.getSenderUserProfile().getId());
+        if (isSenderBanned || isSenderIgnored) {
+            return false;
+        }
+
+        // Apply filters
         boolean matchesDirection = model.getShowBuyOffers().get() == item.isBuyOffer();
         boolean paymentFiltersApplied = model.getActiveMarketPaymentsCount().get() != 0;
         boolean matchesPaymentFilters = paymentFiltersApplied && item.getFiatPaymentMethods().stream()
                 .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
                                 || model.getSelectedMarketPayments().contains(payment));
         boolean myOffersOnly = model.getShowMyOffersOnly().get();
-        UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-        boolean isMyOffer = item.getUserProfile().equals(selectedUserProfile);
+        UserProfile mySelectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        boolean isMyOffer = item.getSenderUserProfile().equals(mySelectedUserProfile);
         return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters) && (!myOffersOnly || isMyOffer);
     }
 
