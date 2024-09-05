@@ -23,12 +23,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Scheduler implements TaskScheduler {
+
+
     // We do not use a ScheduledThreadPoolExecutor as the queue cannot be customized. It would cause undesired behaviour 
     // in case we would use a static executor for all Scheduler instances and multiple schedule calls would get 
     // queued up instead of starting a new scheduler.
@@ -37,19 +38,25 @@ public class Scheduler implements TaskScheduler {
     private volatile boolean stopped;
     @Getter
     private long counter;
-    private Optional<String> threadName = Optional.empty();
+    private Optional<String> runnableName = Optional.empty();
+    private Optional<String> hostClassName = Optional.empty();
 
     private Scheduler(Runnable task) {
         this.task = task;
-        executor = ExecutorFactory.newSingleThreadScheduledExecutor("Scheduler-" + new Random().nextInt(1000));
+        executor = ExecutorFactory.newSingleThreadScheduledExecutor(getClass().getSimpleName());
     }
 
     public static Scheduler run(Runnable task) {
         return new Scheduler(task);
     }
 
-    public Scheduler name(String threadName) {
-        this.threadName = Optional.of("Scheduler-" + StringUtils.truncate(threadName, 30));
+    public Scheduler runnableName(String runnableName) {
+        this.runnableName = Optional.of(StringUtils.truncate(runnableName, 30));
+        return this;
+    }
+
+    public Scheduler host(Object host) {
+        this.hostClassName = Optional.of(StringUtils.truncate(host.getClass().getSimpleName(), 30));
         return this;
     }
 
@@ -98,7 +105,7 @@ public class Scheduler implements TaskScheduler {
                 if (stopped) {
                     return;
                 }
-                threadName.ifPresent(name -> Thread.currentThread().setName(name));
+                maybeUpdateThreadName();
                 try {
                     task.run();
                 } finally {
@@ -110,7 +117,7 @@ public class Scheduler implements TaskScheduler {
                 if (stopped) {
                     return;
                 }
-                threadName.ifPresent(name -> Thread.currentThread().setName(name));
+                maybeUpdateThreadName();
                 try {
                     task.run();
                 } finally {
@@ -122,6 +129,13 @@ public class Scheduler implements TaskScheduler {
             }, initialDelay, delay, timeUnit);
         }
         return this;
+    }
+
+    private void maybeUpdateThreadName() {
+        runnableName.ifPresent(runnableName ->
+                hostClassName.ifPresentOrElse(hostClassName ->
+                                Thread.currentThread().setName(Thread.currentThread().getName() + "." + runnableName + "." + hostClassName),
+                        () -> Thread.currentThread().setName(Thread.currentThread().getName() + "." + runnableName)));
     }
 
     @Override
