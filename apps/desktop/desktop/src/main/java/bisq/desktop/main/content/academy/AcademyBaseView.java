@@ -38,8 +38,6 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
     public AcademyBaseView(M model, C controller) {
         super(new VBox(10), model, controller);
 
-        contentBox = new VBox();
-
         String key = getKey();
         headline = new Label(Res.get("academy.overview." + key));
         headline.setGraphic(ImageUtil.getImageViewById(getIconId()));
@@ -52,6 +50,7 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
         VBox.setMargin(learnMore, new Insets(25, 0, 0,0));
 
         VBox.setMargin(headline, new Insets(0, 0, 0, 0));
+        contentBox = new VBox();
         contentBox.getChildren().add(headline);
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().add(contentBox);
