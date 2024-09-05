@@ -191,7 +191,14 @@ public class MarketPriceRequestService {
             scheduler.stop();
             scheduler = null;
         }
-        scheduler = Scheduler.run(() -> request().whenComplete((result, throwable) -> {
+        scheduler = Scheduler.run(this::periodicRequest)
+                .host(this)
+                .runnableName("periodicRequest")
+                .periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
+    }
+
+    private void periodicRequest() {
+        request().whenComplete((result, throwable) -> {
             if (throwable != null) {
                 if (scheduler != null) {
                     scheduler.stop();
@@ -202,7 +209,7 @@ public class MarketPriceRequestService {
                 initialDelay = Math.min(30, initialDelay);
                 startRequesting();
             }
-        })).periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
+        });
     }
 
     private CompletableFuture<Void> request() {

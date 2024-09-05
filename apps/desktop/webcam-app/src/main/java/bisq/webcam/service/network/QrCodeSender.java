@@ -51,6 +51,8 @@ public class QrCodeSender {
     public void startSendingHeartBeat() {
         // Send a heart beat every second to avoid triggering server socket timeout
         heartBeatScheduler = Optional.of(Scheduler.run(() -> send(WebcamControlSignals.HEART_BEAT))
+                .host(this)
+                .runnableName("sendHeartBeat")
                 .periodically(SEND_HEART_BEAT_INTERVAL));
     }
 

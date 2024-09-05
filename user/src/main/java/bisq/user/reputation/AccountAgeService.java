@@ -99,7 +99,10 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     @Override
     public CompletableFuture<Boolean> initialize() {
         // We delay a bit to ensure the network is well established
-        Scheduler.run(this::maybeRequestAgain).after(3, TimeUnit.SECONDS);
+        Scheduler.run(this::maybeRequestAgain)
+                .host(this)
+                .runnableName("maybeRequestAgain")
+                .after(3, TimeUnit.SECONDS);
         return super.initialize();
     }
 

@@ -56,7 +56,11 @@ public class Scheduler implements TaskScheduler {
     }
 
     public Scheduler host(Object host) {
-        this.hostClassName = Optional.of(StringUtils.truncate(host.getClass().getSimpleName(), 30));
+        return host(host.getClass());
+    }
+
+    public Scheduler host(Class<?> hostClass) {
+        this.hostClassName = Optional.of(StringUtils.truncate(hostClass.getSimpleName(), 30));
         return this;
     }
 

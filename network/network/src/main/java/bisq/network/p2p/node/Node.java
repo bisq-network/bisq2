@@ -567,7 +567,10 @@ public class Node implements Connection.Handler {
                             envelopePayloadMessage={}
                             connection={}""",
                     StringUtils.truncate(envelopePayloadMessage), connection);
-            Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION)).after(100);
+            Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION))
+                    .host(this)
+                    .runnableName("shutdownOrphanedConnection")
+                    .after(100);
         }
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,

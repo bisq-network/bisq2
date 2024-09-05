@@ -103,7 +103,10 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                     // for resend gets started. We delay here 10 sec. and filter out those which got already scheduled.
                     // For messages which have been in FAILED and no change got triggered we run the resend if the
                     // MAX_RESENDS has not got exceeded.
-                    Scheduler.run(this::resendMessageAllFailedMessages).after(10, TimeUnit.SECONDS);
+                    Scheduler.run(this::resendMessageAllFailedMessages)
+                            .host(this)
+                            .runnableName("resendMessageAllFailedMessages")
+                            .after(10, TimeUnit.SECONDS);
                 }
             });
             nodeStatePins.add(pin);
@@ -265,7 +268,10 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                     resendMessageData.getMessageDeliveryStatus());
             return;
         }
-        Scheduler scheduler = Scheduler.run(() -> resendMessage(resendMessageData, MAX_AUTO_RESENDS)).after(interval);
+        Scheduler scheduler = Scheduler.run(() -> resendMessage(resendMessageData, MAX_AUTO_RESENDS))
+                .host(this)
+                .runnableName("resendMessage")
+                .after(interval);
         schedulerByMessageId.put(messageId, scheduler);
     }
 

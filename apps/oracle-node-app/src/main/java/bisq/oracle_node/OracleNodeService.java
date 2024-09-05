@@ -217,10 +217,14 @@ public class OracleNodeService implements Service {
 
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
             startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                    .host(this)
+                    .runnableName("publishMyAuthorizedDataAsStartup")
                     .repeated(10, 60, TimeUnit.SECONDS, 3);
 
             // We have 100 days TTL for the data, we republish after 50 days to ensure the data does not expire
             scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                    .host(this)
+                    .runnableName("publishMyAuthorizedDataAfter50Days")
                     .periodically(50, TimeUnit.DAYS);
         }
 

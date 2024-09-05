@@ -83,7 +83,10 @@ public class ClearNetTransportService implements TransportService {
         initializeCalled = true;
         maybeSimulateDelay();
         bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo)).periodically(1000);
+        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo))
+                .host(this)
+                .runnableName("updateStartBootstrapProgress")
+                .periodically(1000);
     }
 
     @Override

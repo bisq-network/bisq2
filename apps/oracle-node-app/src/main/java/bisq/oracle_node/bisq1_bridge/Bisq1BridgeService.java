@@ -140,22 +140,10 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                     networkService.addConfidentialMessageListener(this);
                     authorizedBondedRolesService.addListener(this);
 
-                    initialDelayScheduler = Scheduler.run(() -> {
-                        log.info("Start republishAuthorizedBondedRoles");
-                        republishAuthorizedBondedRoles();
-                        MemoryReport.logReport();
-                        log.info("Completed republishAuthorizedBondedRoles");
-                        log.info("Start request and publish DaoData");
-                        requestDaoData().join(); // takes about 6 minutes for 500 items
-                        MemoryReport.logReport();
-                        log.info("Completed request and publish DaoData");
-                        periodicRequestDoaDataScheduler = Scheduler.run(() -> {
-                            log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
-                            requestDaoData().join();
-                            MemoryReport.logReport();
-                            log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
-                        }).periodically(5, TimeUnit.SECONDS);
-                    }).after(60, TimeUnit.SECONDS);
+                    initialDelayScheduler = Scheduler.run(this::initialRepublish)
+                            .host(this)
+                            .runnableName("initialRepublish")
+                            .after(60, TimeUnit.SECONDS);
                 });
     }
 
@@ -226,6 +214,28 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void initialRepublish() {
+        log.info("Start republishAuthorizedBondedRoles");
+        republishAuthorizedBondedRoles();
+        MemoryReport.logReport();
+        log.info("Completed republishAuthorizedBondedRoles");
+        log.info("Start request and publish DaoData");
+        requestDaoData().join(); // takes about 6 minutes for 500 items
+        MemoryReport.logReport();
+        log.info("Completed request and publish DaoData");
+        periodicRequestDoaDataScheduler = Scheduler.run(this::periodicRepublish)
+                .host(this)
+                .runnableName("periodicRepublish")
+                .periodically(5, TimeUnit.SECONDS);
+    }
+
+    private void periodicRepublish() {
+        log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
+        requestDaoData().join();
+        MemoryReport.logReport();
+        log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
+    }
 
     private boolean isAuthorized(AuthorizedData authorizedData) {
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER);

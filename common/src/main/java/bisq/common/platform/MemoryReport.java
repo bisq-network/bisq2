@@ -37,7 +37,10 @@ public class MemoryReport {
         if (scheduler != null) {
             scheduler.stop();
         }
-        scheduler = Scheduler.run(MemoryReport::logReport).runnableName("MemoryReport").periodically(30, memoryReportIntervalSec, TimeUnit.SECONDS);
+        scheduler = Scheduler.run(MemoryReport::logReport)
+                .host(MemoryReport.class)
+                .runnableName("logReport")
+                .periodically(30, memoryReportIntervalSec, TimeUnit.SECONDS);
     }
 
     public static void logReport() {

@@ -84,10 +84,10 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
                 // We delay a bit to mitigate potential race conditions
                 if (initialDataScheduler == null) {
-                    initialDataScheduler = Scheduler.run(() -> {
-                        networkService.removeDataServiceListener(initialDataServiceListener);
-                        applyInitialData();
-                    }).after(1000);
+                    initialDataScheduler = Scheduler.run(() -> delayedApplyInitialData())
+                            .host(this)
+                            .runnableName("delayedApplyInitialData")
+                            .after(1000);
                 }
             }
         };
@@ -137,6 +137,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             initialDataScheduler.stop();
         }
         return CompletableFuture.completedFuture(true);
+    }
+
+    private void delayedApplyInitialData() {
+        networkService.removeDataServiceListener(initialDataServiceListener);
+        applyInitialData();
+        initialDataScheduler.stop();
+        initialDataScheduler = null;
     }
 
     private void applyInitialData() {
@@ -308,16 +315,22 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         // Reprocess AuthorizedData which previously failed due potential out-of-order issues
         // We delay to avoid getting too many data queued up
         if (reprocessScheduler == null) {
-            reprocessScheduler = Scheduler.run(() -> {
-                Set<AuthorizedData> clone = new HashSet<>(failedAuthorizedData);
-                clone.forEach(this::onAuthorizedDataAdded);
-                reprocessScheduler = null;
-            }).after(1000);
+            reprocessScheduler = Scheduler.run(this::reprocess)
+                    .host(this)
+                    .runnableName("reprocess")
+                    .after(1000);
         }
     }
 
+    private void reprocess() {
+        Set<AuthorizedData> clone = new HashSet<>(failedAuthorizedData);
+        clone.forEach(this::onAuthorizedDataAdded);
+        reprocessScheduler.stop();
+        reprocessScheduler = null;
+    }
 
-    private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData, AuthorizedBondedRole authorizedBondedRole) {
+    private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData,
+                                                              AuthorizedBondedRole authorizedBondedRole) {
         // AuthorizedBondedRoles are published only by an oracle node. The oracle node use either a hard coded pubKey
         // or has been authorized by another already authorized oracle node. There need to be at least one root node 
         // with a hard coded pubKey.

@@ -72,7 +72,10 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         super.initialize();
 
         // We delay a bit to ensure the network is well established
-        Scheduler.run(this::maybeRequestAgain).after(3, TimeUnit.SECONDS);
+        Scheduler.run(this::maybeRequestAgain)
+                .host(this)
+                .runnableName("maybeRequestAgain")
+                .after(3, TimeUnit.SECONDS);
 
         userIdentityService.getNewlyCreatedUserIdentity().addObserver(userIdentity -> {
             if (userIdentity != null) {

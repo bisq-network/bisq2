@@ -194,7 +194,10 @@ public class PeerGroupManager implements Node.Listener {
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
         maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
-        maybeCreateConnectionsScheduler = Optional.of(Scheduler.run(this::maybeCreateConnections).after(2000));
+        maybeCreateConnectionsScheduler = Optional.of(Scheduler.run(this::maybeCreateConnections)
+                .host(this)
+                .runnableName("maybeCreateConnections")
+                .after(2000));
     }
 
     private void doInitialize() {
