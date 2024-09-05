@@ -53,10 +53,7 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Optional<T>> readAsync() {
-        return CompletableFuture.supplyAsync(() -> {
-            Thread.currentThread().setName(Thread.currentThread().getName() + "." + StringUtils.truncate(fileName, 20));
-            return persistableStoreReaderWriter.read();
-        }, executorService);
+        return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, executorService);
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
