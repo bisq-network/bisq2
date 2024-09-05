@@ -22,11 +22,15 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
 @Slf4j
 public class ExecutorFactory {
+    public static final Map<String, ThreadFactory> THREAD_FACTORY_BY_GROUP = new HashMap<>();
     public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
+    public static final int DEFAULT_PRIORITY = 3;
 
     public static boolean shutdownAndAwaitTermination(ExecutorService executor) {
         return shutdownAndAwaitTermination(executor, 100);
@@ -47,7 +51,10 @@ public class ExecutorFactory {
     }
 
     public static ScheduledExecutorService newSingleThreadScheduledExecutor(String name) {
-        ThreadFactory threadFactory = getThreadFactory(name);
+        return Executors.newSingleThreadScheduledExecutor(getThreadFactory(name));
+    }
+
+    public static ScheduledExecutorService newSingleThreadScheduledExecutor(ThreadFactory threadFactory) {
         return Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
@@ -105,11 +112,13 @@ public class ExecutorFactory {
                 TimeUnit.MILLISECONDS, workQueue, threadFactory);
     }
 
-    private static ThreadFactory getThreadFactory(String name) {
-        return new ThreadFactoryBuilder()
-                .setNameFormat(getNameWithThreadNum(name))
-                .setDaemon(true)
-                .build();
+    public static ThreadFactory getThreadFactory(String name) {
+        return THREAD_FACTORY_BY_GROUP.computeIfAbsent(name,
+                key -> new ThreadFactoryBuilder()
+                        .setNameFormat(getNameWithThreadNum(name))
+                        .setDaemon(true)
+                        .setPriority(DEFAULT_PRIORITY)
+                        .build());
     }
 
     private static String getNameWithThreadNum(String name) {
