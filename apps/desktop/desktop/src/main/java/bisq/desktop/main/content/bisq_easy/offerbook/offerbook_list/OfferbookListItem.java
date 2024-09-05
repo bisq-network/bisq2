@@ -58,9 +58,9 @@ public class OfferbookListItem {
     private final BisqEasyOffer bisqEasyOffer;
     private final MarketPriceService marketPriceService;
     private final ReputationService reputationService;
-    private final UserProfile userProfile;
-
-    private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString, fiatPaymentMethodsAsString;
+    private final UserProfile senderUserProfile;
+    private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString,
+            fiatPaymentMethodsAsString, authorUserProfileId;
     private final ReputationScore reputationScore;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
@@ -72,13 +72,13 @@ public class OfferbookListItem {
     private final Pin marketPriceByCurrencyMapPin;
 
     OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
-                      UserProfile userProfile,
+                      UserProfile senderUserProfile,
                       ReputationService reputationService,
                       MarketPriceService marketPriceService) {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
 
         bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
-        this.userProfile = userProfile;
+        this.senderUserProfile = senderUserProfile;
         this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
         fiatPaymentMethods = retrieveAndSortFiatPaymentMethods();
@@ -89,12 +89,13 @@ public class OfferbookListItem {
         bitcoinPaymentMethodsAsString = Joiner.on(", ").join(bitcoinPaymentMethods.stream()
                 .map(PaymentMethod::getDisplayString)
                 .collect(Collectors.toList()));
-        userNickname = userProfile.getNickName();
+        userNickname = senderUserProfile.getNickName();
         quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
         formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
+        authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
 
-        reputationScore = reputationService.getReputationScore(userProfile);
+        reputationScore = reputationService.getReputationScore(senderUserProfile);
         totalScore = reputationScore.getTotalScore();
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
