@@ -40,8 +40,6 @@ import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -159,14 +157,12 @@ public class TradeStateController implements Controller {
             hasBuyerAcceptedPriceSpecPin = EasyBind.subscribe(model.getHasBuyerAcceptedSellersPriceSpec(),
                     hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
 
-            //todo move to View
-            VBox vBox = new VBox(
-                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec()))),
-                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())))
-            );
-            model.getSellerPriceApprovalContent().set(vBox);
+            model.getBuyerPriceDescriptionApprovalOverlay().set(
+                    Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
+                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
+            model.getSellerPriceDescriptionApprovalOverlay().set(
+                    Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
+                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())));
         });
     }
 
