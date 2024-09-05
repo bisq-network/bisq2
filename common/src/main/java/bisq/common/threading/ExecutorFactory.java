@@ -28,7 +28,7 @@ import java.util.concurrent.*;
 
 @Slf4j
 public class ExecutorFactory {
-    public static final Map<String, ThreadFactory> THREAD_FACTORY_BY_GROUP = new HashMap<>();
+    public static final Map<String, ThreadFactory> THREAD_FACTORY_BY_NAME = new HashMap<>();
     public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
     public static final int DEFAULT_PRIORITY = 3;
 
@@ -46,12 +46,13 @@ public class ExecutorFactory {
     }
 
     public static ExecutorService newSingleThreadExecutor(String name) {
-        ThreadFactory threadFactory = getThreadFactory(name);
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
         return Executors.newSingleThreadExecutor(threadFactory);
     }
 
     public static ScheduledExecutorService newSingleThreadScheduledExecutor(String name) {
-        return Executors.newSingleThreadScheduledExecutor(getThreadFactory(name));
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
+        return Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
     public static ScheduledExecutorService newSingleThreadScheduledExecutor(ThreadFactory threadFactory) {
@@ -74,7 +75,7 @@ public class ExecutorFactory {
                                                       int corePoolSize,
                                                       int maxPoolSize,
                                                       long keepAliveInSeconds) {
-        ThreadFactory threadFactory = getThreadFactory(name);
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
         ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
         executorService.setKeepAliveTime(keepAliveInSeconds, TimeUnit.SECONDS);
         executorService.setCorePoolSize(corePoolSize);
@@ -90,7 +91,7 @@ public class ExecutorFactory {
     }
 
     public static ExecutorService newFixedThreadPool(String name, int numThreads) {
-        ThreadFactory threadFactory = getThreadFactory(name);
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
         return Executors.newFixedThreadPool(numThreads, threadFactory);
     }
 
@@ -106,16 +107,15 @@ public class ExecutorFactory {
                                                            int maximumPoolSize,
                                                            long keepAliveTimeInSec,
                                                            BlockingQueue<Runnable> workQueue) {
-        ThreadFactory threadFactory = getThreadFactory(name);
-
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.MILLISECONDS, workQueue, threadFactory);
     }
 
     public static ThreadFactory getThreadFactory(String name) {
-        return THREAD_FACTORY_BY_GROUP.computeIfAbsent(name,
+        return THREAD_FACTORY_BY_NAME.computeIfAbsent(name,
                 key -> new ThreadFactoryBuilder()
-                        .setNameFormat(getNameWithThreadNum(name))
+                        .setNameFormat(name)
                         .setDaemon(true)
                         .setPriority(DEFAULT_PRIORITY)
                         .build());
