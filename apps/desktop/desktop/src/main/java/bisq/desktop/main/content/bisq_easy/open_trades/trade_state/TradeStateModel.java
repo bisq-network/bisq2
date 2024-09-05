@@ -51,7 +51,8 @@ public class TradeStateModel implements Model {
     private final StringProperty errorMessage = new SimpleStringProperty();
     private final BooleanProperty shouldShowSellerPriceApprovalOverlay = new SimpleBooleanProperty();
     private final BooleanProperty hasBuyerAcceptedSellersPriceSpec = new SimpleBooleanProperty();
-    private final ObjectProperty<VBox> sellerPriceApprovalContent = new SimpleObjectProperty<>();
+    private final StringProperty buyerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
+    private final StringProperty sellerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
 
     void resetAll() {
         reset();
@@ -73,6 +74,7 @@ public class TradeStateModel implements Model {
         errorMessage.set(null);
         shouldShowSellerPriceApprovalOverlay.set(false);
         hasBuyerAcceptedSellersPriceSpec.set(false);
-        sellerPriceApprovalContent.set(null);
+        buyerPriceDescriptionApprovalOverlay.set(null);
+        sellerPriceDescriptionApprovalOverlay.set(null);
     }
 }
