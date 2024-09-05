@@ -17,22 +17,27 @@
 
 package bisq.common.platform;
 
+import bisq.common.formatter.DataSizeFormatter;
+import bisq.common.formatter.SimpleTimeFormatter;
+import bisq.common.threading.ThreadProfiler;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class MemoryReport {
-
     private static Scheduler scheduler;
+    private static boolean includeThreadListInMemoryReport;
 
-    public static void printPeriodically() {
+    public static void printPeriodically(int memoryReportIntervalSec, boolean includeThreadListInMemoryReport) {
+        MemoryReport.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
         if (scheduler != null) {
             scheduler.stop();
         }
-        scheduler = Scheduler.run(MemoryReport::logReport).periodically(10, 60, TimeUnit.SECONDS);
+        scheduler = Scheduler.run(MemoryReport::logReport).runnableName("MemoryReport").periodically(30, memoryReportIntervalSec, TimeUnit.SECONDS);
     }
 
     public static void logReport() {
@@ -41,14 +46,53 @@ public class MemoryReport {
         long total = runtime.totalMemory();
         long used = total - free;
 
-        log.info("\n************************************************************************************************************************\n" +
-                        "Total memory: {}; Used memory: {}; Free memory: {}; Max memory: {}; No. of threads: {}\n" +
-                        "************************************************************************************************************************",
-                StringUtils.formatBytes(total),
-                StringUtils.formatBytes(used),
-                StringUtils.formatBytes(free),
-                StringUtils.formatBytes(runtime.maxMemory()),
-                Thread.activeCount());
+        StringBuilder sb = new StringBuilder();
+        if (includeThreadListInMemoryReport) {
+            ThreadProfiler threadProfiler = ThreadProfiler.INSTANCE;
+            int nameLength = 50;
+            String format = "%-3s\t %-8s\t %-" + nameLength + "s \t %-15s\t %-15s\t %-15s\n";
+            sb.append(String.format(format, "ID", "Priority", "[Group] Name", "State", "Time", "Memory"));
+            sb.append("-----------------------------------------------------------------------------------------------------------------------------\n");
+            Thread.getAllStackTraces().keySet().stream()
+                    .sorted(Comparator.comparing(Thread::threadId))
+                    .forEach(thread -> {
+                        String name = StringUtils.truncate("[" + thread.getThreadGroup().getName() + "] " + thread.getName(), nameLength);
+                        String time = threadProfiler.getThreadTime(thread.threadId()).map(nanoTime ->
+                                        SimpleTimeFormatter.formatDuration(TimeUnit.NANOSECONDS.toMillis(nanoTime)))
+                                .orElse("N/A");
+                        String memory = threadProfiler.getThreadMemory(thread.threadId())
+                                .map(DataSizeFormatter::format)
+                                .orElse("N/A");
+                        sb.append(String.format(format,
+                                thread.threadId(),
+                                thread.getPriority(),
+                                name,
+                                thread.getState().name(),
+                                time,
+                                memory
+                        ));
+                    });
+            sb.append("-----------------------------------------------------------------------------------------------------------------------------\n");
+            log.info("\n************************************************************************************************************************\n" +
+                            "Total memory: {}; Used memory: {}; Free memory: {}; Max memory: {}; No. of threads: {}\n" +
+                            "************************************************************************************************************************\n\n" +
+                            "Threads:\n{}",
+                    StringUtils.formatBytes(total),
+                    StringUtils.formatBytes(used),
+                    StringUtils.formatBytes(free),
+                    StringUtils.formatBytes(runtime.maxMemory()),
+                    Thread.activeCount(),
+                    sb);
+        } else {
+            log.info("\n************************************************************************************************************************\n" +
+                            "Total memory: {}; Used memory: {}; Free memory: {}; Max memory: {}; No. of threads: {}\n" +
+                            "************************************************************************************************************************",
+                    StringUtils.formatBytes(total),
+                    StringUtils.formatBytes(used),
+                    StringUtils.formatBytes(free),
+                    StringUtils.formatBytes(runtime.maxMemory()),
+                    Thread.activeCount());
+        }
     }
 
     public static long getUsedMemoryInBytes() {
