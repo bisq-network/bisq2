@@ -17,30 +17,38 @@
 
 package bisq.presentation.formatters;
 
-import bisq.common.locale.LocaleRepository;
+import bisq.common.formatter.SimpleTimeFormatter;
 import bisq.i18n.Res;
 
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 public class TimeFormatter {
-    public static final long DAY_AS_MS = TimeUnit.DAYS.toMillis(1);
-
     public static String formatDuration(long duration) {
-        if (duration < 1000) {
-            return duration + " ms";
-        } else {
-            long sec = duration / 1000;
-            long ms = duration % 1000;
-            if (ms == 0) {
-                return sec + " sec";
-            } else {
-                return sec + " sec, " + ms + " ms";
-            }
-        }
+        return SimpleTimeFormatter.formatDuration(duration);
     }
+
+    public static String getAgeInSeconds(long duration) {
+        return SimpleTimeFormatter.getAgeInSeconds(duration);
+    }
+
+    public static long getAgeInDays(long date) {
+        return SimpleTimeFormatter.getAgeInDays(date);
+    }
+
+
+    public static String formatTime(Date date) {
+        return SimpleTimeFormatter.formatTime(date);
+    }
+
+    public static String formatTime(Date date, boolean useLocaleAndLocalTimezone) {
+        return SimpleTimeFormatter.formatTime(date, useLocaleAndLocalTimezone);
+    }
+
+    public static String formatTime(Date date, DateFormat timeFormatter) {
+        return SimpleTimeFormatter.formatTime(date, timeFormatter);
+    }
+
 
     public static String formatVideoDuration(long duration) {
         long sec = duration / 1000;
@@ -70,15 +78,6 @@ public class TimeFormatter {
         }
     }
 
-    public static String getAgeInSeconds(long duration) {
-        long sec = duration / 1000;
-        return sec + " sec";
-    }
-
-    public static long getAgeInDays(long date) {
-        return (System.currentTimeMillis() - date) / DAY_AS_MS;
-    }
-
     public static String formatAgeInDays(long date) {
         long totalDays = getAgeInDays(date);
         long years = totalDays / 365;
@@ -89,26 +88,6 @@ public class TimeFormatter {
             return yearString + ", " + dayString;
         } else {
             return dayString;
-        }
-    }
-
-    public static String formatTime(Date date) {
-        return formatTime(date, true);
-    }
-
-    public static String formatTime(Date date, boolean useLocaleAndLocalTimezone) {
-        DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.SHORT, LocaleRepository.getDefaultLocale());
-        if (!useLocaleAndLocalTimezone) {
-            timeInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
-        }
-        return formatTime(date, timeInstance);
-    }
-
-    public static String formatTime(Date date, DateFormat timeFormatter) {
-        if (date != null) {
-            return timeFormatter.format(date);
-        } else {
-            return "";
         }
     }
 }
