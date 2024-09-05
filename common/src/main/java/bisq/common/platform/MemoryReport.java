@@ -52,7 +52,7 @@ public class MemoryReport {
         StringBuilder sb = new StringBuilder();
         if (includeThreadListInMemoryReport) {
             ThreadProfiler threadProfiler = ThreadProfiler.INSTANCE;
-            int nameLength = 50;
+            int nameLength = 100;
             String format = "%-3s\t %-8s\t %-" + nameLength + "s \t %-15s\t %-15s\t %-15s\n";
             sb.append(String.format(format, "ID", "Priority", "[Group] Name", "State", "Time", "Memory"));
             sb.append("-----------------------------------------------------------------------------------------------------------------------------\n");

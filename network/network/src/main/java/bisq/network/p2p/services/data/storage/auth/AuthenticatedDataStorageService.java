@@ -58,7 +58,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         super(persistenceService, storeName, storeKey);
         scheduler = Scheduler.run(this::pruneExpired)
                 .host(this)
-                .runnableName("pruneExpired")
+                .runnableName(getStoreKey() + ".pruneExpired")
                 .periodically(60, TimeUnit.SECONDS);
     }
 

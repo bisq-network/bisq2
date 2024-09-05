@@ -55,7 +55,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class MarketPriceRequestService {
-    private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceService.pool", 3);
+    private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceRequestService", 3);
 
     @Getter
     @ToString
