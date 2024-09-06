@@ -26,9 +26,9 @@ public class DataSizeFormatter {
         String asMB = "";
         double mb = ByteUnit.BYTE.toMB(sizeInBytes);
         if (mb >= 1) {
-            return formatMB(sizeInBytes, 4) + "; ";
+            return formatMB(sizeInBytes, 2) + "; ";
         }
-        return formatKB(sizeInBytes, 4);
+        return formatKB(sizeInBytes, 2);
     }
 
     public static String formatMB(double sizeInBytes) {

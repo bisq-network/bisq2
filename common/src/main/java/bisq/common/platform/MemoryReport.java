@@ -53,7 +53,7 @@ public class MemoryReport {
         if (includeThreadListInMemoryReport) {
             ThreadProfiler threadProfiler = ThreadProfiler.INSTANCE;
             int nameLength = 120;
-            String format = "%-3s\t %-8s\t %-" + nameLength + "s \t %-15s\t %-15s\t %-15s\n";
+            String format = "%-5s\t %-8s\t %-" + nameLength + "s \t %-15s\t %-15s\t %-15s\n";
             String header = String.format(format, "ID", "Priority", "[Group] Name", "State", "Time", "Memory");
 
             StringBuilder customBisqThreads = new StringBuilder("Bisq custom threads:\n");
