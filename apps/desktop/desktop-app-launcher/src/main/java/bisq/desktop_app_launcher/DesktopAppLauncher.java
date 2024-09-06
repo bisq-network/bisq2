@@ -20,6 +20,7 @@ package bisq.desktop_app_launcher;
 import bisq.common.application.BuildVersion;
 import bisq.common.logging.LogSetup;
 import bisq.common.platform.PlatformUtils;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop_app.DesktopApp;
 import bisq.updater.DownloadedFilesVerification;
@@ -68,6 +69,7 @@ public class DesktopAppLauncher {
     private final Options options;
 
     public static void main(String[] args) {
+        ThreadName.set(DesktopAppLauncher.class, "main");
         try {
             new DesktopAppLauncher(args);
         } catch (Exception e) {

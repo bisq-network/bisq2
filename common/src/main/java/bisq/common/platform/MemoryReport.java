@@ -86,6 +86,8 @@ public class MemoryReport {
                                 "JavaFX Application Thread",
                                 "QuantumRenderer-0",
                                 "JNA Cleaner",
+                                "HTTP-Dispatcher",
+                                "idle-timeout-task",
                                 "InvokeLaterDispatcher",
                                 "Prism Font Disposer",
                                 "Java Sound Event Dispatcher",
