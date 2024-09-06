@@ -65,9 +65,12 @@ public class StorageService {
     final Map<String, AppendOnlyDataStorageService> appendOnlyDataStores = new ConcurrentHashMap<>();
     private final PersistenceService persistenceService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final PruneExpiredEntriesService pruneExpiredEntriesService = new PruneExpiredEntriesService();
 
     public StorageService(PersistenceService persistenceService) {
         this.persistenceService = persistenceService;
+
+        pruneExpiredEntriesService.initialize();
 
         // We create all stores for those files we have already persisted.
         // Persisted data is read at the very early stages of the application start.
@@ -78,7 +81,7 @@ public class StorageService {
             if (new File(directory).exists()) {
                 getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
-                            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, authStoreName, storeKey);
+                            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey);
                             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(AuthenticatedData authenticatedData) {
@@ -121,7 +124,7 @@ public class StorageService {
             if (new File(directory).exists()) {
                 getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
-                            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, mailboxStoreName, storeKey);
+                            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, pruneExpiredEntriesService, mailboxStoreName, storeKey);
                             dataStore.addListener(new MailboxDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(MailboxData mailboxData) {
@@ -354,6 +357,7 @@ public class StorageService {
     public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeKey) {
         if (!authenticatedDataStores.containsKey(storeKey)) {
             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService,
+                    pruneExpiredEntriesService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
                     storeKey);
             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
@@ -389,6 +393,7 @@ public class StorageService {
     public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeKey) {
         if (!mailboxStores.containsKey(storeKey)) {
             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService,
+                    pruneExpiredEntriesService,
                     MAILBOX_DATA_STORE.getStoreName(),
                     storeKey);
             dataStore.addListener(new MailboxDataStorageService.Listener() {

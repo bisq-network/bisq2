@@ -19,11 +19,7 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
-import bisq.common.timer.Scheduler;
-import bisq.network.p2p.services.data.storage.DataStorageResult;
-import bisq.network.p2p.services.data.storage.DataStorageService;
-import bisq.network.p2p.services.data.storage.DataStore;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.*;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +28,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,14 +41,10 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
-    private final Scheduler scheduler;
 
-    public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+    public MailboxDataStorageService(PersistenceService persistenceService, PruneExpiredEntriesService pruneExpiredEntriesService, String storeName, String storeKey) {
         super(persistenceService, storeName, storeKey);
-        scheduler = Scheduler.run(this::pruneExpired)
-                .host(this)
-                .runnableName(getStoreKey() + ".pruneExpired")
-                .periodically(60, TimeUnit.SECONDS);
+        pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
 
     @Override
@@ -65,7 +56,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     public void shutdown() {
         maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
-        scheduler.stop();
     }
 
     public DataStorageResult add(AddMailboxRequest request) {
@@ -244,7 +234,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our map", expiredEntries.size());
+            log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> persistableStore.getMap().remove(entry.getKey()));
         }
     }
