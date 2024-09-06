@@ -274,6 +274,12 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         checkArgument(!model.isMyMessage(bisqEasyOfferbookMessage), "tradeChatMessage must not be mine");
 
         UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+
+        if (bannedUserService.isUserProfileBanned(bisqEasyOfferbookMessage.getAuthorUserProfileId()) ||
+                bannedUserService.isUserProfileBanned(userProfile)) {
+            return;
+        }
+
         NetworkId takerNetworkId = userProfile.getNetworkId();
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
@@ -282,12 +288,13 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             return;
         }
 
-        if (!BisqEasyTradeAmountLimits.offerMatchesMinRequiredReputationScore(reputationService,
+        BisqEasyTradeAmountLimits.OfferAmountLimitsResult offerAmountLimitsResult = BisqEasyTradeAmountLimits.checkOfferAmountLimits(reputationService,
                 bisqEasyService,
                 userIdentityService,
                 userProfileService,
                 marketPriceService,
-                bisqEasyOffer)) {
+                bisqEasyOffer);
+        if (!offerAmountLimitsResult.isValid()) {
             if (bisqEasyOffer.getTakersDirection().isBuy()) {
                 long makerAsSellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                         .map(reputationService::getReputationScore)
@@ -302,11 +309,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 new Popup().information(Res.get("chat.message.takeOffer.myReputationScoreTooLow.warn",
                         offersRequiredScore, myScoreAsSeller)).show();
             }
-            return;
-        }
-
-        if (bannedUserService.isUserProfileBanned(bisqEasyOfferbookMessage.getAuthorUserProfileId()) ||
-                bannedUserService.isUserProfileBanned(userProfile)) {
             return;
         }
 

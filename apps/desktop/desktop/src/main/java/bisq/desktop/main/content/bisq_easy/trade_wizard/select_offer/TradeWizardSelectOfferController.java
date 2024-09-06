@@ -314,12 +314,12 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                if (!BisqEasyTradeAmountLimits.offerMatchesMinRequiredReputationScore(reputationService,
+                if (!BisqEasyTradeAmountLimits.checkOfferAmountLimits(reputationService,
                         bisqEasyService,
                         userIdentityService,
                         userProfileService,
                         marketPriceService,
-                        peersOffer)) {
+                        peersOffer).isValid()) {
                     return false;
                 }
 

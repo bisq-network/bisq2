@@ -475,12 +475,12 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            return BisqEasyTradeAmountLimits.offerMatchesMinRequiredReputationScore(reputationService,
+            return BisqEasyTradeAmountLimits.checkOfferAmountLimits(reputationService,
                     bisqEasyService,
                     userIdentityService,
                     userProfileService,
                     marketPriceService,
-                    peersOffer);
+                    peersOffer).isValid();
         } catch (Throwable t) {
             log.error("Error at TakeOfferPredicate", t);
             return false;
