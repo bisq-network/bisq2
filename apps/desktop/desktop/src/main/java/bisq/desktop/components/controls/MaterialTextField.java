@@ -436,6 +436,8 @@ public class MaterialTextField extends Pane {
             }
             onMouseExited();
             update();
+        } else {
+            super.requestFocus();
         }
     }
 
