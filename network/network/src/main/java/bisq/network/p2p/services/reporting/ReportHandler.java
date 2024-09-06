@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.reporting;
 
+import bisq.common.threading.ThreadName;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -50,7 +51,10 @@ class ReportHandler implements Connection.Listener {
 
     CompletableFuture<Report> request() {
         requestTs = System.currentTimeMillis();
-        supplyAsync(() -> node.send(new ReportRequest(requestId), connection), NetworkService.NETWORK_IO_POOL)
+        supplyAsync(() -> {
+            ThreadName.set(this, "request");
+            return node.send(new ReportRequest(requestId), connection);
+        }, NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);

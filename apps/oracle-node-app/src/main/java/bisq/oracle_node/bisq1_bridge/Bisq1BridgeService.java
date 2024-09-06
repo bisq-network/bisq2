@@ -27,6 +27,7 @@ import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.platform.MemoryReport;
+import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.Identity;
@@ -253,6 +254,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         return CompletableFuture.supplyAsync(() -> {
+            ThreadName.set(this, "publishProofOfBurnDtoSet");
             // After v2.1.0 we can remove support for version 0 data
             log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
             Stream<AuthorizedProofOfBurnData> oldVersions = proofOfBurnList.stream()
@@ -282,6 +284,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
         return CompletableFuture.supplyAsync(() -> {
+            ThreadName.set(this, "publishBondedReputationDtoSet");
             // After v2.1.0 we can remove support for version 0 data
             log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
             Stream<AuthorizedBondedReputationData> oldVersions = bondedReputationList.stream()

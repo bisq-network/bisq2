@@ -17,6 +17,7 @@
 
 package bisq.network.i2p;
 
+import bisq.common.threading.ThreadName;
 import bisq.network.i2p.exceptions.CannotConnectToI2pDestination;
 import bisq.network.i2p.exceptions.I2pDestinationOffline;
 import bisq.network.i2p.exceptions.InvalidI2pDestination;
@@ -44,7 +45,10 @@ public class I2pClient {
         Destination destination = createDestination(base64Destination);
         @SuppressWarnings("resource")
         I2PSocket socket = connect(destination);
-        new Thread(() -> socketConsumer.accept(socket)).start();
+        new Thread(() -> {
+            ThreadName.set(this, "handle");
+            socketConsumer.accept(socket);
+        }).start();
     }
 
     private Destination createDestination(String base64Destination) {

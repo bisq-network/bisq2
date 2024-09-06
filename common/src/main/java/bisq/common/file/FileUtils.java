@@ -20,6 +20,8 @@ package bisq.common.file;
 import bisq.common.jvm.DeleteOnExitHook;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
+import bisq.common.threading.ThreadName;
+import bisq.common.util.StringUtils;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
@@ -134,6 +136,7 @@ public class FileUtils {
     public static void recursiveDeleteOnShutdownHook(Path path) {
         Runtime.getRuntime().addShutdownHook(new Thread(
                 () -> {
+                    ThreadName.set(FileUtils.class, "shutdownHook-" + StringUtils.truncate(path.toString(), 10));
                     try {
                         Files.walkFileTree(path, new SimpleFileVisitor<>() {
                             @Override
@@ -330,7 +333,9 @@ public class FileUtils {
         }
     }
 
-    public static HttpURLConnection downloadFile(URL url, File destination, Observable<Double> progress) throws IOException {
+    public static HttpURLConnection downloadFile(URL url,
+                                                 File destination,
+                                                 Observable<Double> progress) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         int fileSize;
         try (InputStream inputStream = new BufferedInputStream(connection.getInputStream());

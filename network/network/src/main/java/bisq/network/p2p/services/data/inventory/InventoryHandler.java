@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteUnit;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -64,7 +65,10 @@ class InventoryHandler implements Connection.Listener {
         requestTs = System.currentTimeMillis();
         log.info("Send InventoryRequest to {} with {}", connection.getPeerAddress(), inventoryFilter.getDetails());
         InventoryRequest inventoryRequest = new InventoryRequest(inventoryFilter, nonce);
-        runAsync(() -> node.send(inventoryRequest, connection), NetworkService.NETWORK_IO_POOL)
+        runAsync(() -> {
+            ThreadName.set(this, "request");
+            node.send(inventoryRequest, connection);
+        }, NetworkService.NETWORK_IO_POOL)
                 .whenComplete((connection, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);

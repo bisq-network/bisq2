@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteUnit;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -91,6 +92,7 @@ public class InventoryResponseService implements Node.Listener {
             InventoryResponse inventoryResponse = new InventoryResponse(requestersVersion, inventory, request.getNonce());
 
             NetworkService.NETWORK_IO_POOL.submit(() -> {
+                ThreadName.set(this, "response");
                 try {
                     node.send(inventoryResponse, connection);
                     log.info("Successfully sent an InventoryResponse to peer {} with {} kb. Took {} ms",

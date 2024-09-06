@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -124,7 +125,7 @@ public abstract class Connection {
         }
 
         inputHandlerFuture = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName(Thread.currentThread().getName() + ".Connection.read-" + getThreadNameId());
+            ThreadName.set(this, "read-" + getThreadNameId());
             try {
                 while (isInputStreamActive()) {
                     var proto = networkEnvelopeSocket.receiveNextEnvelope();

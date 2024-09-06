@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.threading.ThreadName;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
@@ -45,8 +46,7 @@ public final class Server {
         address = serverSocketResult.getAddress();
         log.debug("Create server: {}", serverSocketResult);
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName(Thread.currentThread().getName() + ".Server.listen-" +
-                    StringUtils.truncate(serverSocketResult.getAddress().toString()));
+            ThreadName.set(this, "listen-" + StringUtils.truncate(serverSocketResult.getAddress().toString()));
             try {
                 while (isNotStopped()) {
                     Socket socket = serverSocket.accept();
@@ -54,7 +54,7 @@ public final class Server {
                     if (isNotStopped()) {
                         // Call handler on new thread
                         NetworkService.NETWORK_IO_POOL.submit(() -> {
-                            Thread.currentThread().setName(Thread.currentThread().getName() + ".Server.acceptSocket-" + serverSocketResult.getAddress());
+                            ThreadName.set(this, "handle-" + StringUtils.truncate(serverSocketResult.getAddress().toString()));
                             socketHandler.accept(socket);
                         });
                     }

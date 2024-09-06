@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.network_load;
 
+import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -97,8 +98,10 @@ public class NetworkLoadExchangeService implements Node.Listener {
             NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
             NetworkLoadExchangeResponse response = new NetworkLoadExchangeResponse(request.getNonce(),
                     myNetworkLoad);
-            NetworkService.NETWORK_IO_POOL.submit(() ->
-                    node.send(response, connection));
+            NetworkService.NETWORK_IO_POOL.submit(() -> {
+                ThreadName.set(this, "response");
+                node.send(response, connection);
+            });
             log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
                     request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
         }

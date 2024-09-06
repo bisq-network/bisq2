@@ -22,6 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
@@ -88,7 +89,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Slf4j
 public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
-    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("Network.io", 5, 300, 5);
+    public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("Network.IO", 5, 300, 5);
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("Network.dispatcher");
 
     @Getter
@@ -271,10 +272,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         }
 
         return anySuppliedInitializedNode(senderNetworkId)
-                .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
-                                receiverNetworkId,
-                                senderKeyPair,
-                                senderNetworkId),
+                .thenCompose(networkId -> supplyAsync(() -> {
+                            ThreadName.set(this, "confidentialSend");
+                            return serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
+                                    receiverNetworkId,
+                                    senderKeyPair,
+                                    senderNetworkId);
+                        },
                         NETWORK_IO_POOL));
     }
 
@@ -288,7 +292,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Map<TransportType, Connection>> send(NetworkId senderNetworkId,
                                                                   EnvelopePayloadMessage envelopePayloadMessage,
                                                                   AddressByTransportTypeMap receiver) {
-        return supplyAsync(() -> serviceNodesByTransport.send(senderNetworkId, envelopePayloadMessage, receiver),
+        return supplyAsync(() -> {
+                    ThreadName.set(this, "send");
+                    return serviceNodesByTransport.send(senderNetworkId, envelopePayloadMessage, receiver);
+                },
                 NETWORK_IO_POOL);
     }
 
@@ -487,7 +494,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Map<TransportType, Boolean>> isPeerOnline(NetworkId networkId,
                                                                        AddressByTransportTypeMap peer) {
-        return supplyAsync(() -> serviceNodesByTransport.isPeerOnline(networkId, peer),
+        return supplyAsync(() -> {
+                    ThreadName.set(this, "isPeerOnline");
+                    return serviceNodesByTransport.isPeerOnline(networkId, peer);
+                },
                 NETWORK_IO_POOL);
     }
 

@@ -52,10 +52,9 @@ public class MemoryReport {
         StringBuilder sb = new StringBuilder();
         if (includeThreadListInMemoryReport) {
             ThreadProfiler threadProfiler = ThreadProfiler.INSTANCE;
-            int nameLength = 100;
-            String format = "%-3s\t %-8s\t %-" + nameLength + "s \t %-15s\t %-15s\t %-15s\n";
+            int nameLength = 120;
+            String format = "%-3s\t %-8s\t %-" + nameLength + "s \t %-10s\t %-10s\t %-15s\n";
             sb.append(String.format(format, "ID", "Priority", "[Group] Name", "State", "Time", "Memory"));
-            sb.append("-----------------------------------------------------------------------------------------------------------------------------\n");
             Thread.getAllStackTraces().keySet().stream()
                     .sorted(Comparator.comparing(Thread::threadId))
                     .forEach(thread -> {
@@ -75,7 +74,6 @@ public class MemoryReport {
                                 memory
                         ));
                     });
-            sb.append("-----------------------------------------------------------------------------------------------------------------------------\n");
             log.info("\n************************************************************************************************************************\n" +
                             "Total memory: {}; Used memory: {}; Free memory: {}; Max memory: {}; No. of threads: {}\n" +
                             "************************************************************************************************************************\n\n" +

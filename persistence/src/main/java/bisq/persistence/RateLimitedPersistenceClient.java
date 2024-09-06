@@ -17,6 +17,7 @@
 
 package bisq.persistence;
 
+import bisq.common.threading.ThreadName;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,7 +41,7 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     public RateLimitedPersistenceClient() {
         //todo (Critical) check if we want to use ShutdownHook here
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("RateLimitedPersistenceClient-shutdownHook-" + getPersistence().getStorePath());
+            ThreadName.set(this, "shutdownHook-" + getPersistence().getStorePath());
             persistOnShutdown();
         }));
     }

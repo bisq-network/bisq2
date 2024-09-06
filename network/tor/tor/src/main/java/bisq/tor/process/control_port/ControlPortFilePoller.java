@@ -17,6 +17,8 @@
 
 package bisq.tor.process.control_port;
 
+import bisq.common.threading.ThreadName;
+
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -41,6 +43,7 @@ public class ControlPortFilePoller {
 
     private void startPoller() {
         Thread thread = new Thread(() -> {
+            ThreadName.set(this, "startPoller");
             try {
                 while (true) {
                     Optional<Integer> optionalPort = parsePortFromFile();
