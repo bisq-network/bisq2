@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
-import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.*;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -33,7 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,14 +50,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
-    private final Scheduler scheduler;
 
-    public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+    public AuthenticatedDataStorageService(PersistenceService persistenceService,
+                                           PruneExpiredEntriesService pruneExpiredEntriesService,
+                                           String storeName,
+                                           String storeKey) {
         super(persistenceService, storeName, storeKey);
-        scheduler = Scheduler.run(this::pruneExpired)
-                .host(this)
-                .runnableName(getStoreKey() + ".pruneExpired")
-                .periodically(60, TimeUnit.SECONDS);
+        pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
 
     @Override
@@ -73,7 +70,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public void shutdown() {
         maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
-        scheduler.stop();
     }
 
     public DataStorageResult add(AddAuthenticatedDataRequest request) {
@@ -331,7 +327,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our map", expiredEntries.size());
+            log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> {
                 persistableStore.getMap().remove(entry.getKey());
                 if (entry.getValue() instanceof AddAuthenticatedDataRequest) {
