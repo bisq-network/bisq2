@@ -22,11 +22,28 @@ import bisq.common.util.MathUtils;
 
 public class DataSizeFormatter {
 
+    public static String format(double sizeInBytes) {
+        String asMB = "";
+        double mb = ByteUnit.BYTE.toMB(sizeInBytes);
+        if (mb >= 1) {
+            return formatMB(sizeInBytes, 4) + "; ";
+        }
+        return formatKB(sizeInBytes, 4);
+    }
+
     public static String formatMB(double sizeInBytes) {
         return formatMB(sizeInBytes, 2);
     }
 
     public static String formatMB(double sizeInBytes, int precision) {
         return MathUtils.roundDouble(ByteUnit.BYTE.toMB(sizeInBytes), precision) + " MB";
+    }
+
+    public static String formatKB(double sizeInBytes) {
+        return formatKB(sizeInBytes, 2);
+    }
+
+    public static String formatKB(double sizeInBytes, int precision) {
+        return MathUtils.roundDouble(ByteUnit.BYTE.toKB(sizeInBytes), precision) + " KB";
     }
 }

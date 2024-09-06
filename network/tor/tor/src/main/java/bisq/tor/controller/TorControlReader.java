@@ -1,5 +1,6 @@
 package bisq.tor.controller;
 
+import bisq.common.threading.ThreadName;
 import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.events.EventType;
 import bisq.tor.controller.events.events.HsDescEvent;
@@ -32,6 +33,7 @@ public class TorControlReader implements AutoCloseable {
 
     public void start(InputStream inputStream) {
         Thread thread = new Thread(() -> {
+            ThreadName.setName("TorControlReader.start");
             try {
                 var bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
 

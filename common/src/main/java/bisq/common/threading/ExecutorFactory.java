@@ -22,11 +22,15 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
 @Slf4j
 public class ExecutorFactory {
+    public static final Map<String, ThreadFactory> THREAD_FACTORY_BY_NAME = new HashMap<>();
     public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
+    public static final int DEFAULT_PRIORITY = 3;
 
     public static boolean shutdownAndAwaitTermination(ExecutorService executor) {
         return shutdownAndAwaitTermination(executor, 100);
@@ -42,18 +46,16 @@ public class ExecutorFactory {
     }
 
     public static ExecutorService newSingleThreadExecutor(String name) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(getNameWithThreadNum(name))
-                .setDaemon(true)
-                .build();
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
         return Executors.newSingleThreadExecutor(threadFactory);
     }
 
     public static ScheduledExecutorService newSingleThreadScheduledExecutor(String name) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(getNameWithThreadNum(name))
-                .setDaemon(true)
-                .build();
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
+        return Executors.newSingleThreadScheduledExecutor(threadFactory);
+    }
+
+    public static ScheduledExecutorService newSingleThreadScheduledExecutor(ThreadFactory threadFactory) {
         return Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
@@ -62,28 +64,22 @@ public class ExecutorFactory {
      * To be used when we want to avoid overhead for new thread creation/destruction and no queuing functionality.
      */
     public static ExecutorService newCachedThreadPool(String name) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(getNameWithThreadNum(name))
-                .setDaemon(true)
-                .build();
-        ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
-        ((ThreadPoolExecutor) executorService).setKeepAliveTime(5, TimeUnit.SECONDS);
-        ((ThreadPoolExecutor) executorService).setMaximumPoolSize(1000);
-        return executorService;
+        return newCachedThreadPool(name, 1, 100, 5);
     }
 
     public static ExecutorService newCachedThreadPool(String name, int poolSize, long keepAliveInSeconds) {
         return newCachedThreadPool(name, poolSize, poolSize, keepAliveInSeconds);
     }
 
-    public static ExecutorService newCachedThreadPool(String name, int corePoolSize, int maxPoolSize, long keepAliveInSeconds) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(getNameWithThreadNum(name))
-                .build();
-        ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
-        ((ThreadPoolExecutor) executorService).setKeepAliveTime(keepAliveInSeconds, TimeUnit.SECONDS);
-        ((ThreadPoolExecutor) executorService).setCorePoolSize(corePoolSize);
-        ((ThreadPoolExecutor) executorService).setMaximumPoolSize(maxPoolSize);
+    public static ExecutorService newCachedThreadPool(String name,
+                                                      int corePoolSize,
+                                                      int maxPoolSize,
+                                                      long keepAliveInSeconds) {
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
+        ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
+        executorService.setKeepAliveTime(keepAliveInSeconds, TimeUnit.SECONDS);
+        executorService.setCorePoolSize(corePoolSize);
+        executorService.setMaximumPoolSize(maxPoolSize);
         return executorService;
     }
 
@@ -95,10 +91,7 @@ public class ExecutorFactory {
     }
 
     public static ExecutorService newFixedThreadPool(String name, int numThreads) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(getNameWithThreadNum(name))
-                .setDaemon(true)
-                .build();
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
         return Executors.newFixedThreadPool(numThreads, threadFactory);
     }
 
@@ -114,13 +107,18 @@ public class ExecutorFactory {
                                                            int maximumPoolSize,
                                                            long keepAliveTimeInSec,
                                                            BlockingQueue<Runnable> workQueue) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(getNameWithThreadNum(name))
-                .setDaemon(true)
-                .build();
-
+        ThreadFactory threadFactory = getThreadFactory(getNameWithThreadNum(name));
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.MILLISECONDS, workQueue, threadFactory);
+    }
+
+    public static ThreadFactory getThreadFactory(String name) {
+        return THREAD_FACTORY_BY_NAME.computeIfAbsent(name,
+                key -> new ThreadFactoryBuilder()
+                        .setNameFormat(name)
+                        .setDaemon(true)
+                        .setPriority(DEFAULT_PRIORITY)
+                        .build());
     }
 
     private static String getNameWithThreadNum(String name) {

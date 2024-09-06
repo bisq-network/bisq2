@@ -23,33 +23,45 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Scheduler implements TaskScheduler {
-    // We do not use a ScheduledThreadPoolExecutor as the queue cannot be customized. It would cause undesired behaviour 
+    // We do not use a ScheduledThreadPoolExecutor as the queue cannot be customized. It would cause undesired behaviour
     // in case we would use a static executor for all Scheduler instances and multiple schedule calls would get 
     // queued up instead of starting a new scheduler.
-    private final ScheduledExecutorService executor;
+    private Optional<ScheduledExecutorService> executor = Optional.empty();
     private final Runnable task;
     private volatile boolean stopped;
     @Getter
     private long counter;
-    private Optional<String> threadName = Optional.empty();
+    private Optional<String> runnableName = Optional.empty();
+    private Optional<String> hostClassName = Optional.empty();
 
     private Scheduler(Runnable task) {
         this.task = task;
-        executor = ExecutorFactory.newSingleThreadScheduledExecutor("Scheduler-" + new Random().nextInt(1000));
     }
 
     public static Scheduler run(Runnable task) {
         return new Scheduler(task);
     }
 
-    public Scheduler name(String threadName) {
-        this.threadName = Optional.of("Scheduler-" + StringUtils.truncate(threadName, 30));
+    public Scheduler runnableName(String runnableName) {
+        this.runnableName = Optional.of(StringUtils.truncate(runnableName, 50));
+        return this;
+    }
+
+    public Scheduler host(Object host) {
+        return host(host.getClass());
+    }
+
+    public Scheduler host(Class<?> hostClass) {
+        return host(StringUtils.truncate(hostClass.getSimpleName(), 50));
+    }
+
+    public Scheduler host(String hostClassName) {
+        this.hostClassName = Optional.of(hostClassName);
         return this;
     }
 
@@ -94,11 +106,11 @@ public class Scheduler implements TaskScheduler {
             return this;
         }
         if (cycles == 1) {
-            executor.schedule(() -> {
+            executor = Optional.of(ExecutorFactory.newSingleThreadScheduledExecutor(ExecutorFactory.getThreadFactory(getThreadName(false))));
+            executor.get().schedule(() -> {
                 if (stopped) {
                     return;
                 }
-                threadName.ifPresent(name -> Thread.currentThread().setName(name));
                 try {
                     task.run();
                 } finally {
@@ -106,11 +118,11 @@ public class Scheduler implements TaskScheduler {
                 }
             }, delay, timeUnit);
         } else {
-            executor.scheduleWithFixedDelay(() -> {
+            executor = Optional.of(ExecutorFactory.newSingleThreadScheduledExecutor(ExecutorFactory.getThreadFactory(getThreadName(true))));
+            executor.get().scheduleWithFixedDelay(() -> {
                 if (stopped) {
                     return;
                 }
-                threadName.ifPresent(name -> Thread.currentThread().setName(name));
                 try {
                     task.run();
                 } finally {
@@ -124,9 +136,17 @@ public class Scheduler implements TaskScheduler {
         return this;
     }
 
+    private String getThreadName(boolean isPeriodic) {
+        String name = isPeriodic ? "PeriodicScheduler" : "Scheduler";
+        String host = hostClassName.map(hostClassName -> "." + hostClassName).orElse("");
+        String runnable = runnableName.map(runnableName -> "." + runnableName).orElse("");
+        return name + host + runnable;
+    }
+
     @Override
     public void stop() {
         stopped = true;
-        ExecutorFactory.shutdownAndAwaitTermination(executor);
+        executor.ifPresent(ExecutorFactory::shutdownAndAwaitTermination);
+        executor = Optional.empty();
     }
 }

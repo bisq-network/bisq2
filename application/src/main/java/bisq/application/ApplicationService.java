@@ -83,7 +83,9 @@ public abstract class ApplicationService implements Service {
                     config.getBoolean("devMode"),
                     config.getString("keyIds"),
                     config.getBoolean("ignoreSigningKeyInResourcesCheck"),
-                    config.getBoolean("ignoreSignatureVerification"));
+                    config.getBoolean("ignoreSignatureVerification"),
+                    config.getInt("memoryReportIntervalSec"),
+                    config.getBoolean("includeThreadListInMemoryReport"));
         }
 
         private final Path baseDir;
@@ -92,13 +94,17 @@ public abstract class ApplicationService implements Service {
         private final List<String> keyIds;
         private final boolean ignoreSigningKeyInResourcesCheck;
         private final boolean ignoreSignatureVerification;
+        private final int memoryReportIntervalSec;
+        private final boolean includeThreadListInMemoryReport;
 
         public Config(Path baseDir,
                       String appName,
                       boolean devMode,
                       String keyIds,
                       boolean ignoreSigningKeyInResourcesCheck,
-                      boolean ignoreSignatureVerification) {
+                      boolean ignoreSignatureVerification,
+                      int memoryReportIntervalSec,
+                      boolean includeThreadListInMemoryReport) {
             this.baseDir = baseDir;
             this.appName = appName;
             this.devMode = devMode;
@@ -108,6 +114,8 @@ public abstract class ApplicationService implements Service {
             this.keyIds = List.of(keyIds.split(","));
             this.ignoreSigningKeyInResourcesCheck = ignoreSigningKeyInResourcesCheck;
             this.ignoreSignatureVerification = ignoreSignatureVerification;
+            this.memoryReportIntervalSec = memoryReportIntervalSec;
+            this.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
         }
     }
 
@@ -162,7 +170,7 @@ public abstract class ApplicationService implements Service {
             log.info("Using custom config file");
         }
 
-        MemoryReport.printPeriodically();
+        MemoryReport.printPeriodically(config.getMemoryReportIntervalSec(), config.isIncludeThreadListInMemoryReport());
 
         DevMode.setDevMode(config.isDevMode());
 

@@ -77,8 +77,6 @@ public class IdentityServiceTest {
 
     @AfterEach
     void tearDown() {
-        keyBundleService.getPersistence().flush().join();
-        identityService.getPersistence().flush().join();
     }
 
     @Test

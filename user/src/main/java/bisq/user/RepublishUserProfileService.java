@@ -50,10 +50,13 @@ public class RepublishUserProfileService implements Service {
             }
         });
         Scheduler.run(() -> {
-            KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
-            UserProfile userProfile = selectedUserIdentity.getUserProfile();
-            userIdentityService.publishUserProfile(userProfile, keyPair);
-        }).after(1, TimeUnit.MINUTES);
+                    KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
+                    UserProfile userProfile = selectedUserIdentity.getUserProfile();
+                    userIdentityService.publishUserProfile(userProfile, keyPair);
+                })
+                .host(this)
+                .runnableName("republish")
+                .after(1, TimeUnit.MINUTES);
         return CompletableFuture.completedFuture(true);
     }
 

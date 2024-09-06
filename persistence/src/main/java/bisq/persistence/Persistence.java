@@ -57,15 +57,7 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
-        return CompletableFuture.runAsync(() -> {
-            Thread.currentThread().setName("Persistence.persist-" + fileName);
-            persist(serializable);
-        }, executorService);
-    }
-
-    public CompletableFuture<Void> flush() {
-        //todo does not do anything...
-        return CompletableFuture.runAsync(() -> Thread.currentThread().setName("Flush-Persistence.persist-" + storePath), executorService);
+        return CompletableFuture.runAsync(() -> persist(serializable), executorService);
     }
 
     protected void persist(T persistableStore) {

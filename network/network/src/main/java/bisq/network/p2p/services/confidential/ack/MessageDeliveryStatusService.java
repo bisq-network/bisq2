@@ -83,7 +83,10 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     public void initialize() {
-        Scheduler.run(this::checkPending).after(1000);
+        Scheduler.run(this::checkPending)
+                .host(this)
+                .runnableName("checkPending")
+                .after(1000);
 
         networkService.addConfidentialMessageListener(this);
     }

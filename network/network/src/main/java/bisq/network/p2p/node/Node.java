@@ -19,6 +19,7 @@ package bisq.network.p2p.node;
 
 
 import bisq.common.observable.Observable;
+import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
@@ -567,7 +568,10 @@ public class Node implements Connection.Handler {
                             envelopePayloadMessage={}
                             connection={}""",
                     StringUtils.truncate(envelopePayloadMessage), connection);
-            Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION)).after(100);
+            Scheduler.run(() -> connection.shutdown(CloseReason.ORPHANED_CONNECTION))
+                    .host(this)
+                    .runnableName("shutdownOrphanedConnection")
+                    .after(100);
         }
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
@@ -667,7 +671,10 @@ public class Node implements Connection.Handler {
     }
 
     public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
-        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL)
+        return runAsync(() -> {
+            ThreadName.set(this, "closeConnection");
+            closeConnectionGracefully(connection, closeReason);
+        }, NetworkService.NETWORK_IO_POOL)
                 .orTimeout(4, SECONDS);
     }
 

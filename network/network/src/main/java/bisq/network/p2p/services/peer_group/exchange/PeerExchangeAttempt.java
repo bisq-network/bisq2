@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.observable.Observable;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.common.Address;
 import bisq.network.p2p.node.Connection;
@@ -156,6 +157,7 @@ public class PeerExchangeAttempt {
 
     private CompletableFuture<Void> doPeerExchangeAsync(Address peerAddress) {
         return supplyAsync(() -> {
+            ThreadName.set(this, "request");
             String connectionId = null;
             try {
                 Connection connection = node.getConnection(peerAddress);

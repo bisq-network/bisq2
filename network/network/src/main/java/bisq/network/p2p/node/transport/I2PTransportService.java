@@ -119,7 +119,10 @@ public class I2PTransportService implements TransportService {
         log.debug("Initialize");
 
         bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo)).periodically(1000);
+        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo))
+                .host(this)
+                .runnableName("updateStartBootstrapProgress")
+                .periodically(1000);
         bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
 
         //If embedded router, start it already ...

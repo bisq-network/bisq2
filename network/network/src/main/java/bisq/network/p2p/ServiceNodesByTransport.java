@@ -20,7 +20,9 @@ package bisq.network.p2p;
 
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.StringUtils;
 import bisq.network.SendMessageResult;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
@@ -133,7 +135,10 @@ public class ServiceNodesByTransport {
     public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() -> entry.getValue().getInitializedDefaultNode(defaultNetworkId),
+                        entry -> supplyAsync(() -> {
+                                    ThreadName.set(this, "getInitializedDefaultNode-" + entry.getKey().name());
+                                    return entry.getValue().getInitializedDefaultNode(defaultNetworkId);
+                                },
                                 NETWORK_IO_POOL)));
     }
 
@@ -158,6 +163,7 @@ public class ServiceNodesByTransport {
 
     public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
         return supplyAsync(() -> {
+            ThreadName.set(this, "supplyInitializedNode-" + StringUtils.truncate(networkId.getAddresses(), 10));
             ServiceNode serviceNode = map.get(transportType);
             if (serviceNode.isNodeInitialized(networkId)) {
                 return serviceNode.findNode(networkId).orElseThrow();

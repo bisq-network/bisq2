@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.observable.Pin;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
@@ -99,7 +100,10 @@ public class PeerExchangeService implements Node.Listener {
             Address peerAddress = connection.getPeerAddress();
             List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
             peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
-            NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
+            NETWORK_IO_POOL.submit(() -> {
+                ThreadName.set(this, "response");
+                node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection);
+            });
             log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
         }
     }
@@ -170,7 +174,10 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     public Future<Void> extendPeerGroupAsync() {
-        return CompletableFuture.runAsync(this::extendPeerGroup, NETWORK_IO_POOL);
+        return CompletableFuture.runAsync(() -> {
+            ThreadName.set(this, "extendPeerGroup");
+            extendPeerGroup();
+        }, NETWORK_IO_POOL);
     }
 
     private void extendPeerGroup() {
@@ -197,7 +204,10 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     private Future<Void> retryPeerExchangeAsync() {
-        return CompletableFuture.runAsync(this::retryPeerExchange, NETWORK_IO_POOL);
+        return CompletableFuture.runAsync(() -> {
+            ThreadName.set(this, "retryPeerExchange");
+            retryPeerExchange();
+        }, NETWORK_IO_POOL);
     }
 
     private void retryPeerExchange() {

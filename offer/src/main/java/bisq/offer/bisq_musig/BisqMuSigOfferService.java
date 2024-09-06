@@ -79,7 +79,10 @@ public class BisqMuSigOfferService implements Service {
 
         republishMyOffers();
         // Do again once we assume we better connected
-        Scheduler.run(this::republishMyOffers).after(5000, TimeUnit.MILLISECONDS);
+        Scheduler.run(this::republishMyOffers)
+                .host(this)
+                .runnableName("republishMyOffers")
+                .after(5000, TimeUnit.MILLISECONDS);
 
         return myBisqMuSigOffersService.initialize();
     }

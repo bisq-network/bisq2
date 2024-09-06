@@ -27,6 +27,7 @@ import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.platform.MemoryReport;
+import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.Identity;
@@ -140,22 +141,10 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                     networkService.addConfidentialMessageListener(this);
                     authorizedBondedRolesService.addListener(this);
 
-                    initialDelayScheduler = Scheduler.run(() -> {
-                        log.info("Start republishAuthorizedBondedRoles");
-                        republishAuthorizedBondedRoles();
-                        MemoryReport.logReport();
-                        log.info("Completed republishAuthorizedBondedRoles");
-                        log.info("Start request and publish DaoData");
-                        requestDaoData().join(); // takes about 6 minutes for 500 items
-                        MemoryReport.logReport();
-                        log.info("Completed request and publish DaoData");
-                        periodicRequestDoaDataScheduler = Scheduler.run(() -> {
-                            log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
-                            requestDaoData().join();
-                            MemoryReport.logReport();
-                            log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
-                        }).periodically(5, TimeUnit.SECONDS);
-                    }).after(60, TimeUnit.SECONDS);
+                    initialDelayScheduler = Scheduler.run(this::initialRepublish)
+                            .host(this)
+                            .runnableName("initialRepublish")
+                            .after(60, TimeUnit.SECONDS);
                 });
     }
 
@@ -227,6 +216,28 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private void initialRepublish() {
+        log.info("Start republishAuthorizedBondedRoles");
+        republishAuthorizedBondedRoles();
+        MemoryReport.logReport();
+        log.info("Completed republishAuthorizedBondedRoles");
+        log.info("Start request and publish DaoData");
+        requestDaoData().join(); // takes about 6 minutes for 500 items
+        MemoryReport.logReport();
+        log.info("Completed request and publish DaoData");
+        periodicRequestDoaDataScheduler = Scheduler.run(this::periodicRepublish)
+                .host(this)
+                .runnableName("periodicRepublish")
+                .periodically(5, TimeUnit.SECONDS);
+    }
+
+    private void periodicRepublish() {
+        log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
+        requestDaoData().join();
+        MemoryReport.logReport();
+        log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
+    }
+
     private boolean isAuthorized(AuthorizedData authorizedData) {
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER);
     }
@@ -243,6 +254,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         return CompletableFuture.supplyAsync(() -> {
+            ThreadName.set(this, "publishProofOfBurnDtoSet");
             // After v2.1.0 we can remove support for version 0 data
             log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
             Stream<AuthorizedProofOfBurnData> oldVersions = proofOfBurnList.stream()
@@ -272,6 +284,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
         return CompletableFuture.supplyAsync(() -> {
+            ThreadName.set(this, "publishBondedReputationDtoSet");
             // After v2.1.0 we can remove support for version 0 data
             log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
             Stream<AuthorizedBondedReputationData> oldVersions = bondedReputationList.stream()

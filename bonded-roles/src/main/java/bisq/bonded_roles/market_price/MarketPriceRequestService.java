@@ -25,6 +25,7 @@ import bisq.common.data.Pair;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
@@ -55,7 +56,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class MarketPriceRequestService {
-    private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceService.pool", 3);
+    private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPrice", 3);
 
     @Getter
     @ToString
@@ -191,7 +192,14 @@ public class MarketPriceRequestService {
             scheduler.stop();
             scheduler = null;
         }
-        scheduler = Scheduler.run(() -> request().whenComplete((result, throwable) -> {
+        scheduler = Scheduler.run(this::periodicRequest)
+                .host(this)
+                .runnableName("periodicRequest")
+                .periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
+    }
+
+    private void periodicRequest() {
+        request().whenComplete((result, throwable) -> {
             if (throwable != null) {
                 if (scheduler != null) {
                     scheduler.stop();
@@ -202,7 +210,7 @@ public class MarketPriceRequestService {
                 initialDelay = Math.min(30, initialDelay);
                 startRequesting();
             }
-        })).periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
+        });
     }
 
     private CompletableFuture<Void> request() {
@@ -222,6 +230,7 @@ public class MarketPriceRequestService {
         }
 
         return CompletableFuture.runAsync(() -> {
+                    ThreadName.set(this, "request");
                     Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                     BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
                     httpClient = Optional.of(client);

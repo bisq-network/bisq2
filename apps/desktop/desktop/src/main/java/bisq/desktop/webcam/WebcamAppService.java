@@ -171,21 +171,26 @@ public class WebcamAppService implements Service {
         stopSchedulers();
 
         maxStartupTimeScheduler = Optional.of(Scheduler.run(() -> {
-            if (model.getLastHeartBeatTimestamp().get() == 0) {
-                String errorMessage = "Have not received a heartbeat signal from the webcam app after " + STARTUP_TIME_TIMEOUT / 1000 + " seconds.";
-                log.warn(errorMessage);
-                model.getLocalException().set(new TimeoutException(errorMessage));
-            } else {
-                checkHeartBeatUpdateScheduler = Optional.of(Scheduler.run(() -> {
-                            long now = System.currentTimeMillis();
-                            if (now - model.getLastHeartBeatTimestamp().get() > HEART_BEAT_TIMEOUT) {
-                                String errorMessage = "The last reeceived heartbeat signal from the webcam app is older than " + HEART_BEAT_TIMEOUT / 1000 + " seconds.";
-                                log.warn(errorMessage);
-                                model.getLocalException().set(new TimeoutException(errorMessage));
-                            }
-                        })
-                        .periodically(CHECK_HEART_BEAT_INTERVAL));
-            }
-        }).after(STARTUP_TIME_TIMEOUT));
+                    if (model.getLastHeartBeatTimestamp().get() == 0) {
+                        String errorMessage = "Have not received a heartbeat signal from the webcam app after " + STARTUP_TIME_TIMEOUT / 1000 + " seconds.";
+                        log.warn(errorMessage);
+                        model.getLocalException().set(new TimeoutException(errorMessage));
+                    } else {
+                        checkHeartBeatUpdateScheduler = Optional.of(Scheduler.run(() -> {
+                                    long now = System.currentTimeMillis();
+                                    if (now - model.getLastHeartBeatTimestamp().get() > HEART_BEAT_TIMEOUT) {
+                                        String errorMessage = "The last reeceived heartbeat signal from the webcam app is older than " + HEART_BEAT_TIMEOUT / 1000 + " seconds.";
+                                        log.warn(errorMessage);
+                                        model.getLocalException().set(new TimeoutException(errorMessage));
+                                    }
+                                })
+                                .host(this)
+                                .runnableName("periodicHearBeatCheck")
+                                .periodically(CHECK_HEART_BEAT_INTERVAL));
+                    }
+                })
+                .host(this)
+                .runnableName("initialHearBeatCheck")
+                .after(STARTUP_TIME_TIMEOUT));
     }
 }

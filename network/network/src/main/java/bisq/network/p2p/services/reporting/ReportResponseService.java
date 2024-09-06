@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.platform.MemoryReport;
+import bisq.common.threading.ThreadName;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -68,7 +69,10 @@ public class ReportResponseService implements Node.Listener {
             Report report = createStorageReport();
             ReportResponse response = new ReportResponse(request.getRequestId(), report);
             log.info("Received a ReportRequest from {}", connection.getPeerAddress());
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(response, connection));
+            NetworkService.NETWORK_IO_POOL.submit(() -> {
+                ThreadName.set(this, "response");
+                node.send(response, connection);
+            });
         }
     }
 
