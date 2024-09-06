@@ -33,7 +33,7 @@ public class TorControlReader implements AutoCloseable {
 
     public void start(InputStream inputStream) {
         Thread thread = new Thread(() -> {
-            ThreadName.set(this, "start");
+            ThreadName.setName("TorControlReader.start");
             try {
                 var bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
 

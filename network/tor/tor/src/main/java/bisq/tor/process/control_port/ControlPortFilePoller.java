@@ -43,7 +43,7 @@ public class ControlPortFilePoller {
 
     private void startPoller() {
         Thread thread = new Thread(() -> {
-            ThreadName.set(this, "startPoller");
+            ThreadName.setName("ControlPortFilePoller.startPoller");
             try {
                 while (true) {
                     Optional<Integer> optionalPort = parsePortFromFile();
