@@ -30,7 +30,12 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.PopupControl;
+import javafx.scene.control.Skin;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -101,6 +106,8 @@ public class ReactionUsersPopup extends PopupControl {
                 hide();
             }
         });
+
+        maybeHideScrollbar();
     }
 
     private void showPopup() {
@@ -140,6 +147,17 @@ public class ReactionUsersPopup extends PopupControl {
                     && mouseY <= buttonBounds.getMaxY();
         }
         return !(inPopupBounds || inAreaBetweenButtonAndPopup);
+    }
+
+    private void maybeHideScrollbar() {
+        String hideScrollbarClass = "hide-vertical-scrollbar";
+        if (userProfileListView.getItems().size() <= MAX_USERS_SHOWN_AT_THE_SAME_TIME) {
+            if (!userProfileListView.getStyleClass().contains(hideScrollbarClass)) {
+                userProfileListView.getStyleClass().add(hideScrollbarClass);
+            }
+        } else {
+            userProfileListView.getStyleClass().remove(hideScrollbarClass);
+        }
     }
 
     private Callback<ListView<ListItem>, ListCell<ListItem>> getCellFactory() {
