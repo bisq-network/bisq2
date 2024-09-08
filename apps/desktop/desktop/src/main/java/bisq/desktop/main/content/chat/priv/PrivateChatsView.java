@@ -124,8 +124,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         leaveChatButton.setOnAction(e -> getController().onLeaveChat());
 
-        headerDropdownMenu.visibleProperty().bind(model.getNoOpenChats().not());
-        headerDropdownMenu.managedProperty().bind(model.getNoOpenChats().not());
+        ellipsisMenu.visibleProperty().bind(model.getNoOpenChats().not());
+        ellipsisMenu.managedProperty().bind(model.getNoOpenChats().not());
 
         tableView.visibleProperty().bind(model.getNoOpenChats().not());
         tableView.managedProperty().bind(model.getNoOpenChats().not());
@@ -144,8 +144,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         myUserProfilePin.unsubscribe();
 
         leaveChatButton.setOnAction(null);
-        headerDropdownMenu.visibleProperty().unbind();
-        headerDropdownMenu.managedProperty().unbind();
+        ellipsisMenu.visibleProperty().unbind();
+        ellipsisMenu.managedProperty().unbind();
 
         tableView.visibleProperty().unbind();
         tableView.managedProperty().unbind();
@@ -171,10 +171,10 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
                 Res.get("bisqEasy.privateChats.leave"));
         leaveChatButton.getStyleClass().add("red-menu-item");
 
-        headerDropdownMenu.clearMenuItems();
-        headerDropdownMenu.addMenuItems(helpButton, leaveChatButton);
+        ellipsisMenu.clearMenuItems();
+        ellipsisMenu.addMenuItems(helpButton, leaveChatButton);
 
-        titleHBox.getChildren().setAll(chatHeaderVBox, searchBox, headerDropdownMenu);
+        titleHBox.getChildren().setAll(chatHeaderVBox, searchBox, ellipsisMenu);
     }
 
     private void addOpenChatsSelectionList() {

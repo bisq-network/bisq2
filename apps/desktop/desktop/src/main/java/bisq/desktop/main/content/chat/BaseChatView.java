@@ -49,7 +49,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
-    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("ellipsis-v-grey", "ellipsis-v-white", true);
+    protected final DropdownMenu ellipsisMenu = new DropdownMenu("ellipsis-v-grey", "ellipsis-v-white", true);
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -75,8 +75,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         helpButton = new DropdownBisqMenuItem("icon-help-grey", "icon-help-white");
         infoButton = new DropdownBisqMenuItem("icon-info-grey", "icon-info-white",
                 Res.get("chat.dropdownMenu.channelInfo"));
-        headerDropdownMenu.addMenuItems(helpButton, infoButton);
-        headerDropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));
+        ellipsisMenu.addMenuItems(helpButton, infoButton);
+        ellipsisMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));
     }
 
     protected abstract void configTitleHBox();
