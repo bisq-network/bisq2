@@ -43,7 +43,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     private final Button cancelButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
             rejectPriceButton;
     private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay, sellerPriceDescriptionApprovalOverlay;
-    private final VBox sellerPriceApprovalOverlay;
+    private final VBox tradePhaseBox, sellerPriceApprovalOverlay;
     private final Pane sellerPriceApprovalContent;
     private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin;
 
@@ -53,6 +53,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                           HBox tradeDataHeader) {
         super(new VBox(0), model, controller);
 
+        this.tradePhaseBox = tradePhaseBox;
         cancelButton = new Button();
         cancelButton.setMinWidth(160);
         cancelButton.getStyleClass().add("outlined-button");
@@ -131,6 +132,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     @Override
     protected void onViewAttached() {
+        tradePhaseBox.visibleProperty().bind(model.getIsTradeCompleted().not());
+        tradePhaseBox.managedProperty().bind(model.getIsTradeCompleted().not());
         reportToMediatorButton.visibleProperty().bind(model.getShowReportToMediatorButton());
         reportToMediatorButton.managedProperty().bind(model.getShowReportToMediatorButton());
         isInMediationHBox.visibleProperty().bind(model.getIsInMediation());
@@ -189,6 +192,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     @Override
     protected void onViewDetached() {
+        tradePhaseBox.visibleProperty().unbind();
+        tradePhaseBox.managedProperty().unbind();
         reportToMediatorButton.visibleProperty().unbind();
         reportToMediatorButton.managedProperty().unbind();
         isInMediationHBox.visibleProperty().unbind();

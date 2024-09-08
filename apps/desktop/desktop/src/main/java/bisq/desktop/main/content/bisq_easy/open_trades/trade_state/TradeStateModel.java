@@ -53,6 +53,7 @@ public class TradeStateModel implements Model {
     private final BooleanProperty hasBuyerAcceptedSellersPriceSpec = new SimpleBooleanProperty();
     private final StringProperty buyerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
     private final StringProperty sellerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
+    private final BooleanProperty isTradeCompleted = new SimpleBooleanProperty();
 
     void resetAll() {
         reset();
@@ -76,5 +77,6 @@ public class TradeStateModel implements Model {
         hasBuyerAcceptedSellersPriceSpec.set(false);
         buyerPriceDescriptionApprovalOverlay.set(null);
         sellerPriceDescriptionApprovalOverlay.set(null);
+        isTradeCompleted.set(false);
     }
 }
