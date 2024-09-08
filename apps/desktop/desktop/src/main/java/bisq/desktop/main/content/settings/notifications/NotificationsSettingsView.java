@@ -33,8 +33,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class NotificationsSettingsView extends View<VBox, NotificationsSettingsModel, NotificationsSettingsController> {
-    private static final double TEXT_FIELD_WIDTH = 500;
-
     private final Button clearNotifications;
     private final Switch notifyForPreRelease, useTransientNotifications;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();

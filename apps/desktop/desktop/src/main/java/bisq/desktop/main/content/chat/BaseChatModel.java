@@ -57,11 +57,9 @@ public abstract class BaseChatModel extends NavigationModel {
         switch (chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK:
             case BISQ_EASY_OPEN_TRADES:
-            case BISQ_EASY_PRIVATE_CHAT:
                 helpTitle = Res.get("chat.topMenu.tradeGuide.tooltip");
                 break;
             case DISCUSSION:
-            case EVENTS:
             case SUPPORT:
             default:
                 helpTitle = Res.get("chat.topMenu.chatRules.tooltip");
