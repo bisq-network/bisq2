@@ -80,37 +80,67 @@ public class BisqEasyTradeAmountLimits {
     }
 
 
-    public static Result checkOfferAmountLimits(ReputationService reputationService,
-                                                BisqEasyService bisqEasyService,
-                                                UserIdentityService userIdentityService,
-                                                UserProfileService userProfileService,
-                                                MarketPriceService marketPriceService,
-                                                BisqEasyOffer peersOffer) {
-        return findRequiredReputationScoreForOffer(marketPriceService, peersOffer)
+    public static Optional<Result> checkOfferAmountLimitForMinAmount(ReputationService reputationService,
+                                                                            BisqEasyService bisqEasyService,
+                                                                            UserIdentityService userIdentityService,
+                                                                            UserProfileService userProfileService,
+                                                                            MarketPriceService marketPriceService,
+                                                                            BisqEasyOffer peersOffer) {
+        return findRequiredReputationScoreForMinAmount(marketPriceService, peersOffer)
                 .map(requiredReputationScore -> {
-                    UserProfile sellersUserProfile = peersOffer.getTakersDirection().isBuy()
-                            ? userProfileService.findUserProfile(peersOffer.getMakersUserProfileId()).orElseThrow()
-                            : userIdentityService.getSelectedUserIdentity().getUserProfile();
-                    long reputationScore = reputationService.getReputationScore(sellersUserProfile).getTotalScore();
-                    Result result;
-                    if (reputationScore >= requiredReputationScore) {
-                        result = Result.MATCH_SCORE;
-                    } else if (withTolerance(reputationScore) >= requiredReputationScore) {
-                        result = Result.MATCH_TOLERATED_SCORE;
-                    } else if (requiredReputationScore <= MIN_REPUTAION_SCORE) {
-                        result = Result.MATCH_MIN_SCORE;
-                    } else {
-                        result = Result.SCORE_TOO_LOW;
-                    }
-                    result.setRequiredReputationScore(requiredReputationScore);
-                    return result;
-                })
-                .orElse(Result.SCORE_TOO_LOW);
+                    long sellersReputationScore = getSellersReputationScore(reputationService, userIdentityService, userProfileService, peersOffer);
+                    return getResult(sellersReputationScore, requiredReputationScore);
+                });
     }
 
-    private static Optional<Long> findRequiredReputationScoreForOffer(MarketPriceService marketPriceService,
-                                                                      BisqEasyOffer offer) {
+    public static Optional<Result> checkOfferAmountLimitForMaxOrFixedAmount(ReputationService reputationService,
+                                                                            BisqEasyService bisqEasyService,
+                                                                            UserIdentityService userIdentityService,
+                                                                            UserProfileService userProfileService,
+                                                                            MarketPriceService marketPriceService,
+                                                                            BisqEasyOffer peersOffer) {
+        return findRequiredReputationScoreForMaxOrFixedAmount(marketPriceService, peersOffer)
+                .map(requiredReputationScore -> {
+                    long sellersReputationScore = getSellersReputationScore(reputationService, userIdentityService, userProfileService, peersOffer);
+                    return getResult(sellersReputationScore, requiredReputationScore);
+                });
+    }
+
+    private static long getSellersReputationScore(ReputationService reputationService,
+                                                  UserIdentityService userIdentityService,
+                                                  UserProfileService userProfileService,
+                                                  BisqEasyOffer peersOffer) {
+        UserProfile sellersUserProfile = peersOffer.getTakersDirection().isBuy()
+                ? userProfileService.findUserProfile(peersOffer.getMakersUserProfileId()).orElseThrow()
+                : userIdentityService.getSelectedUserIdentity().getUserProfile();
+        return reputationService.getReputationScore(sellersUserProfile).getTotalScore();
+    }
+
+    private static Result getResult(long sellersReputationScore,
+                                    long requiredReputationScore) {
+        Result result;
+        if (sellersReputationScore >= requiredReputationScore) {
+            result = Result.MATCH_SCORE;
+        } else if (withTolerance(sellersReputationScore) >= requiredReputationScore) {
+            result = Result.MATCH_TOLERATED_SCORE;
+        } else if (requiredReputationScore <= MIN_REPUTAION_SCORE) {
+            result = Result.MATCH_MIN_SCORE;
+        } else {
+            result = Result.SCORE_TOO_LOW;
+        }
+        result.setRequiredReputationScore(requiredReputationScore);
+        return result;
+    }
+
+    private static Optional<Long> findRequiredReputationScoreForMaxOrFixedAmount(MarketPriceService marketPriceService,
+                                                                                 BisqEasyOffer offer) {
         return OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, offer)
+                .flatMap(fiatAmount -> findRequiredReputationScoreByFiatAmount(marketPriceService, offer.getMarket(), fiatAmount));
+    }
+
+    private static Optional<Long> findRequiredReputationScoreForMinAmount(MarketPriceService marketPriceService,
+                                                                          BisqEasyOffer offer) {
+        return OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, offer)
                 .flatMap(fiatAmount -> findRequiredReputationScoreByFiatAmount(marketPriceService, offer.getMarket(), fiatAmount));
     }
 

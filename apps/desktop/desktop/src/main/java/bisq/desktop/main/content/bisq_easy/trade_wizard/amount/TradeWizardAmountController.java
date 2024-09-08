@@ -475,12 +475,14 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            return BisqEasyTradeAmountLimits.checkOfferAmountLimits(reputationService,
-                    bisqEasyService,
-                    userIdentityService,
-                    userProfileService,
-                    marketPriceService,
-                    peersOffer).isValid();
+            return BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
+                            bisqEasyService,
+                            userIdentityService,
+                            userProfileService,
+                            marketPriceService,
+                            peersOffer)
+                    .map(BisqEasyTradeAmountLimits.Result::isValid)
+                    .orElse(false);
         } catch (Throwable t) {
             log.error("Error at TakeOfferPredicate", t);
             return false;
