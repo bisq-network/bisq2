@@ -103,7 +103,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         createOfferButton.setMinSize(Button.USE_PREF_SIZE, Button.USE_PREF_SIZE);
 
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
-        titleHBox.getChildren().setAll(headerTitle, createOfferButton, ellipsisMenu);
+        titleHBox.getChildren().setAll(headerTitle, createOfferButton, ellipsisMenu, notificationSettingsMenu);
     }
 
     @Override
