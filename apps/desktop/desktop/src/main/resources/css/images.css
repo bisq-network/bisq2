@@ -732,10 +732,6 @@
 /* Icons */
 /* ------------------------------------------------------------------------------------ */
 
-#icon-bell {
-    -fx-image: url("/images/icons/icon-bell.png");
-}
-
 #icon-bell-grey {
     -fx-image: url("/images/icons/icon-bell-grey.png");
 }
