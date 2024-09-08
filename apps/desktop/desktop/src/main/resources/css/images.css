@@ -736,6 +736,18 @@
     -fx-image: url("/images/icons/icon-bell.png");
 }
 
+#icon-bell-grey {
+    -fx-image: url("/images/icons/icon-bell-grey.png");
+}
+
+#icon-bell-white {
+    -fx-image: url("/images/icons/icon-bell-white.png");
+}
+
+#icon-bell-green {
+    -fx-image: url("/images/icons/icon-bell-green.png");
+}
+
 #icon-info-white {
     -fx-image: url("/images/icons/icon-info-white.png");
 }
