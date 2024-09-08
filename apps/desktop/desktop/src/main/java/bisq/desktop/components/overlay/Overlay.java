@@ -157,7 +157,6 @@ public abstract class Overlay<T extends Overlay<T>> {
     private boolean showBusyAnimation;
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
-    protected boolean disableActionButton;
     protected boolean useBgEffect = true;
     @Getter
     protected final BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
@@ -191,7 +190,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Transitions.Type transitionsType;
     protected int maxChar = 2200;
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
-    private final ChangeListener<Scene>   sceneListener = (observable, oldValue, newValue) -> {
+    private final ChangeListener<Scene> sceneListener = (observable, oldValue, newValue) -> {
         if (oldValue != null && newValue == null) {
             hide();
         }
@@ -553,11 +552,6 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T setHeadlineStyle(String headlineStyle) {
         this.headlineStyle = headlineStyle;
-        return cast();
-    }
-
-    public T disableActionButton() {
-        this.disableActionButton = true;
         return cast();
     }
 
@@ -1053,37 +1047,31 @@ public abstract class Overlay<T extends Overlay<T>> {
         GridPane.setMargin(buttonBox, new Insets(buttonDistance, 0, 0, 0));
         gridPane.add(buttonBox, 0, gridPane.getRowCount(), 2, 1);
 
-        if (actionHandlerOptional.isPresent() || actionButtonText != null) {
+        boolean useActionButton = actionHandlerOptional.isPresent() || actionButtonText != null;
+        if (useActionButton) {
             actionButton = new Button(actionButtonText == null ? Res.get("confirmation.ok") : actionButtonText);
-
-            if (!disableActionButton)
-                actionButton.setDefaultButton(true);
-            else
-                actionButton.setDisable(true);
 
             HBox.setHgrow(actionButton, Priority.SOMETIMES);
             actionButton.setDefaultButton(true);
 
-            if (!disableActionButton) {
-                actionButton.setOnAction(event -> {
-                    if (doCloseOnAction) {
-                        hide();
-                    }
-                    actionHandlerOptional.ifPresent(Runnable::run);
-                });
-            }
-
-            if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
-                secondaryActionButton = new Button(secondaryActionButtonText);
-                secondaryActionButton.setOnAction(event -> {
-                    if (doCloseOnSecondaryAction) {
-                        hide();
-                    }
-                    secondaryActionHandlerOptional.ifPresent(Runnable::run);
-                });
-            }
-
-        } else if (!hideCloseButton) {
+            actionButton.setOnAction(event -> {
+                if (doCloseOnAction) {
+                    hide();
+                }
+                actionHandlerOptional.ifPresent(Runnable::run);
+            });
+        }
+        boolean useSecondaryActionButton = secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent();
+        if (useSecondaryActionButton) {
+            secondaryActionButton = new Button(secondaryActionButtonText);
+            secondaryActionButton.setOnAction(event -> {
+                if (doCloseOnSecondaryAction) {
+                    hide();
+                }
+                secondaryActionHandlerOptional.ifPresent(Runnable::run);
+            });
+        }
+        if (!useActionButton && !useSecondaryActionButton && !hideCloseButton) {
             closeButton.setDefaultButton(true);
         }
 

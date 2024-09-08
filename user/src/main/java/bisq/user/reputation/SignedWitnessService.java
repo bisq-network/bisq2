@@ -54,7 +54,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @Slf4j
 public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> implements PersistenceClient<SignedWitnessStore> {
-    public static final double WEIGHT = 5;
+    public static final double WEIGHT = 10;
     public static final long MAX_DAYS_AGE_SCORE = 2000;
 
     // Has to be in sync with Bisq1 class

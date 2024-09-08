@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -53,9 +54,11 @@ public class TakeOfferController extends NavigationController implements InitWit
     @ToString
     public static class InitData {
         private final BisqEasyOffer bisqEasyOffer;
+        private final Optional<Monetary> takerAsSellersMaxAllowedAmount;
 
-        public InitData(BisqEasyOffer bisqEasyOffer) {
+        public InitData(BisqEasyOffer bisqEasyOffer, Optional<Monetary> takerAsSellersMaxAllowedAmount) {
             this.bisqEasyOffer = bisqEasyOffer;
+            this.takerAsSellersMaxAllowedAmount = takerAsSellersMaxAllowedAmount;
         }
     }
 
@@ -91,7 +94,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     public void initWithData(InitData initData) {
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
-        takeOfferAmountController.init(bisqEasyOffer);
+        takeOfferAmountController.init(bisqEasyOffer,initData.getTakerAsSellersMaxAllowedAmount());
         takeOfferPaymentController.init(bisqEasyOffer);
         takeOfferReviewController.init(bisqEasyOffer);
 

@@ -31,7 +31,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -476,11 +475,14 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            return BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
-                    bisqEasyService,
-                    userIdentityService,
-                    userProfileService,
-                    peersOffer);
+            return BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
+                            bisqEasyService,
+                            userIdentityService,
+                            userProfileService,
+                            marketPriceService,
+                            peersOffer)
+                    .map(BisqEasyTradeAmountLimits.Result::isValid)
+                    .orElse(false);
         } catch (Throwable t) {
             log.error("Error at TakeOfferPredicate", t);
             return false;
@@ -492,19 +494,21 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void applyMinMaxRange() {
-        String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
-        ReputationScore myReputationScore = reputationService.getReputationScore(myProfileId);
-        BisqEasyTradeAmountLimits.getMinQuoteSideTradeAmount(marketPriceService, model.getMarket()).ifPresent(minRangeValue -> {
-            if (model.getDirection().isBuy()) {
-                Monetary maxRangeValue = BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
-                minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
-                maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
-            } else {
-                BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, model.getMarket(), myReputationScore).ifPresent(maxRangeValue -> {
-                    minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
-                    maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+        BisqEasyTradeAmountLimits.getMinQuoteSideTradeAmount(marketPriceService, model.getMarket())
+                .ifPresent(minRangeValue -> {
+                    if (model.getDirection().isBuy()) {
+                        Monetary maxRangeValue = BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
+                        minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                        maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                    } else {
+                        String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
+                        ReputationScore myReputationScore = reputationService.getReputationScore(myProfileId);
+                        BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, model.getMarket(), myReputationScore.getTotalScore())
+                                .ifPresent(maxRangeValue -> {
+                                    minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                                    maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                                });
+                    }
                 });
-            }
-        });
     }
 }

@@ -18,11 +18,13 @@
 package bisq.rest_api;
 
 import bisq.application.Executable;
+import bisq.common.threading.ThreadName;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RestApiApp extends Executable<RestApiApplicationService> {
     public static void main(String[] args) {
+        ThreadName.set(RestApiApp.class, "main");
         new RestApiApp(args);
     }
 

@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyService;
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
@@ -29,7 +30,6 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -314,11 +314,14 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
-                        bisqEasyService,
-                        userIdentityService,
-                        userProfileService,
-                        peersOffer)) {
+                if (!BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
+                                bisqEasyService,
+                                userIdentityService,
+                                userProfileService,
+                                marketPriceService,
+                                peersOffer)
+                        .map(BisqEasyTradeAmountLimits.Result::isValid)
+                        .orElse(false)) {
                     return false;
                 }
 

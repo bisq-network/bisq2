@@ -1,6 +1,7 @@
 package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bisq_easy.BisqEasyService;
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.*;
@@ -21,6 +22,7 @@ import bisq.chat.pub.PublicChatMessage;
 import bisq.chat.reactions.*;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
+import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -30,15 +32,15 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
+import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.options.OfferOptionUtil;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -63,6 +65,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.Result.*;
 import static bisq.chat.ChatMessageType.TAKE_BISQ_EASY_OFFER;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -274,6 +277,12 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         checkArgument(!model.isMyMessage(bisqEasyOfferbookMessage), "tradeChatMessage must not be mine");
 
         UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+
+        if (bannedUserService.isUserProfileBanned(bisqEasyOfferbookMessage.getAuthorUserProfileId()) ||
+                bannedUserService.isUserProfileBanned(userProfile)) {
+            return;
+        }
+
         NetworkId takerNetworkId = userProfile.getNetworkId();
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
@@ -282,34 +291,73 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             return;
         }
 
-        if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+        Optional<BisqEasyTradeAmountLimits.Result> limitForMinAmount = BisqEasyTradeAmountLimits.checkOfferAmountLimitForMinAmount(reputationService,
                 bisqEasyService,
                 userIdentityService,
                 userProfileService,
-                bisqEasyOffer)) {
-            if (bisqEasyOffer.getDirection().isSell()) {
-                long makerAsSellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
+                marketPriceService,
+                bisqEasyOffer);
+        Optional<BisqEasyTradeAmountLimits.Result> limitForMaxAmount = BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
+                bisqEasyService,
+                userIdentityService,
+                userProfileService,
+                marketPriceService,
+                bisqEasyOffer);
+        if (limitForMaxAmount.isPresent()) {
+            BisqEasyTradeAmountLimits.Result maxAmountResult = limitForMaxAmount.get();
+            BisqEasyTradeAmountLimits.Result minAmountResult = limitForMinAmount.orElse(maxAmountResult);
+            String minFiatAmount = OfferAmountFormatter.formatQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer, true);
+            String maxFiatAmount = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer, true);
+            long requiredReputationScoreForMinAmount = minAmountResult.getRequiredReputationScore();
+            long requiredReputationScoreForMaxAmount = maxAmountResult.getRequiredReputationScore();
+            long sellersScore;
+            if (bisqEasyOffer.getTakersDirection().isBuy()) {
+                // I am as taker the buyer. We check if sellers offer matches the limits
+                sellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                         .map(reputationService::getReputationScore)
                         .map(ReputationScore::getTotalScore)
                         .orElse(0L);
-                long myMinRequiredScore = bisqEasyService.getMinRequiredReputationScore().get();
-                new Popup().information(Res.get("chat.message.takeOffer.makersReputationScoreTooLow.warn",
-                        myMinRequiredScore, makerAsSellersScore)).show();
+
+                if (maxAmountResult == SCORE_TOO_LOW) {
+                    new Popup()
+                            .headline(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.headline"))
+                            .warning(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.warning",
+                                    sellersScore, requiredReputationScoreForMaxAmount, minFiatAmount))
+                            .show();
+                } else if (maxAmountResult == MATCH_MIN_SCORE) {
+                    new Popup()
+                            .headline(Res.get("chat.message.takeOffer.buyer.makersReputationTooLowButInLowAmountTolerance.headline"))
+                            .warning(Res.get("chat.message.takeOffer.buyer.makersReputationTooLowButInLowAmountTolerance.warning",
+                                    sellersScore, requiredReputationScoreForMaxAmount, minFiatAmount))
+                            .closeButtonText(Res.get("chat.message.takeOffer.buyer.makersReputationTooLowButInLowAmountTolerance.no"))
+                            .secondaryActionButtonText(Res.get("chat.message.takeOffer.buyer.makersReputationTooLowButInLowAmountTolerance.yes"))
+                            .onSecondaryAction(() -> Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty())))
+                            .show();
+                } else {
+                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty()));
+                }
             } else {
-                long myScoreAsSeller = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
-                long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(bisqEasyOffer).orElse(0L);
-                new Popup().information(Res.get("chat.message.takeOffer.myReputationScoreTooLow.warn",
-                        offersRequiredScore, myScoreAsSeller)).show();
+                //  I am as taker the seller. We check if my reputation permits to take the offer
+                sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
+                if (minAmountResult == SCORE_TOO_LOW) {
+                    new Popup()
+                            .headline(Res.get("chat.message.takeOffer.seller.myReputationScoreTooLow.headline"))
+                            .warning(Res.get("chat.message.takeOffer.seller.myReputationScoreTooLow.warning",
+                                    sellersScore, requiredReputationScoreForMinAmount, minFiatAmount)).show();
+                } else {
+                    Optional<Monetary> myMaxAllowedAmount = BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, bisqEasyOffer.getMarket(), sellersScore);
+                    Monetary offersMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
+                    if (myMaxAllowedAmount.isPresent() && offersMaxAmount.isGreaterThan(myMaxAllowedAmount.get())) {
+                        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, myMaxAllowedAmount));
+                    } else {
+                        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty()));
+                    }
+
+                }
             }
-            return;
+        } else {
+            log.warn("limitForMinAmount or limitForMaxAmount is not present. limitForMinAmount={}; limitForMaxAmount={}", limitForMinAmount, limitForMaxAmount);
         }
-
-        if (bannedUserService.isUserProfileBanned(bisqEasyOfferbookMessage.getAuthorUserProfileId()) ||
-                bannedUserService.isUserProfileBanned(userProfile)) {
-            return;
-        }
-
-        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
     }
 
     public void onDeleteMessage(ChatMessage chatMessage) {

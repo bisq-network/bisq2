@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
@@ -32,7 +31,6 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -42,20 +40,20 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.identity.UserIdentity;
-import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationService;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public class BisqEasyServiceUtil {
     public static boolean isMaker(ServiceProvider serviceProvider, BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(serviceProvider.getUserService().getUserIdentityService().getMyUserProfileIds());
     }
 
-    public static Optional<BisqEasyTrade> findTradeFromChannel(ServiceProvider serviceProvider, BisqEasyOpenTradeChannel channel) {
+    public static Optional<BisqEasyTrade> findTradeFromChannel(ServiceProvider serviceProvider,
+                                                               BisqEasyOpenTradeChannel channel) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         boolean maker = isMaker(serviceProvider, bisqEasyOffer);
@@ -63,28 +61,6 @@ public class BisqEasyServiceUtil {
         NetworkId takerNetworkId = maker ? peerUserProfile.getNetworkId() : myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
         return serviceProvider.getTradeService().getBisqEasyTradeService().findTrade(tradeId);
-    }
-
-    public static boolean offerMatchesMinRequiredReputationScore(ReputationService reputationService,
-                                                                 BisqEasyService bisqEasyService,
-                                                                 UserIdentityService userIdentityService,
-                                                                 UserProfileService userProfileService,
-                                                                 BisqEasyOffer peersOffer) {
-        if (peersOffer.getDirection().isSell()) {
-            Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
-            if (optionalMakersUserProfile.isEmpty()) {
-                return false;
-            }
-            long makerAsSellersScore = reputationService.getReputationScore(optionalMakersUserProfile.get()).getTotalScore();
-            long myMinRequiredScore = bisqEasyService.getMinRequiredReputationScore().get();
-            // Maker as seller's score must be > than my required score (as buyer)
-            return makerAsSellersScore >= myMinRequiredScore;
-        } else {
-            // My score (as offer is a buy offer, I am the seller) must be > as offers required score
-            long myScoreAsSeller = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
-            long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer).orElse(0L);
-            return myScoreAsSeller >= offersRequiredScore;
-        }
     }
 
     public static String createBasicOfferBookMessage(MarketPriceService marketPriceService,

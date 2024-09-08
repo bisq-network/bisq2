@@ -56,7 +56,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @Slf4j
 public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore>, AuthorizedBondedRolesService.Listener {
-    public static final long WEIGHT = 2;
+    public static final long WEIGHT = 4;
     public static final long MAX_DAYS_AGE_SCORE = 2000;
 
     // Has to be in sync with Bisq1 class
