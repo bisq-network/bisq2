@@ -26,13 +26,13 @@ import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.options.OfferOptionUtil;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -40,12 +40,12 @@ import java.util.Optional;
 @Slf4j
 public class BisqEasyTradeAmountLimits {
     public static final Coin DEFAULT_MIN_BTC_TRADE_AMOUNT = Coin.asBtcFromValue(10000); // 0.0001 BTC
-    public static final Coin DEFAULT_MAX_BTC_TRADE_AMOUNT = Coin.asBtcFromValue(500000); // 0.005 BTC
+    public static final Coin DEFAULT_MAX_BTC_TRADE_AMOUNT = Coin.asBtcFromValue(250000); // 0.0025 BTC // 150 USD @ 60k price
     public static final Fiat DEFAULT_MIN_USD_TRADE_AMOUNT = Fiat.fromFaceValue(6, "USD");
-    public static final Fiat DEFAULT_MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(300, "USD");
     public static final Fiat MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(600, "USD");
     public static final Fiat MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION = Fiat.fromFaceValue(25, "USD");
-    private static final double REPUTAION_FACTOR = 1 / 200d;
+    private static final double REQUIRED_REPUTAION_SCORE_PER_USD = 200d;
+    private static final long MIN_REPUTAION_SCORE = 5000;
     public static final double TOLERANCE = 0.1;
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
@@ -62,18 +62,14 @@ public class BisqEasyTradeAmountLimits {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
                 .map(priceQuote -> priceQuote.toBaseSideMonetary(maxUsdTradeAmount))
                 .flatMap(defaultMaxBtcTradeAmount -> marketPriceService.findMarketPriceQuote(market)
-                        .map(priceQuote -> {
-                            Monetary quoteSideMonetary = priceQuote.toQuoteSideMonetary(defaultMaxBtcTradeAmount);
-                            // quoteSideMonetary= Monetary.from(quoteSideMonetary,quoteSideMonetary.getValue()-10000*20);
-                            return quoteSideMonetary;
-                        }));
+                        .map(priceQuote -> priceQuote.toQuoteSideMonetary(defaultMaxBtcTradeAmount)));
     }
 
     // TODO add BSQ/USD price into calculation to take into account the value of the investment (at burn time)
     private static Fiat getMaxUsdTradeAmount(long totalScore) {
         // A reputation score of 30k gives a max trade amount of 150 USD
         // Upper limit is 600 USD
-        long value = Math.min(MAX_USD_TRADE_AMOUNT.getValue(), MathUtils.roundDoubleToLong(totalScore * REPUTAION_FACTOR));
+        long value = Math.min(MAX_USD_TRADE_AMOUNT.getValue(), MathUtils.roundDoubleToLong(totalScore / REQUIRED_REPUTAION_SCORE_PER_USD));
         Fiat maxUsdTradeAmount = Fiat.fromFaceValue(value, "USD");
 
         // We tolerate up to 25 USD trade amount for users with no or low reputation (< 5000)
@@ -84,118 +80,82 @@ public class BisqEasyTradeAmountLimits {
     }
 
 
-    public static OfferAmountLimitsResult checkOfferAmountLimits(ReputationService reputationService,
-                                                                 BisqEasyService bisqEasyService,
-                                                                 UserIdentityService userIdentityService,
-                                                                 UserProfileService userProfileService,
-                                                                 MarketPriceService marketPriceService,
-                                                                 BisqEasyOffer peersOffer) {
-        // From v2.1.1 on, we check if the max or fix amount of the offer is not exceeding the reputation-based limit.
-        // Otherwise, we stick with the pre v2.1.1 checks, so that old offers do not pose a security risk.
-        UserProfile makersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId()).orElseThrow();
-        ReputationScore makersReputationScore = reputationService.getReputationScore(makersUserProfile);
-
-        Market market = peersOffer.getMarket();
-        String offerId = peersOffer.getId();
-        if (peersOffer.getTakersDirection().isBuy()) {
-            // Taker as buyer
-            long makersMaxAllowedQuoteSideTradeAmount = getMaxQuoteSideTradeAmount(marketPriceService, market, makersReputationScore)
-                    .map(Monetary::getValue)
-                    .orElse(0L);
-            long offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer)
-                    .map(Monetary::getValue)
-                    .orElse(0L);
-            if (makersMaxAllowedQuoteSideTradeAmount >= offersQuoteSideMaxOrFixedAmount) {
-                return OfferAmountLimitsResult.TAKER_AS_BUYER_AMOUNT_MATCH_LIMIT;
-            } else {
-                double makersLimitWithTolerance = MathUtils.roundDoubleToLong(makersMaxAllowedQuoteSideTradeAmount * (1 + TOLERANCE));
-                if (makersLimitWithTolerance >= offersQuoteSideMaxOrFixedAmount) {
-                    log.info("QuoteSideMaxOrFixedAmount of offer with ID {} is below the makersMaxAllowedQuoteSideTradeAmount with a 10% tolerance. " +
-                                    "makersLimitWithTolerance={}; offersQuoteSideMaxOrFixedAmount={}",
-                            offerId, makersLimitWithTolerance, offersQuoteSideMaxOrFixedAmount);
-                    return OfferAmountLimitsResult.TAKER_AS_BUYER_AMOUNT_MATCH_TOLERANCE;
-                } else {
-                    // TODO Can be removed once most users have updated to 2.1.1.
-                    // We have either a pre v2.1.1 offer or the offer was manipulated with a higher as allowed amount and is outside the tolerance (or the
-                    // reputation data was not well distributed, resulting in different reputation scores of me and the peer).
-                    log.warn("quoteSideMaxOrFixedAmount of offer with ID {} is above the makersMaxAllowedQuoteSideTradeAmount with a 10% tolerance. " +
-                                    "makersLimitWithTolerance={}; offersQuoteSideMaxOrFixedAmount={}",
-                            offerId, makersLimitWithTolerance, offersQuoteSideMaxOrFixedAmount);
-                    long makerAsSellersScore = reputationService.getReputationScore(makersUserProfile).getTotalScore();
-                    long myMinRequiredScore = bisqEasyService.getMinRequiredReputationScore().get();
-                    boolean result = makerAsSellersScore >= myMinRequiredScore;
-                    if (result) {
-                        return OfferAmountLimitsResult.TAKER_AS_BUYER_AMOUNT_MATCH_MIN_REQ_REP_SCORE;
+    public static Result checkOfferAmountLimits(ReputationService reputationService,
+                                                BisqEasyService bisqEasyService,
+                                                UserIdentityService userIdentityService,
+                                                UserProfileService userProfileService,
+                                                MarketPriceService marketPriceService,
+                                                BisqEasyOffer peersOffer) {
+        return findRequiredReputationScoreForOffer(marketPriceService, peersOffer)
+                .map(requiredReputationScore -> {
+                    UserProfile sellersUserProfile = peersOffer.getTakersDirection().isBuy()
+                            ? userProfileService.findUserProfile(peersOffer.getMakersUserProfileId()).orElseThrow()
+                            : userIdentityService.getSelectedUserIdentity().getUserProfile();
+                    long reputationScore = reputationService.getReputationScore(sellersUserProfile).getTotalScore();
+                    Result result;
+                    if (reputationScore >= requiredReputationScore) {
+                        result = Result.MATCH_SCORE;
+                    } else if (withTolerance(reputationScore) >= requiredReputationScore) {
+                        result = Result.MATCH_TOLERATED_SCORE;
+                    } else if (requiredReputationScore <= MIN_REPUTAION_SCORE) {
+                        result = Result.MATCH_MIN_SCORE;
                     } else {
-                        log.warn("makerAsSellersScore of offer with ID {} is below myMinRequiredScore. " +
-                                        "makerAsSellersScore={}; myMinRequiredScore={}; makersMaxAllowedQuoteSideTradeAmount={}",
-                                offerId, makerAsSellersScore, myMinRequiredScore, makersMaxAllowedQuoteSideTradeAmount);
-                        return OfferAmountLimitsResult.TAKER_AS_BUYER_AMOUNT_NOT_MATCH_MIN_REQ_REP_SCORE;
+                        result = Result.SCORE_TOO_LOW;
                     }
-                }
-            }
-        } else {
-            // Taker as seller
-            ReputationScore myReputationScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile());
-            long myMaxAllowedQuoteSideTradeAmount = getMaxQuoteSideTradeAmount(marketPriceService, market, myReputationScore)
-                    .map(Monetary::getValue)
-                    .orElse(0L);
-            long offersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer)
-                    .map(Monetary::getValue)
-                    .orElse(0L);
-
-            if (myMaxAllowedQuoteSideTradeAmount >= offersQuoteSideMinOrFixedAmount) {
-                return OfferAmountLimitsResult.TAKER_AS_SELLER_AMOUNT_MATCH_LIMIT;
-            } else {
-                double myLimitWithTolerance = MathUtils.roundDoubleToLong(myMaxAllowedQuoteSideTradeAmount * (1 + TOLERANCE));
-                if (myLimitWithTolerance >= offersQuoteSideMinOrFixedAmount) {
-                    log.info("QuoteSideMinOrFixedAmount of offer with ID {} is below the myMaxAllowedQuoteSideTradeAmount with a 10% tolerance. " +
-                                    "myLimitWithTolerance={}; offersQuoteSideMinOrFixedAmount={}",
-                            offerId, myLimitWithTolerance, offersQuoteSideMinOrFixedAmount);
-                    return OfferAmountLimitsResult.TAKER_AS_SELLER_AMOUNT_MATCH_TOLERANCE;
-                } else {
-                    // TODO Can be removed once most users have updated to 2.1.1.
-                    // We have either a pre v2.1.1 offer or the offer was manipulated with a higher as allowed min amount and is outside the tolerance (or the
-                    // reputation data was not well distributed, resulting in different reputation scores of me and the peer).
-                    log.warn("QuoteSideMinOrFixedAmount of offer with ID {} is above the myMaxAllowedQuoteSideTradeAmount with a 10% tolerance. " +
-                                    "myLimitWithTolerance={}; offersQuoteSideMinOrFixedAmount={}",
-                            offerId, myLimitWithTolerance, offersQuoteSideMinOrFixedAmount);
-                    long myScoreAsSeller = myReputationScore.getTotalScore();
-                    long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer).orElse(0L);
-                    if (myScoreAsSeller >= offersRequiredScore) {
-                        return OfferAmountLimitsResult.TAKER_AS_SELLER_AMOUNT_MATCH_MIN_REQ_REP_SCORE;
-                    } else {
-                        log.warn("RequiredScore of offer with ID {} is above myScoreAsSeller. " +
-                                        "offersRequiredScore={}; myScoreAsSeller={}",
-                                offerId, offersRequiredScore, myScoreAsSeller);
-                        return OfferAmountLimitsResult.TAKER_AS_SELLER_AMOUNT_NOT_MATCH_MIN_REQ_REP_SCORE;
-                    }
-                }
-            }
-        }
+                    result.setRequiredReputationScore(requiredReputationScore);
+                    return result;
+                })
+                .orElse(Result.SCORE_TOO_LOW);
     }
+
+    private static Optional<Long> findRequiredReputationScoreForOffer(MarketPriceService marketPriceService,
+                                                                      BisqEasyOffer offer) {
+        return OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, offer)
+                .flatMap(fiatAmount -> findRequiredReputationScoreByFiatAmount(marketPriceService, offer.getMarket(), fiatAmount));
+    }
+
+    private static Optional<Long> findRequiredReputationScoreByFiatAmount(MarketPriceService marketPriceService,
+                                                                          Market market,
+                                                                          Monetary fiatAmount) {
+        return fiatToBtc(marketPriceService, market, fiatAmount)
+                .flatMap(btc -> btcToUsd(marketPriceService, btc))
+                .map(BisqEasyTradeAmountLimits::getRequiredReputationScoreByUsdAmount);
+    }
+
+    private static Optional<Monetary> fiatToBtc(MarketPriceService marketPriceService,
+                                                Market market,
+                                                Monetary fiatAmount) {
+        return marketPriceService.findMarketPriceQuote(market)
+                .map(btcFiatPriceQuote -> btcFiatPriceQuote.toBaseSideMonetary(fiatAmount));
+    }
+
+    private static Optional<Monetary> btcToUsd(MarketPriceService marketPriceService, Monetary btcAmount) {
+        return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
+                .map(btcUsdPriceQuote -> btcUsdPriceQuote.toQuoteSideMonetary(btcAmount));
+    }
+
+    private static long getRequiredReputationScoreByUsdAmount(Monetary usdAmount) {
+        double faceValue = Monetary.valueToFaceValue(usdAmount, 0);
+        return MathUtils.roundDoubleToLong(faceValue * REQUIRED_REPUTAION_SCORE_PER_USD);
+    }
+
+    private static long withTolerance(long makersReputationScore) {
+        return MathUtils.roundDoubleToLong(makersReputationScore * (1 + TOLERANCE));
+    }
+
 
     @Getter
-    public enum OfferAmountLimitsResult {
-        TAKER_AS_BUYER_AMOUNT_MATCH_LIMIT,
-        TAKER_AS_BUYER_AMOUNT_MATCH_TOLERANCE,
-        TAKER_AS_BUYER_AMOUNT_MATCH_MIN_REQ_REP_SCORE,
-        TAKER_AS_BUYER_AMOUNT_NOT_MATCH_MIN_REQ_REP_SCORE(false),
+    public enum Result {
+        MATCH_SCORE,
+        MATCH_TOLERATED_SCORE,
+        MATCH_MIN_SCORE,
+        SCORE_TOO_LOW;
 
-        TAKER_AS_SELLER_AMOUNT_MATCH_LIMIT,
-        TAKER_AS_SELLER_AMOUNT_MATCH_TOLERANCE,
-        TAKER_AS_SELLER_AMOUNT_MATCH_MIN_REQ_REP_SCORE,
-        TAKER_AS_SELLER_AMOUNT_NOT_MATCH_MIN_REQ_REP_SCORE(false);
+        @Setter
+        private Long requiredReputationScore;
 
-        private final boolean isValid;
-
-        OfferAmountLimitsResult() {
-            this(true);
-        }
-
-        OfferAmountLimitsResult(boolean isValid) {
-            this.isValid = isValid;
+        public boolean isValid() {
+            return this != SCORE_TOO_LOW;
         }
     }
-
 }
