@@ -220,6 +220,25 @@ public class OfferAmountFormatter {
         return OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("data.na"));
     }
 
+    // Min or fixed
+    public static String formatQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
+        return formatQuoteSideMinOrFixedAmount(marketPriceService, offer, true);
+    }
+
+    public static String formatQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService,
+                                                         Offer<?, ?> offer,
+                                                         boolean withCode) {
+        return formatQuoteSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), withCode);
+    }
+
+    public static String formatQuoteSideMinOrFixedAmount(MarketPriceService marketPriceService,
+                                                         AmountSpec amountSpec,
+                                                         PriceSpec priceSpec,
+                                                         Market market,
+                                                         boolean withCode) {
+        return OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, amountSpec, priceSpec, market).map(getFormatFunction(withCode)).orElse(Res.get("data.na"));
+    }
+
     // Max
     public static String formatQuoteSideMaxAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return formatQuoteSideMaxAmount(marketPriceService, offer, true);

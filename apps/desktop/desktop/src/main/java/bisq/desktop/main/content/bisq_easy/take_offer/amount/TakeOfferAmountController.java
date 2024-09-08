@@ -70,6 +70,9 @@ public class TakeOfferAmountController implements Controller {
         Market market = bisqEasyOffer.getMarket();
         amountComponent.setMarket(market);
 
+        PriceUtil.findQuote(marketPriceService, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
+                .ifPresent(amountComponent::setQuote);
+
         Optional<Monetary> optionalQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
         Optional<Monetary> optionalQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
         if (optionalQuoteSideMinOrFixedAmount.isPresent() && takerAsSellersMaxAllowedAmount.isPresent()) {
@@ -91,9 +94,6 @@ public class TakeOfferAmountController implements Controller {
         } else {
             log.error("optionalQuoteSideMinOrFixedAmount or optionalQuoteSideMaxOrFixedAmount is not present");
         }
-
-        PriceUtil.findQuote(marketPriceService, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
-                .ifPresent(amountComponent::setQuote);
 
         String btcAmount = takersDirection.isBuy()
                 ? Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount")
