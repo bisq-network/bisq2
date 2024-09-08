@@ -61,7 +61,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
 
-        setUpHeaderDropdownMenu();
+        setUpEllipsisMenu();
 
         configTitleHBox();
         configCenterVBox();
@@ -72,7 +72,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         root.setFitToHeight(true);
     }
 
-    private void setUpHeaderDropdownMenu() {
+    private void setUpEllipsisMenu() {
         helpButton = new DropdownBisqMenuItem("icon-help-grey", "icon-help-white");
         infoButton = new DropdownBisqMenuItem("icon-info-grey", "icon-info-white",
                 Res.get("chat.dropdownMenu.channelInfo"));
