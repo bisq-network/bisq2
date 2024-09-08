@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.i18n.Res;
@@ -50,6 +51,7 @@ public abstract class BaseChatModel extends NavigationModel {
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
     private final StringProperty searchText = new SimpleStringProperty();
+    private final ObjectProperty<ChatChannelNotificationType> selectedNotificationSetting = new SimpleObjectProperty<>(ChatChannelNotificationType.GLOBAL_DEFAULT);
 
     public BaseChatModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;

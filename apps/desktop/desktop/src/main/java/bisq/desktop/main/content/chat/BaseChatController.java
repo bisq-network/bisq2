@@ -20,8 +20,10 @@ package bisq.desktop.main.content.chat;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
 import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
@@ -55,7 +57,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final ChannelSidebar channelSidebar;
     protected final ChatMessageContainerController chatMessageContainerController;
     protected Subscription searchTextPin;
-    protected Pin selectedChannelPin;
+    protected Pin selectedChannelPin, selectedNotificationSettingPin;
 
     public BaseChatController(ServiceProvider serviceProvider,
                               ChatChannelDomain chatChannelDomain,
@@ -102,6 +104,9 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     public void onDeactivate() {
         selectedChannelPin.unbind();
         searchTextPin.unsubscribe();
+        if (selectedNotificationSettingPin != null) {
+            selectedNotificationSettingPin.unbind();
+        }
     }
 
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
@@ -150,6 +155,9 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 if (chatChannel instanceof CommonPublicChatChannel) {
                     model.getChannelDescription().set(((CommonPublicChatChannel) chatChannel).getDescription());
                 }
+
+                selectedNotificationSettingPin = FxBindings.bind(model.getSelectedNotificationSetting())
+                        .to(chatChannel.getChatChannelNotificationType());
             }
         });
     }
@@ -169,11 +177,9 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         switch (model.chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK:
             case BISQ_EASY_OPEN_TRADES:
-            case BISQ_EASY_PRIVATE_CHAT:
                 Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
                 break;
             case DISCUSSION:
-            case EVENTS:
             case SUPPORT:
                 Navigation.navigateTo(NavigationTarget.CHAT_RULES);
                 break;
@@ -183,9 +189,8 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     String getHelpButtonText() {
         return switch (model.chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK,
-                 BISQ_EASY_OPEN_TRADES,
-                 BISQ_EASY_PRIVATE_CHAT -> Res.get("chat.dropdownMenu.tradeGuide");
-            default -> Res.get("chat.dropdownMenu.chatRules");
+                 BISQ_EASY_OPEN_TRADES -> Res.get("chat.ellipsisMenu.tradeGuide");
+            default -> Res.get("chat.ellipsisMenu.chatRules");
         };
     }
 
@@ -217,5 +222,14 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
     private void cleanupChannelInfo() {
         channelSidebar.setOnUndoIgnoreChatUser(null);
+    }
+
+    void onSetNotificationType(ChatChannelNotificationType type) {
+        model.getSelectedNotificationSetting().set(type);
+        ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel();
+        if (chatChannel != null) {
+            chatService.findChatChannelService(chatChannel)
+                    .ifPresent(service -> service.setChatChannelNotificationType(chatChannel, type));
+        }
     }
 }
