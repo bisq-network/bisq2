@@ -494,19 +494,21 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void applyMinMaxRange() {
-        String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
-        ReputationScore myReputationScore = reputationService.getReputationScore(myProfileId);
-        BisqEasyTradeAmountLimits.getMinQuoteSideTradeAmount(marketPriceService, model.getMarket()).ifPresent(minRangeValue -> {
-            if (model.getDirection().isBuy()) {
-                Monetary maxRangeValue = BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
-                minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
-                maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
-            } else {
-                BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, model.getMarket(), myReputationScore).ifPresent(maxRangeValue -> {
-                    minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
-                    maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+        BisqEasyTradeAmountLimits.getMinQuoteSideTradeAmount(marketPriceService, model.getMarket())
+                .ifPresent(minRangeValue -> {
+                    if (model.getDirection().isBuy()) {
+                        Monetary maxRangeValue = BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
+                        minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                        maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                    } else {
+                        String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
+                        ReputationScore myReputationScore = reputationService.getReputationScore(myProfileId);
+                        BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, model.getMarket(), myReputationScore.getTotalScore())
+                                .ifPresent(maxRangeValue -> {
+                                    minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                                    maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                                });
+                    }
                 });
-            }
-        });
     }
 }

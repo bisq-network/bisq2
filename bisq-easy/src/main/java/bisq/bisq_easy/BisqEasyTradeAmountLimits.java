@@ -29,7 +29,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,8 +56,8 @@ public class BisqEasyTradeAmountLimits {
 
     public static Optional<Monetary> getMaxQuoteSideTradeAmount(MarketPriceService marketPriceService,
                                                                 Market market,
-                                                                ReputationScore myReputationScore) {
-        Fiat maxUsdTradeAmount = getMaxUsdTradeAmount(myReputationScore.getTotalScore());
+                                                                long myReputationScore) {
+        Fiat maxUsdTradeAmount = getMaxUsdTradeAmount(myReputationScore);
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
                 .map(priceQuote -> priceQuote.toBaseSideMonetary(maxUsdTradeAmount))
                 .flatMap(defaultMaxBtcTradeAmount -> marketPriceService.findMarketPriceQuote(market)

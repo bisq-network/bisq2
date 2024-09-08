@@ -22,6 +22,7 @@ import bisq.chat.pub.PublicChatMessage;
 import bisq.chat.reactions.*;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
+import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -38,6 +39,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
@@ -301,9 +303,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 userProfileService,
                 marketPriceService,
                 bisqEasyOffer);
-        if (limitForMinAmount.isPresent() && limitForMaxAmount.isPresent()) {
-            BisqEasyTradeAmountLimits.Result minAmountResult = limitForMinAmount.get();
+        if (limitForMaxAmount.isPresent()) {
             BisqEasyTradeAmountLimits.Result maxAmountResult = limitForMaxAmount.get();
+            BisqEasyTradeAmountLimits.Result minAmountResult = limitForMinAmount.orElse(maxAmountResult);
             String fiatAmount = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer, true);
             long requiredReputationScoreForMinAmount = minAmountResult.getRequiredReputationScore();
             long requiredReputationScoreForMaxAmount = maxAmountResult.getRequiredReputationScore();
@@ -328,10 +330,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                                     sellersScore, requiredReputationScoreForMaxAmount, fiatAmount))
                             .closeButtonText(Res.get("chat.message.takeOffer.buyer.makersReputationTooLowButInLowAmountTolerance.no"))
                             .secondaryActionButtonText(Res.get("chat.message.takeOffer.buyer.makersReputationTooLowButInLowAmountTolerance.yes"))
-                            .onSecondaryAction(() -> Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer)))
+                            .onSecondaryAction(() -> Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty())))
                             .show();
                 } else {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty()));
                 }
             } else {
                 //  I am as taker the seller. We check if my reputation permits to take the offer
@@ -342,7 +344,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                             .warning(Res.get("chat.message.takeOffer.seller.myReputationScoreTooLow.warning",
                                     sellersScore, requiredReputationScoreForMinAmount, fiatAmount)).show();
                 } else {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+                    Optional<Monetary> myMaxAllowedAmount = BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, bisqEasyOffer.getMarket(), sellersScore);
+                    Monetary offersMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
+                    if (myMaxAllowedAmount.isPresent() && offersMaxAmount.isGreaterThan(myMaxAllowedAmount.get())) {
+                        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, myMaxAllowedAmount));
+                    } else {
+                        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty()));
+                    }
+
                 }
             }
         } else {

@@ -29,7 +29,10 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,16 +48,20 @@ public class TakeOfferAmountController implements Controller {
     private final TakeOfferAmountView view;
     private final AmountComponent amountComponent;
     private final MarketPriceService marketPriceService;
+    private final UserIdentityService userIdentityService;
+    private final ReputationService reputationService;
     private Subscription baseSideAmountPin, quoteSideAmountPin;
 
     public TakeOfferAmountController(ServiceProvider serviceProvider) {
         model = new TakeOfferAmountModel();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        reputationService = serviceProvider.getUserService().getReputationService();
         amountComponent = new AmountComponent(serviceProvider, true);
         view = new TakeOfferAmountView(model, this, amountComponent.getView().getRoot());
     }
 
-    public void init(BisqEasyOffer bisqEasyOffer) {
+    public void init(BisqEasyOffer bisqEasyOffer, Optional<Monetary> takerAsSellersMaxAllowedAmount) {
         model.setBisqEasyOffer(bisqEasyOffer);
 
         Direction takersDirection = bisqEasyOffer.getTakersDirection();
@@ -62,21 +69,31 @@ public class TakeOfferAmountController implements Controller {
         amountComponent.setDirection(takersDirection);
         Market market = bisqEasyOffer.getMarket();
         amountComponent.setMarket(market);
+
         Optional<Monetary> optionalQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
         Optional<Monetary> optionalQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
-        if (optionalQuoteSideMinOrFixedAmount.isPresent() && optionalQuoteSideMaxOrFixedAmount.isPresent()) {
-            amountComponent.setMinMaxRange(optionalQuoteSideMinOrFixedAmount.get(),
-                    optionalQuoteSideMaxOrFixedAmount.get());
+        if (optionalQuoteSideMinOrFixedAmount.isPresent() && takerAsSellersMaxAllowedAmount.isPresent()) {
+            Monetary maxAmount = takerAsSellersMaxAllowedAmount.get();
+            amountComponent.setMinMaxRange(optionalQuoteSideMinOrFixedAmount.get(), maxAmount);
+
+            long sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
+            amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description.limitedByTakersReputation",
+                    sellersScore,
+                    OfferAmountFormatter.formatQuoteSideMinAmount(marketPriceService, bisqEasyOffer, false),
+                    AmountFormatter.formatAmountWithCode(maxAmount)));
+        } else if (optionalQuoteSideMinOrFixedAmount.isPresent() && optionalQuoteSideMaxOrFixedAmount.isPresent()) {
+            Monetary maxAmount = optionalQuoteSideMaxOrFixedAmount.get();
+            amountComponent.setMinMaxRange(optionalQuoteSideMinOrFixedAmount.get(), maxAmount);
+
+            amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
+                    OfferAmountFormatter.formatQuoteSideMinAmount(marketPriceService, bisqEasyOffer, false),
+                    AmountFormatter.formatAmountWithCode(maxAmount)));
         } else {
             log.error("optionalQuoteSideMinOrFixedAmount or optionalQuoteSideMaxOrFixedAmount is not present");
         }
 
         PriceUtil.findQuote(marketPriceService, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
                 .ifPresent(amountComponent::setQuote);
-
-        amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
-                OfferAmountFormatter.formatQuoteSideMinAmount(marketPriceService, bisqEasyOffer, false),
-                OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer)));
 
         String btcAmount = takersDirection.isBuy()
                 ? Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount")
