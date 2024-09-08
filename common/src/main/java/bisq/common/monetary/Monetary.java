@@ -34,12 +34,17 @@ import java.math.BigDecimal;
 @ToString
 @Slf4j
 public abstract class Monetary implements Comparable<Monetary>, PersistableProto {
-    public static long doubleValueToLong(double value, int precision) {
+    public static long faceValueToLong(double faceValue, int precision) {
         double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(precision).doubleValue();
-        if (value > max) {
+        if (faceValue > max) {
             throw new ArithmeticException("Provided value would lead to an overflow");
         }
-        return BigDecimal.valueOf(value).movePointRight(precision).longValue();
+        return BigDecimal.valueOf(faceValue).movePointRight(precision).longValue();
+    }
+
+    public static double valueToFaceValue(Monetary monetary, int precision) {
+        double fullPrecision = MathUtils.scaleDownByPowerOf10(monetary.getValue(), monetary.getPrecision());
+        return MathUtils.roundDouble(fullPrecision, precision);
     }
 
     public static Monetary clone(Monetary monetary) {
@@ -86,7 +91,7 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
      * @param faceValue Monetary value as face value. E.g. 123.45 USD or 1.12345678 BTC
      */
     protected Monetary(String id, double faceValue, String code, int precision, int lowPrecision) {
-        this(id, doubleValueToLong(faceValue, precision), code, precision, lowPrecision);
+        this(id, faceValueToLong(faceValue, precision), code, precision, lowPrecision);
     }
 
     public abstract bisq.common.protobuf.Monetary toProto(boolean serializeForHash);
