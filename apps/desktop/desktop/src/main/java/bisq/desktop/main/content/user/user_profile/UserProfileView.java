@@ -72,19 +72,24 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     private Subscription reputationScorePin, useDeleteTooltipPin, selectedChatUserIdentityPin, isValidSelectionPin;
 
     public UserProfileView(UserProfileModel model, UserProfileController controller) {
-        super(new HBox(20), model, controller);
+        super(new HBox(), model, controller);
 
-        root.setAlignment(Pos.TOP_LEFT);
-        root.setPadding(new Insets(20, 40, 40, 40));
+        HBox contentBox = new HBox(20);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        contentBox.setPadding(new Insets(0, 40, 20, 40));
+        HBox.setHgrow(contentBox, Priority.ALWAYS);
+
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
 
         catHashImageView = new ImageView();
         catHashImageView.setFitWidth(UserProfileModel.CAT_HASH_IMAGE_SIZE);
         catHashImageView.setFitHeight(catHashImageView.getFitWidth());
-        root.getChildren().add(catHashImageView);
+        contentBox.getChildren().add(catHashImageView);
 
         formVBox = new VBox(25);
         HBox.setHgrow(formVBox, Priority.ALWAYS);
-        root.getChildren().add(formVBox);
+        contentBox.getChildren().add(formVBox);
 
         createNewProfileButton = new Button(Res.get("user.userProfile.createNewProfile"));
         createNewProfileButton.getStyleClass().addAll("outlined-button");
