@@ -688,6 +688,25 @@
 }
 
 /*******************************************************************************
+ * Trade completed                                                             *
+ ******************************************************************************/
+
+.trade-completed-title {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 2.3em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-completed-table-title {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
+/*******************************************************************************
  *                                                                             *
  * Trade wizard                                                                *
  *                                                                             *
