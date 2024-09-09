@@ -124,6 +124,8 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         this.formattedAge.set(StringUtils.isEmpty(formattedAge) ? Res.get("data.na") : formattedAge);
         if (formattedAge != null) {
             livenessState = "\n" + Res.get("user.userProfile.livenessState", formattedAge) + "\n";
+        } else {
+            livenessState = "";
         }
         updateTooltipText();
     }

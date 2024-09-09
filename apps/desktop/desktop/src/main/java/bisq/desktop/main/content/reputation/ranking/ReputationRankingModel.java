@@ -27,10 +27,12 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.ToggleGroup;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Slf4j
 @Getter
@@ -44,4 +46,8 @@ public class ReputationRankingModel implements Model {
     private final ObjectProperty<ReputationSource> selectedReputationSource = new SimpleObjectProperty<>();
     private final List<RichTableView.FilterMenuItem<ReputationRankingView.ListItem>> filterItems = new ArrayList<>();
     private final ToggleGroup filterMenuItemToggleGroup = new ToggleGroup();
+    @Setter
+    private Predicate<ReputationRankingView.ListItem> filterItemPredicate = e -> true;
+    @Setter
+    private Predicate<ReputationRankingView.ListItem> searchStringPredicate = e -> true;
 }

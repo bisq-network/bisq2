@@ -172,14 +172,15 @@ public class ReputationRankingController implements Controller {
     }
 
     void applySearchPredicate(String searchText) {
-        String string = searchText.toLowerCase();
-        model.getFilteredList().setPredicate(item ->
+        String string = searchText == null ? "" : searchText.toLowerCase();
+        model.setSearchStringPredicate(item ->
                 StringUtils.isEmpty(string) ||
                         item.getUserName().toLowerCase().contains(string) ||
                         item.getUserProfile().getNym().toLowerCase().contains(string) ||
                         item.getTotalScoreString().contains(string) ||
                         item.getProfileAgeString().contains(string) ||
                         item.getValueAsStringProperty().get().toLowerCase().contains(string));
+        applyPredicates();
     }
 
     Optional<ReputationSource> resolveReputationSource(Toggle toggle) {
@@ -211,13 +212,28 @@ public class ReputationRankingController implements Controller {
     }
 
     private void updateFilter(Toggle selectedToggle) {
-        RichTableView.FilterMenuItem.fromToggle(selectedToggle).ifPresent(selectedFilterMenuItem -> {
-            model.getValueColumnVisible().set(selectedFilterMenuItem.getData().isPresent());
-            model.getFilteredValueTitle().set(selectedFilterMenuItem.getTitle().toUpperCase());
-            model.getFilteredList().setPredicate(item ->
-                    selectedFilterMenuItem.getFilter().test(item));
-        });
         model.getSelectedReputationSource().set(resolveReputationSource(selectedToggle).orElse(null));
+
+        RichTableView.FilterMenuItem.fromToggle(selectedToggle)
+                .ifPresentOrElse(selectedFilterMenuItem -> {
+                    model.getValueColumnVisible().set(selectedFilterMenuItem.getData().isPresent());
+                    model.getFilteredValueTitle().set(selectedFilterMenuItem.getTitle().toUpperCase());
+                    UIThread.runOnNextRenderFrame(() -> {
+                        model.setFilterItemPredicate(item -> selectedFilterMenuItem.getFilter().test(item));
+                        applyPredicates();
+                    });
+
+                }, () -> {
+                    model.setFilterItemPredicate(item -> true);
+                    applyPredicates();
+                });
+    }
+
+    private void applyPredicates() {
+        model.getFilteredList().setPredicate(item ->
+                model.getFilterItemPredicate().test(item) &&
+                        model.getSearchStringPredicate().test(item)
+        );
     }
 
     private RichTableView.FilterMenuItem<ReputationRankingView.ListItem> getShowAllFilterMenuItem() {
