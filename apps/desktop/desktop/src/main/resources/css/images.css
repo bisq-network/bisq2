@@ -764,6 +764,18 @@
     -fx-image: url("/images/icons/icon-wallet-white.png");
 }
 
+#trade-guide-grey {
+    -fx-image: url("/images/icons/trade-guide-grey.png");
+}
+
+#trade-guide-white {
+    -fx-image: url("/images/icons/trade-guide-white.png");
+}
+
+#trade-guide-green {
+    -fx-image: url("/images/icons/trade-guide-green.png");
+}
+
 #icon-report {
     -fx-image: url("/images/icons/icon-report.png");
 }

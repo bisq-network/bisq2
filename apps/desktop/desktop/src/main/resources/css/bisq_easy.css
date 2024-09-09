@@ -578,6 +578,11 @@
     -fx-text-fill: -bisq-mid-grey-20 !important;
 }
 
+.outlined-button.request-mediation-button:hover {
+    -fx-border-color: -bisq2-yellow !important;
+    -fx-text-fill: -bisq2-yellow !important;
+}
+
 .bisq-easy-trade-state-phase {
     -fx-font-size: 0.93em;
 }

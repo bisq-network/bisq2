@@ -300,7 +300,7 @@ class TradePhaseBox {
             double width = 160;
             walletHelp = new BisqMenuItem("icon-wallet", "icon-wallet-white", Res.get("bisqEasy.walletGuide.open"));
             walletHelp.setPrefWidth(width);
-            openTradeGuide = new BisqMenuItem("icon-help-grey", "icon-help-white", Res.get("bisqEasy.tradeGuide.open"));
+            openTradeGuide = new BisqMenuItem("trade-guide-grey", "trade-guide-white", Res.get("bisqEasy.tradeGuide.open"));
             openTradeGuide.setPrefWidth(width);
             reportToMediator = new BisqMenuItem("icon-report", "icon-report-white", Res.get("bisqEasy.tradeState.reportToMediator"));
             reportToMediator.setPrefWidth(width);

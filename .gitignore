@@ -33,6 +33,7 @@ hs_err_pid*
 !/.idea/codeStyles/codeStyleConfig.xml
 !/.idea/codeStyles/Project.xml
 !/.idea/icon.svg
+/.tx/.idea
 
 # Bisq
 *.iml
