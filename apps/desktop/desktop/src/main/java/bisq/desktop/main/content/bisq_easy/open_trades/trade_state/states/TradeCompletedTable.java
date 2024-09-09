@@ -24,22 +24,44 @@ import bisq.offer.Direction;
 import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
 import java.util.Optional;
 
 public class TradeCompletedTable extends VBox {
+    private final GridPane headerGridPane, bodyGridPane;
 
-    public TradeCompletedTable(UserProfile userProfile, Direction direction, String btcAmount, String fiatAmount,
-                               String fiatCurrency, String paymentMethodUsed, String tradeIdUsed, String tradeDate,
-                               String tradePriceUsed, String tradePriceSymbolUsed, String miningFeeUsed, Optional<String> txId) {
+    public TradeCompletedTable() {
         Label title = new Label(Res.get("bisqEasy.tradeCompleted.title"));
 
         // Header
-        GridPane headerGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
+        headerGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
         headerGridPane.setMouseTransparent(true);
         GridPaneUtil.setGridPaneMultiColumnsConstraints(headerGridPane, 5);
 
+        // Body
+        bodyGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
+        ColumnConstraints titleCol = new ColumnConstraints();
+        titleCol.setPercentWidth(25);
+        bodyGridPane.getColumnConstraints().add(titleCol);
+        ColumnConstraints valueCol = new ColumnConstraints();
+        valueCol.setPercentWidth(75);
+        bodyGridPane.getColumnConstraints().add(valueCol);
+
+        Region line1 = getLine();
+        Region line2 = getLine();
+        Region line3 = getLine();
+        getChildren().addAll(title, line1, headerGridPane, line2, bodyGridPane, line3);
+    }
+
+    public void initialize(UserProfile userProfile, Direction direction, String btcAmount, String fiatAmount,
+                           String fiatCurrency, String paymentMethodUsed, String tradeIdUsed, String tradeDate,
+                           String tradePriceUsed, String tradePriceSymbolUsed, /*String miningFeeUsed, */Optional<String> txId) {
+        // Header
         int rowTitle = 0;
         int rowValue = 1;
 
@@ -82,14 +104,6 @@ public class TradeCompletedTable extends VBox {
         headerGridPane.add(tradeIdValue, col, rowValue);
 
         // Body
-        GridPane bodyGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
-        ColumnConstraints titleCol = new ColumnConstraints();
-        titleCol.setPercentWidth(0.25);
-        bodyGridPane.getColumnConstraints().add(titleCol);
-        ColumnConstraints valueCol = new ColumnConstraints();
-        valueCol.setPercentWidth(0.75);
-        bodyGridPane.getColumnConstraints().add(valueCol);
-
         int colTitle = 0;
         int colValue = 1;
         int row = 0;
@@ -112,14 +126,14 @@ public class TradeCompletedTable extends VBox {
         bodyGridPane.add(tradeFee, colTitle, row);
         bodyGridPane.add(tradeFeeValue, colValue, row);
 
-        ++row;
-        Label miningFee = new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee"));
-        Label miningFeeValue = new Label(miningFeeUsed);
-        Label miningFeeBtc = new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee.btc").toUpperCase());
-        HBox miningFeeBox = new HBox(5, miningFeeValue, miningFeeBtc);
-        bodyGridPane.add(miningFee, colTitle, row);
-        bodyGridPane.add(direction == Direction.BUY ? new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee.buyer.value")) : miningFeeBox,
-                colValue, row);
+//        ++row;
+//        Label miningFee = new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee"));
+//        Label miningFeeValue = new Label(miningFeeUsed);
+//        Label miningFeeBtc = new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee.btc").toUpperCase());
+//        HBox miningFeeBox = new HBox(5, miningFeeValue, miningFeeBtc);
+//        bodyGridPane.add(miningFee, colTitle, row);
+//        bodyGridPane.add(direction == Direction.BUY ? new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee.buyer.value")) : miningFeeBox,
+//                colValue, row);
 
         if (txId.isPresent()) {
             ++row;
@@ -129,11 +143,6 @@ public class TradeCompletedTable extends VBox {
             bodyGridPane.add(txIdTitle, colTitle, row);
             bodyGridPane.add(txIdValue, colValue, row);
         }
-
-        Region line1 = getLine();
-        Region line2 = getLine();
-        Region line3 = getLine();
-        getChildren().addAll(title, line1, headerGridPane, line2, bodyGridPane, line3);
     }
 
     private Region getLine() {

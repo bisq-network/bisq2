@@ -28,7 +28,13 @@ import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
+import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
+import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.user.profile.UserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -37,6 +43,8 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 public class BuyerState4 extends BaseState {
@@ -80,6 +88,14 @@ public class BuyerState4 extends BaseState {
             String paymentProof = model.getBisqEasyTrade().getPaymentProof().get();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
+            model.setTradePeer(model.getChannel().getPeer());
+            model.setDirection(model.getBisqEasyOffer().getDirection());
+            model.setFiatCurrency(model.getBisqEasyTrade().getOffer().getMarket().getQuoteCurrencyCode());
+            model.setPaymentMethod(model.getBisqEasyTrade().getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
+            model.setTradeId(model.getBisqEasyTrade().getShortId());
+            model.setTradeDate(DateFormatter.formatDate(model.getBisqEasyTrade().getContract().getTakeOfferDate()));
+            model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(model.getBisqEasyTrade())));
+            model.setPriceSymbol(model.getBisqEasyOffer().getMarket().getMarketCodes());
         }
 
         @Override
@@ -109,16 +125,22 @@ public class BuyerState4 extends BaseState {
         }
     }
 
+    @Setter
     @Getter
     private static class Model extends BaseState.Model {
-        @Setter
         protected String paymentProof;
-        @Setter
         protected String paymentProofDescription;
-        @Setter
         protected boolean blockExplorerLinkVisible;
-        @Setter
         protected boolean paymentProofVisible;
+        protected UserProfile tradePeer;
+        protected Direction direction;
+        protected String fiatCurrency;
+        protected String paymentMethod;
+        protected String tradeId;
+        protected String tradeDate;
+        protected String price;
+        protected String priceSymbol;
+        protected Optional<String> txId = Optional.empty();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -129,9 +151,12 @@ public class BuyerState4 extends BaseState {
         private final Button leaveButton, exportButton;
         private final MaterialTextField quoteAmount, baseAmount;
         private final MaterialTextField paymentProof;
+        private final TradeCompletedTable tradeCompletedTable;
 
         private View(Model model, Controller controller) {
             super(model, controller);
+
+            tradeCompletedTable = new TradeCompletedTable();
 
             WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase4.headline"));
 
@@ -147,12 +172,7 @@ public class BuyerState4 extends BaseState {
 
             VBox.setMargin(headline, new Insets(0, 0, 5, 0));
             VBox.setMargin(buttons, new Insets(5, 0, 5, 0));
-            root.getChildren().addAll(
-                    headline,
-                    quoteAmount,
-                    baseAmount,
-                    paymentProof,
-                    buttons);
+            root.getChildren().addAll(tradeCompletedTable, buttons);
         }
 
         @Override
@@ -171,6 +191,10 @@ public class BuyerState4 extends BaseState {
 
             quoteAmount.setText(model.getFormattedQuoteAmount());
             baseAmount.setText(model.getFormattedBaseAmount());
+
+            tradeCompletedTable.initialize(model.getTradePeer(), model.getDirection(), model.getBaseAmount(),
+                    model.getQuoteAmount(), model.getFiatCurrency(), model.getPaymentMethod(), model.getTradeId(),
+                    model.getTradeDate(), model.getPrice(), model.getPriceSymbol(), model.getTxId());
 
             leaveButton.setOnAction(e -> controller.onLeaveChannel());
             exportButton.setOnAction(e -> controller.onExportTrade());

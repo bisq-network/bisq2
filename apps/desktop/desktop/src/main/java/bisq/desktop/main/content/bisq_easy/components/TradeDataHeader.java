@@ -29,7 +29,6 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ObjectProperty;
@@ -77,7 +76,6 @@ public class TradeDataHeader {
         private Controller(ServiceProvider serviceProvider, String peerDescription) {
             this.serviceProvider = serviceProvider;
             reputationService = serviceProvider.getUserService().getReputationService();
-            UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
 
             model = new Model(peerDescription);
             view = new View(model, this);
