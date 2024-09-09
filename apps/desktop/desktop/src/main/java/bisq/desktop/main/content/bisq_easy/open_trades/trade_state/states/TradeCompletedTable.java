@@ -60,7 +60,7 @@ public class TradeCompletedTable extends VBox {
 
     public void initialize(UserProfile userProfile, Direction direction, String btcAmount, String fiatAmount,
                            String fiatCurrency, String paymentMethodUsed, String tradeIdUsed, String tradeDate,
-                           String tradePriceUsed, String tradePriceSymbolUsed, /*String miningFeeUsed, */Optional<String> txId) {
+                           String tradePriceUsed, String tradePriceSymbolUsed, Optional<String> txId) {
         // Header
         int rowTitle = 0;
         int rowValue = 1;
@@ -125,15 +125,6 @@ public class TradeCompletedTable extends VBox {
         Label tradeFeeValue = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeFee.value"));
         bodyGridPane.add(tradeFee, colTitle, row);
         bodyGridPane.add(tradeFeeValue, colValue, row);
-
-//        ++row;
-//        Label miningFee = new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee"));
-//        Label miningFeeValue = new Label(miningFeeUsed);
-//        Label miningFeeBtc = new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee.btc").toUpperCase());
-//        HBox miningFeeBox = new HBox(5, miningFeeValue, miningFeeBtc);
-//        bodyGridPane.add(miningFee, colTitle, row);
-//        bodyGridPane.add(direction == Direction.BUY ? new Label(Res.get("bisqEasy.tradeCompleted.body.miningFee.buyer.value")) : miningFeeBox,
-//                colValue, row);
 
         if (txId.isPresent()) {
             ++row;
