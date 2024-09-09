@@ -35,11 +35,17 @@ public class ThreadName {
     }
 
     public static void set(String hostName) {
-        Thread.currentThread().setName(getName() + "." + hostName);
+        String currentThreadName = getName();
+        if (!currentThreadName.contains(hostName)) {
+            setName(currentThreadName + "." + hostName);
+        }
     }
 
     public static void set(String hostName, String details) {
-        Thread.currentThread().setName(getName() + "." + hostName + "." + details);
+        String currentThreadName = getName();
+        if (!currentThreadName.contains(hostName) && !currentThreadName.contains(details)) {
+            setName(currentThreadName + "." + hostName + "." + details);
+        }
     }
 
     public static void setName(String name) {
