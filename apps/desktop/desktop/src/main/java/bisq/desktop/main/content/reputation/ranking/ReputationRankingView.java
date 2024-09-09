@@ -22,6 +22,7 @@ import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
@@ -40,6 +41,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -70,6 +72,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                 controller::applySearchPredicate);
         configTableView();
 
+        VBox.setVgrow(richTableView, Priority.ALWAYS);
         root.getChildren().addAll(richTableView);
     }
 
@@ -159,6 +162,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
     }
 
     private void configTableView() {
+        richTableView.getColumns().add(IndexColumnUtil.getIndexColumn(model.getSortedList()));
         richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.userProfile"))
                 .left()
@@ -177,9 +181,8 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                 .title(Res.get("reputation.table.columns.livenessState"))
                 .right()
                 .comparator(Comparator.comparing(ListItem::getPublishDate).reversed())
-                .setCellFactory(getLivenessCellFactory())
+                .valueSupplier(ListItem::getLastUserActivity)
                 .build());
-
         scoreColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("reputation.table.columns.reputationScore"))
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
@@ -243,50 +246,6 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         };
     }
 
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getLivenessCellFactory() {
-        return column -> new TableCell<>() {
-            // This is a bit of a hack, but we do not want to add a UIScheduler to the ListItems as the list is large,
-            // and it would consume too much resources. When we add it the cell factory we have no guarantee that it
-            // will get stopped as the updateItem is not called when the view gets removed from stage.
-
-            // As a hack we use the Liveness scheduler in UserProfileIcon as UserProfileIcon handles the cleanup of the scheduler
-            // by using a scene listener to detect once we got removed from stage.
-            // We need to add the userProfileIcon to stage here to make it work, but we set it invisible.
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon(40);
-            private final Label age = new Label();
-            private final HBox hBox = new HBox(age, userProfileIcon);
-
-            {
-                hBox.setAlignment(Pos.CENTER_RIGHT);
-                userProfileIcon.setManaged(false);
-                userProfileIcon.setVisible(false);
-            }
-
-            @Override
-            protected void updateItem(ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    // The update at the second tick would trigger a updateItem on all items not only on the visible
-                    // ones, which cause a performance peak as creating lots of user profile icons is expensive
-                    // (about 13ms on a fast machine) and need to be done on the UI thread.
-                    // Therefor we deactivate the update of the last activity.
-                    // We don't use the binding the for above reasons.
-                    userProfileIcon.setUseSecondTick(false);
-                    //age.textProperty().bind(userProfileIcon.getFormattedAge());
-                    age.setText(userProfileIcon.getFormattedAge().get());
-
-                    userProfileIcon.setUserProfile(item.getUserProfile());
-                    setGraphic(hBox);
-                } else {
-                    //age.textProperty().unbind();
-                    userProfileIcon.dispose();
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getStarsCellFactory() {
         return column -> new TableCell<>() {
             private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
@@ -340,9 +299,8 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         private final ToggleGroup toggleGroup;
         private final ReputationRankingController controller;
 
-        private final String userName;
+        private final String userName, profileAgeString;
         private ReputationScore reputationScore;
-        private final String profileAgeString;
         private final long profileAge;
         private long totalScore;
         private String totalScoreString;
@@ -450,6 +408,15 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                     .filter(e -> selectedReputationSource.isEmpty() || e.getKey().equals(selectedReputationSource.get()))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toSet());
+        }
+
+        public String getLastUserActivity() {
+            long publishDate = userProfile.getPublishDate();
+            if (publishDate == 0) {
+                return Res.get("data.na");
+            } else {
+                return TimeFormatter.formatAge(Math.max(0, System.currentTimeMillis() - publishDate));
+            }
         }
     }
 }
