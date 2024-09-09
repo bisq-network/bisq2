@@ -43,9 +43,8 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
             openLogFileButton, openTorLogFileButton, openDataDirButton, chatRules, tradeGuide, walletGuide, license, tac;
 
     public ResourcesView(ResourcesModel model, ResourcesController controller) {
-        super(new VBox(50), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         Label guidesHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.guides.headline"));
@@ -92,13 +91,17 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         VBox.setMargin(guidesBox, value);
         VBox.setMargin(legalBox, value);
         VBox.setMargin(resourcesBox, value);
-        root.getChildren().addAll(
-                guidesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), guidesBox,
-                localDataHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), localDataBox,
-                backupHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), backupBox,
-                resourcesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), resourcesBox,
-                legalHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), legalBox
+        VBox contentBox = new VBox(50);
+        contentBox.getChildren().addAll(
+                guidesHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), guidesBox,
+                localDataHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), localDataBox,
+                backupHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), backupBox,
+                resourcesHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), resourcesBox,
+                legalHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), legalBox
         );
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
