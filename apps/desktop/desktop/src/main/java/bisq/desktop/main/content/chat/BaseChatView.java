@@ -50,7 +50,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final Pane channelSidebar, chatMessagesComponent;
     protected final SearchBox searchBox = new SearchBox();
     protected final DropdownMenu ellipsisMenu = new DropdownMenu("ellipsis-v-grey", "ellipsis-v-white", true);
-    protected final DropdownMenu notificationsSettingsMenu = new DropdownMenu("icon-bell", "icon-bell", true);
+    protected final DropdownMenu notificationsSettingsMenu = new DropdownMenu("icon-bell-grey", "icon-bell-white", true);
     protected DropdownBisqMenuItem helpButton, infoButton;
     private NotificationSettingMenuItem globalDefault, all, mention, off;
     protected Pane chatUserOverviewRoot;
