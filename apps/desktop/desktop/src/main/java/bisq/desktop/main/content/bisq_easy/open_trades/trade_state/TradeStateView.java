@@ -44,6 +44,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
             rejectPriceButton;
     private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay, sellerPriceDescriptionApprovalOverlay;
     private final VBox tradePhaseBox, sellerPriceApprovalOverlay;
+    private final HBox tradeDataHeader;
     private final Pane sellerPriceApprovalContent;
     private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin;
 
@@ -54,6 +55,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         super(new VBox(0), model, controller);
 
         this.tradePhaseBox = tradePhaseBox;
+        this.tradeDataHeader = tradeDataHeader;
         cancelButton = new Button();
         cancelButton.setMinWidth(160);
         cancelButton.getStyleClass().add("outlined-button");
@@ -134,6 +136,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     protected void onViewAttached() {
         tradePhaseBox.visibleProperty().bind(model.getIsTradeCompleted().not());
         tradePhaseBox.managedProperty().bind(model.getIsTradeCompleted().not());
+        tradeDataHeader.visibleProperty().bind(model.getIsTradeCompleted().not());
+        tradeDataHeader.managedProperty().bind(model.getIsTradeCompleted().not());
         reportToMediatorButton.visibleProperty().bind(model.getShowReportToMediatorButton());
         reportToMediatorButton.managedProperty().bind(model.getShowReportToMediatorButton());
         isInMediationHBox.visibleProperty().bind(model.getIsInMediation());
@@ -194,6 +198,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     protected void onViewDetached() {
         tradePhaseBox.visibleProperty().unbind();
         tradePhaseBox.managedProperty().unbind();
+        tradeDataHeader.visibleProperty().unbind();
+        tradeDataHeader.managedProperty().unbind();
         reportToMediatorButton.visibleProperty().unbind();
         reportToMediatorButton.managedProperty().unbind();
         isInMediationHBox.visibleProperty().unbind();
