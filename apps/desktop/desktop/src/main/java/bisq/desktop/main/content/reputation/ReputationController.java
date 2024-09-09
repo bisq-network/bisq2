@@ -22,7 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.reputation.build_reputation.BuildReputationController;
-import bisq.desktop.main.content.reputation.ranking.list.ReputationListController;
+import bisq.desktop.main.content.reputation.ranking.ReputationRankingController;
 import bisq.desktop.main.content.reputation.score.ReputationScoreController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ public class ReputationController extends ContentTabController<ReputationModel> 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
             case BUILD_REPUTATION -> Optional.of(new BuildReputationController(serviceProvider));
-            case REPUTATION_RANKING -> Optional.of(new ReputationListController(serviceProvider));
+            case REPUTATION_RANKING -> Optional.of(new ReputationRankingController(serviceProvider));
             case REPUTATION_SCORE -> Optional.of(new ReputationScoreController(serviceProvider));
             default -> Optional.empty();
         };

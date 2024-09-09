@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.reputation.ranking.list;
+package bisq.desktop.main.content.reputation.ranking;
 
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;

@@ -18,12 +18,30 @@
 package bisq.desktop.main.content.reputation.ranking;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.table.RichTableView;
+import bisq.user.reputation.ReputationSource;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import javafx.scene.control.ToggleGroup;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Getter
 public class ReputationRankingModel implements Model {
-    public ReputationRankingModel() {
-    }
+    private final ObservableList<ReputationRankingView.ListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<ReputationRankingView.ListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<ReputationRankingView.ListItem> sortedList = new SortedList<>(filteredList);
+    private final BooleanProperty scoreChangeTrigger = new SimpleBooleanProperty();
+    private final StringProperty filteredValueTitle = new SimpleStringProperty();
+    private final BooleanProperty valueColumnVisible = new SimpleBooleanProperty();
+    private final ObjectProperty<ReputationSource> selectedReputationSource = new SimpleObjectProperty<>();
+    private final List<RichTableView.FilterMenuItem<ReputationRankingView.ListItem>> filterItems = new ArrayList<>();
+    private final ToggleGroup filterMenuItemToggleGroup = new ToggleGroup();
 }

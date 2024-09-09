@@ -75,6 +75,7 @@ public class TakeOfferAmountController implements Controller {
 
         Optional<Monetary> optionalQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
         Optional<Monetary> optionalQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+
         if (optionalQuoteSideMinOrFixedAmount.isPresent() && takerAsSellersMaxAllowedAmount.isPresent()) {
             Monetary maxAmount = takerAsSellersMaxAllowedAmount.get();
             amountComponent.setMinMaxRange(optionalQuoteSideMinOrFixedAmount.get(), maxAmount);
