@@ -57,7 +57,6 @@ public class DateColumnUtil {
                     vBox.setAlignment(Pos.CENTER);
                     setAlignment(Pos.CENTER);
                     setGraphic(vBox);
-                    // vBox.setStyle("-fx-background-color: blue");
                 } else {
                     setGraphic(null);
                 }

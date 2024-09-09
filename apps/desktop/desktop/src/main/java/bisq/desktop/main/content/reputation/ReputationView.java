@@ -18,8 +18,13 @@
 package bisq.desktop.main.content.reputation;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.main.content.reputation.ranking.ReputationRankingView;
 import bisq.i18n.Res;
+import javafx.scene.Parent;
 
 public class ReputationView extends ContentTabView<ReputationModel, ReputationController> {
     public ReputationView(ReputationModel model, ReputationController controller) {
@@ -28,5 +33,10 @@ public class ReputationView extends ContentTabView<ReputationModel, ReputationCo
         addTab(Res.get("reputation.buildReputation"), NavigationTarget.BUILD_REPUTATION);
         addTab(Res.get("reputation.ranking"), NavigationTarget.REPUTATION_RANKING);
         addTab(Res.get("reputation.score"), NavigationTarget.REPUTATION_SCORE);
+    }
+
+    @Override
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return childView instanceof ReputationRankingView;
     }
 }
