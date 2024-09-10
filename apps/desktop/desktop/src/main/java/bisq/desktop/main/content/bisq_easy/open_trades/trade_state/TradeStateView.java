@@ -43,8 +43,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     private final Button cancelButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
             rejectPriceButton;
     private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay, sellerPriceDescriptionApprovalOverlay;
-    private final VBox tradePhaseBox, sellerPriceApprovalOverlay;
-    private final HBox tradeDataHeader;
+    private final VBox tradePhaseBox, tradeDataHeaderBox, sellerPriceApprovalOverlay;
     private final Pane sellerPriceApprovalContent;
     private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin;
 
@@ -55,12 +54,12 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         super(new VBox(0), model, controller);
 
         this.tradePhaseBox = tradePhaseBox;
-        this.tradeDataHeader = tradeDataHeader;
         cancelButton = new Button();
         cancelButton.setMinWidth(160);
         cancelButton.getStyleClass().add("outlined-button");
 
         tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), cancelButton);
+        tradeDataHeaderBox = new VBox(tradeDataHeader, Layout.hLine());
 
 
         Label isInMediationIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
@@ -112,7 +111,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         VBox.setMargin(isInMediationHBox, new Insets(20, 30, 0, 30));
         VBox.setMargin(interruptedHBox, new Insets(20, 30, 20, 30));
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
-        VBox content = new VBox(tradeDataHeader, Layout.hLine(), isInMediationHBox, interruptedHBox, phaseAndInfoHBox);
+        VBox content = new VBox(tradeDataHeaderBox, isInMediationHBox, interruptedHBox, phaseAndInfoHBox);
         content.getStyleClass().add("bisq-easy-container");
 
         // Accept seller's price overlay
@@ -136,8 +135,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     protected void onViewAttached() {
         tradePhaseBox.visibleProperty().bind(model.getIsTradeCompleted().not());
         tradePhaseBox.managedProperty().bind(model.getIsTradeCompleted().not());
-        tradeDataHeader.visibleProperty().bind(model.getIsTradeCompleted().not());
-        tradeDataHeader.managedProperty().bind(model.getIsTradeCompleted().not());
+        tradeDataHeaderBox.visibleProperty().bind(model.getIsTradeCompleted().not());
+        tradeDataHeaderBox.managedProperty().bind(model.getIsTradeCompleted().not());
         reportToMediatorButton.visibleProperty().bind(model.getShowReportToMediatorButton());
         reportToMediatorButton.managedProperty().bind(model.getShowReportToMediatorButton());
         isInMediationHBox.visibleProperty().bind(model.getIsInMediation());
@@ -198,8 +197,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     protected void onViewDetached() {
         tradePhaseBox.visibleProperty().unbind();
         tradePhaseBox.managedProperty().unbind();
-        tradeDataHeader.visibleProperty().unbind();
-        tradeDataHeader.managedProperty().unbind();
+        tradeDataHeaderBox.visibleProperty().unbind();
+        tradeDataHeaderBox.managedProperty().unbind();
         reportToMediatorButton.visibleProperty().unbind();
         reportToMediatorButton.managedProperty().unbind();
         isInMediationHBox.visibleProperty().unbind();
