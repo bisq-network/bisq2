@@ -79,7 +79,7 @@ public class Browser {
         }
     }
 
-    public static boolean hyperLinksGetCopiesWithoutPopup() {
+    public static boolean hyperLinksGetCopiedWithoutPopup() {
         return !dontShowAgainService.showAgain(Browser.HYPERLINKS_OPEN_IN_BROWSER) &&
                 !settingsService.getCookie().asBoolean(CookieKey.PERMIT_OPENING_BROWSER).orElse(false);
     }

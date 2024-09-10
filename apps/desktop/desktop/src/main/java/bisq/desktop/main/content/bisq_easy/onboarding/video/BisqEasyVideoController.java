@@ -64,7 +64,7 @@ public class BisqEasyVideoController implements Controller {
         log.warn("mp4 not supported", e);
 
         String videoUrl = "https://bisq.network/bisq-easy";
-        if (Browser.hyperLinksGetCopiesWithoutPopup()) {
+        if (Browser.hyperLinksGetCopiedWithoutPopup()) {
             // User has set don't show again flag for popup and set to not open browser.
             // We would only copy the link but user might be confused that nothing visually happened,
             // so we show a popup.

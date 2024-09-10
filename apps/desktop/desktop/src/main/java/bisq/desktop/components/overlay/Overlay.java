@@ -929,7 +929,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 Hyperlink link = new Hyperlink(messageHyperlinks.get(i));
                 link.getStyleClass().add("overlay-message");
                 link.setOnAction(event -> Browser.open(link.getText()));
-                String tooltipText = Browser.hyperLinksGetCopiesWithoutPopup()
+                String tooltipText = Browser.hyperLinksGetCopiedWithoutPopup()
                         ? Res.get("popup.hyperlink.copy.tooltip", link.getText())
                         : Res.get("popup.hyperlink.openInBrowser.tooltip", link.getText());
                 link.setTooltip(new BisqTooltip(tooltipText));

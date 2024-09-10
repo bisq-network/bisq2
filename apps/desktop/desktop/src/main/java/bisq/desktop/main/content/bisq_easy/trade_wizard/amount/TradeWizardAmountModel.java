@@ -46,12 +46,20 @@ public class TradeWizardAmountModel implements Model {
     private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
     @Setter
     private String headline;
+    private final StringProperty amountLimitInfoLeft = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoRight = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
+    @Setter
+    private String amountLimitInfoLink;
     @Setter
     private boolean isCreateOfferMode;
     @Setter
     private Optional<Monetary> baseSideAmount = Optional.empty();
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
@@ -64,10 +72,17 @@ public class TradeWizardAmountModel implements Model {
         bitcoinPaymentMethods = new ArrayList<>();
         fiatPaymentMethods = new ArrayList<>();
         headline = null;
+        amountLimitInfoLeft.set(null);
+        amountLimitInfoAmount.set(null);
+        amountLimitInfoRight.set(null);
+        amountLimitInfoOverlayInfo.set(null);
+        amountLimitInfoLink = null;
         isCreateOfferMode = false;
         baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
         isMinAmountEnabled.set(false);
+        isAmountLimitInfoOverlayVisible.set(false);
+        isWarningIconVisible.set(false);
         toggleButtonText.set(null);
         priceTooltip.set(null);
         quoteSideAmountSpec.set(null);
