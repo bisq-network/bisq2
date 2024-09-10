@@ -802,8 +802,13 @@
  *                                                                             *
  ******************************************************************************/
 
+.slider {
+    -default-track-color: -bisq-dark-grey-50;
+    -track-color: -bisq2-green ;
+}
+
 .slider .track {
-    -fx-background-color: -bisq-dark-grey-50;
+    -fx-background-color: -bisq-dark-grey-50, -track-color;
     -fx-pref-height: 2px;
 }
 
