@@ -97,6 +97,14 @@ public class AmountComponent {
         controller.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
     }
 
+    public Monetary getReputationBasedQuoteSideAmount() {
+        return controller.model.getReputationBasedQuoteSideAmount();
+    }
+
+    public void applyReputationBasedQuoteSideAmount() {
+        controller.applyReputationBasedQuoteSideAmount();
+    }
+
     public void setTooltip(String tooltip) {
         controller.setTooltip(tooltip);
     }
@@ -238,6 +246,10 @@ public class AmountComponent {
         public void setReputationBasedQuoteSideAmount(Monetary reputationBasedQuoteSideAmount) {
             model.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
             applySliderTrackStyle();
+        }
+
+        public void applyReputationBasedQuoteSideAmount() {
+            quoteSideAmountInput.setAmount(model.getReputationBasedQuoteSideAmount());
         }
 
         public void setQuote(PriceQuote priceQuote) {
@@ -499,7 +511,6 @@ public class AmountComponent {
         @Setter
         private Monetary reputationBasedQuoteSideAmount;
         private final StringProperty sliderTrackStyle = new SimpleStringProperty();
-        ;
         @Setter
         private Market market = MarketRepository.getDefault();
         @Setter
