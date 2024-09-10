@@ -20,23 +20,27 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
-import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import bisq.trade.bisq_easy.BisqEasyTradeUtils;
+import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 public class BuyerState4 extends BaseState {
@@ -80,6 +84,14 @@ public class BuyerState4 extends BaseState {
             String paymentProof = model.getBisqEasyTrade().getPaymentProof().get();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
+            model.setTradePeer(model.getChannel().getPeer());
+            model.setBuyer(model.getBisqEasyTrade().isBuyer());
+            model.setFiatCurrency(model.getBisqEasyTrade().getOffer().getMarket().getQuoteCurrencyCode());
+            model.setPaymentMethod(model.getBisqEasyTrade().getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
+            model.setTradeId(model.getBisqEasyTrade().getShortId());
+            model.setTradeDate(DateFormatter.formatDate(model.getBisqEasyTrade().getContract().getTakeOfferDate()));
+            model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(model.getBisqEasyTrade())));
+            model.setPriceSymbol(model.getBisqEasyOffer().getMarket().getMarketCodes());
         }
 
         @Override
@@ -109,16 +121,22 @@ public class BuyerState4 extends BaseState {
         }
     }
 
+    @Setter
     @Getter
     private static class Model extends BaseState.Model {
-        @Setter
         protected String paymentProof;
-        @Setter
         protected String paymentProofDescription;
-        @Setter
         protected boolean blockExplorerLinkVisible;
-        @Setter
         protected boolean paymentProofVisible;
+        protected UserProfile tradePeer;
+        protected boolean isBuyer;
+        protected String fiatCurrency;
+        protected String paymentMethod;
+        protected String tradeId;
+        protected String tradeDate;
+        protected String price;
+        protected String priceSymbol;
+        protected Optional<String> txId = Optional.empty();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -127,51 +145,41 @@ public class BuyerState4 extends BaseState {
 
     public static class View extends BaseState.View<Model, Controller> {
         private final Button leaveButton, exportButton;
-        private final MaterialTextField quoteAmount, baseAmount;
-        private final MaterialTextField paymentProof;
+        private final TradeCompletedTable tradeCompletedTable;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase4.headline"));
+            tradeCompletedTable = new TradeCompletedTable();
 
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.exportTrade"));
             leaveButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.leaveChannel"));
-            leaveButton.getStyleClass().add("outlined-button");
-            quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase4.quoteAmount"), "", false);
-            baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase4.baseAmount"), "", false);
+            leaveButton.setDefaultButton(true);
+            HBox buttons = new HBox(20, exportButton, leaveButton);
+            buttons.setAlignment(Pos.BOTTOM_RIGHT);
+            VBox.setMargin(buttons, new Insets(0, 0, 20, 0));
 
-            paymentProof = FormUtils.getTextField("", "", false);
-
-            HBox buttons = new HBox(leaveButton, Spacer.fillHBox(), exportButton);
-
-            VBox.setMargin(headline, new Insets(0, 0, 5, 0));
-            VBox.setMargin(buttons, new Insets(5, 0, 5, 0));
-            root.getChildren().addAll(
-                    headline,
-                    quoteAmount,
-                    baseAmount,
-                    paymentProof,
-                    buttons);
+            VBox content = new VBox(10, tradeCompletedTable, buttons);
+            content.setMaxWidth(1160);
+            root.getChildren().addAll(content);
+            root.setAlignment(Pos.CENTER);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            paymentProof.setVisible(model.isPaymentProofVisible());
-            paymentProof.setManaged(model.isPaymentProofVisible());
-            paymentProof.setDescription(model.getPaymentProofDescription());
-            paymentProof.setText(model.getPaymentProof());
-            if (model.isBlockExplorerLinkVisible()) {
-                paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
-                paymentProof.getIconButton().setOnAction(e -> controller.openExplorer());
-                paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase4.txId.tooltip"));
+            Optional<Pair<String, String>> txIdDescriptionAndValue = Optional.empty();
+            if (model.isPaymentProofVisible()) {
+                txIdDescriptionAndValue = Optional.of(new Pair<>(model.getPaymentProofDescription(), model.getPaymentProof()));
             }
-
-            quoteAmount.setText(model.getFormattedQuoteAmount());
-            baseAmount.setText(model.getFormattedBaseAmount());
-
+            tradeCompletedTable.initialize(model.getTradePeer(), model.isBuyer(), model.getBaseAmount(),
+                    model.getQuoteAmount(), model.getFiatCurrency(), model.getPaymentMethod(), model.getTradeId(),
+                    model.getTradeDate(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
+            if (model.isBlockExplorerLinkVisible()) {
+                tradeCompletedTable.showBlockExplorerLink();
+                tradeCompletedTable.getBlockExplorerButton().setOnAction(e -> controller.openExplorer());
+            }
             leaveButton.setOnAction(e -> controller.onLeaveChannel());
             exportButton.setOnAction(e -> controller.onExportTrade());
         }
@@ -180,9 +188,9 @@ public class BuyerState4 extends BaseState {
         protected void onViewDetached() {
             super.onViewDetached();
 
+            tradeCompletedTable.dispose();
             leaveButton.setOnAction(null);
             exportButton.setOnAction(null);
-            paymentProof.getIconButton().setOnAction(null);
         }
     }
 }

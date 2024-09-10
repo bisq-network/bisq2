@@ -178,6 +178,10 @@
     -fx-image: url("/images/waitingstates/scan-with-camera.png");
 }
 
+#complete-trade {
+    -fx-image: url("/images/waitingstates/complete-trade.png");
+}
+
 #video {
     -fx-image: url("/images/video.png");
 }

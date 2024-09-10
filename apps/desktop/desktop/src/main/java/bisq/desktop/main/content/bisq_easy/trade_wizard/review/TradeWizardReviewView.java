@@ -22,6 +22,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.application.DevMode;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.WrappingText;
@@ -77,15 +78,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         gridPane.setHgap(10);
         gridPane.setVgap(10);
         gridPane.setMouseTransparent(true);
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(25);
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(25);
-        ColumnConstraints col3 = new ColumnConstraints();
-        col3.setPercentWidth(25);
-        ColumnConstraints col4 = new ColumnConstraints();
-        col4.setPercentWidth(25);
-        gridPane.getColumnConstraints().addAll(col1, col2, col3, col4);
+        GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, 4);
 
         String descriptionStyle = "trade-wizard-review-description";
         String valueStyle = "trade-wizard-review-value";

@@ -284,20 +284,21 @@ public class TradeStateController implements Controller {
         model.getError().set(false);
         model.getCancelled().set(false);
         model.getCancelButtonVisible().set(true);
+        model.getIsTradeCompleted().set(false);
 
         switch (state) {
             case INIT:
                 break;
             case TAKER_SENT_TAKE_OFFER_REQUEST:
 
-                // Seller
+            // Seller
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
             case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                // Buyer
+            // Buyer
             case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
             case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
@@ -361,6 +362,7 @@ public class TradeStateController implements Controller {
 
             case BTC_CONFIRMED:
                 model.getCancelButtonVisible().set(false);
+                model.getIsTradeCompleted().set(true);
                 if (isSeller) {
                     model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
                 } else {
