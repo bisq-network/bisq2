@@ -40,7 +40,8 @@ public class TradeCompletedTable extends VBox {
 
     public TradeCompletedTable() {
         Label title = new Label(Res.get("bisqEasy.tradeCompleted.title"));
-        title.setGraphic(ImageUtil.getImageViewById("check-circle"));
+        title.setGraphic(ImageUtil.getImageViewById("complete-trade"));
+        title.setGraphicTextGap(30);
         title.getStyleClass().add("trade-completed-title");
 
         Label tableTitle = new Label(Res.get("bisqEasy.tradeCompleted.tableTitle").toUpperCase());
