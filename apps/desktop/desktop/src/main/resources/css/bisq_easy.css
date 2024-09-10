@@ -938,11 +938,23 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.trade-wizard-amount-limit-info-green {
-    -fx-fill: -bisq2-green;
+.trade-wizard-amount-limit-info-overlay-link.hyperlink {
+    -fx-padding: 0.166667em 0 0.166667em 0; /* 2 0 2 0 */
+    -fx-cursor: hand;
+    -fx-content-display: LEFT;
+    -fx-border-color: transparent;
+    -fx-border-width: 1px;
     -fx-text-fill: -bisq2-green;
+    -fx-underline: true;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans Light";
+}
+.trade-wizard-amount-limit-info-overlay-link.hyperlink:hover,
+.trade-wizard-amount-limit-info-overlay-link.hyperlink:hover:visited {
+    -fx-text-fill: -bisq2-green;
+}
+.trade-wizard-amount-limit-info-overlay-link.hyperlink:visited {
+    -fx-text-fill: -bisq2-green;
 }
 
 .trade-wizard-review-details-headline {

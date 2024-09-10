@@ -51,12 +51,14 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private String amountLimitInfoLink;
     @Setter
+    private String amountLimitInfoOverlayInfo;
+    @Setter
     private boolean isCreateOfferMode;
     @Setter
     private Optional<Monetary> baseSideAmount = Optional.empty();
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
-    private final BooleanProperty isAmountLimitInfoVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
@@ -71,11 +73,12 @@ public class TradeWizardAmountModel implements Model {
         headline = null;
         amountLimitInfo = null;
         amountLimitInfoLink = null;
+        amountLimitInfoOverlayInfo = null;
         isCreateOfferMode = false;
         baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
         isMinAmountEnabled.set(false);
-        isAmountLimitInfoVisible.set(false);
+        isAmountLimitInfoOverlayVisible.set(false);
         toggleButtonText.set(null);
         priceTooltip.set(null);
         quoteSideAmountSpec.set(null);

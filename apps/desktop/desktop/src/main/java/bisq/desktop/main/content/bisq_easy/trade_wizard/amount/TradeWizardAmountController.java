@@ -29,6 +29,7 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -55,7 +56,6 @@ import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -340,10 +340,19 @@ public class TradeWizardAmountController implements Controller {
         minAmountCompBaseSideAmountPin.unsubscribe();
         minAmountCompQuoteSideAmountPin.unsubscribe();
         priceTooltipPin.unsubscribe();
+        model.getIsAmountLimitInfoOverlayVisible().set(false);
     }
 
-    void onShowAmountLimitInfo() {
-        model.getIsAmountLimitInfoVisible().set(true);
+    void onShowAmountLimitInfoOverlay() {
+        model.getIsAmountLimitInfoOverlayVisible().set(true);
+    }
+
+    void onCloseAmountLimitInfoOverlay() {
+        model.getIsAmountLimitInfoOverlayVisible().set(false);
+    }
+
+    void onOpenWiki(String url) {
+        Browser.open(url);
     }
 
     void onToggleMinAmountVisibility() {
@@ -510,21 +519,27 @@ public class TradeWizardAmountController implements Controller {
             Monetary reputationBasedQuoteSideAmount = Fiat.fromFaceValue(111, "USD");
             minAmountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
             maxOrFixAmountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
+            int numPotentialTakers = 2;//todo
+            String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
             model.setAmountLimitInfo(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo",
-                    2, AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount)));
+                    numPotentialTakers, formattedAmount));
             model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.link"));
+            long score = 30000; //todo
+            model.setAmountLimitInfoOverlayInfo(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info", formattedAmount, score));
         } else {
             String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
-            ReputationScore myReputationScore = reputationService.getReputationScore(myProfileId);
-            BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, model.getMarket(), myReputationScore.getTotalScore())
+            long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
+            BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, model.getMarket(), myReputationScore)
                     .ifPresent(reputationBasedQuoteSideAmount -> {
                         minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
                         maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
                         minAmountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
                         maxOrFixAmountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
+                        String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
                         model.setAmountLimitInfo(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo",
-                                AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount)));
+                                formattedAmount));
                         model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
+                        model.setAmountLimitInfoOverlayInfo(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.info", myReputationScore, formattedAmount));
                     });
         }
 
