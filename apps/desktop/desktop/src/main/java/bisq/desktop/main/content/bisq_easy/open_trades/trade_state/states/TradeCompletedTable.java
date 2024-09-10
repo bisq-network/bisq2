@@ -64,9 +64,9 @@ public class TradeCompletedTable extends VBox {
         Region line1 = getLine();
         Region line2 = getLine();
         Region line3 = getLine();
-        VBox.setMargin(title, new Insets(0, 0, 20, 0));
+        VBox.setMargin(title, new Insets(10, 0, 20, 0));
         VBox.setMargin(line1, new Insets(10, 0, 5, 0));
-        VBox.setMargin(line2, new Insets(20, 0, 5, 0));
+        VBox.setMargin(line2, new Insets(30, 0, 5, 0));
         VBox.setMargin(line3, new Insets(5, 0, 10, 0));
         getChildren().addAll(title, tableTitle, line1, headerGridPane, line2, bodyGridPane, line3);
         setAlignment(Pos.CENTER);
