@@ -2,6 +2,7 @@ package bisq.desktop.components.controls;
 
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
+import javafx.collections.ObservableList;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
@@ -16,6 +17,7 @@ public final class TextFlowUtils {
      */
     public static void updateTextFlow(TextFlow textFlow, String text) {
         textFlow.getChildren().clear();
+        ObservableList<String> styleClasses = textFlow.getStyleClass();
 
         // Split the text into styled segments
         List<Pair<String, List<String>>> styledSegments = StringUtils.getTextStylePairs(text);
@@ -26,6 +28,7 @@ public final class TextFlowUtils {
 
             if (segmentText != null && !segmentText.isEmpty()) {
                 Text styledText = new Text(segmentText);
+                styledText.getStyleClass().addAll(styleClasses);
 
                 // Apply styles to the Text node
                 if (styles != null) {
@@ -34,9 +37,6 @@ public final class TextFlowUtils {
                             styledText.getStyleClass().add(style);
                         }
                     }
-                } else {
-                    // Apply a default style if no specific styles are present
-                    styledText.getStyleClass().add("trade-wizard-review-value");
                 }
 
                 // Add the styled Text node to the TextFlow
