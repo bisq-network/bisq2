@@ -428,8 +428,6 @@ public class AmountComponent {
                 double repAmount = reputationBasedQuoteSideAmount.getValue() - minRangeMonetary.getValue();
                 double range = model.getMaxRangeMonetary().get().getValue() - minRangeMonetary.getValue();
                 double reputationBasedAmountOnSlider = repAmount / range;
-                log.error("reputationBasedAmountOnSlider {}", reputationBasedAmountOnSlider);
-                // String rightSideColor = "-bisq2-yellow-dim-10";
                 String rightSideColor = "-bisq-dark-grey-50";
                 model.getSliderTrackStyle().set(String.format(
                         "-track-color: linear-gradient(to right, " +

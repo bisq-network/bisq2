@@ -44,7 +44,7 @@ public class BisqEasyTradeAmountLimits {
     public static final Fiat MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(600, "USD");
     public static final Fiat MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION = Fiat.fromFaceValue(25, "USD");
     private static final double REQUIRED_REPUTAION_SCORE_PER_USD = 200d;
-    private static final long MIN_REPUTAION_SCORE = 5000;
+    public static final long MIN_REPUTAION_SCORE = 5000;
     public static final double TOLERANCE = 0.1;
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
@@ -80,11 +80,11 @@ public class BisqEasyTradeAmountLimits {
 
 
     public static Optional<Result> checkOfferAmountLimitForMinAmount(ReputationService reputationService,
-                                                                            BisqEasyService bisqEasyService,
-                                                                            UserIdentityService userIdentityService,
-                                                                            UserProfileService userProfileService,
-                                                                            MarketPriceService marketPriceService,
-                                                                            BisqEasyOffer peersOffer) {
+                                                                     BisqEasyService bisqEasyService,
+                                                                     UserIdentityService userIdentityService,
+                                                                     UserProfileService userProfileService,
+                                                                     MarketPriceService marketPriceService,
+                                                                     BisqEasyOffer peersOffer) {
         return findRequiredReputationScoreForMinAmount(marketPriceService, peersOffer)
                 .map(requiredReputationScore -> {
                     long sellersReputationScore = getSellersReputationScore(reputationService, userIdentityService, userProfileService, peersOffer);
@@ -131,8 +131,8 @@ public class BisqEasyTradeAmountLimits {
         return result;
     }
 
-    private static Optional<Long> findRequiredReputationScoreForMaxOrFixedAmount(MarketPriceService marketPriceService,
-                                                                                 BisqEasyOffer offer) {
+    public static Optional<Long> findRequiredReputationScoreForMaxOrFixedAmount(MarketPriceService marketPriceService,
+                                                                                BisqEasyOffer offer) {
         return OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, offer)
                 .flatMap(fiatAmount -> findRequiredReputationScoreByFiatAmount(marketPriceService, offer.getMarket(), fiatAmount));
     }
@@ -143,9 +143,9 @@ public class BisqEasyTradeAmountLimits {
                 .flatMap(fiatAmount -> findRequiredReputationScoreByFiatAmount(marketPriceService, offer.getMarket(), fiatAmount));
     }
 
-    private static Optional<Long> findRequiredReputationScoreByFiatAmount(MarketPriceService marketPriceService,
-                                                                          Market market,
-                                                                          Monetary fiatAmount) {
+    public static Optional<Long> findRequiredReputationScoreByFiatAmount(MarketPriceService marketPriceService,
+                                                                         Market market,
+                                                                         Monetary fiatAmount) {
         return fiatToBtc(marketPriceService, market, fiatAmount)
                 .flatMap(btc -> btcToUsd(marketPriceService, btc))
                 .map(BisqEasyTradeAmountLimits::getRequiredReputationScoreByUsdAmount);
@@ -168,7 +168,12 @@ public class BisqEasyTradeAmountLimits {
         return MathUtils.roundDoubleToLong(faceValue * REQUIRED_REPUTAION_SCORE_PER_USD);
     }
 
-    private static long withTolerance(long makersReputationScore) {
+    public static Monetary getUsdAmountFromReputationScore(long reputationScore) {
+        long usdAmount = MathUtils.roundDoubleToLong(reputationScore / REQUIRED_REPUTAION_SCORE_PER_USD);
+        return Fiat.fromFaceValue(usdAmount, "USD");
+    }
+
+    public static long withTolerance(long makersReputationScore) {
         return MathUtils.roundDoubleToLong(makersReputationScore * (1 + TOLERANCE));
     }
 

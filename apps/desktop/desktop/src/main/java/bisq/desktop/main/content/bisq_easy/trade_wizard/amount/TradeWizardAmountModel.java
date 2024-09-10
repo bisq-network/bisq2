@@ -46,16 +46,12 @@ public class TradeWizardAmountModel implements Model {
     private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
     @Setter
     private String headline;
-    @Setter
-    private String amountLimitInfoLeft;
-    @Setter
-    private String amountLimitInfoAmount;
-    @Setter
-    private String amountLimitInfoRight;
+    private final StringProperty amountLimitInfoLeft = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoRight = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     @Setter
     private String amountLimitInfoLink;
-    @Setter
-    private String amountLimitInfoOverlayInfo;
     @Setter
     private boolean isCreateOfferMode;
     @Setter
@@ -76,11 +72,11 @@ public class TradeWizardAmountModel implements Model {
         bitcoinPaymentMethods = new ArrayList<>();
         fiatPaymentMethods = new ArrayList<>();
         headline = null;
-        amountLimitInfoLeft = null;
-        amountLimitInfoAmount = null;
-        amountLimitInfoRight = null;
+        amountLimitInfoLeft.set(null);
+        amountLimitInfoAmount.set(null);
+        amountLimitInfoRight.set(null);
+        amountLimitInfoOverlayInfo.set(null);
         amountLimitInfoLink = null;
-        amountLimitInfoOverlayInfo = null;
         isCreateOfferMode = false;
         baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
