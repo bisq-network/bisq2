@@ -47,11 +47,16 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private String headline;
     @Setter
+    private String amountLimitInfo;
+    @Setter
+    private String amountLimitInfoLink;
+    @Setter
     private boolean isCreateOfferMode;
     @Setter
     private Optional<Monetary> baseSideAmount = Optional.empty();
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountLimitInfoVisible = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
@@ -64,10 +69,13 @@ public class TradeWizardAmountModel implements Model {
         bitcoinPaymentMethods = new ArrayList<>();
         fiatPaymentMethods = new ArrayList<>();
         headline = null;
+        amountLimitInfo = null;
+        amountLimitInfoLink = null;
         isCreateOfferMode = false;
         baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
         isMinAmountEnabled.set(false);
+        isAmountLimitInfoVisible.set(false);
         toggleButtonText.set(null);
         priceTooltip.set(null);
         quoteSideAmountSpec.set(null);

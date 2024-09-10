@@ -24,6 +24,7 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -34,8 +35,13 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
     private final Button toggleButton;
     private final VBox minAmountRoot;
     private final Label headlineLabel;
+    private final Label amountLimitInfo;
+    private final Hyperlink amountLimitInfoLink;
 
-    public TradeWizardAmountView(TradeWizardAmountModel model, TradeWizardAmountController controller, AmountComponent minAmountComponent, AmountComponent maxOrFixAmountComponent) {
+    public TradeWizardAmountView(TradeWizardAmountModel model,
+                                 TradeWizardAmountController controller,
+                                 AmountComponent minAmountComponent,
+                                 AmountComponent maxOrFixAmountComponent) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -47,24 +53,35 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         HBox amountBox = new HBox(30, minAmountRoot, maxOrFixAmountComponent.getView().getRoot());
         amountBox.setAlignment(Pos.CENTER);
 
+        amountLimitInfo = new Label();
+        amountLimitInfo.getStyleClass().add("trade-wizard-amount-limit-info");
+        amountLimitInfoLink = new Hyperlink();
+        amountLimitInfoLink.getStyleClass().add("trade-wizard-amount-limit-info-green");
+        HBox amountLimitInfoBox = new HBox(5, amountLimitInfo, amountLimitInfoLink);
+        amountLimitInfoBox.setAlignment(Pos.CENTER);
+
         toggleButton = new Button(Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
         toggleButton.getStyleClass().add("outlined-button");
         toggleButton.setMinWidth(AmountComponent.View.AMOUNT_BOX_WIDTH);
 
-        VBox.setMargin(headlineLabel, new Insets(-30, 0, 10, 0));
-        VBox.setMargin(toggleButton, new Insets(25, 0, 0, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountBox, toggleButton, Spacer.fillVBox());
+        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(amountLimitInfoBox, new Insets(15, 0, 15, 0));
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountBox, amountLimitInfoBox, toggleButton, Spacer.fillVBox());
     }
 
     @Override
     protected void onViewAttached() {
         headlineLabel.setText(model.getHeadline());
+        amountLimitInfo.setText( model.getAmountLimitInfo());
+        amountLimitInfoLink.setText( model.getAmountLimitInfoLink());
+
         minAmountRoot.visibleProperty().bind(model.getIsMinAmountEnabled());
         minAmountRoot.managedProperty().bind(model.getIsMinAmountEnabled());
         toggleButton.visibleProperty().bind(model.getShowRangeAmounts());
         toggleButton.managedProperty().bind(model.getShowRangeAmounts());
         toggleButton.textProperty().bind(model.getToggleButtonText());
 
+        amountLimitInfoLink.setOnAction(e -> controller.onShowAmountLimitInfo());
         toggleButton.setOnAction(e -> controller.onToggleMinAmountVisibility());
     }
 
@@ -74,6 +91,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         minAmountRoot.managedProperty().unbind();
         toggleButton.textProperty().unbind();
 
+        amountLimitInfoLink.setOnAction(null);
         toggleButton.setOnAction(null);
     }
 }

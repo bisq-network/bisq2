@@ -931,6 +931,20 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.trade-wizard-amount-limit-info {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-wizard-amount-limit-info-green {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 .trade-wizard-review-details-headline {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;

@@ -93,6 +93,10 @@ public class AmountComponent {
         controller.setMinMaxRange(minRangeValue, maxRangeValue);
     }
 
+    public void setReputationBasedQuoteSideAmount(Monetary reputationBasedQuoteSideAmount) {
+        controller.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
+    }
+
     public void setTooltip(String tooltip) {
         controller.setTooltip(tooltip);
     }
@@ -229,6 +233,10 @@ public class AmountComponent {
             model.getMinRangeMonetary().set(minRangeValue);
             model.getMaxRangeMonetary().set(maxRangeValue);
             applyInitialRangeValues();
+        }
+
+        public void setReputationBasedQuoteSideAmount(Monetary reputationBasedQuoteSideAmount) {
+            model.getReputationBasedQuoteSideAmount().set(reputationBasedQuoteSideAmount);
         }
 
         public void setQuote(PriceQuote priceQuote) {
@@ -464,6 +472,8 @@ public class AmountComponent {
         @Setter
         private ObjectProperty<Monetary> maxRangeQuoteSideValue = new SimpleObjectProperty<>();
         @Setter
+        private ObjectProperty<Monetary> reputationBasedQuoteSideAmount = new SimpleObjectProperty<>();
+        @Setter
         private Market market = MarketRepository.getDefault();
         @Setter
         private Direction direction = Direction.BUY;
@@ -497,7 +507,10 @@ public class AmountComponent {
         private final BigAmountInput quoteAmount;
         private Subscription baseAmountFocusPin, quoteAmountFocusPin;
 
-        private View(Model model, AmountComponent.Controller controller, SmallAmountInput baseAmount, BigAmountInput quoteAmount) {
+        private View(Model model,
+                     AmountComponent.Controller controller,
+                     SmallAmountInput baseAmount,
+                     BigAmountInput quoteAmount) {
             super(new VBox(10), model, controller);
 
             Pane baseAmountRoot = baseAmount.getRoot();
