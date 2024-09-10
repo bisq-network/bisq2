@@ -17,8 +17,12 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
+import bisq.common.data.Pair;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -32,11 +36,14 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 
 import java.util.Optional;
 
 public class TradeCompletedTable extends VBox {
     private final GridPane headerGridPane, bodyGridPane;
+    @Getter
+    private final BisqMenuItem blockExplorerButton, copyTxIdButton;
 
     public TradeCompletedTable() {
         Label title = new Label(Res.get("bisqEasy.tradeCompleted.title"));
@@ -61,6 +68,15 @@ public class TradeCompletedTable extends VBox {
         valueCol.setPercentWidth(75);
         bodyGridPane.getColumnConstraints().add(valueCol);
 
+        blockExplorerButton = new BisqMenuItem("Link"); // TODO: Add icon for external link instead
+        blockExplorerButton.setVisible(false);
+        blockExplorerButton.setManaged(false);
+        blockExplorerButton.setTooltip(Res.get("bisqEasy.tradeCompleted.body.txId.tooltip"));
+
+        copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");
+        copyTxIdButton.useIconOnly();
+        copyTxIdButton.setTooltip(Res.get("action.copyToClipboard"));
+
         Region line1 = getLine();
         Region line2 = getLine();
         Region line3 = getLine();
@@ -74,7 +90,7 @@ public class TradeCompletedTable extends VBox {
 
     public void initialize(UserProfile userProfile, Direction direction, String btcAmount, String fiatAmount,
                            String fiatCurrency, String paymentMethodUsed, String tradeIdUsed, String tradeDate,
-                           String tradePriceUsed, String tradePriceSymbolUsed, Optional<String> txId) {
+                           String tradePriceUsed, String tradePriceSymbolUsed, Optional<Pair<String, String>> txIdDescriptionAndValue) {
         // Header
         int rowTitle = 0;
         int rowValue = 1;
@@ -163,15 +179,33 @@ public class TradeCompletedTable extends VBox {
         bodyGridPane.add(tradeFee, colTitle, row);
         bodyGridPane.add(tradeFeeValue, colValue, row);
 
-        if (txId.isPresent()) {
+        if (txIdDescriptionAndValue.isPresent()) {
             ++row;
-            Label txIdTitle = new Label(Res.get("bisqEasy.tradeCompleted.body.txId"));
+            Label txIdTitle = new Label(txIdDescriptionAndValue.get().getFirst());
             txIdTitle.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
-            Label txIdValue = new Label(txId.get());
-            // TODO: add link & copy
+            String txId = txIdDescriptionAndValue.get().getSecond();
+            Label txIdValue = new Label(txId);
+            txIdValue.getStyleClass().addAll("medium-text", "text-fill-green");
+            HBox txValueBox = new HBox(5, txIdValue, Spacer.fillHBox(), blockExplorerButton, copyTxIdButton);
+            txValueBox.setAlignment(Pos.CENTER_LEFT);
+            GridPane.setValignment(txIdTitle, VPos.CENTER);
+            GridPane.setValignment(txIdValue, VPos.CENTER);
+            copyTxIdButton.setOnAction(e -> ClipboardUtil.copyToClipboard(txId));
             bodyGridPane.add(txIdTitle, colTitle, row);
-            bodyGridPane.add(txIdValue, colValue, row);
+            bodyGridPane.add(txValueBox, colValue, row);
+            GridPane.setMargin(txIdTitle, new Insets(-5, 0, 0, 0));
+            GridPane.setMargin(txValueBox, new Insets(-5, 0, 0, 0));
         }
+    }
+
+    public void dispose() {
+        blockExplorerButton.setOnAction(null);
+        copyTxIdButton.setOnAction(null);
+    }
+
+    public void showBlockExplorerLink() {
+        blockExplorerButton.setVisible(true);
+        blockExplorerButton.setManaged(true);
     }
 
     private Region getLine() {
