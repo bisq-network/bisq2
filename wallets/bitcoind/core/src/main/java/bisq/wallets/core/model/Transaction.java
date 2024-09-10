@@ -17,7 +17,6 @@
 
 package bisq.wallets.core.model;
 
-import bisq.common.monetary.Coin;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -35,7 +34,7 @@ public class Transaction {
     private final int height;
     private final Optional<Date> date;
     private final int confirmations;
-    private final Coin amount;
+    private final long amount;
     private final boolean incoming;
 
     public Transaction(String txId,
@@ -45,7 +44,7 @@ public class Transaction {
                        int height,
                        Optional<Date> date,
                        int confirmations,
-                       Coin amount,
+                       long amount,
                        boolean incoming) {
 
         this.txId = txId;

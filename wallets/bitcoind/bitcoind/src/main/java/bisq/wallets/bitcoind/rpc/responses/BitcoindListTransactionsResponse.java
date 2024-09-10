@@ -17,12 +17,12 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import bisq.common.monetary.Coin;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -59,13 +59,21 @@ public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<Bitco
         private boolean abandoned;
 
         @Override
-        public Coin getAmount() {
-            return Coin.asBtcFromFaceValue(amount);
+        public long getAmount() {
+            return doubleValueToLong(amount, 8);
         }
 
         @Override
         public Optional<Date> getDate() {
             return Optional.of(new Date(time * 1000L));
         }
+    }
+
+    private static long doubleValueToLong(double value, int precision) {
+        double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(precision).doubleValue();
+        if (value > max) {
+            throw new ArithmeticException("Provided value would lead to an overflow");
+        }
+        return BigDecimal.valueOf(value).movePointRight(precision).longValue();
     }
 }

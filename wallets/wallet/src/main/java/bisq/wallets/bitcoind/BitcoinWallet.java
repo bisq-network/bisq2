@@ -17,7 +17,6 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.common.monetary.Coin;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
@@ -100,7 +99,6 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
                     List<TransactionInput> inputs = new ArrayList<>();
                     List<TransactionOutput> outputs = new ArrayList<>();
                     int lockTime = 0;
-                    Coin amount = Coin.asBtcFromValue(0);
                     boolean incoming = true;
                     return new Transaction(tx.getTxId(),
                             inputs,
@@ -109,7 +107,7 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
                             tx.getBlockheight(),
                             Optional.of(new Date(tx.getTime() * 1000L)),
                             tx.getConfirmations(),
-                            amount,
+                            tx.getAmount(),
                             incoming);
                 })
                 .collect(Collectors.toList());

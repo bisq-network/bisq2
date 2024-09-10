@@ -63,7 +63,7 @@ public class BitcoindSendAndListTxsIntegrationTests {
         BitcoindListTransactionsResponse.Entry firstTx = txs.getFirst();
         assertEquals(firstTxReceiverAddress, firstTx.getAddress());
         assertEquals("receive", firstTx.getCategory());
-        assertEquals(100000000, firstTx.getAmount().getValue());
+        assertEquals(100000000, firstTx.getAmount());
         assertEquals(1, firstTx.getConfirmations());
         assertEquals(0, firstTx.getWalletconflicts().length);
         assertEquals("no", firstTx.getBip125Replaceable());
@@ -71,7 +71,7 @@ public class BitcoindSendAndListTxsIntegrationTests {
         BitcoindListTransactionsResponse.Entry secondTx = txs.get(1);
         assertEquals(secondTxReceiverAddress, secondTx.getAddress());
         assertEquals("receive", secondTx.getCategory());
-        assertEquals(100000000, secondTx.getAmount().getValue());
+        assertEquals(100000000, secondTx.getAmount());
         assertEquals(1, secondTx.getConfirmations());
         assertEquals(0, secondTx.getWalletconflicts().length);
         assertEquals("no", secondTx.getBip125Replaceable());
@@ -79,7 +79,7 @@ public class BitcoindSendAndListTxsIntegrationTests {
         BitcoindListTransactionsResponse.Entry thirdTx = txs.get(2);
         assertEquals(thirdTxReceiverAddress, thirdTx.getAddress());
         assertEquals("receive", thirdTx.getCategory());
-        assertEquals(100000000, thirdTx.getAmount().getValue());
+        assertEquals(100000000, thirdTx.getAmount());
         assertEquals(1, thirdTx.getConfirmations());
         assertEquals(0, thirdTx.getWalletconflicts().length);
         assertEquals("no", thirdTx.getBip125Replaceable());
