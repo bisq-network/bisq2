@@ -26,7 +26,6 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -86,7 +85,7 @@ public class BuyerState4 extends BaseState {
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
             model.setTradePeer(model.getChannel().getPeer());
-            model.setDirection(model.getBisqEasyOffer().getDirection());
+            model.setBuyer(model.getBisqEasyTrade().isBuyer());
             model.setFiatCurrency(model.getBisqEasyTrade().getOffer().getMarket().getQuoteCurrencyCode());
             model.setPaymentMethod(model.getBisqEasyTrade().getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
             model.setTradeId(model.getBisqEasyTrade().getShortId());
@@ -130,7 +129,7 @@ public class BuyerState4 extends BaseState {
         protected boolean blockExplorerLinkVisible;
         protected boolean paymentProofVisible;
         protected UserProfile tradePeer;
-        protected Direction direction;
+        protected boolean isBuyer;
         protected String fiatCurrency;
         protected String paymentMethod;
         protected String tradeId;
@@ -174,7 +173,7 @@ public class BuyerState4 extends BaseState {
             if (model.isPaymentProofVisible()) {
                 txIdDescriptionAndValue = Optional.of(new Pair<>(model.getPaymentProofDescription(), model.getPaymentProof()));
             }
-            tradeCompletedTable.initialize(model.getTradePeer(), model.getDirection(), model.getBaseAmount(),
+            tradeCompletedTable.initialize(model.getTradePeer(), model.isBuyer(), model.getBaseAmount(),
                     model.getQuoteAmount(), model.getFiatCurrency(), model.getPaymentMethod(), model.getTradeId(),
                     model.getTradeDate(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
             if (model.isBlockExplorerLinkVisible()) {

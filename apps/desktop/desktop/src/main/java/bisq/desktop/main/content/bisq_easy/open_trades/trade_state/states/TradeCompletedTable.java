@@ -25,7 +25,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -88,7 +87,7 @@ public class TradeCompletedTable extends VBox {
         setAlignment(Pos.CENTER);
     }
 
-    public void initialize(UserProfile userProfile, Direction direction, String btcAmount, String fiatAmount,
+    public void initialize(UserProfile userProfile, boolean isBuyer, String btcAmount, String fiatAmount,
                            String fiatCurrency, String paymentMethodUsed, String tradeIdUsed, String tradeDate,
                            String tradePriceUsed, String tradePriceSymbolUsed, Optional<Pair<String, String>> txIdDescriptionAndValue) {
         // Header
@@ -103,7 +102,7 @@ public class TradeCompletedTable extends VBox {
         headerGridPane.add(tradeWithValue, col, rowValue);
 
         ++col;
-        Label myDirection = direction == Direction.BUY
+        Label myDirection = isBuyer
                 ? new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.buyer").toUpperCase())
                 : new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.seller").toUpperCase());
         myDirection.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
@@ -117,7 +116,7 @@ public class TradeCompletedTable extends VBox {
         headerGridPane.add(btcBox, col, rowValue);
 
         ++col;
-        Label myOutcome = direction == Direction.BUY
+        Label myOutcome = isBuyer
                 ? new Label(Res.get("bisqEasy.tradeCompleted.header.myOutcome.buyer").toUpperCase())
                 : new Label(Res.get("bisqEasy.tradeCompleted.header.myOutcome.seller").toUpperCase());
         myOutcome.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
