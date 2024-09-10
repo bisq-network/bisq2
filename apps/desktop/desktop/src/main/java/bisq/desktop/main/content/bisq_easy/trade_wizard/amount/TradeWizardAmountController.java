@@ -516,7 +516,7 @@ public class TradeWizardAmountController implements Controller {
 
         if (model.getDirection().isBuy()) {
             //todo get highest reputation score seller
-            Monetary reputationBasedQuoteSideAmount = Fiat.fromFaceValue(111, "USD");
+            Monetary reputationBasedQuoteSideAmount = Fiat.fromFaceValue(30, "USD");
             minAmountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
             maxOrFixAmountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
             int numPotentialTakers = 2;//todo

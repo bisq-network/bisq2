@@ -236,7 +236,8 @@ public class AmountComponent {
         }
 
         public void setReputationBasedQuoteSideAmount(Monetary reputationBasedQuoteSideAmount) {
-            model.getReputationBasedQuoteSideAmount().set(reputationBasedQuoteSideAmount);
+            model.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
+            applySliderTrackStyle();
         }
 
         public void setQuote(PriceQuote priceQuote) {
@@ -402,6 +403,30 @@ public class AmountComponent {
                 }
             }
 
+            applySliderTrackStyle();
+        }
+
+        private void applySliderTrackStyle() {
+            Monetary minRangeMonetary = model.getMinRangeQuoteSideValue().get();
+            Monetary maxRangeMonetary = model.getMaxRangeQuoteSideValue().get();
+            Monetary reputationBasedQuoteSideAmount = model.getReputationBasedQuoteSideAmount();
+            if (reputationBasedQuoteSideAmount != null &&
+                    minRangeMonetary != null &&
+                    maxRangeMonetary != null) {
+                double repAmount = reputationBasedQuoteSideAmount.getValue() - minRangeMonetary.getValue();
+                double range = model.getMaxRangeMonetary().get().getValue() - minRangeMonetary.getValue();
+                double reputationBasedAmountOnSlider = repAmount / range;
+                log.error("reputationBasedAmountOnSlider {}", reputationBasedAmountOnSlider);
+                // String rightSideColor = "-bisq2-yellow-dim-10";
+                String rightSideColor = "-bisq-dark-grey-50";
+                model.getSliderTrackStyle().set(String.format(
+                        "-track-color: linear-gradient(to right, " +
+                                "-bisq2-green 0%%, " +
+                                "-bisq2-green %1$.1f%%, " +
+                                rightSideColor + " %1$.1f%%, " +
+                                rightSideColor + " 100%%);",
+                        100 * reputationBasedAmountOnSlider));
+            }
         }
 
         @Override
@@ -472,7 +497,9 @@ public class AmountComponent {
         @Setter
         private ObjectProperty<Monetary> maxRangeQuoteSideValue = new SimpleObjectProperty<>();
         @Setter
-        private ObjectProperty<Monetary> reputationBasedQuoteSideAmount = new SimpleObjectProperty<>();
+        private Monetary reputationBasedQuoteSideAmount;
+        private final StringProperty sliderTrackStyle = new SimpleStringProperty();
+        ;
         @Setter
         private Market market = MarketRepository.getDefault();
         @Setter
@@ -500,12 +527,12 @@ public class AmountComponent {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         public final static int AMOUNT_BOX_WIDTH = 330;
-        private final Slider slider;
+        private final Slider slider = new Slider();
         private final Label minRangeValue, maxRangeValue, description;
         private final Region selectionLine;
         private final SmallAmountInput baseAmount;
         private final BigAmountInput quoteAmount;
-        private Subscription baseAmountFocusPin, quoteAmountFocusPin;
+        private Subscription baseAmountFocusPin, quoteAmountFocusPin, sliderTrackStylePin;
 
         private View(Model model,
                      AmountComponent.Controller controller,
@@ -551,7 +578,6 @@ public class AmountComponent {
             Pane amountPane = new Pane(vbox, line, selectionLine);
             amountPane.setMaxWidth(AMOUNT_BOX_WIDTH);
 
-            slider = new Slider();
             slider.setMin(model.getSliderMin());
             slider.setMax(model.getSliderMax());
 
@@ -578,6 +604,7 @@ public class AmountComponent {
                         focus -> onInputTextFieldFocus(baseAmount.focusedProperty(), focus));
             }).after(700);
 
+            sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), slider::setStyle);
             slider.valueProperty().bindBidirectional(model.getSliderValue());
             model.getSliderFocus().bind(slider.focusedProperty());
             description.textProperty().bind(model.description);
@@ -600,6 +627,7 @@ public class AmountComponent {
             if (quoteAmountFocusPin != null) {
                 quoteAmountFocusPin.unsubscribe();
             }
+            sliderTrackStylePin.unsubscribe();
             slider.valueProperty().unbindBidirectional(model.getSliderValue());
             model.getSliderFocus().unbind();
             description.textProperty().unbind();
