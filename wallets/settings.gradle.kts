@@ -20,5 +20,6 @@ include("electrum")
 include("elementsd")
 
 include("process")
+include("wallet")
 
 rootProject.name = "wallets"
