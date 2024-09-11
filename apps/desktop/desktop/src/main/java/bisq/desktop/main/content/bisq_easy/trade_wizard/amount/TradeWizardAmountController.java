@@ -559,7 +559,7 @@ public class TradeWizardAmountController implements Controller {
 
         if (model.getDirection().isBuy()) {
             model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.link"));
-            model.getAmountLimitInfoRight().set("");
+            model.setLinkToWikiText(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.linkToWikiText"));
             model.getAmountLimitInfoAmount().set("");
 
             long highestScore = reputationService.getScoreByUserProfileId().entrySet().stream()
@@ -578,6 +578,7 @@ public class TradeWizardAmountController implements Controller {
                 applyReputationBasedQuoteSideAmount();
             }
         } else {
+            model.setLinkToWikiText(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.linkToWikiText"));
             String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
             long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
             BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, model.getMarket(), myReputationScore)
@@ -587,9 +588,8 @@ public class TradeWizardAmountController implements Controller {
                         minAmountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
                         maxOrFixAmountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
                         String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
-                        model.getAmountLimitInfoLeft().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoLeft"));
+                        model.getAmountLimitInfoLeft().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoLeft", myReputationScore));
                         model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoAmount", formattedAmount));
-                        model.getAmountLimitInfoRight().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoRight"));
                         model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
                         model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.info", myReputationScore, formattedAmount));
                     });
