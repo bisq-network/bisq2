@@ -40,7 +40,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, TakeOfferAmountController> {
-    private final Label headlineLabel, amountLimitInfoLeft, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
+    private final Label headlineLabel, amountLimitInfo, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, showOverlayHyperLink, linkToWiki;
     private final VBox content, amountLimitInfoOverlay;
     private final Button closeOverlayButton;
@@ -58,8 +58,8 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        amountLimitInfoLeft = new Label();
-        amountLimitInfoLeft.getStyleClass().add("trade-wizard-amount-limit-info");
+        amountLimitInfo = new Label();
+        amountLimitInfo.getStyleClass().add("trade-wizard-amount-limit-info");
 
         amountLimitInfoAmount = new Hyperlink();
         amountLimitInfoAmount.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
@@ -72,7 +72,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         warningIcon.getStyleClass().add("overlay-icon-warning");
 
         HBox.setMargin(warningIcon, new Insets(0, 5, 0, 0));
-        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfoLeft, amountLimitInfoAmount, showOverlayHyperLink);
+        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfo, amountLimitInfoAmount, showOverlayHyperLink);
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
 
         // VBox.setMargin(headlineLabel, new Insets(-30, 0, 10, 0));
@@ -99,7 +99,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         showOverlayHyperLink.setText(model.getAmountLimitInfoLink());
         linkToWikiText.setText(model.getLinkToWikiText());
 
-        amountLimitInfoLeft.textProperty().bind(model.getAmountLimitInfoLeft());
+        amountLimitInfo.textProperty().bind(model.getAmountLimitInfo());
         amountLimitInfoAmount.textProperty().bind(model.getAmountLimitInfoAmount());
         amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
 
@@ -133,7 +133,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
     @Override
     protected void onViewDetached() {
         warningIcon.visibleProperty().unbind();
-        amountLimitInfoLeft.textProperty().unbind();
+        amountLimitInfo.textProperty().unbind();
         amountLimitInfoAmount.textProperty().unbind();
         amountLimitInfoOverlayInfo.textProperty().unbind();
         amountLimitInfoAmount.managedProperty().unbind();

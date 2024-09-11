@@ -83,11 +83,11 @@ public class TakeOfferAmountController implements Controller {
 
         if (optionalQuoteSideMinOrFixedAmount.isPresent() && takerAsSellersMaxAllowedAmount.isPresent()) {
             //todo
-            Monetary maxAmount = takerAsSellersMaxAllowedAmount.get();
-            Monetary reputationBasedQuoteSideAmount = takerAsSellersMaxAllowedAmount.get();
-            amountComponent.setMinMaxRange(optionalQuoteSideMinOrFixedAmount.get(), maxAmount);
+            Monetary maxAmount = takerAsSellersMaxAllowedAmount.get().round(0);
+            Monetary reputationBasedQuoteSideAmount = takerAsSellersMaxAllowedAmount.get().round(0);
+            Monetary quoteSideMinOrFixedAmount = optionalQuoteSideMinOrFixedAmount.get().round(0);
             amountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
-            applyQuoteSideMinMaxRange(optionalQuoteSideMinOrFixedAmount.get(), maxAmount);
+            applyQuoteSideMinMaxRange(quoteSideMinOrFixedAmount, maxAmount);
 
             long sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
             amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description.limitedByTakersReputation",
@@ -96,9 +96,10 @@ public class TakeOfferAmountController implements Controller {
                     AmountFormatter.formatAmountWithCode(maxAmount)));
         } else if (optionalQuoteSideMinOrFixedAmount.isPresent() && optionalQuoteSideMaxOrFixedAmount.isPresent()) {
             //todo
-            Monetary maxAmount = optionalQuoteSideMaxOrFixedAmount.get();
+            Monetary maxAmount = optionalQuoteSideMaxOrFixedAmount.get().round(0);
             Monetary reputationBasedQuoteSideAmount = optionalQuoteSideMaxOrFixedAmount.get();
-            applyQuoteSideMinMaxRange(optionalQuoteSideMinOrFixedAmount.get(), maxAmount);
+            Monetary quoteSideMinOrFixedAmount = optionalQuoteSideMinOrFixedAmount.get().round(0);
+            applyQuoteSideMinMaxRange(quoteSideMinOrFixedAmount, maxAmount);
 
             amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
                     OfferAmountFormatter.formatQuoteSideMinAmount(marketPriceService, bisqEasyOffer, false),
@@ -169,10 +170,9 @@ public class TakeOfferAmountController implements Controller {
             model.setLinkToWikiText(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.overlay.linkToWikiText"));
             model.getAmountLimitInfoAmount().set("");
 
-
             long sellersReputationScore = reputationService.getReputationScore(bisqEasyOffer.getMakersUserProfileId()).getTotalScore();
             Monetary reputationBasedQuoteSideAmount = BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, bisqEasyOffer.getMarket(), sellersReputationScore)
-                    .orElse(Fiat.fromFaceValue(0, "USD"));
+                    .orElse(Fiat.fromFaceValue(0, "USD")).round(0);
             if (reputationBasedQuoteSideAmount.isLessThan(maxRangeValue)) {
                 model.getIsAmountLimitInfoVisible().set(true);
                 amountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
@@ -180,44 +180,26 @@ public class TakeOfferAmountController implements Controller {
                 model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
                 if (reputationBasedQuoteSideAmount.isLessThan(minRangeValue)) {
                     // Min amount not covered by security from reputation score
-                    model.getAmountLimitInfoLeft().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMin", sellersReputationScore));
+                    model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMin", sellersReputationScore));
                     model.getAmountLimitInfoAmount().set("");
                 } else {
                     // Max amount not covered by security from reputation score
-                    model.getAmountLimitInfoLeft().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMax", sellersReputationScore));
+                    model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMax", sellersReputationScore));
                     model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfoAmount", formattedAmount));
                 }
             } else {
                 model.getIsAmountLimitInfoVisible().set(false);
             }
-
-
-           /* long highestScore = reputationService.getScoreByUserProfileId().entrySet().stream()
-                    .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                    .mapToLong(Map.Entry::getValue)
-                    .max()
-                    .orElse(0L);
-            Monetary highestPossibleUsdAmount = BisqEasyTradeAmountLimits.getUsdAmountFromReputationScore(highestScore);
-
-            amountComponent.setReputationBasedQuoteSideAmount(highestPossibleUsdAmount);
-            long rangeMidValue = minRangeValue.getValue() + (maxRangeValue.getValue() - minRangeValue.getValue()) / 2;
-            // For buyers we show the mid-range amount if there is a highestPossibleUsdAmount > rangeMidValue
-            if (highestPossibleUsdAmount.getValue() > rangeMidValue &&
-                    rangeMidValue > BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.getValue()) {
-                amountComponent.setQuoteSideAmount(Fiat.fromValue(rangeMidValue, "USD"));
-            } else {
-                applyReputationBasedQuoteSideAmount();
-            }*/
         } else {
             model.setLinkToWikiText(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.linkToWikiText"));
             String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
             long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
             BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, bisqEasyOffer.getMarket(), myReputationScore)
                     .ifPresent(reputationBasedQuoteSideAmount -> {
-                        amountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
                         amountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
                         String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
-                        model.getAmountLimitInfoLeft().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoLeft", myReputationScore));
+                        model.getIsAmountLimitInfoVisible().set(true);
+                        model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo", myReputationScore));
                         model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoAmount", formattedAmount));
                         model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
                         model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.info", myReputationScore, formattedAmount));

@@ -30,7 +30,7 @@ public class TakeOfferAmountModel implements Model {
     private BisqEasyOffer bisqEasyOffer;
     private final ObjectProperty<Monetary> takersQuoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> takersBaseSideAmount = new SimpleObjectProperty<>();
-    private final StringProperty amountLimitInfoLeft = new SimpleStringProperty();
+    private final StringProperty amountLimitInfo = new SimpleStringProperty();
     private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();

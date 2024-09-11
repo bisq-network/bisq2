@@ -158,10 +158,30 @@ public class BisqEasyTradeAmountLimits {
                 .map(btcFiatPriceQuote -> btcFiatPriceQuote.toBaseSideMonetary(fiatAmount));
     }
 
-    private static Optional<Monetary> btcToUsd(MarketPriceService marketPriceService, Monetary btcAmount) {
-        return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
-                .map(btcUsdPriceQuote -> btcUsdPriceQuote.toQuoteSideMonetary(btcAmount));
+    private static Optional<Monetary> usdToBtc(MarketPriceService marketPriceService, Monetary usdAmount) {
+        Market usdBitcoinMarket = MarketRepository.getUSDBitcoinMarket();
+        return fiatToBtc(marketPriceService, usdBitcoinMarket, usdAmount);
     }
+
+    private static Optional<Monetary> btcToFiat(MarketPriceService marketPriceService,
+                                                Market market,
+                                                Monetary btcAmount) {
+        return marketPriceService.findMarketPriceQuote(market)
+                .map(priceQuote -> priceQuote.toQuoteSideMonetary(btcAmount));
+    }
+
+    private static Optional<Monetary> btcToUsd(MarketPriceService marketPriceService, Monetary btcAmount) {
+        Market usdBitcoinMarket = MarketRepository.getUSDBitcoinMarket();
+        return btcToFiat(marketPriceService, usdBitcoinMarket, btcAmount);
+    }
+
+    public static Optional<Monetary> usdToFiat(MarketPriceService marketPriceService,
+                                               Market market,
+                                               Monetary usdAmount) {
+        return usdToBtc(marketPriceService, usdAmount).
+                flatMap(btc -> btcToFiat(marketPriceService, market, btc));
+    }
+
 
     private static long getRequiredReputationScoreByUsdAmount(Monetary usdAmount) {
         double faceValue = Monetary.valueToFaceValue(usdAmount, 0);
