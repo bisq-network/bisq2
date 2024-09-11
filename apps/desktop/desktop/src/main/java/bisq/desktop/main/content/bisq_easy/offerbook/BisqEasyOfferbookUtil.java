@@ -70,31 +70,34 @@ public class BisqEasyOfferbookUtil {
             private final Label marketName = new Label();
             private final Label marketCode = new Label();
             private final Label numOffers = new Label();
-            private final Label favouriteLabel = new Label();
-            private final HBox hBox = new HBox(10, marketCode, numOffers);
+            private final Label favouritesLabel = new Label();
+            private final HBox hBox = new HBox(5, marketCode, numOffers);
             private final VBox vBox = new VBox(0, marketName, hBox);
-            private final HBox container = new HBox(0, vBox, Spacer.fillHBox(), favouriteLabel);
+            private final HBox container = new HBox(0, vBox, Spacer.fillHBox(), favouritesLabel);
             private final Tooltip marketDetailsTooltip = new BisqTooltip();
-            private final Tooltip favouriteTooltip = new BisqTooltip();
+            private final Tooltip favouritesTooltip = new BisqTooltip();
             private StringBinding formattedNumOffersBindings;
             private StringBinding formattedTooltipBinding;
 
+            private static final Insets COMPACT_PADDING = new Insets(0, -10, 0, 0);
+
             {
+                hBox.setPadding(COMPACT_PADDING);
                 setCursor(Cursor.HAND);
                 marketName.getStyleClass().add("market-name");
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 vBox.setAlignment(Pos.CENTER_LEFT);
                 Tooltip.install(vBox, marketDetailsTooltip);
 
-                favouriteTooltip.textProperty().set(isFavouritesTableView
+                favouritesTooltip.textProperty().set(isFavouritesTableView
                         ? Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.removeFromFavourites")
                         : Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.addToFavourites"));
                 ImageView star = ImageUtil.getImageViewById(isFavouritesTableView
                         ? "star-yellow"
                         : "star-grey-hollow");
-                favouriteLabel.setGraphic(star);
-                favouriteLabel.getStyleClass().add("favourite-label");
-                Tooltip.install(favouriteLabel, favouriteTooltip);
+                favouritesLabel.setGraphic(star);
+                favouritesLabel.getStyleClass().add("favourite-label");
+                Tooltip.install(favouritesLabel, favouritesTooltip);
 
                 container.setAlignment(Pos.CENTER_LEFT);
             }
@@ -115,7 +118,7 @@ public class BisqEasyOfferbookUtil {
                             BisqEasyOfferbookUtil.getFormattedTooltip(numOffersString, quoteCurrencyDisplayName), item.getNumOffers());
                     marketDetailsTooltip.textProperty().bind(formattedTooltipBinding);
 
-                    favouriteLabel.setOnMouseClicked(e -> item.toggleFavourite());
+                    favouritesLabel.setOnMouseClicked(e -> item.toggleFavourite());
 
                     setGraphic(container);
                 } else {
@@ -129,7 +132,7 @@ public class BisqEasyOfferbookUtil {
                         formattedTooltipBinding.dispose();
                         formattedTooltipBinding = null;
                     }
-                    favouriteLabel.setOnMouseClicked(null);
+                    favouritesLabel.setOnMouseClicked(null);
 
                     setGraphic(null);
                 }
