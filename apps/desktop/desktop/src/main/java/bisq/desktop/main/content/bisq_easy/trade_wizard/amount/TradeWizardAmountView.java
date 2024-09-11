@@ -57,8 +57,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
 
-        //root.setAlignment(Pos.TOP_CENTER);
-
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
@@ -154,6 +152,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoOverlayInfo.textProperty().unbind();
         amountLimitInfoAmount.managedProperty().unbind();
         amountLimitInfoAmount.visibleProperty().unbind();
+
         isAmountLimitInfoVisiblePin.unsubscribe();
 
         amountLimitInfoAmount.setOnAction(null);

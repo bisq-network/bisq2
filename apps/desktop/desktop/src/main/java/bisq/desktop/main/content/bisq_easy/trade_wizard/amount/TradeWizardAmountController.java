@@ -137,7 +137,7 @@ public class TradeWizardAmountController implements Controller {
         minAmountComponent.setMarket(market);
         maxOrFixAmountComponent.setMarket(market);
         model.setMarket(market);
-        applyMinMaxRange();
+        applyQuoteSideMinMaxRange();
     }
 
     public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
@@ -237,7 +237,7 @@ public class TradeWizardAmountController implements Controller {
 
     @Override
     public void onActivate() {
-        applyMinMaxRange();
+        applyQuoteSideMinMaxRange();
 
         if (model.getPriceQuote().get() == null && minAmountComponent.getQuote().get() != null) {
             model.getPriceQuote().set(minAmountComponent.getQuote().get());
@@ -521,7 +521,6 @@ public class TradeWizardAmountController implements Controller {
         double faceValue = Monetary.valueToFaceValue(value, 0);
         model.getIsWarningIconVisible().set(faceValue > reputationBasedAmountFaceValue);
 
-
         long highestScore = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
                 .mapToLong(Map.Entry::getValue)
@@ -539,7 +538,7 @@ public class TradeWizardAmountController implements Controller {
                 .count();
         if (model.getDirection().isBuy()) {
             model.getAmountLimitInfoLeft().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfoLeft", numPotentialTakers, AmountFormatter.formatAmountWithCode(value)));
-            model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info", AmountFormatter.formatAmountWithCode(value), requiredReputationScore));
+            model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info", AmountFormatter.formatAmountWithCode(value), requiredReputationScore) + "\n\n");
         }
     }
 
@@ -550,14 +549,14 @@ public class TradeWizardAmountController implements Controller {
         maxOrFixAmountComponent.setQuoteSideAmount(Fiat.fromValue(value, "USD"));
     }
 
-    private void applyMinMaxRange() {
+    private void applyQuoteSideMinMaxRange() {
         Monetary maxRangeValue = BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
         Monetary minRangeValue = BisqEasyTradeAmountLimits.DEFAULT_MIN_USD_TRADE_AMOUNT;
         minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
         maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
 
         if (model.getDirection().isBuy()) {
-            model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.link"));
+            model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.learnMore"));
             model.setLinkToWikiText(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.linkToWikiText"));
             model.getAmountLimitInfoAmount().set("");
 

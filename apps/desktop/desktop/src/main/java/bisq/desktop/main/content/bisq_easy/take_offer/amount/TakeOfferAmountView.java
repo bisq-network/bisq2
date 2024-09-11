@@ -17,37 +17,167 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.amount;
 
+import bisq.desktop.common.Browser;
+import bisq.desktop.common.Icons;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
+import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TakeOfferAmountView extends View<VBox, TakeOfferAmountModel, TakeOfferAmountController> {
+public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, TakeOfferAmountController> {
+    private final Label headlineLabel, amountLimitInfoLeft, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
+    private final Hyperlink amountLimitInfoAmount, showOverlayHyperLink, linkToWiki;
+    private final VBox content, amountLimitInfoOverlay;
+    private final Button closeOverlayButton;
+    private Subscription isAmountLimitInfoVisiblePin;
 
-    private final Label headlineLabel;
+    public TakeOfferAmountView(TakeOfferAmountModel model,
+                               TakeOfferAmountController controller,
+                               VBox amountComponentRoot) {
+        super(new StackPane(), model, controller);
 
-    public TakeOfferAmountView(TakeOfferAmountModel model, TakeOfferAmountController controller, VBox amountComponentRoot) {
-        super(new VBox(10), model, controller);
-
-        root.setAlignment(Pos.TOP_CENTER);
+        root.setAlignment(Pos.CENTER);
+        content = new VBox(10);
+        content.setAlignment(Pos.TOP_CENTER);
 
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        VBox.setMargin(headlineLabel, new Insets(-30, 0, 10, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountComponentRoot, Spacer.fillVBox());
+        amountLimitInfoLeft = new Label();
+        amountLimitInfoLeft.getStyleClass().add("trade-wizard-amount-limit-info");
+
+        amountLimitInfoAmount = new Hyperlink();
+        amountLimitInfoAmount.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+
+        showOverlayHyperLink = new Hyperlink();
+        showOverlayHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+
+        warningIcon = new Label();
+        Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.15em");
+        warningIcon.getStyleClass().add("overlay-icon-warning");
+
+        HBox.setMargin(warningIcon, new Insets(0, 5, 0, 0));
+        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfoLeft, amountLimitInfoAmount, showOverlayHyperLink);
+        amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
+
+        // VBox.setMargin(headlineLabel, new Insets(-30, 0, 10, 0));
+        // root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountComponentRoot, Spacer.fillVBox());
+
+        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(amountLimitInfoHBox, new Insets(15, 0, 15, 0));
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountComponentRoot, amountLimitInfoHBox, Spacer.fillVBox());
+
+        amountLimitInfoOverlayInfo = new Label();
+        linkToWikiText = new Label();
+        closeOverlayButton = new Button(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.close"));
+        linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
+        amountLimitInfoOverlay = getAmountLimitInfoOverlay(amountLimitInfoOverlayInfo, closeOverlayButton, linkToWikiText, linkToWiki);
+
+        StackPane.setMargin(amountLimitInfoOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
+        root.getChildren().addAll(content, amountLimitInfoOverlay);
     }
 
     @Override
     protected void onViewAttached() {
+        warningIcon.visibleProperty().bind(model.getIsWarningIconVisible());
         headlineLabel.setText(model.getHeadline());
+        showOverlayHyperLink.setText(model.getAmountLimitInfoLink());
+        linkToWikiText.setText(model.getLinkToWikiText());
+
+        amountLimitInfoLeft.textProperty().bind(model.getAmountLimitInfoLeft());
+        amountLimitInfoAmount.textProperty().bind(model.getAmountLimitInfoAmount());
+        amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
+
+        amountLimitInfoAmount.managedProperty().bind(model.getIsAmountLimitInfoVisible().and(model.getAmountLimitInfoAmount().isEmpty().not()));
+        amountLimitInfoAmount.visibleProperty().bind(amountLimitInfoAmount.managedProperty());
+        showOverlayHyperLink.managedProperty().bind(model.getIsAmountLimitInfoVisible());
+        showOverlayHyperLink.visibleProperty().bind(model.getIsAmountLimitInfoVisible());
+
+        isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(),
+                isAmountLimitInfoVisible -> {
+                    if (isAmountLimitInfoVisible) {
+                        amountLimitInfoOverlay.setVisible(true);
+                        amountLimitInfoOverlay.setOpacity(1);
+                        Transitions.blurStrong(content, 0);
+                        Transitions.slideInTop(amountLimitInfoOverlay, 450);
+                    } else {
+                        Transitions.removeEffect(content);
+                        if (amountLimitInfoOverlay.isVisible()) {
+                            Transitions.fadeOut(amountLimitInfoOverlay, Transitions.DEFAULT_DURATION / 2,
+                                    () -> amountLimitInfoOverlay.setVisible(false));
+                        }
+                    }
+                });
+
+        amountLimitInfoAmount.setOnAction(e -> controller.onSetReputationBasedAmount());
+        showOverlayHyperLink.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
+        linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
+        closeOverlayButton.setOnAction(e -> controller.onCloseAmountLimitInfoOverlay());
     }
 
     @Override
     protected void onViewDetached() {
+        warningIcon.visibleProperty().unbind();
+        amountLimitInfoLeft.textProperty().unbind();
+        amountLimitInfoAmount.textProperty().unbind();
+        amountLimitInfoOverlayInfo.textProperty().unbind();
+        amountLimitInfoAmount.managedProperty().unbind();
+        amountLimitInfoAmount.visibleProperty().unbind();
+        showOverlayHyperLink.managedProperty().unbind();
+        showOverlayHyperLink.visibleProperty().unbind();
+
+        isAmountLimitInfoVisiblePin.unsubscribe();
+
+        amountLimitInfoAmount.setOnAction(null);
+        showOverlayHyperLink.setOnAction(null);
+        linkToWiki.setOnAction(null);
+        closeOverlayButton.setOnAction(null);
+    }
+
+    private static VBox getAmountLimitInfoOverlay(Label amountLimitInfoOverlayInfo,
+                                                  Button closeOverlayButton,
+                                                  Label linkToWikiText,
+                                                  Hyperlink linkToWiki) {
+        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        amountLimitInfoOverlayInfo.getStyleClass().addAll("bisq-text-21", "wrap-text");
+        amountLimitInfoOverlayInfo.setAlignment(Pos.BASELINE_LEFT);
+
+        linkToWikiText.getStyleClass().addAll("bisq-text-21", "wrap-text");
+
+        linkToWiki.getStyleClass().addAll("bisq-text-21");
+        String tooltipText = Browser.hyperLinksGetCopiedWithoutPopup()
+                ? Res.get("popup.hyperlink.copy.tooltip", linkToWiki.getText())
+                : Res.get("popup.hyperlink.openInBrowser.tooltip", linkToWiki.getText());
+        linkToWiki.setTooltip(new BisqTooltip(tooltipText));
+
+        HBox linkBox = new HBox(5, linkToWikiText, linkToWiki);
+        linkBox.setAlignment(Pos.BASELINE_LEFT);
+
+        VBox.setMargin(linkBox, new Insets(-22.5, 0, 20, 0));
+        VBox content = new VBox(20, headlineLabel, amountLimitInfoOverlayInfo, linkBox, closeOverlayButton);
+        content.setAlignment(Pos.TOP_CENTER);
+        content.getStyleClass().setAll("trade-wizard-feedback-bg");
+        content.setPadding(new Insets(30));
+
+        VBox vBox = new VBox(content, Spacer.fillVBox());
+        vBox.setMaxWidth(700);
+        return vBox;
     }
 }
