@@ -40,6 +40,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
@@ -319,11 +320,33 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         .orElse(0L);
 
                 if (maxAmountResult == SCORE_TOO_LOW) {
-                    new Popup()
-                            .headline(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.headline"))
-                            .warning(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.warning",
-                                    sellersScore, requiredReputationScoreForMaxAmount, minFiatAmount))
-                            .show();
+                    if (bisqEasyOffer.getAmountSpec() instanceof RangeAmountSpec) {
+                        if (minAmountResult == SCORE_TOO_LOW) {
+                            // Min amount too high for sellers reputation score
+                            new Popup()
+                                    .headline(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.headline"))
+                                    .warning(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.warning",
+                                            sellersScore, requiredReputationScoreForMaxAmount, minFiatAmount))
+                                    .closeButtonText(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.no"))
+                                    .secondaryActionButtonText(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.yes"))
+                                    .onSecondaryAction(() -> Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty())))
+                                    .show();
+                        } else {
+                            // Min amount covered by sellers reputation score. The amount selection screen in the take offer view will handle the warning if user selects a too high amount.
+                            Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty()));
+                        }
+                    } else {
+                        // Fixed price offer
+                        new Popup()
+                                .headline(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.headline"))
+                                .warning(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.warning",
+                                        sellersScore, requiredReputationScoreForMaxAmount, maxFiatAmount))
+                                .closeButtonText(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.no"))
+                                .secondaryActionButtonText(Res.get("chat.message.takeOffer.buyer.makersReputationScoreTooLow.yes"))
+                                .onSecondaryAction(() -> Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty())))
+                                .show();
+                    }
+
                 } else if (maxAmountResult == MATCH_MIN_SCORE) {
                     new Popup()
                             .headline(Res.get("chat.message.takeOffer.buyer.makersReputationTooLowButInLowAmountTolerance.headline"))

@@ -108,6 +108,9 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     public String getMarketCodes() {
         return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
     }
+    public static String createBitcoinFiatMarketCodes(String baseCurrencyCode, String quoteCurrencyCode) {
+        return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
+    }
 
     public String getMarketDisplayName() {
         return getBaseCurrencyDisplayName() + QUOTE_SEPARATOR + getQuoteCurrencyDisplayName();

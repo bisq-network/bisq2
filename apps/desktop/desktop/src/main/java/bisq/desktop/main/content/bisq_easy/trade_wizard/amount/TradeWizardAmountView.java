@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
@@ -41,11 +42,13 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountModel, TradeWizardAmountController> {
-    private final Label headlineLabel, amountLimitInfoLeft, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
+    private final Label headlineLabel, amountLimitInfo, amountLimitInfoLeadLine, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, showOverlayHyperLink, linkToWiki;
     private final VBox minAmountRoot, content, amountLimitInfoOverlay;
     private final Button toggleButton, closeOverlayButton;
-    private Subscription isAmountLimitInfoVisiblePin;
+    private final HBox amountLimitInfoHBox;
+    private final HBox amountLimitInfoWithWarnIcon;
+    private Subscription isAmountLimitInfoVisiblePin, amountLimitInfoLeadLinePin;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
@@ -57,8 +60,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
 
-        //root.setAlignment(Pos.TOP_CENTER);
-
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
@@ -66,8 +67,8 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         HBox amountBox = new HBox(30, minAmountRoot, maxOrFixAmountComponent.getView().getRoot());
         amountBox.setAlignment(Pos.CENTER);
 
-        amountLimitInfoLeft = new Label();
-        amountLimitInfoLeft.getStyleClass().add("trade-wizard-amount-limit-info");
+        amountLimitInfo = new Label();
+        amountLimitInfo.getStyleClass().add("trade-wizard-amount-limit-info");
 
         amountLimitInfoAmount = new Hyperlink();
         amountLimitInfoAmount.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
@@ -75,21 +76,25 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         showOverlayHyperLink = new Hyperlink();
         showOverlayHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
 
+        amountLimitInfoHBox = new HBox(5, amountLimitInfo, amountLimitInfoAmount, showOverlayHyperLink);
+
+        amountLimitInfoLeadLine = new Label();
+        amountLimitInfoLeadLine.getStyleClass().add("trade-wizard-amount-limit-info");
+        VBox amountLimitInfoVBox = new VBox(-2.5, amountLimitInfoLeadLine, amountLimitInfoHBox);
+
         warningIcon = new Label();
         Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.15em");
         warningIcon.getStyleClass().add("overlay-icon-warning");
 
-        HBox.setMargin(warningIcon, new Insets(0, 5, 0, 0));
-        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfoLeft, amountLimitInfoAmount, showOverlayHyperLink);
-        amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
+        amountLimitInfoWithWarnIcon = new HBox(10, warningIcon, amountLimitInfoVBox);
 
         toggleButton = new Button(Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
         toggleButton.getStyleClass().add("outlined-button");
         toggleButton.setMinWidth(AmountComponent.View.AMOUNT_BOX_WIDTH);
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(amountLimitInfoHBox, new Insets(15, 0, 15, 0));
-        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountBox, amountLimitInfoHBox, toggleButton, Spacer.fillVBox());
+        VBox.setMargin(amountLimitInfoWithWarnIcon, new Insets(15, 0, 15, 0));
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountBox, amountLimitInfoWithWarnIcon, toggleButton, Spacer.fillVBox());
 
         amountLimitInfoOverlayInfo = new Label();
         linkToWikiText = new Label();
@@ -103,22 +108,38 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
 
     @Override
     protected void onViewAttached() {
-        warningIcon.visibleProperty().bind(model.getIsWarningIconVisible());
         headlineLabel.setText(model.getHeadline());
-        amountLimitInfoLeft.textProperty().bind(model.getAmountLimitInfoLeft());
-        amountLimitInfoAmount.textProperty().bind(model.getAmountLimitInfoAmount());
-        amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
-        amountLimitInfoAmount.managedProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
-        amountLimitInfoAmount.visibleProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
-
         showOverlayHyperLink.setText(model.getAmountLimitInfoLink());
         linkToWikiText.setText(model.getLinkToWikiText());
 
+        amountLimitInfo.textProperty().bind(model.getAmountLimitInfo());
+        amountLimitInfoLeadLine.textProperty().bind(model.getAmountLimitInfoLeadLine());
+        amountLimitInfoAmount.textProperty().bind(model.getAmountLimitInfoAmount());
+        amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
+        toggleButton.textProperty().bind(model.getToggleButtonText());
+
+        warningIcon.visibleProperty().bind(model.getIsWarningIconVisible());
+        amountLimitInfoAmount.visibleProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
+        amountLimitInfoAmount.managedProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
         minAmountRoot.visibleProperty().bind(model.getIsMinAmountEnabled());
         minAmountRoot.managedProperty().bind(model.getIsMinAmountEnabled());
         toggleButton.visibleProperty().bind(model.getShowRangeAmounts());
         toggleButton.managedProperty().bind(model.getShowRangeAmounts());
-        toggleButton.textProperty().bind(model.getToggleButtonText());
+
+        amountLimitInfoLeadLinePin = EasyBind.subscribe(model.getAmountLimitInfoLeadLine(), value -> {
+            boolean isEmpty = StringUtils.isEmpty(value);
+            amountLimitInfoLeadLine.setVisible(!isEmpty);
+            amountLimitInfoLeadLine.setManaged(!isEmpty);
+            double top = isEmpty ? 0 : -22.5;
+            HBox.setMargin(warningIcon, new Insets(top, 0, 0, 0));
+            if (isEmpty) {
+                amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
+                amountLimitInfoWithWarnIcon.setAlignment(Pos.CENTER);
+            } else {
+                amountLimitInfoHBox.setAlignment(Pos.BASELINE_LEFT);
+                amountLimitInfoWithWarnIcon.setAlignment(Pos.CENTER_LEFT);
+            }
+        });
 
         isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(),
                 isAmountLimitInfoVisible -> {
@@ -145,15 +166,19 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
 
     @Override
     protected void onViewDetached() {
+        toggleButton.textProperty().unbind();
+        amountLimitInfo.textProperty().unbind();
+        amountLimitInfoLeadLine.textProperty().unbind();
+        amountLimitInfoAmount.textProperty().unbind();
+        amountLimitInfoOverlayInfo.textProperty().unbind();
+
         warningIcon.visibleProperty().unbind();
         minAmountRoot.visibleProperty().unbind();
         minAmountRoot.managedProperty().unbind();
-        toggleButton.textProperty().unbind();
-        amountLimitInfoLeft.textProperty().unbind();
-        amountLimitInfoAmount.textProperty().unbind();
-        amountLimitInfoOverlayInfo.textProperty().unbind();
-        amountLimitInfoAmount.managedProperty().unbind();
         amountLimitInfoAmount.visibleProperty().unbind();
+        amountLimitInfoAmount.managedProperty().unbind();
+
+        amountLimitInfoLeadLinePin.unsubscribe();
         isAmountLimitInfoVisiblePin.unsubscribe();
 
         amountLimitInfoAmount.setOnAction(null);

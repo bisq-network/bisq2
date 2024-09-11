@@ -20,8 +20,7 @@ package bisq.desktop.main.content.bisq_easy.take_offer.amount;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,6 +30,16 @@ public class TakeOfferAmountModel implements Model {
     private BisqEasyOffer bisqEasyOffer;
     private final ObjectProperty<Monetary> takersQuoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> takersBaseSideAmount = new SimpleObjectProperty<>();
+    private final StringProperty amountLimitInfo = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
+    private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
+    private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountLimitInfoVisible = new SimpleBooleanProperty();
+    @Setter
+    private String amountLimitInfoLink;
+    @Setter
+    private String linkToWikiText;
     @Setter
     private String headline;
 }
