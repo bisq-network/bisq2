@@ -17,9 +17,9 @@
 
 package bisq.wallets.bitcoind.zmq;
 
-import bisq.common.encoding.Hex;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
+import com.google.common.io.BaseEncoding;
 
 public class BitcoindRawTxProcessor implements ZmqRawTxProcessor {
 
@@ -33,7 +33,7 @@ public class BitcoindRawTxProcessor implements ZmqRawTxProcessor {
 
     @Override
     public void processRawTx(byte[] serializedTx, byte[] sequenceNumber) {
-        String txInHex = Hex.encode(serializedTx);
+        String txInHex = BaseEncoding.base16().lowerCase().encode(serializedTx);
         BitcoindDecodeRawTransactionResponse.Result rawTransaction = daemon.decodeRawTransaction(txInHex).getResult();
         listeners.fireTxOutputAddressesListeners(rawTransaction);
         listeners.fireTxIdInputListeners(rawTransaction);
