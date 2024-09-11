@@ -334,8 +334,6 @@ public class TradeWizardAmountController implements Controller {
                 maxOrFixAmountComponent.setTooltip(priceTooltip);
             }
         });
-
-        applyReputationBasedQuoteSideAmount();
     }
 
     @Override
@@ -546,9 +544,10 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void applyReputationBasedQuoteSideAmount() {
-        Fiat oneUsd = Fiat.fromFaceValue(1d, "USD");
-        Fiat value = Fiat.fromValue(maxOrFixAmountComponent.getReputationBasedQuoteSideAmount().getValue() - oneUsd.getValue(), "USD");
-        maxOrFixAmountComponent.setQuoteSideAmount(value);
+        // Reduce by 1 USD to avoid rounding issues, but use at least 25 USD (MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION)
+        long value = maxOrFixAmountComponent.getReputationBasedQuoteSideAmount().getValue() - 10000;
+        value = Math.max(BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.getValue(), value);
+        maxOrFixAmountComponent.setQuoteSideAmount(Fiat.fromValue(value, "USD"));
     }
 
     private void applyMinMaxRange() {
@@ -572,7 +571,9 @@ public class TradeWizardAmountController implements Controller {
             minAmountComponent.setReputationBasedQuoteSideAmount(highestPossibleUsdAmount);
             maxOrFixAmountComponent.setReputationBasedQuoteSideAmount(highestPossibleUsdAmount);
             long rangeMidValue = minRangeValue.getValue() + (maxRangeValue.getValue() - minRangeValue.getValue()) / 2;
-            if (highestPossibleUsdAmount.getValue() > rangeMidValue) {
+            // For buyers we show the mid-range amount if there is a highestPossibleUsdAmount > rangeMidValue
+            if (highestPossibleUsdAmount.getValue() > rangeMidValue &&
+                    rangeMidValue > BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.getValue()) {
                 maxOrFixAmountComponent.setQuoteSideAmount(Fiat.fromValue(rangeMidValue, "USD"));
             } else {
                 applyReputationBasedQuoteSideAmount();
@@ -593,6 +594,7 @@ public class TradeWizardAmountController implements Controller {
                         model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
                         model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.info", myReputationScore, formattedAmount));
                     });
+            applyReputationBasedQuoteSideAmount();
         }
     }
 }
