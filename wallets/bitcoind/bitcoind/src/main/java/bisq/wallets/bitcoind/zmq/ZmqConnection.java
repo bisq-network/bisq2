@@ -17,10 +17,10 @@
 
 package bisq.wallets.bitcoind.zmq;
 
-import bisq.common.threading.ExecutorFactory;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.zmq.exceptions.CannotFindZmqAddressException;
 import bisq.wallets.bitcoind.zmq.exceptions.CannotFindZmqTopicException;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.zeromq.SocketType;
@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,8 +47,8 @@ public class ZmqConnection implements AutoCloseable {
     @Getter
     private final ZmqListeners listeners;
 
-    private final ExecutorService executorService = ExecutorFactory
-            .newFixedThreadPool("wallet-zeromq-notification-thread-pool", 2);
+    private final ExecutorService executorService =
+            newFixedThreadPool("wallet-zeromq-notification-thread-pool", 2);
 
     private ZContext context;
 
@@ -150,5 +152,13 @@ public class ZmqConnection implements AutoCloseable {
 
     private boolean isZeroMqContextTerminated(int errorCode) {
         return errorCode == ERROR_CODE_CONTEXT_TERMINATED;
+    }
+
+    public ExecutorService newFixedThreadPool(String name, int numThreads) {
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name + "-%d")
+                .setDaemon(true)
+                .build();
+        return Executors.newFixedThreadPool(numThreads, threadFactory);
     }
 }
