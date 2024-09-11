@@ -50,7 +50,7 @@ public class WalletTransactionListItem implements DateTableItem {
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
         txId = transaction.getTxId();
-        amount = transaction.getAmount();
+        amount = Coin.asBtcFromValue(transaction.getAmount());
         amountAsString = AmountFormatter.formatAmount(amount);
         confirmations = transaction.getConfirmations();
         confirmationsAsString = String.valueOf(confirmations);

@@ -17,7 +17,6 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
-import bisq.common.monetary.Coin;
 import bisq.wallets.core.model.TransactionInfo;
 import com.squareup.moshi.Json;
 import lombok.Getter;
@@ -56,8 +55,8 @@ public class ElectrumOnChainTransactionResponse implements TransactionInfo {
     private Integer txPosInBlock;
 
     @Override
-    public Coin getAmount() {
-        return Coin.parseBtc(bcValue);
+    public long getAmount() {
+        return Long.parseLong(bcBalance);
     }
 
     @Override

@@ -17,15 +17,13 @@
 
 package bisq.wallets.core.model;
 
-import bisq.common.monetary.Coin;
-
 import java.util.Date;
 import java.util.Optional;
 
 public interface TransactionInfo {
     String getTxId();
 
-    Coin getAmount();
+    long getAmount();
 
     int getConfirmations();
 

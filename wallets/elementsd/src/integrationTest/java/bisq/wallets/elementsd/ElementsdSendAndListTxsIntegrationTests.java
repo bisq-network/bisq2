@@ -50,7 +50,7 @@ public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInst
         ElementsdListTransactionsResponse.Entry firstTx = txs.getFirst();
         assertEquals(firstTxId, firstTx.getTxId());
         assertEquals("receive", firstTx.getCategory());
-        assertEquals(100000000, firstTx.getAmount().getValue());
+        assertEquals(100000000, firstTx.getAmount());
         assertEquals(1, firstTx.getConfirmations());
         assertEquals(3, firstTx.getBlockheight());
         assertEquals(0, firstTx.getWalletconflicts().length);
@@ -59,7 +59,7 @@ public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInst
         ElementsdListTransactionsResponse.Entry secondTx = txs.get(1);
         assertEquals(secondTxId, secondTx.getTxId());
         assertEquals("receive", secondTx.getCategory());
-        assertEquals(100000000, secondTx.getAmount().getValue());
+        assertEquals(100000000, secondTx.getAmount());
         assertEquals(1, secondTx.getConfirmations());
         assertEquals(3, secondTx.getBlockheight());
         assertEquals(0, secondTx.getWalletconflicts().length);
@@ -68,7 +68,7 @@ public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInst
         ElementsdListTransactionsResponse.Entry thirdTx = txs.get(2);
         assertEquals(thirdTxId, thirdTx.getTxId());
         assertEquals("receive", thirdTx.getCategory());
-        assertEquals(100000000, thirdTx.getAmount().getValue());
+        assertEquals(100000000, thirdTx.getAmount());
         assertEquals(1, thirdTx.getConfirmations());
         assertEquals(3, thirdTx.getBlockheight());
         assertEquals(0, thirdTx.getWalletconflicts().length);

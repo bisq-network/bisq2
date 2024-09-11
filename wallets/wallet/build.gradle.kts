@@ -1,7 +1,7 @@
 plugins {
     id("bisq.java-library")
-    id("bisq.protobuf")
     id("bisq.java-integration-tests")
+    id("bisq.protobuf")
 }
 
 dependencies {
@@ -10,7 +10,6 @@ dependencies {
     implementation("bitcoind:core")
     implementation("bitcoind:bitcoind")
     implementation("bitcoind:json-rpc")
-    implementation("wallets:wallet")
 
-    integrationTestImplementation("bitcoind:regtest")
+    implementation(libs.typesafe.config)
 }
