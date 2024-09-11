@@ -17,12 +17,15 @@
 
 package bisq.wallets.regtest;
 
-import bisq.common.file.FileUtils;
 import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.process.BisqProcess;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
 public abstract class AbstractRegtestSetup<T extends BisqProcess> implements BisqProcess {
@@ -32,7 +35,7 @@ public abstract class AbstractRegtestSetup<T extends BisqProcess> implements Bis
     protected final Path tmpDirPath;
 
     public AbstractRegtestSetup() throws IOException {
-        this.tmpDirPath = FileUtils.createTempDir();
+        this.tmpDirPath = createTempDir();
     }
 
     protected abstract T createProcess();
@@ -49,4 +52,40 @@ public abstract class AbstractRegtestSetup<T extends BisqProcess> implements Bis
     public abstract List<String> mineOneBlock() throws InterruptedException;
 
     public abstract RpcConfig getRpcConfig();
+
+    public static Path createTempDir() throws IOException {
+        Path tempDirPath = Files.createTempDirectory(null);
+        recursiveDeleteOnShutdownHook(tempDirPath);
+        return tempDirPath;
+    }
+
+    public static void recursiveDeleteOnShutdownHook(Path path) {
+        Runtime.getRuntime().addShutdownHook(new Thread(
+                () -> {
+                    try {
+                        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+                            @Override
+                            public FileVisitResult visitFile(Path file,
+                                                             @SuppressWarnings("unused") BasicFileAttributes attrs)
+                                    throws IOException {
+                                Files.delete(file);
+                                return FileVisitResult.CONTINUE;
+                            }
+
+                            @Override
+                            public FileVisitResult postVisitDirectory(Path dir, IOException e)
+                                    throws IOException {
+                                if (e == null) {
+                                    Files.delete(dir);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                                // directory iteration failed
+                                throw e;
+                            }
+                        });
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to delete " + path, e);
+                    }
+                }));
+    }
 }

@@ -17,12 +17,12 @@
 
 package bisq.wallets.regtest.process;
 
-import bisq.common.file.FileUtils;
 import bisq.common.file.LogScanner;
 import bisq.common.threading.ThreadName;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -48,7 +48,7 @@ public abstract class DaemonProcess implements BisqProcess {
     @Override
     public void start() {
         try {
-            FileUtils.makeDirs(dataDir.toFile());
+            makeDirs(dataDir.toFile());
             process = createAndStartProcess();
             waitUntilReady();
         } catch (IOException e) {
@@ -118,6 +118,12 @@ public abstract class DaemonProcess implements BisqProcess {
             String processName = process.info().command().orElse("<unknown process>");
             log.error("{} didn't start correctly.", processName, e);
             throw new CannotStartProcessException(processName, e);
+        }
+    }
+
+    private static void makeDirs(File dir) throws IOException {
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new IOException("Could not make dir " + dir);
         }
     }
 }
