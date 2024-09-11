@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountModel, TradeWizardAmountController> {
-    private final Label headlineLabel, amountLimitInfoLeft, amountLimitInfoRight, amountLimitInfoOverlayInfo, warningIcon;
+    private final Label headlineLabel, amountLimitInfoLeft, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, showOverlayHyperLink, linkToWiki;
     private final VBox minAmountRoot, content, amountLimitInfoOverlay;
     private final Button toggleButton, closeOverlayButton;
@@ -72,9 +72,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoAmount = new Hyperlink();
         amountLimitInfoAmount.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
 
-        amountLimitInfoRight = new Label();
-        amountLimitInfoRight.getStyleClass().add("trade-wizard-amount-limit-info");
-
         showOverlayHyperLink = new Hyperlink();
         showOverlayHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
 
@@ -83,7 +80,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         warningIcon.getStyleClass().add("overlay-icon-warning");
 
         HBox.setMargin(warningIcon, new Insets(0, 5, 0, 0));
-        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfoLeft, amountLimitInfoAmount, amountLimitInfoRight, showOverlayHyperLink);
+        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfoLeft, amountLimitInfoAmount, showOverlayHyperLink);
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
 
         toggleButton = new Button(Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
@@ -95,9 +92,10 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountBox, amountLimitInfoHBox, toggleButton, Spacer.fillVBox());
 
         amountLimitInfoOverlayInfo = new Label();
+        linkToWikiText = new Label();
         closeOverlayButton = new Button(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.close"));
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
-        amountLimitInfoOverlay = getAmountLimitInfoOverlay(amountLimitInfoOverlayInfo, closeOverlayButton, linkToWiki);
+        amountLimitInfoOverlay = getAmountLimitInfoOverlay(amountLimitInfoOverlayInfo, closeOverlayButton, linkToWikiText, linkToWiki);
 
         StackPane.setMargin(amountLimitInfoOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, amountLimitInfoOverlay);
@@ -109,14 +107,12 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         headlineLabel.setText(model.getHeadline());
         amountLimitInfoLeft.textProperty().bind(model.getAmountLimitInfoLeft());
         amountLimitInfoAmount.textProperty().bind(model.getAmountLimitInfoAmount());
-        amountLimitInfoRight.textProperty().bind(model.getAmountLimitInfoRight());
         amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
         amountLimitInfoAmount.managedProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
         amountLimitInfoAmount.visibleProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
-        amountLimitInfoRight.managedProperty().bind(model.getAmountLimitInfoRight().isEmpty().not());
-        amountLimitInfoRight.visibleProperty().bind(model.getAmountLimitInfoRight().isEmpty().not());
 
         showOverlayHyperLink.setText(model.getAmountLimitInfoLink());
+        linkToWikiText.setText(model.getLinkToWikiText());
 
         minAmountRoot.visibleProperty().bind(model.getIsMinAmountEnabled());
         minAmountRoot.managedProperty().bind(model.getIsMinAmountEnabled());
@@ -155,12 +151,9 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         toggleButton.textProperty().unbind();
         amountLimitInfoLeft.textProperty().unbind();
         amountLimitInfoAmount.textProperty().unbind();
-        amountLimitInfoRight.textProperty().unbind();
         amountLimitInfoOverlayInfo.textProperty().unbind();
         amountLimitInfoAmount.managedProperty().unbind();
         amountLimitInfoAmount.visibleProperty().unbind();
-        amountLimitInfoRight.managedProperty().unbind();
-        amountLimitInfoRight.visibleProperty().unbind();
         isAmountLimitInfoVisiblePin.unsubscribe();
 
         amountLimitInfoAmount.setOnAction(null);
@@ -172,14 +165,15 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
 
     private static VBox getAmountLimitInfoOverlay(Label amountLimitInfoOverlayInfo,
                                                   Button closeOverlayButton,
+                                                  Label linkToWikiText,
                                                   Hyperlink linkToWiki) {
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         amountLimitInfoOverlayInfo.getStyleClass().addAll("bisq-text-21", "wrap-text");
+        amountLimitInfoOverlayInfo.setAlignment(Pos.BASELINE_LEFT);
 
-        Label linkToWikiText = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.linkToWikiText"));
-        linkToWikiText.getStyleClass().addAll("bisq-text-21");
+        linkToWikiText.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
         linkToWiki.getStyleClass().addAll("bisq-text-21");
         String tooltipText = Browser.hyperLinksGetCopiedWithoutPopup()
@@ -188,13 +182,14 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         linkToWiki.setTooltip(new BisqTooltip(tooltipText));
 
         HBox linkBox = new HBox(5, linkToWikiText, linkToWiki);
-        linkBox.setAlignment(Pos.CENTER_LEFT);
+        linkBox.setAlignment(Pos.BASELINE_LEFT);
 
-        VBox.setMargin(closeOverlayButton, new Insets(20, 0, 0, 0));
+        VBox.setMargin(linkBox, new Insets(-22.5, 0, 20, 0));
         VBox content = new VBox(20, headlineLabel, amountLimitInfoOverlayInfo, linkBox, closeOverlayButton);
         content.setAlignment(Pos.TOP_CENTER);
         content.getStyleClass().setAll("trade-wizard-feedback-bg");
         content.setPadding(new Insets(30));
+
         VBox vBox = new VBox(content, Spacer.fillVBox());
         vBox.setMaxWidth(700);
         return vBox;

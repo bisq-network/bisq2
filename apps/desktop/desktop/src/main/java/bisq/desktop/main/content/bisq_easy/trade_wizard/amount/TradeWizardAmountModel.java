@@ -48,10 +48,11 @@ public class TradeWizardAmountModel implements Model {
     private String headline;
     private final StringProperty amountLimitInfoLeft = new SimpleStringProperty();
     private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
-    private final StringProperty amountLimitInfoRight = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     @Setter
     private String amountLimitInfoLink;
+    @Setter
+    private String linkToWikiText;
     @Setter
     private boolean isCreateOfferMode;
     @Setter
@@ -74,9 +75,9 @@ public class TradeWizardAmountModel implements Model {
         headline = null;
         amountLimitInfoLeft.set(null);
         amountLimitInfoAmount.set(null);
-        amountLimitInfoRight.set(null);
         amountLimitInfoOverlayInfo.set(null);
         amountLimitInfoLink = null;
+        linkToWikiText = null;
         isCreateOfferMode = false;
         baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
