@@ -17,8 +17,8 @@
 
 package bisq.wallets.regtest.process;
 
-import bisq.common.file.LogScanner;
 import bisq.common.threading.ThreadName;
+import bisq.wallets.regtest.LogScanner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
