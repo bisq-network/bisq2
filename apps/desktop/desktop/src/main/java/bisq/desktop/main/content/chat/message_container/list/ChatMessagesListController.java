@@ -589,7 +589,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
-        chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer)
+        // Private chats are all using the DISCUSSION ChatChannelDomain
+        chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, peer)
                 .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
     }
 
