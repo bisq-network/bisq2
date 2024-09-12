@@ -38,6 +38,10 @@ public class TakeOfferAmountModel implements Model {
     private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
     private final BooleanProperty isAmountLimitInfoVisible = new SimpleBooleanProperty();
     @Setter
+    private Monetary sellersReputationBasedQuoteSideAmount;
+    @Setter
+    private long sellersReputationScore;
+    @Setter
     private String amountLimitInfoLink;
     @Setter
     private String linkToWikiText;

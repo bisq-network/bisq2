@@ -54,9 +54,9 @@ public class BisqEasyTradeAmountLimits {
                         .map(priceQuote -> priceQuote.toQuoteSideMonetary(defaultMinBtcTradeAmount)));
     }
 
-    public static Optional<Monetary> getMaxQuoteSideTradeAmount(MarketPriceService marketPriceService,
-                                                                Market market,
-                                                                long myReputationScore) {
+    public static Optional<Monetary> getReputationBasedQuoteSideAmount(MarketPriceService marketPriceService,
+                                                                       Market market,
+                                                                       long myReputationScore) {
         Fiat maxUsdTradeAmount = getMaxUsdTradeAmount(myReputationScore);
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
                 .map(priceQuote -> priceQuote.toBaseSideMonetary(maxUsdTradeAmount))

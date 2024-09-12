@@ -54,11 +54,11 @@ public class TakeOfferController extends NavigationController implements InitWit
     @ToString
     public static class InitData {
         private final BisqEasyOffer bisqEasyOffer;
-        private final Optional<Monetary> takerAsSellersMaxAllowedAmount;
+        private final Optional<Monetary> reputationBasedQuoteSideAmount;
 
-        public InitData(BisqEasyOffer bisqEasyOffer, Optional<Monetary> takerAsSellersMaxAllowedAmount) {
+        public InitData(BisqEasyOffer bisqEasyOffer, Optional<Monetary> reputationBasedQuoteSideAmount) {
             this.bisqEasyOffer = bisqEasyOffer;
-            this.takerAsSellersMaxAllowedAmount = takerAsSellersMaxAllowedAmount;
+            this.reputationBasedQuoteSideAmount = reputationBasedQuoteSideAmount;
         }
     }
 
@@ -94,7 +94,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     public void initWithData(InitData initData) {
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
-        takeOfferAmountController.init(bisqEasyOffer,initData.getTakerAsSellersMaxAllowedAmount());
+        takeOfferAmountController.init(bisqEasyOffer, initData.getReputationBasedQuoteSideAmount());
         takeOfferPaymentController.init(bisqEasyOffer);
         takeOfferReviewController.init(bisqEasyOffer);
 
