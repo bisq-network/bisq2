@@ -78,9 +78,10 @@ public class TakeOfferAmountController implements Controller {
         PriceUtil.findQuote(marketPriceService, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
                 .ifPresent(amountComponent::setQuote);
 
-        Optional<Monetary> optionalQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
-        Optional<Monetary> optionalQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
-
+        Optional<Monetary> optionalQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer)
+                .map(monetary -> monetary.round(0));
+        Optional<Monetary> optionalQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer)
+                .map(monetary -> monetary.round(0));
         if (optionalQuoteSideMinOrFixedAmount.isPresent() && takerAsSellersMaxAllowedAmount.isPresent()) {
             //todo
             Monetary maxAmount = takerAsSellersMaxAllowedAmount.get().round(0);
@@ -196,6 +197,8 @@ public class TakeOfferAmountController implements Controller {
             long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
             BisqEasyTradeAmountLimits.getMaxQuoteSideTradeAmount(marketPriceService, bisqEasyOffer.getMarket(), myReputationScore)
                     .ifPresent(reputationBasedQuoteSideAmount -> {
+                        reputationBasedQuoteSideAmount = reputationBasedQuoteSideAmount.round(0);
+                        model.getIsAmountHyperLinkDisabled().set(reputationBasedQuoteSideAmount.isGreaterThan(maxRangeValue));
                         amountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
                         String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
                         model.getIsAmountLimitInfoVisible().set(true);
@@ -209,10 +212,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     private void applyReputationBasedQuoteSideAmount() {
-        // Reduce by 1 USD to avoid rounding issues, but use at least 25 USD (MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION)
-        long value = amountComponent.getReputationBasedQuoteSideAmount().getValue() - 10000;
-        value = Math.max(BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.getValue(), value);
-        amountComponent.setQuoteSideAmount(Fiat.fromValue(value, "USD"));
+        amountComponent.setQuoteSideAmount(amountComponent.getReputationBasedQuoteSideAmount().round(0));
     }
 
     private void maxOrFixedQuoteSideAmountChanged(Monetary value) {

@@ -34,6 +34,7 @@ public class TakeOfferAmountModel implements Model {
     private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isAmountHyperLinkDisabled = new SimpleBooleanProperty();
     private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
     private final BooleanProperty isAmountLimitInfoVisible = new SimpleBooleanProperty();
     @Setter

@@ -102,6 +102,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         amountLimitInfo.textProperty().bind(model.getAmountLimitInfo());
         amountLimitInfoAmount.textProperty().bind(model.getAmountLimitInfoAmount());
         amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
+        amountLimitInfoAmount.disableProperty().bind(model.getIsAmountHyperLinkDisabled());
 
         amountLimitInfoAmount.managedProperty().bind(model.getIsAmountLimitInfoVisible().and(model.getAmountLimitInfoAmount().isEmpty().not()));
         amountLimitInfoAmount.visibleProperty().bind(amountLimitInfoAmount.managedProperty());
@@ -136,6 +137,8 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         amountLimitInfo.textProperty().unbind();
         amountLimitInfoAmount.textProperty().unbind();
         amountLimitInfoOverlayInfo.textProperty().unbind();
+        amountLimitInfoAmount.disableProperty().unbind();
+
         amountLimitInfoAmount.managedProperty().unbind();
         amountLimitInfoAmount.visibleProperty().unbind();
         showOverlayHyperLink.managedProperty().unbind();
