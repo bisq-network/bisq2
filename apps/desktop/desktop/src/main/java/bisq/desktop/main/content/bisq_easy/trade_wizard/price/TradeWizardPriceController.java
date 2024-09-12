@@ -21,6 +21,7 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
@@ -138,6 +139,7 @@ public class TradeWizardPriceController implements Controller {
         isPriceInvalidPin.unsubscribe();
         priceSpecPin.unsubscribe();
         percentageInputPin.unsubscribe();
+        view.getRoot().setOnKeyPressed(null);
     }
 
     void onPercentageFocussed(boolean focussed) {
@@ -222,10 +224,16 @@ public class TradeWizardPriceController implements Controller {
 
     void showLearnWhySection() {
         model.getShouldShowLearnWhyOverlay().set(true);
+        view.getRoot().setOnKeyPressed(keyEvent -> {
+            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+            });
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::closeLearnWhySection);
+        });
     }
 
     void closeLearnWhySection() {
         model.getShouldShowLearnWhyOverlay().set(false);
+        view.getRoot().setOnKeyPressed(null);
     }
 
     private void applyPriceSpec() {

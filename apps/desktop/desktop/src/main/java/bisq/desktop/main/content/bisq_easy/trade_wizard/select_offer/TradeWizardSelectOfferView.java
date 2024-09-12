@@ -327,7 +327,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                             model.getQuoteSideAmountSpec(),
                             bisqEasyOffer.getPriceSpec(),
                             bisqEasyOffer.getMarket())
-                    .orElse(Monetary.from(0, model.getMarket().getBaseCurrencyCode()));
+                    .orElseThrow();
             baseAmountAsLong = baseAmountAsMonetary.getValue();
             baseAmountDisplayString = AmountFormatter.formatAmountWithCode(baseAmountAsMonetary, false);
             reputationScore = authorUserProfile.flatMap(reputationService::findReputationScore)

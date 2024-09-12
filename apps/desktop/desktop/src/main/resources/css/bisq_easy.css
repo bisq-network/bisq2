@@ -973,8 +973,16 @@
 .trade-wizard-amount-limit-info-overlay-link.hyperlink:hover:visited {
     -fx-text-fill: -bisq2-green;
 }
+
 .trade-wizard-amount-limit-info-overlay-link.hyperlink:visited {
     -fx-text-fill: -bisq2-green;
+}
+
+.trade-wizard-amount-limit-info-overlay-link.hyperlink:disabled {
+    -fx-opacity: 1;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-underline: false;
+    -fx-cursor: none;
 }
 
 .trade-wizard-review-details-headline {

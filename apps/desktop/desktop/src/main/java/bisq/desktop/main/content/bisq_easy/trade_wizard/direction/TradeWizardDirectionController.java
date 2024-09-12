@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.Direction;
 import bisq.user.identity.UserIdentityService;
@@ -73,6 +74,7 @@ public class TradeWizardDirectionController implements Controller {
 
     @Override
     public void onDeactivate() {
+        view.getRoot().setOnKeyPressed(null);
     }
 
     void onSelectDirection(Direction direction) {
@@ -112,6 +114,13 @@ public class TradeWizardDirectionController implements Controller {
         if (!reputationScore.hasReputation()) {
             navigationButtonsVisibleHandler.accept(false);
             model.getShowReputationInfo().set(true);
+            view.getRoot().setOnKeyPressed(keyEvent -> {
+                KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+                });
+                KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseReputationInfo);
+            });
+        } else {
+            view.getRoot().setOnKeyPressed(null);
         }
     }
 }
