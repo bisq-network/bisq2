@@ -569,19 +569,20 @@ public class TradeWizardAmountController implements Controller {
                     // min < 25 USD, max > 25 USD
                     model.getAmountLimitInfoLeadLine().set(Res.get("bisqEasy.tradeWizard.amount.buyer.noReputationNeededForMinAmount.limitInfo.leadLine",
                             formattedAmountWithoutReputationNeeded));
+                    String numSellers = Res.get("bisqEasy.tradeWizard.amount.buyer.numSellers." + Math.min(numPotentialTakersForMaxOrFixedAmount, 2), numPotentialTakersForMaxOrFixedAmount);
                     model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.noReputationNeededForMinAmount.limitInfo",
-                            formattedMaxOrFixedAmount, numPotentialTakersForMaxOrFixedAmount));
+                            formattedMaxOrFixedAmount, numSellers));
                     model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.noReputationNeededForMinAmount.limitInfo.overlay.info",
                             formattedMinAmount, formattedAmountWithoutReputationNeeded, formattedMaxOrFixedAmount, requiredReputationScoreForMaxOrFixedAmount) + "\n\n");
                 } else {
                     // min > 25 USD
                     model.getIsWarningIconVisible().set(numPotentialTakersForMaxOrFixedAmount == 0);
                     if (maxAmountChanged) {
-                        String numSellers = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.numSellers." + Math.min(numPotentialTakersForMaxOrFixedAmount, 2), numPotentialTakersForMaxOrFixedAmount);
+                        String numSellers = Res.get("bisqEasy.tradeWizard.amount.buyer.numSellers." + Math.min(numPotentialTakersForMaxOrFixedAmount, 2), numPotentialTakersForMaxOrFixedAmount);
                         model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo", numSellers, formattedMaxOrFixedAmount));
                         model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info", formattedMaxOrFixedAmount, requiredReputationScoreForMaxOrFixedAmount) + "\n\n");
                     } else {
-                        String numSellers = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.numSellers." + Math.min(numPotentialTakersForMinAmount, 2), numPotentialTakersForMinAmount);
+                        String numSellers = Res.get("bisqEasy.tradeWizard.amount.buyer.numSellers." + Math.min(numPotentialTakersForMinAmount, 2), numPotentialTakersForMinAmount);
                         model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo", numSellers, formattedMinAmount));
                         model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info", formattedMinAmount, requiredReputationScoreForMinAmount) + "\n\n");
                     }
@@ -594,7 +595,7 @@ public class TradeWizardAmountController implements Controller {
                     model.getIsWarningIconVisible().set(true);
                 } else {
                     // min > 25 USD
-                    String numSellers = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.numSellers." + Math.min(numPotentialTakersForMaxOrFixedAmount, 2), numPotentialTakersForMaxOrFixedAmount);
+                    String numSellers = Res.get("bisqEasy.tradeWizard.amount.buyer.numSellers." + Math.min(numPotentialTakersForMaxOrFixedAmount, 2), numPotentialTakersForMaxOrFixedAmount);
                     model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo", numSellers, formattedMaxOrFixedAmount));
                     model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info", formattedMaxOrFixedAmount, requiredReputationScoreForMaxOrFixedAmount) + "\n\n");
                     model.getIsWarningIconVisible().set(numPotentialTakersForMaxOrFixedAmount == 0);
@@ -603,11 +604,11 @@ public class TradeWizardAmountController implements Controller {
         } else {
             long myReputationScore = model.getMyReputationScore();
             String formattedReputationBasedMaxAmount = formatAmountWithCode(model.getReputationBasedMaxAmount());
+            String formattedAmountWithoutReputationNeeded = formatAmountWithCode(amountWithoutReputationNeeded);
             if (noReputationNeededForMaxOrFixedAmount) {
-                String formattedAmountWithoutReputationNeeded = formatAmountWithCode(amountWithoutReputationNeeded);
                 model.getAmountLimitInfoAmount().set("");
                 model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.noReputationNeededForMaxOrFixedAmount.overlay.info",
-                        myReputationScore, formattedReputationBasedMaxAmount));
+                        formattedAmountWithoutReputationNeeded, myReputationScore, formattedReputationBasedMaxAmount));
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.noReputationNeededForMaxOrFixedAmount", formattedAmountWithoutReputationNeeded));
             } else {
                 model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoAmount", formattedReputationBasedMaxAmount));
