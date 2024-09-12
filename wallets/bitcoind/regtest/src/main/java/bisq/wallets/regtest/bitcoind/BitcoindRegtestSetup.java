@@ -17,7 +17,6 @@
 
 package bisq.wallets.regtest.bitcoind;
 
-import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
@@ -31,11 +30,13 @@ import lombok.Getter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 
 public class BitcoindRegtestSetup
         extends AbstractRegtestSetup<MultiProcessCoordinator> {
@@ -101,7 +102,7 @@ public class BitcoindRegtestSetup
     }
 
     private RpcConfig createRpcConfig() {
-        int port = NetworkUtils.findFreeSystemPort();
+        int port = findFreeSystemPort();
         return createRpcConfig("127.0.0.1", port);
     }
 
@@ -166,6 +167,17 @@ public class BitcoindRegtestSetup
             }
 
             return bitcoindPath;
+        }
+    }
+
+    public static int findFreeSystemPort() {
+        try {
+            ServerSocket server = new ServerSocket(0);
+            int port = server.getLocalPort();
+            server.close();
+            return port;
+        } catch (IOException ignored) {
+            return new Random().nextInt(10000) + 50000;
         }
     }
 }

@@ -17,21 +17,23 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
-import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
+import bisq.wallets.json_rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.RpcConfig;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.ConnectException;
+import java.net.ServerSocket;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class WalletNotRunningTest {
     @Test
     void notRunningTest() {
-        int freePort = NetworkUtils.findFreeSystemPort();
+        int freePort = findFreeSystemPort();
 
         RpcConfig rpcConfig = RpcConfig.builder()
                 .hostname("127.0.0.1")
@@ -45,5 +47,16 @@ public class WalletNotRunningTest {
 
         assertThatThrownBy(minerChainBackend::listWallets)
                 .hasCauseInstanceOf(ConnectException.class);
+    }
+
+    public static int findFreeSystemPort() {
+        try {
+            ServerSocket server = new ServerSocket(0);
+            int port = server.getLocalPort();
+            server.close();
+            return port;
+        } catch (IOException ignored) {
+            return new Random().nextInt(10000) + 50000;
+        }
     }
 }

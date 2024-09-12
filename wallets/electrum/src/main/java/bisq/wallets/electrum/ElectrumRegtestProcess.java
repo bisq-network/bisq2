@@ -18,14 +18,14 @@
 package bisq.wallets.electrum;
 
 import bisq.common.file.FileCreationWatcher;
-import bisq.common.file.FileScanner;
 import bisq.common.file.FileUtils;
-import bisq.common.file.LogScanner;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.RpcConfig;
+import bisq.wallets.regtest.FileScanner;
+import bisq.wallets.regtest.LogScanner;
 import bisq.wallets.regtest.process.DaemonProcess;
 import bisq.wallets.regtest.process.ProcessConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;

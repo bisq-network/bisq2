@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.file;
+package bisq.wallets.regtest;
 
 import lombok.extern.slf4j.Slf4j;
 

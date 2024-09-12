@@ -17,7 +17,6 @@
 
 package bisq.wallets.regtest.bitcoind;
 
-import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.json_rpc.RpcCallFailureException;
@@ -53,7 +52,7 @@ public class BitcoindRegtestProcess extends DaemonProcess {
 
     @Override
     public ProcessConfig createProcessConfig() {
-        int zmqPort = NetworkUtils.findFreeSystemPort();
+        int zmqPort = BitcoindRegtestSetup.findFreeSystemPort();
         return ProcessConfig.builder()
                 .name(binaryPath.toAbsolutePath().toString())
                 .args(List.of(
@@ -61,7 +60,7 @@ public class BitcoindRegtestProcess extends DaemonProcess {
                         "-datadir=" + dataDir.toAbsolutePath(),
                         "-debug=1",
 
-                        "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
+                        "-bind=127.0.0.1:" + BitcoindRegtestSetup.findFreeSystemPort(),
                         "-whitelist=127.0.0.1",
 
                         "-rpcbind=127.0.0.1:" + rpcConfig.getPort(),
