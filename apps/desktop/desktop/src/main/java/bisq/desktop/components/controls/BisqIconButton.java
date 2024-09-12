@@ -39,6 +39,14 @@ public class BisqIconButton extends Button {
         return button;
     }
 
+    public static Button createCopyIconButton(BisqTooltip.Style tooltipStyle, String style) {
+        Button button = AwesomeDude.createIconButton(AwesomeIcon.COPY);
+        button.getStyleClass().add("icon-button");
+        button.getGraphic().getStyleClass().add(style);
+        button.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard"), tooltipStyle));
+        return button;
+    }
+
     public static Button createExternalLinkButton(@Nullable String text, String tooltip) {
         return createIconButton(AwesomeIcon.EXTERNAL_LINK, text, tooltip);
     }
@@ -82,7 +90,7 @@ public class BisqIconButton extends Button {
         button.getStyleClass().add("icon-button");
         if (StringUtils.isNotEmpty(text)) {
             button.setText(text);
-            button.setGraphicTextGap(7.5);
+            button.setGraphicTextGap(5);
             button.setContentDisplay(ContentDisplay.RIGHT);
         }
         return button;
