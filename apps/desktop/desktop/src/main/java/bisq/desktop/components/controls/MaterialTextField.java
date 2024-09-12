@@ -506,7 +506,7 @@ public class MaterialTextField extends Pane {
             }
         }
 
-        helpLabel.setVisible(isValid.get() && StringUtils.isNotEmpty(getHelpText()));
+        helpLabel.setVisible(StringUtils.isNotEmpty(getHelpText()) && StringUtils.isEmpty(errorLabel.getText()));
         helpLabel.setManaged(helpLabel.isVisible());
 
         descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
