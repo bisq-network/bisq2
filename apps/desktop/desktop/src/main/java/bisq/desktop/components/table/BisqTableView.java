@@ -218,6 +218,7 @@ public class BisqTableView<T> extends TableView<T> {
                         selectedPin.unsubscribe();
                         selectedPin = null;
                     }
+                    setId(null);
                 }
             }
         };
