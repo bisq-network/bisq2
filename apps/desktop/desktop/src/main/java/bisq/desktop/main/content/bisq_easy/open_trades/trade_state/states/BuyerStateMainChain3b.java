@@ -24,10 +24,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerStateOnChain3b extends StateOnChain3b<SellerStateOnChain3b.Controller> {
-    public SellerStateOnChain3b(ServiceProvider serviceProvider,
-                                BisqEasyTrade bisqEasyTrade,
-                                BisqEasyOpenTradeChannel channel) {
+public class BuyerStateMainChain3b extends StateMainChain3b<BuyerStateMainChain3b.Controller> {
+    public BuyerStateMainChain3b(ServiceProvider serviceProvider,
+                                 BisqEasyTrade bisqEasyTrade,
+                                 BisqEasyOpenTradeChannel channel) {
         super(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -42,7 +42,7 @@ public class SellerStateOnChain3b extends StateOnChain3b<SellerStateOnChain3b.Co
         return new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
-    protected static class Controller extends StateOnChain3b.Controller<Model, View> {
+    protected static class Controller extends StateMainChain3b.Controller<Model, View> {
         protected Controller(ServiceProvider serviceProvider,
                              BisqEasyTrade bisqEasyTrade,
                              BisqEasyOpenTradeChannel channel) {
@@ -61,13 +61,13 @@ public class SellerStateOnChain3b extends StateOnChain3b<SellerStateOnChain3b.Co
     }
 
     @Getter
-    protected static class Model extends StateOnChain3b.Model {
+    protected static class Model extends StateMainChain3b.Model {
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }
 
-    public static class View extends StateOnChain3b.View<Model, Controller> {
+    public static class View extends StateMainChain3b.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }
