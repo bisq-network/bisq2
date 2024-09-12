@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class TradeWizardPaymentMethodsController implements Controller {
-    private static final BitcoinPaymentMethod ON_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
+    private static final BitcoinPaymentMethod MAIN_CHAIN_PAYMENT_METHOD = BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN);
     private static final int MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS = 3;
     private static final int MAX_ALLOWED_SELECTED_FIAT_PAYMENTS = 4;
 
@@ -173,7 +173,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
                         maybeAddBitcoinPaymentMethod(bitcoinPaymentMethod);
                     }
                 }));
-        maybeAddOnChainPaymentMethodAsSelected();
+        maybeAddMainChainPaymentMethodAsSelected();
     }
 
     @Override
@@ -322,9 +322,9 @@ public class TradeWizardPaymentMethodsController implements Controller {
         model.getCanAddCustomFiatPaymentMethod().set(model.getAddedCustomFiatPaymentMethods().size() < MAX_ALLOWED_CUSTOM_FIAT_PAYMENTS);
     }
 
-    private void maybeAddOnChainPaymentMethodAsSelected() {
+    private void maybeAddMainChainPaymentMethodAsSelected() {
         if (model.getSelectedBitcoinPaymentMethods().isEmpty()) {
-            model.getSelectedBitcoinPaymentMethods().add(ON_CHAIN_PAYMENT_METHOD);
+            model.getSelectedBitcoinPaymentMethods().add(MAIN_CHAIN_PAYMENT_METHOD);
         }
     }
 }

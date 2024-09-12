@@ -268,8 +268,8 @@ public class TakeOfferReviewController implements Controller {
         String formattedBaseAmount = AmountFormatter.formatAmount(fixBaseSideAmount, false);
         String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount);
         Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
-        boolean isOnchain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
-        model.setFeeDetailsVisible(isOnchain);
+        boolean isMainChain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
+        model.setFeeDetailsVisible(isMainChain);
         if (takersDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
@@ -278,7 +278,7 @@ public class TakeOfferReviewController implements Controller {
             toReceiveAmount = formattedQuoteAmount;
             toReceiveCode = fixQuoteSideAmount.getCode();
 
-            if (isOnchain) {
+            if (isMainChain) {
                 model.setFee(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFee"));
                 model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.noTradeFeesLong"));
             } else {
@@ -292,7 +292,7 @@ public class TakeOfferReviewController implements Controller {
             toReceiveAmount = formattedBaseAmount;
             toReceiveCode = fixBaseSideAmount.getCode();
 
-            if (isOnchain) {
+            if (isMainChain) {
                 model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
                 model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFeeLong"));
             } else {

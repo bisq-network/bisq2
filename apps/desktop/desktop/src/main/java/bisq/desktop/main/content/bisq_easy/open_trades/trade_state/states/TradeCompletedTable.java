@@ -22,27 +22,27 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.Getter;
 
 import java.util.Optional;
 
 public class TradeCompletedTable extends VBox {
     private final GridPane headerGridPane, bodyGridPane;
+    // @Getter
+    // private final BisqMenuItem  copyTxIdButton;
     @Getter
-    private final BisqMenuItem blockExplorerButton, copyTxIdButton;
+    private final Button blockExplorerButton, copyTxIdButton;
 
     public TradeCompletedTable() {
         Label title = new Label(Res.get("bisqEasy.tradeCompleted.title"));
@@ -67,14 +67,20 @@ public class TradeCompletedTable extends VBox {
         valueCol.setPercentWidth(75);
         bodyGridPane.getColumnConstraints().add(valueCol);
 
-        blockExplorerButton = new BisqMenuItem("Link"); // TODO: Add icon for external link instead
+        blockExplorerButton = BisqIconButton.createExternalLinkButton(Res.get("bisqEasy.tradeCompleted.body.txId.explorerLink"), Res.get("bisqEasy.tradeCompleted.body.txId.tooltip"));
+        blockExplorerButton.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
+        blockExplorerButton.getGraphic().getStyleClass().add("text-fill-grey-dimmed");
         blockExplorerButton.setVisible(false);
         blockExplorerButton.setManaged(false);
-        blockExplorerButton.setTooltip(Res.get("bisqEasy.tradeCompleted.body.txId.tooltip"));
 
-        copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");
+        copyTxIdButton = BisqIconButton.createCopyIconButton(BisqTooltip.Style.DEFAULT, "text-fill-grey-dimmed");
+
+       /* blockExplorerButton = new BisqMenuItem(Res.get("bisqEasy.tradeCompleted.body.txId.explorerLink")); // TODO: Add icon for external link instead
+         blockExplorerButton.setTooltip(Res.get("bisqEasy.tradeCompleted.body.txId.tooltip"));*/
+
+      /*  copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");
         copyTxIdButton.useIconOnly();
-        copyTxIdButton.setTooltip(Res.get("action.copyToClipboard"));
+        copyTxIdButton.setTooltip(Res.get("action.copyToClipboard"));*/
 
         Region line1 = getLine();
         Region line2 = getLine();
@@ -87,9 +93,17 @@ public class TradeCompletedTable extends VBox {
         setAlignment(Pos.CENTER);
     }
 
-    public void initialize(UserProfile userProfile, boolean isBuyer, String btcAmount, String fiatAmount,
-                           String fiatCurrency, String paymentMethodUsed, String tradeIdUsed, String tradeDate,
-                           String tradePriceUsed, String tradePriceSymbolUsed, Optional<Pair<String, String>> txIdDescriptionAndValue) {
+    public void initialize(UserProfile userProfile,
+                           boolean isBuyer,
+                           String btcAmount,
+                           String fiatAmount,
+                           String fiatCurrency,
+                           String paymentMethodUsed,
+                           String tradeIdUsed,
+                           String tradeDate,
+                           String tradePriceUsed,
+                           String tradePriceSymbolUsed,
+                           Optional<Pair<String, String>> txIdDescriptionAndValue) {
         // Header
         int rowTitle = 0;
         int rowValue = 1;
@@ -185,7 +199,8 @@ public class TradeCompletedTable extends VBox {
             String txId = txIdDescriptionAndValue.get().getSecond();
             Label txIdValue = new Label(txId);
             txIdValue.getStyleClass().addAll("medium-text", "text-fill-green");
-            HBox txValueBox = new HBox(5, txIdValue, Spacer.fillHBox(), blockExplorerButton, copyTxIdButton);
+
+            HBox txValueBox = new HBox(10, txIdValue, Spacer.fillHBox(), blockExplorerButton, copyTxIdButton);
             txValueBox.setAlignment(Pos.CENTER_LEFT);
             GridPane.setValignment(txIdTitle, VPos.CENTER);
             GridPane.setValignment(txIdValue, VPos.CENTER);

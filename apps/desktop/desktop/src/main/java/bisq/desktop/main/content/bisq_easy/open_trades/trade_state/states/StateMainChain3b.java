@@ -58,12 +58,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> extends BaseState {
+public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, ?>> extends BaseState {
     protected final C controller;
 
-    protected StateOnChain3b(ServiceProvider serviceProvider,
-                             BisqEasyTrade bisqEasyTrade,
-                             BisqEasyOpenTradeChannel channel) {
+    protected StateMainChain3b(ServiceProvider serviceProvider,
+                               BisqEasyTrade bisqEasyTrade,
+                               BisqEasyOpenTradeChannel channel) {
         controller = getController(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -71,7 +71,7 @@ public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> 
                                        BisqEasyTrade bisqEasyTrade,
                                        BisqEasyOpenTradeChannel channel);
 
-    protected static abstract class Controller<M extends StateOnChain3b.Model, V extends StateOnChain3b.View<?, ?>> extends BaseState.Controller<M, V> {
+    protected static abstract class Controller<M extends StateMainChain3b.Model, V extends StateMainChain3b.View<?, ?>> extends BaseState.Controller<M, V> {
         private final static Map<String, Tx> CONFIRMED_TX_CACHE = new HashMap<>();
 
         private final ExplorerService explorerService;
@@ -270,11 +270,11 @@ public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> 
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
-            role = this instanceof BuyerStateOnChain3b.Model ? "buyer" : "seller";
+            role = this instanceof BuyerStateMainChain3b.Model ? "buyer" : "seller";
         }
     }
 
-    public static abstract class View<M extends StateOnChain3b.Model, C extends StateOnChain3b.Controller<?, ?>> extends BaseState.View<M, C> {
+    public static abstract class View<M extends StateMainChain3b.Model, C extends StateMainChain3b.Controller<?, ?>> extends BaseState.View<M, C> {
         private final Button button;
         private final MaterialTextField paymentProof, btcBalance;
         private final WaitingAnimation waitingAnimation;
@@ -299,8 +299,8 @@ public abstract class StateOnChain3b<C extends StateOnChain3b.Controller<?, ?>> 
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
 
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.headline.onChain"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.info.onChain"));
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.headline.MAIN_CHAIN"));
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.info.MAIN_CHAIN"));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
             root.getChildren().addAll(waitingInfo, paymentProof, btcBalance, button);

@@ -43,10 +43,10 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     @Getter
     private final Observable<String> paymentAccountData = new Observable<>();
     @Getter
-    private final Observable<String> bitcoinPaymentData = new Observable<>(); // btc address in case of onchain, or LN invoice if LN is used
+    private final Observable<String> bitcoinPaymentData = new Observable<>(); // btc address in case of mainChain, or LN invoice if LN is used
     // paymentProof can be null in Observable
     @Getter
-    private final Observable<String> paymentProof = new Observable<>(); // txId in case of onchain, or preimage if LN is used
+    private final Observable<String> paymentProof = new Observable<>(); // txId in case of mainChain, or preimage if LN is used
 
     // The role who cancelled or rejected the trade
     @Getter

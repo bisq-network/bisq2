@@ -503,17 +503,17 @@ public class TradeWizardReviewController implements Controller {
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
         Direction direction = model.getBisqEasyOffer().getDirection();
-        boolean isOnchain = model.getBitcoinPaymentMethods().stream().anyMatch(e -> e.getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN);
-        model.setFeeDetailsVisible(isOnchain);
+        boolean isMainChain = model.getBitcoinPaymentMethods().stream().anyMatch(e -> e.getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN);
+        model.setFeeDetailsVisible(isMainChain);
         if (direction.isSell()) {
-            if (isOnchain) {
+            if (isMainChain) {
                 model.setFee(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFee"));
                 model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.noTradeFeesLong"));
             } else {
                 model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
             }
         } else {
-            if (isOnchain) {
+            if (isMainChain) {
                 model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
                 model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFeeLong"));
             } else {

@@ -151,10 +151,10 @@ public class SellerState3a extends BaseState {
 
         private void onConfirmedBtcSent() {
             BitcoinPaymentRail paymentRail = getPaymentRail();
-            boolean isOnChain = paymentRail == BitcoinPaymentRail.MAIN_CHAIN;
+            boolean isMainChain = paymentRail == BitcoinPaymentRail.MAIN_CHAIN;
             String paymentProof = model.getPaymentProof().get();
             boolean isValid;
-            if (isOnChain) {
+            if (isMainChain) {
                 isValid = paymentProof != null && model.getPaymentProofValidator().validateAndGet();
             } else {
                 if (paymentProof == null) {
