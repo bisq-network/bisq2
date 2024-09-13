@@ -6,6 +6,7 @@ dependencyResolutionManagement {
     }
 }
 
+include("bitcoin-core-binaries")
 include("gradle-tasks")
 
 rootProject.name = "bitcoind-build-logic"

@@ -11,7 +11,6 @@ includeBuild("../wallets/bitcoind/build-logic") {
 }
 
 include("commons")
-include("bitcoin-core-binaries")
 include("desktop-regtest")
 include("electrum-binaries")
 include("packaging")
