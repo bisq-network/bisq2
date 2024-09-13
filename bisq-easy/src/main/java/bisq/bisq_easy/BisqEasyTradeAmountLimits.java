@@ -80,6 +80,28 @@ public class BisqEasyTradeAmountLimits {
 
 
     public static Optional<Result> checkOfferAmountLimitForMinAmount(ReputationService reputationService,
+                                                                     UserIdentityService userIdentityService,
+                                                                     UserProfileService userProfileService,
+                                                                     MarketPriceService marketPriceService,
+                                                                     Market market,
+                                                                     Monetary fiatAmount,
+                                                                     BisqEasyOffer peersOffer) {
+        return findRequiredReputationScoreByFiatAmount(marketPriceService, market, fiatAmount)
+                .map(requiredReputationScore -> {
+                    long sellersReputationScore = getSellersReputationScore(reputationService, userIdentityService, userProfileService, peersOffer);
+                    return getResult(sellersReputationScore, requiredReputationScore);
+                });
+    }
+
+    public static Optional<Long> findRequiredReputationScoreByFiatAmount1(MarketPriceService marketPriceService,
+                                                                          Market market,
+                                                                          Monetary fiatAmount) {
+        return fiatToBtc(marketPriceService, market, fiatAmount)
+                .flatMap(btc -> btcToUsd(marketPriceService, btc))
+                .map(BisqEasyTradeAmountLimits::getRequiredReputationScoreByUsdAmount);
+    }
+
+    public static Optional<Result> checkOfferAmountLimitForMinAmount(ReputationService reputationService,
                                                                      BisqEasyService bisqEasyService,
                                                                      UserIdentityService userIdentityService,
                                                                      UserProfileService userProfileService,

@@ -286,7 +286,7 @@ public class AmountComponent {
                     quoteSideAmountInput.setAmount(exactAmount.round(0));
                 } else {
                     log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");
-                    Fiat defaultQuoteSideAmount = Fiat.fromValue(1000000, model.getMarket().getQuoteCurrencyCode());
+                    Fiat defaultQuoteSideAmount = Fiat.fromFaceValue(100, model.getMarket().getQuoteCurrencyCode());
                     quoteSideAmountInput.setAmount(defaultQuoteSideAmount);
                 }
             } else {

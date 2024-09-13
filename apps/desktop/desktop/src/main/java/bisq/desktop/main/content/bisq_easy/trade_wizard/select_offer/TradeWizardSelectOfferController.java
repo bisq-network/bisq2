@@ -314,14 +314,14 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                if (!BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
-                                bisqEasyService,
-                                userIdentityService,
-                                userProfileService,
-                                marketPriceService,
-                                peersOffer)
-                        .map(BisqEasyTradeAmountLimits.Result::isValid)
-                        .orElse(false)) {
+                Optional<BisqEasyTradeAmountLimits.Result> result = BisqEasyTradeAmountLimits.checkOfferAmountLimitForMinAmount(reputationService,
+                        userIdentityService,
+                        userProfileService,
+                        marketPriceService,
+                        model.getMarket(),
+                        myQuoteSideMaxOrFixedAmount,
+                        peersOffer);
+                if (!result.map(BisqEasyTradeAmountLimits.Result::isValid).orElse(false)) {
                     return false;
                 }
 

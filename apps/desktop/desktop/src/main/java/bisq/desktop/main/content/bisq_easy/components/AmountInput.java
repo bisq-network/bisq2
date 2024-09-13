@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.components;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
+import bisq.common.util.StringUtils;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
@@ -79,7 +80,7 @@ public abstract class AmountInput {
 
     protected static class Controller implements bisq.desktop.common.view.Controller {
         @Setter
-        protected  Model model;
+        protected Model model;
         @Getter
         @Setter
         protected View view;
@@ -111,7 +112,7 @@ public abstract class AmountInput {
         }
 
         private void onAmount(String value) {
-            if (isValueOrCodeNull(value, model.code.get())) {
+            if (StringUtils.isEmpty(value) || StringUtils.isEmpty(model.code.get())) {
                 setAmountInvalid();
                 return;
             }
@@ -124,9 +125,6 @@ public abstract class AmountInput {
             updateAmountIfNotFocused(value);
         }
 
-        private boolean isValueOrCodeNull(String value, String code) {
-            return value == null || code == null;
-        }
 
         private void handleInvalidValue() {
             if (!model.hasFocus) {
@@ -219,7 +217,9 @@ public abstract class AmountInput {
             }
         }
 
-        private void onAmountChanged(ObservableValue<? extends Monetary> observable, Monetary oldValue, Monetary newValue) {
+        private void onAmountChanged(ObservableValue<? extends Monetary> observable,
+                                     Monetary oldValue,
+                                     Monetary newValue) {
             applyAmount(newValue);
         }
 
