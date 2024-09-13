@@ -293,13 +293,11 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
 
         Optional<BisqEasyTradeAmountLimits.Result> limitForMinAmount = BisqEasyTradeAmountLimits.checkOfferAmountLimitForMinAmount(reputationService,
-                bisqEasyService,
                 userIdentityService,
                 userProfileService,
                 marketPriceService,
                 bisqEasyOffer);
         Optional<BisqEasyTradeAmountLimits.Result> limitForMaxAmount = BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
-                bisqEasyService,
                 userIdentityService,
                 userProfileService,
                 marketPriceService,

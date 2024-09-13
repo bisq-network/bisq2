@@ -93,16 +93,7 @@ public class BisqEasyTradeAmountLimits {
                 });
     }
 
-    public static Optional<Long> findRequiredReputationScoreByFiatAmount1(MarketPriceService marketPriceService,
-                                                                          Market market,
-                                                                          Monetary fiatAmount) {
-        return fiatToBtc(marketPriceService, market, fiatAmount)
-                .flatMap(btc -> btcToUsd(marketPriceService, btc))
-                .map(BisqEasyTradeAmountLimits::getRequiredReputationScoreByUsdAmount);
-    }
-
     public static Optional<Result> checkOfferAmountLimitForMinAmount(ReputationService reputationService,
-                                                                     BisqEasyService bisqEasyService,
                                                                      UserIdentityService userIdentityService,
                                                                      UserProfileService userProfileService,
                                                                      MarketPriceService marketPriceService,
@@ -115,7 +106,6 @@ public class BisqEasyTradeAmountLimits {
     }
 
     public static Optional<Result> checkOfferAmountLimitForMaxOrFixedAmount(ReputationService reputationService,
-                                                                            BisqEasyService bisqEasyService,
                                                                             UserIdentityService userIdentityService,
                                                                             UserProfileService userProfileService,
                                                                             MarketPriceService marketPriceService,
