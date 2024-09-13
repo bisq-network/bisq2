@@ -69,7 +69,7 @@ public class TimeFormatter {
         long days = hours / 24;
         hours = hours % 24;
         if (days > 0) {
-            String dayString = Res.getAsSingularOrPlural("temporal.day", days);
+            String dayString = Res.getPluralization("temporal.day", days);
             return String.format("%s, %d hours, %d min, %d sec", dayString, hours, min, sec);
         } else if (hours > 0) {
             return String.format("%d hours, %d min, %d sec", hours, min, sec);
@@ -82,9 +82,9 @@ public class TimeFormatter {
         long totalDays = getAgeInDays(date);
         long years = totalDays / 365;
         long days = totalDays - years * 365;
-        String dayString = Res.getAsSingularOrPlural("temporal.day", days);
+        String dayString = Res.getPluralization("temporal.day", days);
         if (years > 0) {
-            String yearString = Res.getAsSingularOrPlural("temporal.year", years);
+            String yearString = Res.getPluralization("temporal.year", years);
             return yearString + ", " + dayString;
         } else {
             return dayString;

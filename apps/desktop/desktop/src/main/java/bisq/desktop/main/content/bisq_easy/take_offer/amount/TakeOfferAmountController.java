@@ -87,7 +87,7 @@ public class TakeOfferAmountController implements Controller {
                 maxAmount = reputationBasedQuoteSideAmount.isGreaterThan(offersQuoteSideMaxOrFixedAmount)
                         ? offersQuoteSideMaxOrFixedAmount
                         : reputationBasedQuoteSideAmount;
-                amountComponent.setReputationBasedQuoteSideAmount(maxAmount);
+                amountComponent.setRightMarkerQuoteSideValue(maxAmount);
                 applyQuoteSideMinMaxRange(quoteSideMinAmount, maxAmount);
 
                 long sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
@@ -186,7 +186,7 @@ public class TakeOfferAmountController implements Controller {
 
             if (reputationBasedQuoteSideAmount.isLessThan(maxRangeValue)) {
                 model.getIsAmountLimitInfoVisible().set(true);
-                amountComponent.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
+                amountComponent.setRightMarkerQuoteSideValue(reputationBasedQuoteSideAmount);
                 amountComponent.setQuoteSideAmount(reputationBasedQuoteSideAmount);
                 String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
                 model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
@@ -209,7 +209,7 @@ public class TakeOfferAmountController implements Controller {
             BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, bisqEasyOffer.getMarket(), myReputationScore)
                     .ifPresent(myReputationBasedQuoteSideAmount -> {
                         model.getIsAmountHyperLinkDisabled().set(myReputationBasedQuoteSideAmount.isGreaterThan(maxRangeValue));
-                        amountComponent.setReputationBasedQuoteSideAmount(myReputationBasedQuoteSideAmount);
+                        amountComponent.setRightMarkerQuoteSideValue(myReputationBasedQuoteSideAmount);
                         String formattedAmount = AmountFormatter.formatAmountWithCode(myReputationBasedQuoteSideAmount);
                         model.getIsAmountLimitInfoVisible().set(true);
                         model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo", myReputationScore));

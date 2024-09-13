@@ -80,7 +80,20 @@ public class BisqEasyTradeAmountLimits {
 
 
     public static Optional<Result> checkOfferAmountLimitForMinAmount(ReputationService reputationService,
-                                                                     BisqEasyService bisqEasyService,
+                                                                     UserIdentityService userIdentityService,
+                                                                     UserProfileService userProfileService,
+                                                                     MarketPriceService marketPriceService,
+                                                                     Market market,
+                                                                     Monetary fiatAmount,
+                                                                     BisqEasyOffer peersOffer) {
+        return findRequiredReputationScoreByFiatAmount(marketPriceService, market, fiatAmount)
+                .map(requiredReputationScore -> {
+                    long sellersReputationScore = getSellersReputationScore(reputationService, userIdentityService, userProfileService, peersOffer);
+                    return getResult(sellersReputationScore, requiredReputationScore);
+                });
+    }
+
+    public static Optional<Result> checkOfferAmountLimitForMinAmount(ReputationService reputationService,
                                                                      UserIdentityService userIdentityService,
                                                                      UserProfileService userProfileService,
                                                                      MarketPriceService marketPriceService,
@@ -93,7 +106,6 @@ public class BisqEasyTradeAmountLimits {
     }
 
     public static Optional<Result> checkOfferAmountLimitForMaxOrFixedAmount(ReputationService reputationService,
-                                                                            BisqEasyService bisqEasyService,
                                                                             UserIdentityService userIdentityService,
                                                                             UserProfileService userProfileService,
                                                                             MarketPriceService marketPriceService,

@@ -50,6 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -93,12 +95,16 @@ public class AmountComponent {
         controller.setMinMaxRange(minRangeValue, maxRangeValue);
     }
 
-    public void setReputationBasedQuoteSideAmount(Monetary reputationBasedQuoteSideAmount) {
-        controller.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
+    public void setLeftMarkerQuoteSideValue(Monetary quoteSideAmount) {
+        controller.setLeftMarkerQuoteSideValue(quoteSideAmount);
+    }
+
+    public void setRightMarkerQuoteSideValue(Monetary quoteSideAmount) {
+        controller.setRightMarkerQuoteSideValue(quoteSideAmount);
     }
 
     public Monetary getReputationBasedQuoteSideAmount() {
-        return controller.model.getReputationBasedQuoteSideAmount();
+        return controller.model.getRightMarkerQuoteSideValue();
     }
 
     public void applyReputationBasedQuoteSideAmount() {
@@ -128,6 +134,9 @@ public class AmountComponent {
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
+        private static final String SLIDER_TRACK_DEFAULT_COLOR = "-bisq-dark-grey-50";
+        private static final String SLIDER_TRACK_MARKER_COLOR = "-bisq2-green";
+
         private final Model model;
         @Getter
         private final View view;
@@ -243,13 +252,18 @@ public class AmountComponent {
             applyInitialRangeValues();
         }
 
-        public void setReputationBasedQuoteSideAmount(Monetary reputationBasedQuoteSideAmount) {
-            model.setReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
+        public void setLeftMarkerQuoteSideValue(Monetary quoteSideAmount) {
+            model.setLeftMarkerQuoteSideValue(quoteSideAmount);
+            applySliderTrackStyle();
+        }
+
+        public void setRightMarkerQuoteSideValue(Monetary quoteSideAmount) {
+            model.setRightMarkerQuoteSideValue(quoteSideAmount);
             applySliderTrackStyle();
         }
 
         public void applyReputationBasedQuoteSideAmount() {
-            quoteSideAmountInput.setAmount(model.getReputationBasedQuoteSideAmount());
+            quoteSideAmountInput.setAmount(model.getRightMarkerQuoteSideValue());
         }
 
         public void setQuote(PriceQuote priceQuote) {
@@ -286,7 +300,7 @@ public class AmountComponent {
                     quoteSideAmountInput.setAmount(exactAmount.round(0));
                 } else {
                     log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");
-                    Fiat defaultQuoteSideAmount = Fiat.fromValue(1000000, model.getMarket().getQuoteCurrencyCode());
+                    Fiat defaultQuoteSideAmount = Fiat.fromFaceValue(100, model.getMarket().getQuoteCurrencyCode());
                     quoteSideAmountInput.setAmount(defaultQuoteSideAmount);
                 }
             } else {
@@ -372,47 +386,40 @@ public class AmountComponent {
             boolean isMinRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(minRangeMonetary.getCode());
             boolean isMaxRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(maxRangeMonetary.getCode());
 
-            if (model.getMinRangeBaseSideValue().get() == null) {
-                Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ?
-                        minRangeMonetary :
-                        priceQuote.toBaseSideMonetary(minRangeMonetary);
-                model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);
-                if (!model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
-                            AmountFormatter.formatAmountWithCode(minRangeMonetaryAsCoin)));
-                }
-            }
-            if (model.getMaxRangeBaseSideValue().get() == null) {
-                Monetary maxRangeMonetaryAsCoin = !isMaxRangeMonetaryFiat ?
-                        maxRangeMonetary :
-                        priceQuote.toBaseSideMonetary(maxRangeMonetary);
-                model.getMaxRangeBaseSideValue().set(maxRangeMonetaryAsCoin);
-                if (!model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
-                            AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsCoin)));
-                }
+            Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ?
+                    minRangeMonetary :
+                    priceQuote.toBaseSideMonetary(minRangeMonetary);
+            model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);
+            if (!model.useQuoteCurrencyForMinMaxRange) {
+                model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
+                        AmountFormatter.formatAmountWithCode(minRangeMonetaryAsCoin)));
             }
 
-            if (model.getMinRangeQuoteSideValue().get() == null) {
-                Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ?
-                        minRangeMonetary :
-                        priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
-                model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
-                if (model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
-                            AmountFormatter.formatAmountWithCode(minRangeMonetaryAsFiat)));
-                }
+            Monetary maxRangeMonetaryAsCoin = !isMaxRangeMonetaryFiat ?
+                    maxRangeMonetary :
+                    priceQuote.toBaseSideMonetary(maxRangeMonetary);
+            model.getMaxRangeBaseSideValue().set(maxRangeMonetaryAsCoin);
+            if (!model.useQuoteCurrencyForMinMaxRange) {
+                model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
+                        AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsCoin)));
             }
 
-            if (model.getMaxRangeQuoteSideValue().get() == null) {
-                Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ?
-                        maxRangeMonetary :
-                        priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
-                model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
-                if (model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
-                            AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsFiat)));
-                }
+            Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ?
+                    minRangeMonetary :
+                    priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
+            model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
+            if (model.useQuoteCurrencyForMinMaxRange) {
+                model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
+                        AmountFormatter.formatAmountWithCode(minRangeMonetaryAsFiat)));
+            }
+
+            Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ?
+                    maxRangeMonetary :
+                    priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
+            model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
+            if (model.useQuoteCurrencyForMinMaxRange) {
+                model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
+                        AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsFiat)));
             }
 
             applySliderTrackStyle();
@@ -421,22 +428,37 @@ public class AmountComponent {
         private void applySliderTrackStyle() {
             Monetary minRangeMonetary = model.getMinRangeQuoteSideValue().get();
             Monetary maxRangeMonetary = model.getMaxRangeQuoteSideValue().get();
-            Monetary reputationBasedQuoteSideAmount = model.getReputationBasedQuoteSideAmount();
-            if (reputationBasedQuoteSideAmount != null &&
-                    minRangeMonetary != null &&
-                    maxRangeMonetary != null) {
-                double repAmount = reputationBasedQuoteSideAmount.getValue() - minRangeMonetary.getValue();
-                double range = model.getMaxRangeMonetary().get().getValue() - minRangeMonetary.getValue();
-                double reputationBasedAmountOnSlider = range != 0 ? repAmount / range : 0;
-                String rightSideColor = "-bisq-dark-grey-50";
-                model.getSliderTrackStyle().set(String.format(
-                        "-track-color: linear-gradient(to right, " +
-                                "-bisq2-green 0%%, " +
-                                "-bisq2-green %1$.1f%%, " +
-                                rightSideColor + " %1$.1f%%, " +
-                                rightSideColor + " 100%%);",
-                        100 * reputationBasedAmountOnSlider));
+            if (minRangeMonetary == null || maxRangeMonetary == null) {
+                return;
             }
+            long minRangeMonetaryValue = minRangeMonetary.getValue();
+            long maxRangeMonetaryValue = maxRangeMonetary.getValue();
+            double range = maxRangeMonetaryValue - minRangeMonetaryValue;
+
+            // If left value is not set we use minRange
+            // If left value is set but right value not set we don't show any marker
+            Monetary markerQuoteSideValue = model.getLeftMarkerQuoteSideValue();
+            long leftMarkerQuoteSideValue = Optional.ofNullable(markerQuoteSideValue).orElse(minRangeMonetary).getValue();
+            double left = leftMarkerQuoteSideValue - minRangeMonetaryValue;
+            double leftPercentage = range != 0 ? 100 * left / range : 0;
+
+            long rightMarkerQuoteSideValue = Optional.ofNullable(model.getRightMarkerQuoteSideValue()).orElse(minRangeMonetary).getValue();
+            double right = rightMarkerQuoteSideValue - minRangeMonetaryValue;
+            double rightPercentage = range != 0 ? 100 * right / range : 0;
+
+            // E.g.: -bisq-dark-grey-50 0%, -bisq-dark-grey-50 30.0%, -bisq2-green 30.0%, -bisq2-green 60.0%, -bisq-dark-grey-50 60.0%, -bisq-dark-grey-50 100%)
+            String segments = String.format(
+                    SLIDER_TRACK_DEFAULT_COLOR + " 0%%, " +
+                            SLIDER_TRACK_DEFAULT_COLOR + " %1$.1f%%, " +
+
+                            SLIDER_TRACK_MARKER_COLOR + " %1$.1f%%, " +
+                            SLIDER_TRACK_MARKER_COLOR + " %2$.1f%%, " +
+
+                            SLIDER_TRACK_DEFAULT_COLOR + " %2$.1f%%, " +
+                            SLIDER_TRACK_DEFAULT_COLOR + " 100%%)",
+                    leftPercentage, rightPercentage);
+            String style = "-track-color: linear-gradient(to right, " + segments + ";";
+            model.getSliderTrackStyle().set(style);
         }
 
         @Override
@@ -453,6 +475,8 @@ public class AmountComponent {
             maxRangeCustomValuePin.unsubscribe();
             baseSideAmountValidPin.unsubscribe();
             quoteSideAmountValidPin.unsubscribe();
+            model.setLeftMarkerQuoteSideValue(null);
+            model.setRightMarkerQuoteSideValue(null);
         }
 
         private void setQuoteFromBase() {
@@ -507,7 +531,9 @@ public class AmountComponent {
         @Setter
         private ObjectProperty<Monetary> maxRangeQuoteSideValue = new SimpleObjectProperty<>();
         @Setter
-        private Monetary reputationBasedQuoteSideAmount;
+        private Monetary leftMarkerQuoteSideValue;
+        @Setter
+        private Monetary rightMarkerQuoteSideValue;
         private final StringProperty sliderTrackStyle = new SimpleStringProperty();
         @Setter
         private Market market = MarketRepository.getDefault();
@@ -529,6 +555,8 @@ public class AmountComponent {
             sliderFocus.set(false);
             market = MarketRepository.getDefault();
             direction = Direction.BUY;
+            leftMarkerQuoteSideValue = null;
+            rightMarkerQuoteSideValue = null;
         }
     }
 

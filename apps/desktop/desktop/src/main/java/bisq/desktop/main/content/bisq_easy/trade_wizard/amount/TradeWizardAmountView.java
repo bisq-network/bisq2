@@ -43,7 +43,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountModel, TradeWizardAmountController> {
     private final Label headlineLabel, amountLimitInfo, amountLimitInfoLeadLine, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
-    private final Hyperlink amountLimitInfoAmount, showOverlayHyperLink, linkToWiki;
+    private final Hyperlink amountLimitInfoAmount, learnMoreHyperLink, linkToWiki;
     private final VBox minAmountRoot, content, amountLimitInfoOverlay;
     private final Button toggleButton, closeOverlayButton;
     private final HBox amountLimitInfoHBox;
@@ -73,10 +73,11 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoAmount = new Hyperlink();
         amountLimitInfoAmount.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
 
-        showOverlayHyperLink = new Hyperlink();
-        showOverlayHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+        learnMoreHyperLink = new Hyperlink();
+        learnMoreHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
 
-        amountLimitInfoHBox = new HBox(5, amountLimitInfo, amountLimitInfoAmount, showOverlayHyperLink);
+        amountLimitInfoHBox = new HBox(5, amountLimitInfo, amountLimitInfoAmount, learnMoreHyperLink);
+        amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
 
         amountLimitInfoLeadLine = new Label();
         amountLimitInfoLeadLine.getStyleClass().add("trade-wizard-amount-limit-info");
@@ -87,6 +88,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         warningIcon.getStyleClass().add("overlay-icon-warning");
 
         amountLimitInfoWithWarnIcon = new HBox(10, warningIcon, amountLimitInfoVBox);
+        amountLimitInfoWithWarnIcon.setAlignment(Pos.CENTER);
 
         toggleButton = new Button(Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
         toggleButton.getStyleClass().add("outlined-button");
@@ -109,7 +111,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
     @Override
     protected void onViewAttached() {
         headlineLabel.setText(model.getHeadline());
-        showOverlayHyperLink.setText(model.getAmountLimitInfoLink());
+        learnMoreHyperLink.setText(model.getAmountLimitInfoLink());
         linkToWikiText.setText(model.getLinkToWikiText());
 
         amountLimitInfo.textProperty().bind(model.getAmountLimitInfo());
@@ -117,7 +119,10 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoAmount.textProperty().bind(model.getAmountLimitInfoAmount());
         amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
         toggleButton.textProperty().bind(model.getToggleButtonText());
+        amountLimitInfoAmount.disableProperty().bind(model.getIsAmountHyperLinkDisabled());
 
+        learnMoreHyperLink.visibleProperty().bind(model.getIsLearnMoreVisible());
+        learnMoreHyperLink.managedProperty().bind(model.getIsLearnMoreVisible());
         warningIcon.visibleProperty().bind(model.getIsWarningIconVisible());
         amountLimitInfoAmount.visibleProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
         amountLimitInfoAmount.managedProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
@@ -132,13 +137,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
             amountLimitInfoLeadLine.setManaged(!isEmpty);
             double top = isEmpty ? 0 : -22.5;
             HBox.setMargin(warningIcon, new Insets(top, 0, 0, 0));
-            if (isEmpty) {
-                amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
-                amountLimitInfoWithWarnIcon.setAlignment(Pos.CENTER);
-            } else {
-                amountLimitInfoHBox.setAlignment(Pos.BASELINE_LEFT);
-                amountLimitInfoWithWarnIcon.setAlignment(Pos.CENTER_LEFT);
-            }
         });
 
         isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(),
@@ -158,7 +156,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
                 });
 
         amountLimitInfoAmount.setOnAction(e -> controller.onSetReputationBasedAmount());
-        showOverlayHyperLink.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
+        learnMoreHyperLink.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         closeOverlayButton.setOnAction(e -> controller.onCloseAmountLimitInfoOverlay());
         toggleButton.setOnAction(e -> controller.onToggleMinAmountVisibility());
@@ -171,7 +169,10 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoLeadLine.textProperty().unbind();
         amountLimitInfoAmount.textProperty().unbind();
         amountLimitInfoOverlayInfo.textProperty().unbind();
+        amountLimitInfoAmount.disableProperty().unbind();
 
+        learnMoreHyperLink.visibleProperty().unbind();
+        learnMoreHyperLink.managedProperty().unbind();
         warningIcon.visibleProperty().unbind();
         minAmountRoot.visibleProperty().unbind();
         minAmountRoot.managedProperty().unbind();
@@ -182,7 +183,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         isAmountLimitInfoVisiblePin.unsubscribe();
 
         amountLimitInfoAmount.setOnAction(null);
-        showOverlayHyperLink.setOnAction(null);
+        learnMoreHyperLink.setOnAction(null);
         linkToWiki.setOnAction(null);
         closeOverlayButton.setOnAction(null);
         toggleButton.setOnAction(null);
