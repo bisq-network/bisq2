@@ -372,47 +372,40 @@ public class AmountComponent {
             boolean isMinRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(minRangeMonetary.getCode());
             boolean isMaxRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(maxRangeMonetary.getCode());
 
-            if (model.getMinRangeBaseSideValue().get() == null) {
-                Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ?
-                        minRangeMonetary :
-                        priceQuote.toBaseSideMonetary(minRangeMonetary);
-                model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);
-                if (!model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
-                            AmountFormatter.formatAmountWithCode(minRangeMonetaryAsCoin)));
-                }
-            }
-            if (model.getMaxRangeBaseSideValue().get() == null) {
-                Monetary maxRangeMonetaryAsCoin = !isMaxRangeMonetaryFiat ?
-                        maxRangeMonetary :
-                        priceQuote.toBaseSideMonetary(maxRangeMonetary);
-                model.getMaxRangeBaseSideValue().set(maxRangeMonetaryAsCoin);
-                if (!model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
-                            AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsCoin)));
-                }
+            Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ?
+                    minRangeMonetary :
+                    priceQuote.toBaseSideMonetary(minRangeMonetary);
+            model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);
+            if (!model.useQuoteCurrencyForMinMaxRange) {
+                model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
+                        AmountFormatter.formatAmountWithCode(minRangeMonetaryAsCoin)));
             }
 
-            if (model.getMinRangeQuoteSideValue().get() == null) {
-                Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ?
-                        minRangeMonetary :
-                        priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
-                model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
-                if (model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
-                            AmountFormatter.formatAmountWithCode(minRangeMonetaryAsFiat)));
-                }
+            Monetary maxRangeMonetaryAsCoin = !isMaxRangeMonetaryFiat ?
+                    maxRangeMonetary :
+                    priceQuote.toBaseSideMonetary(maxRangeMonetary);
+            model.getMaxRangeBaseSideValue().set(maxRangeMonetaryAsCoin);
+            if (!model.useQuoteCurrencyForMinMaxRange) {
+                model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
+                        AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsCoin)));
             }
 
-            if (model.getMaxRangeQuoteSideValue().get() == null) {
-                Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ?
-                        maxRangeMonetary :
-                        priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
-                model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
-                if (model.useQuoteCurrencyForMinMaxRange) {
-                    model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
-                            AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsFiat)));
-                }
+            Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ?
+                    minRangeMonetary :
+                    priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
+            model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
+            if (model.useQuoteCurrencyForMinMaxRange) {
+                model.getMinRangeValueAsString().set(Res.get("bisqEasy.component.amount.minRangeValue",
+                        AmountFormatter.formatAmountWithCode(minRangeMonetaryAsFiat)));
+            }
+
+            Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ?
+                    maxRangeMonetary :
+                    priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
+            model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
+            if (model.useQuoteCurrencyForMinMaxRange) {
+                model.getMaxRangeValueAsString().set(Res.get("bisqEasy.component.amount.maxRangeValue",
+                        AmountFormatter.formatAmountWithCode(maxRangeMonetaryAsFiat)));
             }
 
             applySliderTrackStyle();
