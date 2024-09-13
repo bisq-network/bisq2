@@ -8,6 +8,5 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":commons"))
     implementation(libs.bouncycastle.pg)
 }
