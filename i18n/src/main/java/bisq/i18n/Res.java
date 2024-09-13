@@ -63,6 +63,16 @@ public class Res {
         );
     }
 
+    public static String getQuantityKey(String key, double number) {
+        if (number == 0) {
+            return get(key + ".0");
+        } else if (number == 1) {
+            return get(key + ".1");
+        } else {
+            return get(key + ".*", number);
+        }
+    }
+
     public static String get(String key, Object... arguments) {
         return MessageFormat.format(get(key), arguments);
     }
