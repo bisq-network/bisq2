@@ -53,6 +53,7 @@ public abstract class ChatView<V extends ChatView<V, M>, M extends ChatModel> ex
         searchBox.setPrefHeight(searchBoxHeight);
 
         HBox.setMargin(channelIcon, new Insets(0, 0, -2, 5));
+        HBox.setMargin(notificationsSettingsMenu, new Insets(0, 0, 0, -5));
         titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, ellipsisMenu, notificationsSettingsMenu);
     }
 
