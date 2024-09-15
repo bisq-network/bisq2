@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownTitleMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import javafx.css.PseudoClass;
@@ -182,6 +183,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     }
 
     private void setupNotificationsSettingMenu() {
+        DropdownTitleMenuItem title = new DropdownTitleMenuItem(Res.get("chat.notificationsSettingsMenu.title"));
         globalDefault = new NotificationSettingMenuItem("check-white", "check-white",
                 Res.get("chat.notificationsSettingsMenu.globalDefault"), ChatChannelNotificationType.GLOBAL_DEFAULT);
         all = new NotificationSettingMenuItem("check-white", "check-white",
@@ -190,7 +192,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
                 Res.get("chat.notificationsSettingsMenu.mention"), ChatChannelNotificationType.MENTION);
         off = new NotificationSettingMenuItem("check-white", "check-white",
                 Res.get("chat.notificationsSettingsMenu.off"), ChatChannelNotificationType.OFF);
-        notificationsSettingsMenu.addMenuItems(globalDefault, all, mention, off);
+        notificationsSettingsMenu.getStyleClass().add("notifications-settings-menu");
+        notificationsSettingsMenu.addMenuItems(title, globalDefault, all, mention, off);
         notificationsSettingsMenu.setTooltip(Res.get("chat.notificationsSettingsMenu.tooltip"));
     }
 
