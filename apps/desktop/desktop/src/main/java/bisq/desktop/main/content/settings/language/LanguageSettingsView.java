@@ -30,7 +30,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,16 +43,13 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, LanguageSettingsController> {
-    private static final double TEXT_FIELD_WIDTH = 500;
-
     private final Button addLanguageButton;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
     private Subscription getSelectedSupportedLanguageCodePin;
 
     public LanguageSettingsView(LanguageSettingsModel model, LanguageSettingsController controller) {
-        super(new VBox(50), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         // Language
@@ -127,8 +128,12 @@ public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, Lang
         Insets insets = new Insets(0, 5, 0, 5);
         VBox.setMargin(languageSelection, insets);
         VBox.setMargin(supportedLanguageGridPane, insets);
-        root.getChildren().addAll(languageSelectionHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), languageSelection,
-                supportedLanguagesHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), supportedLanguageGridPane);
+        VBox contentBox = new VBox(50);
+        contentBox.getChildren().addAll(languageSelectionHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), languageSelection,
+                supportedLanguagesHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), supportedLanguageGridPane);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
