@@ -271,7 +271,7 @@ public class RichTableView<T> extends VBox {
         toggleGroup.flatMap(toggleGroup -> FilterMenuItem.fromToggle(toggleGroup.getSelectedToggle()))
                 .ifPresent(filterMenuItem -> {
                     tooltip.setText(Res.get("component.standardTable.filter.tooltip", filterMenuItem.getTitle()));
-                    filterMenu.setLabel(filterMenuItem.getTitle());
+                    filterMenu.setLabelAsContent(filterMenuItem.getTitle());
                 });
     }
 

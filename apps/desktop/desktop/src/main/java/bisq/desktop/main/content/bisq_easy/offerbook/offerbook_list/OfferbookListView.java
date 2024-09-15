@@ -263,7 +263,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         menu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
         menu.setOpenToTheRight(true);
         offerDirectionFilterLabel = new Label();
-        menu.setLabel(offerDirectionFilterLabel);
+        menu.setContent(offerDirectionFilterLabel);
         buyFromOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
         sellToOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
         menu.addMenuItems(buyFromOffers, sellToOffers);
@@ -275,7 +275,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         menu.getStyleClass().add("dropdown-offer-list-payment-filter-menu");
         menu.setOpenToTheRight(true);
         paymentsFilterLabel = new Label();
-        menu.setLabel(paymentsFilterLabel);
+        menu.setContent(paymentsFilterLabel);
         return menu;
     }
 
