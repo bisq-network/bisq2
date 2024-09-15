@@ -73,7 +73,7 @@ public class DropdownMenu extends HBox {
         buttonIcon = defaultIcon;
 
         getChildren().addAll(hBox, buttonIcon);
-        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.setAlignment(Pos.BASELINE_LEFT);
 
         getStyleClass().add("dropdown-menu");
         contextMenu.getStyleClass().add("dropdown-menu-popup");
@@ -86,8 +86,7 @@ public class DropdownMenu extends HBox {
             setAlignment(Pos.CENTER);
         } else {
             setSpacing(5);
-            setAlignment(Pos.CENTER_RIGHT);
-            setPadding(new Insets(0, 5, 0, 0));
+            setAlignment(Pos.BASELINE_LEFT);
         }
 
         widthPropertyChangeListener = (observable, oldValue, newValue) -> {
@@ -115,12 +114,12 @@ public class DropdownMenu extends HBox {
 
     public void setLabelAsContent(String text) {
         Label label = new Label(text);
+        label.setAlignment(Pos.BASELINE_LEFT);
         setContent(label);
     }
 
     public void setContent(Node content) {
-        hBox.getChildren().add(content);
-        getChildren().set(0, hBox);
+        hBox.getChildren().setAll(content);
     }
 
     private void toggleContextMenu() {

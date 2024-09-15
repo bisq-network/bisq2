@@ -137,15 +137,13 @@ public class RichTableView<T> extends VBox {
         filterItems.ifPresent(filterMenu::addMenuItems);
         tooltip = new BisqTooltip();
         filterMenu.setTooltip(tooltip);
-        filterMenu.setAlignment(Pos.BASELINE_LEFT);
 
         searchBox = new SearchBox();
         searchBox.setManaged(searchTextHandler.isPresent());
         searchBox.setVisible(searchBox.isManaged());
         searchBox.setPrefWidth(90);
         searchBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox.setMargin(filterMenu, new Insets(0, 20, 0, 0));
-        HBox filterBox = new HBox(20, searchBox, filterMenu);
+        HBox filterBox = new HBox(10, searchBox, filterMenu);
         filterBox.setAlignment(Pos.BASELINE_LEFT);
 
         HBox headerBox = new HBox(headlineLabel, Spacer.fillHBox(), filterBox);
@@ -163,7 +161,7 @@ public class RichTableView<T> extends VBox {
         HBox footerHBox = new HBox(numEntriesLabel, Spacer.fillHBox(), exportHyperlink);
         footerHBox.setAlignment(Pos.BASELINE_LEFT);
 
-        VBox.setMargin(headerBox, new Insets(0, 0, 5, 10));
+        VBox.setMargin(headerBox, new Insets(0, 10, 5, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
         VBox.setMargin(footerHBox, new Insets(-5, 0, 0, 10));
         getChildren().addAll(headerBox, tableView, footerHBox);

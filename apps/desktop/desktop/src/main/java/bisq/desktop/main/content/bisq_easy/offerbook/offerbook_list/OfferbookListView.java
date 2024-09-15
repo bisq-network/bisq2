@@ -108,11 +108,11 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         showOnlyMyMessages = new CheckBox();
         showOnlyMyMessagesHBox = new HBox(5, showOnlyMyMessages, showMyOffersOnlyLabel);
         showOnlyMyMessagesHBox.getStyleClass().add("offerbook-subheader-checkbox");
-        showOnlyMyMessagesHBox.setAlignment(Pos.CENTER);
+        showOnlyMyMessagesHBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox subheader = new HBox(10);
-        subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getStyleClass().add("offer-list-subheader");
+        subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getChildren().addAll(offerDirectionFilterMenu, paymentsFilterMenu, showOnlyMyMessagesHBox);
 
         tableView = new BisqTableView<>(model.getSortedOfferbookListItems());
