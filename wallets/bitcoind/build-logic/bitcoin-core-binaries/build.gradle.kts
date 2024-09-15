@@ -17,6 +17,6 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation(project(":gradle-tasks"))
+    implementation("bitcoind-build-logic:gradle-tasks")
     implementation(libs.google.guava)
 }
