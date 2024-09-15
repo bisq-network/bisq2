@@ -50,9 +50,8 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
     private final MaterialTextField minRequiredReputationScore, maxTradePriceDeviation;
 
     public TradeSettingsView(TradeSettingsModel model, TradeSettingsController controller) {
-        super(new VBox(50), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         // Trade
@@ -83,7 +82,11 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
 
         Insets insets = new Insets(0, 5, 0, 5);
         VBox.setMargin(tradeVBox, insets);
-        root.getChildren().addAll(tradeHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), tradeVBox);
+        VBox contentBox = new VBox(50);
+        contentBox.getChildren().addAll(tradeHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), tradeVBox);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override

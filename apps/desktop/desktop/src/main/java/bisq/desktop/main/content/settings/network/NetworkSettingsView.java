@@ -47,9 +47,8 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
     private Subscription ignoreDiffAdjustFromSecManagerSwitchPin;
 
     public NetworkSettingsView(NetworkSettingsModel model, NetworkSettingsController controller) {
-        super(new VBox(50), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         Label networkHeadline = new Label(Res.get("settings.network.headline"));
@@ -62,8 +61,11 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
         ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
 
         VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
-        Insets insets = new Insets(0, 5, 0, 5);
-        root.getChildren().addAll(networkHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), networkVBox);
+        VBox contentBox = new VBox(50);
+        contentBox.getChildren().addAll(networkHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), networkVBox);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
@@ -86,5 +88,4 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
         ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
         difficultyAdjustmentFactor.resetValidation();
     }
-
 }

@@ -25,7 +25,11 @@ import bisq.settings.ChatNotificationType;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -41,9 +45,8 @@ public class NotificationsSettingsView extends View<VBox, NotificationsSettingsM
     private Subscription selectedNotificationTypePin;
 
     public NotificationsSettingsView(NotificationsSettingsModel model, NotificationsSettingsController controller) {
-        super(new VBox(50), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         // Notifications
@@ -73,8 +76,11 @@ public class NotificationsSettingsView extends View<VBox, NotificationsSettingsM
 
         Insets insets = new Insets(0, 5, 0, 5);
         VBox.setMargin(notificationsVBox, insets);
-        root.getChildren().addAll(notificationsHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), notificationsVBox);
-
+        VBox contentBox = new VBox(50);
+        contentBox.getChildren().addAll(notificationsHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), notificationsVBox);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
         notificationsToggleListener = (observable, oldValue, newValue) -> controller.onSetChatNotificationType((ChatNotificationType) newValue.getUserData());
     }
 
