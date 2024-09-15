@@ -30,15 +30,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DisplaySettingsView extends View<VBox, DisplaySettingsModel, DisplaySettingsController> {
-    private static final double TEXT_FIELD_WIDTH = 500;
-
     private final Button resetDontShowAgain;
     private final Switch useAnimations, preventStandbyMode;
 
     public DisplaySettingsView(DisplaySettingsModel model, DisplaySettingsController controller) {
-        super(new VBox(50), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
         Label displayHeadline = SettingsViewUtils.getHeadline(Res.get("settings.display.headline"));
@@ -53,7 +50,11 @@ public class DisplaySettingsView extends View<VBox, DisplaySettingsModel, Displa
 
         Insets insets = new Insets(0, 5, 0, 5);
         VBox.setMargin(displayVBox, insets);
-        root.getChildren().addAll(displayHeadline, SettingsViewUtils.getLineAfterHeadline(root.getSpacing()), displayVBox);
+        VBox contentBox = new VBox(50);
+        contentBox.getChildren().addAll(displayHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), displayVBox);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
