@@ -76,7 +76,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         learnMoreHyperLink = new Hyperlink();
         learnMoreHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
 
-        amountLimitInfoHBox = new HBox(5, amountLimitInfo, amountLimitInfoAmount, learnMoreHyperLink);
+        amountLimitInfoHBox = new HBox(2.5, amountLimitInfo, amountLimitInfoAmount, learnMoreHyperLink);
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
 
         amountLimitInfoLeadLine = new Label();

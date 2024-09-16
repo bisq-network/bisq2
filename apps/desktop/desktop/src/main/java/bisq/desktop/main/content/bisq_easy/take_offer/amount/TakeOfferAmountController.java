@@ -144,7 +144,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     void onSetReputationBasedAmount() {
-        amountComponent.setQuoteSideAmount(amountComponent.getReputationBasedQuoteSideAmount().round(0));
+        amountComponent.setQuoteSideAmount(amountComponent.getRightMarkerQuoteSideValue().round(0));
     }
 
     void onShowAmountLimitInfoOverlay() {
@@ -215,20 +215,20 @@ public class TakeOfferAmountController implements Controller {
                         model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo", myReputationScore));
                         model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoAmount", formattedAmount));
                         model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
-                        model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.info", myReputationScore, formattedAmount));
+                        model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.info.sufficientScore", myReputationScore, formattedAmount)+"\n\n");
                     });
             applyReputationBasedQuoteSideAmount();
         }
     }
 
     private void applyReputationBasedQuoteSideAmount() {
-        amountComponent.setQuoteSideAmount(amountComponent.getReputationBasedQuoteSideAmount().round(0));
+        amountComponent.setQuoteSideAmount(amountComponent.getRightMarkerQuoteSideValue().round(0));
     }
 
     private void maxOrFixedQuoteSideAmountChanged(Monetary value) {
-        if (amountComponent.getReputationBasedQuoteSideAmount() == null) {
+        if (amountComponent.getRightMarkerQuoteSideValue() == null) {
             return;
         }
-        model.getIsWarningIconVisible().set(value.round(0).getValue() > amountComponent.getReputationBasedQuoteSideAmount().round(0).getValue());
+        model.getIsWarningIconVisible().set(value.round(0).getValue() > amountComponent.getRightMarkerQuoteSideValue().round(0).getValue());
     }
 }

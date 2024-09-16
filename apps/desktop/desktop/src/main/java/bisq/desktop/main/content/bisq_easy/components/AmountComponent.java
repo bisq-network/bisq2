@@ -103,7 +103,7 @@ public class AmountComponent {
         controller.setRightMarkerQuoteSideValue(quoteSideAmount);
     }
 
-    public Monetary getReputationBasedQuoteSideAmount() {
+    public Monetary getRightMarkerQuoteSideValue() {
         return controller.model.getRightMarkerQuoteSideValue();
     }
 
