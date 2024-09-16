@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, TakeOfferAmountController> {
     private final Label headlineLabel, amountLimitInfo, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
-    private final Hyperlink amountLimitInfoAmount, showOverlayHyperLink, linkToWiki;
+    private final Hyperlink amountLimitInfoAmount, learnMore, linkToWiki;
     private final VBox content, amountLimitInfoOverlay;
     private final Button closeOverlayButton;
     private Subscription isAmountLimitInfoVisiblePin;
@@ -64,15 +64,15 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         amountLimitInfoAmount = new Hyperlink();
         amountLimitInfoAmount.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
 
-        showOverlayHyperLink = new Hyperlink();
-        showOverlayHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+        learnMore = new Hyperlink();
+        learnMore.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
 
         warningIcon = new Label();
         Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.15em");
         warningIcon.getStyleClass().add("overlay-icon-warning");
 
         HBox.setMargin(warningIcon, new Insets(0, 5, 0, 0));
-        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfo, amountLimitInfoAmount, showOverlayHyperLink);
+        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfo, amountLimitInfoAmount, learnMore);
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
 
         // VBox.setMargin(headlineLabel, new Insets(-30, 0, 10, 0));
@@ -96,7 +96,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
     protected void onViewAttached() {
         warningIcon.visibleProperty().bind(model.getIsWarningIconVisible());
         headlineLabel.setText(model.getHeadline());
-        showOverlayHyperLink.setText(model.getAmountLimitInfoLink());
+        learnMore.setText(model.getAmountLimitInfoLink());
         linkToWikiText.setText(model.getLinkToWikiText());
 
         amountLimitInfo.textProperty().bind(model.getAmountLimitInfo());
@@ -106,8 +106,8 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
 
         amountLimitInfoAmount.managedProperty().bind(model.getIsAmountLimitInfoVisible().and(model.getAmountLimitInfoAmount().isEmpty().not()));
         amountLimitInfoAmount.visibleProperty().bind(amountLimitInfoAmount.managedProperty());
-        showOverlayHyperLink.managedProperty().bind(model.getIsAmountLimitInfoVisible());
-        showOverlayHyperLink.visibleProperty().bind(model.getIsAmountLimitInfoVisible());
+        learnMore.managedProperty().bind(model.getIsAmountLimitInfoVisible());
+        learnMore.visibleProperty().bind(model.getIsAmountLimitInfoVisible());
 
         isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(),
                 isAmountLimitInfoVisible -> {
@@ -126,7 +126,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
                 });
 
         amountLimitInfoAmount.setOnAction(e -> controller.onSetReputationBasedAmount());
-        showOverlayHyperLink.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
+        learnMore.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         closeOverlayButton.setOnAction(e -> controller.onCloseAmountLimitInfoOverlay());
     }
@@ -141,13 +141,13 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
 
         amountLimitInfoAmount.managedProperty().unbind();
         amountLimitInfoAmount.visibleProperty().unbind();
-        showOverlayHyperLink.managedProperty().unbind();
-        showOverlayHyperLink.visibleProperty().unbind();
+        learnMore.managedProperty().unbind();
+        learnMore.visibleProperty().unbind();
 
         isAmountLimitInfoVisiblePin.unsubscribe();
 
         amountLimitInfoAmount.setOnAction(null);
-        showOverlayHyperLink.setOnAction(null);
+        learnMore.setOnAction(null);
         linkToWiki.setOnAction(null);
         closeOverlayButton.setOnAction(null);
     }

@@ -45,7 +45,7 @@ public class BisqEasyTradeAmountLimits {
     public static final Fiat MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION = Fiat.fromFaceValue(25, "USD");
     private static final double REQUIRED_REPUTAION_SCORE_PER_USD = 200d;
     public static final long MIN_REPUTAION_SCORE = 5000;
-    public static final double TOLERANCE = 0.1;
+    public static final double TOLERANCE = 0.05;
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
@@ -79,13 +79,13 @@ public class BisqEasyTradeAmountLimits {
     }
 
 
-    public static Optional<Result> checkOfferAmountLimitForMinAmount(ReputationService reputationService,
-                                                                     UserIdentityService userIdentityService,
-                                                                     UserProfileService userProfileService,
-                                                                     MarketPriceService marketPriceService,
-                                                                     Market market,
-                                                                     Monetary fiatAmount,
-                                                                     BisqEasyOffer peersOffer) {
+    public static Optional<Result> checkOfferAmountLimitForGivenAmount(ReputationService reputationService,
+                                                                       UserIdentityService userIdentityService,
+                                                                       UserProfileService userProfileService,
+                                                                       MarketPriceService marketPriceService,
+                                                                       Market market,
+                                                                       Monetary fiatAmount,
+                                                                       BisqEasyOffer peersOffer) {
         return findRequiredReputationScoreByFiatAmount(marketPriceService, market, fiatAmount)
                 .map(requiredReputationScore -> {
                     long sellersReputationScore = getSellersReputationScore(reputationService, userIdentityService, userProfileService, peersOffer);
@@ -117,10 +117,10 @@ public class BisqEasyTradeAmountLimits {
                 });
     }
 
-    private static long getSellersReputationScore(ReputationService reputationService,
-                                                  UserIdentityService userIdentityService,
-                                                  UserProfileService userProfileService,
-                                                  BisqEasyOffer peersOffer) {
+    public static long getSellersReputationScore(ReputationService reputationService,
+                                                 UserIdentityService userIdentityService,
+                                                 UserProfileService userProfileService,
+                                                 BisqEasyOffer peersOffer) {
         UserProfile sellersUserProfile = peersOffer.getTakersDirection().isBuy()
                 ? userProfileService.findUserProfile(peersOffer.getMakersUserProfileId()).orElseThrow()
                 : userIdentityService.getSelectedUserIdentity().getUserProfile();
@@ -194,9 +194,16 @@ public class BisqEasyTradeAmountLimits {
                 flatMap(btc -> btcToFiat(marketPriceService, market, btc));
     }
 
+    public static Optional<Monetary> fiatToUsd(MarketPriceService marketPriceService,
+                                               Market market,
+                                               Monetary fiatAmount) {
+        return fiatToBtc(marketPriceService, market, fiatAmount).
+                flatMap(btc -> btcToUsd(marketPriceService, btc));
+    }
 
-    private static long getRequiredReputationScoreByUsdAmount(Monetary usdAmount) {
-        double faceValue = Monetary.valueToFaceValue(usdAmount, 0);
+
+    public static long getRequiredReputationScoreByUsdAmount(Monetary usdAmount) {
+        double faceValue = Monetary.toFaceValue(usdAmount.round(0), 0);
         return MathUtils.roundDoubleToLong(faceValue * REQUIRED_REPUTAION_SCORE_PER_USD);
     }
 

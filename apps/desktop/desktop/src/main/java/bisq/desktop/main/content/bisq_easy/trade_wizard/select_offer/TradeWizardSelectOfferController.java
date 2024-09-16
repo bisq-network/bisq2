@@ -314,7 +314,7 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                Optional<BisqEasyTradeAmountLimits.Result> result = BisqEasyTradeAmountLimits.checkOfferAmountLimitForMinAmount(reputationService,
+                Optional<BisqEasyTradeAmountLimits.Result> result = BisqEasyTradeAmountLimits.checkOfferAmountLimitForGivenAmount(reputationService,
                         userIdentityService,
                         userProfileService,
                         marketPriceService,

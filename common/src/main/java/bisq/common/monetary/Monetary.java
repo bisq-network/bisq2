@@ -42,7 +42,7 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         return BigDecimal.valueOf(faceValue).movePointRight(precision).longValue();
     }
 
-    public static double valueToFaceValue(Monetary monetary, int precision) {
+    public static double toFaceValue(Monetary monetary, int precision) {
         double fullPrecision = MathUtils.scaleDownByPowerOf10(monetary.getValue(), monetary.getPrecision());
         return MathUtils.roundDouble(fullPrecision, precision);
     }
