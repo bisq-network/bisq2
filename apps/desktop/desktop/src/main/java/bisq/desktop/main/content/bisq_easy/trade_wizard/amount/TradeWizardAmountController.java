@@ -600,7 +600,7 @@ public class TradeWizardAmountController implements Controller {
             }
         } else {
             // Seller
-            Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount();
+            Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount().round(0);
             if (model.isCreateOfferMode()) {
                 // Create offer
                 long myReputationScore = model.getMyReputationScore();
