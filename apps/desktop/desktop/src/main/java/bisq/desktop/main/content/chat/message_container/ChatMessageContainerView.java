@@ -1,6 +1,22 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.chat.message_container;
 
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -20,7 +36,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -157,23 +172,13 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
         userProfileSelection.setMaxComboBoxWidth(165);
-        userProfileSelection.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(UserProfileSelection.ListItem item) {
-                return item != null ? StringUtils.truncate(item.getUserIdentity().getUserName(), 10) : "";
-            }
-
-            @Override
-            public UserProfileSelection.ListItem fromString(String string) {
-                return null;
-            }
-        });
+        userProfileSelection.openMenuUpwards();
+        userProfileSelection.openMenuToTheRight();
         userProfileSelectionRoot = userProfileSelection.getRoot();
-        userProfileSelectionRoot.setMaxHeight(44);
+        userProfileSelectionRoot.setMaxHeight(45);
         userProfileSelectionRoot.setMaxWidth(165);
         userProfileSelectionRoot.setMinWidth(165);
-        userProfileSelectionRoot.setId("chat-user-profile-bg");
-        HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -8));
+        userProfileSelectionRoot.getStyleClass().add("chat-user-profile-bg");
     }
 
     private void createChatDialogEnabledSubscription() {

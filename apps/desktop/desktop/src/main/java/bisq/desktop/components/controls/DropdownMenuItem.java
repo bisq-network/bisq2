@@ -56,6 +56,10 @@ public class DropdownMenuItem extends CustomMenuItem {
         setContent(hBox);
     }
 
+    public DropdownMenuItem(Node node) {
+        this(null, null, node);
+    }
+
     public void updateWidth(Double width) {
         hBox.setPrefWidth(width);
     }

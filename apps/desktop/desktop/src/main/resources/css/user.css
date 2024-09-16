@@ -87,3 +87,16 @@
     -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
+
+/*******************************************************************************
+ * User Profile Controller                                                     *
+ ******************************************************************************/
+
+.user-profile-selection .dropdown-menu {
+    -fx-alignment: center;
+    -fx-min-height: 45;
+}
+
+.user-profile-selection .dropdown-menu .dropdown-menu-content-hbox {
+    -fx-alignment: center;
+}

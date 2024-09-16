@@ -18,14 +18,15 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.containers.Spacer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -49,7 +50,7 @@ public class DropdownMenu extends HBox {
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
     private final ContextMenu contextMenu = new ContextMenu();
     @Getter
-    private Label label = new Label();
+    private final HBox hBox = new HBox();
     private ImageView buttonIcon;
     private boolean isFirstRun = false;
     @Setter
@@ -71,7 +72,9 @@ public class DropdownMenu extends HBox {
 
         buttonIcon = defaultIcon;
 
-        getChildren().addAll(label, buttonIcon);
+        getChildren().addAll(hBox, buttonIcon);
+        hBox.setAlignment(Pos.BASELINE_LEFT);
+        hBox.getStyleClass().add("dropdown-menu-content-hbox");
 
         getStyleClass().add("dropdown-menu");
         contextMenu.getStyleClass().add("dropdown-menu-popup");
@@ -84,8 +87,7 @@ public class DropdownMenu extends HBox {
             setAlignment(Pos.CENTER);
         } else {
             setSpacing(5);
-            setAlignment(Pos.CENTER_RIGHT);
-            setPadding(new Insets(0, 5, 0, 0));
+            setAlignment(Pos.BASELINE_LEFT);
         }
 
         widthPropertyChangeListener = (observable, oldValue, newValue) -> {
@@ -111,13 +113,18 @@ public class DropdownMenu extends HBox {
         attachListeners();
     }
 
-    public void setLabel(String text) {
-        label.setText(text);
+    public void setLabelAsContent(String text) {
+        Label label = new Label(text);
+        label.setAlignment(Pos.BASELINE_LEFT);
+        setContent(label);
     }
 
-    public void setLabel(Label label) {
-        this.label = label;
-        getChildren().set(0, label);
+    public void setContent(Node content) {
+        hBox.getChildren().setAll(content);
+    }
+
+    public void useSpaceBetweenContentAndIcon() {
+        getChildren().setAll(hBox, Spacer.fillHBox(), buttonIcon);
     }
 
     private void toggleContextMenu() {

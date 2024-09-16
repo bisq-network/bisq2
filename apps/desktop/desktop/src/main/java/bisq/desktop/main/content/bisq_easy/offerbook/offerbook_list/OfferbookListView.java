@@ -108,11 +108,11 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         showOnlyMyMessages = new CheckBox();
         showOnlyMyMessagesHBox = new HBox(5, showOnlyMyMessages, showMyOffersOnlyLabel);
         showOnlyMyMessagesHBox.getStyleClass().add("offerbook-subheader-checkbox");
-        showOnlyMyMessagesHBox.setAlignment(Pos.CENTER);
+        showOnlyMyMessagesHBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox subheader = new HBox(10);
-        subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getStyleClass().add("offer-list-subheader");
+        subheader.setAlignment(Pos.CENTER_LEFT);
         subheader.getChildren().addAll(offerDirectionFilterMenu, paymentsFilterMenu, showOnlyMyMessagesHBox);
 
         tableView = new BisqTableView<>(model.getSortedOfferbookListItems());
@@ -263,7 +263,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         menu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
         menu.setOpenToTheRight(true);
         offerDirectionFilterLabel = new Label();
-        menu.setLabel(offerDirectionFilterLabel);
+        menu.setContent(offerDirectionFilterLabel);
         buyFromOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
         sellToOffers = new DropdownBisqMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
         menu.addMenuItems(buyFromOffers, sellToOffers);
@@ -275,7 +275,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         menu.getStyleClass().add("dropdown-offer-list-payment-filter-menu");
         menu.setOpenToTheRight(true);
         paymentsFilterLabel = new Label();
-        menu.setLabel(paymentsFilterLabel);
+        menu.setContent(paymentsFilterLabel);
         return menu;
     }
 
