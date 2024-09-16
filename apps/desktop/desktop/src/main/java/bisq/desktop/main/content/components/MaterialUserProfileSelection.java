@@ -43,6 +43,7 @@ public class MaterialUserProfileSelection extends Pane {
     protected final Region bg = new Region();
     protected final Region line = new Region();
     protected final Region selectionLine = new Region();
+    @Getter
     protected final Label descriptionLabel = new Label();
     protected final Pane userProfileSelectionRoot;
     @Getter
@@ -98,7 +99,6 @@ public class MaterialUserProfileSelection extends Pane {
             descriptionLabel.setText(description);
         }
 
-
         userProfileSelectionRoot = userProfileSelection.getRoot();
         userProfileSelectionRoot.setLayoutX(6.5);
         userProfileSelectionRoot.getStyleClass().add("material-text-field");
@@ -150,10 +150,6 @@ public class MaterialUserProfileSelection extends Pane {
 
     public final StringProperty descriptionProperty() {
         return descriptionLabel.textProperty();
-    }
-
-    public Label getDescriptionLabel() {
-        return descriptionLabel;
     }
 
 

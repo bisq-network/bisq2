@@ -159,12 +159,12 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userProfileSelection.setMaxComboBoxWidth(165);
         userProfileSelection.setConverter(new StringConverter<>() {
             @Override
-            public String toString(UserProfileSelection.ListItem item) {
+            public String toString(UserProfileSelection.UserProfileMenuItem item) {
                 return item != null ? StringUtils.truncate(item.getUserIdentity().getUserName(), 10) : "";
             }
 
             @Override
-            public UserProfileSelection.ListItem fromString(String string) {
+            public UserProfileSelection.UserProfileMenuItem fromString(String string) {
                 return null;
             }
         });
