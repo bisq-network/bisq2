@@ -18,13 +18,13 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.containers.Spacer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -74,6 +74,7 @@ public class DropdownMenu extends HBox {
 
         getChildren().addAll(hBox, buttonIcon);
         hBox.setAlignment(Pos.BASELINE_LEFT);
+        hBox.getStyleClass().add("dropdown-menu-content-hbox");
 
         getStyleClass().add("dropdown-menu");
         contextMenu.getStyleClass().add("dropdown-menu-popup");
@@ -120,6 +121,10 @@ public class DropdownMenu extends HBox {
 
     public void setContent(Node content) {
         hBox.getChildren().setAll(content);
+    }
+
+    public void useSpaceBetweenContentAndIcon() {
+        getChildren().setAll(hBox, Spacer.fillHBox(), buttonIcon);
     }
 
     private void toggleContextMenu() {

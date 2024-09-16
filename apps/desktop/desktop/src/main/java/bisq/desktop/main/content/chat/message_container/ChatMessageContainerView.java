@@ -172,12 +172,13 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
         userProfileSelection.setMaxComboBoxWidth(165);
+        userProfileSelection.openMenuUpwards();
+        userProfileSelection.openMenuToTheRight();
         userProfileSelectionRoot = userProfileSelection.getRoot();
-        userProfileSelectionRoot.setMaxHeight(44);
+        userProfileSelectionRoot.setMaxHeight(45);
         userProfileSelectionRoot.setMaxWidth(165);
         userProfileSelectionRoot.setMinWidth(165);
-        userProfileSelectionRoot.setId("chat-user-profile-bg");
-        HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -8));
+        userProfileSelectionRoot.getStyleClass().add("chat-user-profile-bg");
     }
 
     private void createChatDialogEnabledSubscription() {

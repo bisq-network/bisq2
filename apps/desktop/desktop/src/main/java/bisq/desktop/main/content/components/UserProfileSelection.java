@@ -44,6 +44,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.geometry.Pos;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -87,6 +88,14 @@ public class UserProfileSelection {
 
     public void setPrefWidth(double value) {
         controller.setPrefWidth(value);
+    }
+
+    public void openMenuUpwards() {
+        controller.view.getDropdownMenu().setOpenUpwards(true);
+    }
+
+    public void openMenuToTheRight() {
+        controller.view.getDropdownMenu().setOpenToTheRight(true);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -235,9 +244,11 @@ public class UserProfileSelection {
             dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
             dropdownMenu.setTooltip(Res.get("user.userProfile.comboBox.description"));
             dropdownMenu.setContent(userProfileDisplay);
+            dropdownMenu.useSpaceBetweenContentAndIcon();
 
             root.getChildren().setAll(dropdownMenu);
             root.setPrefHeight(60);
+            root.getStyleClass().add("user-profile-selection");
         }
 
         @Override
@@ -272,6 +283,7 @@ public class UserProfileSelection {
 
         private void setMenuMaxWidth(double width) {
             setMenuPrefWidth(width);
+            dropdownMenu.setMaxWidth(width == 0 ? DEFAULT_MENU_WIDTH : width);
         }
     }
 
