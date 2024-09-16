@@ -35,7 +35,11 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import javafx.beans.property.*;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -66,16 +70,12 @@ public class UserProfileSelection {
         return controller.view.getRoot();
     }
 
-    public void setIsLeftAligned(boolean isLeftAligned) {
-//        controller.model.getIsLeftAligned().set(isLeftAligned);
-    }
-
     public void setMaxComboBoxWidth(int width) {
-        controller.view.setMaxComboBoxWidth(width);
+        controller.view.setMenuMaxWidth(width);
     }
 
     public void setConverter(StringConverter<UserProfileMenuItem> value) {
-//        controller.view.setConverter(value);
+        controller.view.setConverter(value);
     }
 
     public boolean isFocused() {
@@ -166,8 +166,7 @@ public class UserProfileSelection {
         }
 
         private boolean isFocused() {
-//            return view.getComboBox().isFocused();
-            return false;
+            return view.getDropdownMenu().isFocused();
         }
 
         private ReadOnlyBooleanProperty focusedProperty() {
@@ -175,11 +174,11 @@ public class UserProfileSelection {
         }
 
         private void requestFocus() {
-//            view.getComboBox().requestFocus();
+            view.getDropdownMenu().requestFocus();
         }
 
         private void setPrefWidth(double value) {
-//            view.getComboBox().setPrefWidth(value);
+            view.setMenuPrefWidth(value);
         }
 
         private void navigationTargetChanged(NavigationTarget navigationTarget) {
@@ -222,15 +221,18 @@ public class UserProfileSelection {
         private final ObservableList<UserProfileMenuItem> userProfiles = FXCollections.observableArrayList();
         private final Observable<Boolean> isPrivateChannel = new Observable<>(false);
         private final Observable<Boolean> shouldShowMenu = new Observable<>(false);
+        private final DoubleProperty menuWidth = new SimpleDoubleProperty();
     }
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
+        private final static int DEFAULT_MENU_WIDTH = 200;
+
         @Getter
         private final DropdownMenu dropdownMenu;
         private final UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
-        private Subscription selectedUserProfilePin;
-        private Pin shouldShowMenu;
+        private Subscription selectedUserProfilePin, menuWidthPin;
+        private Pin shouldShowMenuPin;
 
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
             super(new Pane(), model, controller);
@@ -251,23 +253,34 @@ public class UserProfileSelection {
                     userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity()));
                 });
             });
-            shouldShowMenu = FxBindings.subscribe(model.getShouldShowMenu(), this::shouldShowMenu);
+            shouldShowMenuPin = FxBindings.subscribe(model.getShouldShowMenu(), this::shouldShowMenu);
+            menuWidthPin = EasyBind.subscribe(model.getMenuWidth(), w -> setMenuPrefWidth(w.doubleValue()));
             dropdownMenu.addMenuItems(model.getUserProfiles());
         }
 
         @Override
         protected void onViewDetached() {
             selectedUserProfilePin.unsubscribe();
-            shouldShowMenu.unbind();
-        }
-
-        public void setMaxComboBoxWidth(int width) {
-            dropdownMenu.setMaxWidth(width);
+            menuWidthPin.unsubscribe();
+            shouldShowMenuPin.unbind();
+            dropdownMenu.clearMenuItems();
         }
 
         private void shouldShowMenu(boolean showMenu) {
             dropdownMenu.setManaged(showMenu);
             dropdownMenu.setVisible(showMenu);
+        }
+
+        private void setMenuPrefWidth(double width) {
+            dropdownMenu.setPrefWidth(width == 0 ? DEFAULT_MENU_WIDTH : width);
+        }
+
+        private void setMenuMaxWidth(double width) {
+            setMenuPrefWidth(width);
+        }
+
+        void setConverter(StringConverter<UserProfileMenuItem> value) {
+            // TODO
         }
     }
 
