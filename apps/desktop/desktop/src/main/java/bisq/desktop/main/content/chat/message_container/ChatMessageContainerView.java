@@ -1,6 +1,5 @@
 package bisq.desktop.main.content.chat.message_container;
 
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -20,7 +19,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -157,17 +155,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
         userProfileSelection.setMaxComboBoxWidth(165);
-        userProfileSelection.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(UserProfileSelection.UserProfileMenuItem item) {
-                return item != null ? StringUtils.truncate(item.getUserIdentity().getUserName(), 10) : "";
-            }
-
-            @Override
-            public UserProfileSelection.UserProfileMenuItem fromString(String string) {
-                return null;
-            }
-        });
         userProfileSelectionRoot = userProfileSelection.getRoot();
         userProfileSelectionRoot.setMaxHeight(44);
         userProfileSelectionRoot.setMaxWidth(165);

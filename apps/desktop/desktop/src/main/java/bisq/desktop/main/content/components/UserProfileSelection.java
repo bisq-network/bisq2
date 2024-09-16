@@ -45,7 +45,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.scene.layout.Pane;
-import javafx.util.StringConverter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -72,10 +71,6 @@ public class UserProfileSelection {
 
     public void setMaxComboBoxWidth(int width) {
         controller.view.setMenuMaxWidth(width);
-    }
-
-    public void setConverter(StringConverter<UserProfileMenuItem> value) {
-        controller.view.setConverter(value);
     }
 
     public boolean isFocused() {
@@ -277,10 +272,6 @@ public class UserProfileSelection {
 
         private void setMenuMaxWidth(double width) {
             setMenuPrefWidth(width);
-        }
-
-        void setConverter(StringConverter<UserProfileMenuItem> value) {
-            // TODO
         }
     }
 
