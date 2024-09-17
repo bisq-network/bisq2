@@ -161,8 +161,10 @@ public class UserProfileSelection {
                     new Popup().warning(Res.get("chat.privateChannel.changeUserProfile.warn",
                                     selectedUserIdentity.getUserProfile().getUserName()))
                             .onClose(() -> {
-                                model.getSelectedUserIdentity().set(null);
-                                model.getSelectedUserIdentity().set(selectedUserIdentity);
+                                UIThread.run(() -> {
+                                    model.getSelectedUserIdentity().set(null);
+                                    model.getSelectedUserIdentity().set(selectedUserIdentity);
+                                });
                             })
                             .show();
                 } else {
@@ -235,6 +237,7 @@ public class UserProfileSelection {
         private final static int DEFAULT_MENU_WIDTH = 200;
 
         private final UserProfileDisplay userProfileDisplay;
+        private final UserProfileDisplay singleUserProfileDisplay;
         @Getter
         private final DropdownMenu dropdownMenu;
         private final HBox singleUserProfileHBox;
@@ -244,18 +247,19 @@ public class UserProfileSelection {
             super(new Pane(), model, controller);
 
             userProfileDisplay = new UserProfileDisplay(iconSize);
-
             dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
             dropdownMenu.setTooltip(Res.get("user.userProfile.comboBox.description"));
             dropdownMenu.setContent(userProfileDisplay);
             dropdownMenu.useSpaceBetweenContentAndIcon();
 
-            singleUserProfileHBox = new HBox(userProfileDisplay);
+            singleUserProfileDisplay = new UserProfileDisplay(iconSize);
+            singleUserProfileHBox = new HBox(singleUserProfileDisplay);
             singleUserProfileHBox.getStyleClass().add("single-user-profile");
             singleUserProfileHBox.setFillHeight(true);
 
             if (useMaterialStyle) {
                 root.getStyleClass().add("user-profile-selection-material-design");
+                dropdownMenu.setOpenToTheRight(true);
             } else {
                 root.getStyleClass().add("user-profile-selection");
             }
@@ -272,6 +276,7 @@ public class UserProfileSelection {
 
             selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserIdentity(), selectedUserIdentity -> {
                 userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
+                singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
                 model.getUserProfiles().forEach(userProfileMenuItem -> {
                     userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity()));
                 });
