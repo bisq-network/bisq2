@@ -213,7 +213,7 @@ public class UserProfileSelection {
         }
 
         private void updateShouldShowMenu() {
-            model.getShouldShowMenu().set(!model.getIsPrivateChannel().get() && !model.getUserProfiles().isEmpty());
+            model.getShouldShowMenu().set(!model.getIsPrivateChannel().get() && model.getUserProfiles().size() > 1);
         }
     }
 
