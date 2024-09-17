@@ -23,7 +23,6 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
 import bisq.chat.priv.PrivateChatChannel;
-import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -35,15 +34,18 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -103,8 +105,8 @@ public class UserProfileSelection {
         private final View view;
         private final UserIdentityService userIdentityService;
         private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
-        private Pin selectedUserProfilePin, userProfilesPin, chatChannelSelectionPin, navigationPin, isPrivateChannelPin;
-        private final ListChangeListener<UserProfileMenuItem> userProfilesListener = change -> updateShouldShowMenu();
+        private Pin selectedUserProfilePin, chatChannelSelectionPin, navigationPin, userIdentitiesPin;
+        private Subscription isPrivateChannelPin;
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -118,35 +120,31 @@ public class UserProfileSelection {
         public void onActivate() {
             selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                     userIdentity -> UIThread.run(() -> model.getSelectedUserIdentity().set(userIdentity)));
-            userProfilesPin = FxBindings.<UserIdentity, UserProfileMenuItem>bind(model.getUserProfiles())
-                    .map(userIdentity -> {
-                        UserProfileMenuItem userProfileMenuItem = new UserProfileMenuItem(userIdentity);
-                        userProfileMenuItem.setOnAction(e -> onSelected(userProfileMenuItem));
-                        return userProfileMenuItem;
-                    })
-                    .to(userIdentityService.getUserIdentities());
-
+            userIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::updateUserProfiles));
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
-
-            model.getUserProfiles().addListener(userProfilesListener);
-            isPrivateChannelPin = FxBindings.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldShowMenu());
+            isPrivateChannelPin = EasyBind.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldShowMenu());
         }
 
         @Override
         public void onDeactivate() {
-            // Need to clear list otherwise we get issues with binding when multiple 
-            // instances are used.
-            model.getUserProfiles().forEach(UserProfileMenuItem::dispose);
-            model.getUserProfiles().clear();
-            model.getUserProfiles().removeListener(userProfilesListener);
-
             selectedUserProfilePin.unbind();
-            userProfilesPin.unbind();
             navigationPin.unbind();
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
             }
-            isPrivateChannelPin.unbind();
+            userIdentitiesPin.unbind();
+            isPrivateChannelPin.unsubscribe();
+        }
+
+        private void updateUserProfiles() {
+            model.getUserProfiles().forEach(UserProfileMenuItem::dispose);
+            model.getUserProfiles().clear();
+            userIdentityService.getUserIdentities().forEach(userIdentity -> {
+                UserProfileMenuItem userProfileMenuItem = new UserProfileMenuItem(userIdentity);
+                userProfileMenuItem.setOnAction(e -> onSelected(userProfileMenuItem));
+                model.getUserProfiles().add(userProfileMenuItem);
+            });
+            updateShouldShowMenu();
         }
 
         private void onSelected(UserProfileMenuItem selectedItem) {
@@ -158,8 +156,10 @@ public class UserProfileSelection {
                     new Popup().warning(Res.get("chat.privateChannel.changeUserProfile.warn",
                                     selectedUserIdentity.getUserProfile().getUserName()))
                             .onClose(() -> {
-                                model.getSelectedUserIdentity().set(null);
-                                model.getSelectedUserIdentity().set(selectedUserIdentity);
+                                UIThread.run(() -> {
+                                    model.getSelectedUserIdentity().set(null);
+                                    model.getSelectedUserIdentity().set(selectedUserIdentity);
+                                });
                             })
                             .show();
                 } else {
@@ -213,7 +213,7 @@ public class UserProfileSelection {
         }
 
         private void updateShouldShowMenu() {
-            model.getShouldShowMenu().set(!model.getIsPrivateChannel().get() && !model.getUserProfiles().isEmpty());
+            model.getShouldShowMenu().set(!model.getIsPrivateChannel().get() && model.getUserProfiles().size() > 1);
         }
     }
 
@@ -222,8 +222,8 @@ public class UserProfileSelection {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<UserIdentity> selectedUserIdentity = new SimpleObjectProperty<>();
         private final ObservableList<UserProfileMenuItem> userProfiles = FXCollections.observableArrayList();
-        private final Observable<Boolean> isPrivateChannel = new Observable<>(false);
-        private final Observable<Boolean> shouldShowMenu = new Observable<>(false);
+        private final BooleanProperty isPrivateChannel = new SimpleBooleanProperty(false);
+        private final BooleanProperty shouldShowMenu = new SimpleBooleanProperty(false);
         private final DoubleProperty menuWidth = new SimpleDoubleProperty();
     }
 
@@ -231,49 +231,69 @@ public class UserProfileSelection {
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int DEFAULT_MENU_WIDTH = 200;
 
+        private final UserProfileDisplay userProfileDisplay;
+        private final UserProfileDisplay singleUserProfileDisplay;
         @Getter
         private final DropdownMenu dropdownMenu;
-        private final UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
+        private final HBox singleUserProfileHBox;
+        private final ListChangeListener<UserProfileMenuItem> userProfilesListener = change -> updateMenuItems();
         private Subscription selectedUserProfilePin, menuWidthPin;
-        private Pin shouldShowMenuPin;
 
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
             super(new Pane(), model, controller);
 
+            userProfileDisplay = new UserProfileDisplay(iconSize);
             dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
             dropdownMenu.setTooltip(Res.get("user.userProfile.comboBox.description"));
             dropdownMenu.setContent(userProfileDisplay);
             dropdownMenu.useSpaceBetweenContentAndIcon();
 
-            root.getChildren().setAll(dropdownMenu);
+            singleUserProfileDisplay = new UserProfileDisplay(iconSize);
+            singleUserProfileHBox = new HBox(singleUserProfileDisplay);
+            singleUserProfileHBox.getStyleClass().add("single-user-profile");
+            singleUserProfileHBox.setFillHeight(true);
+
+            if (useMaterialStyle) {
+                root.getStyleClass().add("user-profile-selection-material-design");
+                dropdownMenu.setOpenToTheRight(true);
+            } else {
+                root.getStyleClass().add("user-profile-selection");
+            }
+            root.getChildren().setAll(dropdownMenu, singleUserProfileHBox);
             root.setPrefHeight(60);
-            root.getStyleClass().add("user-profile-selection");
         }
 
         @Override
         protected void onViewAttached() {
+            dropdownMenu.visibleProperty().bind(model.getShouldShowMenu());
+            dropdownMenu.managedProperty().bind(model.getShouldShowMenu());
+            singleUserProfileHBox.visibleProperty().bind(model.getShouldShowMenu().not());
+            singleUserProfileHBox.managedProperty().bind(model.getShouldShowMenu().not());
+
             selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserIdentity(), selectedUserIdentity -> {
                 userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
-                model.getUserProfiles().forEach(userProfileMenuItem -> {
-                    userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity()));
-                });
+                singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
+                model.getUserProfiles().forEach(userProfileMenuItem ->
+                        userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity())));
             });
-            shouldShowMenuPin = FxBindings.subscribe(model.getShouldShowMenu(), this::shouldShowMenu);
             menuWidthPin = EasyBind.subscribe(model.getMenuWidth(), w -> setMenuPrefWidth(w.doubleValue()));
-            dropdownMenu.addMenuItems(model.getUserProfiles());
+
+            model.getUserProfiles().addListener(userProfilesListener);
+            updateMenuItems();
         }
 
         @Override
         protected void onViewDetached() {
+            dropdownMenu.visibleProperty().unbind();
+            dropdownMenu.managedProperty().unbind();
+            singleUserProfileHBox.visibleProperty().unbind();
+            singleUserProfileHBox.managedProperty().unbind();
+
             selectedUserProfilePin.unsubscribe();
             menuWidthPin.unsubscribe();
-            shouldShowMenuPin.unbind();
-            dropdownMenu.clearMenuItems();
-        }
 
-        private void shouldShowMenu(boolean showMenu) {
-            dropdownMenu.setManaged(showMenu);
-            dropdownMenu.setVisible(showMenu);
+            dropdownMenu.clearMenuItems();
+            model.getUserProfiles().removeListener(userProfilesListener);
         }
 
         private void setMenuPrefWidth(double width) {
@@ -284,9 +304,14 @@ public class UserProfileSelection {
             setMenuPrefWidth(width);
             dropdownMenu.setMaxWidth(width == 0 ? DEFAULT_MENU_WIDTH : width);
         }
+
+        private void updateMenuItems() {
+            dropdownMenu.clearMenuItems();
+            dropdownMenu.addMenuItems(model.getUserProfiles());
+        }
     }
 
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
     @Getter
     public static final class UserProfileMenuItem extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
@@ -295,10 +320,9 @@ public class UserProfileSelection {
         private final UserIdentity userIdentity;
 
         private UserProfileMenuItem(UserIdentity userIdentity) {
-            super(new UserProfileDisplay(userIdentity.getUserProfile()));
+            super("check-white", "check-white", new UserProfileDisplay(userIdentity.getUserProfile()));
 
             this.userIdentity = userIdentity;
-
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
             initialize();

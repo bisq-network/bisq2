@@ -97,6 +97,29 @@
     -fx-min-height: 45;
 }
 
-.user-profile-selection .dropdown-menu .dropdown-menu-content-hbox {
+.user-profile-selection .dropdown-menu .dropdown-menu-content-hbox,
+.user-profile-selection-material-design .dropdown-menu .dropdown-menu-content-hbox {
+    -fx-alignment: center;
+}
+
+.user-profile-selection-material-design .dropdown-menu,
+.user-profile-selection-material-design .dropdown-menu:hover {
+    -fx-background-color: none;
+}
+
+.user-profile-selection .single-user-profile {
+    -fx-min-height: 45;
+    -fx-padding: 0 5 0 5;
+    -fx-alignment: center;
+}
+
+.user-profile-selection-material-design .user-profile-display {
+    -fx-font-size: 0.8em !important;
+}
+
+.user-profile-selection-material-design .dropdown-menu,
+.user-profile-selection-material-design .single-user-profile {
+    -fx-padding: 0 10 !important;
+    -fx-min-height: 35;
     -fx-alignment: center;
 }
