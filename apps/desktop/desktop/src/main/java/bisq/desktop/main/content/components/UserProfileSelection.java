@@ -286,7 +286,7 @@ public class UserProfileSelection {
         }
     }
 
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
     @Getter
     public static final class UserProfileMenuItem extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
@@ -295,10 +295,9 @@ public class UserProfileSelection {
         private final UserIdentity userIdentity;
 
         private UserProfileMenuItem(UserIdentity userIdentity) {
-            super(new UserProfileDisplay(userIdentity.getUserProfile()));
+            super("check-white", "check-white", new UserProfileDisplay(userIdentity.getUserProfile()));
 
             this.userIdentity = userIdentity;
-
             getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
             initialize();
