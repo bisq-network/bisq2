@@ -23,7 +23,6 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
 import bisq.chat.priv.PrivateChatChannel;
-import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -106,7 +105,8 @@ public class UserProfileSelection {
         private final View view;
         private final UserIdentityService userIdentityService;
         private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
-        private Pin selectedUserProfilePin, chatChannelSelectionPin, navigationPin, isPrivateChannelPin, userIdentitiesPin;
+        private Pin selectedUserProfilePin, chatChannelSelectionPin, navigationPin, userIdentitiesPin;
+        private Subscription isPrivateChannelPin;
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -122,7 +122,7 @@ public class UserProfileSelection {
                     userIdentity -> UIThread.run(() -> model.getSelectedUserIdentity().set(userIdentity)));
             userIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::updateUserProfiles));
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
-            isPrivateChannelPin = FxBindings.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldShowMenu());
+            isPrivateChannelPin = EasyBind.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldShowMenu());
         }
 
         @Override
@@ -132,8 +132,8 @@ public class UserProfileSelection {
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
             }
-            isPrivateChannelPin.unbind();
             userIdentitiesPin.unbind();
+            isPrivateChannelPin.unsubscribe();
         }
 
         private void updateUserProfiles() {
@@ -222,7 +222,7 @@ public class UserProfileSelection {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<UserIdentity> selectedUserIdentity = new SimpleObjectProperty<>();
         private final ObservableList<UserProfileMenuItem> userProfiles = FXCollections.observableArrayList();
-        private final Observable<Boolean> isPrivateChannel = new Observable<>(false);
+        private final BooleanProperty isPrivateChannel = new SimpleBooleanProperty(false);
         private final BooleanProperty shouldShowMenu = new SimpleBooleanProperty(false);
         private final DoubleProperty menuWidth = new SimpleDoubleProperty();
     }
@@ -273,9 +273,8 @@ public class UserProfileSelection {
             selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserIdentity(), selectedUserIdentity -> {
                 userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
                 singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
-                model.getUserProfiles().forEach(userProfileMenuItem -> {
-                    userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity()));
-                });
+                model.getUserProfiles().forEach(userProfileMenuItem ->
+                        userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity())));
             });
             menuWidthPin = EasyBind.subscribe(model.getMenuWidth(), w -> setMenuPrefWidth(w.doubleValue()));
 
