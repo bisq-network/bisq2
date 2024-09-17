@@ -106,8 +106,7 @@ public class UserProfileSelection {
         private final View view;
         private final UserIdentityService userIdentityService;
         private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
-        private Pin selectedUserProfilePin, userProfilesPin, chatChannelSelectionPin, navigationPin, isPrivateChannelPin;
-        private final ListChangeListener<UserProfileMenuItem> userProfilesListener = change -> updateShouldShowMenu();
+        private Pin selectedUserProfilePin, chatChannelSelectionPin, navigationPin, isPrivateChannelPin, userIdentitiesPin;
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -121,35 +120,31 @@ public class UserProfileSelection {
         public void onActivate() {
             selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                     userIdentity -> UIThread.run(() -> model.getSelectedUserIdentity().set(userIdentity)));
-            userProfilesPin = FxBindings.<UserIdentity, UserProfileMenuItem>bind(model.getUserProfiles())
-                    .map(userIdentity -> {
-                        UserProfileMenuItem userProfileMenuItem = new UserProfileMenuItem(userIdentity);
-                        userProfileMenuItem.setOnAction(e -> onSelected(userProfileMenuItem));
-                        return userProfileMenuItem;
-                    })
-                    .to(userIdentityService.getUserIdentities());
-
+            userIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::updateUserProfiles));
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
-
-            model.getUserProfiles().addListener(userProfilesListener);
             isPrivateChannelPin = FxBindings.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldShowMenu());
         }
 
         @Override
         public void onDeactivate() {
-            // Need to clear list otherwise we get issues with binding when multiple 
-            // instances are used.
-            model.getUserProfiles().forEach(UserProfileMenuItem::dispose);
-            model.getUserProfiles().clear();
-            model.getUserProfiles().removeListener(userProfilesListener);
-
             selectedUserProfilePin.unbind();
-            userProfilesPin.unbind();
             navigationPin.unbind();
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
             }
             isPrivateChannelPin.unbind();
+            userIdentitiesPin.unbind();
+        }
+
+        private void updateUserProfiles() {
+            model.getUserProfiles().forEach(UserProfileMenuItem::dispose);
+            model.getUserProfiles().clear();
+            userIdentityService.getUserIdentities().forEach(userIdentity -> {
+                UserProfileMenuItem userProfileMenuItem = new UserProfileMenuItem(userIdentity);
+                userProfileMenuItem.setOnAction(e -> onSelected(userProfileMenuItem));
+                model.getUserProfiles().add(userProfileMenuItem);
+            });
+            updateShouldShowMenu();
         }
 
         private void onSelected(UserProfileMenuItem selectedItem) {
@@ -241,6 +236,7 @@ public class UserProfileSelection {
         @Getter
         private final DropdownMenu dropdownMenu;
         private final HBox singleUserProfileHBox;
+        private final ListChangeListener<UserProfileMenuItem> userProfilesListener = change -> updateMenuItems();
         private Subscription selectedUserProfilePin, menuWidthPin;
 
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
@@ -282,7 +278,9 @@ public class UserProfileSelection {
                 });
             });
             menuWidthPin = EasyBind.subscribe(model.getMenuWidth(), w -> setMenuPrefWidth(w.doubleValue()));
-            dropdownMenu.addMenuItems(model.getUserProfiles());
+
+            model.getUserProfiles().addListener(userProfilesListener);
+            updateMenuItems();
         }
 
         @Override
@@ -294,7 +292,9 @@ public class UserProfileSelection {
 
             selectedUserProfilePin.unsubscribe();
             menuWidthPin.unsubscribe();
+
             dropdownMenu.clearMenuItems();
+            model.getUserProfiles().removeListener(userProfilesListener);
         }
 
         private void setMenuPrefWidth(double width) {
@@ -304,6 +304,11 @@ public class UserProfileSelection {
         private void setMenuMaxWidth(double width) {
             setMenuPrefWidth(width);
             dropdownMenu.setMaxWidth(width == 0 ? DEFAULT_MENU_WIDTH : width);
+        }
+
+        private void updateMenuItems() {
+            dropdownMenu.clearMenuItems();
+            dropdownMenu.addMenuItems(model.getUserProfiles());
         }
     }
 
