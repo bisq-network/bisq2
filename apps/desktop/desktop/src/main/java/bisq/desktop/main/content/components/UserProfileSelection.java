@@ -35,15 +35,18 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -223,7 +226,7 @@ public class UserProfileSelection {
         private final ObjectProperty<UserIdentity> selectedUserIdentity = new SimpleObjectProperty<>();
         private final ObservableList<UserProfileMenuItem> userProfiles = FXCollections.observableArrayList();
         private final Observable<Boolean> isPrivateChannel = new Observable<>(false);
-        private final Observable<Boolean> shouldShowMenu = new Observable<>(false);
+        private final BooleanProperty shouldShowMenu = new SimpleBooleanProperty(false);
         private final DoubleProperty menuWidth = new SimpleDoubleProperty();
     }
 
@@ -231,49 +234,62 @@ public class UserProfileSelection {
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int DEFAULT_MENU_WIDTH = 200;
 
+        private final UserProfileDisplay userProfileDisplay;
         @Getter
         private final DropdownMenu dropdownMenu;
-        private final UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
+        private final HBox singleUserProfileHBox;
         private Subscription selectedUserProfilePin, menuWidthPin;
-        private Pin shouldShowMenuPin;
 
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
             super(new Pane(), model, controller);
+
+            userProfileDisplay = new UserProfileDisplay(iconSize);
 
             dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
             dropdownMenu.setTooltip(Res.get("user.userProfile.comboBox.description"));
             dropdownMenu.setContent(userProfileDisplay);
             dropdownMenu.useSpaceBetweenContentAndIcon();
 
-            root.getChildren().setAll(dropdownMenu);
+            singleUserProfileHBox = new HBox(userProfileDisplay);
+            singleUserProfileHBox.getStyleClass().add("single-user-profile");
+            singleUserProfileHBox.setFillHeight(true);
+
+            if (useMaterialStyle) {
+                root.getStyleClass().add("user-profile-selection-material-design");
+            } else {
+                root.getStyleClass().add("user-profile-selection");
+            }
+            root.getChildren().setAll(dropdownMenu, singleUserProfileHBox);
             root.setPrefHeight(60);
-            root.getStyleClass().add("user-profile-selection");
         }
 
         @Override
         protected void onViewAttached() {
+            dropdownMenu.visibleProperty().bind(model.getShouldShowMenu());
+            dropdownMenu.managedProperty().bind(model.getShouldShowMenu());
+            singleUserProfileHBox.visibleProperty().bind(model.getShouldShowMenu().not());
+            singleUserProfileHBox.managedProperty().bind(model.getShouldShowMenu().not());
+
             selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserIdentity(), selectedUserIdentity -> {
                 userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
                 model.getUserProfiles().forEach(userProfileMenuItem -> {
                     userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity()));
                 });
             });
-            shouldShowMenuPin = FxBindings.subscribe(model.getShouldShowMenu(), this::shouldShowMenu);
             menuWidthPin = EasyBind.subscribe(model.getMenuWidth(), w -> setMenuPrefWidth(w.doubleValue()));
             dropdownMenu.addMenuItems(model.getUserProfiles());
         }
 
         @Override
         protected void onViewDetached() {
+            dropdownMenu.visibleProperty().unbind();
+            dropdownMenu.managedProperty().unbind();
+            singleUserProfileHBox.visibleProperty().unbind();
+            singleUserProfileHBox.managedProperty().unbind();
+
             selectedUserProfilePin.unsubscribe();
             menuWidthPin.unsubscribe();
-            shouldShowMenuPin.unbind();
             dropdownMenu.clearMenuItems();
-        }
-
-        private void shouldShowMenu(boolean showMenu) {
-            dropdownMenu.setManaged(showMenu);
-            dropdownMenu.setVisible(showMenu);
         }
 
         private void setMenuPrefWidth(double width) {
