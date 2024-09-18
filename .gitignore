@@ -41,6 +41,7 @@ hs_err_pid*
 *.wallet
 *.ser
 *.sh
+.vscode
 .DS_Store
 .gradle
 build

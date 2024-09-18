@@ -9,8 +9,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaApplication
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Sync
-import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.*
 import org.gradle.jvm.tasks.Jar
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
@@ -43,9 +42,29 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val javaApplicationExtension = project.extensions.findByType<JavaApplication>()
         checkNotNull(javaApplicationExtension) { "Can't find JavaApplication extension." }
 
+        val createCustomJre = project.tasks.register<JLinkTask>("createCustomJre") {
+            dependsOn(project.tasks.named("jdepsReport"))
+
+            jdkDirectory.set(getJPackageJdkDirectory(extension))
+            jDepsOutputFile.set(getBuildFileOf(project, "reports/jdeps/jdeps-main.txt"))
+            outputDirectory.set(project.layout.buildDirectory.dir("custom-jre"))
+
+            doLast {
+                println("JLink configuration:")
+                println("JDK Directory: ${jdkDirectory.get()}")
+                println("JDeps Output File: ${jDepsOutputFile.get()}")
+                println("Output Directory: ${outputDirectory.get()}")
+            }
+        }
+
         project.tasks.register<JPackageTask>("generateInstallers") {
             group = "distribution"
             description = "Generate the installer or the platform the project is running"
+
+            dependsOn(createCustomJre)
+
+            // Set the runtime image to the output of JLinkTask
+            runtimeImageDirectory.set(createCustomJre.flatMap { it.outputDirectory })
 
             val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam-app" }?.map { e -> e.value.project }?.first()
             webcamProject?.let { webcam ->
@@ -80,10 +99,6 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
-
-            runtimeImageDirectory.set(
-                    getJPackageJdkDirectory(extension)
-            )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
         }
@@ -126,5 +141,9 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             }
         }
         return javaVersion.map { JavaLanguageVersion.of(it) }
+    }
+
+    private fun getBuildFileOf(project: Project, relativePath: String): RegularFile {
+        return project.layout.buildDirectory.file(relativePath).get()
     }
 }
