@@ -105,7 +105,6 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
     private VBox createAndGetStepOne(Pane userProfileSelection) {
         Label title = createAndGetStepLabel(Res.get("reputation.accountAge.import.step1.title"));
         Label instruction = createAndGetStepInstructionLabel(Res.get("reputation.accountAge.import.step1.instruction"));
-        VBox.setMargin(userProfileSelection, new Insets(0, 0, -10, -15));
         VBox vBox = new VBox(title, instruction, userProfileSelection, Layout.hLine());
         vBox.getStyleClass().add("import-step");
         VBox.setMargin(vBox, new Insets(20, 0, 0, 0));

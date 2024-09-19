@@ -44,6 +44,7 @@ public class BurnBsqTab3Controller implements Controller {
     public BurnBsqTab3Controller(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
+        userProfileSelection.openMenuToTheRight();
 
         model = new BurnBsqTab3Model();
         view = new BurnBsqTab3View(model, this, userProfileSelection.getRoot());

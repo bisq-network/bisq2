@@ -44,6 +44,7 @@ public class BondedReputationTab3Controller implements Controller {
     public BondedReputationTab3Controller(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
+        userProfileSelection.openMenuToTheRight();
 
         model = new BondedReputationTab3Model();
         view = new BondedReputationTab3View(model, this, userProfileSelection.getRoot());

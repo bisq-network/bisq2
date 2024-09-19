@@ -53,6 +53,7 @@ public class AccountAgeTab3Controller implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         this.popupOwner = popupOwner;
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
+        userProfileSelection.openMenuToTheRight();
         accountAgeService = serviceProvider.getUserService().getReputationService().getAccountAgeService();
 
         model = new AccountAgeTab3Model();
