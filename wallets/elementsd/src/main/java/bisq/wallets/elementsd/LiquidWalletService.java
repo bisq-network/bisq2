@@ -23,7 +23,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.wallets.bitcoind.AbstractBitcoindWalletService;
-import bisq.wallets.json_rpc.RpcConfig;
+import bisq.wallets.bitcoind.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,19 +47,25 @@ public class LiquidWalletService extends AbstractBitcoindWalletService<LiquidWal
     }
 
     @Override
-    protected LiquidWallet createWallet(RpcConfig rpcConfig) {
-        return WalletFactory.createLiquidWallet(rpcConfig, walletName, persistableStore);
+    protected LiquidWallet createWallet(bisq.wallets.bitcoind.RpcConfig rpcConfig) {
+        return WalletFactory.createLiquidWallet(rpcConfig.toJsonRpcConfig(), walletName, persistableStore);
     }
 
     @Override
-    protected void persistRpcConfig(RpcConfig rpcConfig) {
-        persistableStore.setRpcConfig(Optional.of(rpcConfig));
+    protected void persistRpcConfig(bisq.wallets.bitcoind.RpcConfig rpcConfig) {
+        persistableStore.setRpcConfig(Optional.of(rpcConfig.toJsonRpcConfig()));
         persist();
     }
 
     @Override
-    protected Optional<RpcConfig> getRpcConfigFromPersistableStore() {
-        return persistableStore.getRpcConfig();
+    protected Optional<bisq.wallets.bitcoind.RpcConfig> getRpcConfigFromPersistableStore() {
+        return persistableStore.getRpcConfig().map(jsonRpcConfig ->
+                RpcConfig.builder()
+                        .hostname(jsonRpcConfig.getHostname())
+                        .port(jsonRpcConfig.getPort())
+                        .user(jsonRpcConfig.getUser())
+                        .password(jsonRpcConfig.getPassword())
+                        .build());
     }
 
     @Override

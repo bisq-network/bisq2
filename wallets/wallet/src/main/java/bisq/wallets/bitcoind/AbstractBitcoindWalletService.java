@@ -31,7 +31,6 @@ import bisq.wallets.core.exceptions.WalletNotInitializedException;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
-import bisq.wallets.json_rpc.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -115,8 +114,17 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     // WalletService
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+
     @Override
-    public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
+    public CompletableFuture<Boolean> initializeWallet(bisq.wallets.json_rpc.RpcConfig jsonRpcConfig,
+                                                       Optional<String> walletPassphrase) {
+        RpcConfig rpcConfig = RpcConfig.builder()
+                .hostname(jsonRpcConfig.getHostname())
+                .port(jsonRpcConfig.getPort())
+                .user(jsonRpcConfig.getUser())
+                .password(jsonRpcConfig.getPassword())
+                .build();
+
         if (wallet.isEmpty()) {
             boolean isSuccess = verifyRpcConfigAndCreateWallet(Optional.of(rpcConfig));
 
@@ -242,7 +250,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         if (optionalRpcConfig.isEmpty()) return false;
 
         RpcConfig rpcConfig = optionalRpcConfig.get();
-        boolean isValidRpcConfig = BitcoindDaemon.verifyRpcConfig(rpcConfig);
+        boolean isValidRpcConfig = BitcoindDaemon.verifyRpcConfig(rpcConfig.toJsonRpcConfig());
         if (isValidRpcConfig) {
             T walletImpl = createWallet(rpcConfig);
             wallet = Optional.of(walletImpl);

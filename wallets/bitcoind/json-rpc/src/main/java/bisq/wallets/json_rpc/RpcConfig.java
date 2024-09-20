@@ -17,38 +17,14 @@
 
 package bisq.wallets.json_rpc;
 
-import bisq.common.proto.PersistableProto;
 import lombok.Builder;
 import lombok.Getter;
 
 @Builder
 @Getter
-public final class RpcConfig implements PersistableProto {
+public final class RpcConfig {
     private String hostname;
     private int port;
     private String user;
     private String password;
-
-    @Override
-    public bisq.wallets.protobuf.RpcConfig toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
-    }
-
-    @Override
-    public bisq.wallets.protobuf.RpcConfig.Builder getBuilder(boolean serializeForHash) {
-        return bisq.wallets.protobuf.RpcConfig.newBuilder()
-                .setHostname(hostname)
-                .setPort(port)
-                .setUser(user)
-                .setPassword(password);
-    }
-
-    public static RpcConfig fromProto(bisq.wallets.protobuf.RpcConfig proto) {
-        return RpcConfig.builder()
-                .hostname(proto.getHostname())
-                .port(proto.getPort())
-                .user(proto.getUser())
-                .password(proto.getPassword())
-                .build();
-    }
 }
