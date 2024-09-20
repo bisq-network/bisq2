@@ -6,6 +6,7 @@ dependencyResolutionManagement {
     }
 }
 
+include("commons")
 include("bitcoin-core-binaries")
 include("gradle-tasks")
 
