@@ -60,7 +60,7 @@ public class BitcoindSendAndListTxsIntegrationTests {
         List<BitcoindListTransactionsResponse.Entry> txs = receiverBackend.listTransactions(10);
         assertEquals(3, txs.size());
 
-        BitcoindListTransactionsResponse.Entry firstTx = txs.getFirst();
+        BitcoindListTransactionsResponse.Entry firstTx = txs.stream().findFirst().orElseThrow();
         assertEquals(firstTxReceiverAddress, firstTx.getAddress());
         assertEquals("receive", firstTx.getCategory());
         assertEquals(100000000, firstTx.getAmount());

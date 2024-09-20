@@ -34,10 +34,12 @@ public enum BitcoindZmqTopic {
     }
 
     public static BitcoindZmqTopic parse(String topicName) {
-        return switch (topicName) {
-            case BitcoindZmqTopic.HASHBLOCK_TOPIC_NAME -> TOPIC_HASHBLOCK;
-            case BitcoindZmqTopic.RAWTX_TOPIC_NAME -> TOPIC_RAWTX;
-            default -> throw new IllegalStateException("Unknown ZMQ topic: " + topicName);
-        };
+        if (topicName.equals(BitcoindZmqTopic.HASHBLOCK_TOPIC_NAME)) {
+            return TOPIC_HASHBLOCK;
+        } else if (topicName.equals(BitcoindZmqTopic.RAWTX_TOPIC_NAME)) {
+            return TOPIC_RAWTX;
+        } else {
+            throw new IllegalStateException("Unknown ZMQ topic: " + topicName);
+        }
     }
 }
