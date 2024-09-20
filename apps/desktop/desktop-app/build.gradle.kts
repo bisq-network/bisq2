@@ -55,6 +55,7 @@ dependencies {
 
     implementation("network:network")
     implementation("bitcoind:core")
+    implementation("wallets:wallet")
     // implementation("wallets:electrum")
     // implementation("wallets:bitcoind")
 

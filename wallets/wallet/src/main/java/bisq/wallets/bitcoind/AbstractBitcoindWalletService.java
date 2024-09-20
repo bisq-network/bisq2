@@ -116,15 +116,8 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
 
 
     @Override
-    public CompletableFuture<Boolean> initializeWallet(bisq.wallets.json_rpc.RpcConfig jsonRpcConfig,
+    public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig,
                                                        Optional<String> walletPassphrase) {
-        RpcConfig rpcConfig = RpcConfig.builder()
-                .hostname(jsonRpcConfig.getHostname())
-                .port(jsonRpcConfig.getPort())
-                .user(jsonRpcConfig.getUser())
-                .password(jsonRpcConfig.getPassword())
-                .build();
-
         if (wallet.isEmpty()) {
             boolean isSuccess = verifyRpcConfigAndCreateWallet(Optional.of(rpcConfig));
 

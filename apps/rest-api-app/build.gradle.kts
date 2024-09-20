@@ -28,6 +28,7 @@ dependencies {
     implementation("network:network-common")
     implementation("network:network")
     implementation("bitcoind:core")
+    implementation("wallets:wallet")
 
     implementation(libs.typesafe.config)
     implementation(libs.bundles.glassfish.jersey)
