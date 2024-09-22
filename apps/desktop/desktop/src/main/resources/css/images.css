@@ -254,6 +254,29 @@
     -fx-image: url("/images/icons/close-mini-green.png");
 }
 
+#link-white {
+    -fx-image: url("/images/icons/link-white.png");
+}
+
+#link-grey {
+    -fx-image: url("/images/icons/link-grey.png");
+}
+
+#link-green {
+    -fx-image: url("/images/icons/link-green.png");
+}
+
+#open-link-white {
+    -fx-image: url("/images/icons/open-link-white.png");
+}
+
+#open-link-grey {
+    -fx-image: url("/images/icons/open-link-grey.png");
+}
+
+#open-link-green {
+    -fx-image: url("/images/icons/open-link-green.png");
+}
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */

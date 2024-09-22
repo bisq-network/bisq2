@@ -23,6 +23,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.i18n.Res;
@@ -115,9 +116,16 @@ public class BuyerState4 extends BaseState {
         }
 
         private void openExplorer() {
+            Browser.open(getBlockExplorerUrl());
+        }
+
+        private void copyExplorerLink() {
+            ClipboardUtil.copyToClipboard(getBlockExplorerUrl());
+        }
+
+        private String getBlockExplorerUrl() {
             ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            String url = provider.getBaseUrl() + provider.getTxPath() + model.getPaymentProof();
-            Browser.open(url);
+            return provider.getBaseUrl() + provider.getTxPath() + model.getPaymentProof();
         }
     }
 
@@ -178,7 +186,8 @@ public class BuyerState4 extends BaseState {
                     model.getTradeDate(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
             if (model.isBlockExplorerLinkVisible()) {
                 tradeCompletedTable.showBlockExplorerLink();
-                tradeCompletedTable.getBlockExplorerButton().setOnAction(e -> controller.openExplorer());
+                tradeCompletedTable.getOpenTxExplorerButton().setOnAction(e -> controller.openExplorer());
+                tradeCompletedTable.getCopyTxExplorerLinkButton().setOnAction(e -> controller.copyExplorerLink());
             }
             leaveButton.setOnAction(e -> controller.onLeaveChannel());
             exportButton.setOnAction(e -> controller.onExportTrade());

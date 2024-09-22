@@ -23,6 +23,7 @@ import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
@@ -39,10 +40,8 @@ import java.util.Optional;
 
 public class TradeCompletedTable extends VBox {
     private final GridPane headerGridPane, bodyGridPane;
-    // @Getter
-    // private final BisqMenuItem  copyTxIdButton;
     @Getter
-    private final Button blockExplorerButton, copyTxIdButton;
+    private final BisqMenuItem copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton;
 
     public TradeCompletedTable() {
         Label title = new Label(Res.get("bisqEasy.tradeCompleted.title"));
@@ -67,20 +66,21 @@ public class TradeCompletedTable extends VBox {
         valueCol.setPercentWidth(75);
         bodyGridPane.getColumnConstraints().add(valueCol);
 
-        blockExplorerButton = BisqIconButton.createExternalLinkButton(Res.get("bisqEasy.tradeCompleted.body.txId.explorerLink"), Res.get("bisqEasy.tradeCompleted.body.txId.tooltip"));
-        blockExplorerButton.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
-        blockExplorerButton.getGraphic().getStyleClass().add("text-fill-grey-dimmed");
-        blockExplorerButton.setVisible(false);
-        blockExplorerButton.setManaged(false);
-
-        copyTxIdButton = BisqIconButton.createCopyIconButton(BisqTooltip.Style.DEFAULT, "text-fill-grey-dimmed");
-
-       /* blockExplorerButton = new BisqMenuItem(Res.get("bisqEasy.tradeCompleted.body.txId.explorerLink")); // TODO: Add icon for external link instead
-         blockExplorerButton.setTooltip(Res.get("bisqEasy.tradeCompleted.body.txId.tooltip"));*/
-
-      /*  copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");
+        copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");
         copyTxIdButton.useIconOnly();
-        copyTxIdButton.setTooltip(Res.get("action.copyToClipboard"));*/
+        copyTxIdButton.setTooltip(Res.get("bisqEasy.tradeCompleted.body.copy.txId.tooltip"));
+
+        copyTxExplorerLinkButton = new BisqMenuItem("link-grey", "link-white");
+        copyTxExplorerLinkButton.useIconOnly();
+        copyTxExplorerLinkButton.setTooltip(Res.get("bisqEasy.tradeCompleted.body.copy.explorerLink.tooltip"));
+        copyTxExplorerLinkButton.setVisible(false);
+        copyTxExplorerLinkButton.setManaged(false);
+
+        openTxExplorerButton = new BisqMenuItem("open-link-grey","open-link-white");
+        openTxExplorerButton.useIconOnly();
+        openTxExplorerButton.setTooltip(Res.get("bisqEasy.tradeCompleted.body.txId.tooltip"));
+        openTxExplorerButton.setVisible(false);
+        openTxExplorerButton.setManaged(false);
 
         Region line1 = getLine();
         Region line2 = getLine();
@@ -200,7 +200,7 @@ public class TradeCompletedTable extends VBox {
             Label txIdValue = new Label(txId);
             txIdValue.getStyleClass().addAll("medium-text", "text-fill-green");
 
-            HBox txValueBox = new HBox(10, txIdValue, Spacer.fillHBox(), blockExplorerButton, copyTxIdButton);
+            HBox txValueBox = new HBox(1, txIdValue, Spacer.fillHBox(), copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton);
             txValueBox.setAlignment(Pos.CENTER_LEFT);
             GridPane.setValignment(txIdTitle, VPos.CENTER);
             GridPane.setValignment(txIdValue, VPos.CENTER);
@@ -213,13 +213,16 @@ public class TradeCompletedTable extends VBox {
     }
 
     public void dispose() {
-        blockExplorerButton.setOnAction(null);
         copyTxIdButton.setOnAction(null);
+        copyTxExplorerLinkButton.setOnAction(null);
+        openTxExplorerButton.setOnAction(null);
     }
 
     public void showBlockExplorerLink() {
-        blockExplorerButton.setVisible(true);
-        blockExplorerButton.setManaged(true);
+        copyTxExplorerLinkButton.setVisible(true);
+        copyTxExplorerLinkButton.setManaged(true);
+        openTxExplorerButton.setVisible(true);
+        openTxExplorerButton.setManaged(true);
     }
 
     private Region getLine() {
