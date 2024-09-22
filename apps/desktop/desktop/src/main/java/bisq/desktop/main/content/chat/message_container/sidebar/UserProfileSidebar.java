@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.sidebar;
+package bisq.desktop.main.content.chat.message_container.sidebar;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;

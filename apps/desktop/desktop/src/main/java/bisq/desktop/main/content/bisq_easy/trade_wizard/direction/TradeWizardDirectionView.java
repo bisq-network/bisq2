@@ -44,6 +44,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
     private Subscription directionSubscription, showReputationInfoPin;
     private Button withoutReputationButton, backToBuyButton;
     private Button gainReputationButton;
+    private Label subtitleLabel2;
 
     public TradeWizardDirectionView(TradeWizardDirectionModel model, TradeWizardDirectionController controller) {
         super(new StackPane(), model, controller);
@@ -88,6 +89,8 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
 
     @Override
     protected void onViewAttached() {
+        subtitleLabel2.setText(Res.get("bisqEasy.tradeWizard.direction.feedback.subTitle2", model.getFormattedAmountWithoutReputationNeeded()));
+
         buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
@@ -181,7 +184,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.direction.feedback.gainReputation"));
         gainReputationButton.getStyleClass().add("outlined-button");
 
-        Label subtitleLabel2 = new Label(Res.get("bisqEasy.tradeWizard.direction.feedback.subTitle2"));
+        subtitleLabel2 = new Label();
         subtitleLabel2.setMaxWidth(width - 60);
         subtitleLabel2.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
