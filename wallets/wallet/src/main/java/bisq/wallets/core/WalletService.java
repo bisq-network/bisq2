@@ -21,10 +21,10 @@ import bisq.common.application.Service;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.wallets.bitcoind.RpcConfig;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
-import bisq.wallets.json_rpc.RpcConfig;
 
 import java.util.List;
 import java.util.Optional;

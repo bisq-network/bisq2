@@ -16,18 +16,6 @@ public enum Os {
         this.canonicalName = canonicalName;
     }
 
-    public static bisq.common.platform.OS getOS() {
-        String osName = getOsName();
-        if (isLinux(osName)) {
-            return bisq.common.platform.OS.LINUX;
-        } else if (isMacOs(osName)) {
-            return bisq.common.platform.OS.MAC_OS;
-        } else if (isWindows(osName)) {
-            return bisq.common.platform.OS.WINDOWS;
-        }
-        throw new IllegalStateException("Running on unsupported OS: " + osName);
-    }
-
     public static boolean isLinux() {
         return isLinux(getOsName());
     }

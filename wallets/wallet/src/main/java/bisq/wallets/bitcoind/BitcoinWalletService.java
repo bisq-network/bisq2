@@ -22,7 +22,6 @@ import bisq.common.observable.Observable;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.wallets.json_rpc.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +62,7 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
 
     @Override
     protected BitcoinWallet createWallet(RpcConfig rpcConfig) {
-        return WalletFactory.createBitcoinWallet(rpcConfig, walletName, persistableStore);
+        return WalletFactory.createBitcoinWallet(rpcConfig.toJsonRpcConfig(), walletName, persistableStore);
     }
 
     @Override

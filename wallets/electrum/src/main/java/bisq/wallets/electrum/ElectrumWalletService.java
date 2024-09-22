@@ -21,6 +21,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.NetworkUtils;
+import bisq.wallets.bitcoind.RpcConfig;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
@@ -28,7 +29,6 @@ import bisq.wallets.core.model.Utxo;
 import bisq.wallets.electrum.notifications.ElectrumNotifyApi;
 import bisq.wallets.electrum.notifications.ElectrumNotifyWebServer;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
-import bisq.wallets.json_rpc.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -97,7 +97,14 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return initializeWallet(processConfig.getElectrumConfig().toRpcConfig(), Optional.empty());
+        bisq.wallets.json_rpc.RpcConfig jsonRpcConfig = processConfig.getElectrumConfig().toRpcConfig();
+        bisq.wallets.bitcoind.RpcConfig rpcConfig = RpcConfig.builder()
+                .hostname(jsonRpcConfig.getHostname())
+                .port(jsonRpcConfig.getPort())
+                .user(jsonRpcConfig.getUser())
+                .password(jsonRpcConfig.getPassword())
+                .build();
+        return initializeWallet(rpcConfig, Optional.empty());
     }
 
     @Override
@@ -115,8 +122,10 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     // WalletService
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+
     @Override
-    public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
+    public CompletableFuture<Boolean> initializeWallet(bisq.wallets.bitcoind.RpcConfig rpcConfig,
+                                                       Optional<String> walletPassphrase) {
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
             electrumProcess.start();

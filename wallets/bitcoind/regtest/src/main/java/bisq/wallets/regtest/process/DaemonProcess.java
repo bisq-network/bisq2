@@ -17,7 +17,6 @@
 
 package bisq.wallets.regtest.process;
 
-import bisq.common.threading.ThreadName;
 import bisq.wallets.regtest.LogScanner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +62,7 @@ public abstract class DaemonProcess implements BisqProcess {
 
     protected void waitUntilReady() {
         FutureTask<Boolean> waitingFuture = new FutureTask<>(() -> {
-            ThreadName.set(this, "waitUntilLogContainsLines");
+            Thread.currentThread().setName("waitUntilLogContainsLines");
             return waitUntilLogContainsLines();
         });
         Thread waitingThread = new Thread(waitingFuture);

@@ -21,6 +21,7 @@ dependencies {
     api("bitcoind:core")
     implementation("bitcoind:json-rpc")
     implementation("bitcoind:regtest")
+    implementation("wallets:wallet")
 
     implementation(project(":process"))
     implementation(libs.typesafe.config)
