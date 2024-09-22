@@ -17,11 +17,16 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
 
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.Direction;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -29,7 +34,10 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.function.Consumer;
+
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
 
 @Slf4j
 public class TradeWizardDirectionController implements Controller {
@@ -41,6 +49,8 @@ public class TradeWizardDirectionController implements Controller {
     private final ReputationService reputationService;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final UserIdentityService userIdentityService;
+    private final MarketPriceService marketPriceService;
+    private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
 
     public TradeWizardDirectionController(ServiceProvider serviceProvider,
                                           Runnable onNextHandler,
@@ -50,6 +60,8 @@ public class TradeWizardDirectionController implements Controller {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        bisqEasyOfferbookSelectionService = serviceProvider.getChatService().getBisqEasyOfferbookChannelSelectionService();
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
 
         model = new TradeWizardDirectionModel();
@@ -70,6 +82,15 @@ public class TradeWizardDirectionController implements Controller {
     public void onActivate() {
         setDirection(Direction.BUY);
         applyShowReputationInfo();
+
+        model.setFormattedAmountWithoutReputationNeeded(Optional.ofNullable(bisqEasyOfferbookSelectionService.getSelectedChannel().get())
+                .filter(channel -> channel instanceof BisqEasyOfferbookChannel)
+                .map(channel -> (BisqEasyOfferbookChannel) channel)
+                .map(BisqEasyOfferbookChannel::getMarket)
+                .flatMap(market -> BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, market, MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION))
+                .map(amount -> amount.round(0))
+                .map(AmountFormatter::formatAmountWithCode)
+                .orElse("25 USD"));
     }
 
     @Override

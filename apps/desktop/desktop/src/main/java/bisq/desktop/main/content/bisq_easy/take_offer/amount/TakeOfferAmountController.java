@@ -230,7 +230,8 @@ public class TakeOfferAmountController implements Controller {
                         if (myReputationBasedQuoteSideAmount.isLessThan(maxRangeValue)) {
                             if (myReputationScore <= MIN_REPUTAION_SCORE) {
                                 model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.seller.limitInfo.scoreTooLow", myReputationScore));
-                                model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.seller.limitInfo.overlay.info.scoreTooLow", formattedAmountWithoutReputationNeeded, myReputationScore) + "\n\n");
+                                model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.seller.limitInfo.overlay.info.scoreTooLow",
+                                        formattedAmountWithoutReputationNeeded, myReputationScore) + "\n\n");
                             } else {
                                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.sufficientScore", myReputationScore));
                                 model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.wizard.limitInfo.overlay.info", myReputationScore, formattedAmount));
@@ -243,7 +244,8 @@ public class TakeOfferAmountController implements Controller {
                             } else if (myReputationScore <= MIN_REPUTAION_SCORE) {
                                 model.getAmountLimitInfoAmount().set(null);
                                 model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.seller.limitInfo.lowToleratedAmount", formattedAmountWithoutReputationNeeded));
-                                model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.seller.limitInfo.overlay.info.scoreTooLow", formattedAmountWithoutReputationNeeded, myReputationScore) + "\n\n");
+                                model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.seller.limitInfo.overlay.info.scoreTooLow",
+                                        formattedAmountWithoutReputationNeeded, myReputationScore) + "\n\n");
                             } else {
                                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.sufficientScore", myReputationScore));
                                 model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.wizard.limitInfo.overlay.info", myReputationScore, formattedAmount));

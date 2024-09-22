@@ -22,7 +22,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
+import bisq.desktop.main.content.chat.message_container.sidebar.UserProfileSidebar;
 import bisq.i18n.Res;
 import javafx.beans.property.*;
 import javafx.scene.layout.Pane;

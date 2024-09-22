@@ -24,12 +24,15 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class TradeWizardDirectionModel implements Model {
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
+    @Setter
+    private String formattedAmountWithoutReputationNeeded;
 
     void reset() {
         direction.set(Direction.BUY);

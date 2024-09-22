@@ -520,7 +520,8 @@ public class TradeWizardAmountController implements Controller {
                 .count();
         model.getAmountLimitInfoLeadLine().set(null);
         Monetary amountWithoutReputationNeeded = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, model.getMarket(), MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION)
-                .orElseThrow();
+                .orElseThrow()
+                .round(0);
         boolean noReputationNeededForMaxOrFixedAmount = maxOrFixedQuoteSideAmount.isLessThanOrEqual(amountWithoutReputationNeeded);
         if (model.getDirection().isBuy()) {
             // Buyer
