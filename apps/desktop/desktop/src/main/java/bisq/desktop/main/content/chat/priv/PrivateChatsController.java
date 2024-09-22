@@ -110,12 +110,14 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
             }
 
             if (chatChannel instanceof TwoPartyPrivateChatChannel channel) {
+                // Set reputation score first since observable is userProfile, which updates both user and reputation
                 UserProfile peer = userProfileService.getManagedUserProfile(channel.getPeer());
-                model.getPeersUserProfile().set(peer);
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
+                model.getPeersUserProfile().set(peer);
                 UserProfile myProfile = userProfileService.getManagedUserProfile(channel.getMyUserIdentity().getUserProfile());
-                model.getMyUserProfile().set(myProfile);
                 model.setMyUserReputationScore(reputationService.getReputationScore(myProfile));
+                model.getMyUserProfile().set(myProfile);
+
                 model.getListItems().stream()
                         .filter(item -> item.getChannel().equals(channel))
                         .findAny()

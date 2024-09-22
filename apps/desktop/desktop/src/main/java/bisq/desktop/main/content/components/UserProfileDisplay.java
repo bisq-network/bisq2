@@ -39,18 +39,22 @@ public class UserProfileDisplay extends HBox {
     private final Label userName;
 
     public UserProfileDisplay() {
-        this(null, DEFAULT_ICON_SIZE);
+        this(null, DEFAULT_ICON_SIZE, null);
     }
 
     public UserProfileDisplay(double size) {
-        this(null, size);
+        this(null, size, null);
     }
 
     public UserProfileDisplay(@Nullable UserProfile userProfile) {
-        this(userProfile, DEFAULT_ICON_SIZE);
+        this(userProfile, DEFAULT_ICON_SIZE, null);
     }
 
-    public UserProfileDisplay(@Nullable UserProfile userProfile, double size) {
+    public UserProfileDisplay(@Nullable UserProfile userProfile, @Nullable ReputationScore reputationScore) {
+        this(userProfile, DEFAULT_ICON_SIZE, reputationScore);
+    }
+
+    public UserProfileDisplay(@Nullable UserProfile userProfile, double size, @Nullable ReputationScore reputationScore) {
         super(10);
 
         setAlignment(Pos.CENTER_LEFT);
@@ -68,6 +72,10 @@ public class UserProfileDisplay extends HBox {
 
         if (userProfile != null) {
             setUserProfile(userProfile);
+        }
+
+        if (reputationScore != null) {
+            setReputationScore(reputationScore);
         }
     }
 

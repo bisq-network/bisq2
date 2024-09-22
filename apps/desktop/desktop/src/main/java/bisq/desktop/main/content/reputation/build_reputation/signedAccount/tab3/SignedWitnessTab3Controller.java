@@ -53,6 +53,7 @@ public class SignedWitnessTab3Controller implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         this.popupOwner = popupOwner;
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
+        userProfileSelection.openMenuToTheRight();
         signedWitnessService = serviceProvider.getUserService().getReputationService().getSignedWitnessService();
 
         model = new SignedWitnessTab3Model();

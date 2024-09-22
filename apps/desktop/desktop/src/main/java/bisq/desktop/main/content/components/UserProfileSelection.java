@@ -34,6 +34,8 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -49,6 +51,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -105,12 +108,14 @@ public class UserProfileSelection {
         private final View view;
         private final UserIdentityService userIdentityService;
         private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
+        private final ReputationService reputationService;
         private Pin selectedUserProfilePin, chatChannelSelectionPin, navigationPin, userIdentitiesPin;
         private Subscription isPrivateChannelPin;
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             chatChannelSelectionServices = serviceProvider.getChatService().getChatChannelSelectionServices();
+            reputationService = serviceProvider.getUserService().getReputationService();
 
             model = new Model();
             view = new View(model, this, iconSize, useMaterialStyle);
@@ -119,7 +124,10 @@ public class UserProfileSelection {
         @Override
         public void onActivate() {
             selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
-                    userIdentity -> UIThread.run(() -> model.getSelectedUserIdentity().set(userIdentity)));
+                    userIdentity -> UIThread.run(() -> {
+                        model.setUserReputationScore(reputationService.getReputationScore(userIdentity.getUserProfile()));
+                        model.getSelectedUserIdentity().set(userIdentity);
+                    }));
             userIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::updateUserProfiles));
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
             isPrivateChannelPin = EasyBind.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldShowMenu());
@@ -140,7 +148,8 @@ public class UserProfileSelection {
             model.getUserProfiles().forEach(UserProfileMenuItem::dispose);
             model.getUserProfiles().clear();
             userIdentityService.getUserIdentities().forEach(userIdentity -> {
-                UserProfileMenuItem userProfileMenuItem = new UserProfileMenuItem(userIdentity);
+                UserProfileMenuItem userProfileMenuItem = new UserProfileMenuItem(
+                        userIdentity, reputationService.getReputationScore(userIdentity.getUserProfile()));
                 userProfileMenuItem.setOnAction(e -> onSelected(userProfileMenuItem));
                 model.getUserProfiles().add(userProfileMenuItem);
             });
@@ -157,6 +166,7 @@ public class UserProfileSelection {
                                     selectedUserIdentity.getUserProfile().getUserName()))
                             .onClose(() -> {
                                 UIThread.run(() -> {
+                                    model.setUserReputationScore(reputationService.getReputationScore(selectedUserIdentity.getUserProfile()));
                                     model.getSelectedUserIdentity().set(null);
                                     model.getSelectedUserIdentity().set(selectedUserIdentity);
                                 });
@@ -225,6 +235,8 @@ public class UserProfileSelection {
         private final BooleanProperty isPrivateChannel = new SimpleBooleanProperty(false);
         private final BooleanProperty shouldShowMenu = new SimpleBooleanProperty(false);
         private final DoubleProperty menuWidth = new SimpleDoubleProperty();
+        @Setter
+        private ReputationScore userReputationScore;
     }
 
     @Slf4j
@@ -244,7 +256,6 @@ public class UserProfileSelection {
 
             userProfileDisplay = new UserProfileDisplay(iconSize);
             dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-            dropdownMenu.setTooltip(Res.get("user.userProfile.comboBox.description"));
             dropdownMenu.setContent(userProfileDisplay);
             dropdownMenu.useSpaceBetweenContentAndIcon();
 
@@ -272,7 +283,9 @@ public class UserProfileSelection {
 
             selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserIdentity(), selectedUserIdentity -> {
                 userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
+                userProfileDisplay.setReputationScore(model.getUserReputationScore());
                 singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
+                singleUserProfileDisplay.setReputationScore(model.getUserReputationScore());
                 model.getUserProfiles().forEach(userProfileMenuItem ->
                         userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity())));
             });
@@ -319,8 +332,8 @@ public class UserProfileSelection {
         @EqualsAndHashCode.Include
         private final UserIdentity userIdentity;
 
-        private UserProfileMenuItem(UserIdentity userIdentity) {
-            super("check-white", "check-white", new UserProfileDisplay(userIdentity.getUserProfile()));
+        private UserProfileMenuItem(UserIdentity userIdentity, ReputationScore reputationScore) {
+            super("check-white", "check-white", new UserProfileDisplay(userIdentity.getUserProfile(), reputationScore));
 
             this.userIdentity = userIdentity;
             getStyleClass().add("dropdown-menu-item");

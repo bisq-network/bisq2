@@ -72,11 +72,11 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         vBox.setPadding(new Insets(30, 30, 20, 30));
         vBox.setAlignment(Pos.TOP_LEFT);
 
-
         VBox.setMargin(vBox, new Insets(0, 0, 20, 0));
         VBox.setVgrow(vBox, Priority.SOMETIMES);
         root.setPadding(new Insets(0, 40, 40, 40));
         root.getChildren().addAll(vBox);
+        root.getStyleClass().add("build-reputation");
     }
 
     @Override
