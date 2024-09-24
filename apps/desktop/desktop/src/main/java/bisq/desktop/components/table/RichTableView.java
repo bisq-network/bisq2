@@ -158,13 +158,13 @@ public class RichTableView<T> extends VBox {
         exportHyperlink.setAlignment(Pos.BASELINE_LEFT);
 
         HBox.setMargin(exportHyperlink, new Insets(8, 10, 0, 0));
-        HBox footerHBox = new HBox(numEntriesLabel, Spacer.fillHBox(), exportHyperlink);
-        footerHBox.setAlignment(Pos.BASELINE_LEFT);
+        VBox footerVBox = new VBox(5, numEntriesLabel, exportHyperlink);
+        footerVBox.setAlignment(Pos.BASELINE_LEFT);
 
-        VBox.setMargin(headerBox, new Insets(0, 10, 5, 10));
+        VBox.setMargin(headerBox, new Insets(0, 0, 5, 0));
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        VBox.setMargin(footerHBox, new Insets(-5, 0, 0, 10));
-        getChildren().addAll(headerBox, tableView, footerHBox);
+        VBox.setMargin(footerVBox, new Insets(10, 0, 0, 0));
+        getChildren().addAll(headerBox, tableView, footerVBox);
 
         listChangeListener = c -> listItemsChanged();
         toggleChangeListener = (observable, oldValue, newValue) -> selectedFilterMenuItemChanged();

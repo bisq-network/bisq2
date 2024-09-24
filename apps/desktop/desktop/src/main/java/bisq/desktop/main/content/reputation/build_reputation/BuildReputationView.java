@@ -65,7 +65,7 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
 
         HBox buttons = new HBox(20, burnBsqButton, bsqBondButton, signedAccountButton, accountAgeButton);
 
-        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(20, 0, 0, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox vBox = new VBox(10, headlineLabel, info, buttons, learnMore);
         vBox.getStyleClass().add("bisq-box-2");

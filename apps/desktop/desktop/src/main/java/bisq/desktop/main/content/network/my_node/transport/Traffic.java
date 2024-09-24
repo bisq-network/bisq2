@@ -185,7 +185,6 @@ public class Traffic {
 
         private VBox getVBox(Label headline, Label details) {
             headline.getStyleClass().add("standard-table-headline");
-            VBox.setMargin(headline, new Insets(0, 0, 0, 10));
             VBox vBox = new VBox(10, headline, details);
             vBox.setAlignment(Pos.TOP_LEFT);
             details.getStyleClass().add("standard-table-view");

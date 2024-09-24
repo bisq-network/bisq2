@@ -208,7 +208,7 @@ public class ConnectionsAndNodes {
         private final RichTableView<NodeListItem> nodesTableView;
 
         public View(Model model, Controller controller) {
-            super(new VBox(20), model, controller);
+            super(new VBox(40), model, controller);
 
             connectionsTableView = new RichTableView<>(model.getConnectionListItems().getSortedList(),
                     Res.get("network.connections.title"),

@@ -352,7 +352,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * StandardTable                                                                  *
+ * StandardTable                                                               *
  *                                                                             *
  ******************************************************************************/
 
@@ -364,6 +364,12 @@
 
 .standard-table-view {
     -fx-background-color: -bisq-dark-grey-20;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.standard-table-view .column-header {
+    -fx-background-color: -bisq-dark-grey-30;
 }
 
 .standard-table-num-entries {

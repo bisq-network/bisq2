@@ -153,8 +153,7 @@ public class SystemLoad {
             systemLoad.setAlignment(Pos.TOP_LEFT);
             systemLoad.setPrefWidth(4000);
 
-            VBox.setMargin(powHeadline, new Insets(0, 0, 0, 10));
-            VBox.setMargin(systemLoadHeadline, new Insets(15, 0, 0, 10));
+            VBox.setMargin(systemLoadHeadline, new Insets(15, 0, 0, 0));
             root.getChildren().addAll(powHeadline, pow, systemLoadHeadline, systemLoad);
         }
 
