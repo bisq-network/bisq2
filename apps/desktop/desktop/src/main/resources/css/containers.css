@@ -356,6 +356,13 @@
  *                                                                             *
  ******************************************************************************/
 
+.rich-table-view-box {
+}
+
+.rich-table-view-box .dropdown-menu {
+    -fx-padding: 5;
+}
+
 .standard-table-headline {
     -fx-font-size: 1.8em;
     -fx-font-family: "IBM Plex Sans Light";

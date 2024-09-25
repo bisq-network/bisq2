@@ -165,6 +165,7 @@ public class RichTableView<T> extends VBox {
         VBox.setVgrow(tableView, Priority.ALWAYS);
         VBox.setMargin(footerVBox, new Insets(10, 0, 0, 0));
         getChildren().addAll(headerBox, tableView, footerVBox);
+        getStyleClass().add("rich-table-view-box");
 
         listChangeListener = c -> listItemsChanged();
         toggleChangeListener = (observable, oldValue, newValue) -> selectedFilterMenuItemChanged();
