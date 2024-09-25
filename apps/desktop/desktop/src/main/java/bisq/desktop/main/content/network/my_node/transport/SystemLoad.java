@@ -136,19 +136,19 @@ public class SystemLoad {
             super(new VBox(10), model, controller);
 
             Label powHeadline = new Label(Res.get("network.transport.pow.headline"));
-            powHeadline.getStyleClass().add("standard-table-headline");
+            powHeadline.getStyleClass().add("rich-table-headline");
 
             pow = new Label();
-            pow.getStyleClass().add("standard-table-view");
+            pow.getStyleClass().add("rich-table-view");
             pow.setPadding(new Insets(10));
             pow.setAlignment(Pos.TOP_LEFT);
             pow.setPrefWidth(4000);
 
             Label systemLoadHeadline = new Label(Res.get("network.transport.systemLoad.headline"));
-            systemLoadHeadline.getStyleClass().add("standard-table-headline");
+            systemLoadHeadline.getStyleClass().add("rich-table-headline");
 
             systemLoad = new Label();
-            systemLoad.getStyleClass().add("standard-table-view");
+            systemLoad.getStyleClass().add("rich-table-view");
             systemLoad.setPadding(new Insets(10));
             systemLoad.setAlignment(Pos.TOP_LEFT);
             systemLoad.setPrefWidth(4000);
