@@ -46,7 +46,7 @@ public class VersionDistributionView extends View<VBox, VersionDistributionModel
 
 
         Label localVersionHeadline = new Label(Res.get("network.version.localVersion.headline"));
-        localVersionHeadline.getStyleClass().add("standard-table-headline");
+        localVersionHeadline.getStyleClass().add("rich-table-headline");
 
         Label details = new Label(Res.get("network.version.localVersion.details",
                 ApplicationVersion.getVersion().getVersionAsString(),

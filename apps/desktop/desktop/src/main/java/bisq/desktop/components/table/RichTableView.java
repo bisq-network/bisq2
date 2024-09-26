@@ -124,11 +124,11 @@ public class RichTableView<T> extends VBox {
         headlineLabel = new Label(headline.orElse(""));
         headlineLabel.setManaged(headline.isPresent());
         headlineLabel.setVisible(headlineLabel.isManaged());
-        headlineLabel.getStyleClass().add("standard-table-headline");
+        headlineLabel.getStyleClass().add("rich-table-headline");
         headlineLabel.setAlignment(Pos.BASELINE_LEFT);
 
         tableView = new BisqTableView<>(sortedList);
-        tableView.getStyleClass().add("standard-table-view");
+        tableView.getStyleClass().add("rich-table-view");
         tableView.setMinHeight(200);
 
         filterMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
@@ -150,11 +150,11 @@ public class RichTableView<T> extends VBox {
         headerBox.setAlignment(Pos.BASELINE_LEFT);
 
         numEntriesLabel = new Label();
-        numEntriesLabel.getStyleClass().add("standard-table-num-entries");
+        numEntriesLabel.getStyleClass().add("rich-table-num-entries");
         numEntriesLabel.setAlignment(Pos.BASELINE_LEFT);
 
         exportHyperlink = new Hyperlink(Res.get("action.exportAsCsv"));
-        exportHyperlink.getStyleClass().add("standard-table-num-entries");
+        exportHyperlink.getStyleClass().add("rich-table-num-entries");
         exportHyperlink.setAlignment(Pos.BASELINE_LEFT);
 
         HBox.setMargin(exportHyperlink, new Insets(8, 10, 0, 0));
@@ -165,6 +165,7 @@ public class RichTableView<T> extends VBox {
         VBox.setVgrow(tableView, Priority.ALWAYS);
         VBox.setMargin(footerVBox, new Insets(10, 0, 0, 0));
         getChildren().addAll(headerBox, tableView, footerVBox);
+        getStyleClass().add("rich-table-view-box");
 
         listChangeListener = c -> listItemsChanged();
         toggleChangeListener = (observable, oldValue, newValue) -> selectedFilterMenuItemChanged();

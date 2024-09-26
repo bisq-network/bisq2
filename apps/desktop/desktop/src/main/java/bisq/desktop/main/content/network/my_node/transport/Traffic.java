@@ -184,10 +184,10 @@ public class Traffic {
         }
 
         private VBox getVBox(Label headline, Label details) {
-            headline.getStyleClass().add("standard-table-headline");
+            headline.getStyleClass().add("rich-table-headline");
             VBox vBox = new VBox(10, headline, details);
             vBox.setAlignment(Pos.TOP_LEFT);
-            details.getStyleClass().add("standard-table-view");
+            details.getStyleClass().add("rich-table-view");
             details.setPadding(new Insets(10, 10, 15, 10));
             details.setAlignment(Pos.TOP_LEFT);
             details.setPrefWidth(4000);
