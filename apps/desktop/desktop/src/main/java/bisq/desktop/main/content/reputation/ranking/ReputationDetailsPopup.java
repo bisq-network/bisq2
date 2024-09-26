@@ -19,25 +19,28 @@ package bisq.desktop.main.content.reputation.ranking;
 
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
-import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
-import bisq.user.reputation.*;
+import bisq.user.reputation.AccountAgeService;
+import bisq.user.reputation.BondedReputationService;
+import bisq.user.reputation.ProfileAgeService;
+import bisq.user.reputation.ProofOfBurnService;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
+import bisq.user.reputation.ReputationSource;
+import bisq.user.reputation.SignedWitnessService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
@@ -48,7 +51,7 @@ import java.util.Optional;
 
 public class ReputationDetailsPopup extends VBox {
     private final BisqTableView<ListItem> tableView;
-    private final UserProfileIcon userProfileIcon;
+    private final UserProfileDisplay userProfileDisplay;
 
     public ReputationDetailsPopup(UserProfile userProfile,
                                   ReputationScore reputationScore,
@@ -103,16 +106,7 @@ public class ReputationDetailsPopup extends VBox {
         setPrefWidth(1000);
         configTableView();
 
-        userProfileIcon = new UserProfileIcon(40);
-        userProfileIcon.setUserProfile(userProfile);
-
-        Label userName = new Label(userProfile.getNickName());
-        userName.setId("chat-user-name");
-        Tooltip tooltip = new BisqTooltip(userProfile.getUserName(), BisqTooltip.Style.MEDIUM_DARK);
-        userName.setTooltip(tooltip);
-
-        HBox row1 = new HBox(20, userProfileIcon, userName);
-        row1.setAlignment(Pos.CENTER_LEFT);
+        userProfileDisplay = new UserProfileDisplay(userProfile, reputationScore);
 
         MaterialTextField totalScore = new MaterialTextField(Res.get("reputation.totalScore"));
         totalScore.setEditable(false);
@@ -129,7 +123,7 @@ public class ReputationDetailsPopup extends VBox {
         setSpacing(15);
         setPadding(new Insets(0, 0, 0, 20));
         VBox.setMargin(tableView, new Insets(-10, 0, 0, 0));
-        getChildren().addAll(row1, row2, tableView);
+        getChildren().addAll(userProfileDisplay, row2, tableView);
         UIThread.runOnNextRenderFrame(this::requestFocus);
     }
 
@@ -139,7 +133,7 @@ public class ReputationDetailsPopup extends VBox {
 
     public void dispose() {
         tableView.dispose();
-        userProfileIcon.dispose();
+        userProfileDisplay.dispose();
     }
 
     private void configTableView() {

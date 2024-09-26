@@ -63,17 +63,24 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
 
     public ReputationRankingView(ReputationRankingModel model,
                                  ReputationRankingController controller) {
-        super(new VBox(20), model, controller);
-        root.setPadding(new Insets(0, 40, 40, 40));
+        super(new VBox(), model, controller);
+
+        Label headlineLabel = new Label(Res.get("reputation.table.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-5");
+
         richTableView = new RichTableView<>(model.getSortedList(),
-                Res.get("reputation.table.headline"),
+                "",
                 model.getFilterItems(),
                 model.getFilterMenuItemToggleGroup(),
                 controller::applySearchPredicate);
         configTableView();
 
+        VBox contentBox = new VBox(10);
+        contentBox.getChildren().addAll(headlineLabel, richTableView);
+        contentBox.getStyleClass().add("bisq-common-bg");
         VBox.setVgrow(richTableView, Priority.ALWAYS);
-        root.getChildren().addAll(richTableView);
+        root.getChildren().addAll(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
