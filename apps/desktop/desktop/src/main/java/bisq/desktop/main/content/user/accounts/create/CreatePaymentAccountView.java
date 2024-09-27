@@ -58,7 +58,7 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
         accountName = new MaterialTextField(Res.get("user.paymentAccounts.createAccount.accountName"),
                 Res.get("user.paymentAccounts.createAccount.accountName.prompt"));
         accountName.setPrefWidth(width);
-        accountData = new MaterialTextArea(Res.get("user.paymentAccounts.createAccount.accountName"),
+        accountData = new MaterialTextArea(Res.get("user.paymentAccounts.accountData"),
                 Res.get("user.paymentAccounts.createAccount.accountData.prompt"));
         accountData.setPrefWidth(width);
         accountData.setFixedHeight(200);
