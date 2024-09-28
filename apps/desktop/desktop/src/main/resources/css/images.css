@@ -1586,3 +1586,16 @@
 #sound-off {
     -fx-image: url("/images/video/sound_off.png");
 }
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Reputation */
+/* ------------------------------------------------------------------------------------ */
+
+#offer-reputation {
+    -fx-image: url("/images/reputation/offer-rep.png");
+}
+
+#stars-reputation-table {
+    -fx-image: url("/images/reputation/rep-table.png");
+}

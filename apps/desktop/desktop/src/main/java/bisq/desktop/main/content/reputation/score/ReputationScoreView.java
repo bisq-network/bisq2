@@ -17,20 +17,68 @@
 
 package bisq.desktop.main.content.reputation.score;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ReputationScoreView extends View<VBox, ReputationScoreModel, ReputationScoreController> {
     public ReputationScoreView(ReputationScoreModel model, ReputationScoreController controller) {
-        super(new VBox(50), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
+        Label headlineLabel = new Label(Res.get("reputation.reputationScore.headline"));
+        headlineLabel.getStyleClass().add("reputation-score-headline");
 
-        root.getChildren().addAll(new Label("TODO"));
+        Label introLabel = new Label(Res.get("reputation.reputationScore.intro"));
+
+        Label sellerReputationLabel = new Label(Res.get("reputation.reputationScore.sellerReputation"));
+        sellerReputationLabel.setAlignment(Pos.TOP_LEFT);
+        ImageView offerImage = ImageUtil.getImageViewById("offer-reputation");
+        VBox offerBox = new VBox(offerImage);
+        offerBox.setAlignment(Pos.BOTTOM_CENTER);
+        HBox sellerReputationBox = new HBox(sellerReputationLabel, Spacer.fillHBox(), offerBox);
+        sellerReputationBox.getStyleClass().add("reputation-score-card-large");
+
+        Label explanationIntroLabel = new Label(Res.get("reputation.reputationScore.explanation.intro"));
+
+        Label scoreTitleLabel = new Label(Res.get("reputation.reputationScore.explanation.score.title"));
+        scoreTitleLabel.getStyleClass().add("card-title");
+        Label scoreDescriptionLabel = new Label(Res.get("reputation.reputationScore.explanation.score.description"));
+        VBox scoreBox = new VBox(20, scoreTitleLabel, scoreDescriptionLabel);
+        scoreBox.getStyleClass().add("reputation-score-card-small");
+        Label rankingTitleLabel = new Label(Res.get("reputation.reputationScore.explanation.ranking.title"));
+        rankingTitleLabel.getStyleClass().add("card-title");
+        Label rankingDescriptionLabel = new Label(Res.get("reputation.reputationScore.explanation.ranking.description"));
+        VBox rankingBox = new VBox(20, rankingTitleLabel, rankingDescriptionLabel);
+        rankingBox.getStyleClass().add("reputation-score-card-small");
+        HBox scoreAndReputationBox = new HBox(20, scoreBox, rankingBox);
+
+        Label starsTitleLabel = new Label(Res.get("reputation.reputationScore.explanation.stars.title"));
+        starsTitleLabel.getStyleClass().add("card-title");
+        Label starsDescriptionLabel = new Label(Res.get("reputation.reputationScore.explanation.stars.description"));
+        ImageView starsTableImage = ImageUtil.getImageViewById("stars-reputation-table");
+        VBox starsTableBox = new VBox(starsTableImage);
+        starsTableBox.setAlignment(Pos.CENTER);
+        VBox starsBox = new VBox(20, starsTitleLabel, starsDescriptionLabel, starsTableBox);
+        starsBox.getStyleClass().add("reputation-score-card-large");
+
+        Label closingLabel = new Label(Res.get("reputation.reputationScore.closing"));
+
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(headlineLabel, introLabel, sellerReputationBox, explanationIntroLabel,
+                scoreAndReputationBox, starsBox, closingLabel);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().addAll(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
+        root.getStyleClass().add("reputation-score");
     }
 
     @Override

@@ -353,3 +353,40 @@
 .build-reputation .user-profile-selection {
     -fx-padding: 0 5 0 20;
 }
+
+.reputation-score .reputation-score-card-small,
+.reputation-score .reputation-score-card-large {
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-radius: 8 8 8 8;
+    -fx-padding: 40;
+}
+
+.reputation-score .reputation-score-card-small .label,
+.reputation-score .reputation-score-card-large .label {
+    -fx-line-spacing: 7px;
+    -fx-wrap-text: true;
+}
+
+.reputation-score .reputation-score-card-small .card-title,
+.reputation-score .reputation-score-card-large .card-title {
+    -fx-font-size: 1.7em !important;
+}
+
+.reputation-score .reputation-score-card-large {
+    -fx-max-width: 1000;
+    -fx-min-width: 800;
+}
+
+.reputation-score .reputation-score-card-small {
+    -fx-max-width: 490;
+    -fx-min-width: 390;
+}
+
+.reputation-score .reputation-score-headline {
+    -fx-font-size: 2.5em !important;
+}
+
+.reputation-score .label {
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
