@@ -362,7 +362,7 @@
 }
 
 .reputation .label {
-    -fx-line-spacing: 7px;
+    -fx-line-spacing: 5px;
     -fx-wrap-text: true;
 }
 
@@ -403,4 +403,8 @@
 
 .reputation .reputation-learn-more:hover {
     -fx-underline: true;
+}
+
+.popup-bg .bisq-common-bg {
+    -fx-padding: 10 30 30 30 !important;
 }
