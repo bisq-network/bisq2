@@ -110,15 +110,14 @@ public class BurnScoreSimulation {
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private static final double MATERIAL_FIELD_WIDTH = 270;
+        private static final double MATERIAL_FIELD_WIDTH = 260;
 
         private final MaterialTextField amount;
         private final MaterialTextField score;
         private final AgeSlider simAgeSlider;
         private final MaterialTextField ageField;
 
-        private View(Model model,
-                     Controller controller) {
+        private View(Model model, Controller controller) {
             super(new VBox(10), model, controller);
 
             Label simHeadline = new Label(Res.get("reputation.sim.headline"));
