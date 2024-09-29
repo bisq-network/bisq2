@@ -47,6 +47,7 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
 
         // Burn BSQ
         burnBsqButton = new Button(Res.get("reputation.buildReputation.burnBsq.button"));
+        burnBsqButton.setDefaultButton(true);
         VBox burnBsqBox = createAndGetBuildReputationMethodBox(
                 Res.get("reputation.buildReputation.burnBsq.title"),
                 Res.get("reputation.buildReputation.burnBsq.description"),
@@ -115,9 +116,11 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().add("card-title");
         Label descriptionLabel = new Label(description);
+        if (!button.isDefaultButton()) {
+            button.getStyleClass().add("outlined-button");
+        }
         button.getStyleClass().addAll("medium-large-button");
         button.setMaxWidth(Double.MAX_VALUE);
-        button.setDefaultButton(true);
         VBox vBox = new VBox(20, titleLabel, descriptionLabel, Spacer.fillVBox(), button);
         vBox.setFillWidth(true);
         vBox.getStyleClass().add("reputation-card-small");
