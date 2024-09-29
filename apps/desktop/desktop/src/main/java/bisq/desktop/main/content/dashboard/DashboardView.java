@@ -82,6 +82,8 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
 
         HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
+        hBox.getStyleClass().add("bisq-box-2");
+        hBox.setPadding(new Insets(20, 40, 20, 40));
         gridPane.add(hBox, 0, 0, 2, 1);
 
         //Second row
