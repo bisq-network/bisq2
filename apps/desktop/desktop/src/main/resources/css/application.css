@@ -404,3 +404,7 @@
 .reputation .reputation-learn-more:hover {
     -fx-underline: true;
 }
+
+.popup-bg .bisq-common-bg {
+    -fx-padding: 10 30 30 30 !important;
+}
