@@ -42,7 +42,6 @@ import bisq.security.keys.KeyBundleService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,8 +77,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Node implements Connection.Handler {
-    @Setter
-    public static int preferredVersion = 0;
+    public static final int PREFERRED_VERSION = 1;
 
     public enum State {
         NEW,
@@ -408,11 +406,8 @@ public class Node implements Connection.Handler {
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
-        // To get better chances to use the right version at the first attempt we use the preferredVersion which will
-        // be set from another higher level service and is based on the distribution of versions.
-        // If v2.1.0 reaches 50% distribution rate we use version 1 as preferredVersion.
         // This code can be removed once no old versions are expected anymore.
-        Capability candidate = Capability.withVersion(myCapability, preferredVersion);
+        Capability candidate = Capability.withVersion(myCapability, PREFERRED_VERSION);
         log.info("Create outbound connection to {} with capability version 1", address);
         try {
             return doCreateOutboundConnection(address, candidate);
@@ -420,7 +415,7 @@ public class Node implements Connection.Handler {
             if (e.getCause() != null && e.getReason() != null && e.getReason() == HANDSHAKE_FAILED) {
                 log.warn("Handshake at creating outbound connection to {} failed. We try again with capability version 0. Error: {}",
                         address, ExceptionUtil.getRootCauseMessage(e));
-                int version = preferredVersion == 0 ? 1 : 0;
+                int version = PREFERRED_VERSION == 0 ? 1 : 0;
                 candidate = Capability.withVersion(myCapability, version);
                 return doCreateOutboundConnection(address, candidate);
             } else {
