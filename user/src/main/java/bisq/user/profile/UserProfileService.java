@@ -22,7 +22,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
@@ -166,14 +165,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                 }
                 numUserProfiles.set(userProfileById.values().size());
                 persist();
-
-                double updated = getUserProfiles().stream()
-                        .mapToLong(UserProfile::getVersion)
-                        .average()
-                        .orElse(0);
-                if (updated >= 0.5) {
-                    Node.setPreferredVersion(1);
-                }
             }
         } else {
             if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
