@@ -35,8 +35,7 @@ public final class SubmarineOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
                           AmountSpec amountSpec,
                           PriceSpec priceSpec,
                           List<FiatPaymentMethod> fiatPaymentMethods,
-                          String makersTradeTerms,
-                          long requiredTotalReputationScore) {
+                          String makersTradeTerms) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -47,7 +46,7 @@ public final class SubmarineOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
                 List.of(TradeProtocolType.SUBMARINE),
                 PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore)
+                OfferOptionUtil.fromTradeTerms(makersTradeTerms)
         );
     }
 
