@@ -46,10 +46,6 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
                               Pane userProfileSelection) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(5);
-        root.setAlignment(Pos.TOP_LEFT);
-        root.getStyleClass().add("account-age");
-
         VBox stepOne = createAndGetStepOne(userProfileSelection);
         VBox stepTwo = createAndGetStepTwo();
         VBox stepThree = createAndGetStepThree();
@@ -69,7 +65,12 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        root.getChildren().addAll(stepOne, stepTwo, stepThree, stepFour, requestCertificateButton, buttons);
+        VBox contentBox = new VBox(30);
+        contentBox.getChildren().addAll(stepOne, stepTwo, stepThree, stepFour, requestCertificateButton, buttons);
+        contentBox.getStyleClass().addAll("bisq-common-bg", "common-line-spacing");
+        root.getChildren().addAll(contentBox);
+        root.setPadding(new Insets(20, 0, 0, 0));
+        root.getStyleClass().add("account-age");
     }
 
     @Override
