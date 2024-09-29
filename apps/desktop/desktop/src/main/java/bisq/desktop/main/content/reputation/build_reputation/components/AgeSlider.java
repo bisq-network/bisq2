@@ -92,10 +92,10 @@ public class AgeSlider {
             slider.setMin(model.getMin());
             slider.setMax(model.getMax());
 
-            Label min = new Label(model.getMin() + " " + Res.get("temporal.day.1"));
+            Label min = new Label(Res.getPluralization("temporal.day", model.getMin()));
             min.getStyleClass().add("bisq-small-light-label-dimmed");
 
-            Label max = new Label(model.getMax() + " " + Res.get("temporal.day.*"));
+            Label max = new Label(Res.getPluralization("temporal.day", model.getMax()));
             max.getStyleClass().add("bisq-small-light-label-dimmed");
 
             root.getChildren().addAll(slider, new HBox(min, Spacer.fillHBox(), max));

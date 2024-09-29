@@ -64,7 +64,7 @@ public class SignedWitnessTab1View extends View<VBox, SignedWitnessTab1Model, Si
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(headline2, new Insets(20, 0, 0, 0));
 
-        VBox contentBox = new VBox(20);
+        VBox contentBox = new VBox(15);
         contentBox.getChildren().addAll(headline, info, headline2, info2, buttons);
         contentBox.getStyleClass().addAll("bisq-common-bg", "common-line-spacing");
         root.getChildren().addAll(contentBox);

@@ -66,14 +66,14 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         maxTradePriceDeviation.setMaxWidth(TEXT_FIELD_WIDTH);
         maxTradePriceDeviation.setStringConverter(Converters.PERCENTAGE_STRING_CONVERTER);
 
+        VBox.setMargin(maxTradePriceDeviation, new Insets(15, 0, 0, 0));
         VBox tradeVBox = new VBox(10,
                 closeMyOfferWhenTaken,
                 offersOnlySwitch,
                 maxTradePriceDeviation
         );
 
-        Insets insets = new Insets(0, 5, 0, 5);
-        VBox.setMargin(tradeVBox, insets);
+        VBox.setMargin(tradeVBox, new Insets(0, 5, 0, 5));
         VBox contentBox = new VBox(50);
         contentBox.getChildren().addAll(tradeHeadline, SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()), tradeVBox);
         contentBox.getStyleClass().add("bisq-common-bg");

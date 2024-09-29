@@ -76,9 +76,11 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         configTableView();
 
         VBox contentBox = new VBox(10);
-        contentBox.getChildren().addAll(headlineLabel, richTableView);
         contentBox.getStyleClass().add("bisq-common-bg");
         VBox.setVgrow(richTableView, Priority.ALWAYS);
+        contentBox.getChildren().addAll(headlineLabel, richTableView);
+
+        VBox.setVgrow(contentBox, Priority.ALWAYS);
         root.getChildren().addAll(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
     }

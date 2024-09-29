@@ -66,7 +66,7 @@ public class BondedReputationTab2View extends View<VBox, BondedReputationTab2Mod
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
+        VBox.setMargin(buttons, new Insets(-5, 0, 0, 0));
 
         VBox contentBox = new VBox(20);
         contentBox.getChildren().addAll(headline, info, hBox, buttons);

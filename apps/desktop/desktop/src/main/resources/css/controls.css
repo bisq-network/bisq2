@@ -136,7 +136,7 @@
 
 .outlined-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq2-green;
+    -fx-border-color: -bisq2-green-dim-20;
     -fx-border-width: 1;
     -fx-border-radius: 4;
     -fx-text-fill: -bisq2-green;
