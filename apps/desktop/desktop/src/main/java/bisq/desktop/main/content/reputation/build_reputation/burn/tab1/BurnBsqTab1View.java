@@ -36,9 +36,7 @@ public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Con
 
     public BurnBsqTab1View(BurnBsqTab1Model model,
                            BurnBsqTab1Controller controller) {
-        super(new VBox(20), model, controller);
-
-        root.setAlignment(Pos.TOP_LEFT);
+        super(new VBox(), model, controller);
 
         Label headline = new Label(Res.get("reputation.burnedBsq.infoHeadline"));
         headline.getStyleClass().add("bisq-text-headline-2");
@@ -65,7 +63,12 @@ public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Con
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(headline2, new Insets(20, 0, 0, 0));
-        root.getChildren().addAll(headline, info, headline2, info2, buttons);
+
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(headline, info, headline2, info2, buttons);
+        contentBox.getStyleClass().addAll("bisq-common-bg", "common-line-spacing");
+        root.getChildren().addAll(contentBox);
+        root.setPadding(new Insets(20, 0, 0, 0));
     }
 
     @Override
