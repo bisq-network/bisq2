@@ -35,7 +35,7 @@ public class ReputationScoreView extends View<VBox, ReputationScoreModel, Reputa
         super(new VBox(), model, controller);
 
         Label headlineLabel = new Label(Res.get("reputation.reputationScore.headline"));
-        headlineLabel.getStyleClass().add("reputation-score-headline");
+        headlineLabel.getStyleClass().add("reputation-headline");
 
         Label introLabel = new Label(Res.get("reputation.reputationScore.intro"));
 
@@ -45,7 +45,7 @@ public class ReputationScoreView extends View<VBox, ReputationScoreModel, Reputa
         VBox offerBox = new VBox(offerImage);
         offerBox.setAlignment(Pos.BOTTOM_CENTER);
         HBox sellerReputationBox = new HBox(sellerReputationLabel, Spacer.fillHBox(), offerBox);
-        sellerReputationBox.getStyleClass().add("reputation-score-card-large");
+        sellerReputationBox.getStyleClass().add("reputation-card-large");
 
         Label explanationIntroLabel = new Label(Res.get("reputation.reputationScore.explanation.intro"));
 
@@ -53,12 +53,12 @@ public class ReputationScoreView extends View<VBox, ReputationScoreModel, Reputa
         scoreTitleLabel.getStyleClass().add("card-title");
         Label scoreDescriptionLabel = new Label(Res.get("reputation.reputationScore.explanation.score.description"));
         VBox scoreBox = new VBox(20, scoreTitleLabel, scoreDescriptionLabel);
-        scoreBox.getStyleClass().add("reputation-score-card-small");
+        scoreBox.getStyleClass().add("reputation-card-small");
         Label rankingTitleLabel = new Label(Res.get("reputation.reputationScore.explanation.ranking.title"));
         rankingTitleLabel.getStyleClass().add("card-title");
         Label rankingDescriptionLabel = new Label(Res.get("reputation.reputationScore.explanation.ranking.description"));
         VBox rankingBox = new VBox(20, rankingTitleLabel, rankingDescriptionLabel);
-        rankingBox.getStyleClass().add("reputation-score-card-small");
+        rankingBox.getStyleClass().add("reputation-card-small");
         HBox scoreAndReputationBox = new HBox(20, scoreBox, rankingBox);
 
         Label starsTitleLabel = new Label(Res.get("reputation.reputationScore.explanation.stars.title"));
@@ -68,7 +68,7 @@ public class ReputationScoreView extends View<VBox, ReputationScoreModel, Reputa
         VBox starsTableBox = new VBox(starsTableImage);
         starsTableBox.setAlignment(Pos.CENTER);
         VBox starsBox = new VBox(20, starsTitleLabel, starsDescriptionLabel, starsTableBox);
-        starsBox.getStyleClass().add("reputation-score-card-large");
+        starsBox.getStyleClass().add("reputation-card-large");
 
         Label closingLabel = new Label(Res.get("reputation.reputationScore.closing"));
 
@@ -78,7 +78,7 @@ public class ReputationScoreView extends View<VBox, ReputationScoreModel, Reputa
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().addAll(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
-        root.getStyleClass().add("reputation-score");
+        root.getStyleClass().add("reputation");
     }
 
     @Override

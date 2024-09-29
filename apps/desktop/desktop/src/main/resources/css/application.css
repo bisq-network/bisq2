@@ -350,43 +350,48 @@
  * Reputation                                                                  *
  ******************************************************************************/
 
-.build-reputation .user-profile-selection {
+.reputation .user-profile-selection {
     -fx-padding: 0 5 0 20;
 }
 
-.reputation-score .reputation-score-card-small,
-.reputation-score .reputation-score-card-large {
+.reputation .reputation-card-small,
+.reputation .reputation-card-large {
     -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 8 8 8 8;
     -fx-padding: 40;
 }
 
-.reputation-score .reputation-score-card-small .label,
-.reputation-score .reputation-score-card-large .label {
+.reputation .label {
     -fx-line-spacing: 7px;
     -fx-wrap-text: true;
 }
 
-.reputation-score .reputation-score-card-small .card-title,
-.reputation-score .reputation-score-card-large .card-title {
+.reputation .reputation-card-small .card-title,
+.reputation .reputation-card-large .card-title {
     -fx-font-size: 1.7em !important;
 }
 
-.reputation-score .reputation-score-card-large {
+.reputation .reputation-card-large {
     -fx-max-width: 1000;
     -fx-min-width: 800;
 }
 
-.reputation-score .reputation-score-card-small {
+.reputation .reputation-card-small {
     -fx-max-width: 490;
-    -fx-min-width: 390;
+    -fx-pref-width: 490;
+    -fx-min-width: 490;
 }
 
-.reputation-score .reputation-score-headline {
+.reputation .reputation-headline {
     -fx-font-size: 2.5em !important;
 }
 
-.reputation-score .label {
+.reputation .reputation-title {
+    -fx-font-size: 1.9em !important;
+}
+
+.reputation .label,
+.reputation-learn-more {
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans Light";
 }
