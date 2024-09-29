@@ -194,15 +194,31 @@ public class TakeOfferAmountController implements Controller {
                 amountComponent.setRightMarkerQuoteSideValue(reputationBasedQuoteSideAmount);
                 amountComponent.setQuoteSideAmount(reputationBasedQuoteSideAmount);
                 String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
-                model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
-                if (reputationBasedQuoteSideAmount.isLessThan(minRangeValue)) {
-                    // Min amount not covered by security from reputation score
-                    model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMin", sellersReputationScore));
-                    model.getAmountLimitInfoAmount().set("");
+
+                if (sellersReputationScore <= MIN_REPUTAION_SCORE) {
+                    if (reputationBasedQuoteSideAmount.isLessThan(minRangeValue)) {
+                        // Min amount not covered by security from reputation score
+                        model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.minAmountNotCovered", sellersReputationScore));
+                        model.getAmountLimitInfoAmount().set("");
+                        model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMin.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
+                    } else {
+                        // Max amount not covered by security from reputation score
+                        model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMax", sellersReputationScore));
+                        model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfoAmount", formattedAmount));
+                        model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMax.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
+                    }
                 } else {
-                    // Max amount not covered by security from reputation score
-                    model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMax", sellersReputationScore));
-                    model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfoAmount", formattedAmount));
+                    if (reputationBasedQuoteSideAmount.isLessThan(minRangeValue)) {
+                        // Min amount not covered by security from reputation score
+                        model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.minAmountNotCovered", sellersReputationScore));
+                        model.getAmountLimitInfoAmount().set("");
+                        model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.tooHighMin.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
+                    } else {
+                        // Max amount not covered by security from reputation score
+                        model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.minAmountCovered", sellersReputationScore));
+                        model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfoAmount", formattedAmount));
+                        model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.minAmountCovered.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
+                    }
                 }
             } else {
                 model.getIsAmountLimitInfoVisible().set(false);
