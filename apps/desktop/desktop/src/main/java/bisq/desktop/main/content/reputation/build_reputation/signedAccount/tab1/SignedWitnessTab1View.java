@@ -38,9 +38,6 @@ public class SignedWitnessTab1View extends View<VBox, SignedWitnessTab1Model, Si
                                  SignedWitnessTab1Controller controller) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(20);
-        root.setAlignment(Pos.TOP_LEFT);
-
         Label headline = new Label(Res.get("reputation.signedWitness.infoHeadline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
@@ -66,7 +63,12 @@ public class SignedWitnessTab1View extends View<VBox, SignedWitnessTab1Model, Si
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(headline2, new Insets(20, 0, 0, 0));
-        root.getChildren().addAll(headline, info, headline2, info2, buttons);
+
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(headline, info, headline2, info2, buttons);
+        contentBox.getStyleClass().addAll("bisq-common-bg", "common-line-spacing");
+        root.getChildren().addAll(contentBox);
+        root.setPadding(new Insets(20, 0, 0, 0));
     }
 
     @Override

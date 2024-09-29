@@ -601,6 +601,10 @@
     -fx-padding: 50;
 }
 
+.common-line-spacing .label {
+    -fx-line-spacing: 7px;
+}
+
 #chat-message-quote-box-peer-msg {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 0 8 8 0;
@@ -621,7 +625,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * Controlsfx Popover                                                                  *
+ * Controlsfx Popover                                                          *
  *                                                                             *
  ******************************************************************************/
 
