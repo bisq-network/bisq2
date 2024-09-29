@@ -25,10 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class TradeSettingsModel implements Model {
-    private final LongProperty minRequiredReputationScore = new SimpleLongProperty();
-    private final BooleanProperty minRequiredReputationScoreEditable = new SimpleBooleanProperty();
-    private final StringProperty minRequiredReputationScoreDescriptionText = new SimpleStringProperty();
-    private final BooleanProperty ignoreMinRequiredReputationScoreFromSecManager = new SimpleBooleanProperty();
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
     private final DoubleProperty maxTradePriceDeviation = new SimpleDoubleProperty();

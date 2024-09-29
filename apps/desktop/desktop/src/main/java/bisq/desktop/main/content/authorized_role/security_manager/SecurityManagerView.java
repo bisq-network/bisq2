@@ -21,7 +21,6 @@ import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
-import bisq.bonded_roles.security_manager.min_reputation_score.AuthorizedMinRequiredReputationScoreData;
 import bisq.desktop.common.converters.Converters;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -37,7 +36,6 @@ import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.user.reputation.ReputationScore;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -62,20 +60,16 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
             new NumberValidator(Res.get("authorizedRole.securityManager.difficultyAdjustment.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
                     0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT, false);
-    private static final ValidatorBase MIN_REPUTATION_SCORE_VALIDATOR =
-            new NumberValidator(Res.get("authorizedRole.securityManager.minRequiredReputationScore.invalid", ReputationScore.MAX_VALUE),
-                    0, ReputationScore.MAX_VALUE, false);
 
-    private final Button difficultyAdjustmentButton, minRequiredReputationScoreButton, sendAlertButton;
+    private final Button difficultyAdjustmentButton, sendAlertButton;
     private final MaterialTextArea message;
-    private final MaterialTextField headline, minVersion, difficultyAdjustmentFactor, minRequiredReputationScore;
+    private final MaterialTextField headline, minVersion, difficultyAdjustmentFactor;
     private final AutoCompleteComboBox<AlertType> alertTypeSelection;
     private final AutoCompleteComboBox<BondedRoleListItem> bondedRoleSelection;
     private final CheckBox haltTradingCheckBox, requireVersionForTradingCheckBox;
     private final HBox requireVersionForTradingHBox;
     private final RichTableView<AlertListItem> alertTableView;
     private final RichTableView<DifficultyAdjustmentListItem> difficultyAdjustmentTableView;
-    private final RichTableView<MinRequiredReputationScoreListItem> minRequiredReputationScoreTableView;
 
     private Subscription selectedAlertTypePin, selectedBondedRolListItemPin;
 
@@ -139,22 +133,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         configAlertTableView();
 
 
-        // minRequiredReputationScore
-        Label minRequiredReputationScoreHeadline = new Label(Res.get("authorizedRole.securityManager.minRequiredReputationScore.headline"));
-        minRequiredReputationScoreHeadline.getStyleClass().add("large-thin-headline");
-
-        minRequiredReputationScore = new MaterialTextField(Res.get("authorizedRole.securityManager.minRequiredReputationScore.description"));
-        minRequiredReputationScore.setMaxWidth(400);
-        minRequiredReputationScore.setValidators(MIN_REPUTATION_SCORE_VALIDATOR);
-
-        minRequiredReputationScoreButton = new Button(Res.get("authorizedRole.securityManager.minRequiredReputationScore.button"));
-        minRequiredReputationScoreButton.setDefaultButton(true);
-
-        minRequiredReputationScoreTableView = new RichTableView<>(model.getMinRequiredReputationScoreListItems(),
-                Res.get("authorizedRole.securityManager.minRequiredReputationScore.table.headline"));
-        configMinRequiredReputationScoreTableView();
-
-
         // difficultyAdjustment
         Label difficultyAdjustmentHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.headline"));
         difficultyAdjustmentHeadline.getStyleClass().add("large-thin-headline");
@@ -177,7 +155,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         VBox.setMargin(difficultyAdjustmentButton, new Insets(0, 0, 10, 0));
         VBox.setMargin(sendAlertButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(haltTradingCheckBox, new Insets(10, 0, 0, 0));
-        VBox.setMargin(minRequiredReputationScoreHeadline, new Insets(20, 0, 0, 0));
         VBox.setMargin(difficultyAdjustmentHeadline, new Insets(20, 0, 0, 0));
         VBox.setMargin(roleInfo, new Insets(20, 0, 0, 0));
         VBox.setVgrow(difficultyAdjustmentTableView, Priority.NEVER);
@@ -189,26 +166,18 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 bondedRoleSelection,
                 sendAlertButton,
                 alertTableView,
-
-                minRequiredReputationScoreHeadline, minRequiredReputationScore, minRequiredReputationScoreButton,
-                minRequiredReputationScoreTableView,
-
                 difficultyAdjustmentHeadline, difficultyAdjustmentFactor, difficultyAdjustmentButton,
                 difficultyAdjustmentTableView,
-
                 roleInfo);
     }
 
     @Override
     protected void onViewAttached() {
         alertTableView.initialize();
-        minRequiredReputationScoreTableView.initialize();
         difficultyAdjustmentTableView.initialize();
 
         Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
                 Converters.DOUBLE_STRING_CONVERTER);
-        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(),
-                Converters.LONG_STRING_CONVERTER);
 
         haltTradingCheckBox.visibleProperty().bind(model.getSelectedAlertType().isEqualTo(AlertType.EMERGENCY));
         haltTradingCheckBox.managedProperty().bind(haltTradingCheckBox.visibleProperty());
@@ -217,7 +186,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         minVersion.textProperty().bindBidirectional(model.getMinVersion());
         minVersion.disableProperty().bind(requireVersionForTradingCheckBox.selectedProperty().not());
         difficultyAdjustmentButton.disableProperty().bind(model.getDifficultyAdjustmentFactorButtonDisabled());
-        minRequiredReputationScoreButton.disableProperty().bind(model.getMinRequiredReputationScoreButtonDisabled());
         bondedRoleSelection.visibleProperty().bind(model.getSelectedAlertType().isEqualTo(AlertType.BAN));
         bondedRoleSelection.managedProperty().bind(bondedRoleSelection.visibleProperty());
 
@@ -248,7 +216,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         });
 
         difficultyAdjustmentButton.setOnAction(e -> controller.onPublishDifficultyAdjustmentFactor());
-        minRequiredReputationScoreButton.setOnAction(e -> controller.onPublishMinRequiredReputationScore());
         sendAlertButton.setOnAction(e -> controller.onSendAlert());
         haltTradingCheckBox.selectedProperty().bindBidirectional(model.getHaltTrading());
         requireVersionForTradingCheckBox.selectedProperty().bindBidirectional(model.getRequireVersionForTrading());
@@ -262,11 +229,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     @Override
     protected void onViewDetached() {
         alertTableView.dispose();
-        minRequiredReputationScoreTableView.dispose();
         difficultyAdjustmentTableView.dispose();
 
         Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
-        Bindings.unbindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore());
 
         haltTradingCheckBox.visibleProperty().unbind();
         haltTradingCheckBox.managedProperty().unbind();
@@ -275,7 +240,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         minVersion.textProperty().unbindBidirectional(model.getMinVersion());
         minVersion.disableProperty().unbind();
         difficultyAdjustmentButton.disableProperty().unbind();
-        minRequiredReputationScoreButton.disableProperty().unbind();
 
         bondedRoleSelection.visibleProperty().unbind();
         bondedRoleSelection.managedProperty().unbind();
@@ -294,7 +258,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         requireVersionForTradingCheckBox.selectedProperty().unbindBidirectional(model.getRequireVersionForTrading());
 
         difficultyAdjustmentButton.setOnAction(null);
-        minRequiredReputationScoreButton.setOnAction(null);
         alertTypeSelection.setOnChangeConfirmed(null);
         bondedRoleSelection.setOnChangeConfirmed(null);
 
@@ -319,24 +282,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .setCellFactory(getRemoveDifficultyAdjustmentCellFactory())
                 .build());
     }
-
-    private void configMinRequiredReputationScoreTableView() {
-        minRequiredReputationScoreTableView.getColumns().add(DateColumnUtil.getDateColumn(minRequiredReputationScoreTableView.getSortOrder()));
-        minRequiredReputationScoreTableView.getColumns().add(new BisqTableColumn.Builder<MinRequiredReputationScoreListItem>()
-                .title(Res.get("authorizedRole.securityManager.minRequiredReputationScore.table.value"))
-                .minWidth(150)
-                .comparator(Comparator.comparing(MinRequiredReputationScoreListItem::getMinRequiredReputationScore))
-                .valueSupplier(MinRequiredReputationScoreListItem::getMinRequiredReputationScoreString)
-                .build());
-        minRequiredReputationScoreTableView.getColumns().add(new BisqTableColumn.Builder<MinRequiredReputationScoreListItem>()
-                .isSortable(false)
-                .minWidth(200)
-                .right()
-                .setCellFactory(getRemoveMinRequiredReputationScoreCellFactory())
-                .includeForCsv(false)
-                .build());
-    }
-
 
     private void configAlertTableView() {
         alertTableView.getColumns().add(DateColumnUtil.getDateColumn(alertTableView.getSortOrder()));
@@ -425,25 +370,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         };
     }
 
-    private Callback<TableColumn<MinRequiredReputationScoreListItem, MinRequiredReputationScoreListItem>,
-            TableCell<MinRequiredReputationScoreListItem, MinRequiredReputationScoreListItem>> getRemoveMinRequiredReputationScoreCellFactory() {
-        return column -> new TableCell<>() {
-            private final Button button = new Button(Res.get("data.remove"));
-
-            @Override
-            protected void updateItem(MinRequiredReputationScoreListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty && controller.isRemoveMinRequiredReputationScoreButtonVisible(item.getData())) {
-                    button.setOnAction(e -> controller.onRemoveMinRequiredReputationScoreListItem(item));
-                    setGraphic(button);
-                } else {
-                    button.setOnAction(null);
-                    setGraphic(null);
-                }
-            }
-        };
-    }
 
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
@@ -463,27 +389,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             timeString = DateFormatter.formatTime(date);
             difficultyAdjustmentFactor = data.getDifficultyAdjustmentFactor();
             difficultyAdjustmentFactorString = String.valueOf(difficultyAdjustmentFactor);
-        }
-    }
-
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    @Getter
-    @ToString
-    public static class MinRequiredReputationScoreListItem implements DateTableItem {
-        @EqualsAndHashCode.Include
-        private final AuthorizedMinRequiredReputationScoreData data;
-
-        private final long date;
-        private final String dateString, timeString, minRequiredReputationScoreString;
-        private final double minRequiredReputationScore;
-
-        public MinRequiredReputationScoreListItem(AuthorizedMinRequiredReputationScoreData data) {
-            this.data = data;
-            date = data.getDate();
-            dateString = DateFormatter.formatDate(date);
-            timeString = DateFormatter.formatTime(date);
-            minRequiredReputationScore = data.getMinRequiredReputationScore();
-            minRequiredReputationScoreString = String.valueOf(minRequiredReputationScore);
         }
     }
 

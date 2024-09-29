@@ -41,6 +41,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @ToString
 @EqualsAndHashCode
 @Getter
+@Deprecated(since = "2.1.1")
 public final class AuthorizedMinRequiredReputationScoreData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 

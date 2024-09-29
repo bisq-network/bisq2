@@ -40,7 +40,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();
     final Observable<Market> selectedMarket = new Observable<>();
-    final Observable<Long> minRequiredReputationScore = new Observable<>();
+    @Deprecated(since = "2.1.1")
+    private final Observable<Long> minRequiredReputationScore = new Observable<>();
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>();
@@ -53,6 +54,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
     final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
+    @Deprecated(since = "2.1.1")
     final Observable<Boolean> ignoreMinRequiredReputationScoreFromSecManager = new Observable<>();
     final Observable<Double> maxTradePriceDeviation = new Observable<>();
     final Observable<Boolean> showBuyOffers = new Observable<>();

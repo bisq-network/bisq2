@@ -78,7 +78,7 @@ message PaymentMethodSpec {
 
 // options
 message ReputationOption {
-  uint64 requiredTotalReputationScore = 1;
+  uint64 requiredTotalReputationScore = 1 [deprecated = true]; // Not used anymore since 2.1.1
 }
 message TradeTermsOption {
   string makersTradeTerms = 1;

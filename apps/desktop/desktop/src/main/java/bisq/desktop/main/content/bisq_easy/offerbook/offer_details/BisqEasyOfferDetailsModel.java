@@ -43,7 +43,5 @@ public class BisqEasyOfferDetailsModel implements Model {
     private final StringProperty id = new SimpleStringProperty();
     private final StringProperty date = new SimpleStringProperty();
     private final StringProperty makersTradeTerms = new SimpleStringProperty();
-    private final StringProperty requiredTotalReputationScore = new SimpleStringProperty();
     private final BooleanProperty makersTradeTermsVisible = new SimpleBooleanProperty();
-    private final BooleanProperty requiredTotalReputationScoreVisible = new SimpleBooleanProperty();
 }

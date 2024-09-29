@@ -23,7 +23,6 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.currency.MarketRepository;
-import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
@@ -73,12 +72,9 @@ public class BisqEasyService implements Service {
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private final Observable<Long> minRequiredReputationScore = new Observable<>();
     private final MarketPriceService marketPriceService;
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
-            mostRecentDiffAdjustmentValueOrDefaultPin, minRequiredReputationScorePin,
-            ignoreMinRequiredReputationScoreFromSecManagerPin, mostRecentMinRequiredReputationScoreOrDefaultPin,
-            selectedMarketPin;
+            mostRecentDiffAdjustmentValueOrDefaultPin, selectedMarketPin;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -130,10 +126,6 @@ public class BisqEasyService implements Service {
         ignoreDiffAdjustmentFromSecManagerPin = settingsService.getIgnoreDiffAdjustmentFromSecManager().addObserver(e -> applyDifficultyAdjustmentFactor());
         mostRecentDiffAdjustmentValueOrDefaultPin = bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(e -> applyDifficultyAdjustmentFactor());
 
-        minRequiredReputationScorePin = settingsService.getMinRequiredReputationScore().addObserver(e -> applyMinRequiredReputationScore());
-        ignoreMinRequiredReputationScoreFromSecManagerPin = settingsService.getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(e -> applyMinRequiredReputationScore());
-        mostRecentMinRequiredReputationScoreOrDefaultPin = bondedRolesService.getMinRequiredReputationScoreService().getMostRecentValueOrDefault().addObserver(e -> applyMinRequiredReputationScore());
-
         settingsService.getCookie().asString(CookieKey.SELECTED_MARKET_CODES)
                 .flatMap(MarketRepository::findAnyFiatMarketByMarketCodes)
                 .ifPresentOrElse(marketPriceService::setSelectedMarket,
@@ -154,9 +146,6 @@ public class BisqEasyService implements Service {
             difficultyAdjustmentFactorPin.unbind();
             ignoreDiffAdjustmentFromSecManagerPin.unbind();
             mostRecentDiffAdjustmentValueOrDefaultPin.unbind();
-            minRequiredReputationScorePin.unbind();
-            ignoreMinRequiredReputationScoreFromSecManagerPin.unbind();
-            mostRecentMinRequiredReputationScoreOrDefaultPin.unbind();
             selectedMarketPin.unbind();
         }
 
@@ -221,13 +210,5 @@ public class BisqEasyService implements Service {
                 networkLoadService.setDifficultyAdjustmentFactor(bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().get());
             }
         });
-    }
-
-    private void applyMinRequiredReputationScore() {
-        if (settingsService.getIgnoreMinRequiredReputationScoreFromSecManager().get()) {
-            minRequiredReputationScore.set(settingsService.getMinRequiredReputationScore().get());
-        } else {
-            minRequiredReputationScore.set(bondedRolesService.getMinRequiredReputationScoreService().getMostRecentValueOrDefault().get());
-        }
     }
 }

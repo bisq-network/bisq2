@@ -44,6 +44,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
     private final Hyperlink amountLimitInfoAmount, learnMore, linkToWiki;
     private final VBox content, amountLimitInfoOverlay;
     private final Button closeOverlayButton;
+    private final HBox amountLimitInfoHBox;
     private Subscription isAmountLimitInfoVisiblePin;
 
     public TakeOfferAmountView(TakeOfferAmountModel model,
@@ -72,11 +73,9 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         warningIcon.getStyleClass().add("overlay-icon-warning");
 
         HBox.setMargin(warningIcon, new Insets(0, 5, 0, 0));
-        HBox amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfo, amountLimitInfoAmount, learnMore);
+        HBox.setMargin(amountLimitInfoAmount, new Insets(0, 0, 0, -2.5));
+        amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfo, amountLimitInfoAmount, learnMore);
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
-
-        // VBox.setMargin(headlineLabel, new Insets(-30, 0, 10, 0));
-        // root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountComponentRoot, Spacer.fillVBox());
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
         VBox.setMargin(amountLimitInfoHBox, new Insets(15, 0, 15, 0));
@@ -108,6 +107,8 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         amountLimitInfoAmount.visibleProperty().bind(amountLimitInfoAmount.managedProperty());
         learnMore.managedProperty().bind(model.getIsAmountLimitInfoVisible());
         learnMore.visibleProperty().bind(model.getIsAmountLimitInfoVisible());
+        amountLimitInfoHBox.managedProperty().bind(model.getIsAmountLimitInfoVisible());
+        amountLimitInfoHBox.visibleProperty().bind(model.getIsAmountLimitInfoVisible());
 
         isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(),
                 isAmountLimitInfoVisible -> {
@@ -143,6 +144,8 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         amountLimitInfoAmount.visibleProperty().unbind();
         learnMore.managedProperty().unbind();
         learnMore.visibleProperty().unbind();
+        amountLimitInfoHBox.managedProperty().unbind();
+        amountLimitInfoHBox.visibleProperty().unbind();
 
         isAmountLimitInfoVisiblePin.unsubscribe();
 

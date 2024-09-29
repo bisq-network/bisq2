@@ -25,6 +25,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class ReputationOption implements OfferOption {
+    @Deprecated(since = "2.1.1")
     private final long requiredTotalReputationScore;
 
     public ReputationOption(long requiredTotalReputationScore) {

@@ -25,13 +25,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class OfferOptionUtil {
-    public static List<OfferOption> fromTradeTermsAndReputationScore(String makersTradeTerms, long requiredTotalReputationScore) {
+    public static List<OfferOption> fromTradeTerms(String makersTradeTerms) {
         List<OfferOption> offerOptions = new ArrayList<>();
         if (makersTradeTerms != null && !makersTradeTerms.isEmpty()) {
             offerOptions.add(new TradeTermsOption(makersTradeTerms));
-        }
-        if (requiredTotalReputationScore > 0) {
-            offerOptions.add(new ReputationOption(requiredTotalReputationScore));
         }
         return offerOptions;
     }
@@ -40,13 +37,6 @@ public class OfferOptionUtil {
         return offerOptions.stream()
                 .filter(option -> option instanceof TradeTermsOption)
                 .map(option -> (TradeTermsOption) option)
-                .findAny();
-    }
-
-    public static Optional<ReputationOption> findReputationOption(Collection<OfferOption> offerOptions) {
-        return offerOptions.stream()
-                .filter(option -> option instanceof ReputationOption)
-                .map(option -> (ReputationOption) option)
                 .findAny();
     }
 
@@ -74,10 +64,5 @@ public class OfferOptionUtil {
     public static Optional<String> findMakersTradeTerms(Offer<?, ?> offer) {
         return OfferOptionUtil.findTradeTermsOption(offer.getOfferOptions()).stream().findAny()
                 .map(TradeTermsOption::getMakersTradeTerms);
-    }
-
-    public static Optional<Long> findRequiredTotalReputationScore(Offer<?, ?> offer) {
-        return OfferOptionUtil.findReputationOption(offer.getOfferOptions()).stream().findAny()
-                .map(ReputationOption::getRequiredTotalReputationScore);
     }
 }
