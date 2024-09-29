@@ -59,7 +59,6 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          List<BitcoinPaymentMethod> bitcoinPaymentMethods,
                          List<FiatPaymentMethod> fiatPaymentMethods,
                          String makersTradeTerms,
-                         long requiredTotalReputationScore,
                          List<String> supportedLanguageCodes) {
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
@@ -71,7 +70,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 List.of(TradeProtocolType.BISQ_EASY),
                 PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(bitcoinPaymentMethods),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
+                OfferOptionUtil.fromTradeTerms(makersTradeTerms),
                 supportedLanguageCodes
         );
     }

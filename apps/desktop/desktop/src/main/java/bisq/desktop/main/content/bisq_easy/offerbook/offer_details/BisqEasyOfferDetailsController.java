@@ -122,11 +122,6 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
         model.getMakersTradeTermsVisible().set(tradeTerms.isPresent());
         tradeTerms.ifPresent(makersTradeTerms ->
                 model.getMakersTradeTerms().set(makersTradeTerms));
-
-        Optional<Long> reputationScore = OfferOptionUtil.findRequiredTotalReputationScore(bisqEasyOffer);
-        model.getRequiredTotalReputationScoreVisible().set(reputationScore.isPresent());
-        reputationScore.ifPresent(requiredTotalReputationScore ->
-                model.getRequiredTotalReputationScore().set(String.valueOf(requiredTotalReputationScore)));
     }
 
     @Override

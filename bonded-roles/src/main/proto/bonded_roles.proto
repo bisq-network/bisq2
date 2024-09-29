@@ -95,7 +95,9 @@ message AuthorizedDifficultyAdjustmentData {
   sint32 version = 5;
 }
 
+// Not used anymore since 2.1.1
 message AuthorizedMinRequiredReputationScoreData {
+  option deprecated = true;
   sint64 date = 1;
   sint64 minRequiredReputationScore = 2;
   string securityManagerProfileId = 3;

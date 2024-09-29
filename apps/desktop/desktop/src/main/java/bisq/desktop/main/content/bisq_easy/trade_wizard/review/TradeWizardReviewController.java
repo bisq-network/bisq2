@@ -176,7 +176,6 @@ public class TradeWizardReviewController implements Controller {
                 new ArrayList<>(bitcoinPaymentMethods),
                 new ArrayList<>(fiatPaymentMethods),
                 userIdentity.getUserProfile().getTerms(),
-                bisqEasyService.getMinRequiredReputationScore().get(),
                 new ArrayList<>(settingsService.getSupportedLanguageCodes()));
         model.setBisqEasyOffer(bisqEasyOffer);
 

@@ -40,8 +40,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDetailsModel, BisqEasyOfferDetailsController> {
     private final Button closeButton;
-    private final MaterialTextField id, offerType, date, paymentMethods, baseSideAmount, quoteSideAmount,
-            price, requiredTotalReputationScore;
+    private final MaterialTextField id, offerType, date, paymentMethods, baseSideAmount, quoteSideAmount, price;
     private final MaterialTextArea makersTradeTerms;
     private final VBox vBox;
     private Subscription widthPin, heightPin;
@@ -99,9 +98,6 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
         makersTradeTerms.setPrefHeight(30);
         detailFields.getChildren().add(makersTradeTerms);
 
-        requiredTotalReputationScore = getField(Res.get("bisqEasy.offerDetails.requiredTotalReputationScore"));
-        detailFields.getChildren().add(requiredTotalReputationScore);
-
         closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);
         HBox buttonBox = new HBox(closeButton);
@@ -123,9 +119,6 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
         makersTradeTerms.textProperty().bind(model.getMakersTradeTerms());
         makersTradeTerms.visibleProperty().bind(model.getMakersTradeTermsVisible());
         makersTradeTerms.managedProperty().bind(model.getMakersTradeTermsVisible());
-        requiredTotalReputationScore.textProperty().bind(model.getRequiredTotalReputationScore());
-        requiredTotalReputationScore.visibleProperty().bind(model.getRequiredTotalReputationScoreVisible());
-        requiredTotalReputationScore.managedProperty().bind(model.getRequiredTotalReputationScoreVisible());
 
         widthPin = EasyBind.subscribe(Overlay.primaryStageOwner.widthProperty(), w -> {
             if (vBox.getWidth() > 0) {
@@ -159,9 +152,6 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
         makersTradeTerms.textProperty().unbind();
         makersTradeTerms.visibleProperty().unbind();
         makersTradeTerms.managedProperty().unbind();
-        requiredTotalReputationScore.textProperty().unbind();
-        requiredTotalReputationScore.visibleProperty().unbind();
-        requiredTotalReputationScore.managedProperty().unbind();
 
         widthPin.unsubscribe();
         heightPin.unsubscribe();

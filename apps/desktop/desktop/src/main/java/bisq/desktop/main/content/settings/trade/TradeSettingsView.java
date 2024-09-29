@@ -46,8 +46,8 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
                     0.01, BisqEasyTradeService.MAX_TRADE_PRICE_DEVIATION);
     private static final double TEXT_FIELD_WIDTH = 500;
 
-    private final Switch ignoreMinRequiredReputationScoreFromSecManagerSwitch, offersOnlySwitch, closeMyOfferWhenTaken;
-    private final MaterialTextField minRequiredReputationScore, maxTradePriceDeviation;
+    private final Switch offersOnlySwitch, closeMyOfferWhenTaken;
+    private final MaterialTextField maxTradePriceDeviation;
 
     public TradeSettingsView(TradeSettingsModel model, TradeSettingsController controller) {
         super(new VBox(), model, controller);
@@ -66,18 +66,10 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         maxTradePriceDeviation.setMaxWidth(TEXT_FIELD_WIDTH);
         maxTradePriceDeviation.setStringConverter(Converters.PERCENTAGE_STRING_CONVERTER);
 
-        minRequiredReputationScore = new MaterialTextField(Res.get("settings.trade.requiredTotalReputationScore"),
-                null, Res.get("settings.trade.requiredTotalReputationScore.help"));
-        minRequiredReputationScore.setMaxWidth(TEXT_FIELD_WIDTH);
-        minRequiredReputationScore.setValidators(REPUTATION_SCORE_VALIDATOR);
-        minRequiredReputationScore.setStringConverter(Converters.LONG_STRING_CONVERTER);
-        ignoreMinRequiredReputationScoreFromSecManagerSwitch = new Switch(Res.get("settings.trade.minReputationScore.ignoreValueFromSecManager"));
-
         VBox tradeVBox = new VBox(10,
                 closeMyOfferWhenTaken,
                 offersOnlySwitch,
-                maxTradePriceDeviation,
-                minRequiredReputationScore, ignoreMinRequiredReputationScoreFromSecManagerSwitch
+                maxTradePriceDeviation
         );
 
         Insets insets = new Insets(0, 5, 0, 5);
@@ -92,32 +84,20 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
     @Override
     protected void onViewAttached() {
         offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
-        ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreMinRequiredReputationScoreFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.bindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation(),
                 Converters.PERCENTAGE_STRING_CONVERTER);
         maxTradePriceDeviation.validate(); // Needed to show help field as its shown only if input is valid
-
-        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(),
-                Converters.LONG_STRING_CONVERTER);
-        minRequiredReputationScore.descriptionProperty().bind(model.getMinRequiredReputationScoreDescriptionText());
-        minRequiredReputationScore.getTextInputControl().editableProperty().bind(model.getMinRequiredReputationScoreEditable());
-        minRequiredReputationScore.validate();
     }
 
     @Override
     protected void onViewDetached() {
         offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());
-        ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreMinRequiredReputationScoreFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.unbindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation());
-        Bindings.unbindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore());
-        minRequiredReputationScore.getTextInputControl().editableProperty().unbind();
-        minRequiredReputationScore.descriptionProperty().unbind();
 
         maxTradePriceDeviation.resetValidation();
-        minRequiredReputationScore.resetValidation();
     }
 }

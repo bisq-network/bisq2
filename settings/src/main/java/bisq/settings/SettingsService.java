@@ -17,7 +17,6 @@
 
 package bisq.settings;
 
-import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
@@ -41,6 +40,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
+    @Deprecated(since = "2.1.1")
     public final static long DEFAULT_MIN_REQUIRED_REPUTATION_SCORE = 30_000;
     public final static double DEFAULT_MAX_TRADE_PRICE_DEVIATION = 0.05; // 5%
 
@@ -73,7 +73,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getChatNotificationType().addObserver(value -> persist());
         getUseAnimations().addObserver(value -> persist());
         getPreventStandbyMode().addObserver(value -> persist());
-        getMinRequiredReputationScore().addObserver(value -> persist());
         getCloseMyOfferWhenTaken().addObserver(value -> persist());
         getConsumedAlertIds().addObserver(this::persist);
         getSupportedLanguageCodes().addObserver(this::persist);
@@ -83,7 +82,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getDifficultyAdjustmentFactor().addObserver(value -> persist());
         getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist());
         getFavouriteMarkets().addObserver(this::persist);
-        getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(value -> persist());
         getMaxTradePriceDeviation().addObserver(value -> persist());
         getShowBuyOffers().addObserver(value -> persist());
         getShowOfferListExpanded().addObserver(value -> persist());
@@ -93,12 +91,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
         isInitialized = true;
 
-        if (DevMode.isDevMode() && getMinRequiredReputationScore().get() == DEFAULT_MIN_REQUIRED_REPUTATION_SCORE) {
-            getIgnoreMinRequiredReputationScoreFromSecManager().set(true);
-            getMinRequiredReputationScore().set(0L);
-            log.info("In dev mode we set getMinRequiredReputationScore to 0 if it was the default value of {}",
-                    DEFAULT_MIN_REQUIRED_REPUTATION_SCORE);
-        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -148,10 +140,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.useAnimations;
     }
 
-    public Observable<Long> getMinRequiredReputationScore() {
-        return persistableStore.minRequiredReputationScore;
-    }
-
     public Observable<Boolean> getOffersOnly() {
         return persistableStore.offersOnly;
     }
@@ -166,10 +154,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
         return persistableStore.ignoreDiffAdjustmentFromSecManager;
-    }
-
-    public Observable<Boolean> getIgnoreMinRequiredReputationScoreFromSecManager() {
-        return persistableStore.ignoreMinRequiredReputationScoreFromSecManager;
     }
 
     public Observable<Double> getDifficultyAdjustmentFactor() {
