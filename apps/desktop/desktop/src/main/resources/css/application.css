@@ -362,7 +362,7 @@
 }
 
 .reputation .label {
-    -fx-line-spacing: 7px;
+    -fx-line-spacing: 5px;
     -fx-wrap-text: true;
 }
 
