@@ -65,8 +65,8 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(buttons, new Insets(-5, 0, 0, 0));
 
         VBox contentBox = new VBox(20);
         contentBox.getChildren().addAll(headline, info, hBox, buttons);
