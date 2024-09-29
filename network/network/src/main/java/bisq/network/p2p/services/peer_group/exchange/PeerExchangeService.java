@@ -50,6 +50,8 @@ import static bisq.network.NetworkService.NETWORK_IO_POOL;
 @Slf4j
 @Getter
 public class PeerExchangeService implements Node.Listener {
+    private static final int MAX_RETRY_ATTEMPTS = 10;
+
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
 
@@ -218,8 +220,8 @@ public class PeerExchangeService implements Node.Listener {
             log.info("We have a pending retryPeerExchangeAttempt. We ignore the retryPeerExchange call.");
             return;
         }
-        if (numRetryAttempts.get() > 10) {
-            log.warn("We have retried the peer exchange 10 times without success and give up.");
+        if (numRetryAttempts.get() > MAX_RETRY_ATTEMPTS) {
+            log.warn("We have retried the peer exchange {} times without success and give up.", MAX_RETRY_ATTEMPTS);
             return;
         }
         long delay = 1000L * numRetryAttempts.get() * numRetryAttempts.get();
