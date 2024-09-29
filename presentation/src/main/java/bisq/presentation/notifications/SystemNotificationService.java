@@ -26,8 +26,9 @@ import bisq.presentation.notifications.other.AwtNotificationDelegate;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.awt.*;
+import java.awt.SystemTray;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -55,20 +56,32 @@ public class SystemNotificationService implements Service {
 
     public void show(Notification notification) {
         if (isInitialized) {
-            getDelegate().show(notification.getTitle(), notification.getMessage());
+            getDelegate().ifPresent(delegate -> delegate.show(notification.getTitle(), notification.getMessage()));
         }
     }
 
-    private SystemNotificationDelegate getDelegate() {
+    private Optional<SystemNotificationDelegate> getDelegate() {
         if (delegate == null) {
             if (OS.isLinux() && LinuxNotificationDelegate.isSupported()) {
                 delegate = new LinuxNotificationDelegate(baseDir, settingsService);
             } else if (OS.isMacOs() && OsxNotificationDelegate.isSupported()) {
                 delegate = new OsxNotificationDelegate();
-            } else if (SystemTray.isSupported()) {
-                delegate = new AwtNotificationDelegate();
+            } else {
+                boolean supported = false;
+                try {
+                    supported = SystemTray.isSupported();
+                } catch (Exception e) {
+                    log.warn("SystemTray.isSupported call failed", e);
+                }
+                try {
+                    if (supported) {
+                        delegate = new AwtNotificationDelegate();
+                    }
+                } catch (Exception e) {
+                    log.warn("Creating AwtNotificationDelegate failed, even SystemTray.isSupported() returned true", e);
+                }
             }
         }
-        return delegate;
+        return Optional.ofNullable(delegate);
     }
 }
