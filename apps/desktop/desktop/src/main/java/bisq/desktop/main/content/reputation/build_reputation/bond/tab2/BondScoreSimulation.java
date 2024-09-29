@@ -111,13 +111,14 @@ public class BondScoreSimulation {
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private static final double MATERIAL_FIELD_WIDTH = 270;
+
         private final MaterialTextField amount;
         private final MaterialTextField score;
         private final AgeSlider simAgeSlider;
         private final MaterialTextField ageField;
 
-        private View(Model model,
-                     Controller controller) {
+        private View(Model model, Controller controller) {
             super(new VBox(10), model, controller);
 
             Label simHeadline = new Label(Res.get("reputation.sim.headline"));
@@ -153,15 +154,15 @@ public class BondScoreSimulation {
         private MaterialTextField getField(String description) {
             MaterialTextField field = new MaterialTextField(description);
             field.setEditable(false);
-            field.setMinWidth(380);
-            field.setMaxWidth(380);
+            field.setMinWidth(MATERIAL_FIELD_WIDTH);
+            field.setMaxWidth(MATERIAL_FIELD_WIDTH);
             return field;
         }
 
         private MaterialTextField getInputField(String key) {
             MaterialTextField field = new MaterialTextField(Res.get(key), Res.get(key + ".prompt"));
-            field.setMinWidth(380);
-            field.setMaxWidth(380);
+            field.setMinWidth(MATERIAL_FIELD_WIDTH);
+            field.setMaxWidth(MATERIAL_FIELD_WIDTH);
             return field;
         }
     }

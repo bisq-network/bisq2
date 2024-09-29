@@ -44,13 +44,10 @@ public class BondedReputationTab3View extends View<VBox, BondedReputationTab3Mod
                                     Pane userProfileSelection) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(20);
-        root.setAlignment(Pos.TOP_LEFT);
-
         Label headline = new Label(Res.get("reputation.bond.howToHeadline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        OrderedList info = new OrderedList(Res.get("reputation.bond.howTo"), "bisq-text-13");
+        OrderedList info = new OrderedList(Res.get("reputation.bond.howTo"), "bisq-text-13", 7, 7);
 
         Label userProfileSelectLabel = new Label(Res.get("user.bondedRoles.userProfile.select").toUpperCase());
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");
@@ -73,12 +70,18 @@ public class BondedReputationTab3View extends View<VBox, BondedReputationTab3Mod
         VBox.setMargin(userProfileSelectLabel, new Insets(10, 0, -20, 0));
         VBox.setMargin(userProfileSelection, new Insets(0, 0, -30, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, info, userProfileSelectLabel, userProfileSelection, pubKeyHash, buttons);
+
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(headline, info, userProfileSelectLabel, userProfileSelection, pubKeyHash, buttons);
+        contentBox.getStyleClass().addAll("bisq-common-bg", "common-line-spacing");
+        root.getChildren().addAll(contentBox);
+        root.setPadding(new Insets(20, 0, 0, 0));
     }
 
     @Override
     protected void onViewAttached() {
         pubKeyHash.textProperty().bind(model.getPubKeyHash());
+
         pubKeyHash.getIconButton().setOnAction(e -> controller.onCopyToClipboard(pubKeyHash.getText()));
         closeButton.setOnAction(e -> controller.onClose());
         backButton.setOnAction(e -> controller.onBack());

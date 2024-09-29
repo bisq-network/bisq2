@@ -110,7 +110,7 @@ public class BurnScoreSimulation {
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private static final double MATERIAL_FIELD_WIDTH = 260;
+        private static final double MATERIAL_FIELD_WIDTH = 270;
 
         private final MaterialTextField amount;
         private final MaterialTextField score;
