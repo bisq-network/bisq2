@@ -47,7 +47,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         Label headline = new Label(Res.get("reputation.burnedBsq.howToHeadline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        OrderedList info = new OrderedList(Res.get("reputation.burnedBsq.howTo"), "bisq-text-13", 7, 7);
+        OrderedList info = new OrderedList(Res.get("reputation.burnedBsq.howTo"), "bisq-text-13", 7, 5);
 
         Label userProfileSelectLabel = new Label(Res.get("user.bondedRoles.userProfile.select").toUpperCase());
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");
