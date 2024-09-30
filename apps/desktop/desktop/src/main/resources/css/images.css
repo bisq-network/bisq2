@@ -721,16 +721,16 @@
     -fx-image: url("/images/protocols/protocol-bisq-easy.png");
 }
 
-#protocol-bisq_musig {
-    -fx-image: url("/images/protocols/protocol-bisq-musig.png");
+#protocol-bisq-mu-sig {
+    -fx-image: url("/images/protocols/protocol-bisq-mu-sig.png");
 }
 
 #protocol-submarine {
     -fx-image: url("/images/protocols/protocol-submarine.png");
 }
 
-#protocol-liquid-musig {
-    -fx-image: url("/images/protocols/protocol-liquid-musig.png");
+#protocol-liquid-mu-sig {
+    -fx-image: url("/images/protocols/protocol-liquid-mu-sig.png");
 }
 
 #protocol-bisq-lightning {
