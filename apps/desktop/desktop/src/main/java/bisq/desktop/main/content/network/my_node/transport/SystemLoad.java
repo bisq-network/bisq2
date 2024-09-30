@@ -139,7 +139,7 @@ public class SystemLoad {
             powHeadline.getStyleClass().add("rich-table-headline");
 
             pow = new Label();
-            pow.getStyleClass().add("rich-table-view");
+            pow.getStyleClass().add("network-details-view");
             pow.setPadding(new Insets(10));
             pow.setAlignment(Pos.TOP_LEFT);
             pow.setPrefWidth(4000);
@@ -148,7 +148,7 @@ public class SystemLoad {
             systemLoadHeadline.getStyleClass().add("rich-table-headline");
 
             systemLoad = new Label();
-            systemLoad.getStyleClass().add("rich-table-view");
+            systemLoad.getStyleClass().add("network-details-view");
             systemLoad.setPadding(new Insets(10));
             systemLoad.setAlignment(Pos.TOP_LEFT);
             systemLoad.setPrefWidth(4000);
