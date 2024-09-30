@@ -107,6 +107,8 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     @Nullable
     private Scheduler periodicRequestDoaDataScheduler, initialDelayScheduler;
+    @SuppressWarnings("FieldCanBeLocal") // Pin it so that it does not get GC'ed
+    private final MemoryReport memoryReport;
 
     public Bisq1BridgeService(Config config,
                               NetworkService networkService,
@@ -127,6 +129,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
 
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+        memoryReport = MemoryReport.getINSTANCE();
     }
 
 
@@ -219,11 +222,11 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private void initialRepublish() {
         log.info("Start republishAuthorizedBondedRoles");
         republishAuthorizedBondedRoles();
-        MemoryReport.logReport();
+        memoryReport.logReport();
         log.info("Completed republishAuthorizedBondedRoles");
         log.info("Start request and publish DaoData");
         requestDaoData().join(); // takes about 6 minutes for 500 items
-        MemoryReport.logReport();
+        memoryReport.logReport();
         log.info("Completed request and publish DaoData");
         periodicRequestDoaDataScheduler = Scheduler.run(this::periodicRepublish)
                 .host(this)
@@ -234,7 +237,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private void periodicRepublish() {
         log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
         requestDaoData().join();
-        MemoryReport.logReport();
+        memoryReport.logReport();
         log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
     }
 

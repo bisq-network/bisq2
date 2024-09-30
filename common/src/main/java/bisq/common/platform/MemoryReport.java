@@ -22,6 +22,7 @@ import bisq.common.formatter.SimpleTimeFormatter;
 import bisq.common.threading.ThreadProfiler;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -30,21 +31,27 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class MemoryReport {
-    private static Scheduler scheduler;
-    private static boolean includeThreadListInMemoryReport;
+    @Getter
+    private static final MemoryReport INSTANCE = new MemoryReport();
 
-    public static void printPeriodically(int memoryReportIntervalSec, boolean includeThreadListInMemoryReport) {
-        MemoryReport.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
+    private Scheduler scheduler;
+    private boolean includeThreadListInMemoryReport;
+
+    public MemoryReport() {
+    }
+
+    public void printPeriodically(int memoryReportIntervalSec, boolean includeThreadListInMemoryReport) {
+        this.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
         if (scheduler != null) {
             scheduler.stop();
         }
-        scheduler = Scheduler.run(MemoryReport::logReport)
+        scheduler = Scheduler.run(this::logReport)
                 .host(MemoryReport.class)
                 .runnableName("logReport")
                 .periodically(30, memoryReportIntervalSec, TimeUnit.SECONDS);
     }
 
-    public static void logReport() {
+    public void logReport() {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.freeMemory();
         long total = runtime.totalMemory();
