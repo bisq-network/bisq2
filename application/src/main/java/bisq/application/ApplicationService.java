@@ -124,7 +124,8 @@ public abstract class ApplicationService implements Service {
     protected final Config config;
     @Getter
     protected final PersistenceService persistenceService;
-
+    @SuppressWarnings("FieldCanBeLocal") // Pin it so that it does not get GC'ed
+    private final MemoryReport memoryReport;
     private FileLock instanceLock;
 
     public ApplicationService(String configFileName, String[] args) {
@@ -170,7 +171,8 @@ public abstract class ApplicationService implements Service {
             log.info("Using custom config file");
         }
 
-        MemoryReport.printPeriodically(config.getMemoryReportIntervalSec(), config.isIncludeThreadListInMemoryReport());
+        memoryReport = MemoryReport.getINSTANCE();
+        memoryReport.printPeriodically(config.getMemoryReportIntervalSec(), config.isIncludeThreadListInMemoryReport());
 
         DevMode.setDevMode(config.isDevMode());
 
