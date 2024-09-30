@@ -93,14 +93,17 @@ public class Res {
      * Additionally, a '.0' postfix handles 0 values.
      */
     public static String getPluralization(String key, double number) {
+        String pluralKey;
         if (number == 1) {
-            return get(key + ".1");
+            pluralKey = key + ".1";
         } else {
             if (number == 0 && has(key + ".0")) {
-                return get(key + ".0");
-            } else
-                return get(key + ".*", number);
+                pluralKey = key + ".0";
+            } else {
+                pluralKey = key + ".*";
+            }
         }
+        return get(pluralKey, number);
     }
 
     public static boolean has(String key) {
