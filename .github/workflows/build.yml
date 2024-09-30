@@ -83,7 +83,7 @@ jobs:
              echo "The secret \"TX_TOKEN\" has not been set; please go to \"settings \> secrets and variables\" to create it"
              exit 1
         - name: Checkout
-          uses: actions/checkout@v4.1.7
+          uses: actions/checkout@v4.2.0
         - name: Push source files using transifex client
           uses: transifex/cli-action@v2
           with:
