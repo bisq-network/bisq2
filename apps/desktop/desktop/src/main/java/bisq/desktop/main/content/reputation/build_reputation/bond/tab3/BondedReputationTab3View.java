@@ -47,7 +47,7 @@ public class BondedReputationTab3View extends View<VBox, BondedReputationTab3Mod
         Label headline = new Label(Res.get("reputation.bond.howToHeadline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        OrderedList info = new OrderedList(Res.get("reputation.bond.howTo"), "bisq-text-13", 7, 7);
+        OrderedList info = new OrderedList(Res.get("reputation.bond.howTo"), "bisq-text-13", 7, 5);
 
         Label userProfileSelectLabel = new Label(Res.get("user.bondedRoles.userProfile.select").toUpperCase());
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");
