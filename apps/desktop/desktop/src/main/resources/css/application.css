@@ -390,19 +390,23 @@
     -fx-font-size: 1.9em !important;
 }
 
-.reputation .label,
 .reputation .reputation-learn-more {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.reputation .reputation-learn-more {
+.reputation .reputation-learn-more-link {
     -fx-fill: -fx-light-text-color !important;
     -fx-text-fill: -fx-light-text-color !important;
-}
-
-.reputation .reputation-learn-more:hover {
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
     -fx-underline: true;
+}
+.reputation .reputation-learn-more-link:hover {
+    -fx-fill: -bisq2-green !important;
+    -fx-text-fill: -bisq2-green !important;
 }
 
 .popup-bg .bisq-common-bg {

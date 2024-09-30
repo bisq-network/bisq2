@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BuildReputationView extends View<VBox, BuildReputationModel, BuildReputationController> {
     private final Button burnBsqButton, bsqBondButton, accountAgeButton, signedAccountButton;
-    private final BisqMenuItem learnMore;
+    private final BisqMenuItem learnMoreLink;
 
     public BuildReputationView(BuildReputationModel model, BuildReputationController controller) {
         super(new VBox(), model, controller);
@@ -82,12 +82,15 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
 
         HBox signedAccountAndAgeBox = new HBox(20, signedAccountBox, accountAgeBox);
 
-        learnMore = new BisqMenuItem(Res.get("reputation.buildReputation.readMore"));
-        learnMore.getStyleClass().add("reputation-learn-more");
+        Label learnMoreLabel = new Label(Res.get("reputation.buildReputation.learnMore"));
+        learnMoreLink = new BisqMenuItem(Res.get("reputation.buildReputation.learnMore.link"));
+        learnMoreLabel.getStyleClass().addAll("reputation-learn-more");
+        learnMoreLink.getStyleClass().addAll("reputation-learn-more-link");
+        HBox learnMoreHBox = new HBox(4, learnMoreLabel, learnMoreLink);
 
         VBox contentBox = new VBox(20);
         contentBox.getChildren().addAll(headlineLabel, introLabelPart1, introLabelPart2, title, burnAndBondBox,
-                signedAccountAndAgeBox, learnMore);
+                signedAccountAndAgeBox, learnMoreHBox);
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().addAll(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
@@ -100,7 +103,7 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         bsqBondButton.setOnAction(e -> controller.onBsqBond());
         signedAccountButton.setOnAction(e -> controller.onSignedAccount());
         accountAgeButton.setOnAction(e -> controller.onAccountAge());
-        learnMore.setOnAction(e -> controller.onLearnMore());
+        learnMoreLink.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
@@ -109,7 +112,7 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         bsqBondButton.setOnAction(null);
         signedAccountButton.setOnAction(null);
         accountAgeButton.setOnAction(null);
-        learnMore.setOnAction(null);
+        learnMoreLink.setOnAction(null);
     }
 
     private VBox createAndGetBuildReputationMethodBox(String title, String description, Button button) {
