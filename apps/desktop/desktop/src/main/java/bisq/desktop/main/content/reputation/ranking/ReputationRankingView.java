@@ -201,6 +201,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         richTableView.getColumns().add(scoreColumn);
 
         valueColumn = new BisqTableColumn.Builder<ListItem>()
+                .minWidth(150)
                 .titleProperty(model.getFilteredValueTitle())
                 .comparator(Comparator.comparing(ListItem::getValue))
                 .valuePropertySupplier(ListItem::getValueAsStringProperty)
