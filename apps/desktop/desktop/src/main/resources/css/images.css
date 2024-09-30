@@ -1593,7 +1593,7 @@
 /* ------------------------------------------------------------------------------------ */
 
 #offer-reputation {
-    -fx-image: url("/images/reputation/offer-rep.png");
+    -fx-image: url("/images/reputation/offer-rep-score.png");
 }
 
 #stars-reputation-table {
