@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.network.p2p.version;
 
 import bisq.common.data.Pair;
+import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.network.my_node.transport.TransportController;
@@ -61,7 +62,7 @@ public class VersionDistributionController implements Controller {
         TreeMap<String, Set<UserProfile>> map = new TreeMap<>();
         userProfileService.getUserProfiles().forEach(userProfile -> {
             String version = userProfile.getApplicationVersion();
-            if (version.isEmpty()) {
+            if (version.isEmpty() || new Version(version).belowOrEqual(new Version("2.0.4"))) {
                 version = Res.get("network.version.versionDistribution.oldVersions");
             }
             map.putIfAbsent(version, new HashSet<>());
