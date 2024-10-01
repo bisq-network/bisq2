@@ -33,43 +33,49 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeOverviewController> {
+public class TradeOverviewView extends View<VBox, TradeOverviewModel, TradeOverviewController> {
     private static final int VERTICAL_MARGIN = 30;
     private static final int VERTICAL_GAP = 25;
     private static final int HORIZONTAL_GAP = 25;
 
     public TradeOverviewView(TradeOverviewModel model, TradeOverviewController controller) {
-        super(new GridPane(), model, controller);
+        super(new VBox(), model, controller);
 
-        root.setHgap(HORIZONTAL_GAP);
-        root.setVgap(VERTICAL_GAP);
-        root.setPadding(new Insets(0, 40, 40, 40));
+        GridPane contentBox = new GridPane();
+        contentBox.getStyleClass().add("bisq-common-bg");
+        contentBox.setHgap(HORIZONTAL_GAP);
+        contentBox.setVgap(VERTICAL_GAP);
 
-        GridPaneUtil.setGridPaneTwoColumnsConstraints(root);
-        root.getColumnConstraints().get(0).setMinWidth(450);
-        root.getColumnConstraints().get(1).setMinWidth(450);
+        GridPaneUtil.setGridPaneTwoColumnsConstraints(contentBox);
+        contentBox.getColumnConstraints().get(0).setMinWidth(450);
+        contentBox.getColumnConstraints().get(1).setMinWidth(450);
 
         Label headline = new Label(Res.get("tradeApps.overview.headline"));
         headline.setWrapText(true);
         headline.getStyleClass().add("trade-protocols-overview-headline");
         headline.setMinHeight(55);
-        root.add(headline, 0, 0, 2, 1);
+        contentBox.add(headline, 0, 0, 2, 1);
 
         Label subHeadline = new Label(Res.get("tradeApps.overview.subHeadline"));
         subHeadline.setWrapText(true);
         subHeadline.getStyleClass().add("trade-protocols-overview-sub-headline");
         GridPane.setMargin(subHeadline, new Insets(-10, 0, 0, 0));
-        root.add(subHeadline, 0, 1, 2, 1);
+        contentBox.add(subHeadline, 0, 1, 2, 1);
 
         Insets protocolsInset = new Insets(0, 0, 0, 0);
         GridPane mainProtocolsPane = GridPaneUtil.getGridPane(25, 25, protocolsInset);
         GridPaneUtil.setGridPaneMultiColumnsConstraints(mainProtocolsPane, 6);
-        root.add(mainProtocolsPane, 0, 2, 2, 1);
+        contentBox.add(mainProtocolsPane, 0, 2, 2, 1);
 
         mainProtocolsPane.getRowCount();
         int rowCount;
@@ -89,11 +95,11 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
         more.setWrapText(true);
         more.getStyleClass().add("trade-protocols-overview-sub-headline");
         GridPane.setMargin(more, new Insets(20, 0, 10, 0));
-        root.add(more, 0, root.getRowCount(), 2, 1);
+        contentBox.add(more, 0, contentBox.getRowCount(), 2, 1);
 
         GridPane moreProtocolsPane = GridPaneUtil.getGridPane(25, 25, protocolsInset);
         GridPaneUtil.setGridPaneMultiColumnsConstraints(moreProtocolsPane, 6);
-        root.add(moreProtocolsPane, 0, root.getRowCount(), 2, 1);
+        contentBox.add(moreProtocolsPane, 0, contentBox.getRowCount(), 2, 1);
 
         moreProtocolsPane.getRowCount();
         index = 0;
@@ -107,6 +113,9 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
             getProtocolBox(moreProtocolsPane, protocol, columnIndex * 3, rowCount);
             index++;
         }
+
+        root.getChildren().addAll(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
@@ -124,7 +133,7 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
         int rowIndex = rowCount;
 
         Pane group = new Pane();
-        group.getStyleClass().add("bisq-box-2");
+        group.getStyleClass().add("bisq-card-bg");
         group.setCursor(Cursor.HAND);
         group.setOnMouseClicked(e -> controller.onSelect(protocolListItem));
         gridPane.add(group, columnIndex, rowIndex, 3, 6);
@@ -198,7 +207,7 @@ public class TradeOverviewView extends View<GridPane, TradeOverviewModel, TradeO
             button.setDefaultButton(true);
         } else {
             button.setText(Res.get("action.learnMore"));
-            button.getStyleClass().addAll("outlined-button", "grey-outlined-button");
+            button.getStyleClass().add("outlined-button");
         }
         GridPane.setMargin(button, new Insets(7, VERTICAL_MARGIN, HORIZONTAL_GAP, VERTICAL_MARGIN));
         gridPane.add(button, columnIndex, ++rowIndex, 3, 1);

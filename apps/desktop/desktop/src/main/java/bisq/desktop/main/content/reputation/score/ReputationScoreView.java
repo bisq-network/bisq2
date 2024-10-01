@@ -45,7 +45,7 @@ public class ReputationScoreView extends View<VBox, ReputationScoreModel, Reputa
         VBox offerBox = new VBox(offerImage);
         offerBox.setAlignment(Pos.BOTTOM_CENTER);
         HBox sellerReputationBox = new HBox(sellerReputationLabel, Spacer.fillHBox(), offerBox);
-        sellerReputationBox.getStyleClass().add("reputation-card-large");
+        sellerReputationBox.getStyleClass().addAll("reputation-card-large", "bisq-card-bg");
 
         Label explanationIntroLabel = new Label(Res.get("reputation.reputationScore.explanation.intro"));
 
@@ -53,12 +53,12 @@ public class ReputationScoreView extends View<VBox, ReputationScoreModel, Reputa
         scoreTitleLabel.getStyleClass().add("card-title");
         Label scoreDescriptionLabel = new Label(Res.get("reputation.reputationScore.explanation.score.description"));
         VBox scoreBox = new VBox(20, scoreTitleLabel, scoreDescriptionLabel);
-        scoreBox.getStyleClass().add("reputation-card-small");
+        scoreBox.getStyleClass().addAll("reputation-card-small", "bisq-card-bg");
         Label rankingTitleLabel = new Label(Res.get("reputation.reputationScore.explanation.ranking.title"));
         rankingTitleLabel.getStyleClass().add("card-title");
         Label rankingDescriptionLabel = new Label(Res.get("reputation.reputationScore.explanation.ranking.description"));
         VBox rankingBox = new VBox(20, rankingTitleLabel, rankingDescriptionLabel);
-        rankingBox.getStyleClass().add("reputation-card-small");
+        rankingBox.getStyleClass().addAll("reputation-card-small", "bisq-card-bg");
         HBox scoreAndReputationBox = new HBox(20, scoreBox, rankingBox);
 
         Label starsTitleLabel = new Label(Res.get("reputation.reputationScore.explanation.stars.title"));
@@ -68,7 +68,7 @@ public class ReputationScoreView extends View<VBox, ReputationScoreModel, Reputa
         VBox starsTableBox = new VBox(starsTableImage);
         starsTableBox.setAlignment(Pos.CENTER);
         VBox starsBox = new VBox(20, starsTitleLabel, starsDescriptionLabel, starsTableBox);
-        starsBox.getStyleClass().add("reputation-card-large");
+        starsBox.getStyleClass().addAll("reputation-card-large", "bisq-card-bg");
 
         Label closingLabel = new Label(Res.get("reputation.reputationScore.closing"));
 

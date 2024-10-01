@@ -126,7 +126,7 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         button.setMaxWidth(Double.MAX_VALUE);
         VBox vBox = new VBox(20, titleLabel, descriptionLabel, Spacer.fillVBox(), button);
         vBox.setFillWidth(true);
-        vBox.getStyleClass().add("reputation-card-small");
+        vBox.getStyleClass().addAll("reputation-card-small", "bisq-card-bg");
         return vBox;
     }
 }
