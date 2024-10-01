@@ -47,19 +47,19 @@ class LeftNavSubButton extends LeftNavButton {
 
     @Override
     protected void applyStyle() {
-        Layout.chooseStyleClass(label, "bisq-text-green", "bisq-text-grey-9", isSelected());
+        Layout.chooseStyleClass(buttonLabel, "bisq-text-green", "bisq-text-grey-9", isSelected());
     }
 
     @Override
     public void setHorizontalExpanded(boolean menuExpanded, int duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
-            Transitions.animateLeftSubNavigation(label, LABEL_X_POS_EXPANDED, duration);
-            label.setText(fullTitle);
+            Transitions.animateLeftSubNavigation(buttonLabel, LABEL_X_POS_EXPANDED, duration);
+            buttonLabel.setText(fullTitle);
         } else {
             Tooltip.install(this, tooltip);
-            Transitions.animateLeftSubNavigation(label, LABEL_X_POS_COLLAPSED, duration);
-            label.setText(fullTitle.substring(0, 1));
+            Transitions.animateLeftSubNavigation(buttonLabel, LABEL_X_POS_COLLAPSED, duration);
+            buttonLabel.setText(fullTitle.substring(0, 1));
         }
     }
 

@@ -58,7 +58,8 @@ class LeftNavButton extends Pane implements Toggle {
     protected final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     protected final BooleanProperty selectedProperty = new SimpleBooleanProperty();
     protected final BooleanProperty highlightedProperty = new SimpleBooleanProperty();
-    protected final Label label;
+    @Getter
+    protected final Label buttonLabel;
     protected final Tooltip tooltip;
 
     @Nullable
@@ -108,12 +109,12 @@ class LeftNavButton extends Pane implements Toggle {
             getChildren().add(icon);
         }
 
-        label = new Label(title);
-        label.setLayoutX(LABEL_X_POS_EXPANDED);
-        label.setLayoutY((calculateHeight() - 21) * 0.5);
-        label.setMouseTransparent(true);
+        buttonLabel = new Label(title);
+        buttonLabel.setLayoutX(LABEL_X_POS_EXPANDED);
+        buttonLabel.setLayoutY((calculateHeight() - 21) * 0.5);
+        buttonLabel.setMouseTransparent(true);
 
-        getChildren().add(label);
+        getChildren().add(buttonLabel);
 
         if (hasSubmenu) {
             verticalExpandIcon = BisqIconButton.createIconButton("nav-arrow-right");
@@ -150,7 +151,7 @@ class LeftNavButton extends Pane implements Toggle {
 
         hoverProperty().addListener((ov, wasHovered, isHovered) -> {
             if (isSelected() || isHighlighted()) return;
-            Layout.chooseStyleClass(label, "bisq-text-white", "bisq-text-grey-9", isHovered);
+            Layout.chooseStyleClass(buttonLabel, "bisq-text-white", "bisq-text-grey-9", isHovered);
             if (icon != null) {
                 getChildren().set(0, isHovered ? iconHover : icon);
             }
@@ -174,9 +175,9 @@ class LeftNavButton extends Pane implements Toggle {
     protected void applyStyle() {
         boolean isHighlighted = isSelected() || isHighlighted();
         Layout.addStyleClass(this, "bisq-dark-bg");
-        Layout.toggleStyleClass(label, "bisq-text-green", isSelected());
-        Layout.toggleStyleClass(label, "bisq-text-white", isHighlighted());
-        Layout.toggleStyleClass(label, "bisq-text-grey-9", !isHighlighted);
+        Layout.toggleStyleClass(buttonLabel, "bisq-text-green", isSelected());
+        Layout.toggleStyleClass(buttonLabel, "bisq-text-white", isHighlighted());
+        Layout.toggleStyleClass(buttonLabel, "bisq-text-grey-9", !isHighlighted);
 
         if (icon != null) {
             getChildren().set(0, isSelected() ? iconActive : isHighlighted ? iconHover : icon);
@@ -190,9 +191,9 @@ class LeftNavButton extends Pane implements Toggle {
     public void setHorizontalExpanded(boolean menuExpanded, int duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
-            label.setVisible(true);
-            label.setManaged(true);
-            Transitions.fadeIn(label, duration);
+            buttonLabel.setVisible(true);
+            buttonLabel.setManaged(true);
+            Transitions.fadeIn(buttonLabel, duration);
             if (hasSubmenu) {
                 Objects.requireNonNull(verticalExpandCollapseIcon).setVisible(true);
                 Transitions.fadeIn(verticalExpandCollapseIcon, 3 * duration, 0.4, null);
@@ -202,9 +203,9 @@ class LeftNavButton extends Pane implements Toggle {
             if (hasSubmenu) {
                 Transitions.fadeOut(verticalExpandCollapseIcon, duration / 2, () -> Objects.requireNonNull(verticalExpandCollapseIcon).setVisible(false));
             }
-            Transitions.fadeOut(label, duration, () -> {
-                label.setVisible(false);
-                label.setManaged(false);
+            Transitions.fadeOut(buttonLabel, duration, () -> {
+                buttonLabel.setVisible(false);
+                buttonLabel.setManaged(false);
             });
         }
     }
