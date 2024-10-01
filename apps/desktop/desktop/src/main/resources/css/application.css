@@ -354,13 +354,6 @@
     -fx-padding: 0 5 0 20;
 }
 
-.reputation .reputation-card-small,
-.reputation .reputation-card-large {
-    -fx-background-color: -bisq-dark-grey-40;
-    -fx-background-radius: 8 8 8 8;
-    -fx-padding: 40;
-}
-
 .reputation .label {
     -fx-font-size: 1.15em;
     -fx-line-spacing: 5px;
@@ -405,6 +398,7 @@
     -fx-font-family: "IBM Plex Sans Light";
     -fx-underline: true;
 }
+
 .reputation .reputation-learn-more-link:hover {
     -fx-fill: -bisq2-green !important;
     -fx-text-fill: -bisq2-green !important;
