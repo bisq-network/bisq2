@@ -5,9 +5,6 @@ on:
   pull_request:
     types: [ opened, reopened, synchronize, closed ]
     branches: [ main ]
-  pull_request_target:
-    types: [ closed ]
-    branches: [ main ]
 
 permissions:
   contents: read
@@ -72,23 +69,3 @@ jobs:
       os: ${{ matrix.os }}
       name: wallet module
       build-root-dir: wallets
-
-  if_merged:
-      if: github.event.pull_request_target.merged == true
-      name: Push translation source files to Transifex
-      runs-on: ubuntu-latest
-      steps:
-        - name: "Check if TX_TOKEN secret exists"
-          env:
-            transifex_secret: ${{secrets.TX_TOKEN}}
-          if: ${{env.transifex_secret == ''}}
-          run: |
-             echo "The secret \"TX_TOKEN\" has not been set; please go to \"settings \> secrets and variables\" to create it"
-             exit 1
-        - name: Checkout
-          uses: actions/checkout@v4.2.0
-        - name: Push source files using transifex client
-          uses: transifex/cli-action@v2
-          with:
-            token: ${{ secrets.TX_TOKEN }}
-            args: push -s
