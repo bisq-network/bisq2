@@ -5,6 +5,9 @@ on:
   pull_request:
     types: [ opened, reopened, synchronize, closed ]
     branches: [ main ]
+  pull_request_target:
+    types: [ closed ]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -71,7 +74,7 @@ jobs:
       build-root-dir: wallets
 
   if_merged:
-      if: github.event.pull_request.merged == true
+      if: github.event.pull_request_target.merged == true
       name: Push translation source files to Transifex
       runs-on: ubuntu-latest
       steps:
