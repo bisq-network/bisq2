@@ -292,7 +292,11 @@ public class FileUtils {
     }
 
     public static Set<String> listFiles(String dirPath) {
-        try (Stream<Path> stream = Files.list(Paths.get(dirPath))) {
+        return listFiles(Paths.get(dirPath));
+    }
+
+    public static Set<String> listFiles(Path dirPath) {
+        try (Stream<Path> stream = Files.list(dirPath)) {
             return stream
                     .filter(file -> !Files.isDirectory(file))
                     .map(Path::getFileName)
@@ -303,8 +307,16 @@ public class FileUtils {
             return new HashSet<>();
         }
     }
+
     public static Set<String> listDirectories(String dirPath) {
-        try (Stream<Path> stream = Files.list(Paths.get(dirPath))) {
+        return listDirectories(Paths.get(dirPath));
+    }
+
+    public static Set<String> listDirectories(Path dirPath) {
+        if (!dirPath.toFile().exists()) {
+            return new HashSet<>();
+        }
+        try (Stream<Path> stream = Files.list(dirPath)) {
             return stream
                     .filter(Files::isDirectory)
                     .map(Path::getFileName)
