@@ -82,6 +82,8 @@ public enum NavigationTarget {
     WALLET_GUIDE_CREATE_WALLET(WALLET_GUIDE, false),
     WALLET_GUIDE_RECEIVE(WALLET_GUIDE, false),
 
+    BISQ_EASY_TRADE_DETAILS(OVERLAY, false),
+
     BISQ_EASY_OFFER_DETAILS(OVERLAY, false),
 
     CHAT_RULES(OVERLAY, false),

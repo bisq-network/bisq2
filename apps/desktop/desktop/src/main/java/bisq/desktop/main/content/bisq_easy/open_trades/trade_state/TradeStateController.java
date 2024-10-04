@@ -32,7 +32,10 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
+import bisq.desktop.common.view.Navigation;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.DontShowAgainService;
@@ -211,6 +214,20 @@ public class TradeStateController implements Controller {
                 .onAction(this::doInterruptTrade)
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
+    }
+
+    void onViewTradeDetails() {
+        BisqEasyOpenTradeChannel channel = model.getChannel().get();
+        Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(serviceProvider,
+                channel);
+        if (optionalBisqEasyTrade.isEmpty()) {
+            model.resetAll();
+            return;
+        }
+
+        BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
+                new TradeDetailsController.InitData(bisqEasyTrade, channel));
     }
 
     void onRejectPrice() {

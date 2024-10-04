@@ -784,6 +784,10 @@
     -fx-image: url("/images/icons/icon-info-grey.png");
 }
 
+#icon-info-green {
+    -fx-image: url("/images/icons/icon-info-green.png");
+}
+
 #icon-help-white {
     -fx-image: url("/images/icons/icon-help-white.png");
 }

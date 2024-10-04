@@ -27,6 +27,6 @@ public class CopyOnClickLabel extends Label {
         super(text);
         setTooltip(new BisqTooltip(Res.get("action.copyToClipboard")));
         setCursor(Cursor.HAND);
-        setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(text));
+        setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(this.getText()));
     }
 }
