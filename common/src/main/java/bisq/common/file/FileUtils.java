@@ -296,6 +296,9 @@ public class FileUtils {
     }
 
     public static Set<String> listFiles(Path dirPath) {
+        if (!dirPath.toFile().exists()) {
+            return new HashSet<>();
+        }
         try (Stream<Path> stream = Files.list(dirPath)) {
             return stream
                     .filter(file -> !Files.isDirectory(file))

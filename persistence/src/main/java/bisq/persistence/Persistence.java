@@ -19,6 +19,7 @@ package bisq.persistence;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
+import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,11 +41,11 @@ public class Persistence<T extends PersistableStore<T>> {
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
-    public Persistence(String directory, String fileName) {
+    public Persistence(String directory, String fileName, MaxBackupSize maxBackupSize) {
         this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
         storePath = Path.of(directory, storageFileName + EXTENSION);
-        var storeFileManager = new PersistableStoreFileManager(storePath);
+        var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }
 

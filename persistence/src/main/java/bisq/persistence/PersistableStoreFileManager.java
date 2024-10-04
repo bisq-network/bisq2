@@ -17,34 +17,37 @@
 
 package bisq.persistence;
 
+import bisq.persistence.backup.BackupService;
+import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 @Slf4j
 public class PersistableStoreFileManager {
-
-    public static final String BACKUP_DIR = "backup";
     public static final String TEMP_FILE_PREFIX = "temp_";
 
     @Getter
     private final Path storeFilePath;
     private final Path parentDirectoryPath;
-
-    private final Path backupFilePath;
+    private final BackupService backupService;
     @Getter
     private final Path tempFilePath;
 
     public PersistableStoreFileManager(Path storeFilePath) {
+        this(storeFilePath, MaxBackupSize.ZERO);
+    }
+
+    public PersistableStoreFileManager(Path storeFilePath, MaxBackupSize maxBackupSize) {
         this.storeFilePath = storeFilePath;
         this.parentDirectoryPath = storeFilePath.getParent();
-        this.backupFilePath = createBackupFilePath();
         this.tempFilePath = createTempFilePath();
+        Path dataDir = storeFilePath.getParent().getParent().getParent();
+        backupService = new BackupService(dataDir, storeFilePath, maxBackupSize);
     }
 
     public void createParentDirectoriesIfNotExisting() {
@@ -57,33 +60,12 @@ public class PersistableStoreFileManager {
         }
     }
 
-    public void tryToBackupCurrentStoreFile() throws IOException {
-        File storeFile = storeFilePath.toFile();
-        if (!storeFile.exists()) {
-            return;
-        }
-
-        File backupFile = backupFilePath.toFile();
-        if (backupFile.exists()) {
-            Files.delete(backupFilePath);
-        }
-
-        boolean isSuccess = storeFilePath.toFile().renameTo(backupFile);
-        if (!isSuccess) {
-            throw new IOException("Couldn't rename " + storeFilePath + " to " + backupFilePath);
-        }
+    public void maybeMigrateLegacyBackupFile() {
+        backupService.maybeMigrateLegacyBackupFile();
     }
 
-    public void restoreBackupFileIfCurrentFileNotExisting() {
-        File storeFile = storeFilePath.toFile();
-        if (!storeFile.exists()) {
-            File backupFile = backupFilePath.toFile();
-            boolean isSuccess = backupFile.renameTo(storeFile);
-
-            if (!isSuccess) {
-                log.error("Couldn't rename {} to {}", backupFile, storeFilePath);
-            }
-        }
+    public boolean maybeBackup() {
+        return backupService.maybeBackup();
     }
 
     public void renameTempFileToCurrentFile() throws IOException {
@@ -101,12 +83,6 @@ public class PersistableStoreFileManager {
         if (!isSuccess) {
             throw new IOException("Couldn't rename " + tempFile + " to " + storeFilePath);
         }
-    }
-
-    private Path createBackupFilePath() {
-        Path dirPath = Path.of(parentDirectoryPath.toString(), BACKUP_DIR);
-        dirPath.toFile().mkdirs();
-        return dirPath.resolve(storeFilePath.getFileName());
     }
 
     private Path createTempFilePath() {
