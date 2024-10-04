@@ -22,9 +22,11 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +42,19 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         headlineLabel.getStyleClass().add("reputation-headline");
 
         Label introLabelPart1 = new Label(Res.get("reputation.buildReputation.intro.part1"));
+
+        Label formulaOutput = new Label(Res.get("reputation.buildReputation.intro.part1.formula.output"));
+        Label formulaInput = new Label(Res.get("reputation.buildReputation.intro.part1.formula.input"));
+        Label formulaDivisor = new Label("200");
+        Label formulaEquals = new Label("=");
+        VBox formulaQuotientVBox = new VBox(5, formulaInput, getLine(), formulaDivisor);
+        formulaQuotientVBox.setAlignment(Pos.CENTER);
+        HBox formulaHBox = new HBox(10, formulaOutput, formulaEquals, formulaQuotientVBox);
+        formulaHBox.setAlignment(Pos.CENTER);
+        formulaHBox.getStyleClass().add("max-trade-amount-formula");
+        Label formulaFootnote = new Label(Res.get("reputation.buildReputation.intro.part1.formula.footnote"));
+        formulaFootnote.getStyleClass().add("max-trade-amount-formula-footnote");
+
         Label introLabelPart2 = new Label(Res.get("reputation.buildReputation.intro.part2"));
 
         Label title = new Label(Res.get("reputation.buildReputation.title"));
@@ -88,10 +103,13 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         learnMoreLink.getStyleClass().addAll("reputation-learn-more-link");
         HBox learnMoreHBox = new HBox(4, learnMoreLabel, learnMoreLink);
 
+
         VBox contentBox = new VBox(20);
-        contentBox.getChildren().addAll(headlineLabel, introLabelPart1, introLabelPart2, title, burnAndBondBox,
-                signedAccountAndAgeBox, learnMoreHBox);
+        contentBox.getChildren().addAll(headlineLabel, introLabelPart1, formulaHBox,
+                formulaFootnote, introLabelPart2, title, burnAndBondBox, signedAccountAndAgeBox, learnMoreHBox);
         contentBox.getStyleClass().add("bisq-common-bg");
+        VBox.setMargin(formulaFootnote, new Insets(-15, 0, 0, 0));
+        VBox.setMargin(title, new Insets(25, 0, 0, 0));
         root.getChildren().addAll(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
         root.getStyleClass().add("reputation");
@@ -128,5 +146,14 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         vBox.setFillWidth(true);
         vBox.getStyleClass().addAll("reputation-card-small", "bisq-card-bg");
         return vBox;
+    }
+
+    private Region getLine() {
+        Region line = new Region();
+        line.setMinHeight(1);
+        line.setMaxHeight(1);
+        line.setStyle("-fx-background-color: -bisq-border-color-grey");
+        line.setPadding(new Insets(9, 0, 8, 0));
+        return line;
     }
 }

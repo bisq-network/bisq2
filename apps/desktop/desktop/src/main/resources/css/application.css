@@ -410,6 +410,15 @@
     -fx-text-fill: -bisq2-green !important;
 }
 
+.reputation .max-trade-amount-formula {
+    -fx-max-width: 1000;
+    -fx-min-width: 1000;
+}
+
+.reputation .max-trade-amount-formula-footnote {
+    -fx-font-size: 1.02em;
+}
+
 .popup-bg .bisq-common-bg {
     -fx-padding: 10 30 30 30 !important;
 }
