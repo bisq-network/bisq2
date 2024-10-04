@@ -29,6 +29,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.identity.UserIdentityService;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,6 +45,7 @@ public class BurnBsqTab3Controller implements Controller {
     public BurnBsqTab3Controller(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
+        userProfileSelection.setMaxWidth(Region.USE_COMPUTED_SIZE);
         userProfileSelection.openMenuToTheRight();
 
         model = new BurnBsqTab3Model();

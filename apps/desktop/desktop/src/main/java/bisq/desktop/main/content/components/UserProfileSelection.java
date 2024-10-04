@@ -74,8 +74,14 @@ public class UserProfileSelection {
         return controller.view.getRoot();
     }
 
-    public void setMaxComboBoxWidth(int width) {
+    public void setMaxWidth(double width) {
         controller.view.setMenuMaxWidth(width);
+        controller.model.getMenuWidth().set(width);
+    }
+
+    public void setPrefWidth(double width) {
+        controller.view.setMenuPrefWidth(width);
+        controller.model.getMenuWidth().set(width);
     }
 
     public boolean isFocused() {
@@ -88,10 +94,6 @@ public class UserProfileSelection {
 
     public void requestFocus() {
         controller.requestFocus();
-    }
-
-    public void setPrefWidth(double value) {
-        controller.setPrefWidth(value);
     }
 
     public void openMenuUpwards() {
@@ -190,10 +192,6 @@ public class UserProfileSelection {
             view.getDropdownMenu().requestFocus();
         }
 
-        private void setPrefWidth(double value) {
-            view.setMenuPrefWidth(value);
-        }
-
         private void navigationTargetChanged(NavigationTarget navigationTarget) {
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
@@ -241,7 +239,7 @@ public class UserProfileSelection {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
-        private final static int DEFAULT_MENU_WIDTH = 200;
+        private static final double DEFAULT_MENU_WIDTH = 200;
 
         private final UserProfileDisplay userProfileDisplay;
         private final UserProfileDisplay singleUserProfileDisplay;

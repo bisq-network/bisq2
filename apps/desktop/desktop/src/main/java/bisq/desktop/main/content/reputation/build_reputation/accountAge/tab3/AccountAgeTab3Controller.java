@@ -34,6 +34,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.AccountAgeService;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,7 @@ public class AccountAgeTab3Controller implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         this.popupOwner = popupOwner;
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
+        userProfileSelection.setMaxWidth(Region.USE_COMPUTED_SIZE);
         userProfileSelection.openMenuToTheRight();
         accountAgeService = serviceProvider.getUserService().getReputationService().getAccountAgeService();
 

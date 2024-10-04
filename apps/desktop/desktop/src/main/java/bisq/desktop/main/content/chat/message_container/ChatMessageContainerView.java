@@ -171,7 +171,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     }
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
-        userProfileSelection.setMaxComboBoxWidth(165);
+        userProfileSelection.setMaxWidth(165);
         userProfileSelection.openMenuUpwards();
         userProfileSelection.openMenuToTheRight();
         userProfileSelectionRoot = userProfileSelection.getRoot();
