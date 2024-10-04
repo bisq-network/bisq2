@@ -364,7 +364,7 @@
 
 .reputation .reputation-card-small .card-title,
 .reputation .reputation-card-large .card-title {
-    -fx-font-size: 1.7em !important;
+    -fx-font-size: 1.7em;
 }
 
 .reputation .reputation-card-large {
@@ -379,11 +379,11 @@
 }
 
 .reputation .reputation-headline {
-    -fx-font-size: 2.5em !important;
+    -fx-font-size: 2.5em;
 }
 
 .reputation .reputation-title {
-    -fx-font-size: 1.9em !important;
+    -fx-font-size: 1.9em;
 }
 
 .reputation .reputation-headline,
@@ -391,6 +391,7 @@
 .reputation .card-title {
     -fx-fill: -fx-light-text-color !important;
     -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .reputation .reputation-learn-more {
