@@ -22,9 +22,11 @@ import bisq.common.formatter.SimpleTimeFormatter;
 import bisq.common.threading.ThreadProfiler;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
+import com.sun.management.UnixOperatingSystemMXBean;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.management.ManagementFactory;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +60,17 @@ public class MemoryReport {
         long used = total - free;
 
         if (includeThreadListInMemoryReport) {
+            if (OS.isMacOs() || OS.isLinux()) {
+                try {
+                    UnixOperatingSystemMXBean osBean = (UnixOperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+                    long openFileDescriptors = osBean.getOpenFileDescriptorCount();
+                    long maxFileDescriptors = osBean.getMaxFileDescriptorCount();
+                    log.info("openFileDescriptors={}; maxFileDescriptors={}", openFileDescriptors, maxFileDescriptors);
+                } catch (Exception e) {
+                    log.error("Try to use UnixOperatingSystemMXBean failed", e);
+                }
+            }
+
             ThreadProfiler threadProfiler = ThreadProfiler.INSTANCE;
             int nameLength = 120;
             String format = "%-5s\t %-8s\t %-" + nameLength + "s \t %-15s\t %-15s\t %-15s\n";
