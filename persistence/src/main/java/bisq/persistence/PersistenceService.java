@@ -19,6 +19,7 @@ package bisq.persistence;
 
 import bisq.common.proto.PersistableProto;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.persistence.backup.MaxBackupSize;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,25 +45,64 @@ public class PersistenceService {
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                                  DbSubDirectory dbSubDirectory,
                                                                                  PersistableStore<T> persistableStore) {
-        return getOrCreatePersistence(client, dbSubDirectory.getDbPath(), persistableStore.getClass().getSimpleName(), persistableStore);
+        return getOrCreatePersistence(client,
+                dbSubDirectory,
+                persistableStore.getClass().getSimpleName(),
+                persistableStore);
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                                  DbSubDirectory dbSubDirectory,
                                                                                  String fileName,
                                                                                  PersistableStore<T> persistableStore) {
-        return getOrCreatePersistence(client, dbSubDirectory.getDbPath(), fileName, persistableStore);
+        return getOrCreatePersistence(client,
+                dbSubDirectory,
+                fileName,
+                persistableStore,
+                MaxBackupSize.from(dbSubDirectory));
+    }
+
+    public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 DbSubDirectory dbSubDirectory,
+                                                                                 PersistableStore<T> persistableStore,
+                                                                                 MaxBackupSize maxBackupSize) {
+        return getOrCreatePersistence(client,
+                dbSubDirectory.getDbPath(),
+                persistableStore.getClass().getSimpleName(),
+                persistableStore,
+                maxBackupSize);
+    }
+
+    public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 DbSubDirectory dbSubDirectory,
+                                                                                 String fileName,
+                                                                                 PersistableStore<T> persistableStore,
+                                                                                 MaxBackupSize maxBackupSize) {
+        return getOrCreatePersistence(client,
+                dbSubDirectory.getDbPath(),
+                fileName,
+                persistableStore,
+                maxBackupSize);
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
                                                                                  String subDir,
                                                                                  String fileName,
-                                                                                 PersistableStore<T> persistableStore) {
+                                                                                 PersistableStore<T> persistableStore,
+                                                                                 MaxBackupSize maxBackupSize) {
         PersistableStoreResolver.addResolver(persistableStore.getResolver());
         clients.add(client);
-        Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName);
+        Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName, maxBackupSize);
         persistenceInstances.add(persistence);
         return persistence;
+    }
+
+    public CompletableFuture<Void> pruneAllBackups() {
+        List<CompletableFuture<Void>> list = clients.stream()
+                .map(PersistenceClient::getPersistence)
+                .map(Persistence::pruneBackups)
+                .toList();
+        return CompletableFutureUtils.allOf(list).thenApply(l -> null);
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {

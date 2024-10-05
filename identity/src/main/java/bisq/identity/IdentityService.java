@@ -115,8 +115,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     @Override
     public CompletableFuture<Boolean> persist() {
-        return getPersistence().persistAsync(getPersistableStore().getClone())
-                .handle((nil, throwable) -> throwable == null);
+        return PersistenceClient.super.persist();
     }
 
 
