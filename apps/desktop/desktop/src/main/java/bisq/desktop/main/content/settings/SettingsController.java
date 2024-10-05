@@ -23,7 +23,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.settings.display.DisplaySettingsController;
 import bisq.desktop.main.content.settings.language.LanguageSettingsController;
-import bisq.desktop.main.content.settings.network.NetworkSettingsController;
+import bisq.desktop.main.content.settings.misc.NetworkSettingsController;
 import bisq.desktop.main.content.settings.notifications.NotificationsSettingsController;
 import bisq.desktop.main.content.settings.trade.TradeSettingsController;
 import lombok.Getter;

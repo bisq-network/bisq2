@@ -59,6 +59,7 @@ import java.util.function.Predicate;
 @ToString
 public class BackupService {
     static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmm");
+    public static final int TOTAL_MAX_BACKUP_SIZE_IN_MB = 100;
     private static final Map<String, Long> accumulatedFileSizeByStore = new ConcurrentHashMap<>();
     @Setter
     private static double totalMaxBackupSize = ByteUnit.MB.toBytes(100);

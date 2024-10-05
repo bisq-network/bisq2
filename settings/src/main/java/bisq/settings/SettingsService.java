@@ -90,6 +90,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getShowMarketSelectionListCollapsed().addObserver(value -> persist());
         getBackupLocation().addObserver(value -> persist());
         getShowMyOffersOnly().addObserver(value -> persist());
+        getTotalMaxBackupSizeInMB().addObserver(value -> persist());
 
         isInitialized = true;
 
@@ -211,6 +212,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Boolean> getShowMyOffersOnly() {
         return persistableStore.showMyOffersOnly;
+    }
+
+    public Observable<Integer> getTotalMaxBackupSizeInMB() {
+        return persistableStore.totalMaxBackupSizeInMB;
     }
 
 
