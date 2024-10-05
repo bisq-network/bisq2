@@ -17,14 +17,15 @@
 
 package bisq.persistence.backup;
 
+import bisq.common.data.ByteUnit;
 import bisq.persistence.DbSubDirectory;
 import lombok.Getter;
 
 @Getter
 public enum MaxBackupSize {
-    HUNDRED_MB(100),
-    TEN_MB(10),
-    ZERO(0);
+    ZERO(0),
+    TEN_MB(ByteUnit.MB.toBytes(10)),
+    HUNDRED_MB(ByteUnit.MB.toBytes(100));
 
     public static MaxBackupSize from(DbSubDirectory dbSubDirectory) {
         return switch (dbSubDirectory) {
@@ -36,9 +37,9 @@ public enum MaxBackupSize {
         };
     }
 
-    private final int sizeInMB;
+    private final double sizeInBytes;
 
-    MaxBackupSize(int sizeInMB) {
-        this.sizeInMB = sizeInMB;
+    MaxBackupSize(double sizeInBytes) {
+        this.sizeInBytes = sizeInBytes;
     }
 }

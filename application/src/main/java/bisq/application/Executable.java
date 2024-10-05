@@ -27,7 +27,15 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         }));
 
         applicationService = createApplicationService(args);
+
+        long ts = System.currentTimeMillis();
+        applicationService.pruneAllBackups().join();
+        log.info("pruneAllBackups took {} ms", System.currentTimeMillis() - ts);
+
+        ts = System.currentTimeMillis();
         applicationService.readAllPersisted().join();
+        log.info("readAllPersisted took {} ms", System.currentTimeMillis() - ts);
+
         launchApplication(args);
     }
 

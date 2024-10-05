@@ -17,19 +17,24 @@
 
 package bisq.persistence.backup;
 
+import bisq.common.data.ByteUnit;
 import bisq.common.file.FileUtils;
 import bisq.persistence.Persistence;
 import com.google.common.annotations.VisibleForTesting;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 /**
  * We back up the persisted data at each write operation. We append the date time format with minutes as smallest time unit.
@@ -42,15 +47,30 @@ import java.util.*;
  * - If older than 7 days and not older than 28 days, we keep the newest backup per calendar week
  * - If older than 28 days but not older than 1 year, we keep the newest backup per month
  * - If older than 1 year we keep the newest backup per year
+ *
+ * The max number of backups is: 60 + 23 + 6 + 3 + 11 + number of years * 11. for 1 year its: 103.
+ * Assuming that most data do not get recent updates each minute, we would have about 40-50 backups.
+ * If the backup file is 600 bytes (Settings), it would result in 61.8 KB.
+ * If it is 1MB (typical size for user_profile_store.protobuf) it would result in 40-50 MB.
+ * To avoid too much growth of backups we use the MaxBackupSize and drop old backups once the limit is reached.
+ * We check as well for the totalMaxBackupSize (sum of all backups of all storage files) and once reached drop backups.
  */
 @Slf4j
 @ToString
 public class BackupService {
     static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmm");
+    private static final Map<String, Long> accumulatedFileSizeByStore = new ConcurrentHashMap<>();
+    @Setter
+    private static double totalMaxBackupSize = ByteUnit.MB.toBytes(100);
 
     private final String fileName;
-    final Path dirPath, storeFilePath;
+    @VisibleForTesting
+    final Path dirPath;
+    private final Path storeFilePath;
     private final MaxBackupSize maxBackupSize;
+
+    private final Map<String, Long> fileSizeByBackupFileInfo = new HashMap<>();
+    private long accumulatedFileSize;
 
     public BackupService(Path dataDir, Path storeFilePath, MaxBackupSize maxBackupSize) {
         this.storeFilePath = storeFilePath;
@@ -63,10 +83,6 @@ public class BackupService {
         String dirName = fileName.replace(Persistence.EXTENSION, "")
                 .replace("_store", "");
         dirPath = backupDir.resolve(dirName);
-
-        if (maxBackupSize != MaxBackupSize.ZERO) {
-            prune();
-        }
     }
 
     public void maybeMigrateLegacyBackupFile() {
@@ -93,9 +109,17 @@ public class BackupService {
         if (maxBackupSize == MaxBackupSize.ZERO) {
             return false;
         }
+
         if (!storeFilePath.toFile().exists()) {
             return false;
         }
+
+        // If we get over half of maxBackupSize we prune
+        long fileSize = updateAndGetAccumulatedFileSize();
+        if (fileSize > maxBackupSize.getSizeInBytes() / 2) {
+            prune();
+        }
+
         try {
             return backup(getBackupFile());
         } catch (IOException ex) {
@@ -113,38 +137,47 @@ public class BackupService {
         return success;
     }
 
-
-    @VisibleForTesting
-    void prune() {
-        if (dirPath.toFile().exists()) {
-            Set<String> fileNames = FileUtils.listFiles(dirPath);
-            List<BackupFileInfo> backupFileInfoList = createBackupFileInfo(fileName, fileNames);
-            LocalDateTime now = LocalDateTime.now();
-            List<BackupFileInfo> outdatedBackupFileInfos = findOutdatedBackups(new ArrayList<>(backupFileInfoList), now);
-            outdatedBackupFileInfos.forEach(backupFileInfo -> {
-                try {
-                    String fileNameWithDate = backupFileInfo.getFileNameWithDate();
-                    FileUtils.deleteFile(dirPath.resolve(fileNameWithDate).toFile());
-                    log.info("Deleted outdated backup {}", fileNameWithDate);
-                } catch (Exception e) {
-                    log.error("Failed to prune backups", e);
-                }
-            });
+    public void prune() {
+        if (maxBackupSize == MaxBackupSize.ZERO) {
+            return;
         }
+
+        accumulatedFileSize = 0;
+        Set<String> fileNames = FileUtils.listFiles(dirPath);
+        List<BackupFileInfo> backupFileInfoList = createBackupFileInfo(fileName, fileNames);
+        LocalDateTime now = LocalDateTime.now();
+        List<BackupFileInfo> outdatedBackupFileInfos = findOutdatedBackups(new ArrayList<>(backupFileInfoList), now, this::isMaxFileSizeReached);
+        outdatedBackupFileInfos.forEach(backupFileInfo -> {
+            try {
+                String fileNameWithDate = backupFileInfo.getFileNameWithDate();
+                FileUtils.deleteFile(dirPath.resolve(fileNameWithDate).toFile());
+                log.info("Deleted outdated backup {}", fileNameWithDate);
+            } catch (Exception e) {
+                log.error("Failed to prune backups", e);
+            }
+        });
     }
 
     @VisibleForTesting
-    static List<BackupFileInfo> findOutdatedBackups(List<BackupFileInfo> backupFileInfoList, LocalDateTime now) {
+    static List<BackupFileInfo> findOutdatedBackups(List<BackupFileInfo> backupFileInfoList,
+                                                    LocalDateTime now,
+                                                    Predicate<BackupFileInfo> isMaxFileSizeReachedPredicate) {
         Map<Integer, BackupFileInfo> byMinutes = new HashMap<>();
         Map<Integer, BackupFileInfo> byHour = new HashMap<>();
         Map<Integer, BackupFileInfo> byDay = new HashMap<>();
         Map<Integer, BackupFileInfo> byWeek = new HashMap<>();
         Map<Integer, BackupFileInfo> byMonth = new HashMap<>();
         Map<Integer, BackupFileInfo> byYear = new HashMap<>();
+
         for (BackupFileInfo backupFileInfo : backupFileInfoList) {
             long ageInMinutes = getBackupAgeInMinutes(backupFileInfo, now);
             long ageInHours = getBackupAgeInHours(backupFileInfo, now);
             long ageInDays = getBackupAgeInDays(backupFileInfo, now);
+
+            if (isMaxFileSizeReachedPredicate.test(backupFileInfo)) {
+                continue;
+            }
+
             if (ageInMinutes < 60) {
                 byMinutes.putIfAbsent(backupFileInfo.getMinutes(), backupFileInfo);
             } else if (ageInHours < 24) {
@@ -172,6 +205,40 @@ public class BackupService {
         ArrayList<BackupFileInfo> outDated = new ArrayList<>(backupFileInfoList);
         outDated.removeAll(remaining);
         return outDated;
+    }
+
+    private long addAndGetAccumulatedFileSize(BackupFileInfo backupFileInfo) {
+        accumulatedFileSize += getFileSize(backupFileInfo);
+        accumulatedFileSizeByStore.put(fileName, accumulatedFileSize);
+        return accumulatedFileSize;
+    }
+
+    private long updateAndGetAccumulatedFileSize() {
+        accumulatedFileSize = 0;
+        Set<String> fileNames = FileUtils.listFiles(dirPath);
+        createBackupFileInfo(fileName, fileNames)
+                .forEach(this::addAndGetAccumulatedFileSize);
+        return accumulatedFileSize;
+    }
+
+    private boolean isMaxFileSizeReached(BackupFileInfo backupFileInfo) {
+        accumulatedFileSize = addAndGetAccumulatedFileSize(backupFileInfo);
+        long totalAccumulatedFileSize = accumulatedFileSizeByStore.values().stream().mapToLong(e -> e).sum();
+        return accumulatedFileSize > maxBackupSize.getSizeInBytes() || totalAccumulatedFileSize > totalMaxBackupSize;
+    }
+
+    private long getFileSize(BackupFileInfo backupFileInfo) {
+        Path path = dirPath.resolve(backupFileInfo.getFileNameWithDate());
+        String key = path.toAbsolutePath().toString();
+        fileSizeByBackupFileInfo.computeIfAbsent(key, k -> {
+            try {
+                return Files.size(path);
+            } catch (IOException e) {
+                log.error("Failed to read file size of {}", path.toAbsolutePath(), e);
+                return 0L;
+            }
+        });
+        return fileSizeByBackupFileInfo.get(key);
     }
 
 
@@ -210,7 +277,9 @@ public class BackupService {
 
     private static long getBackupAgeInMinutes(BackupFileInfo backupFileInfo, LocalDateTime now) {
         return ChronoUnit.MINUTES.between(backupFileInfo.getLocalDateTime(), now);
-    }   private static long getBackupAgeInHours(BackupFileInfo backupFileInfo, LocalDateTime now) {
+    }
+
+    private static long getBackupAgeInHours(BackupFileInfo backupFileInfo, LocalDateTime now) {
         return ChronoUnit.HOURS.between(backupFileInfo.getLocalDateTime(), now);
     }
 }

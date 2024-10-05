@@ -30,7 +30,6 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,8 +58,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.SETTINGS,
-                persistableStore,
-                MaxBackupSize.HUNDRED_MB);
+                persistableStore);
         SettingsService.instance = this;
     }
 

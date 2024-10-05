@@ -70,7 +70,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         try {
             writeStoreToTempFile(persistableStore);
             boolean hasFileBeenBackedUp = storeFileManager.maybeBackup();
-            if(!hasFileBeenBackedUp){
+            if (!hasFileBeenBackedUp) {
                 File storeFile = storeFilePath.toFile();
                 FileUtils.deleteFile(storeFile);
             }
@@ -80,6 +80,10 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         } catch (Exception e) {
             log.error("Couldn't write persistable store to disk.", e);
         }
+    }
+
+    public void pruneBackups() {
+        storeFileManager.pruneBackups();
     }
 
     private PersistableStore<?> readStoreFromFile() throws IOException {

@@ -97,6 +97,14 @@ public class PersistenceService {
         return persistence;
     }
 
+    public CompletableFuture<Void> pruneAllBackups() {
+        List<CompletableFuture<Void>> list = clients.stream()
+                .map(PersistenceClient::getPersistence)
+                .map(Persistence::pruneBackups)
+                .toList();
+        return CompletableFutureUtils.allOf(list).thenApply(l -> null);
+    }
+
     public CompletableFuture<Boolean> readAllPersisted() {
         List<String> storagePaths = clients.stream()
                 .map(persistenceClient -> persistenceClient.getPersistence().getStorePath()

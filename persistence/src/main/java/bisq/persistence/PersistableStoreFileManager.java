@@ -64,10 +64,6 @@ public class PersistableStoreFileManager {
         backupService.maybeMigrateLegacyBackupFile();
     }
 
-    public boolean maybeBackup() {
-        return backupService.maybeBackup();
-    }
-
     public void renameTempFileToCurrentFile() throws IOException {
         File storeFile = storeFilePath.toFile();
         if (storeFile.exists()) {
@@ -83,6 +79,14 @@ public class PersistableStoreFileManager {
         if (!isSuccess) {
             throw new IOException("Couldn't rename " + tempFile + " to " + storeFilePath);
         }
+    }
+
+    public boolean maybeBackup() {
+        return backupService.maybeBackup();
+    }
+
+    public void pruneBackups() {
+        backupService.prune();
     }
 
     private Path createTempFilePath() {

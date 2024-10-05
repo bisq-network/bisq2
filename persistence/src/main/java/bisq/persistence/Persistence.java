@@ -64,4 +64,8 @@ public class Persistence<T extends PersistableStore<T>> {
     protected void persist(T persistableStore) {
         persistableStoreReaderWriter.write(persistableStore);
     }
+
+    public CompletableFuture<Void> pruneBackups() {
+        return CompletableFuture.runAsync(persistableStoreReaderWriter::pruneBackups, executorService);
+    }
 }

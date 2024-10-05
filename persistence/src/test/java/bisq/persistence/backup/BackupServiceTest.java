@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -68,6 +69,7 @@ public class BackupServiceTest {
 
     @Test
     void testPrune() {
+        Predicate<BackupFileInfo> isMaxFileSizeReachedFunction = e -> false;
         List<String> fileNames;
         List<BackupFileInfo> list;
         List<BackupFileInfo> outdatedBackupFileInfos;
@@ -79,7 +81,7 @@ public class BackupServiceTest {
         // Empty
         fileNames = List.of();
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
 
         // Backup date is in the future. We treat backup as daily backup
@@ -88,7 +90,7 @@ public class BackupServiceTest {
         );
         now = LocalDateTime.parse("2024-09-14_1755", BackupService.DATE_FORMAT);
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
         now = LocalDateTime.parse("2024-09-15_1755", BackupService.DATE_FORMAT);
 
@@ -98,7 +100,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-15_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
 
 
@@ -111,7 +113,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-15_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(2, outdatedBackupFileInfos.size());
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(0))));
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(1))));
@@ -127,7 +129,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-15_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(2, outdatedBackupFileInfos.size());
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(0))));
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(2))));
@@ -139,7 +141,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-15_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(list.get(0).getFileNameWithDate(), fileNames.get(1));
         assertEquals(0, outdatedBackupFileInfos.size());
 
@@ -151,7 +153,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-15_1752"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
 
 
@@ -162,7 +164,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-05_1752"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(2, outdatedBackupFileInfos.size());
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(0))));
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, fileNames.get(2))));
@@ -180,7 +182,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-15_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertTrue(outdatedBackupFileInfos.isEmpty());
 
 
@@ -196,7 +198,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-14_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertTrue(outdatedBackupFileInfos.isEmpty());
 
 
@@ -212,7 +214,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-15_1755" // sunday
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(6, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
@@ -232,7 +234,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-15_1755" // sunday
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(6, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
@@ -250,7 +252,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-22_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(0, outdatedBackupFileInfos.size());
 
 
@@ -269,7 +271,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-09-22_1755" // sunday
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(6, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
@@ -299,7 +301,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-11-30_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(2, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
@@ -319,7 +321,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2023-12-29_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         assertEquals(1, outdatedBackupFileInfos.size());
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
@@ -373,7 +375,7 @@ public class BackupServiceTest {
                 "test_store.protobuf_2024-12-30_1755"
         );
         list = BackupService.createBackupFileInfo(fileName, fileNames);
-        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now);
+        outdatedBackupFileInfos = BackupService.findOutdatedBackups(new ArrayList<>(list), now, isMaxFileSizeReachedFunction);
         remaining = new ArrayList<>(list);
         remaining.removeAll(outdatedBackupFileInfos);
         assertEquals(11, outdatedBackupFileInfos.size());
