@@ -46,12 +46,16 @@ public class TorControlProtocol implements AutoCloseable {
             torControlReader.start(controlSocket.getInputStream());
             outputStream = Optional.of(controlSocket.getOutputStream());
         } catch (IOException | InterruptedException e) {
+            close();
             throw new CannotConnectWithTorException(e);
         }
     }
 
     @Override
     public void close() {
+        if(closeInProgress){
+            return;
+        }
         closeInProgress = true;
         try {
             controlSocket.close();
@@ -239,6 +243,7 @@ public class TorControlProtocol implements AutoCloseable {
                 connectionAttempt++;
                 Thread.sleep(200);
             } catch (IOException e) {
+                close();
                 throw new CannotConnectWithTorException(e);
             }
         }

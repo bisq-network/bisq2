@@ -39,12 +39,22 @@ public class NetworkEnvelopeSocket implements Closeable {
     }
 
     public void send(NetworkEnvelope networkEnvelope) throws IOException {
-        networkEnvelope.writeDelimitedTo(outputStream);
-        outputStream.flush();
+        try {
+            networkEnvelope.writeDelimitedTo(outputStream);
+            outputStream.flush();
+        } catch (IOException e) {
+            close();
+            throw e;
+        }
     }
 
     public bisq.network.protobuf.NetworkEnvelope receiveNextEnvelope() throws IOException {
-        return bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
+        try {
+            return bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
+        } catch (IOException e) {
+            close();
+            throw e;
+        }
     }
 
     @Override
