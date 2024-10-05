@@ -20,6 +20,7 @@ package bisq.settings;
 import bisq.common.application.Service;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
+import bisq.common.data.ByteUnit;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
@@ -30,6 +31,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.persistence.backup.BackupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,7 +92,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getShowMarketSelectionListCollapsed().addObserver(value -> persist());
         getBackupLocation().addObserver(value -> persist());
         getShowMyOffersOnly().addObserver(value -> persist());
-        getTotalMaxBackupSizeInMB().addObserver(value -> persist());
+        getTotalMaxBackupSizeInMB().addObserver(value -> {
+            BackupService.setTotalMaxBackupSize(ByteUnit.MB.toBytes(value));
+            persist();
+        });
 
         isInitialized = true;
 
@@ -214,7 +219,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.showMyOffersOnly;
     }
 
-    public Observable<Integer> getTotalMaxBackupSizeInMB() {
+    public Observable<Double> getTotalMaxBackupSizeInMB() {
         return persistableStore.totalMaxBackupSizeInMB;
     }
 

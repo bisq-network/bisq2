@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.network;
+package bisq.desktop.main.content.settings.misc;
 
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.observable.Pin;
@@ -31,22 +31,22 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class NetworkSettingsController implements Controller {
+public class MiscSettingsController implements Controller {
     @Getter
-    private final NetworkSettingsView view;
-    private final NetworkSettingsModel model;
+    private final MiscSettingsView view;
+    private final MiscSettingsModel model;
     private final SettingsService settingsService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
 
     private Pin ignoreDiffAdjustmentFromSecManagerPin,
-            mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin;
+            mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin, totalMaxBackupSizeInMBPin;
     private Subscription difficultyAdjustmentFactorDescriptionTextPin;
 
-    public NetworkSettingsController(ServiceProvider serviceProvider) {
+    public MiscSettingsController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
         difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
-        model = new NetworkSettingsModel();
-        view = new NetworkSettingsView(model, this);
+        model = new MiscSettingsModel();
+        view = new MiscSettingsView(model, this);
     }
 
     @Override
@@ -74,6 +74,9 @@ public class NetworkSettingsController implements Controller {
                                         UIThread.run(() -> model.getDifficultyAdjustmentFactor().set(mostRecentValueOrDefault)));
                     }
                 });
+
+        totalMaxBackupSizeInMBPin = FxBindings.bindBiDir(model.getTotalMaxBackupSizeInMB())
+                .to(settingsService.getTotalMaxBackupSizeInMB());
     }
 
     @Override
@@ -81,6 +84,7 @@ public class NetworkSettingsController implements Controller {
         ignoreDiffAdjustmentFromSecManagerPin.unbind();
         model.getDifficultyAdjustmentFactorEditable().unbind();
         difficultyAdjustmentFactorDescriptionTextPin.unsubscribe();
+        totalMaxBackupSizeInMBPin.unbind();
         if (difficultyAdjustmentFactorPin != null) {
             difficultyAdjustmentFactorPin.unbind();
         }

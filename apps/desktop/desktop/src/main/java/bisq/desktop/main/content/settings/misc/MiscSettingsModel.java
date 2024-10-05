@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.network;
+package bisq.desktop.main.content.settings.misc;
 
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
@@ -24,12 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class NetworkSettingsModel implements Model {
+public class MiscSettingsModel implements Model {
     private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
     private final BooleanProperty difficultyAdjustmentFactorEditable = new SimpleBooleanProperty();
     private final StringProperty difficultyAdjustmentFactorDescriptionText = new SimpleStringProperty();
     private final BooleanProperty ignoreDiffAdjustmentFromSecManager = new SimpleBooleanProperty();
+    private final DoubleProperty totalMaxBackupSizeInMB = new SimpleDoubleProperty();
 
-    public NetworkSettingsModel() {
+    public MiscSettingsModel() {
     }
 }

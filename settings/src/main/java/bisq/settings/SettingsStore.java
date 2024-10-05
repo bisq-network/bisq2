@@ -63,7 +63,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> showMarketSelectionListCollapsed = new Observable<>();
     final Observable<String> backupLocation = new Observable<>();
     final Observable<Boolean> showMyOffersOnly = new Observable<>();
-    final Observable<Integer> totalMaxBackupSizeInMB = new Observable<>();
+    final Observable<Double> totalMaxBackupSizeInMB = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -117,7 +117,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean showMarketSelectionListCollapsed,
                          String backupLocation,
                          boolean showMyOffersOnly,
-                         int totalMaxBackupSizeInMB) {
+                         double totalMaxBackupSizeInMB) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -188,6 +188,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         if (maxTradePriceDeviation == 0) {
             maxTradePriceDeviation = SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
         }
+        double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
+        if (totalMaxBackupSizeInMB == 0) {
+            totalMaxBackupSizeInMB = BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB;
+        }
         return new SettingsStore(Cookie.fromProto(proto.getCookie()),
                 proto.getDontShowAgainMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
@@ -214,7 +218,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getShowMarketSelectionListCollapsed(),
                 proto.getBackupLocation(),
                 proto.getShowMyOffersOnly(),
-                proto.getTotalMaxBackupSizeInMB());
+                totalMaxBackupSizeInMB);
     }
 
     @Override
