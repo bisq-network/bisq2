@@ -72,8 +72,8 @@ public class MemoryReport {
             }
 
             ThreadProfiler threadProfiler = ThreadProfiler.INSTANCE;
-            int nameLength = 120;
-            String format = "%-5s\t %-8s\t %-" + nameLength + "s \t %-15s\t %-15s\t %-15s\n";
+            int nameLength = 80;
+            String format = "%-5s\t %-8s\t %-" + nameLength + "s\t %-15s\t %-15s\t %-15s\n";
             String header = String.format(format, "ID", "Priority", "[Group] Name", "State", "Time", "Memory");
 
             StringBuilder customBisqThreads = new StringBuilder("Bisq custom threads:\n");
@@ -93,11 +93,16 @@ public class MemoryReport {
                                 .map(DataSizeFormatter::format)
                                 .orElse("N/A");
                         int priority = thread.getPriority();
+                        String threadState = thread.getState().name();
+                        if (threadState.equals("BLOCKED")) {
+                            log.warn("Thread {} is in {} state. It might be caused by a deadlock or resource block. " +
+                                    "thread={}", thread.threadId(), threadState, thread);
+                        }
                         String line = String.format(format,
                                 thread.threadId(),
                                 priority,
                                 fullName,
-                                thread.getState().name(),
+                                threadState,
                                 time,
                                 memory
                         );
