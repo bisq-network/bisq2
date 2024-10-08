@@ -18,7 +18,7 @@
 package bisq.wallets.electrum;
 
 import bisq.common.util.NetworkUtils;
-import bisq.wallets.json_rpc.RpcConfig;
+import bisq.wallets.bitcoind.RpcConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
