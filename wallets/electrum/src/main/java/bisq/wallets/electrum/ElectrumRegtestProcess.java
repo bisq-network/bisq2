@@ -75,7 +75,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
         logFilePath = findNewLogFile();
         super.start();
         rpcConfig = electrumProcessConfig.getElectrumConfig()
-                .toRpcConfig();
+                .toRpcConfig().toJsonRpcConfig();
     }
 
     public void stopOld() {
@@ -151,7 +151,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
     }
 
     private ElectrumDaemon createElectrumDaemon() {
-        RpcConfig rpcConfig = electrumProcessConfig.getElectrumConfig().toRpcConfig();
+        RpcConfig rpcConfig = electrumProcessConfig.getElectrumConfig().toRpcConfig().toJsonRpcConfig();
         JsonRpcClient jsonRpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         return new ElectrumDaemon(jsonRpcClient);
     }
