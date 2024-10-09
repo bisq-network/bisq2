@@ -2,7 +2,9 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
     }
-    includeBuild("../build-logic")
+    includeBuild("../build-logic") {
+    name = "bitcoind-build-logic"
+}
 }
 
 dependencyResolutionManagement {
