@@ -74,7 +74,8 @@ public class BitcoindRegtestProcess extends DaemonProcess {
                         "-zmqpubrawtx=tcp://127.0.0.1:" + zmqPort,
 
                         "-fallbackfee=0.00000001",
-                        "-txindex=1"))
+                        "-txindex=1",
+                        "-peerbloomfilters=1"))
                 .environmentVars(Collections.emptyMap())
                 .build();
     }
