@@ -38,13 +38,15 @@ import java.util.List;
 public class BitcoindRegtestProcess extends DaemonProcess {
 
     private final Path binaryPath;
+    protected final int p2pPort;
     @Getter
     protected final RpcConfig rpcConfig;
     private final BitcoindDaemon bitcoindDaemon;
 
-    public BitcoindRegtestProcess(Path binaryPath, RpcConfig rpcConfig, Path dataDir) {
+    public BitcoindRegtestProcess(Path binaryPath, int p2pPort, RpcConfig rpcConfig, Path dataDir) {
         super(dataDir);
         this.binaryPath = binaryPath;
+        this.p2pPort = p2pPort;
         this.rpcConfig = rpcConfig;
         JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         bitcoindDaemon = new BitcoindDaemon(rpcClient);
@@ -60,7 +62,7 @@ public class BitcoindRegtestProcess extends DaemonProcess {
                         "-datadir=" + dataDir.toAbsolutePath(),
                         "-debug=1",
 
-                        "-bind=127.0.0.1:" + BitcoindRegtestSetup.findFreeSystemPort(),
+                        "-bind=127.0.0.1:" + p2pPort,
                         "-whitelist=127.0.0.1",
 
                         "-rpcbind=127.0.0.1:" + rpcConfig.getPort(),

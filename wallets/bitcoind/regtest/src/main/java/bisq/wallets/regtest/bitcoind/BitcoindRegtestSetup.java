@@ -42,6 +42,8 @@ public class BitcoindRegtestSetup
         extends AbstractRegtestSetup<MultiProcessCoordinator> {
 
     @Getter
+    private final int p2pPort;
+    @Getter
     private final RpcConfig rpcConfig;
     private final BitcoindRegtestProcess bitcoindProcess;
     @Getter
@@ -49,6 +51,7 @@ public class BitcoindRegtestSetup
 
     public BitcoindRegtestSetup() throws IOException {
         super();
+        p2pPort = BitcoindRegtestSetup.findFreeSystemPort();
         rpcConfig = createRpcConfig();
         bitcoindProcess = createBitcoindProcess();
         remoteBitcoind = new RemoteBitcoind(rpcConfig);
@@ -113,6 +116,7 @@ public class BitcoindRegtestSetup
         Path bitcoindDataDir = tmpDirPath.resolve("bitcoind_data_dir");
         return new BitcoindRegtestProcess(
                 bitcoindPath,
+                p2pPort,
                 rpcConfig,
                 bitcoindDataDir
         );
