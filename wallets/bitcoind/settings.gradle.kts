@@ -3,9 +3,6 @@ pluginManagement {
         gradlePluginPortal()
     }
     includeBuild("build-logic")
-    includeBuild("../../build-logic") {
-        name = "root-build-logic"
-    }
 }
 
 dependencyResolutionManagement {
