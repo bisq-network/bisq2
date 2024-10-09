@@ -97,13 +97,7 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        bisq.wallets.json_rpc.RpcConfig jsonRpcConfig = processConfig.getElectrumConfig().toRpcConfig();
-        bisq.wallets.bitcoind.RpcConfig rpcConfig = RpcConfig.builder()
-                .hostname(jsonRpcConfig.getHostname())
-                .port(jsonRpcConfig.getPort())
-                .user(jsonRpcConfig.getUser())
-                .password(jsonRpcConfig.getPassword())
-                .build();
+        RpcConfig rpcConfig = processConfig.getElectrumConfig().toRpcConfig();
         return initializeWallet(rpcConfig, Optional.empty());
     }
 
