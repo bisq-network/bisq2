@@ -15,21 +15,31 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.network;
+package bisq.persistence.backup;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.*;
+import bisq.common.data.ByteUnit;
+import bisq.persistence.DbSubDirectory;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter
-public class NetworkSettingsModel implements Model {
-    private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
-    private final BooleanProperty difficultyAdjustmentFactorEditable = new SimpleBooleanProperty();
-    private final StringProperty difficultyAdjustmentFactorDescriptionText = new SimpleStringProperty();
-    private final BooleanProperty ignoreDiffAdjustmentFromSecManager = new SimpleBooleanProperty();
+public enum MaxBackupSize {
+    ZERO(0),
+    TEN_MB(ByteUnit.MB.toBytes(10)),
+    HUNDRED_MB(ByteUnit.MB.toBytes(100));
 
-    public NetworkSettingsModel() {
+    public static MaxBackupSize from(DbSubDirectory dbSubDirectory) {
+        return switch (dbSubDirectory) {
+            case NETWORK_DB -> ZERO;
+            case CACHE -> ZERO;
+            case SETTINGS -> TEN_MB;
+            case PRIVATE -> HUNDRED_MB;
+            case WALLETS -> HUNDRED_MB;
+        };
+    }
+
+    private final double sizeInBytes;
+
+    MaxBackupSize(double sizeInBytes) {
+        this.sizeInBytes = sizeInBytes;
     }
 }

@@ -164,6 +164,10 @@ public class FileUtils {
                 }));
     }
 
+    public static void makeDirs(Path dirPath) throws IOException {
+        makeDirs(dirPath.toFile());
+    }
+
     public static void makeDirs(String dirPath) throws IOException {
         makeDirs(new File(dirPath));
     }
@@ -288,9 +292,36 @@ public class FileUtils {
     }
 
     public static Set<String> listFiles(String dirPath) {
-        try (Stream<Path> stream = Files.list(Paths.get(dirPath))) {
+        return listFiles(Paths.get(dirPath));
+    }
+
+    public static Set<String> listFiles(Path dirPath) {
+        if (!dirPath.toFile().exists()) {
+            return new HashSet<>();
+        }
+        try (Stream<Path> stream = Files.list(dirPath)) {
             return stream
                     .filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .collect(Collectors.toSet());
+        } catch (IOException e) {
+            log.error(e.toString(), e);
+            return new HashSet<>();
+        }
+    }
+
+    public static Set<String> listDirectories(String dirPath) {
+        return listDirectories(Paths.get(dirPath));
+    }
+
+    public static Set<String> listDirectories(Path dirPath) {
+        if (!dirPath.toFile().exists()) {
+            return new HashSet<>();
+        }
+        try (Stream<Path> stream = Files.list(dirPath)) {
+            return stream
+                    .filter(Files::isDirectory)
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .collect(Collectors.toSet());

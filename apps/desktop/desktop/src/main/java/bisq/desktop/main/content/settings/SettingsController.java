@@ -23,7 +23,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.settings.display.DisplaySettingsController;
 import bisq.desktop.main.content.settings.language.LanguageSettingsController;
-import bisq.desktop.main.content.settings.network.NetworkSettingsController;
+import bisq.desktop.main.content.settings.misc.MiscSettingsController;
 import bisq.desktop.main.content.settings.notifications.NotificationsSettingsController;
 import bisq.desktop.main.content.settings.trade.TradeSettingsController;
 import lombok.Getter;
@@ -48,7 +48,7 @@ public class SettingsController extends ContentTabController<SettingsModel> {
             case NOTIFICATION_SETTINGS -> Optional.of(new NotificationsSettingsController(serviceProvider));
             case DISPLAY_SETTINGS -> Optional.of(new DisplaySettingsController(serviceProvider));
             case TRADE_SETTINGS -> Optional.of(new TradeSettingsController(serviceProvider));
-            case NETWORK_SETTINGS -> Optional.of(new NetworkSettingsController(serviceProvider));
+            case MISC_SETTINGS -> Optional.of(new MiscSettingsController(serviceProvider));
             default -> Optional.empty();
         };
     }

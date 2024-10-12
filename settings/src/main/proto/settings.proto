@@ -63,4 +63,5 @@ message SettingsStore {
   bool showMarketSelectionListCollapsed = 22;
   string backupLocation = 23;
   bool showMyOffersOnly = 24;
+  double totalMaxBackupSizeInMB = 25;
 }
