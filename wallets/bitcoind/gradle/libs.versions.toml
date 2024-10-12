@@ -1,0 +1,26 @@
+[versions]
+assertj-core-lib = { strictly = '3.22.0' }
+bouncycastle-lib = { strictly = '1.69' } # Oldest version without known CVEs
+google-guava-lib = { strictly = '31.1-jre' }
+jeromq-lib = { strictly = '0.5.2' }
+junit-jupiter-lib = { strictly = '5.8.2' }
+logback-lib = { strictly = '1.2.11' }
+lombok-lib = { strictly = '1.18.34' }
+mockito-lib = { strictly = '4.11.0' }
+slf4j-lib = { strictly = '1.7.36' }
+square-moshi-lib = { strictly = '1.14.0' }
+square-okhttp-libs = { strictly = '4.10.0' }
+
+[libraries]
+assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
+bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk15on', version.ref = 'bouncycastle-lib' }
+google-guava = { module = 'com.google.guava:guava', version.ref = 'google-guava-lib' }
+jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
+junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
+logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'logback-lib' }
+logback-core = { module = 'ch.qos.logback:logback-core', version.ref = 'logback-lib' }
+lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
+mockito = { module = 'org.mockito:mockito-core', version.ref = 'mockito-lib' }
+slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
+square-moshi =  { module = 'com.squareup.moshi:moshi', version.ref = 'square-moshi-lib' }
+square-okhttp-bom =  { module = 'com.squareup.okhttp3:okhttp-bom', version.ref = 'square-okhttp-libs' }
