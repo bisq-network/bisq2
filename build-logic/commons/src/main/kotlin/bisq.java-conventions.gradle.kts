@@ -11,16 +11,11 @@ repositories {
 
 java {
     toolchain {
-        // We use the Java 22 toolchain to use jpackage to create the binaries.
         languageVersion.set(JavaLanguageVersion.of(22))
     }
 }
 
 tasks {
-    compileJava {
-        options.release.set(22)
-    }
-
     test {
         useJUnitPlatform()
     }
