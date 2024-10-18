@@ -17,6 +17,6 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.25.4"
+        artifact = "com.google.protobuf:protoc:4.28.2"
     }
 }
