@@ -52,7 +52,7 @@ mockito-lib = { strictly = '4.11.0' }
 openjfx-plugin = { strictly = '0.0.13' }
 openjfx-monocle-lib = { strictly = 'jdk-12.0.1+2'}
 
-protobuf-java-lib = { strictly = '3.25.4' }
+protobuf-java-lib = { strictly = '4.28.2' }
 protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 
 sarxos-lib = { strictly = '0.3.12' }
