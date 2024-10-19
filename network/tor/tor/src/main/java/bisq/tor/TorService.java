@@ -182,7 +182,6 @@ public class TorService implements Service {
             }
         }
 
-        installTorIfNotUpToDate();
         return torDataDirPath.resolve("tor");
     }
 
