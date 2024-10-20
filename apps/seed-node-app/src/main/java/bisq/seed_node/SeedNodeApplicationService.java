@@ -75,7 +75,8 @@ public class SeedNodeApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return securityService.initialize()
+        return super.initialize()
+                .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> bondedRolesService.initialize())

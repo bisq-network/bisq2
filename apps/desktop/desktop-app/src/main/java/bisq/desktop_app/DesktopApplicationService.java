@@ -219,7 +219,8 @@ public class DesktopApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return securityService.initialize()
+        return super.initialize()
+                .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
 
