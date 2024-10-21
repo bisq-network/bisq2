@@ -8,65 +8,61 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
-//fixme (low prio) use Optional instead of Nullable
+import static bisq.common.util.OptionalUtils.normalize;
+import static bisq.common.validation.NetworkDataValidation.validateText;
+
 @EqualsAndHashCode(callSuper = true)
-@Setter
 @Getter
+@Setter
 @ToString
 @Slf4j
 public abstract class BankAccountPayload extends CountryBasedAccountPayload {
-    protected String holderName;
-    protected String bankName;
-    protected String branchId;
-    protected String accountNr;
-    protected String accountType;
-    @Nullable
-    protected String holderTaxId;
-    protected String bankId;
-    @Nullable
-    protected String nationalAccountId;
+
+    protected Optional<String> holderName;
+    protected Optional<String> bankName;
+    protected Optional<String> branchId;
+    protected Optional<String> accountNr;
+    protected Optional<String> accountType;
+    protected Optional<String> holderTaxId;
+    protected Optional<String> bankId;
+    protected Optional<String> nationalAccountId;
 
     protected BankAccountPayload(String id,
                                  String paymentMethodName,
                                  String countryCode,
-                                 String holderName,
-                                 @Nullable String bankName,
-                                 @Nullable String branchId,
-                                 @Nullable String accountNr,
-                                 @Nullable String accountType,
-                                 @Nullable String holderTaxId,
-                                 @Nullable String bankId,
-                                 @Nullable String nationalAccountId) {
+                                 Optional<String> holderName,
+                                 Optional<String> bankName,
+                                 Optional<String> branchId,
+                                 Optional<String> accountNr,
+                                 Optional<String> accountType,
+                                 Optional<String> holderTaxId,
+                                 Optional<String> bankId,
+                                 Optional<String> nationalAccountId) {
         super(id, paymentMethodName, countryCode);
 
-        this.holderName = Optional.ofNullable(holderName).orElse("");
-        this.bankName = Optional.ofNullable(bankName).orElse("");
-        this.branchId = Optional.ofNullable(branchId).orElse("");
-        this.accountNr = Optional.ofNullable(accountNr).orElse("");
-        this.accountType = Optional.ofNullable(accountType).orElse("");
-        this.holderTaxId = holderTaxId;
-        this.bankId = Optional.ofNullable(bankId).orElse("");
-        this.nationalAccountId = nationalAccountId;
+        this.holderName = normalize(holderName);
+        this.bankName = normalize(bankName);
+        this.branchId = normalize(branchId);
+        this.accountNr = normalize(accountNr);
+        this.accountType = normalize(accountType);
+        this.holderTaxId = normalize(holderTaxId);
+        this.bankId = normalize(bankId);
+        this.nationalAccountId = normalize(nationalAccountId);
     }
 
     @Override
     public void verify() {
         super.verify();
-        NetworkDataValidation.validateText(holderName, 100);
-        NetworkDataValidation.validateText(bankName, 100);
-        NetworkDataValidation.validateText(branchId, 30);
-        NetworkDataValidation.validateText(accountNr, 30);
-        NetworkDataValidation.validateText(accountType, 20);
-        if (holderTaxId != null) {
-            NetworkDataValidation.validateText(holderTaxId, 50);
-        }
-        NetworkDataValidation.validateText(bankId, 50);
-        if (nationalAccountId != null) {
-            NetworkDataValidation.validateText(nationalAccountId, 50);
-        }
+        validateText(holderName, 100);
+        validateText(bankName, 100);
+        validateText(branchId, 30);
+        validateText(accountNr, 30);
+        validateText(accountType, 20);
+        validateText(holderTaxId, 50);
+        validateText(bankId, 50);
+        validateText(nationalAccountId, 50);
     }
 
     @Override
@@ -80,16 +76,15 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
     }
 
     protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
-        var builder = bisq.account.protobuf.BankAccountPayload.newBuilder()
-                .setHolderName(holderName)
-                .setBankName(bankName)
-                .setBranchId(branchId)
-                .setAccountNr(accountNr)
-                .setAccountType(accountType)
-                .setBranchId(branchId)
-                .setBankId(bankId);
-        Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
-        Optional.ofNullable(nationalAccountId).ifPresent(builder::setNationalAccountId);
+        var builder = bisq.account.protobuf.BankAccountPayload.newBuilder();
+        holderName.ifPresent(builder::setHolderName);
+        bankName.ifPresent(builder::setBankName);
+        branchId.ifPresent(builder::setBranchId);
+        accountNr.ifPresent(builder::setAccountNr);
+        accountType.ifPresent(builder::setAccountType);
+        holderTaxId.ifPresent(builder::setHolderTaxId);
+        bankId.ifPresent(builder::setBankId);
+        nationalAccountId.ifPresent(builder::setNationalAccountId);
         return builder;
     }
 

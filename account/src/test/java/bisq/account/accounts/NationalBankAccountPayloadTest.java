@@ -5,6 +5,8 @@ import bisq.account.protobuf.BankAccountPayload;
 import bisq.account.protobuf.CountryBasedAccountPayload;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class NationalBankAccountPayloadTest {
@@ -39,16 +41,15 @@ class NationalBankAccountPayloadTest {
     private static final bisq.account.accounts.NationalBankAccountPayload PAYLOAD =
             new bisq.account.accounts.NationalBankAccountPayload(
                     "id", "paymentMethodName", "countryCode",
-                    "holderName", "bankName", "branchId",
-                    "accountNr", "accountType", "holderTaxId",
-                    "bankId", "nationalAccountId"
+                    Optional.of("holderName"), Optional.of("bankName"), Optional.of("branchId"),
+                    Optional.of("accountNr"), Optional.of("accountType"), Optional.of("holderTaxId"),
+                    Optional.of("bankId"), Optional.of("nationalAccountId")
             );
     private static final bisq.account.accounts.NationalBankAccountPayload PAYLOAD_OPTIONALS_NOT_SET =
             new bisq.account.accounts.NationalBankAccountPayload(
                     "id", "paymentMethodName", "countryCode",
-                    "holderName", null, null,
-                    null, null, null,
-                    null, null);
+                    Optional.of("holderName"), null, null, null, null,
+                    null, null, null);
 
     @Test
     void testToProto() {

@@ -11,6 +11,8 @@ import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
@@ -48,9 +50,9 @@ class NationalBankAccountTest {
             "accountName",
             new NationalBankAccountPayload(
                     "id", "NATIONAL_BANK", "countryCode",
-                    null, "bankName", null,
-                    null, null, null,
-                    null, null),
+                    Optional.empty(), Optional.of("bankName"), Optional.empty(),
+                    Optional.empty(), Optional.empty(), Optional.empty(),
+                    Optional.empty(), Optional.empty()),
             new bisq.common.locale.Country(
                     "countryCode",
                     "countryName",

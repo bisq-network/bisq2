@@ -13,6 +13,8 @@ import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
@@ -58,9 +60,9 @@ class CashDepositAccountTest {
             "accountName",
             new bisq.account.accounts.CashDepositAccountPayload(
                     "id", "CASH_DEPOSIT", "US",
-                    "holderName", "bankName", "branchId",
-                    "accountNr", "accountType", "holderTaxId",
-                    "bankId", "nationalAccountId", "requirements"),
+                    Optional.of("holderName"), Optional.of("bankName"), Optional.of("branchId"),
+                    Optional.of("accountNr"), Optional.of("accountType"), Optional.of("holderTaxId"),
+                    Optional.of("bankId"), Optional.of("nationalAccountId"), "requirements"),
             new bisq.common.locale.Country(
                     "US",
                     "countryName",
