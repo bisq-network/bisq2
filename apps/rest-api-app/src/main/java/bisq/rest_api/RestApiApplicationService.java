@@ -172,7 +172,6 @@ public class RestApiApplicationService extends ApplicationService {
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
-                walletService,
                 networkService,
                 identityService,
                 bondedRolesService,
