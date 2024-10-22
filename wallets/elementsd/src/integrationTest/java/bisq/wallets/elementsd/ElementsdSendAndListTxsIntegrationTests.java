@@ -47,7 +47,7 @@ public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInst
         List<ElementsdListTransactionsResponse.Entry> txs = receiverBackend.listTransactions(10);
         assertEquals(3, txs.size());
 
-        ElementsdListTransactionsResponse.Entry firstTx = txs.getFirst();
+        ElementsdListTransactionsResponse.Entry firstTx = txs.get(0);
         assertEquals(firstTxId, firstTx.getTxId());
         assertEquals("receive", firstTx.getCategory());
         assertEquals(100000000, firstTx.getAmount());

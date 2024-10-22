@@ -89,7 +89,7 @@ public class ConnectionHandshakeInitiator {
             throw new ConnectionException("Received multiple responses from client. requests=" + responseNetworkEnvelopes);
         }
 
-        NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.getFirst();
+        NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.get(0);
         responseNetworkEnvelope.verifyVersion();
 
         if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response response)) {

@@ -118,7 +118,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         }
 
         // If new data is older than existing entry we clear set and add our new data, otherwise we ignore the new data.
-        AuthorizedTimestampData existing = new ArrayList<>(dataSet).getFirst();
+        AuthorizedTimestampData existing = new ArrayList<>(dataSet).get(0);
         if (existing.getDate() > data.getDate()) {
             dataSet.clear();
             dataSet.add(data);

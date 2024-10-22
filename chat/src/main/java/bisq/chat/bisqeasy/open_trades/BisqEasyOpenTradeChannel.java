@@ -200,7 +200,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
     public UserProfile getPeer() {
         checkArgument(!traders.isEmpty(),
                 "traders is expected to has at least size 1 at getPeer() in  BisqEasyOpenTradeChannel");
-        return new ArrayList<>(traders).getFirst();
+        return new ArrayList<>(traders).get(0);
     }
 
     @Override

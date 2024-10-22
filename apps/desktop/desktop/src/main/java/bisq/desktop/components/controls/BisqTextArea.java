@@ -107,7 +107,7 @@ public class BisqTextArea extends TextArea {
                         Node thirdNode = parent.getChildrenUnmodifiable().get(2);
                         if (thirdNode instanceof Group group) {
                             if (!group.getChildren().isEmpty()) {
-                                Node node = group.getChildren().getFirst();
+                                Node node = group.getChildren().get(0);
                                 if (node instanceof Text) {
                                     this.selectorText = (Text) node;
                                 }

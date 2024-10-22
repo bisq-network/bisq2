@@ -89,7 +89,7 @@ public class NotificationPanelController implements Controller {
             List<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeIdsOfNotifications().stream()
                     .map(e -> e.substring(0, 8)).collect(Collectors.toList());
             if (tradeIdsOfNotifications.size() == 1) {
-                String tradeId = tradeIdsOfNotifications.getFirst();
+                String tradeId = tradeIdsOfNotifications.get(0);
                 if (hasMediatorNotConsumedNotifications) {
                     model.getHeadline().set(Res.get("notificationPanel.mediationCases.headline.single", tradeId));
                     model.getButtonText().set(Res.get("notificationPanel.mediationCases.button"));

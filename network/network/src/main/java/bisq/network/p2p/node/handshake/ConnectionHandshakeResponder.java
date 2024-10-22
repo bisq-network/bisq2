@@ -61,7 +61,7 @@ public class ConnectionHandshakeResponder {
         List<NetworkEnvelope> requestEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
         validateRequestEnvelopes(requestEnvelopes);
 
-        NetworkEnvelope requestProto = requestEnvelopes.getFirst();
+        NetworkEnvelope requestProto = requestEnvelopes.get(0);
         NetworkEnvelope requestNetworkEnvelope = parseAndValidateRequest(requestProto);
 
         ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage();

@@ -345,7 +345,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         if (selectionService.getSelectedChannel().get() == null &&
                 !bisqEasyOfferbookChannelService.getChannels().isEmpty() &&
                 !model.getSortedMarketChannelItems().isEmpty()) {
-            selectionService.selectChannel(model.getSortedMarketChannelItems().getFirst().getChannel());
+            selectionService.selectChannel(model.getSortedMarketChannelItems().get(0).getChannel());
         }
     }
 

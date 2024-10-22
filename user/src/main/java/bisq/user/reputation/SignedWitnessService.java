@@ -132,7 +132,7 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         }
 
         // If new data is older than existing entry we clear set and add our new data, otherwise we ignore the new data.
-        AuthorizedSignedWitnessData existing = new ArrayList<>(dataSet).getFirst();
+        AuthorizedSignedWitnessData existing = new ArrayList<>(dataSet).get(0);
         if (existing.getWitnessSignDate() > data.getWitnessSignDate()) {
             dataSet.clear();
             dataSet.add(data);

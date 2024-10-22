@@ -345,10 +345,10 @@ public class TradeWizardReviewController implements Controller {
             model.getTakersBitcoinPaymentMethods().setAll(bitcoinPaymentMethods);
             model.getTakersFiatPaymentMethods().setAll(fiatPaymentMethods);
             if (model.getTakersSelectedBitcoinPaymentMethod() == null) {
-                model.setTakersSelectedBitcoinPaymentMethod(bitcoinPaymentMethods.getFirst());
+                model.setTakersSelectedBitcoinPaymentMethod(bitcoinPaymentMethods.get(0));
             }
             if (model.getTakersSelectedFiatPaymentMethod() == null) {
-                model.setTakersSelectedFiatPaymentMethod(fiatPaymentMethods.getFirst());
+                model.setTakersSelectedFiatPaymentMethod(fiatPaymentMethods.get(0));
             }
             model.setBitcoinPaymentMethodDescription(
                     bitcoinPaymentMethods.size() == 1

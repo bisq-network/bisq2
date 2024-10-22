@@ -73,8 +73,8 @@ public class DropdownMenuItem extends CustomMenuItem {
     private void updateIcon(ImageView newIcon) {
         if (buttonIcon != newIcon) {
             buttonIcon = newIcon;
-            hBox.getChildren().removeFirst();
-            hBox.getChildren().addFirst(buttonIcon);
+            hBox.getChildren().remove(0);
+            hBox.getChildren().add(0, buttonIcon);
         }
     }
 }
