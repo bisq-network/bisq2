@@ -108,3 +108,12 @@ minimum_perc           = 0
 resource_name          = network.properties
 replace_edited_strings = false
 keep_translations      = false
+
+[o:bisq:p:bisq-2:r:reputationproperties]
+file_filter            = i18n/src/main/resources/reputation_<lang>.properties
+source_file            = i18n/src/main/resources/reputation.properties
+type                   = UNICODEPROPERTIES
+minimum_perc           = 0
+resource_name          = reputation.properties
+replace_edited_strings = false
+keep_translations      = false
