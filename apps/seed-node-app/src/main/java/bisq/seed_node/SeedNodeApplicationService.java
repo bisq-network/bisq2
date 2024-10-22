@@ -24,9 +24,11 @@ import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.evolution.migration.MigrationService;
 import bisq.identity.IdentityService;
+import bisq.java_se.guava.GuavaJavaSeFunctionProvider;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
+import bisq.security.pow.equihash.Equihash;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,6 +58,10 @@ public class SeedNodeApplicationService extends ApplicationService {
 
     public SeedNodeApplicationService(String[] args) {
         super("seed_node", args, PlatformUtils.getUserDataDir());
+
+        // Guava has different APIs for Java SE and Android.
+        // To allow re-usability on Android we use the Android in Equihash. Here we use the Java SE version.
+        Equihash.setGuavaFunctionProvider(new GuavaJavaSeFunctionProvider());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
 

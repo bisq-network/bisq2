@@ -39,15 +39,17 @@ import bisq.evolution.migration.MigrationService;
 import bisq.evolution.updater.UpdaterService;
 import bisq.identity.IdentityService;
 import bisq.java_se.JvmMemoryReportService;
-import bisq.os_specific.notifications.linux.LinuxNotificationService;
-import bisq.os_specific.notifications.osx.OsxNotificationService;
-import bisq.os_specific.notifications.other.AwtNotificationService;
+import bisq.java_se.guava.GuavaJavaSeFunctionProvider;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
+import bisq.os_specific.notifications.linux.LinuxNotificationService;
+import bisq.os_specific.notifications.osx.OsxNotificationService;
+import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
+import bisq.security.pow.equihash.Equihash;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
@@ -113,11 +115,16 @@ public class DesktopApplicationService extends ApplicationService {
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args, PlatformUtils.getUserDataDir());
 
+        // Guava has different APIs for Java SE and Android.
+        // To allow re-usability on Android we use the Android in Equihash. Here we use the Java SE version.
+        Equihash.setGuavaFunctionProvider(new GuavaJavaSeFunctionProvider());
+
         migrationService = new MigrationService(getConfig().getBaseDir());
 
         memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
+
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
         //noinspection SwitchStatementWithTooFewBranches
