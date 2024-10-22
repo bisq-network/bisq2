@@ -203,6 +203,10 @@ public abstract class ApplicationService implements Service {
         }
     }
 
+    public CompletableFuture<Void> pruneAllBackups() {
+        return persistenceService.pruneAllBackups();
+    }
+
     public CompletableFuture<Boolean> readAllPersisted() {
         return persistenceService.readAllPersisted();
     }

@@ -30,6 +30,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,11 +60,13 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
         this.storeKey = storeKey;
         String storageFileName = storeKey + STORE_POST_FIX;
-        subDirectory = DbSubDirectory.NETWORK_DB.getDbPath() + File.separator + storeName;
+        DbSubDirectory dbSubDirectory = DbSubDirectory.NETWORK_DB;
+        subDirectory = dbSubDirectory.getDbPath() + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this,
                 subDirectory,
                 storageFileName,
-                persistableStore);
+                persistableStore,
+                MaxBackupSize.from(dbSubDirectory));
     }
 
     public void shutdown() {

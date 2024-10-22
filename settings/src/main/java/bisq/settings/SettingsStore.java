@@ -27,6 +27,7 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.backup.BackupService;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +63,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> showMarketSelectionListCollapsed = new Observable<>();
     final Observable<String> backupLocation = new Observable<>();
     final Observable<Boolean> showMyOffersOnly = new Observable<>();
+    final Observable<Double> totalMaxBackupSizeInMB = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -87,7 +89,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 false,
                 PlatformUtils.getHomeDirectory(),
-                false);
+                false,
+                BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB);
     }
 
     public SettingsStore(Cookie cookie,
@@ -113,7 +116,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean showOfferListExpanded,
                          boolean showMarketSelectionListCollapsed,
                          String backupLocation,
-                         boolean showMyOffersOnly) {
+                         boolean showMyOffersOnly,
+                         double totalMaxBackupSizeInMB) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -138,6 +142,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
         this.backupLocation.set(backupLocation);
         this.showMyOffersOnly.set(showMyOffersOnly);
+        this.totalMaxBackupSizeInMB.set(totalMaxBackupSizeInMB);
     }
 
     @Override
@@ -166,7 +171,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setShowOfferListExpanded(showOfferListExpanded.get())
                 .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get())
                 .setBackupLocation(backupLocation.get())
-                .setShowMyOffersOnly(showMyOffersOnly.get());
+                .setShowMyOffersOnly(showMyOffersOnly.get())
+                .setTotalMaxBackupSizeInMB(totalMaxBackupSizeInMB.get());
     }
 
     @Override
@@ -181,6 +187,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
         if (maxTradePriceDeviation == 0) {
             maxTradePriceDeviation = SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+        }
+        double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
+        if (totalMaxBackupSizeInMB == 0) {
+            totalMaxBackupSizeInMB = BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB;
         }
         return new SettingsStore(Cookie.fromProto(proto.getCookie()),
                 proto.getDontShowAgainMapMap().entrySet().stream()
@@ -207,7 +217,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getShowOfferListExpanded(),
                 proto.getShowMarketSelectionListCollapsed(),
                 proto.getBackupLocation(),
-                proto.getShowMyOffersOnly());
+                proto.getShowMyOffersOnly(),
+                totalMaxBackupSizeInMB);
     }
 
     @Override
@@ -246,7 +257,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 showOfferListExpanded.get(),
                 showMarketSelectionListCollapsed.get(),
                 backupLocation.get(),
-                showMyOffersOnly.get());
+                showMyOffersOnly.get(),
+                totalMaxBackupSizeInMB.get());
     }
 
     @Override
@@ -276,6 +288,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             showMarketSelectionListCollapsed.set(persisted.showMarketSelectionListCollapsed.get());
             backupLocation.set(persisted.backupLocation.get());
             showMyOffersOnly.set(persisted.showMyOffersOnly.get());
+            totalMaxBackupSizeInMB.set(persisted.totalMaxBackupSizeInMB.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }
