@@ -24,6 +24,7 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
@@ -88,7 +89,7 @@ public class RestApiApplicationService extends ApplicationService {
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     public RestApiApplicationService(String[] args) {
-        super("rest_api", args);
+        super("rest_api", args, PlatformUtils.getUserDataDir());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
 

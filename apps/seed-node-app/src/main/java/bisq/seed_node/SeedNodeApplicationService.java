@@ -19,6 +19,7 @@ package bisq.seed_node;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.common.platform.PlatformUtils;
 import bisq.identity.IdentityService;
 import bisq.evolution.migration.MigrationService;
 import bisq.network.NetworkService;
@@ -51,7 +52,7 @@ public class SeedNodeApplicationService extends ApplicationService {
     private final MigrationService migrationService;
 
     public SeedNodeApplicationService(String[] args) {
-        super("seed_node", args);
+        super("seed_node", args, PlatformUtils.getUserDataDir());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
 

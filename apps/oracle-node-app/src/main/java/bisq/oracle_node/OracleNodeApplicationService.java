@@ -20,6 +20,7 @@ package bisq.oracle_node;
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
+import bisq.common.platform.PlatformUtils;
 import bisq.identity.IdentityService;
 import bisq.evolution.migration.MigrationService;
 import bisq.network.NetworkService;
@@ -44,7 +45,7 @@ public class OracleNodeApplicationService extends ApplicationService {
     private final MigrationService migrationService;
 
     public OracleNodeApplicationService(String[] args) {
-        super("oracle_node", args);
+        super("oracle_node", args, PlatformUtils.getUserDataDir());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
 

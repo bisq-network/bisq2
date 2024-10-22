@@ -26,6 +26,7 @@ import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
@@ -102,7 +103,7 @@ public class DesktopApplicationService extends ApplicationService {
     private final MigrationService migrationService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
-        super("desktop", args);
+        super("desktop", args, PlatformUtils.getUserDataDir());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
 

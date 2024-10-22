@@ -29,7 +29,6 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.platform.MemoryReport;
-import bisq.common.platform.PlatformUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
@@ -73,11 +72,11 @@ public abstract class ApplicationService implements Service {
     @ToString
     @EqualsAndHashCode
     public static final class Config {
-        private static Config from(com.typesafe.config.Config config, String[] args) {
+        private static Config from(com.typesafe.config.Config config, String[] args, Path userDataDir) {
             String appName = resolveAppName(args, config);
             Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
                     .map(Path::of)
-                    .orElse(PlatformUtils.getUserDataDir().resolve(appName));
+                    .orElse(userDataDir.resolve(appName));
             return new Config(appDataDir,
                     appName,
                     config.getBoolean("devMode"),
@@ -128,14 +127,14 @@ public abstract class ApplicationService implements Service {
     private final MemoryReport memoryReport;
     private FileLock instanceLock;
 
-    public ApplicationService(String configFileName, String[] args) {
+    public ApplicationService(String configFileName, String[] args, Path userDataDir) {
         com.typesafe.config.Config defaultTypesafeConfig = ConfigFactory.load(configFileName);
         defaultTypesafeConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
 
         String appName = resolveAppName(args, defaultTypesafeConfig.getConfig("application"));
         Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
                 .map(Path::of)
-                .orElse(PlatformUtils.getUserDataDir().resolve(appName));
+                .orElse(userDataDir.resolve(appName));
         File customConfigFile = Path.of(appDataDir.toString(), "bisq.conf").toFile();
         com.typesafe.config.Config typesafeConfig;
         boolean customConfigProvided = customConfigFile.exists();
@@ -151,7 +150,7 @@ public abstract class ApplicationService implements Service {
         }
 
         typesafeAppConfig = typesafeConfig.getConfig("application");
-        config = Config.from(typesafeAppConfig, args);
+        config = Config.from(typesafeAppConfig, args, userDataDir);
 
         Path dataDir = config.getBaseDir();
         try {
