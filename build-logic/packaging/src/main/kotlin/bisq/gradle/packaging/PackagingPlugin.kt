@@ -1,8 +1,5 @@
 package bisq.gradle.packaging
 
-import bisq.gradle.common.OS
-import bisq.gradle.common.getOS
-import bisq.gradle.common.getPlatform
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.Directory

@@ -37,7 +37,7 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
     private final ElementsdConfig elementsdConfig;
 
     public ElementsdRegtestProcess(ElementsdConfig elementsdConfig, Path dataDir) {
-        super(null, elementsdConfig.elementsdRpcConfig(), dataDir);
+        super(null, NetworkUtils.findFreeSystemPort(), elementsdConfig.elementsdRpcConfig(), dataDir);
         this.elementsdConfig = elementsdConfig;
     }
 
@@ -52,7 +52,7 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
                         "-datadir=" + dataDir.toAbsolutePath(),
                         "-debug=1",
 
-                        "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
+                        "-bind=127.0.0.1:" + p2pPort,
                         "-whitelist=127.0.0.1",
 
                         "-rpcbind=127.0.0.1:" + rpcConfig.getPort(),
