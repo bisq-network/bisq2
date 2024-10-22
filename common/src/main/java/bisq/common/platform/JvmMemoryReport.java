@@ -31,14 +31,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class MemoryReport {
+public class JvmMemoryReport {
     @Getter
-    private static final MemoryReport INSTANCE = new MemoryReport();
+    private static final JvmMemoryReport INSTANCE = new JvmMemoryReport();
 
     private Scheduler scheduler;
     private boolean includeThreadListInMemoryReport;
 
-    public MemoryReport() {
+    public JvmMemoryReport() {
     }
 
     public void printPeriodically(int memoryReportIntervalSec, boolean includeThreadListInMemoryReport) {
@@ -47,7 +47,7 @@ public class MemoryReport {
             scheduler.stop();
         }
         scheduler = Scheduler.run(this::logReport)
-                .host(MemoryReport.class)
+                .host(JvmMemoryReport.class)
                 .runnableName("logReport")
                 .periodically(30, memoryReportIntervalSec, TimeUnit.SECONDS);
     }

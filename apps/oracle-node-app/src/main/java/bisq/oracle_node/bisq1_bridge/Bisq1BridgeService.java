@@ -26,7 +26,7 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
-import bisq.common.platform.MemoryReport;
+import bisq.common.platform.JvmMemoryReport;
 import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
@@ -108,7 +108,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     @Nullable
     private Scheduler periodicRequestDoaDataScheduler, initialDelayScheduler;
     @SuppressWarnings("FieldCanBeLocal") // Pin it so that it does not get GC'ed
-    private final MemoryReport memoryReport;
+    private final JvmMemoryReport memoryReport;
 
     public Bisq1BridgeService(Config config,
                               NetworkService networkService,
@@ -129,7 +129,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
 
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
-        memoryReport = MemoryReport.getINSTANCE();
+        memoryReport = JvmMemoryReport.getINSTANCE();
     }
 
 

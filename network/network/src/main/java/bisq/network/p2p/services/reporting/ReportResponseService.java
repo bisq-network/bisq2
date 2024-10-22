@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.reporting;
 
-import bisq.common.platform.MemoryReport;
+import bisq.common.platform.JvmMemoryReport;
 import bisq.common.threading.ThreadName;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -112,7 +112,7 @@ public class ReportResponseService implements Node.Listener {
 
 
         int numConnections = node.getNumConnections();
-        int memoryUsed = (int) MemoryReport.getUsedMemoryInMB();
+        int memoryUsed = (int) JvmMemoryReport.getUsedMemoryInMB();
         int numThreads = Thread.activeCount();
         double nodeLoad = networkLoadSnapshot.getCurrentNetworkLoad().getLoad();
 
