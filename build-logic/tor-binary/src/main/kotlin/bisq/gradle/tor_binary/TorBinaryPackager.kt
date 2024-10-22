@@ -1,5 +1,7 @@
 package bisq.gradle.tor_binary
 
+import bisq.gradle.common.OS
+import bisq.gradle.common.getOS
 import bisq.gradle.tasks.download.SignedBinaryDownloader
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
@@ -47,6 +49,11 @@ class TorBinaryPackager(private val project: Project, private val torBinaryDownl
                 destinationDirectory.set(project.layout.buildDirectory.dir("generated/src/main/resources"))
                 from(project.layout.buildDirectory.dir(PROCESSED_DIR))
             }
+
+        if (getOS() == OS.LINUX) {
+            // The Bisq package depends on Tor and the OS's package manager installs Tor and its dependencies for us.
+            return
+        }
 
         val processResourcesTask = project.tasks.named("processResources")
         processResourcesTask.configure {

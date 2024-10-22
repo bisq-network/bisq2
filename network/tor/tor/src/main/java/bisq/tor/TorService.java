@@ -18,6 +18,7 @@
 package bisq.tor;
 
 import bisq.common.application.Service;
+import bisq.common.file.FileUtils;
 import bisq.common.observable.Observable;
 import bisq.common.platform.LinuxDistribution;
 import bisq.common.platform.OS;
@@ -74,7 +75,16 @@ public class TorService implements Service {
         }
 
         if (!LinuxDistribution.isWhonix()) {
-            installTorIfNotUpToDate();
+            try {
+                Path torDataDirPath = transportConfig.getDataDir();
+                FileUtils.makeDirs(torDataDirPath.toFile());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            if (!OS.isLinux()) {
+                installTorIfNotUpToDate();
+            }
 
             PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
             createTorrcConfigFile(torDataDirPath, hashedControlPassword);
@@ -177,12 +187,8 @@ public class TorService implements Service {
     private Path getTorBinaryPath() {
         if (OS.isLinux()) {
             Optional<Path> systemTorBinaryPath = NativeTorProcess.getSystemTorPath();
-            if (systemTorBinaryPath.isPresent()) {
-                return systemTorBinaryPath.get();
-            }
+            return systemTorBinaryPath.orElseThrow(TorNotInstalledException::new);
         }
-
-        installTorIfNotUpToDate();
         return torDataDirPath.resolve("tor");
     }
 

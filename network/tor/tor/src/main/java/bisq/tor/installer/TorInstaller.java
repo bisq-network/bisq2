@@ -58,9 +58,6 @@ public class TorInstaller {
 
     private void install() throws IOException {
         try {
-            File torDir = torInstallationFiles.getTorDir();
-            FileUtils.makeDirs(torDir);
-
             File destDir = torInstallationFiles.getTorDir();
             new TorBinaryZipExtractor(destDir).extractBinary();
             log.info("Tor files installed to {}", destDir.getAbsolutePath());
