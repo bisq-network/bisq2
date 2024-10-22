@@ -52,6 +52,7 @@ dependencies {
     implementation("bisq:bisq-easy")
     implementation("bisq:application")
     implementation("bisq:evolution")
+    implementation("bisq:os-specific")
 
     implementation(project(":desktop"))
 

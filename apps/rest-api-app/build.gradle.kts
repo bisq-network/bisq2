@@ -26,6 +26,7 @@ dependencies {
     implementation("bisq:bisq-easy")
     implementation("bisq:application")
     implementation("bisq:evolution")
+    implementation("bisq:os-specific")
 
     implementation("network:network-common")
     implementation("network:network")

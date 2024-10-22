@@ -24,16 +24,21 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.java_se.JvmMemoryReportService;
 import bisq.common.platform.MemoryReportService;
+import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
-import bisq.identity.IdentityService;
 import bisq.evolution.migration.MigrationService;
+import bisq.identity.IdentityService;
+import bisq.java_se.JvmMemoryReportService;
+import bisq.os_specific.notifications.linux.LinuxNotificationService;
+import bisq.os_specific.notifications.osx.OsxNotificationService;
+import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
+import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;
@@ -41,8 +46,8 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.wallets.core.WalletService;
 import bisq.wallets.core.BitcoinWalletSelection;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -143,7 +148,7 @@ public class RestApiApplicationService extends ApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        systemNotificationService = new SystemNotificationService(config.getBaseDir(), settingsService);
+        systemNotificationService = new SystemNotificationService(findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -277,5 +282,22 @@ public class RestApiApplicationService extends ApplicationService {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
+    }  private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
+        try {
+            switch (OS.getOS()) {
+                case LINUX:
+                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
+                case MAC_OS:
+                    return Optional.of(new OsxNotificationService());
+                case WINDOWS:
+                    return Optional.of(new AwtNotificationService());
+                default:
+                case ANDROID:
+                    return Optional.empty();
+            }
+        } catch (Exception e) {
+            log.warn("Could not create SystemNotificationDelegate for {}", OS.getOsName());
+            return Optional.empty();
+        }
     }
 }

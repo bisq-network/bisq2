@@ -19,73 +19,36 @@ package bisq.presentation.notifications;
 
 
 import bisq.common.application.Service;
-import bisq.common.platform.OS;
-import bisq.presentation.notifications.linux.LinuxNotificationDelegate;
-import bisq.presentation.notifications.osx.OsxNotificationDelegate;
-import bisq.presentation.notifications.other.AwtNotificationDelegate;
-import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.awt.SystemTray;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class SystemNotificationService implements Service {
-    private final Path baseDir;
-    private final SettingsService settingsService;
-    private SystemNotificationDelegate delegate;
+    private final Optional<OsSpecificNotificationService> systemNotificationDelegate;
     private boolean isInitialized;
 
-    public SystemNotificationService(Path baseDir, SettingsService settingsService) {
-        this.baseDir = baseDir;
-        this.settingsService = settingsService;
+    public SystemNotificationService(Optional<OsSpecificNotificationService> systemNotificationDelegate) {
+        this.systemNotificationDelegate = systemNotificationDelegate;
     }
 
     public CompletableFuture<Boolean> initialize() {
         isInitialized = true;
         log.info("initialize");
+        systemNotificationDelegate.ifPresent(Service::initialize);
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        systemNotificationDelegate.ifPresent(Service::shutdown);
         return CompletableFuture.completedFuture(true);
     }
 
 
     public void show(Notification notification) {
         if (isInitialized) {
-            getDelegate().ifPresent(delegate -> delegate.show(notification.getTitle(), notification.getMessage()));
+            systemNotificationDelegate.ifPresent(service -> service.show(notification.getTitle(), notification.getMessage()));
         }
-    }
-
-    private Optional<SystemNotificationDelegate> getDelegate() {
-        if(OS.isAndroid()){
-            return Optional.empty();
-        }
-
-        if (delegate == null) {
-            if (OS.isLinux() && LinuxNotificationDelegate.isSupported()) {
-                delegate = new LinuxNotificationDelegate(baseDir, settingsService);
-            } else if (OS.isMacOs() && OsxNotificationDelegate.isSupported()) {
-                delegate = new OsxNotificationDelegate();
-            } else {
-                boolean supported = false;
-                try {
-                    supported = SystemTray.isSupported();
-                } catch (Exception e) {
-                    log.warn("SystemTray.isSupported call failed", e);
-                }
-                try {
-                    if (supported) {
-                        delegate = new AwtNotificationDelegate();
-                    }
-                } catch (Exception e) {
-                    log.warn("Creating AwtNotificationDelegate failed, even SystemTray.isSupported() returned true", e);
-                }
-            }
-        }
-        return Optional.ofNullable(delegate);
     }
 }

@@ -55,6 +55,10 @@ public class Version implements Comparable<Version> {
         return compareTo(other) < 0;
     }
 
+    public boolean belowOrEqual(String other) {
+        return belowOrEqual(new Version(other));
+    }
+
     public boolean belowOrEqual(Version other) {
         return compareTo(other) <= 0;
     }
@@ -65,6 +69,10 @@ public class Version implements Comparable<Version> {
 
     public boolean above(Version other) {
         return compareTo(other) > 0;
+    }
+
+    public boolean aboveOrEqual(String other) {
+        return aboveOrEqual(new Version(other));
     }
 
     public boolean aboveOrEqual(Version other) {

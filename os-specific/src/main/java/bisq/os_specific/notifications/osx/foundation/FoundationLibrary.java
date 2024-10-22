@@ -31,7 +31,7 @@
  * the License.
  */
 
-package bisq.presentation.notifications.osx.foundation;
+package bisq.os_specific.notifications.osx.foundation;
 
 import com.sun.jna.Callback;
 import com.sun.jna.Library;

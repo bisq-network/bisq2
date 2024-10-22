@@ -17,6 +17,8 @@
 
 package bisq.presentation.notifications;
 
-public interface SystemNotificationDelegate {
+import bisq.common.application.Service;
+
+public interface OsSpecificNotificationService extends Service {
    void show(String title, String message);
 }
