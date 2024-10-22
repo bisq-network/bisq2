@@ -17,7 +17,6 @@ dependencies {
     implementation("bisq:application")
     implementation("bisq:evolution")
 
-    implementation("network:network-common")
     implementation("network:network")
     implementation("network:network-identity")
 

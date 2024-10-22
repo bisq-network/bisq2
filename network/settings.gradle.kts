@@ -16,7 +16,6 @@ dependencyResolutionManagement {
 includeBuild("..")
 includeBuild("tor")
 
-include("network-common")
 include("i2p")
 include("i2p-v2")
 include("network")

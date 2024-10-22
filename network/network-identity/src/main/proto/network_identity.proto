@@ -2,10 +2,10 @@ syntax = "proto3";
 package network.identity;
 option java_package = "bisq.network.identity.protobuf";
 option java_multiple_files = true;
-import "network_common.proto";
+import "common.proto";
 import "security.proto";
 
 message NetworkId {
-  network.common.AddressByTransportTypeMap addressByNetworkTypeMap = 1;
+  common.AddressByTransportTypeMap addressByNetworkTypeMap = 1;
   security.PubKey pubKey = 2;
 }

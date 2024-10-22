@@ -10,7 +10,6 @@ dependencies {
     implementation(project(":identity"))
     implementation(project(":settings"))
 
-    implementation("network:network-common")
     implementation("network:network-identity")
     implementation("network:network")
 

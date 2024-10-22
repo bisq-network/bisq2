@@ -28,7 +28,6 @@ dependencies {
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
 
-    implementation("network:network-common")
     implementation("network:network")
     implementation("bitcoind:core")
     implementation("wallets:wallet")

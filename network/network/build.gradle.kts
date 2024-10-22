@@ -9,7 +9,6 @@ dependencies {
     implementation("bisq:security")
     implementation("bisq:persistence")
 
-    implementation(project(":network-common"))
     implementation(project(":network-identity"))
     implementation(project(":i2p"))
     implementation("tor:tor")
