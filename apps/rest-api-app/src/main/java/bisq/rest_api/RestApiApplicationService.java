@@ -27,6 +27,7 @@ import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
+import bisq.evolution.migration.MigrationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
@@ -82,11 +83,15 @@ public class RestApiApplicationService extends ApplicationService {
     private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
+    private final MigrationService migrationService;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     public RestApiApplicationService(String[] args) {
         super("rest_api", args);
+
+        migrationService = new MigrationService(getConfig().getBaseDir());
+
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
@@ -167,7 +172,7 @@ public class RestApiApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return super.initialize()
+        return migrationService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
@@ -247,6 +252,7 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> walletService.map(Service::shutdown)
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> throwable == null)
                 .join());

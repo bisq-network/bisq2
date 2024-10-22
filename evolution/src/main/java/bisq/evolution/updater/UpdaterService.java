@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.updater;
+package bisq.evolution.updater;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.release.ReleaseNotification;
@@ -46,7 +46,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.updater.UpdaterUtils.*;
+import static bisq.evolution.updater.UpdaterUtils.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j

@@ -33,6 +33,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.identity.IdentityService;
+import bisq.evolution.migration.MigrationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
@@ -43,7 +44,7 @@ import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
-import bisq.updater.UpdaterService;
+import bisq.evolution.updater.UpdaterService;
 import bisq.user.UserService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
@@ -98,9 +99,12 @@ public class DesktopApplicationService extends ApplicationService {
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
+    private final MigrationService migrationService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
+
+        migrationService = new MigrationService(getConfig().getBaseDir());
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
@@ -219,7 +223,7 @@ public class DesktopApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return super.initialize()
+        return migrationService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
@@ -311,6 +315,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> walletService.map(service -> service.shutdown().exceptionally(this::logError))
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> migrationService.shutdown().exceptionally(this::logError))
                 .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {

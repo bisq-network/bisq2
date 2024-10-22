@@ -21,6 +21,7 @@ import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.identity.IdentityService;
+import bisq.evolution.migration.MigrationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -40,9 +41,12 @@ public class OracleNodeApplicationService extends ApplicationService {
     private final NetworkService networkService;
     private final OracleNodeService oracleNodeService;
     private final BondedRolesService bondedRolesService;
+    private final MigrationService migrationService;
 
     public OracleNodeApplicationService(String[] args) {
         super("oracle_node", args);
+
+        migrationService = new MigrationService(getConfig().getBaseDir());
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
@@ -80,7 +84,7 @@ public class OracleNodeApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return super.initialize()
+        return migrationService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -106,6 +110,7 @@ public class OracleNodeApplicationService extends ApplicationService {
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(2, TimeUnit.MINUTES)
                 .handle((result, throwable) -> throwable == null)
                 .join());

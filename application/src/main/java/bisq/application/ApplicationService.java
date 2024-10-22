@@ -17,7 +17,6 @@
 
 package bisq.application;
 
-import bisq.application.migration.MigrationService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
 import bisq.common.application.OptionUtils;
@@ -125,7 +124,6 @@ public abstract class ApplicationService implements Service {
     protected final Config config;
     @Getter
     protected final PersistenceService persistenceService;
-    private final MigrationService migrationService;
     @SuppressWarnings("FieldCanBeLocal") // Pin it so that it does not get GC'ed
     private final MemoryReport memoryReport;
     private FileLock instanceLock;
@@ -187,7 +185,6 @@ public abstract class ApplicationService implements Service {
 
         String absoluteDataDirPath = dataDir.toAbsolutePath().toString();
         persistenceService = new PersistenceService(absoluteDataDirPath);
-        migrationService = new MigrationService(dataDir);
     }
 
     private void checkInstanceLock() {
@@ -214,9 +211,7 @@ public abstract class ApplicationService implements Service {
         return persistenceService.readAllPersisted();
     }
 
-    public CompletableFuture<Boolean> initialize() {
-        return migrationService.runMigrations();
-    }
+    public abstract CompletableFuture<Boolean> initialize();
 
     public abstract CompletableFuture<Boolean> shutdown();
 

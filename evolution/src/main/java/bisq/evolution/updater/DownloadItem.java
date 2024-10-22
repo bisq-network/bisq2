@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.updater;
+package bisq.evolution.updater;
 
 import bisq.common.observable.Observable;
 import lombok.EqualsAndHashCode;
@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static bisq.updater.UpdaterUtils.*;
+import static bisq.evolution.updater.UpdaterUtils.*;
 
 @Slf4j
 @ToString

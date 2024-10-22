@@ -32,8 +32,8 @@ import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
 import bisq.desktop.main.top.TopPanelController;
-import bisq.updater.UpdaterService;
-import bisq.updater.UpdaterUtils;
+import bisq.evolution.updater.UpdaterService;
+import bisq.evolution.updater.UpdaterUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

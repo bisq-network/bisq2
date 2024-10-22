@@ -1,6 +1,7 @@
-package bisq.application.migration;
+package bisq.evolution.migration;
 
 import bisq.common.application.ApplicationVersion;
+import bisq.common.application.Service;
 import bisq.common.platform.Version;
 
 import java.io.File;
@@ -9,7 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
-public class MigrationService {
+public class MigrationService implements Service {
     static final Version VERSION_BEFORE_MIGRATION_SERVICE_INTRODUCED = new Version("2.1.1");
     private final Path dataDir;
     private final File dataDirVersionFile;
@@ -19,7 +20,8 @@ public class MigrationService {
         this.dataDirVersionFile = dataDir.resolve("version").toFile();
     }
 
-    public CompletableFuture<Boolean> runMigrations() {
+    @Override
+    public CompletableFuture<Boolean> initialize() {
         Version dataDirVersion = getDataDirVersion();
         Version appVersion = ApplicationVersion.getVersion();
 
@@ -28,6 +30,11 @@ public class MigrationService {
             migrator.migrate();
         }
 
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
         return CompletableFuture.completedFuture(true);
     }
 

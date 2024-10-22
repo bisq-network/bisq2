@@ -1,4 +1,4 @@
-package bisq.application.migration.migrations;
+package bisq.evolution.migration.migrations;
 
 import bisq.common.platform.Version;
 

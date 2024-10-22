@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.updater;
+package bisq.evolution.updater;
 
 import bisq.common.file.FileUtils;
 import bisq.security.PgPUtils;
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-import static bisq.updater.UpdaterUtils.*;
+import static bisq.evolution.updater.UpdaterUtils.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j

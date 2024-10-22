@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.updater;
+package bisq.evolution.updater;
 
 import bisq.common.file.FileUtils;
 import bisq.common.platform.Platform;

@@ -15,10 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.updater;
+package bisq.evolution.updater;
 
 import bisq.common.file.FileUtils;
 import bisq.common.threading.ExecutorFactory;
+import bisq.evolution.updater.DownloadItem;
+import bisq.evolution.updater.UpdaterService;
+import bisq.evolution.updater.UpdaterUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +35,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-import static bisq.updater.UpdaterUtils.*;
+import static bisq.evolution.updater.UpdaterUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 // Tests deactivated as they fail on CI due FileNotFoundException probably related to the srcBaseDir location.

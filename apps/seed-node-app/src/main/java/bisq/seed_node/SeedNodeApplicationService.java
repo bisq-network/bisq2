@@ -20,6 +20,7 @@ package bisq.seed_node;
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.identity.IdentityService;
+import bisq.evolution.migration.MigrationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -47,9 +48,12 @@ public class SeedNodeApplicationService extends ApplicationService {
     protected final SecurityService securityService;
     private final SeedNodeService seedNodeService;
     private final BondedRolesService bondedRolesService;
+    private final MigrationService migrationService;
 
     public SeedNodeApplicationService(String[] args) {
         super("seed_node", args);
+
+        migrationService = new MigrationService(getConfig().getBaseDir());
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
@@ -75,7 +79,7 @@ public class SeedNodeApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return super.initialize()
+        return migrationService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -102,6 +106,7 @@ public class SeedNodeApplicationService extends ApplicationService {
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable != null) {
