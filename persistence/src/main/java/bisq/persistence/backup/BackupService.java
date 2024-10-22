@@ -107,7 +107,6 @@ public class BackupService {
     }
 
     public boolean maybeBackup() {
-        log.error("totalMaxBackupSize {}",totalMaxBackupSize);
         if (maxBackupSize == MaxBackupSize.ZERO) {
             return false;
         }
