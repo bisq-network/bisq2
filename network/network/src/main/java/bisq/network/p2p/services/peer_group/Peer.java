@@ -20,7 +20,7 @@ package bisq.network.p2p.services.peer_group;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import lombok.EqualsAndHashCode;

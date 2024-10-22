@@ -31,7 +31,7 @@ import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
 import com.google.gson.Gson;

@@ -19,7 +19,7 @@ package bisq.desktop.main.content.network.bonded_roles.tabs.registration;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.Model;
-import bisq.network.common.AddressByTransportTypeMap;
+import bisq.common.network.AddressByTransportTypeMap;
 import bisq.user.identity.UserIdentity;
 import javafx.beans.property.*;
 import lombok.Getter;

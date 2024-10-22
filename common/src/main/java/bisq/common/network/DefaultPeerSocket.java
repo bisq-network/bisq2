@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.common;
+package bisq.common.network;
 
 import lombok.Getter;
 

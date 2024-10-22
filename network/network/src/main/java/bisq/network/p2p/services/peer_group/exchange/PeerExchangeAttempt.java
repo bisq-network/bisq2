@@ -20,7 +20,7 @@ package bisq.network.p2p.services.peer_group.exchange;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.Peer;

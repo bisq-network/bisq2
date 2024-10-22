@@ -25,7 +25,7 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
 import com.fasterxml.jackson.databind.ObjectMapper;

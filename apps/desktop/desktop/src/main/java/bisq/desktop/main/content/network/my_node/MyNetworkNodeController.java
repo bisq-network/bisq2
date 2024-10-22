@@ -21,7 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.network.my_node.transport.TransportController;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import javafx.scene.Node;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

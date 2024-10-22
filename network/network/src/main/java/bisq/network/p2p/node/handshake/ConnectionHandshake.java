@@ -19,9 +19,9 @@ package bisq.network.p2p.node.handshake;
 
 import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
-import bisq.network.common.Address;
-import bisq.network.common.DefaultPeerSocket;
-import bisq.network.common.PeerSocket;
+import bisq.common.network.Address;
+import bisq.common.network.DefaultPeerSocket;
+import bisq.common.network.PeerSocket;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;

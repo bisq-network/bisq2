@@ -1,6 +1,6 @@
 package bisq.network.p2p.node.handshake;
 
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.security.TorSignatureUtil;
 import bisq.security.keys.TorKeyUtils;
 import lombok.extern.slf4j.Slf4j;

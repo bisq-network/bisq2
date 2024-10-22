@@ -18,7 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.common.threading.ThreadName;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

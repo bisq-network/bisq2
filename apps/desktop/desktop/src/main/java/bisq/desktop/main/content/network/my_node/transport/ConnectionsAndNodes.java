@@ -26,7 +26,7 @@ import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.components.table.TableList;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.message.EnvelopePayloadMessage;

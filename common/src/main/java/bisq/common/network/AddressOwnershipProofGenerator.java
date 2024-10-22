@@ -15,16 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.common;
+package bisq.common.network;
 
-import java.io.Closeable;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-public interface PeerSocket extends Closeable {
-    InputStream getInputStream();
-
-    OutputStream getOutputStream();
-
-    boolean isClosed();
+public interface AddressOwnershipProofGenerator {
+    AddressOwnershipProof generate(Address myAddress, Address peerAddress);
 }

@@ -19,8 +19,8 @@ package bisq.network.p2p.services.peer_group;
 
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.StringUtils;
-import bisq.network.common.Address;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.DbSubDirectory;

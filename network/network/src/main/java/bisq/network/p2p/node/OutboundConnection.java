@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.Getter;

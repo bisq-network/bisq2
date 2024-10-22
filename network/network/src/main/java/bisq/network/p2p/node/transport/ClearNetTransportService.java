@@ -1,9 +1,9 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.common.timer.Scheduler;
-import bisq.network.common.Address;
-import bisq.network.common.TransportConfig;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyBundle;
 import lombok.EqualsAndHashCode;

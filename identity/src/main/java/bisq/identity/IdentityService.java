@@ -22,7 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkIdService;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.DbSubDirectory;

@@ -19,8 +19,8 @@ package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.file.FileUtils;
-import bisq.network.common.Address;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Feature;

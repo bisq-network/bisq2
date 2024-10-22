@@ -18,7 +18,7 @@
 package bisq.network.identity;
 
 import bisq.common.proto.NetworkProto;
-import bisq.network.common.AddressByTransportTypeMap;
+import bisq.common.network.AddressByTransportTypeMap;
 import bisq.security.keys.PubKey;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;

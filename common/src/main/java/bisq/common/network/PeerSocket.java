@@ -15,25 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.common;
+package bisq.common.network;
 
-import lombok.Getter;
+import java.io.Closeable;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import java.nio.ByteBuffer;
-import java.util.Optional;
+public interface PeerSocket extends Closeable {
+    InputStream getInputStream();
 
-@Getter
-public class AddressOwnershipProof {
-    private final long signatureDate;
-    private final Optional<ByteBuffer> proof;
+    OutputStream getOutputStream();
 
-    public AddressOwnershipProof(long signatureDate) {
-        this.signatureDate = signatureDate;
-        this.proof = Optional.empty();
-    }
-
-    public AddressOwnershipProof(long signatureDate, ByteBuffer proof) {
-        this.signatureDate = signatureDate;
-        this.proof = Optional.of(proof);
-    }
+    boolean isClosed();
 }

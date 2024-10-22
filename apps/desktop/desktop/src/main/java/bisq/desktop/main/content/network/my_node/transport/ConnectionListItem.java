@@ -24,7 +24,7 @@ import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;

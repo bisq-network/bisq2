@@ -18,9 +18,9 @@
 package bisq.identity;
 
 import bisq.network.NetworkService;
-import bisq.network.common.Address;
-import bisq.network.common.AddressByTransportTypeMap;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.PersistenceService;

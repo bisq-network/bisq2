@@ -20,7 +20,7 @@ package bisq.desktop.main.content.network.my_node.transport;
 import bisq.common.formatter.DataSizeFormatter;
 import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadService;

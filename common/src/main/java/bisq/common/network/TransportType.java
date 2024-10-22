@@ -15,8 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.common;
+package bisq.common.network;
 
-public interface AddressOwnershipProofGenerator {
-    AddressOwnershipProof generate(Address myAddress, Address peerAddress);
+/**
+ * We do not use a protobuf enum for Type as it is used as key in a protobuf map and that does not support enums.
+ */
+public enum TransportType {
+    TOR,
+    I2P,
+    CLEAR;
+
+    public static TransportType from(Address address) {
+        if (address.isClearNetAddress()) {
+            return TransportType.CLEAR;
+        } else if (address.isTorAddress()) {
+            return TransportType.TOR;
+        } else if (address.isI2pAddress()) {
+            return TransportType.I2P;
+        } else {
+            throw new IllegalArgumentException("Could not resolve transportType from address " + address);
+        }
+    }
 }

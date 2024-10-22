@@ -19,7 +19,7 @@ package bisq.network.p2p.services.peer_group;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;

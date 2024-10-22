@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.handshake;
 
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.security.keys.TorKeyGeneration;
 import bisq.security.keys.TorKeyPair;
 import org.junit.jupiter.api.Test;

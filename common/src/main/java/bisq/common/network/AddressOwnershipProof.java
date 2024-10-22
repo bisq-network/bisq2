@@ -15,25 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.common;
+package bisq.common.network;
 
-/**
- * We do not use a protobuf enum for Type as it is used as key in a protobuf map and that does not support enums.
- */
-public enum TransportType {
-    TOR,
-    I2P,
-    CLEAR;
+import lombok.Getter;
 
-    public static TransportType from(Address address) {
-        if (address.isClearNetAddress()) {
-            return TransportType.CLEAR;
-        } else if (address.isTorAddress()) {
-            return TransportType.TOR;
-        } else if (address.isI2pAddress()) {
-            return TransportType.I2P;
-        } else {
-            throw new IllegalArgumentException("Could not resolve transportType from address " + address);
-        }
+import java.nio.ByteBuffer;
+import java.util.Optional;
+
+@Getter
+public class AddressOwnershipProof {
+    private final long signatureDate;
+    private final Optional<ByteBuffer> proof;
+
+    public AddressOwnershipProof(long signatureDate) {
+        this.signatureDate = signatureDate;
+        this.proof = Optional.empty();
+    }
+
+    public AddressOwnershipProof(long signatureDate, ByteBuffer proof) {
+        this.signatureDate = signatureDate;
+        this.proof = Optional.of(proof);
     }
 }

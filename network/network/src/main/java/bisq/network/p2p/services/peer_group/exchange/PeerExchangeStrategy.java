@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.util.CollectionUtil;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.Peer;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
