@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.platform;
+package bisq.java_se;
 
 import bisq.common.formatter.DataSizeFormatter;
 import bisq.common.formatter.SimpleTimeFormatter;
-import bisq.common.threading.ThreadProfiler;
+import bisq.common.platform.MemoryReportService;
+import bisq.common.platform.OS;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import com.sun.management.UnixOperatingSystemMXBean;

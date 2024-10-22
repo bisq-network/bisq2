@@ -19,7 +19,7 @@ package bisq.seed_node;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.common.platform.JvmMemoryReportService;
+import bisq.java_se.JvmMemoryReportService;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.evolution.migration.MigrationService;

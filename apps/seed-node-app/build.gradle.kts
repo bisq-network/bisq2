@@ -9,6 +9,7 @@ application {
 
 dependencies {
     implementation("bisq:persistence")
+    implementation("bisq:java-se")
     implementation("bisq:security")
     implementation("bisq:bonded-roles")
     implementation("bisq:identity")

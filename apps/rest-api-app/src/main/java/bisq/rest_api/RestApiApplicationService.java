@@ -24,7 +24,7 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.platform.JvmMemoryReportService;
+import bisq.java_se.JvmMemoryReportService;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.util.CompletableFutureUtils;

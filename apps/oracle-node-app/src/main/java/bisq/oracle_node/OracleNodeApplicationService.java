@@ -20,7 +20,7 @@ package bisq.oracle_node;
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
-import bisq.common.platform.JvmMemoryReportService;
+import bisq.java_se.JvmMemoryReportService;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.identity.IdentityService;
