@@ -228,11 +228,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         });
     }
 
-    private void applyNotification(ChatNotification notification) {
-        findMarketChannelItem(notification.getChatChannelId())
-                .ifPresent(MarketChannelItem::refreshNotifications);
-    }
-
     @Override
     public void onDeactivate() {
         super.onDeactivate();
@@ -364,6 +359,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         return model.getMarketChannelItems().stream()
                 .filter(e -> e.getChannel().getId().equals(chatChannelId))
                 .findFirst();
+    }
+
+    private void applyNotification(ChatNotification notification) {
+        findMarketChannelItem(notification.getChatChannelId())
+                .ifPresent(MarketChannelItem::refreshNotifications);
     }
 
 /*
