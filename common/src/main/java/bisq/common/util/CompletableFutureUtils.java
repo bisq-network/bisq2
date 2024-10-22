@@ -92,7 +92,7 @@ public class CompletableFutureUtils {
         return resultFuture;
     }
 
-    public static <T> boolean isCompleted(CompletableFuture<T> future) {
+    /*public static <T> boolean isCompleted(CompletableFuture<T> future) {
         return future.state() == Future.State.SUCCESS;
-    }
+    }*/
 }
