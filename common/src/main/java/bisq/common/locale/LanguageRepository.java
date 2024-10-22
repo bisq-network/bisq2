@@ -69,13 +69,13 @@ public class LanguageRepository {
             "it", // Italian
             "pt-BR", // Portuguese (Brazil)
             "cs", // Czech
-            "pcm" // Nigerian Pidgin
+            "pcm", // Nigerian Pidgin
+            "ru" // Russian
             /*
             // not translated yet
             "pt", // Portuguese
             "zh-Hans", // Chinese [Han Simplified]
             "zh-Hant", // Chinese [Han Traditional]
-            "ru", // Russian
             "fr", // French
             "vi", // Vietnamese
             "th", // Thai
