@@ -24,7 +24,8 @@ import java.util.Locale;
 public enum OS {
     LINUX("linux"),
     MAC_OS("macos"),
-    WINDOWS("win");
+    WINDOWS("win"),
+    ANDROID("android");
 
     @Getter
     private final String canonicalName;
@@ -41,6 +42,8 @@ public enum OS {
             return OS.MAC_OS;
         } else if (isWindows(osName)) {
             return OS.WINDOWS;
+        } else if (isAndroid()) {
+            return OS.ANDROID;
         }
         throw new IllegalStateException("Running on unsupported OS: " + osName);
     }
@@ -50,7 +53,7 @@ public enum OS {
     }
 
     public static boolean isLinux(String osName) {
-        return osName.contains("linux");
+        return osName.contains("linux") && !isAndroid();
     }
 
     public static boolean isMacOs() {
@@ -69,11 +72,31 @@ public enum OS {
         return osName.contains("win");
     }
 
+    public static boolean isAndroid(String osName) {
+        return isLinux(osName) && isAndroid();
+    }
+
+    public static boolean isAndroid() {
+        // Alternatively we could use `java.vendor` but it seems it is less reliable.
+        //  String property = System.getProperty("java.vendor");
+        //  return "The Android Project".equals(property);
+        try {
+            Class.forName("android.os.Build");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
     public static String getOsName() {
         return System.getProperty("os.name").toLowerCase(Locale.US);
     }
 
     public static String getOsVersion() {
         return System.getProperty("os.version");
+    }
+
+    public static String getJavaVendor() {
+        return System.getProperty("java.vendor");
     }
 }

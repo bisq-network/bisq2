@@ -41,6 +41,11 @@ public class PlatformUtils {
             return Paths.get(System.getProperty("user.home"), "Library", "Application Support");
         }
 
+        if (OS.isAndroid()) {
+            throw new RuntimeException("getUserDataDir is not supported for Android platform. " +
+                    "Provide the user data dir from the Android activity instead.");
+        }
+
         // *nix
         return Paths.get(System.getProperty("user.home"), ".local", "share");
     }

@@ -38,6 +38,9 @@ public class PreventStandbyModeService {
     }
 
     public void initialize() {
+        if(OS.isAndroid()){
+            return;
+        }
         settingsService.getPreventStandbyMode().addObserver(preventStandbyMode -> {
             if (preventStandbyMode) {
                 this.preventStandbyMode.initialize();

@@ -61,6 +61,10 @@ public class SystemNotificationService implements Service {
     }
 
     private Optional<SystemNotificationDelegate> getDelegate() {
+        if(OS.isAndroid()){
+            return Optional.empty();
+        }
+
         if (delegate == null) {
             if (OS.isLinux() && LinuxNotificationDelegate.isSupported()) {
                 delegate = new LinuxNotificationDelegate(baseDir, settingsService);
