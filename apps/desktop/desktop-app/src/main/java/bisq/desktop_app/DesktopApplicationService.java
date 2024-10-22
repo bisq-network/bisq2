@@ -33,7 +33,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.State;
+import bisq.application.State;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.migration.MigrationService;
 import bisq.evolution.updater.UpdaterService;

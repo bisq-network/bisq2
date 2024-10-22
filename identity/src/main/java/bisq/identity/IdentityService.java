@@ -32,7 +32,6 @@ import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityStore>, Service {
@@ -193,8 +193,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public Optional<Identity> findAnyIdentityByNetworkId(NetworkId networkId) {
         synchronized (lock) {
-            return Streams.concat(persistableStore.getDefaultIdentity().stream(),
-                            getActiveIdentityByTag().values().stream(),
+            return Stream.concat(Stream.concat(persistableStore.getDefaultIdentity().stream(),
+                            getActiveIdentityByTag().values().stream()),
                             getRetired().stream())
                     .filter(e -> e.getNetworkId().equals(networkId))
                     .findAny();

@@ -21,7 +21,7 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.State;
+import bisq.application.State;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.splash.temp.BootstrapStateDisplay;
