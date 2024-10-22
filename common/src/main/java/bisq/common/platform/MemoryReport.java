@@ -27,7 +27,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.management.ManagementFactory;
-import java.util.Comparator;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -81,25 +80,26 @@ public class MemoryReport {
             customBisqThreads.append(header);
             boolean showJvmThreads = true;
             Thread.getAllStackTraces().keySet().stream()
-                    .sorted(Comparator.comparing(Thread::threadId))
+                    //.sorted(Comparator.comparing(Thread::threadId))
                     .forEach(thread -> {
                         String groupName = thread.getThreadGroup().getName();
                         String threadName = thread.getName();
                         String fullName = StringUtils.truncate("[" + groupName + "] " + threadName, nameLength);
-                        String time = threadProfiler.getThreadTime(thread.threadId()).map(nanoTime ->
+                        long threadId = 0;//thread.threadId();
+                        String time = threadProfiler.getThreadTime(threadId).map(nanoTime ->
                                         SimpleTimeFormatter.formatDuration(TimeUnit.NANOSECONDS.toMillis(nanoTime)))
                                 .orElse("N/A");
-                        String memory = threadProfiler.getThreadMemory(thread.threadId())
+                        String memory = threadProfiler.getThreadMemory(threadId)
                                 .map(DataSizeFormatter::format)
                                 .orElse("N/A");
                         int priority = thread.getPriority();
                         String threadState = thread.getState().name();
                         if (threadState.equals("BLOCKED")) {
                             log.warn("Thread {} is in {} state. It might be caused by a deadlock or resource block. " +
-                                    "thread={}", thread.threadId(), threadState, thread);
+                                    "thread={}", threadId, threadState, thread);
                         }
                         String line = String.format(format,
-                                thread.threadId(),
+                                threadId,
                                 priority,
                                 fullName,
                                 threadState,
