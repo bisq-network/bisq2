@@ -1,10 +1,14 @@
 package bisq.application.migration;
 
 import bisq.application.migration.migrations.Migration;
+import bisq.application.migration.migrations.MigrationFailedException;
 import bisq.application.migration.migrations.MigrationsForV2_1_2;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.platform.Version;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -21,11 +25,28 @@ public class Migrator {
     }
 
     public void migrate() {
+        boolean allMigrationsSucceeded = true;
+
         for (Migration migration : allMigrations) {
             Version migrationVersion = migration.getVersion();
             if (migrationVersion.belowOrEqual(appVersion)) {
                 log.info("Running {} migrations.", migrationVersion);
-                migration.run(dataDir);
+
+                try {
+                    migration.run(dataDir);
+                } catch (MigrationFailedException e) {
+                    log.error("Migration failed.", e);
+                    allMigrationsSucceeded = false;
+                }
+            }
+        }
+
+        if (allMigrationsSucceeded) {
+            try {
+                Path versionFilePath = dataDir.resolve("version");
+                Files.writeString(versionFilePath, ApplicationVersion.getVersion().toString());
+            } catch (IOException e) {
+                throw new MigrationFailedException(e);
             }
         }
     }

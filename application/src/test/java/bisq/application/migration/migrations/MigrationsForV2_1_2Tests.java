@@ -1,6 +1,5 @@
 package bisq.application.migration.migrations;
 
-import bisq.common.application.ApplicationVersion;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -18,20 +17,17 @@ public class MigrationsForV2_1_2Tests {
     private final MigrationsForV2_1_2 migrationsForV212 = new MigrationsForV2_1_2();
 
     @Test
-    void migrationTest(@TempDir Path dataDir) throws IOException {
+    void migrateEmptyDataDir(@TempDir Path dataDir) {
         Version version = migrationsForV212.getVersion();
         Version expectedVersion = new Version("2.1.2");
         assertThat(version).isEqualTo(expectedVersion);
 
         migrationsForV212.run(dataDir);
-        String readVersion = Files.readString(dataDir.resolve("version"));
-        assertThat(readVersion)
-                .isEqualTo(ApplicationVersion.getVersion().toString());
     }
 
     @Test
     @EnabledOnOs({OS.MAC, OS.WINDOWS})
-    void torFilesRemovalTestOnMacAndWindows(@TempDir Path dataDir) throws IOException {
+    void torFilesRemovalTestOnMacAndWindows(@TempDir Path dataDir) {
         Path torDataDir = dataDir.resolve("tor");
         createFakeTorDataDir(torDataDir);
 
@@ -46,15 +42,11 @@ public class MigrationsForV2_1_2Tests {
 
         fileExists = pluggableTransportDir.resolve("README.SNOWFLAKE.md").toFile().exists();
         assertThat(fileExists).isTrue();
-
-        Path versionFilePath = dataDir.resolve("version");
-        String version = Files.readString(versionFilePath);
-        assertThat(version).isEqualTo(ApplicationVersion.getVersion().toString());
     }
 
     @Test
     @EnabledOnOs(OS.LINUX)
-    void torFilesRemovalTestOnLinux(@TempDir Path dataDir) throws IOException {
+    void torFilesRemovalTestOnLinux(@TempDir Path dataDir) {
         Path torDataDir = dataDir.resolve("tor");
         createFakeTorDataDir(torDataDir);
 
@@ -69,10 +61,6 @@ public class MigrationsForV2_1_2Tests {
 
         fileExists = pluggableTransportDir.resolve("README.SNOWFLAKE.md").toFile().exists();
         assertThat(fileExists).isFalse();
-
-        Path versionFilePath = dataDir.resolve("version");
-        String version = Files.readString(versionFilePath);
-        assertThat(version).isEqualTo(ApplicationVersion.getVersion().toString());
     }
 
     private void createFakeTorDataDir(Path torDataDir) {
