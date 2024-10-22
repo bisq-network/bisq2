@@ -23,35 +23,42 @@ import bisq.common.threading.ThreadProfiler;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import com.sun.management.UnixOperatingSystemMXBean;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.management.ManagementFactory;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class JvmMemoryReport {
-    @Getter
-    private static final JvmMemoryReport INSTANCE = new JvmMemoryReport();
-
+public class JvmMemoryReportService implements MemoryReportService {
+    private final int memoryReportIntervalSec;
+    private final boolean includeThreadListInMemoryReport;
     private Scheduler scheduler;
-    private boolean includeThreadListInMemoryReport;
 
-    public JvmMemoryReport() {
+    public JvmMemoryReportService(int memoryReportIntervalSec, boolean includeThreadListInMemoryReport) {
+        this.memoryReportIntervalSec = memoryReportIntervalSec;
+        this.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
     }
 
-    public void printPeriodically(int memoryReportIntervalSec, boolean includeThreadListInMemoryReport) {
-        this.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        scheduler = Scheduler.run(this::logReport)
+                .host(JvmMemoryReportService.class)
+                .runnableName("logReport")
+                .periodically(30, memoryReportIntervalSec, TimeUnit.SECONDS);
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
         if (scheduler != null) {
             scheduler.stop();
         }
-        scheduler = Scheduler.run(this::logReport)
-                .host(JvmMemoryReport.class)
-                .runnableName("logReport")
-                .periodically(30, memoryReportIntervalSec, TimeUnit.SECONDS);
+        return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public void logReport() {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.freeMemory();
@@ -148,22 +155,26 @@ public class JvmMemoryReport {
         }
     }
 
-    public static long getUsedMemoryInBytes() {
+    @Override
+    public long getUsedMemoryInBytes() {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.freeMemory();
         long total = runtime.totalMemory();
         return total - free;
     }
 
-    public static long getUsedMemoryInMB() {
+    @Override
+    public long getUsedMemoryInMB() {
         return getUsedMemoryInBytes() / 1024 / 1024;
     }
 
-    public static long getFreeMemoryInMB() {
+    @Override
+    public long getFreeMemoryInMB() {
         return Runtime.getRuntime().freeMemory() / 1024 / 1024;
     }
 
-    public static long getTotalMemoryInMB() {
+    @Override
+    public long getTotalMemoryInMB() {
         return Runtime.getRuntime().totalMemory() / 1024 / 1024;
     }
 }

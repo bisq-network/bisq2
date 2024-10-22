@@ -21,6 +21,7 @@ package bisq.network;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
@@ -121,7 +122,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                           PersistenceService persistenceService,
                           KeyBundleService keyBundleService,
                           HashCashProofOfWorkService hashCashProofOfWorkService,
-                          EquihashProofOfWorkService equihashProofOfWorkService) {
+                          EquihashProofOfWorkService equihashProofOfWorkService,
+                          MemoryReportService memoryReportService) {
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
         defaultPortByTransportType = config.getDefaultPortByTransportType();
@@ -162,7 +164,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 equihashProofOfWorkService,
                 dataService,
                 messageDeliveryStatusService,
-                resendMessageService);
+                resendMessageService,
+                memoryReportService);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
     }
 

@@ -26,7 +26,7 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
-import bisq.common.platform.JvmMemoryReport;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
@@ -93,6 +93,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private final NetworkService networkService;
     private final Bisq1BridgeHttpService httpService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final MemoryReportService memoryReportService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
     private final boolean ignoreSecurityManager;
@@ -107,13 +108,12 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     @Nullable
     private Scheduler periodicRequestDoaDataScheduler, initialDelayScheduler;
-    @SuppressWarnings("FieldCanBeLocal") // Pin it so that it does not get GC'ed
-    private final JvmMemoryReport memoryReport;
 
     public Bisq1BridgeService(Config config,
                               NetworkService networkService,
                               PersistenceService persistenceService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
+                              MemoryReportService memoryReportService,
                               PrivateKey authorizedPrivateKey,
                               PublicKey authorizedPublicKey,
                               boolean ignoreSecurityManager,
@@ -124,12 +124,12 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         this.authorizedPublicKey = authorizedPublicKey;
         this.ignoreSecurityManager = ignoreSecurityManager;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+        this.memoryReportService = memoryReportService;
 
         Bisq1BridgeHttpService.Config httpServiceConfig = Bisq1BridgeHttpService.Config.from(config.getHttpService());
         httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
 
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
-        memoryReport = JvmMemoryReport.getINSTANCE();
     }
 
 
@@ -222,11 +222,11 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private void initialRepublish() {
         log.info("Start republishAuthorizedBondedRoles");
         republishAuthorizedBondedRoles();
-        memoryReport.logReport();
+        memoryReportService.logReport();
         log.info("Completed republishAuthorizedBondedRoles");
         log.info("Start request and publish DaoData");
         requestDaoData().join(); // takes about 6 minutes for 500 items
-        memoryReport.logReport();
+        memoryReportService.logReport();
         log.info("Completed request and publish DaoData");
         periodicRequestDoaDataScheduler = Scheduler.run(this::periodicRepublish)
                 .host(this)
@@ -237,7 +237,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private void periodicRepublish() {
         log.info("periodicRequestDoaDataScheduler: Start requestDoaData");
         requestDaoData().join();
-        memoryReport.logReport();
+        memoryReportService.logReport();
         log.info("periodicRequestDoaDataScheduler: Completed requestDoaData");
     }
 

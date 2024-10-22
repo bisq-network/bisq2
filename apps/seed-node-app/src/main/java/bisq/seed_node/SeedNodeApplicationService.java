@@ -19,9 +19,11 @@ package bisq.seed_node;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.common.platform.JvmMemoryReportService;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
-import bisq.identity.IdentityService;
 import bisq.evolution.migration.MigrationService;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -50,11 +52,14 @@ public class SeedNodeApplicationService extends ApplicationService {
     private final SeedNodeService seedNodeService;
     private final BondedRolesService bondedRolesService;
     private final MigrationService migrationService;
+    private final MemoryReportService memoryReportService;
 
     public SeedNodeApplicationService(String[] args) {
         super("seed_node", args, PlatformUtils.getUserDataDir());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
+
+        memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
@@ -64,7 +69,8 @@ public class SeedNodeApplicationService extends ApplicationService {
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
-                securityService.getEquihashProofOfWorkService());
+                securityService.getEquihashProofOfWorkService(),
+                memoryReportService);
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),
@@ -81,6 +87,7 @@ public class SeedNodeApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> initialize() {
         return migrationService.initialize()
+                .thenCompose(result -> memoryReportService.initialize())
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -107,6 +114,7 @@ public class SeedNodeApplicationService extends ApplicationService {
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> memoryReportService.shutdown())
                 .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {

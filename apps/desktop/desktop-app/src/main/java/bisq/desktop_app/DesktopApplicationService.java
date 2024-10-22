@@ -26,6 +26,8 @@ import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.platform.JvmMemoryReportService;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
@@ -33,8 +35,9 @@ import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
 import bisq.desktop.webcam.WebcamAppService;
-import bisq.identity.IdentityService;
 import bisq.evolution.migration.MigrationService;
+import bisq.evolution.updater.UpdaterService;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
@@ -45,7 +48,6 @@ import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
-import bisq.evolution.updater.UpdaterService;
 import bisq.user.UserService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
@@ -101,11 +103,14 @@ public class DesktopApplicationService extends ApplicationService {
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
     private final MigrationService migrationService;
+    private final MemoryReportService memoryReportService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args, PlatformUtils.getUserDataDir());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
+
+        memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
@@ -129,7 +134,8 @@ public class DesktopApplicationService extends ApplicationService {
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
-                securityService.getEquihashProofOfWorkService());
+                securityService.getEquihashProofOfWorkService(),
+                memoryReportService);
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),
@@ -225,6 +231,7 @@ public class DesktopApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> initialize() {
         return migrationService.initialize()
+                .thenCompose(result -> memoryReportService.initialize())
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
@@ -316,6 +323,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> walletService.map(service -> service.shutdown().exceptionally(this::logError))
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> memoryReportService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> migrationService.shutdown().exceptionally(this::logError))
                 .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {

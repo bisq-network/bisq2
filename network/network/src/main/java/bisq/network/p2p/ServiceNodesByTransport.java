@@ -20,6 +20,7 @@ package bisq.network.p2p;
 
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -88,7 +89,8 @@ public class ServiceNodesByTransport {
                                    EquihashProofOfWorkService equihashProofOfWorkService,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
-                                   Optional<ResendMessageService> resendMessageService) {
+                                   Optional<ResendMessageService> resendMessageService,
+                                   MemoryReportService memoryReportService) {
         this.supportedTransportTypes = supportedTransportTypes;
 
         authorizationService = new AuthorizationService(authorizationServiceConfig,
@@ -122,7 +124,8 @@ public class ServiceNodesByTransport {
                     resendMessageService,
                     authorizationService,
                     seedAddresses,
-                    transportType);
+                    transportType,
+                    memoryReportService);
             map.put(transportType, serviceNode);
         });
     }

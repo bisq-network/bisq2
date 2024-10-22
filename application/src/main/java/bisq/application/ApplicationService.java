@@ -28,7 +28,6 @@ import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
-import bisq.common.platform.JvmMemoryReport;
 import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
@@ -123,8 +122,6 @@ public abstract class ApplicationService implements Service {
     protected final Config config;
     @Getter
     protected final PersistenceService persistenceService;
-    @SuppressWarnings("FieldCanBeLocal") // Pin it so that it does not get GC'ed
-    private final JvmMemoryReport memoryReport;
     private FileLock instanceLock;
 
     public ApplicationService(String configFileName, String[] args, Path userDataDir) {
@@ -169,9 +166,6 @@ public abstract class ApplicationService implements Service {
         if (customConfigProvided) {
             log.info("Using custom config file");
         }
-
-        memoryReport = JvmMemoryReport.getINSTANCE();
-        memoryReport.printPeriodically(config.getMemoryReportIntervalSec(), config.isIncludeThreadListInMemoryReport());
 
         DevMode.setDevMode(config.isDevMode());
 

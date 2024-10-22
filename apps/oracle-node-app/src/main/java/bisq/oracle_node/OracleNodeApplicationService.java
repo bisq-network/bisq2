@@ -20,6 +20,8 @@ package bisq.oracle_node;
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
+import bisq.common.platform.JvmMemoryReportService;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.identity.IdentityService;
 import bisq.evolution.migration.MigrationService;
@@ -43,11 +45,14 @@ public class OracleNodeApplicationService extends ApplicationService {
     private final OracleNodeService oracleNodeService;
     private final BondedRolesService bondedRolesService;
     private final MigrationService migrationService;
-
+    private final MemoryReportService memoryReportService;
+    
     public OracleNodeApplicationService(String[] args) {
         super("oracle_node", args, PlatformUtils.getUserDataDir());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
+
+        memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
@@ -57,7 +62,8 @@ public class OracleNodeApplicationService extends ApplicationService {
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
-                securityService.getEquihashProofOfWorkService());
+                securityService.getEquihashProofOfWorkService(),
+                memoryReportService);
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),
@@ -80,12 +86,14 @@ public class OracleNodeApplicationService extends ApplicationService {
                 networkService,
                 persistenceService,
                 bondedRolesService.getAuthorizedBondedRolesService(),
-                marketPriceRequestService);
+                marketPriceRequestService,
+                memoryReportService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         return migrationService.initialize()
+                .thenCompose(result -> memoryReportService.initialize())
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -111,6 +119,7 @@ public class OracleNodeApplicationService extends ApplicationService {
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> memoryReportService.shutdown())
                 .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(2, TimeUnit.MINUTES)
                 .handle((result, throwable) -> throwable == null)

@@ -24,6 +24,8 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.platform.JvmMemoryReportService;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
@@ -85,6 +87,7 @@ public class RestApiApplicationService extends ApplicationService {
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
     private final MigrationService migrationService;
+    private final MemoryReportService memoryReportService;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -92,6 +95,8 @@ public class RestApiApplicationService extends ApplicationService {
         super("rest_api", args, PlatformUtils.getUserDataDir());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
+
+        memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
@@ -115,7 +120,8 @@ public class RestApiApplicationService extends ApplicationService {
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
-                securityService.getEquihashProofOfWorkService());
+                securityService.getEquihashProofOfWorkService(),
+                memoryReportService);
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),
@@ -174,6 +180,7 @@ public class RestApiApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> initialize() {
         return migrationService.initialize()
+                .thenCompose(result -> memoryReportService.initialize())
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
@@ -253,6 +260,7 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> walletService.map(Service::shutdown)
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> memoryReportService.shutdown())
                 .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> throwable == null)
