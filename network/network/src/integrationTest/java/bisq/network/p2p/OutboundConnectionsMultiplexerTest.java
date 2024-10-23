@@ -19,6 +19,7 @@ package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.file.FileUtils;
+import bisq.common.network.DefaultLocalhostFacade;
 import bisq.common.util.NetworkUtils;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
@@ -59,7 +60,7 @@ public class OutboundConnectionsMultiplexerTest {
         ArrayList<TransportType> supportedTransportTypes = new ArrayList<>();
         supportedTransportTypes.add(TransportType.CLEAR);
 
-        Address serverAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
+        Address serverAddress = DefaultLocalhostFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
         Capability serverCapability = createCapability(serverAddress, supportedTransportTypes);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
@@ -83,7 +84,7 @@ public class OutboundConnectionsMultiplexerTest {
                 }
 
                 AuthorizationService authorizationService = createAuthorizationService();
-                Address outboundAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
+                Address outboundAddress = DefaultLocalhostFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
                 Capability outboundCapability = createCapability(outboundAddress, supportedTransportTypes);
                 Selector selector = SelectorProvider.provider().openSelector();
 

@@ -23,18 +23,15 @@ import bisq.common.validation.NetworkDataValidation;
 import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.StringTokenizer;
 
 import static com.google.common.base.Preconditions.checkArgument;
-
+@Slf4j
 @EqualsAndHashCode
 @Getter
 public final class Address implements NetworkProto, Comparable<Address> {
-    public static Address localHost(int port) {
-        return new Address("127.0.0.1", port);
-    }
-
     public static Address fromFullAddress(String fullAddress) {
         StringTokenizer st = new StringTokenizer(fullAddress, ":");
         String host = maybeConvertLocalHost(st.nextToken());
@@ -99,6 +96,10 @@ public final class Address implements NetworkProto, Comparable<Address> {
         return !isClearNetAddress() && !isTorAddress();
     }
 
+    public boolean isLocalhost() {
+        return host.equals("127.0.0.1");
+    }
+
     public TransportType getTransportType() {
         if (isClearNetAddress()) {
             return TransportType.CLEAR;
@@ -117,7 +118,7 @@ public final class Address implements NetworkProto, Comparable<Address> {
 
     @Override
     public String toString() {
-        if (host.equals("127.0.0.1")) {
+        if (isLocalhost()) {
             return "[" + port + "]";
         } else {
             return StringUtils.truncate(host, 1000) + ":" + port;

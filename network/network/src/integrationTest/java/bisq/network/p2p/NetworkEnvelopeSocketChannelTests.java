@@ -19,6 +19,7 @@ package bisq.network.p2p;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.file.FileUtils;
+import bisq.common.network.DefaultLocalhostFacade;
 import bisq.common.util.NetworkUtils;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
@@ -188,11 +189,11 @@ public class NetworkEnvelopeSocketChannelTests {
         List<TransportType> supportedTransportTypes = new ArrayList<>(1);
         supportedTransportTypes.add(TransportType.CLEAR);
 
-        Capability peerCapability = createCapability(Address.localHost(2345), supportedTransportTypes);
+        Capability peerCapability = createCapability(DefaultLocalhostFacade.toLocalHostAddress(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationService authorizationService = createAuthorizationService();
 
-        Capability responderCapability = createCapability(Address.localHost(1234), supportedTransportTypes);
+        Capability responderCapability = createCapability(DefaultLocalhostFacade.toLocalHostAddress(1234), supportedTransportTypes);
 
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),

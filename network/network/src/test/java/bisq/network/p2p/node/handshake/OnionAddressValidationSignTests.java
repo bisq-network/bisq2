@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.network.Address;
+import bisq.common.network.DefaultLocalhostFacade;
 import bisq.security.keys.TorKeyGeneration;
 import bisq.security.keys.TorKeyPair;
 import org.junit.jupiter.api.Test;
@@ -33,15 +34,15 @@ public class OnionAddressValidationSignTests {
 
     @Test
     void testSignNonOnionAddresses() {
-        Address myAddress = Address.localHost(1234);
-        Address peerAddress = Address.localHost(4321);
+        Address myAddress = DefaultLocalhostFacade.toLocalHostAddress(1234);
+        Address peerAddress = DefaultLocalhostFacade.toLocalHostAddress(4321);
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());
         assertThat(signature).isEmpty();
     }
 
     @Test
     void testSignMyNonOnionAddress() {
-        Address myAddress = Address.localHost(1234);
+        Address myAddress = DefaultLocalhostFacade.toLocalHostAddress(1234);
         Address peerAddress = new Address(peerTorKeyPair.getOnionAddress(), 8888);
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());
         assertThat(signature).isEmpty();
@@ -50,7 +51,7 @@ public class OnionAddressValidationSignTests {
     @Test
     void testSignPeerNonOnionAddress() {
         Address myAddress = new Address(myTorKeyPair.getOnionAddress(), 8888);
-        Address peerAddress = Address.localHost(4321);
+        Address peerAddress = DefaultLocalhostFacade.toLocalHostAddress(4321);
         Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myTorKeyPair.getPrivateKey());
         assertThat(signature).isEmpty();
     }

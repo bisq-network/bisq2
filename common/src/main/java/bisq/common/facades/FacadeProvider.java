@@ -19,6 +19,8 @@ package bisq.common.facades;
 
 import bisq.common.facades.android.AndroidGuavaFacade;
 import bisq.common.facades.android.AndroidJdkFacade;
+import bisq.common.network.DefaultLocalhostFacade;
+import bisq.common.network.LocalhostFacade;
 
 // The JDKs for Java SE and Android have different API support, thus, we use a
 // facade with Android compatible APIs by default and set for Java SE based applicationServices
@@ -27,6 +29,7 @@ import bisq.common.facades.android.AndroidJdkFacade;
 public class FacadeProvider {
     private static JdkFacade jdkFacade = new AndroidJdkFacade();
     private static GuavaFacade guavaFacade = new AndroidGuavaFacade();
+    private static LocalhostFacade localhostFacade = new DefaultLocalhostFacade();
 
     public static void setJdkFacade(JdkFacade jdkFacade) {
         FacadeProvider.jdkFacade = jdkFacade;
@@ -43,4 +46,13 @@ public class FacadeProvider {
     public static GuavaFacade getGuavaFacade() {
         return guavaFacade;
     }
+
+    public static LocalhostFacade getLocalhostFacade() {
+        return localhostFacade;
+    }
+
+    public static void setLocalhostFacade(LocalhostFacade localhostFacade) {
+        FacadeProvider.localhostFacade = localhostFacade;
+    }
+
 }

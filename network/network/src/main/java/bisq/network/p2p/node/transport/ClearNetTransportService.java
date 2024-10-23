@@ -1,9 +1,9 @@
 package bisq.network.p2p.node.transport;
 
-import bisq.common.timer.Scheduler;
 import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
+import bisq.common.timer.Scheduler;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyBundle;
 import lombok.EqualsAndHashCode;
@@ -18,6 +18,8 @@ import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+
+import static bisq.common.facades.FacadeProvider.getLocalhostFacade;
 
 
 @Slf4j
@@ -115,14 +117,14 @@ public class ClearNetTransportService implements TransportService {
         maybeSimulateDelay();
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Address address = Address.localHost(port);
+            Address myAddress = getLocalhostFacade().toMyLocalhost(port);
             log.debug("ServerSocket created at port {}", port);
 
             bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
             bootstrapInfo.getBootstrapProgress().set(0.5);
-            bootstrapInfo.getBootstrapDetails().set("Server created: " + address);
+            bootstrapInfo.getBootstrapDetails().set("Server created: " + myAddress);
 
-            return new ServerSocketResult(serverSocket, address);
+            return new ServerSocketResult(serverSocket, myAddress);
         } catch (IOException e) {
             log.error("{}. Server port {}", e, port);
             throw new CompletionException(e);
@@ -131,6 +133,8 @@ public class ClearNetTransportService implements TransportService {
 
     @Override
     public Socket getSocket(Address address) throws IOException {
+        address = getLocalhostFacade().toPeersLocalhost(address);
+
         log.debug("Create new Socket to {}", address);
         maybeSimulateDelay();
         Socket socket = new Socket(address.getHost(), address.getPort());
