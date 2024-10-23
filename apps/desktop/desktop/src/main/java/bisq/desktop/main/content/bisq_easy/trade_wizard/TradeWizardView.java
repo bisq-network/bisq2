@@ -204,8 +204,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     }
 
     private Triple<HBox, Button, List<Label>> getProgressItems() {
-        Label direction = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.direction"));
-        Label market = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.market"));
+        Label directionAndMarket = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.directionAndMarket"));
         priceProgressItemLabel = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.price"));
         priceProgressItemLine = getHLine();
         Label amount = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.amount"));
@@ -224,9 +223,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         hBox.setPadding(new Insets(0, 20, 0, 50));
 
         hBox.getChildren().addAll(Spacer.fillHBox(),
-                direction,
-                getHLine(),
-                market,
+                directionAndMarket,
                 getHLine(),
                 amount,
                 getHLine(),
@@ -238,7 +235,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 Spacer.fillHBox(),
                 closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, amount, paymentMethods, takeOfferProgressItem, review)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(directionAndMarket, amount, paymentMethods, takeOfferProgressItem, review)));
     }
 
     private Region getHLine() {

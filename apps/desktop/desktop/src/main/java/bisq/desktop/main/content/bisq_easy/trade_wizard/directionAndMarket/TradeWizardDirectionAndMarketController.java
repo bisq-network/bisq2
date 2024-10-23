@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket;
 
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
@@ -40,10 +40,10 @@ import java.util.function.Consumer;
 import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
 
 @Slf4j
-public class TradeWizardDirectionController implements Controller {
-    private final TradeWizardDirectionModel model;
+public class TradeWizardDirectionAndMarketController implements Controller {
+    private final TradeWizardDirectionAndMarketModel model;
     @Getter
-    private final TradeWizardDirectionView view;
+    private final TradeWizardDirectionAndMarketView view;
     private final Runnable onNextHandler;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final ReputationService reputationService;
@@ -52,10 +52,10 @@ public class TradeWizardDirectionController implements Controller {
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
 
-    public TradeWizardDirectionController(ServiceProvider serviceProvider,
-                                          Runnable onNextHandler,
-                                          Consumer<Boolean> navigationButtonsVisibleHandler,
-                                          Consumer<NavigationTarget> closeAndNavigateToHandler) {
+    public TradeWizardDirectionAndMarketController(ServiceProvider serviceProvider,
+                                                   Runnable onNextHandler,
+                                                   Consumer<Boolean> navigationButtonsVisibleHandler,
+                                                   Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.onNextHandler = onNextHandler;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -64,8 +64,8 @@ public class TradeWizardDirectionController implements Controller {
         bisqEasyOfferbookSelectionService = serviceProvider.getChatService().getBisqEasyOfferbookChannelSelectionService();
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
 
-        model = new TradeWizardDirectionModel();
-        view = new TradeWizardDirectionView(model, this);
+        model = new TradeWizardDirectionAndMarketModel();
+        view = new TradeWizardDirectionAndMarketView(model, this);
         setDirection(Direction.BUY);
         applyShowReputationInfo();
     }

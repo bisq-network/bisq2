@@ -27,7 +27,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket.TradeWizardDirectionAndMarketController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods.TradeWizardPaymentMethodsController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.price.TradeWizardPriceController;
@@ -68,7 +68,7 @@ public class TradeWizardController extends NavigationController implements InitW
     private final TradeWizardModel model;
     @Getter
     private final TradeWizardView view;
-    private final TradeWizardDirectionController tradeWizardDirectionController;
+    private final TradeWizardDirectionAndMarketController tradeWizardDirectionController;
     private final TradeWizardMarketController tradeWizardMarketController;
     private final TradeWizardPriceController tradeWizardPriceController;
     private final TradeWizardAmountController tradeWizardAmountController;
@@ -90,7 +90,7 @@ public class TradeWizardController extends NavigationController implements InitW
         model = new TradeWizardModel();
         view = new TradeWizardView(model, this);
 
-        tradeWizardDirectionController = new TradeWizardDirectionController(serviceProvider,
+        tradeWizardDirectionController = new TradeWizardDirectionAndMarketController(serviceProvider,
                 this::onNext,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
