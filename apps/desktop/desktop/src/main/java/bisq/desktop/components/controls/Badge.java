@@ -153,7 +153,7 @@ public class Badge extends StackPane {
     public void setControl(Node control) {
         if (control != null) {
             this.control = control;
-            getChildren().addFirst(control);
+            getChildren().add(0, control);
 
             // if the control got resized the badge must be reset
             if (control instanceof Region) {

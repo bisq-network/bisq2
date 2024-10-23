@@ -103,7 +103,7 @@ public class I2pEmbeddedRouter {
             }
         }
 
-        routerContext = RouterContext.listContexts().getFirst();
+        routerContext = RouterContext.listContexts().get(0);
         router = routerContext.router();
         // Check for RUNNING state (indicating NetDB and tunnels are ready)
         while(!router.isRunning()) {
@@ -178,7 +178,7 @@ public class I2pEmbeddedRouter {
             }
             router.setKillVMOnEnd(false);
             router.runRouter();
-            routerContext = RouterContext.listContexts().getFirst();
+            routerContext = RouterContext.listContexts().get(0);
             while(!router.isRunning()) {
                 try {
                     //noinspection BusyWait

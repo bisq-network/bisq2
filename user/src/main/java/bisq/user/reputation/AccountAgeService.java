@@ -138,7 +138,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         }
 
         // If new data is older than existing entry we clear set and add our new data, otherwise we ignore the new data.
-        AuthorizedAccountAgeData existing = new ArrayList<>(dataSet).getFirst();
+        AuthorizedAccountAgeData existing = new ArrayList<>(dataSet).get(0);
         if (existing.getDate() > data.getDate()) {
             dataSet.clear();
             dataSet.add(data);

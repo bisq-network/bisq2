@@ -218,7 +218,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
             if (txOutputValuesForAddress.isEmpty()) {
                 explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.noOutputsForAddress"));
             } else if (txOutputValuesForAddress.size() == 1) {
-                long outputValue = txOutputValuesForAddress.getFirst();
+                long outputValue = txOutputValuesForAddress.get(0);
                 model.getBtcBalance().set(getFormattedAmount(outputValue));
                 long tradeAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
                 if (outputValue != tradeAmount) {
