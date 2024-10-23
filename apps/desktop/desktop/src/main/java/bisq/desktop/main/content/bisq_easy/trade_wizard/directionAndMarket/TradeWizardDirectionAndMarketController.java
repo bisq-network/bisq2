@@ -21,7 +21,6 @@ import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
@@ -31,7 +30,6 @@ import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
@@ -64,7 +62,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
-    private Subscription searchTextPin;
+    private Subscription searchTextPin, selectedMarketPin;
 
     public TradeWizardDirectionAndMarketController(ServiceProvider serviceProvider,
                                                    Runnable onNextHandler,
@@ -111,7 +109,6 @@ public class TradeWizardDirectionAndMarketController implements Controller {
                 .map(AmountFormatter::formatAmountWithCode)
                 .orElse("25 USD"));
 
-        model.setHeadline("TESTING");
         model.getSearchText().set("");
         if (model.getSelectedMarket().get() == null) {
             // Use selected public channel or if private channel is selected we use any of the public channels for
@@ -158,12 +155,17 @@ public class TradeWizardDirectionAndMarketController implements Controller {
                 );
             }
         });
+
+        selectedMarketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket ->
+            model.getHeadline().set(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline",
+                    selectedMarket.getQuoteCurrencyDisplayName())));
     }
 
     @Override
     public void onDeactivate() {
         view.getRoot().setOnKeyPressed(null);
         searchTextPin.unsubscribe();
+        selectedMarketPin.unsubscribe();
     }
 
     void onSelectDirection(Direction direction) {

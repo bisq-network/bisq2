@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket;
 
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.Market;
-import bisq.common.data.Pair;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -28,7 +27,6 @@ import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -77,13 +75,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-//        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.direction.subTitle"));
-//        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-//        subtitleLabel.setAlignment(Pos.CENTER);
-//        subtitleLabel.setWrapText(true);
-//        subtitleLabel.getStyleClass().add("bisq-text-3");
-
-
         // Market
         searchBox = new SearchBox();
         searchBox.setPromptText(Res.get("bisqEasy.tradeWizard.market.columns.name").toUpperCase());
@@ -108,22 +99,11 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         tableViewWithSearchBox.setMaxWidth(tableWidth);
         tableViewWithSearchBox.getStyleClass().add("markets-table-container");
 
-
         // Direction
-        Pair<VBox, Button> buyPair = getBoxPair(Res.get("bisqEasy.tradeWizard.direction.buy"),
-                Res.get("bisqEasy.tradeWizard.direction.buy.info"), "card-button");
-        VBox buyBox = buyPair.getFirst();
-        buyButton = buyPair.getSecond();
-
-        Pair<VBox, Button> sellPair = getBoxPair(Res.get("bisqEasy.tradeWizard.direction.sell"),
-                Res.get("bisqEasy.tradeWizard.direction.sell.info"), "card-button");
-        VBox sellBox = sellPair.getFirst();
-        sellButton = sellPair.getSecond();
-
-        HBox directionBox = new HBox(25, buyBox, sellBox);
+        buyButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.buy"), "card-button");
+        sellButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.sell"), "card-button");
+        HBox directionBox = new HBox(25, buyButton, sellButton);
         directionBox.setAlignment(Pos.BASELINE_CENTER);
-
-
 
         VBox.setMargin(headlineLabel, new Insets(-20, 0, 0, 0));
         VBox.setMargin(directionBox, new Insets(10, 0, 0, 0));
@@ -139,7 +119,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
     @Override
     protected void onViewAttached() {
-        headlineLabel.setText(model.getHeadline());
+        headlineLabel.textProperty().bind(model.getHeadline());
         tableView.initialize();
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
         // We use setOnMouseClicked handler not a listener on
@@ -149,7 +129,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
-//        subtitleLabel2.setText(Res.get("bisqEasy.tradeWizard.direction.feedback.subTitle2", model.getFormattedAmountWithoutReputationNeeded()));
+        subtitleLabel2.setText(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2", model.getFormattedAmountWithoutReputationNeeded()));
 
         buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
@@ -184,6 +164,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
     @Override
     protected void onViewDetached() {
+        headlineLabel.textProperty().unbind();
         tableView.dispose();
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
         tableView.setOnMouseClicked(null);
@@ -203,25 +184,14 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         showReputationInfoPin.unsubscribe();
     }
 
-    private Pair<VBox, Button> getBoxPair(String title, String info, String style) {
+    private Button createAndGetDirectionButton(String title, String style) {
         Button button = new Button(title);
         button.getStyleClass().addAll(style, "bisq-easy-trade-wizard-large-push-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
         button.setMinWidth(width);
         button.setMinHeight(112);
-
-        Label infoLabel = new Label(info);
-        infoLabel.getStyleClass().add("bisq-text-3");
-        infoLabel.setMaxWidth(width);
-        infoLabel.setWrapText(true);
-        infoLabel.setTextAlignment(TextAlignment.CENTER);
-        infoLabel.setAlignment(Pos.CENTER);
-
-        VBox vBox = new VBox(8, button, infoLabel);
-        vBox.setAlignment(Pos.CENTER);
-
-        return new Pair<>(vBox, button);
+        return button;
     }
 
     private void setupReputationInfo() {
@@ -235,25 +205,25 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         // We don't use setManaged as the transition would not work as expected if set to false
         reputationInfo.setVisible(false);
         reputationInfo.setAlignment(Pos.TOP_CENTER);
-        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.direction.feedback.headline"));
+        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setTextAlignment(TextAlignment.CENTER);
         headlineLabel.setAlignment(Pos.CENTER);
         headlineLabel.setMaxWidth(width - 60);
 
-        Label subtitleLabel1 = new Label(Res.get("bisqEasy.tradeWizard.direction.feedback.subTitle1"));
+        Label subtitleLabel1 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1"));
         subtitleLabel1.setMaxWidth(width - 60);
         subtitleLabel1.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.direction.feedback.gainReputation"));
+        gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
         gainReputationButton.getStyleClass().add("outlined-button");
 
         subtitleLabel2 = new Label();
         subtitleLabel2.setMaxWidth(width - 60);
         subtitleLabel2.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        withoutReputationButton = new Button(Res.get("bisqEasy.tradeWizard.direction.feedback.tradeWithoutReputation"));
-        backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.direction.feedback.backToBuy"));
+        withoutReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.tradeWithoutReputation"));
+        backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.backToBuy"));
 
         HBox buttons = new HBox(7, backToBuyButton, withoutReputationButton);
         buttons.setAlignment(Pos.CENTER);
