@@ -55,7 +55,9 @@ public abstract class BaseState {
         protected final BisqEasyOpenTradeChannelService channelService;
         protected final LeavePrivateChatManager leavePrivateChatManager;
 
-        protected Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        protected Controller(ServiceProvider serviceProvider,
+                             BisqEasyTrade bisqEasyTrade,
+                             BisqEasyOpenTradeChannel channel) {
             chatService = serviceProvider.getChatService();
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             accountService = serviceProvider.getAccountService();
@@ -89,9 +91,10 @@ public abstract class BaseState {
         }
 
         protected Optional<String> findUsersAccountData() {
-            return Optional.ofNullable(accountService.getSelectedAccount()).stream()
-                    .filter(account -> account instanceof UserDefinedFiatAccount)
-                    .map(account -> (UserDefinedFiatAccount) account)
+            return accountService
+                    .getSelectedAccount().stream()
+                    .filter(UserDefinedFiatAccount.class::isInstance)
+                    .map(UserDefinedFiatAccount.class::cast)
                     .map(account -> account.getAccountPayload().getAccountData())
                     .findFirst();
         }

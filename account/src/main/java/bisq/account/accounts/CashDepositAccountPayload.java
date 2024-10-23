@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
+import static bisq.common.util.OptionalUtils.toOptional;
+
 @Getter
 @Slf4j
 @ToString
@@ -16,13 +20,11 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
     private final String requirements;
 
     public CashDepositAccountPayload(String id, String paymentMethodName, String countryCode,
-                                     String holderName, String bankName, String branchId,
-                                     String accountNr, String accountType,
-                                     String holderTaxId, String bankId,
-                                     String nationalAccountId, String requirements) {
-        super(id, paymentMethodName, countryCode,
-                holderName, bankName, branchId,
-                accountNr, accountType, holderTaxId,
+                                     Optional<String> holderName, Optional<String> bankName, Optional<String> branchId,
+                                     Optional<String> accountNr, Optional<String> accountType,
+                                     Optional<String> holderTaxId, Optional<String> bankId,
+                                     Optional<String> nationalAccountId, String requirements) {
+        super(id, paymentMethodName, countryCode, holderName, bankName, branchId, accountNr, accountType, holderTaxId,
                 bankId, nationalAccountId);
         this.requirements = requirements;
 
@@ -35,6 +37,7 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
 
         NetworkDataValidation.validateText(requirements, 500);
     }
+
     @Override
     protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
         return super.getBankAccountPayloadBuilder(serializeForHash).setCashDepositAccountPayload(
@@ -56,14 +59,14 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
                 proto.getId(),
                 proto.getPaymentMethodName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                bankAccountPayload.getHolderName(),
-                bankAccountPayload.getBankName(),
-                bankAccountPayload.getBranchId(),
-                bankAccountPayload.getAccountNr(),
-                bankAccountPayload.getAccountType(),
-                bankAccountPayload.getHolderTaxId(),
-                bankAccountPayload.getBankId(),
-                bankAccountPayload.getNationalAccountId(),
+                toOptional(bankAccountPayload.getHolderName()),
+                toOptional(bankAccountPayload.getBankName()),
+                toOptional(bankAccountPayload.getBranchId()),
+                toOptional(bankAccountPayload.getAccountNr()),
+                toOptional(bankAccountPayload.getAccountType()),
+                toOptional(bankAccountPayload.getHolderTaxId()),
+                toOptional(bankAccountPayload.getBankId()),
+                toOptional(bankAccountPayload.getNationalAccountId()),
                 bankAccountPayload.getCashDepositAccountPayload().getRequirements());
     }
 }

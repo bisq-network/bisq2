@@ -11,6 +11,8 @@ import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
@@ -46,7 +48,9 @@ class AchTransferAccountTest {
 
     private static final AchTransferAccount ACCOUNT = new AchTransferAccount(
             "accountName",
-            new AchTransferAccountPayload("id", "ACH_TRANSFER", "countryCode", null, "bankName", null, null, null, null),
+            new AchTransferAccountPayload("id", "ACH_TRANSFER",
+                    "countryCode", null, Optional.of("bankName"),
+                    null, null, null, null),
             new bisq.common.locale.Country(
                     "countryCode",
                     "countryName",

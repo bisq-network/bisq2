@@ -7,6 +7,8 @@ import bisq.account.protobuf.CountryBasedAccountPayload;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
@@ -40,11 +42,14 @@ class AchTransferAccountPayloadTest {
 
     private static final bisq.account.accounts.AchTransferAccountPayload PAYLOAD =
             new bisq.account.accounts.AchTransferAccountPayload(
-                    "id", "paymentMethodName", "countryCode", "holderName", "bankName", "branchId", "accountNr", "accountType", "holderAddress"
+                    "id", "paymentMethodName", "countryCode",
+                    Optional.of("holderName"), Optional.of("bankName"), Optional.of("branchId"),
+                    Optional.of("accountNr"), Optional.of("accountType"), Optional.of("holderAddress")
             );
     private static final bisq.account.accounts.AchTransferAccountPayload PAYLOAD_OPTIONALS_NOT_SET =
             new bisq.account.accounts.AchTransferAccountPayload(
-                    "id", "paymentMethodName", "countryCode", "holderName", null, null, null, null, null
+                    "id", "paymentMethodName", "countryCode",
+                    Optional.of("holderName"), null, null, null, null, null
             );
 
     @Test
