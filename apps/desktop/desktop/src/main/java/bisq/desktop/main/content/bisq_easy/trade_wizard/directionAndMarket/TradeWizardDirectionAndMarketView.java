@@ -100,8 +100,8 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         tableViewWithSearchBox.getStyleClass().add("markets-table-container");
 
         // Direction
-        buyButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.buy"), "card-button");
-        sellButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.sell"), "card-button");
+        buyButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.buy"));
+        sellButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.sell"));
         HBox directionBox = new HBox(25, buyButton, sellButton);
         directionBox.setAlignment(Pos.BASELINE_CENTER);
 
@@ -184,13 +184,13 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         showReputationInfoPin.unsubscribe();
     }
 
-    private Button createAndGetDirectionButton(String title, String style) {
+    private Button createAndGetDirectionButton(String title) {
         Button button = new Button(title);
-        button.getStyleClass().addAll(style, "bisq-easy-trade-wizard-large-push-button");
+        button.getStyleClass().addAll("card-button", "bisq-easy-trade-wizard-large-push-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
         button.setMinWidth(width);
-        button.setMinHeight(112);
+        button.setMinHeight(60);
         return button;
     }
 
