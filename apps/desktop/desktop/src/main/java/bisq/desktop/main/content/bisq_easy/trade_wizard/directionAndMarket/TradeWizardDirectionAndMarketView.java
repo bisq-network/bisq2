@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.Transitions;
@@ -37,7 +37,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirectionModel, TradeWizardDirectionController> {
+public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWizardDirectionAndMarketModel, TradeWizardDirectionAndMarketController> {
     private final Button buyButton, sellButton;
     private final VBox reputationInfo;
     private final VBox content;
@@ -46,7 +46,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
     private Button gainReputationButton;
     private Label subtitleLabel2;
 
-    public TradeWizardDirectionView(TradeWizardDirectionModel model, TradeWizardDirectionController controller) {
+    public TradeWizardDirectionAndMarketView(TradeWizardDirectionAndMarketModel model, TradeWizardDirectionAndMarketController controller) {
         super(new StackPane(), model, controller);
 
         root.setAlignment(Pos.CENTER);
