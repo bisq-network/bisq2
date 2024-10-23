@@ -21,6 +21,7 @@ dependencies {
     api("bitcoind:core")
     implementation("bitcoind:json-rpc")
     implementation("bitcoind:regtest")
+    implementation("bisq:java-se")
     implementation("wallets:wallet")
 
     implementation(project(":process"))
