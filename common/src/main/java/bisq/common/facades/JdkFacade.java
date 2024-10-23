@@ -17,6 +17,8 @@
 
 package bisq.common.facades;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public interface JdkFacade {
@@ -27,4 +29,8 @@ public interface JdkFacade {
     void redirectError(ProcessBuilder processBuilder);
 
     void redirectOutput(ProcessBuilder processBuilder);
+
+    void writeString(Path torrcPath, String string) throws IOException;
+
+    String readString(Path controlPortFilePath) throws IOException;
 }

@@ -17,9 +17,7 @@
 
 package bisq.tor.process;
 
-import bisq.common.facades.android.AndroidJdkFacade;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -29,12 +27,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.common.facades.FacadeProvider.getJdkFacade;
+
 @Slf4j
 public class NativeTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
-
-    @Setter
-    private static bisq.common.facades.JdkFacade jdkFacade = new AndroidJdkFacade();
 
     private final Path torDataDirPath;
     private final Path torBinaryPath;
@@ -51,7 +48,7 @@ public class NativeTorProcess {
         createTorControlDirectory();
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
-        String ownerPid = jdkFacade.getMyPid();
+        String ownerPid = getJdkFacade().getMyPid();
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
                 "--torrc-file", absoluteTorrcPathAsString,
@@ -64,8 +61,8 @@ public class NativeTorProcess {
             environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
         }
 
-        jdkFacade.redirectError(processBuilder);
-        jdkFacade.redirectOutput(processBuilder);
+        getJdkFacade().redirectError(processBuilder);
+        getJdkFacade().redirectOutput(processBuilder);
 
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);

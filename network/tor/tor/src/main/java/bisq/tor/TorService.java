@@ -18,7 +18,7 @@
 package bisq.tor;
 
 import bisq.common.application.Service;
-import bisq.common.facades.android.AndroidJdkFacade;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileUtils;
 import bisq.common.observable.Observable;
 import bisq.common.platform.LinuxDistribution;
@@ -32,7 +32,6 @@ import bisq.tor.installer.TorInstaller;
 import bisq.tor.process.NativeTorProcess;
 import bisq.tor.process.control_port.ControlPortFilePoller;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
@@ -52,9 +51,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 public class TorService implements Service {
     private static final int RANDOM_PORT = 0;
-
-    @Setter
-    private static bisq.common.facades.JdkFacade jdkFacade = new AndroidJdkFacade();
 
     private final TorTransportConfig transportConfig;
     private final Path torDataDirPath;
@@ -198,7 +194,7 @@ public class TorService implements Service {
     }
 
     private boolean isTorRunning(String absoluteTorBinaryPath) {
-        return jdkFacade.getProcessCommandLineStream().anyMatch(e -> e.startsWith(absoluteTorBinaryPath));
+        return FacadeProvider.getJdkFacade().getProcessCommandLineStream().anyMatch(e -> e.startsWith(absoluteTorBinaryPath));
     }
 
     private void installTorIfNotUpToDate() {

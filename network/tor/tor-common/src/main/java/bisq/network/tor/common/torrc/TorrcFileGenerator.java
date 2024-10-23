@@ -17,8 +17,9 @@
 
 package bisq.network.tor.common.torrc;
 
+import bisq.common.facades.FacadeProvider;
+
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -53,8 +54,9 @@ public class TorrcFileGenerator {
                         .append(" ").append(dirAuthority.getRelayFingerprint())
                         .append("\n"));
 
+
         try {
-            Files.writeString(torrcPath, torrcStringBuilder.toString());
+            FacadeProvider.getJdkFacade().writeString(torrcPath, torrcStringBuilder.toString());
         } catch (IOException e) {
             throw new IllegalStateException("Couldn't create torrc file: " + torrcPath.toAbsolutePath());
         }

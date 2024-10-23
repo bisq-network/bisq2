@@ -19,7 +19,10 @@ package bisq.java_se.facades;
 
 import bisq.common.facades.JdkFacade;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public class JavaSeJdkFacade implements JdkFacade {
@@ -42,5 +45,15 @@ public class JavaSeJdkFacade implements JdkFacade {
     @Override
     public void redirectOutput(ProcessBuilder processBuilder) {
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+    }
+
+    @Override
+    public void writeString(Path torrcPath, String torrc) throws IOException {
+        Files.writeString(torrcPath, torrc);
+    }
+
+    @Override
+    public String readString(Path controlPortFilePath) throws IOException {
+        return Files.readString(controlPortFilePath);
     }
 }
