@@ -17,12 +17,15 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket;
 
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketView;
 import bisq.offer.Direction;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,10 +36,23 @@ public class TradeWizardDirectionAndMarketModel implements Model {
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
     @Setter
     private String formattedAmountWithoutReputationNeeded;
+    @Setter
+    private String headline;
+    private final ObjectProperty<TradeWizardDirectionAndMarketView.ListItem> selectedMarketListItem = new SimpleObjectProperty<>();
+    private final StringProperty searchText = new SimpleStringProperty();
+    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
+    private final ObservableList<TradeWizardDirectionAndMarketView.ListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<TradeWizardDirectionAndMarketView.ListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<TradeWizardDirectionAndMarketView.ListItem> sortedList = new SortedList<>(filteredList);
 
     void reset() {
         direction.set(Direction.BUY);
         showReputationInfo.set(false);
         buyButtonDisabled.set(false);
+        headline = null;
+        selectedMarketListItem.set(null);
+        searchText.set(null);
+        selectedMarket.set(null);
+        listItems.clear();
     }
 }
