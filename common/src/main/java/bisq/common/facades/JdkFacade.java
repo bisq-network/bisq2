@@ -29,8 +29,4 @@ public interface JdkFacade {
     void redirectError(ProcessBuilder processBuilder);
 
     void redirectOutput(ProcessBuilder processBuilder);
-
-    void writeString(Path torrcPath, String string) throws IOException;
-
-    String readString(Path controlPortFilePath) throws IOException;
 }

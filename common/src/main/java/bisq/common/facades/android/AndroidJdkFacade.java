@@ -19,8 +19,6 @@ package bisq.common.facades.android;
 
 import bisq.common.facades.JdkFacade;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public class AndroidJdkFacade implements JdkFacade {
@@ -51,20 +49,5 @@ public class AndroidJdkFacade implements JdkFacade {
         // TODO
         throw new UnsupportedOperationException("Not supported yet.");
         // processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
-    }
-
-    @Override
-    public void writeString(Path torrcPath, String torrc) throws IOException {
-        // TODO
-        throw new UnsupportedOperationException("Not supported yet.");
-        // Files.writeString(torrcPath, torrc);
-    }
-
-
-    @Override
-    public String readString(Path controlPortFilePath) throws IOException {
-        // TODO
-        throw new UnsupportedOperationException("Not supported yet.");
-        // return Files.readString(controlPortFilePath);
     }
 }

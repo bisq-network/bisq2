@@ -17,7 +17,7 @@
 
 package bisq.network.tor.common.torrc;
 
-import bisq.common.facades.FacadeProvider;
+import bisq.common.file.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -56,7 +56,7 @@ public class TorrcFileGenerator {
 
 
         try {
-            FacadeProvider.getJdkFacade().writeString(torrcPath, torrcStringBuilder.toString());
+            FileUtils.writeToFile(torrcStringBuilder.toString(), torrcPath.toFile());
         } catch (IOException e) {
             throw new IllegalStateException("Couldn't create torrc file: " + torrcPath.toAbsolutePath());
         }
