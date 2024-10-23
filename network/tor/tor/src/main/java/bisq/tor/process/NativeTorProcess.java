@@ -64,9 +64,6 @@ public class NativeTorProcess {
         getJdkFacade().redirectError(processBuilder);
         getJdkFacade().redirectOutput(processBuilder);
 
-        processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
-
         try {
             Process torProcess = processBuilder.start();
             process = Optional.of(torProcess);
