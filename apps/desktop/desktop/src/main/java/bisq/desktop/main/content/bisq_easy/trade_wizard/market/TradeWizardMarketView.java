@@ -187,7 +187,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         private final String numOffers;
         private final String numUsers;
 
-        //TOD move to cell
+        // TODO: move to cell
         private final Node marketLogo;
 
         ListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
