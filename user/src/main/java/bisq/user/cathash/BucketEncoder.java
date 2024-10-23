@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.cathash;
+package bisq.user.cathash;
 
 import java.math.BigInteger;
 import java.util.Optional;

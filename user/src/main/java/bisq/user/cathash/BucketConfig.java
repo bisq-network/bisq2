@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.cathash;
+package bisq.user.cathash;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import java.util.Optional;
 
 @Slf4j
 public abstract class BucketConfig {
-    static final int CURRENT_VERSION = 0;
+    public static final int CURRENT_VERSION = 0;
     static final String DIGIT = "#";
     static final String SHAPE_NUMBER = "#SHAPE_NUMBER#";
 
