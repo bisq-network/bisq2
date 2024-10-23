@@ -18,7 +18,6 @@
 package bisq.desktop_app;
 
 import bisq.account.AccountService;
-import bisq.application.ApplicationService;
 import bisq.application.ShutDownHandler;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
@@ -27,19 +26,15 @@ import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.OS;
-import bisq.common.platform.PlatformUtils;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
-import bisq.evolution.migration.MigrationService;
 import bisq.evolution.updater.UpdaterService;
 import bisq.identity.IdentityService;
-import bisq.java_se.JvmMemoryReportService;
-import bisq.java_se.guava.GuavaJavaSeFacade;
+import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
@@ -49,7 +44,6 @@ import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
-import bisq.security.pow.equihash.Equihash;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
@@ -76,7 +70,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 
 @Slf4j
-public class DesktopApplicationService extends ApplicationService {
+public class DesktopApplicationService extends JavaSeApplicationService {
     public static final long STARTUP_TIMEOUT_SEC = 300;
     public static final long SHUTDOWN_TIMEOUT_SEC = 10;
 
@@ -109,20 +103,9 @@ public class DesktopApplicationService extends ApplicationService {
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
-    private final MigrationService migrationService;
-    private final MemoryReportService memoryReportService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
-        super("desktop", args, PlatformUtils.getUserDataDir());
-
-        // Guava has different APIs for Java SE and Android.
-        // Thus, we use a facade with Android compatible APIs by default and let the Desktop app set the Java SE facade
-        // containing APIs only supported for Java SE compatible JDKs.
-        Equihash.setGuavaFacade(new GuavaJavaSeFacade());
-
-        migrationService = new MigrationService(getConfig().getBaseDir());
-
-        memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
+        super("desktop", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 

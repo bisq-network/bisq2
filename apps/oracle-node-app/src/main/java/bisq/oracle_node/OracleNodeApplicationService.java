@@ -17,19 +17,13 @@
 
 package bisq.oracle_node;
 
-import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
-import bisq.java_se.JvmMemoryReportService;
-import bisq.common.platform.MemoryReportService;
-import bisq.common.platform.PlatformUtils;
 import bisq.identity.IdentityService;
-import bisq.evolution.migration.MigrationService;
-import bisq.java_se.guava.GuavaJavaSeFacade;
+import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
-import bisq.security.pow.equihash.Equihash;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,26 +34,15 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 @Getter
-public class OracleNodeApplicationService extends ApplicationService {
+public class OracleNodeApplicationService extends JavaSeApplicationService {
     private final IdentityService identityService;
     private final SecurityService securityService;
     private final NetworkService networkService;
     private final OracleNodeService oracleNodeService;
     private final BondedRolesService bondedRolesService;
-    private final MigrationService migrationService;
-    private final MemoryReportService memoryReportService;
-    
+
     public OracleNodeApplicationService(String[] args) {
-        super("oracle_node", args, PlatformUtils.getUserDataDir());
-
-        // Guava has different APIs for Java SE and Android.
-        // Thus, we use a facade with Android compatible APIs by default and let the Desktop app set the Java SE facade
-        // containing APIs only supported for Java SE compatible JDKs.
-        Equihash.setGuavaFacade(new GuavaJavaSeFacade());
-
-        migrationService = new MigrationService(getConfig().getBaseDir());
-
-        memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
+        super("oracle_node", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 

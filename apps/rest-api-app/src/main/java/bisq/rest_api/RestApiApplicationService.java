@@ -18,32 +18,26 @@
 package bisq.rest_api;
 
 import bisq.account.AccountService;
-import bisq.application.ApplicationService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.OS;
-import bisq.common.platform.PlatformUtils;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
-import bisq.evolution.migration.MigrationService;
 import bisq.identity.IdentityService;
-import bisq.java_se.JvmMemoryReportService;
-import bisq.java_se.guava.GuavaJavaSeFacade;
-import bisq.os_specific.notifications.linux.LinuxNotificationService;
-import bisq.os_specific.notifications.osx.OsxNotificationService;
-import bisq.os_specific.notifications.other.AwtNotificationService;
+import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
+import bisq.os_specific.notifications.linux.LinuxNotificationService;
+import bisq.os_specific.notifications.osx.OsxNotificationService;
+import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.pow.equihash.Equihash;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -68,7 +62,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Getter
 @Slf4j
-public class RestApiApplicationService extends ApplicationService {
+public class RestApiApplicationService extends JavaSeApplicationService {
     public enum State {
         INITIALIZE_APP,
         INITIALIZE_NETWORK,
@@ -93,22 +87,11 @@ public class RestApiApplicationService extends ApplicationService {
     private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
-    private final MigrationService migrationService;
-    private final MemoryReportService memoryReportService;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     public RestApiApplicationService(String[] args) {
-        super("rest_api", args, PlatformUtils.getUserDataDir());
-
-        // Guava has different APIs for Java SE and Android.
-        // Thus, we use a facade with Android compatible APIs by default and let the Desktop app set the Java SE facade
-        // containing APIs only supported for Java SE compatible JDKs.
-        Equihash.setGuavaFacade(new GuavaJavaSeFacade());
-
-        migrationService = new MigrationService(getConfig().getBaseDir());
-
-        memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
+        super("rest_api", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");

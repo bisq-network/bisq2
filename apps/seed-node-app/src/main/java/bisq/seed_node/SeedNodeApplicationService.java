@@ -17,18 +17,12 @@
 
 package bisq.seed_node;
 
-import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.java_se.JvmMemoryReportService;
-import bisq.common.platform.MemoryReportService;
-import bisq.common.platform.PlatformUtils;
-import bisq.evolution.migration.MigrationService;
 import bisq.identity.IdentityService;
-import bisq.java_se.guava.GuavaJavaSeFacade;
+import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
-import bisq.security.pow.equihash.Equihash;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,26 +41,15 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Getter
 @Slf4j
-public class SeedNodeApplicationService extends ApplicationService {
+public class SeedNodeApplicationService extends JavaSeApplicationService {
     protected final NetworkService networkService;
     protected final IdentityService identityService;
     protected final SecurityService securityService;
     private final SeedNodeService seedNodeService;
     private final BondedRolesService bondedRolesService;
-    private final MigrationService migrationService;
-    private final MemoryReportService memoryReportService;
 
     public SeedNodeApplicationService(String[] args) {
-        super("seed_node", args, PlatformUtils.getUserDataDir());
-
-        // Guava has different APIs for Java SE and Android.
-        // Thus, we use a facade with Android compatible APIs by default and let the Desktop app set the Java SE facade
-        // containing APIs only supported for Java SE compatible JDKs.
-        Equihash.setGuavaFacade(new GuavaJavaSeFacade());
-
-        migrationService = new MigrationService(getConfig().getBaseDir());
-
-        memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
+        super("seed_node", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
