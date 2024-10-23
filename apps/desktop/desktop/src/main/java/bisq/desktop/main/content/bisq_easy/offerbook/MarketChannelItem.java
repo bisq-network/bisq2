@@ -21,11 +21,14 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.settings.FavouriteMarketsService;
-import javafx.beans.property.*;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.effect.ColorAdjust;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -46,9 +49,10 @@ public class MarketChannelItem {
     private final FavouriteMarketsService favouriteMarketsService;
     private final ChatNotificationService chatNotificationService;
     private final Market market;
-    private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
-    private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
-    private final StringProperty numMarketNotifications = new SimpleStringProperty();
+    private final SimpleIntegerProperty numOffers = new SimpleIntegerProperty(0);
+    private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
+    private final SimpleStringProperty numMarketNotifications = new SimpleStringProperty();
+    private Pin channelPin;
 
     MarketChannelItem(BisqEasyOfferbookChannel channel,
                       FavouriteMarketsService favouriteMarketsService,
@@ -59,6 +63,15 @@ public class MarketChannelItem {
         this.chatNotificationService = chatNotificationService;
         market = channel.getMarket();
         refreshNotifications();
+        initialize();
+    }
+
+    private void initialize() {
+        channelPin = channel.getChatMessages().addObserver(this::updateNumOffers);
+    }
+
+    public void dispose() {
+        channelPin.unbind();
     }
 
     void refreshNotifications() {
@@ -72,7 +85,6 @@ public class MarketChannelItem {
             value = String.valueOf(numNotifications);
         }
         numMarketNotifications.set(value);
-        updateNumOffers();
     }
 
     private void updateNumOffers() {

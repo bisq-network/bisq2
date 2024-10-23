@@ -77,7 +77,6 @@ public class BuyerState2a extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }

@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.common.currency.Market;
@@ -8,14 +25,16 @@ import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -76,8 +95,6 @@ public class BisqEasyOfferbookUtil {
             private final HBox container = new HBox(0, vBox, Spacer.fillHBox(), favouritesLabel);
             private final Tooltip marketDetailsTooltip = new BisqTooltip();
             private final Tooltip favouritesTooltip = new BisqTooltip();
-            private StringBinding formattedNumOffersBindings;
-            private StringBinding formattedTooltipBinding;
 
             private static final Insets COMPACT_PADDING = new Insets(0, -10, 0, 0);
 
@@ -107,33 +124,15 @@ public class BisqEasyOfferbookUtil {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+                    numOffers.setText(BisqEasyOfferbookUtil.getFormattedOfferNumber(item.getNumOffers().get()));
                     String quoteCurrencyDisplayName = item.getMarket().getQuoteCurrencyDisplayName();
+                    marketDetailsTooltip.setText(BisqEasyOfferbookUtil.getFormattedTooltip(item.getNumOffers().get(), quoteCurrencyDisplayName));
                     marketName.setText(quoteCurrencyDisplayName);
                     marketCode.setText(item.getMarket().getQuoteCurrencyCode());
-                    int numOffersString = item.getNumOffers().get();
-                    formattedNumOffersBindings = Bindings.createStringBinding(() ->
-                            BisqEasyOfferbookUtil.getFormattedOfferNumber(numOffersString), item.getNumOffers());
-                    numOffers.textProperty().bind(formattedNumOffersBindings);
-                    formattedTooltipBinding = Bindings.createStringBinding(() ->
-                            BisqEasyOfferbookUtil.getFormattedTooltip(numOffersString, quoteCurrencyDisplayName), item.getNumOffers());
-                    marketDetailsTooltip.textProperty().bind(formattedTooltipBinding);
-
                     favouritesLabel.setOnMouseClicked(e -> item.toggleFavourite());
-
                     setGraphic(container);
                 } else {
-                    numOffers.textProperty().unbind();
-                    marketDetailsTooltip.textProperty().unbind();
-                    if (formattedNumOffersBindings != null) {
-                        formattedNumOffersBindings.dispose();
-                        formattedNumOffersBindings = null;
-                    }
-                    if (formattedTooltipBinding != null) {
-                        formattedTooltipBinding.dispose();
-                        formattedTooltipBinding = null;
-                    }
                     favouritesLabel.setOnMouseClicked(null);
-
                     setGraphic(null);
                 }
             }
