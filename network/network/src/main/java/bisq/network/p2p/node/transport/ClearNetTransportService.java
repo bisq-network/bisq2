@@ -12,6 +12,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -37,7 +38,8 @@ public class ClearNetTransportService implements TransportService {
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
                     config.getInt("devModeDelayInMs"),
                     config.getInt("sendMessageThrottleTime"),
-                    config.getInt("receiveMessageThrottleTime")
+                    config.getInt("receiveMessageThrottleTime"),
+                    config.getInt("connectTimeoutMs")
             );
         }
 
@@ -48,6 +50,7 @@ public class ClearNetTransportService implements TransportService {
         private final int devModeDelayInMs;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
+        private final int connectTimeoutMs;
 
         public Config(Path dataDir,
                       int defaultNodePort,
@@ -55,7 +58,8 @@ public class ClearNetTransportService implements TransportService {
                       int userNodeSocketTimeout,
                       int devModeDelayInMs,
                       int sendMessageThrottleTime,
-                      int receiveMessageThrottleTime) {
+                      int receiveMessageThrottleTime,
+                      int connectTimeoutMs) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
@@ -63,10 +67,12 @@ public class ClearNetTransportService implements TransportService {
             this.devModeDelayInMs = devModeDelayInMs;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+            this.connectTimeoutMs = connectTimeoutMs;
         }
     }
 
     private final int devModeDelayInMs;
+    private final int connectTimeoutMs;
     private int numSocketsCreated = 0;
     @Getter
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
@@ -75,6 +81,7 @@ public class ClearNetTransportService implements TransportService {
 
     public ClearNetTransportService(TransportConfig config) {
         devModeDelayInMs = config.getDevModeDelayInMs();
+        connectTimeoutMs = ((Config) config).getConnectTimeoutMs();
     }
 
     @Override
@@ -137,7 +144,9 @@ public class ClearNetTransportService implements TransportService {
 
         log.debug("Create new Socket to {}", address);
         maybeSimulateDelay();
-        Socket socket = new Socket(address.getHost(), address.getPort());
+        Socket socket = new Socket();
+        socket.connect(new InetSocketAddress(address.getHost(), address.getPort()), connectTimeoutMs);
+
         numSocketsCreated++;
 
         bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
