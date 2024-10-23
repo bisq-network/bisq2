@@ -17,22 +17,19 @@
 
 package bisq.java_se.guava;
 
-import bisq.common.guava.GuavaFunctionProvider;
+import bisq.common.guava.GuavaFacade;
 import com.google.common.primitives.ImmutableIntArray;
 
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
-public class GuavaJavaSeFunctionProvider implements GuavaFunctionProvider {
-    public Function<ImmutableIntArray, IntStream> getToIntStreamFunction() {
-        return ImmutableIntArray::stream;
+public class GuavaJavaSeFacade implements GuavaFacade {
+    public IntStream toIntStream(ImmutableIntArray value){
+        return value.stream();
     }
-
-    public Function<IntStream, IntStream> getToParallelFunction() {
-        return IntStream::parallel;
+    public IntStream parallel(IntStream value){
+        return value.parallel();
     }
-
-    public Function<IntStream, ImmutableIntArray> getCopyOfFunction() {
-        return ImmutableIntArray::copyOf;
+    public ImmutableIntArray copyOf(IntStream value){
+        return ImmutableIntArray.copyOf(value);
     }
 }

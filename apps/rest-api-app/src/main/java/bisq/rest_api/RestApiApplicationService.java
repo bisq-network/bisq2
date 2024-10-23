@@ -32,7 +32,7 @@ import bisq.contract.ContractService;
 import bisq.evolution.migration.MigrationService;
 import bisq.identity.IdentityService;
 import bisq.java_se.JvmMemoryReportService;
-import bisq.java_se.guava.GuavaJavaSeFunctionProvider;
+import bisq.java_se.guava.GuavaJavaSeFacade;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
 import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
@@ -102,8 +102,9 @@ public class RestApiApplicationService extends ApplicationService {
         super("rest_api", args, PlatformUtils.getUserDataDir());
 
         // Guava has different APIs for Java SE and Android.
-        // To allow re-usability on Android we use the Android in Equihash. Here we use the Java SE version.
-        Equihash.setGuavaFunctionProvider(new GuavaJavaSeFunctionProvider());
+        // Thus, we use a facade with Android compatible APIs by default and let the Desktop app set the Java SE facade
+        // containing APIs only supported for Java SE compatible JDKs.
+        Equihash.setGuavaFacade(new GuavaJavaSeFacade());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
 

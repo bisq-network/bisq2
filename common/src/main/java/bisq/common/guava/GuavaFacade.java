@@ -15,15 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.java_se;
+package bisq.common.guava;
 
 import com.google.common.primitives.ImmutableIntArray;
 
 import java.util.stream.IntStream;
 
-public class JreGuavaUtils {
-    public static IntStream toIntStream(ImmutableIntArray array) {
-        // Android use a different version of Guava which does not support the stream method.
-        return array.stream();
-    }
+public interface GuavaFacade {
+    IntStream toIntStream(ImmutableIntArray array);
+
+    IntStream parallel(IntStream value);
+
+    ImmutableIntArray copyOf(IntStream value);
 }
