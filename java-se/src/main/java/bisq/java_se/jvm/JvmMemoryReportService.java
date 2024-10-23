@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.java_se;
+package bisq.java_se.jvm;
 
 import bisq.common.formatter.DataSizeFormatter;
 import bisq.common.formatter.SimpleTimeFormatter;
@@ -23,6 +23,7 @@ import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.OS;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
+import bisq.java_se.utils.ThreadProfiler;
 import com.sun.management.UnixOperatingSystemMXBean;
 import lombok.extern.slf4j.Slf4j;
 

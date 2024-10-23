@@ -19,7 +19,7 @@ package bisq.java_se.utils;
 
 import java.lang.management.ManagementFactory;
 
-public class Pid {
+public class PidUtil {
     public static String getMyPid() {
         String processName = ManagementFactory.getRuntimeMXBean().getName();
         return processName.split("@")[0];

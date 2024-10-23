@@ -17,7 +17,7 @@
 
 package bisq.tor.process;
 
-import bisq.java_se.utils.Pid;
+import bisq.java_se.utils.PidUtil;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +47,7 @@ public class NativeTorProcess {
         createTorControlDirectory();
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
-        String ownerPid = Pid.getMyPid();
+        String ownerPid = PidUtil.getMyPid();
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
                 "--torrc-file", absoluteTorrcPathAsString,

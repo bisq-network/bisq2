@@ -21,7 +21,7 @@ import bisq.application.ApplicationService;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.evolution.migration.MigrationService;
-import bisq.java_se.JvmMemoryReportService;
+import bisq.java_se.jvm.JvmMemoryReportService;
 import bisq.java_se.guava.GuavaJavaSeFacade;
 import bisq.security.pow.equihash.Equihash;
 import lombok.Getter;

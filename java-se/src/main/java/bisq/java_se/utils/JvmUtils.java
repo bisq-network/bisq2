@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.java_se;
+package bisq.java_se.utils;
 
 import lombok.extern.slf4j.Slf4j;
 
