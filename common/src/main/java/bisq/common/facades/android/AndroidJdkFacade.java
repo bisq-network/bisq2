@@ -36,4 +36,18 @@ public class AndroidJdkFacade implements JdkFacade {
         throw new UnsupportedOperationException("Not supported yet.");
         //return ProcessHandle.allProcesses().map(processHandle -> processHandle.info().commandLine().orElse(""));
     }
+
+    @Override
+    public void redirectError(ProcessBuilder processBuilder) {
+        // TODO
+        throw new UnsupportedOperationException("Not supported yet.");
+        //processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
+    }
+
+    @Override
+    public void redirectOutput(ProcessBuilder processBuilder) {
+        // TODO
+        throw new UnsupportedOperationException("Not supported yet.");
+        //processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+    }
 }

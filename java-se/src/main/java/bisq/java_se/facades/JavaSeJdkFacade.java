@@ -33,4 +33,14 @@ public class JavaSeJdkFacade implements JdkFacade {
     public Stream<String> getProcessCommandLineStream() {
         return ProcessHandle.allProcesses().map(processHandle -> processHandle.info().commandLine().orElse(""));
     }
+
+    @Override
+    public void redirectError(ProcessBuilder processBuilder) {
+        processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
+    }
+
+    @Override
+    public void redirectOutput(ProcessBuilder processBuilder) {
+        processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+    }
 }

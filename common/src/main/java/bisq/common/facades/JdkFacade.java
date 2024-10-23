@@ -23,4 +23,8 @@ public interface JdkFacade {
     String getMyPid();
 
     Stream<String> getProcessCommandLineStream();
+
+    void redirectError(ProcessBuilder processBuilder);
+
+    void redirectOutput(ProcessBuilder processBuilder);
 }

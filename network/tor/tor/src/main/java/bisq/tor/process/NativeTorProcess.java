@@ -64,6 +64,9 @@ public class NativeTorProcess {
             environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
         }
 
+        jdkFacade.redirectError(processBuilder);
+        jdkFacade.redirectOutput(processBuilder);
+
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
 
