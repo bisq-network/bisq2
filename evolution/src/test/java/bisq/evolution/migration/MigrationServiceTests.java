@@ -2,7 +2,6 @@ package bisq.evolution.migration;
 
 import bisq.common.platform.InvalidVersionException;
 import bisq.common.platform.Version;
-import bisq.evolution.migration.MigrationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
