@@ -31,7 +31,6 @@ dependencies {
     implementation(project(":tor-common"))
 
     implementation("bisq:security")
-    implementation("bisq:java-se")
 
     implementation("network:network-identity")
     implementation("network:socks5-socket-channel")

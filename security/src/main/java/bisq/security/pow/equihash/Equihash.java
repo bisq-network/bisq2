@@ -17,8 +17,8 @@
 
 package bisq.security.pow.equihash;
 
-import bisq.common.guava.GuavaAndroidFacade;
-import bisq.common.guava.GuavaFacade;
+import bisq.common.facades.android.AndroidGuavaFacade;
+import bisq.common.facades.GuavaFacade;
 import bisq.common.platform.OS;
 import bisq.common.util.ByteArrayUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -83,7 +83,7 @@ public class Equihash {
     // Thus, we use a facade with Android compatible APIs by default and let the Desktop app set the Java SE facade
     // containing APIs only supported for Java SE compatible JDKs.
     @Setter
-    private static GuavaFacade guavaFacade = new GuavaAndroidFacade();
+    private static GuavaFacade guavaFacade = new AndroidGuavaFacade();
     private final int k, N;
     private final int tableCapacity;
     private final int inputNum, inputBits;

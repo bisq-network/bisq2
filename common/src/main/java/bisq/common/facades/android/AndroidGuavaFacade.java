@@ -15,16 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.guava;
+package bisq.common.facades.android;
 
+import bisq.common.facades.GuavaFacade;
 import com.google.common.primitives.ImmutableIntArray;
 
 import java.util.stream.IntStream;
 
-public interface GuavaFacade {
-    IntStream toIntStream(ImmutableIntArray array);
+public class AndroidGuavaFacade implements GuavaFacade {
+    public AndroidGuavaFacade() {
+    }
 
-    IntStream parallel(IntStream value);
+    public IntStream toIntStream(ImmutableIntArray value) {
+        return IntStream.range(0, value.length()).map(value::get);
+    }
 
-    ImmutableIntArray copyOf(IntStream value);
+    public IntStream parallel(IntStream value) {
+        ImmutableIntArray array = ImmutableIntArray.copyOf(value.toArray());
+        return IntStream.range(0, array.length()).map(array::get).parallel();
+    }
+
+    public ImmutableIntArray copyOf(IntStream value) {
+        return ImmutableIntArray.copyOf(value.toArray());
+    }
 }

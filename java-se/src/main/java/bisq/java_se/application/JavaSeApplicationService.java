@@ -21,9 +21,11 @@ import bisq.application.ApplicationService;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
 import bisq.evolution.migration.MigrationService;
+import bisq.java_se.facades.JavaSeJdkFacade;
 import bisq.java_se.jvm.JvmMemoryReportService;
-import bisq.java_se.guava.GuavaJavaSeFacade;
+import bisq.java_se.facades.JavaSeGuavaFacade;
 import bisq.security.pow.equihash.Equihash;
+import bisq.tor.process.NativeTorProcess;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,10 +38,11 @@ public abstract class JavaSeApplicationService extends ApplicationService {
     public JavaSeApplicationService(String configFileName, String[] args) {
         super(configFileName, args, PlatformUtils.getUserDataDir());
 
-        // Guava has different APIs for Java SE and Android.
-        // Thus, we use a facade with Android compatible APIs by default and let the Desktop app set the Java SE facade
-        // containing APIs only supported for Java SE compatible JDKs.
-        Equihash.setGuavaFacade(new GuavaJavaSeFacade());
+        // The JDKs for Java SE and Android have different API support, thus, we use a
+        // facade with Android compatible APIs by default and set for Java SE based applicationServices
+        // the Java SE facade.
+        Equihash.setGuavaFacade(new JavaSeGuavaFacade());
+        NativeTorProcess.setJdkFacade(new JavaSeJdkFacade());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
         memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());

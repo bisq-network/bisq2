@@ -17,8 +17,9 @@
 
 package bisq.tor.process;
 
-import bisq.java_se.utils.PidUtil;
+import bisq.common.facades.android.AndroidJdkFacade;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -31,6 +32,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class NativeTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
+
+    @Setter
+    private static bisq.common.facades.JdkFacade jdkFacade = new AndroidJdkFacade();
 
     private final Path torDataDirPath;
     private final Path torBinaryPath;
@@ -47,7 +51,7 @@ public class NativeTorProcess {
         createTorControlDirectory();
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
-        String ownerPid = PidUtil.getMyPid();
+        String ownerPid = jdkFacade.getMyPid();
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
                 "--torrc-file", absoluteTorrcPathAsString,
