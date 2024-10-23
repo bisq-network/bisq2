@@ -17,6 +17,7 @@
 
 package bisq.tor.process;
 
+import bisq.java_se.utils.Pid;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import lombok.extern.slf4j.Slf4j;
 

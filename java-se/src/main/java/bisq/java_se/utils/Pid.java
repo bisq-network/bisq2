@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.process;
+package bisq.java_se.utils;
 
 import java.lang.management.ManagementFactory;
 
