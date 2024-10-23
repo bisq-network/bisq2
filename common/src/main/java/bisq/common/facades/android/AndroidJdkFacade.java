@@ -19,10 +19,21 @@ package bisq.common.facades.android;
 
 import bisq.common.facades.JdkFacade;
 
+import java.util.stream.Stream;
+
 public class AndroidJdkFacade implements JdkFacade {
     @Override
     public String getMyPid() {
         // TODO
         throw new UnsupportedOperationException("Not supported yet.");
+        // String processName = ManagementFactory.getRuntimeMXBean().getName();
+        //return processName.split("@")[0];
+    }
+
+    @Override
+    public Stream<String> getProcessCommandLineStream() {
+        // TODO
+        throw new UnsupportedOperationException("Not supported yet.");
+        //return ProcessHandle.allProcesses().map(processHandle -> processHandle.info().commandLine().orElse(""));
     }
 }

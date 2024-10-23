@@ -20,10 +20,17 @@ package bisq.java_se.facades;
 import bisq.common.facades.JdkFacade;
 
 import java.lang.management.ManagementFactory;
+import java.util.stream.Stream;
 
 public class JavaSeJdkFacade implements JdkFacade {
-    public  String getMyPid() {
+    @Override
+    public String getMyPid() {
         String processName = ManagementFactory.getRuntimeMXBean().getName();
         return processName.split("@")[0];
+    }
+
+    @Override
+    public Stream<String> getProcessCommandLineStream() {
+        return ProcessHandle.allProcesses().map(processHandle -> processHandle.info().commandLine().orElse(""));
     }
 }

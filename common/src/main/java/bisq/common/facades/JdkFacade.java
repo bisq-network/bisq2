@@ -17,6 +17,10 @@
 
 package bisq.common.facades;
 
+import java.util.stream.Stream;
+
 public interface JdkFacade {
     String getMyPid();
+
+    Stream<String> getProcessCommandLineStream();
 }

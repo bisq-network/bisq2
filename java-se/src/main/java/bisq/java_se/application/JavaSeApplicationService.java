@@ -25,6 +25,7 @@ import bisq.java_se.facades.JavaSeJdkFacade;
 import bisq.java_se.jvm.JvmMemoryReportService;
 import bisq.java_se.facades.JavaSeGuavaFacade;
 import bisq.security.pow.equihash.Equihash;
+import bisq.tor.TorService;
 import bisq.tor.process.NativeTorProcess;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public abstract class JavaSeApplicationService extends ApplicationService {
         // the Java SE facade.
         Equihash.setGuavaFacade(new JavaSeGuavaFacade());
         NativeTorProcess.setJdkFacade(new JavaSeJdkFacade());
+        TorService.setJdkFacade(new JavaSeJdkFacade());
 
         migrationService = new MigrationService(getConfig().getBaseDir());
         memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());

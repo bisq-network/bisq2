@@ -23,13 +23,18 @@ import com.google.common.primitives.ImmutableIntArray;
 import java.util.stream.IntStream;
 
 public class JavaSeGuavaFacade implements GuavaFacade {
-    public IntStream toIntStream(ImmutableIntArray value){
+    @Override
+    public IntStream toIntStream(ImmutableIntArray value) {
         return value.stream();
     }
-    public IntStream parallel(IntStream value){
+
+    @Override
+    public IntStream parallel(IntStream value) {
         return value.parallel();
     }
-    public ImmutableIntArray copyOf(IntStream value){
+
+    @Override
+    public ImmutableIntArray copyOf(IntStream value) {
         return ImmutableIntArray.copyOf(value);
     }
 }
