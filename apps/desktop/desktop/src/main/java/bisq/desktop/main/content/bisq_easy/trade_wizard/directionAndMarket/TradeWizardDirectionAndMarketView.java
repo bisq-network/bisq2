@@ -23,6 +23,8 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -34,7 +36,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -56,12 +62,14 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
     private final Button buyButton, sellButton;
     private final VBox reputationInfo;
     private final VBox content;
-    private Subscription directionSubscription, showReputationInfoPin;
+    private final BisqTableView<TradeWizardDirectionAndMarketView.ListItem> tableView;
+    private final SearchBox searchBox;
+    private final DropdownMenu marketSelectionMenu;
+    private final Label selectedMarketLabel;
+    private Subscription directionSubscription, showReputationInfoPin, marketPin;
     private Button withoutReputationButton, backToBuyButton;
     private Button gainReputationButton;
     private Label subtitleLabel2;
-    private final BisqTableView<TradeWizardDirectionAndMarketView.ListItem> tableView;
-    private final SearchBox searchBox;
 
     public TradeWizardDirectionAndMarketView(TradeWizardDirectionAndMarketModel model,
                                              TradeWizardDirectionAndMarketController controller) {
@@ -82,6 +90,11 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         searchBox.setMaxWidth(140);
         searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
 
+        marketSelectionMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        // TODO: Improve this to have more info
+        selectedMarketLabel = new Label();
+        marketSelectionMenu.setContent(selectedMarketLabel);
+
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
         double tableHeight = 290;
@@ -99,6 +112,8 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         tableViewWithSearchBox.setMaxWidth(tableWidth);
         tableViewWithSearchBox.getStyleClass().add("markets-table-container");
 
+        marketSelectionMenu.addMenuItems(new DropdownMenuItem(tableViewWithSearchBox));
+
         // Direction
         buyButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.buy"));
         sellButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.sell"));
@@ -107,8 +122,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         VBox.setMargin(headlineLabel, new Insets(-20, 0, 0, 0));
         VBox.setMargin(directionBox, new Insets(10, 0, 0, 0));
-        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, tableViewWithSearchBox,
-                directionBox, Spacer.fillVBox());
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, marketSelectionMenu, directionBox, Spacer.fillVBox());
 
         reputationInfo = new VBox(20);
         setupReputationInfo();
@@ -160,6 +174,12 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
                         }
                     }
                 });
+
+        marketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
+            if (selectedMarket != null) {
+                selectedMarketLabel.setText(selectedMarket.getQuoteCurrencyDisplayName());
+            }
+        });
     }
 
     @Override
@@ -182,6 +202,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         directionSubscription.unsubscribe();
         showReputationInfoPin.unsubscribe();
+        marketPin.unsubscribe();
     }
 
     private Button createAndGetDirectionButton(String title) {

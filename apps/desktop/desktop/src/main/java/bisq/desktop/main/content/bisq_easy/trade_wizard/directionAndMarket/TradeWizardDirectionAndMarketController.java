@@ -156,9 +156,12 @@ public class TradeWizardDirectionAndMarketController implements Controller {
             }
         });
 
-        selectedMarketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket ->
-            model.getHeadline().set(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline",
-                    selectedMarket.getQuoteCurrencyDisplayName())));
+        selectedMarketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
+            if (selectedMarket != null) {
+                model.getHeadline().set(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline",
+                        selectedMarket.getQuoteCurrencyDisplayName()));
+            }
+        });
     }
 
     @Override
