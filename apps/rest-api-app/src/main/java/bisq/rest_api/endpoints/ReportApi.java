@@ -20,7 +20,7 @@ package bisq.rest_api.endpoints;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.services.reporting.Report;
 import bisq.rest_api.JaxRsApplication;
 import bisq.rest_api.RestApiApplicationService;

@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.common.facades.FacadeProvider.getJdkFacade;
+
 @Slf4j
 public class NativeTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
@@ -46,7 +48,7 @@ public class NativeTorProcess {
         createTorControlDirectory();
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
-        String ownerPid = Pid.getMyPid();
+        String ownerPid = getJdkFacade().getMyPid();
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
                 "--torrc-file", absoluteTorrcPathAsString,
@@ -59,8 +61,8 @@ public class NativeTorProcess {
             environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
         }
 
-        processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+        getJdkFacade().redirectError(processBuilder);
+        getJdkFacade().redirectOutput(processBuilder);
 
         try {
             Process torProcess = processBuilder.start();

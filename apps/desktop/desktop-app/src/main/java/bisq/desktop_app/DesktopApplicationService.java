@@ -18,24 +18,30 @@
 package bisq.desktop_app;
 
 import bisq.account.AccountService;
-import bisq.application.ApplicationService;
 import bisq.application.ShutDownHandler;
+import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.State;
 import bisq.desktop.webcam.WebcamAppService;
+import bisq.evolution.updater.UpdaterService;
 import bisq.identity.IdentityService;
+import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
+import bisq.os_specific.notifications.linux.LinuxNotificationService;
+import bisq.os_specific.notifications.osx.OsxNotificationService;
+import bisq.os_specific.notifications.other.AwtNotificationService;
+import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
@@ -43,7 +49,6 @@ import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
-import bisq.updater.UpdaterService;
 import bisq.user.UserService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
@@ -65,7 +70,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 
 @Slf4j
-public class DesktopApplicationService extends ApplicationService {
+public class DesktopApplicationService extends JavaSeApplicationService {
     public static final long STARTUP_TIMEOUT_SEC = 300;
     public static final long SHUTDOWN_TIMEOUT_SEC = 10;
 
@@ -103,6 +108,7 @@ public class DesktopApplicationService extends ApplicationService {
         super("desktop", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
+
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
         //noinspection SwitchStatementWithTooFewBranches
@@ -124,7 +130,8 @@ public class DesktopApplicationService extends ApplicationService {
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
-                securityService.getEquihashProofOfWorkService());
+                securityService.getEquihashProofOfWorkService(),
+                memoryReportService);
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),
@@ -146,7 +153,7 @@ public class DesktopApplicationService extends ApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        systemNotificationService = new SystemNotificationService(config.getBaseDir(), settingsService);
+        systemNotificationService = new SystemNotificationService(findSystemNotificationDelegate());
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -170,7 +177,6 @@ public class DesktopApplicationService extends ApplicationService {
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
-                walletService,
                 networkService,
                 identityService,
                 bondedRolesService,
@@ -217,9 +223,29 @@ public class DesktopApplicationService extends ApplicationService {
                 webcamAppService);
     }
 
+    private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
+        try {
+            switch (OS.getOS()) {
+                case LINUX:
+                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
+                case MAC_OS:
+                    return Optional.of(new OsxNotificationService());
+                case WINDOWS:
+                    return Optional.of(new AwtNotificationService());
+                default:
+                case ANDROID:
+                    return Optional.empty();
+            }
+        } catch (Exception e) {
+            log.warn("Could not create SystemNotificationDelegate for {}", OS.getOsName());
+            return Optional.empty();
+        }
+    }
+
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return super.initialize()
+        return migrationService.initialize()
+                .thenCompose(result -> memoryReportService.initialize())
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
@@ -311,6 +337,8 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> walletService.map(service -> service.shutdown().exceptionally(this::logError))
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> memoryReportService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> migrationService.shutdown().exceptionally(this::logError))
                 .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {

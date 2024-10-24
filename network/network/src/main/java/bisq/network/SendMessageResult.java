@@ -1,6 +1,6 @@
 package bisq.network;
 
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 
 import java.util.HashMap;

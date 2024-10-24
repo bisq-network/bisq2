@@ -26,7 +26,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.settings.ChatNotificationType;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.updater.UpdaterService;
+import bisq.evolution.updater.UpdaterService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;

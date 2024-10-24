@@ -3,7 +3,6 @@ package bonded_roles;
 option java_package = "bisq.bonded_roles.protobuf";
 option java_multiple_files = true;
 import "common.proto";
-import "network_common.proto";
 import "network_identity.proto";
 
 enum BondedRoleType {
@@ -34,7 +33,7 @@ message BondedRoleRegistrationRequest {
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
   string signatureBase64 = 5;
-  optional network.common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
+  optional common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
   network.identity.NetworkId networkId = 7;
   bool isCancellationRequest = 8;
 }
@@ -45,7 +44,7 @@ message AuthorizedBondedRole {
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
   string signatureBase64 = 5;
-  optional network.common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
+  optional common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
   network.identity.NetworkId networkId = 7;
   optional AuthorizedOracleNode authorizingOracleNode = 8;
   bool staticPublicKeysProvided = 9;

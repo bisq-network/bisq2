@@ -21,7 +21,7 @@ import bisq.common.formatter.DataSizeFormatter;
 import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;

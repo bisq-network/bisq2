@@ -17,9 +17,9 @@
 
 package bisq.tor;
 
-import bisq.network.common.Address;
-import bisq.network.common.AddressOwnershipProof;
-import bisq.network.common.AddressOwnershipProofGenerator;
+import bisq.common.network.Address;
+import bisq.common.network.AddressOwnershipProof;
+import bisq.common.network.AddressOwnershipProofGenerator;
 import bisq.security.TorSignatureUtil;
 import bisq.security.keys.TorKeyPair;
 import org.bouncycastle.crypto.CryptoException;

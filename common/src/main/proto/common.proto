@@ -92,3 +92,12 @@ message StringLongPair {
   string key = 1;
   sint64 value = 2;
 }
+
+message Address {
+  string host = 1;
+  sint32 port = 2;
+}
+
+message AddressByTransportTypeMap {
+  map<string, Address> addressByTransportType = 1;
+}

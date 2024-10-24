@@ -17,6 +17,7 @@
 
 package bisq.security.pow.equihash;
 
+import bisq.common.platform.OS;
 import bisq.common.util.ByteArrayUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
@@ -32,6 +33,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static bisq.common.facades.FacadeProvider.getGuavaFacade;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.math.BigInteger.ONE;
 
@@ -73,7 +75,11 @@ public class Equihash {
      * Mean solution count per nonce for Equihash puzzles with unit difficulty.
      */
     private static final double MEAN_SOLUTION_COUNT_PER_NONCE = 2.0;
+    private static final boolean IS_ANDROID = OS.isAndroid();
 
+    // Guava has different APIs for Java SE and Android.
+    // Thus, we use a facade with Android compatible APIs by default and let the Desktop app set the Java SE facade
+    // containing APIs only supported for Java SE compatible JDKs.
     private final int k, N;
     private final int tableCapacity;
     private final int inputNum, inputBits;
@@ -245,7 +251,7 @@ public class Equihash {
             }
             return IntStream.range(0, table.numRows)
                     .mapToObj(table::getRow)
-                    .filter(row -> row.stream().distinct().count() == inputNum)
+                    .filter(row -> getGuavaFacade().toIntStream(row).distinct().count() == inputNum)
                     .map(row -> sortInputs(row.toArray()))
                     .filter(this::testDifficultyCondition);
         }
@@ -259,7 +265,9 @@ public class Equihash {
                 int[] hash = hashInputs(i);
                 return IntStream.range(0, k + 2).map(j -> j <= k ? hash[j] & (N / 2 - 1) : i);
             });
-            return new XorTable(k + 1, 1, ImmutableIntArray.copyOf(tableValues.parallel()));
+            IntStream parallelIntStream = getGuavaFacade().parallel(tableValues);
+            ImmutableIntArray immutableIntArray = getGuavaFacade().copyOf(parallelIntStream);
+            return new XorTable(k + 1, 1, immutableIntArray);
         }
 
         private boolean testDifficultyCondition(int[] inputs) {

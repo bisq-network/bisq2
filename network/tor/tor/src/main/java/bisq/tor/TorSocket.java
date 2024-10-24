@@ -17,7 +17,7 @@
 
 package bisq.tor;
 
-import bisq.network.common.PeerSocket;
+import bisq.common.network.PeerSocket;
 import lombok.Getter;
 
 import java.io.IOException;

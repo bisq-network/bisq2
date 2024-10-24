@@ -20,7 +20,7 @@ package bisq.oracle_node;
 import bisq.application.Executable;
 import bisq.common.file.FileUtils;
 import bisq.common.threading.ThreadName;
-import bisq.network.common.AddressByTransportTypeMap;
+import bisq.common.network.AddressByTransportTypeMap;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 

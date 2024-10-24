@@ -29,16 +29,16 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.updater.DownloadItem;
-import bisq.updater.UpdaterService;
-import bisq.updater.UpdaterUtils;
+import bisq.evolution.updater.DownloadItem;
+import bisq.evolution.updater.UpdaterService;
+import bisq.evolution.updater.UpdaterUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.concurrent.CancellationException;
 
-import static bisq.updater.UpdaterUtils.RELEASES_URL;
+import static bisq.evolution.updater.UpdaterUtils.RELEASES_URL;
 
 @Slf4j
 public class UpdaterController implements Controller {

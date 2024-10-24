@@ -21,12 +21,13 @@ package bisq.network;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.common.Address;
-import bisq.network.common.AddressByTransportTypeMap;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientsByTransport;
 import bisq.network.identity.NetworkId;
@@ -77,7 +78,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static bisq.network.common.TransportType.TOR;
+import static bisq.common.network.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -121,7 +122,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                           PersistenceService persistenceService,
                           KeyBundleService keyBundleService,
                           HashCashProofOfWorkService hashCashProofOfWorkService,
-                          EquihashProofOfWorkService equihashProofOfWorkService) {
+                          EquihashProofOfWorkService equihashProofOfWorkService,
+                          MemoryReportService memoryReportService) {
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
         defaultPortByTransportType = config.getDefaultPortByTransportType();
@@ -162,7 +164,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 equihashProofOfWorkService,
                 dataService,
                 messageDeliveryStatusService,
-                resendMessageService);
+                resendMessageService,
+                memoryReportService);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
     }
 

@@ -17,5 +17,4 @@ dependencies {
     implementation("network:network")
 
     implementation(libs.typesafe.config)
-    implementation(libs.bouncycastle.pg)
 }

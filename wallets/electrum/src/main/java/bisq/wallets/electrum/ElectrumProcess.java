@@ -95,6 +95,7 @@ public class ElectrumProcess implements BisqProcess {
             case LINUX -> ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX;
             case MAC_OS -> ElectrumBinaryExtractor.MAC_OS_BINARY_SUFFIX;
             case WINDOWS -> ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX;
+            case ANDROID -> throw new RuntimeException("Android not supported");
         };
     }
 
@@ -118,6 +119,7 @@ public class ElectrumProcess implements BisqProcess {
             case MAC_OS -> destDirPath.resolve("Electrum." + binarySuffix)
                     .resolve("Contents/MacOS/run_electrum");
             case WINDOWS -> destDirPath.resolve("electrum-" + version + "." + binarySuffix);
+            case ANDROID -> throw new RuntimeException("Android not supported");
         };
     }
 }

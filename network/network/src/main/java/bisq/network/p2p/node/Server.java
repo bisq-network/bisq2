@@ -20,7 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

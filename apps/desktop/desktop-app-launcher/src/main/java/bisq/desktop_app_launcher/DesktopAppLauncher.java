@@ -23,8 +23,8 @@ import bisq.common.platform.PlatformUtils;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop_app.DesktopApp;
-import bisq.updater.DownloadedFilesVerification;
-import bisq.updater.UpdaterUtils;
+import bisq.evolution.updater.DownloadedFilesVerification;
+import bisq.evolution.updater.UpdaterUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -38,7 +38,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-import static bisq.updater.UpdaterUtils.*;
+import static bisq.evolution.updater.UpdaterUtils.*;
 
 /**
  * We ship the binary with the current version of the DesktopApp and with the JRE.

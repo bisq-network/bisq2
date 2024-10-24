@@ -17,6 +17,7 @@
 
 package bisq.desktop;
 
+import bisq.application.State;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
@@ -29,6 +30,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.cathash.JavaFxCatHashService;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.MainController;
@@ -115,7 +117,8 @@ public class DesktopController extends NavigationController {
         Browser.initialize(applicationJavaFxApplicationData.getHostServices(), settingsService, dontShowAgainService);
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
-        CatHash.setBaseDir(serviceProvider.getConfig().getBaseDir());
+
+        CatHash.setDelegate(new JavaFxCatHashService(serviceProvider.getConfig().getBaseDir()));
 
         Navigation.init(settingsService);
         Overlay.init(serviceProvider, viewRoot);

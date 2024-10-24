@@ -20,7 +20,7 @@ package bisq.network.p2p.node.handshake;
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;

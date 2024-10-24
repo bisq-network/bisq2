@@ -12,7 +12,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;

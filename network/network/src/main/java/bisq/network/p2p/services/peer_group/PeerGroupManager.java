@@ -20,7 +20,7 @@ package bisq.network.p2p.services.peer_group;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;

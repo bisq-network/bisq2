@@ -17,10 +17,10 @@
 
 package bisq.oracle_node;
 
-import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.identity.IdentityService;
+import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -34,7 +34,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 @Getter
-public class OracleNodeApplicationService extends ApplicationService {
+public class OracleNodeApplicationService extends JavaSeApplicationService {
     private final IdentityService identityService;
     private final SecurityService securityService;
     private final NetworkService networkService;
@@ -52,7 +52,8 @@ public class OracleNodeApplicationService extends ApplicationService {
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
-                securityService.getEquihashProofOfWorkService());
+                securityService.getEquihashProofOfWorkService(),
+                memoryReportService);
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),
@@ -75,12 +76,14 @@ public class OracleNodeApplicationService extends ApplicationService {
                 networkService,
                 persistenceService,
                 bondedRolesService.getAuthorizedBondedRolesService(),
-                marketPriceRequestService);
+                marketPriceRequestService,
+                memoryReportService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return super.initialize()
+        return migrationService.initialize()
+                .thenCompose(result -> memoryReportService.initialize())
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -106,6 +109,8 @@ public class OracleNodeApplicationService extends ApplicationService {
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> memoryReportService.shutdown())
+                .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(2, TimeUnit.MINUTES)
                 .handle((result, throwable) -> throwable == null)
                 .join());

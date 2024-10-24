@@ -35,6 +35,7 @@ javafx {
 
 dependencies {
     implementation("bisq:persistence")
+    implementation("bisq:java-se")
     implementation("bisq:i18n")
     implementation("bisq:security")
     implementation("bisq:identity")
@@ -50,6 +51,8 @@ dependencies {
     implementation("bisq:presentation")
     implementation("bisq:bisq-easy")
     implementation("bisq:application")
+    implementation("bisq:evolution")
+    implementation("bisq:os-specific")
 
     implementation(project(":desktop"))
 

@@ -19,9 +19,10 @@ package bisq.network.p2p;
 
 
 import bisq.common.observable.Observable;
+import bisq.common.platform.MemoryReportService;
 import bisq.network.NetworkService;
-import bisq.network.common.Address;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -116,6 +117,7 @@ public class ServiceNode implements Node.Listener {
     private final Set<Address> seedNodeAddresses;
     @Getter
     private final TransportType transportType;
+    private final MemoryReportService memoryReportService;
     private final NetworkLoadSnapshot networkLoadSnapshot;
 
     @Getter
@@ -158,7 +160,8 @@ public class ServiceNode implements Node.Listener {
                 Optional<ResendMessageService> resendMessageService,
                 AuthorizationService authorizationService,
                 Set<Address> seedNodeAddresses,
-                TransportType transportType) {
+                TransportType transportType,
+                MemoryReportService memoryReportService) {
         this.config = config;
         this.nodeConfig = nodeConfig;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
@@ -168,6 +171,7 @@ public class ServiceNode implements Node.Listener {
         this.messageDeliveryStatusService = messageDeliveryStatusService;
         this.seedNodeAddresses = seedNodeAddresses;
         this.transportType = transportType;
+        this.memoryReportService = memoryReportService;
 
         this.networkLoadSnapshot = new NetworkLoadSnapshot();
 
@@ -249,7 +253,8 @@ public class ServiceNode implements Node.Listener {
                 supportedServices.contains(ServiceNode.SupportedService.REPORT_RESPONSE) ?
                 Optional.of(new ReportResponseService(defaultNode,
                         dataService.orElseThrow(),
-                        networkLoadSnapshot)) :
+                        networkLoadSnapshot,
+                        memoryReportService)) :
                 Optional.empty();
 
         networkLoadService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&

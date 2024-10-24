@@ -41,7 +41,7 @@ import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
-import bisq.updater.UpdaterService;
+import bisq.evolution.updater.UpdaterService;
 import bisq.user.UserService;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;

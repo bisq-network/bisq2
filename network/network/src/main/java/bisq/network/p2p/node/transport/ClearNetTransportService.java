@@ -1,9 +1,9 @@
 package bisq.network.p2p.node.transport;
 
+import bisq.common.network.Address;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
 import bisq.common.timer.Scheduler;
-import bisq.network.common.Address;
-import bisq.network.common.TransportConfig;
-import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyBundle;
 import lombok.EqualsAndHashCode;
@@ -12,12 +12,15 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+
+import static bisq.common.facades.FacadeProvider.getLocalhostFacade;
 
 
 @Slf4j
@@ -35,7 +38,8 @@ public class ClearNetTransportService implements TransportService {
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
                     config.getInt("devModeDelayInMs"),
                     config.getInt("sendMessageThrottleTime"),
-                    config.getInt("receiveMessageThrottleTime")
+                    config.getInt("receiveMessageThrottleTime"),
+                    config.getInt("connectTimeoutMs")
             );
         }
 
@@ -46,6 +50,7 @@ public class ClearNetTransportService implements TransportService {
         private final int devModeDelayInMs;
         private final int sendMessageThrottleTime;
         private final int receiveMessageThrottleTime;
+        private final int connectTimeoutMs;
 
         public Config(Path dataDir,
                       int defaultNodePort,
@@ -53,7 +58,8 @@ public class ClearNetTransportService implements TransportService {
                       int userNodeSocketTimeout,
                       int devModeDelayInMs,
                       int sendMessageThrottleTime,
-                      int receiveMessageThrottleTime) {
+                      int receiveMessageThrottleTime,
+                      int connectTimeoutMs) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
@@ -61,10 +67,12 @@ public class ClearNetTransportService implements TransportService {
             this.devModeDelayInMs = devModeDelayInMs;
             this.sendMessageThrottleTime = sendMessageThrottleTime;
             this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+            this.connectTimeoutMs = connectTimeoutMs;
         }
     }
 
     private final int devModeDelayInMs;
+    private final int connectTimeoutMs;
     private int numSocketsCreated = 0;
     @Getter
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
@@ -73,6 +81,7 @@ public class ClearNetTransportService implements TransportService {
 
     public ClearNetTransportService(TransportConfig config) {
         devModeDelayInMs = config.getDevModeDelayInMs();
+        connectTimeoutMs = ((Config) config).getConnectTimeoutMs();
     }
 
     @Override
@@ -115,14 +124,14 @@ public class ClearNetTransportService implements TransportService {
         maybeSimulateDelay();
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Address address = Address.localHost(port);
+            Address myAddress = getLocalhostFacade().toMyLocalhost(port);
             log.debug("ServerSocket created at port {}", port);
 
             bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
             bootstrapInfo.getBootstrapProgress().set(0.5);
-            bootstrapInfo.getBootstrapDetails().set("Server created: " + address);
+            bootstrapInfo.getBootstrapDetails().set("Server created: " + myAddress);
 
-            return new ServerSocketResult(serverSocket, address);
+            return new ServerSocketResult(serverSocket, myAddress);
         } catch (IOException e) {
             log.error("{}. Server port {}", e, port);
             throw new CompletionException(e);
@@ -131,9 +140,13 @@ public class ClearNetTransportService implements TransportService {
 
     @Override
     public Socket getSocket(Address address) throws IOException {
+        address = getLocalhostFacade().toPeersLocalhost(address);
+
         log.debug("Create new Socket to {}", address);
         maybeSimulateDelay();
-        Socket socket = new Socket(address.getHost(), address.getPort());
+        Socket socket = new Socket();
+        socket.connect(new InetSocketAddress(address.getHost(), address.getPort()), connectTimeoutMs);
+
         numSocketsCreated++;
 
         bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);

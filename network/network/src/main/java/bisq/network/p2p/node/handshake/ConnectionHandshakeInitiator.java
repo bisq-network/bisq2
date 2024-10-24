@@ -18,9 +18,9 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
-import bisq.network.common.Address;
-import bisq.network.common.AddressOwnershipProof;
-import bisq.network.common.AddressOwnershipProofGenerator;
+import bisq.common.network.Address;
+import bisq.common.network.AddressOwnershipProof;
+import bisq.common.network.AddressOwnershipProofGenerator;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;

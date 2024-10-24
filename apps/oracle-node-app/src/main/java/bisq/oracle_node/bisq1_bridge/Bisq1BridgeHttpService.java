@@ -24,7 +24,7 @@ import bisq.common.encoding.Base64;
 import bisq.common.encoding.Hex;
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.dto.BondedRoleVerificationDto;

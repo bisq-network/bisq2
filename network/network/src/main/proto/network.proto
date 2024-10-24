@@ -3,7 +3,6 @@ package network;
 option java_package = "bisq.network.protobuf";
 option java_multiple_files = true;
 import "common.proto";
-import "network_common.proto";
 import "network_identity.proto";
 import "security.proto";
 import "google/protobuf/any.proto";
@@ -26,7 +25,7 @@ enum Feature {
 }
 
 message Capability {
-  network.common.Address address = 1;
+  common.Address address = 1;
   repeated string supportedTransportTypes = 2;
   repeated Feature features = 3;
   sint32 version = 4;
@@ -342,7 +341,7 @@ message DataStore {
 }
 
 message NetworkServiceStore {
-  repeated network.common.AddressByTransportTypeMap seedNodes = 1;
+  repeated common.AddressByTransportTypeMap seedNodes = 1;
   map<string, network.identity.NetworkId> networkIdByTag = 2 [deprecated = true]; // Moved to NetworkIdStore
 }
 

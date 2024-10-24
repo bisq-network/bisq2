@@ -26,6 +26,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.identity.Identity;
@@ -117,7 +118,8 @@ public class OracleNodeService implements Service {
                              NetworkService networkService,
                              PersistenceService persistenceService,
                              AuthorizedBondedRolesService authorizedBondedRolesService,
-                             MarketPriceRequestService marketPriceRequestService) {
+                             MarketPriceRequestService marketPriceRequestService,
+                             MemoryReportService memoryReportService) {
         this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
@@ -145,6 +147,7 @@ public class OracleNodeService implements Service {
                 networkService,
                 persistenceService,
                 authorizedBondedRolesService,
+                memoryReportService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
                 ignoreSecurityManager,

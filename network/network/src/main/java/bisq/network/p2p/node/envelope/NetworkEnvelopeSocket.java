@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.envelope;
 
-import bisq.network.common.PeerSocket;
+import bisq.common.network.PeerSocket;
 import bisq.network.p2p.message.NetworkEnvelope;
 import lombok.extern.slf4j.Slf4j;
 

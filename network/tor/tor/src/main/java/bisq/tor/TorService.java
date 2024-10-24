@@ -18,6 +18,7 @@
 package bisq.tor;
 
 import bisq.common.application.Service;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileUtils;
 import bisq.common.observable.Observable;
 import bisq.common.platform.LinuxDistribution;
@@ -142,7 +143,7 @@ public class TorService implements Service {
         try {
             InetAddress bindAddress = !LinuxDistribution.isWhonix() ? Inet4Address.getLoopbackAddress()
                     : Inet4Address.getByName("0.0.0.0");
-            var localServerSocket =  new ServerSocket(RANDOM_PORT, 50, bindAddress);
+            var localServerSocket = new ServerSocket(RANDOM_PORT, 50, bindAddress);
 
             String onionAddress = torKeyPair.getOnionAddress();
             if (!publishedOnionServices.contains(onionAddress)) {
@@ -193,11 +194,7 @@ public class TorService implements Service {
     }
 
     private boolean isTorRunning(String absoluteTorBinaryPath) {
-        return ProcessHandle.allProcesses()
-                .anyMatch(processHandle -> processHandle.info()
-                        .commandLine()
-                        .orElse("")
-                        .startsWith(absoluteTorBinaryPath));
+        return FacadeProvider.getJdkFacade().getProcessCommandLineStream().anyMatch(e -> e.startsWith(absoluteTorBinaryPath));
     }
 
     private void installTorIfNotUpToDate() {

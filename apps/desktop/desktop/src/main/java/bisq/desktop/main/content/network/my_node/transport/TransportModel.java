@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.network.my_node.transport;
 
 import bisq.desktop.common.view.Model;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.node.Node;
 import lombok.Getter;
 import lombok.Setter;

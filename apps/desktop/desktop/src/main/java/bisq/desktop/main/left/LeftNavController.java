@@ -32,7 +32,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.updater.UpdaterService;
+import bisq.evolution.updater.UpdaterService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;

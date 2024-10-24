@@ -19,15 +19,16 @@ package bisq.network.p2p;
 
 
 import bisq.common.data.Pair;
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.platform.MemoryReportService;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.SendMessageResult;
-import bisq.network.common.Address;
-import bisq.network.common.AddressByTransportTypeMap;
-import bisq.network.common.TransportConfig;
-import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
@@ -88,7 +89,8 @@ public class ServiceNodesByTransport {
                                    EquihashProofOfWorkService equihashProofOfWorkService,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
-                                   Optional<ResendMessageService> resendMessageService) {
+                                   Optional<ResendMessageService> resendMessageService,
+                                   MemoryReportService memoryReportService) {
         this.supportedTransportTypes = supportedTransportTypes;
 
         authorizationService = new AuthorizationService(authorizationServiceConfig,
@@ -122,7 +124,8 @@ public class ServiceNodesByTransport {
                     resendMessageService,
                     authorizationService,
                     seedAddresses,
-                    transportType);
+                    transportType,
+                    memoryReportService);
             map.put(transportType, serviceNode);
         });
     }
@@ -183,8 +186,12 @@ public class ServiceNodesByTransport {
     }
 
     public void addSeedNode(AddressByTransportTypeMap seedNodeMap) {
-        supportedTransportTypes.forEach(transportType ->
-                map.get(transportType).addSeedNodeAddress(seedNodeMap.get(transportType)));
+        supportedTransportTypes.forEach(transportType -> {
+            if (seedNodeMap.containsKey(transportType)) {
+                Address seedNodeAddress = seedNodeMap.get(transportType);
+                map.get(transportType).addSeedNodeAddress(seedNodeAddress);
+            }
+        });
     }
 
     public void removeSeedNode(AddressByTransportTypeMap seedNode) {

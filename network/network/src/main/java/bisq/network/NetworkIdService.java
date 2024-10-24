@@ -19,11 +19,12 @@ package bisq.network;
 
 
 import bisq.common.application.Service;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileUtils;
 import bisq.common.util.NetworkUtils;
-import bisq.network.common.Address;
-import bisq.network.common.AddressByTransportTypeMap;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -167,7 +168,7 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
         return switch (transportType) {
             case TOR -> new Address(keyBundle.getTorKeyPair().getOnionAddress(), port);
             case I2P -> throw new RuntimeException("I2P not unsupported yet");
-            case CLEAR -> Address.localHost(port);
+            case CLEAR -> FacadeProvider.getLocalhostFacade().toMyLocalhost(port);
         };
     }
 

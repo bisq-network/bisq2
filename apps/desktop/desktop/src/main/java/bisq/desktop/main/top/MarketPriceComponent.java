@@ -33,7 +33,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ComboBoxWithSearch;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.i18n.Res;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;

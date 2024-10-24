@@ -17,9 +17,9 @@
 
 package bisq.network.i2p;
 
-import bisq.network.common.Address;
-import bisq.network.common.AddressOwnershipProof;
-import bisq.network.common.AddressOwnershipProofGenerator;
+import bisq.common.network.Address;
+import bisq.common.network.AddressOwnershipProof;
+import bisq.common.network.AddressOwnershipProofGenerator;
 
 public class I2pAddressOwnershipProofGenerator implements AddressOwnershipProofGenerator {
     @Override

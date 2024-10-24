@@ -27,7 +27,10 @@ public enum Platform {
     MACOS_ARM_64("macos_arm64"),
 
     WIN_X86_64("win_x86_64"),
-    WIN_ARM_64("win_arm64");
+    WIN_ARM_64("win_arm64"),
+
+    ANDROID_X86_64("android_x86_64"),
+    ANDROID_ARM_64("android_arm64");
 
     @Getter
     private final String platformName;
@@ -51,6 +54,10 @@ public enum Platform {
             case WINDOWS -> switch (architecture) {
                 case X86_64 -> WIN_X86_64;
                 case ARM_64 -> WIN_ARM_64;
+            };
+            case ANDROID -> switch (architecture) {
+                case X86_64 -> ANDROID_X86_64;
+                case ARM_64 -> ANDROID_ARM_64;
             };
         };
     }
