@@ -83,7 +83,7 @@ public class ProtobufUtils {
                     try {
                         return enumFromProto(enumType, ((Enum<?>) enumProto).name());
                     } catch (Exception e) {
-                        log.warn("Could not resolve enum for proto {}.", enumProto, e);
+                        log.warn("Could not resolve enum for proto {}. We skip that collection entry.", enumProto, e);
                         return null;
                     }
                 })

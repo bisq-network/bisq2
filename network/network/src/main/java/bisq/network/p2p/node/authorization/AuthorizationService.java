@@ -21,6 +21,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashTokenService;
 import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
+import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2TokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
@@ -68,6 +69,9 @@ public class AuthorizationService {
                         case EQUI_HASH:
                             supportedServices.put(supportedFilterType, new EquiHashTokenService(equihashProofOfWorkService));
                             break;
+                        case HASH_CASH_V2:
+                            supportedServices.put(supportedFilterType, new HashCashV2TokenService(hashCashProofOfWorkService));
+                            break;
                         default:
                             throw new IllegalArgumentException("Undefined filterType " + supportedFilterType);
                     }
@@ -78,8 +82,8 @@ public class AuthorizationService {
                                           NetworkLoad networkLoad,
                                           String peerAddress,
                                           int messageCounter,
-                                          List<Feature> features) {
-        AuthorizationTokenType preferredAuthorizationTokenType = selectAuthorizationTokenType(features);
+                                          Collection<Feature> peersFeatures) {
+        AuthorizationTokenType preferredAuthorizationTokenType = selectAuthorizationTokenType(peersFeatures);
         return supportedServices.get(preferredAuthorizationTokenType).createToken(message,
                 networkLoad,
                 peerAddress,
@@ -119,13 +123,13 @@ public class AuthorizationService {
     }
 
     // Get first match with peers feature based on order of myPreferredFilterTypes
-    private AuthorizationTokenType selectAuthorizationTokenType(List<Feature> peersFeatures) {
+    private AuthorizationTokenType selectAuthorizationTokenType(Collection<Feature> peersFeatures) {
         return selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
     }
 
     @VisibleForTesting
     static AuthorizationTokenType selectAuthorizationTokenType(List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes,
-                                                               List<Feature> peersFeatures) {
+                                                               Collection<Feature> peersFeatures) {
         checkArgument(!myPreferredAuthorizationTokenTypes.isEmpty(), "myPreferredAuthorizationTokenTypes must not be empty");
         if (peersFeatures.isEmpty()) {
             return myPreferredAuthorizationTokenTypes.get(0);
@@ -137,7 +141,7 @@ public class AuthorizationService {
                 .orElse(peersAuthorizationTokenTypes.get(0));
     }
 
-    private static List<AuthorizationTokenType> toAuthorizationTypes(List<Feature> features) {
+    private static List<AuthorizationTokenType> toAuthorizationTypes(Collection<Feature> features) {
         return features.stream()
                 .flatMap(feature -> AuthorizationTokenType.fromFeature(feature).stream())
                 .collect(Collectors.toList());

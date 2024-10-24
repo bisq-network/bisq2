@@ -17,13 +17,14 @@
 
 package bisq.network.p2p.node.handshake;
 
-import bisq.common.util.StringUtils;
 import bisq.common.network.Address;
 import bisq.common.network.AddressOwnershipProof;
 import bisq.common.network.AddressOwnershipProofGenerator;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.OutboundConnection;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -33,7 +34,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -76,7 +76,7 @@ public class ConnectionHandshakeInitiator {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 peerAddress.getFullAddress(),
                 0,
-                new ArrayList<>());
+                Feature.DEFAULT_FEATURES);
         return new NetworkEnvelope(token, request);
     }
 

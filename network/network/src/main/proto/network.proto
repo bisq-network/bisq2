@@ -22,6 +22,7 @@ enum Feature {
   FEATURE_INVENTORY_MINI_SKETCH = 2;
   FEATURE_AUTHORIZATION_HASH_CASH = 3;
   FEATURE_AUTHORIZATION_EQUI_HASH = 4;
+  FEATURE_AUTHORIZATION_HASH_CASH_V2 = 5;
 }
 
 message Capability {
@@ -74,12 +75,19 @@ enum AuthorizationTokenType{
   AUTHORIZATIONTOKENTYPE_UNSPECIFIED = 0;
   AUTHORIZATIONTOKENTYPE_HASH_CASH = 1;
   AUTHORIZATIONTOKENTYPE_EQUI_HASH = 2;
+  AUTHORIZATIONTOKENTYPE_HASH_CASH_V2 = 3;
 }
 
 message HashCashToken {
   security.ProofOfWork proofOfWork = 1;
   sint32 messageCounter = 2;
 }
+
+message HashCashV2Token {
+  security.ProofOfWork proofOfWork = 1;
+  sint32 messageCounter = 2;
+}
+
 message EquiHashToken {
   security.ProofOfWork proofOfWork = 1;
   sint32 messageCounter = 2;
@@ -90,6 +98,7 @@ message AuthorizationToken {
   oneof message {
     HashCashToken hashCashToken = 10;
     EquiHashToken equiHashToken = 11;
+    HashCashV2Token hashCashV2Token = 12;
   };
 }
 
