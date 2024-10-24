@@ -54,18 +54,22 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWizardDirectionAndMarketModel,
         TradeWizardDirectionAndMarketController> {
-    private final Label headlineLabel;
+    private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
+
+    private final Label headlineLabel, marketPrice;
     private final Button buyButton, sellButton;
     private final VBox reputationInfo;
     private final VBox content;
     private final BisqTableView<TradeWizardDirectionAndMarketView.ListItem> tableView;
     private final SearchBox searchBox;
-    private final DropdownMenu marketSelectionMenu;
-    private final Label selectedMarketLabel;
+    private final HBox selectedMarketHBox;
     private Subscription directionSubscription, showReputationInfoPin, marketPin;
     private Button withoutReputationButton, backToBuyButton;
     private Button gainReputationButton;
@@ -74,11 +78,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
     public TradeWizardDirectionAndMarketView(TradeWizardDirectionAndMarketModel model,
                                              TradeWizardDirectionAndMarketController controller) {
         super(new StackPane(), model, controller);
-
-        root.setAlignment(Pos.CENTER);
-
-        content = new VBox(10);
-        content.setAlignment(Pos.TOP_CENTER);
 
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -90,10 +89,14 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         searchBox.setMaxWidth(140);
         searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
 
-        marketSelectionMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        // TODO: Improve this to have more info
-        selectedMarketLabel = new Label();
-        marketSelectionMenu.setContent(selectedMarketLabel);
+        DropdownMenu marketSelectionMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        marketSelectionMenu.useSpaceBetweenContentAndIcon();
+        marketSelectionMenu.setAlignment(Pos.CENTER);
+        marketSelectionMenu.getStyleClass().add("bisq-easy-trade-wizard-market-selection-menu");
+        selectedMarketHBox = new HBox(10);
+        selectedMarketHBox.setAlignment(Pos.CENTER);
+        marketSelectionMenu.setContent(selectedMarketHBox);
+        marketPrice = new Label();
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
@@ -121,7 +124,8 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         directionBox.setAlignment(Pos.BASELINE_CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(-20, 0, 0, 0));
-        VBox.setMargin(directionBox, new Insets(10, 0, 0, 0));
+        content = new VBox(50);
+        content.setAlignment(Pos.CENTER);
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, marketSelectionMenu, directionBox, Spacer.fillVBox());
 
         reputationInfo = new VBox(20);
@@ -129,11 +133,13 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         StackPane.setMargin(reputationInfo, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, reputationInfo);
+        root.setAlignment(Pos.CENTER);
     }
 
     @Override
     protected void onViewAttached() {
         headlineLabel.textProperty().bind(model.getHeadline());
+        marketPrice.textProperty().bind(model.getMarketPrice());
         tableView.initialize();
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
         // We use setOnMouseClicked handler not a listener on
@@ -177,7 +183,11 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         marketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
             if (selectedMarket != null) {
-                selectedMarketLabel.setText(selectedMarket.getQuoteCurrencyDisplayName());
+                StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedMarket, Optional.ofNullable(MARKET_IMAGE_CACHE));
+                Label quoteCurrencyMarket = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.market", selectedMarket.getQuoteCurrencyDisplayName()), marketsImage);
+                quoteCurrencyMarket.setGraphicTextGap(10);
+                Label marketCodes = new Label(selectedMarket.getMarketCodes());
+                selectedMarketHBox.getChildren().setAll(quoteCurrencyMarket, marketCodes, marketPrice);
             }
         });
     }
@@ -185,6 +195,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
     @Override
     protected void onViewDetached() {
         headlineLabel.textProperty().unbind();
+        marketPrice.textProperty().unbind();
         tableView.dispose();
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
         tableView.setOnMouseClicked(null);
