@@ -44,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 import static bisq.bisq_easy.BisqEasyMarketFilter.*;
 
 @Slf4j
@@ -271,7 +273,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.getSelectionModel().clearSelection();
         favouritesTableView.getSelectionModel().select(selectedItem);
 
-        StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket());
+        StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedItem.getMarket(), Optional.empty());
         channelHeaderIcon.setGraphic(marketsImage);
     }
 

@@ -15,12 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.market;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -32,22 +34,27 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class TradeWizardMarketModel implements Model {
-    @Setter
-    private Direction direction;
-    @Setter
-    private String headline;
-    private final ObjectProperty<TradeWizardMarketView.ListItem> selectedMarketListItem = new SimpleObjectProperty<>();
+public class TradeWizardDirectionAndMarketModel implements Model {
+    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
+    private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
+    private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
+    private final StringProperty headline = new SimpleStringProperty();
+    private final StringProperty marketPrice = new SimpleStringProperty();
+    private final ObjectProperty<TradeWizardDirectionAndMarketView.ListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
-    private final ObservableList<TradeWizardMarketView.ListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<TradeWizardMarketView.ListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<TradeWizardMarketView.ListItem> sortedList = new SortedList<>(filteredList);
-
+    private final ObservableList<TradeWizardDirectionAndMarketView.ListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<TradeWizardDirectionAndMarketView.ListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<TradeWizardDirectionAndMarketView.ListItem> sortedList = new SortedList<>(filteredList);
+    @Setter
+    private String formattedAmountWithoutReputationNeeded;
 
     void reset() {
-        direction = null;
-        headline = null;
+        direction.set(Direction.BUY);
+        showReputationInfo.set(false);
+        buyButtonDisabled.set(false);
+        headline.set(null);
+        marketPrice.set(null);
         selectedMarketListItem.set(null);
         searchText.set(null);
         selectedMarket.set(null);

@@ -27,8 +27,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket.TradeWizardDirectionAndMarketController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods.TradeWizardPaymentMethodsController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.price.TradeWizardPriceController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.review.TradeWizardReviewController;
@@ -68,8 +67,7 @@ public class TradeWizardController extends NavigationController implements InitW
     private final TradeWizardModel model;
     @Getter
     private final TradeWizardView view;
-    private final TradeWizardDirectionController tradeWizardDirectionController;
-    private final TradeWizardMarketController tradeWizardMarketController;
+    private final TradeWizardDirectionAndMarketController tradeWizardDirectionAndMarketController;
     private final TradeWizardPriceController tradeWizardPriceController;
     private final TradeWizardAmountController tradeWizardAmountController;
     private final TradeWizardPaymentMethodsController tradeWizardPaymentMethodsController;
@@ -90,11 +88,10 @@ public class TradeWizardController extends NavigationController implements InitW
         model = new TradeWizardModel();
         view = new TradeWizardView(model, this);
 
-        tradeWizardDirectionController = new TradeWizardDirectionController(serviceProvider,
+        tradeWizardDirectionAndMarketController = new TradeWizardDirectionAndMarketController(serviceProvider,
                 this::onNext,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
-        tradeWizardMarketController = new TradeWizardMarketController(serviceProvider, this::onNext);
         tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, view.getRoot());
         tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, view.getRoot());
         tradeWizardPaymentMethodsController = new TradeWizardPaymentMethodsController(serviceProvider, view.getRoot(), this::onNext);
@@ -133,8 +130,7 @@ public class TradeWizardController extends NavigationController implements InitW
         model.getNextButtonDisabled().set(false);
         model.getChildTargets().clear();
         model.getChildTargets().addAll(List.of(
-                NavigationTarget.TRADE_WIZARD_DIRECTION,
-                NavigationTarget.TRADE_WIZARD_MARKET,
+                NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET,
                 NavigationTarget.TRADE_WIZARD_AMOUNT,
                 NavigationTarget.TRADE_WIZARD_PAYMENT_METHODS,
                 NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
@@ -142,19 +138,18 @@ public class TradeWizardController extends NavigationController implements InitW
         ));
 
         if (model.getPriceProgressItemVisible().get()) {
-            model.getChildTargets().add(3, NavigationTarget.TRADE_WIZARD_PRICE);
+            model.getChildTargets().add(2, NavigationTarget.TRADE_WIZARD_PRICE);
         } else {
             model.getChildTargets().remove(NavigationTarget.TRADE_WIZARD_PRICE);
         }
 
-        directionPin = EasyBind.subscribe(tradeWizardDirectionController.getDirection(), direction -> {
-            tradeWizardMarketController.setDirection(direction);
+        directionPin = EasyBind.subscribe(tradeWizardDirectionAndMarketController.getDirection(), direction -> {
             tradeWizardSelectOfferController.setDirection(direction);
             tradeWizardAmountController.setDirection(direction);
             tradeWizardPaymentMethodsController.setDirection(direction);
             tradeWizardPriceController.setDirection(direction);
         });
-        marketPin = EasyBind.subscribe(tradeWizardMarketController.getMarket(), market -> {
+        marketPin = EasyBind.subscribe(tradeWizardDirectionAndMarketController.getMarket(), market -> {
             tradeWizardSelectOfferController.setMarket(market);
             tradeWizardPaymentMethodsController.setMarket(market);
             tradeWizardPriceController.setMarket(market);
@@ -202,8 +197,8 @@ public class TradeWizardController extends NavigationController implements InitW
         if (navigationTarget == NavigationTarget.TRADE_WIZARD_REVIEW_OFFER) {
             if (model.isCreateOfferMode()) {
                 tradeWizardReviewController.setDataForCreateOffer(
-                        tradeWizardDirectionController.getDirection().get(),
-                        tradeWizardMarketController.getMarket().get(),
+                        tradeWizardDirectionAndMarketController.getDirection().get(),
+                        tradeWizardDirectionAndMarketController.getMarket().get(),
                         tradeWizardPaymentMethodsController.getBitcoinPaymentMethods(),
                         tradeWizardPaymentMethodsController.getFiatPaymentMethods(),
                         tradeWizardAmountController.getQuoteSideAmountSpec().get(),
@@ -229,7 +224,7 @@ public class TradeWizardController extends NavigationController implements InitW
         model.getCloseButtonVisible().set(true);
         // model.getNextButtonText().set(Res.get("action.next"));
         model.getBackButtonText().set(Res.get("action.back"));
-        model.getBackButtonVisible().set(navigationTarget != NavigationTarget.TRADE_WIZARD_DIRECTION);
+        model.getBackButtonVisible().set(navigationTarget != NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET);
         // model.getNextButtonVisible().set(navigationTarget != NavigationTarget.TRADE_WIZARD_REVIEW_OFFER);
     }
 
@@ -237,8 +232,7 @@ public class TradeWizardController extends NavigationController implements InitW
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case TRADE_WIZARD_DIRECTION -> Optional.of(tradeWizardDirectionController);
-            case TRADE_WIZARD_MARKET -> Optional.of(tradeWizardMarketController);
+            case TRADE_WIZARD_DIRECTION_AND_MARKET -> Optional.of(tradeWizardDirectionAndMarketController);
             case TRADE_WIZARD_PRICE -> Optional.of(tradeWizardPriceController);
             case TRADE_WIZARD_PAYMENT_METHODS -> Optional.of(tradeWizardPaymentMethodsController);
             case TRADE_WIZARD_AMOUNT -> Optional.of(tradeWizardAmountController);
@@ -333,8 +327,7 @@ public class TradeWizardController extends NavigationController implements InitW
     private void reset() {
         resetSelectedChildTarget();
 
-        tradeWizardDirectionController.reset();
-        tradeWizardMarketController.reset();
+        tradeWizardDirectionAndMarketController.reset();
         tradeWizardPriceController.reset();
         tradeWizardAmountController.reset();
         tradeWizardPaymentMethodsController.reset();
@@ -345,8 +338,8 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private void updateNextButtonDisabledState() {
-        if (NavigationTarget.TRADE_WIZARD_MARKET.equals(model.getSelectedChildTarget().get())) {
-            model.getNextButtonDisabled().set(tradeWizardMarketController.getMarket().get() == null);
+        if (NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(tradeWizardDirectionAndMarketController.getMarket().get() == null);
         } else if (NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get() == null);
         } else {
@@ -360,7 +353,7 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private void setMainButtonsVisibleState(boolean value) {
-        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TRADE_WIZARD_DIRECTION);
+        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET);
         model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TRADE_WIZARD_REVIEW_OFFER);
         model.getCloseButtonVisible().set(value);
     }
