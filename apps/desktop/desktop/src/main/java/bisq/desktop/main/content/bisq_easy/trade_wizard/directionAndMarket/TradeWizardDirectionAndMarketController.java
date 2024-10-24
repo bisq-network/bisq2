@@ -33,6 +33,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -160,6 +161,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
             if (selectedMarket != null) {
                 model.getHeadline().set(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline",
                         selectedMarket.getQuoteCurrencyDisplayName()));
+                updateMarketPrice();
             }
         });
     }
@@ -228,6 +230,16 @@ public class TradeWizardDirectionAndMarketController implements Controller {
             });
         } else {
             view.getRoot().setOnKeyPressed(null);
+        }
+    }
+
+    private void updateMarketPrice() {
+        Market selectedMarket = model.getSelectedMarket().get();
+        if (selectedMarket != null) {
+            marketPriceService
+                    .findMarketPrice(selectedMarket)
+                    .ifPresent(marketPrice ->
+                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
         }
     }
 }

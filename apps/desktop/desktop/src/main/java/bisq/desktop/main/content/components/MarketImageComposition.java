@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.components;
 
 import bisq.common.currency.FiatCurrencyRepository;
@@ -20,6 +37,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,12 +59,19 @@ public class MarketImageComposition {
             .collect(Collectors.toUnmodifiableSet());
     private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
 
-    public static StackPane getMarketIcons(Market market) {
+    public static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache) {
         String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase();
         String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase();
         String key = baseCurrencyCode + "." + quoteCurrencyCode;
-        if (MARKET_IMAGE_CACHE.containsKey(key)) {
-            return MARKET_IMAGE_CACHE.get(key);
+
+        if (dedicatedCache.isPresent()) {
+            if (dedicatedCache.get().containsKey(key)) {
+                return dedicatedCache.get().get(key);
+            }
+        } else {
+            if (MARKET_IMAGE_CACHE.containsKey(key)) {
+                return MARKET_IMAGE_CACHE.get(key);
+            }
         }
 
         StackPane pane = new StackPane();
@@ -77,7 +102,11 @@ public class MarketImageComposition {
             }
         });
 
-        MARKET_IMAGE_CACHE.put(key, pane);
+        if (dedicatedCache.isPresent()) {
+            dedicatedCache.get().put(key, pane);
+        } else {
+            MARKET_IMAGE_CACHE.put(key, pane);
+        }
         return pane;
     }
 

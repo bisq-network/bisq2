@@ -1108,6 +1108,20 @@
     -fx-font-size: 0.9em;
 }
 
+.bisq-easy-trade-wizard-market-selection-menu {
+    -fx-background-color: derive(-bisq-dark-grey-20, -20%);
+    -fx-background-radius: 4;
+    -fx-min-height: 60;
+    -fx-max-height: 60;
+    -fx-min-width: 495;
+    -fx-max-width: 495;
+    -fx-padding: 0 30;
+}
+
+.bisq-easy-trade-wizard-market-selection-menu:hover {
+    -fx-background-color: derive(-bisq-dark-grey-20, -20%);
+}
+
 
 /*******************************************************************************
  * TradeWizardTakeOfferView.tableView                                          *
