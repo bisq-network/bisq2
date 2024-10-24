@@ -100,8 +100,8 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
-        double tableHeight = 290;
-        int tableWidth = 650;
+        double tableHeight = 260;
+        int tableWidth = 671;
         tableView.setMinHeight(tableHeight);
         tableView.setMaxHeight(tableHeight);
         tableView.setMinWidth(tableWidth);
@@ -122,7 +122,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         HBox directionBox = new HBox(25, buyButton, sellButton);
         directionBox.setAlignment(Pos.BASELINE_CENTER);
 
-        VBox.setMargin(headlineLabel, new Insets(-20, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
         content = new VBox(50);
         content.setAlignment(Pos.CENTER);
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, marketSelectionMenu, directionBox, Spacer.fillVBox());
@@ -182,6 +182,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         marketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
             if (selectedMarket != null) {
+                // TODO: Only update text
                 StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedMarket, Optional.ofNullable(MARKET_IMAGE_CACHE));
                 Label quoteCurrencyMarket = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.market",
                         selectedMarket.getQuoteCurrencyDisplayName()), marketsImage);
@@ -279,7 +280,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeWizardDirectionAndMarketView.ListItem>()
                 .left()
-                .minWidth(120)
+                .minWidth(180)
                 .comparator(Comparator.comparing(TradeWizardDirectionAndMarketView.ListItem::getQuoteCurrencyDisplayName))
                 .setCellFactory(getNameCellFactory())
                 .build());
@@ -298,8 +299,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
     }
 
     private Callback<TableColumn<TradeWizardDirectionAndMarketView.ListItem, TradeWizardDirectionAndMarketView.ListItem>,
-            TableCell<TradeWizardDirectionAndMarketView.ListItem, TradeWizardDirectionAndMarketView.ListItem>> getNameCellFactory
-            () {
+            TableCell<TradeWizardDirectionAndMarketView.ListItem, TradeWizardDirectionAndMarketView.ListItem>> getNameCellFactory() {
         return column -> new TableCell<>() {
             private final Label label = new Label();
             private final Tooltip tooltip = new BisqTooltip();
