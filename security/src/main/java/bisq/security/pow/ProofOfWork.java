@@ -35,8 +35,9 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 public final class ProofOfWork implements NetworkProto {
-    // payload is usually the pubKeyHash
-    private final byte[] payload;       // message of 1000 chars has about 1300 bytes
+    // With HashCashV2 we use the 20 byte hash of the serialized message for the payload
+    // instead the serialized message as in HashCash(V1)
+    private final byte[] payload;
     private final long counter;
     // If challenge does not make sense we set it null
     // Challenge need to be hashed to 256 bits

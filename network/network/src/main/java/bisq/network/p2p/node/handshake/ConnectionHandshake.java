@@ -18,14 +18,15 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.encoding.Hex;
-import bisq.common.util.StringUtils;
 import bisq.common.network.Address;
 import bisq.common.network.DefaultPeerSocket;
 import bisq.common.network.PeerSocket;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
@@ -41,8 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Set;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.*;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -219,12 +220,18 @@ public final class ConnectionHandshake {
             Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myKeyBundle.getTorKeyPair().getPrivateKey());
 
             Request request = new Request(capability, signature, myNetworkLoad, signatureDate);
-            // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
+
+            // As we do not know the peers networkLoad yet, we use the NetworkLoad.INITIAL_LOAD.
+            NetworkLoad initialNetworkLoad = NetworkLoad.INITIAL_NETWORK_LOAD;
+
+            // As we do not know the peers features yet, we use a set of minimal default features.
+            Set<Feature> peersFeatures = Feature.DEFAULT_FEATURES;
+
             AuthorizationToken token = authorizationService.createToken(request,
-                    NetworkLoad.INITIAL_NETWORK_LOAD,
+                    initialNetworkLoad,
                     peerAddress.getFullAddress(),
                     0,
-                    new ArrayList<>());
+                    peersFeatures);
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
             networkEnvelopeSocket.send(requestNetworkEnvelope);
