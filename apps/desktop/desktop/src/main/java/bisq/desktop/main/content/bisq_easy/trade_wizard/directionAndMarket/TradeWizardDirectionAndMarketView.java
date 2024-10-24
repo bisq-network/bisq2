@@ -82,7 +82,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        // Market
         searchBox = new SearchBox();
         searchBox.setPromptText(Res.get("bisqEasy.tradeWizard.market.columns.name").toUpperCase());
         searchBox.setMinWidth(140);
@@ -97,6 +96,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         selectedMarketHBox.setAlignment(Pos.CENTER);
         marketSelectionMenu.setContent(selectedMarketHBox);
         marketPrice = new Label();
+        marketPrice.getStyleClass().add("medium-text");
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
@@ -117,7 +117,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         marketSelectionMenu.addMenuItems(new DropdownMenuItem(tableViewWithSearchBox));
 
-        // Direction
         buyButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.buy"));
         sellButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.sell"));
         HBox directionBox = new HBox(25, buyButton, sellButton);
@@ -184,10 +183,16 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         marketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
             if (selectedMarket != null) {
                 StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedMarket, Optional.ofNullable(MARKET_IMAGE_CACHE));
-                Label quoteCurrencyMarket = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.market", selectedMarket.getQuoteCurrencyDisplayName()), marketsImage);
+                Label quoteCurrencyMarket = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.market",
+                        selectedMarket.getQuoteCurrencyDisplayName()), marketsImage);
                 quoteCurrencyMarket.setGraphicTextGap(10);
+                quoteCurrencyMarket.getStyleClass().addAll("font-size-13", "text-fill-white");
                 Label marketCodes = new Label(selectedMarket.getMarketCodes());
-                selectedMarketHBox.getChildren().setAll(quoteCurrencyMarket, marketCodes, marketPrice);
+                marketCodes.getStyleClass().addAll("medium-text", "font-semi-bold");
+                HBox marketCodeAndPriceHBox = new HBox(10, marketCodes, marketPrice);
+                marketCodeAndPriceHBox.setAlignment(Pos.CENTER_LEFT);
+                HBox.setMargin(marketCodeAndPriceHBox, new Insets(0, 0, -3, 0));
+                selectedMarketHBox.getChildren().setAll(quoteCurrencyMarket, marketCodeAndPriceHBox);
             }
         });
     }
