@@ -73,7 +73,6 @@ public class DropdownMenu extends HBox {
         buttonIcon = defaultIcon;
 
         getChildren().addAll(hBox, buttonIcon);
-        hBox.setAlignment(Pos.BASELINE_LEFT);
         hBox.getStyleClass().add("dropdown-menu-content-hbox");
 
         getStyleClass().add("dropdown-menu");
@@ -85,9 +84,11 @@ public class DropdownMenu extends HBox {
             setMinSize(size, size);
             setPrefSize(size, size);
             setAlignment(Pos.CENTER);
+            hBox.setAlignment(Pos.BASELINE_LEFT);
         } else {
             setSpacing(5);
             setAlignment(Pos.BASELINE_LEFT);
+            hBox.setAlignment(Pos.CENTER);
         }
 
         widthPropertyChangeListener = (observable, oldValue, newValue) -> {
