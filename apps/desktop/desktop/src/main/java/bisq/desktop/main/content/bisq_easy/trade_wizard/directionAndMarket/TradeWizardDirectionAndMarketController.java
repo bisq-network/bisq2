@@ -30,10 +30,8 @@ import bisq.common.currency.MarketRepository;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -63,7 +61,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
-    private Subscription searchTextPin, selectedMarketPin;
+    private Subscription searchTextPin;
 
     public TradeWizardDirectionAndMarketController(ServiceProvider serviceProvider,
                                                    Runnable onNextHandler,
@@ -156,21 +154,12 @@ public class TradeWizardDirectionAndMarketController implements Controller {
                 );
             }
         });
-
-        selectedMarketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
-            if (selectedMarket != null) {
-                model.getHeadline().set(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline",
-                        selectedMarket.getQuoteCurrencyDisplayName()));
-                updateMarketPrice();
-            }
-        });
     }
 
     @Override
     public void onDeactivate() {
         view.getRoot().setOnKeyPressed(null);
         searchTextPin.unsubscribe();
-        selectedMarketPin.unsubscribe();
     }
 
     void onSelectDirection(Direction direction) {
@@ -208,6 +197,10 @@ public class TradeWizardDirectionAndMarketController implements Controller {
                 .ifPresent(bisqEasyOfferbookSelectionService::selectChannel);
     }
 
+    void updateNavigationButtonsVisibility(boolean shouldShow) {
+        navigationButtonsVisibleHandler.accept(shouldShow);
+    }
+
     private void setDirection(Direction direction) {
         model.getDirection().set(direction);
     }
@@ -230,16 +223,6 @@ public class TradeWizardDirectionAndMarketController implements Controller {
             });
         } else {
             view.getRoot().setOnKeyPressed(null);
-        }
-    }
-
-    private void updateMarketPrice() {
-        Market selectedMarket = model.getSelectedMarket().get();
-        if (selectedMarket != null) {
-            marketPriceService
-                    .findMarketPrice(selectedMarket)
-                    .ifPresent(marketPrice ->
-                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
         }
     }
 }

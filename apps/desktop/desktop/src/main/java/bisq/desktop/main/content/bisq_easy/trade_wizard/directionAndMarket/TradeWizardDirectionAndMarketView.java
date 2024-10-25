@@ -23,8 +23,6 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -54,22 +52,17 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWizardDirectionAndMarketModel,
         TradeWizardDirectionAndMarketController> {
-    private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
-
-    private final Label headlineLabel, marketPrice;
+    private final Label quoteCurrencyLabel;
     private final Button buyButton, sellButton;
     private final VBox reputationInfo;
     private final VBox content;
     private final BisqTableView<TradeWizardDirectionAndMarketView.ListItem> tableView;
     private final SearchBox searchBox;
-    private final HBox selectedMarketHBox;
+    private final StackPane tableViewWithSearchBox;
     private Subscription directionSubscription, showReputationInfoPin, marketPin;
     private Button withoutReputationButton, backToBuyButton;
     private Button gainReputationButton;
@@ -79,8 +72,13 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
                                              TradeWizardDirectionAndMarketController controller) {
         super(new StackPane(), model, controller);
 
-        headlineLabel = new Label();
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline"));
+        quoteCurrencyLabel = new Label();
+        quoteCurrencyLabel.getStyleClass().add("bisq-easy-trade-wizard-quote-currency");
+        HBox headlineHBox = new HBox(headlineLabel, quoteCurrencyLabel, new Label("?"));
+        headlineHBox.setAlignment(Pos.CENTER);
+        headlineHBox.getStyleClass().add("bisq-text-headline-2");
+        HBox.setMargin(quoteCurrencyLabel, new Insets(0, 0, 0, 5));
 
         searchBox = new SearchBox();
         searchBox.setPromptText(Res.get("bisqEasy.tradeWizard.market.columns.name").toUpperCase());
@@ -88,61 +86,62 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         searchBox.setMaxWidth(140);
         searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
 
-        DropdownMenu marketSelectionMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        marketSelectionMenu.useSpaceBetweenContentAndIcon();
-        marketSelectionMenu.setAlignment(Pos.CENTER);
-        marketSelectionMenu.getStyleClass().add("bisq-easy-trade-wizard-market-selection-menu");
-        selectedMarketHBox = new HBox(10);
-        selectedMarketHBox.setAlignment(Pos.CENTER);
-        marketSelectionMenu.setContent(selectedMarketHBox);
-        marketPrice = new Label();
-        marketPrice.getStyleClass().add("medium-text");
-
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
         double tableHeight = 250;
-        double tableWidth = 671;
+        double tableWidth = 600;
         tableView.setPrefSize(tableWidth, tableHeight);
         tableView.setFixedCellSize(50);
         configTableView();
 
         StackPane.setMargin(searchBox, new Insets(5, 0, 0, 15));
-        StackPane tableViewWithSearchBox = new StackPane(tableView, searchBox);
+        tableViewWithSearchBox = new StackPane(tableView, searchBox);
         tableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
         tableViewWithSearchBox.setPrefSize(tableWidth, tableHeight);
         tableViewWithSearchBox.setMaxWidth(tableWidth);
+        tableViewWithSearchBox.setMaxHeight(tableHeight);
         tableViewWithSearchBox.getStyleClass().add("markets-table-container");
-
-        marketSelectionMenu.addMenuItems(new DropdownMenuItem(tableViewWithSearchBox));
+        updateMarketSelectionTableVisibility(false);
 
         buyButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.buy"));
         sellButton = createAndGetDirectionButton(Res.get("bisqEasy.tradeWizard.directionAndMarket.sell"));
         HBox directionBox = new HBox(25, buyButton, sellButton);
         directionBox.setAlignment(Pos.BASELINE_CENTER);
 
-        VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
-        content = new VBox(50);
+        content = new VBox(80);
         content.setAlignment(Pos.CENTER);
-        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, marketSelectionMenu, directionBox, Spacer.fillVBox());
+        content.getChildren().addAll(Spacer.fillVBox(), headlineHBox, directionBox, Spacer.fillVBox());
 
         reputationInfo = new VBox(20);
         setupReputationInfo();
 
         StackPane.setMargin(reputationInfo, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, reputationInfo);
+        StackPane.setMargin(tableViewWithSearchBox, new Insets(130, 0, 0, 0));
+        root.getChildren().addAll(content, tableViewWithSearchBox, reputationInfo);
         root.setAlignment(Pos.CENTER);
     }
 
     @Override
     protected void onViewAttached() {
-        headlineLabel.textProperty().bind(model.getHeadline());
-        marketPrice.textProperty().bind(model.getMarketPrice());
         tableView.initialize();
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
         // We use setOnMouseClicked handler not a listener on
         // tableView.getSelectionModel().getSelectedItem() to get triggered the handler only at user action and
         // not when we set the selected item by code.
         tableView.setOnMouseClicked(e -> controller.onMarketListItemClicked(tableView.getSelectionModel().getSelectedItem()));
+        quoteCurrencyLabel.setOnMouseClicked(e -> {
+            updateMarketSelectionTableVisibility(!tableViewWithSearchBox.isVisible());
+            if (tableViewWithSearchBox.isVisible()) {
+                e.consume();
+            }
+        });
+        // TODO: Add keyEvent handler in root for ESC
+        root.setOnMouseClicked(e -> {
+            if (tableViewWithSearchBox.isVisible()) {
+                updateMarketSelectionTableVisibility(false);
+            }
+        });
+        updateMarketSelectionTableVisibility(false);
 
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
@@ -180,29 +179,18 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         marketPin = EasyBind.subscribe(model.getSelectedMarket(), selectedMarket -> {
             if (selectedMarket != null) {
-                // TODO: Only update text
-                StackPane marketsImage = MarketImageComposition.getMarketIcons(selectedMarket, Optional.ofNullable(MARKET_IMAGE_CACHE));
-                Label quoteCurrencyMarket = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.market",
-                        selectedMarket.getQuoteCurrencyDisplayName()), marketsImage);
-                quoteCurrencyMarket.setGraphicTextGap(10);
-                quoteCurrencyMarket.getStyleClass().addAll("font-size-13", "text-fill-white");
-                Label marketCodes = new Label(selectedMarket.getMarketCodes());
-                marketCodes.getStyleClass().addAll("medium-text", "font-semi-bold");
-                HBox marketCodeAndPriceHBox = new HBox(10, marketCodes, marketPrice);
-                marketCodeAndPriceHBox.setAlignment(Pos.CENTER_LEFT);
-                HBox.setMargin(marketCodeAndPriceHBox, new Insets(0, 0, -3, 0));
-                selectedMarketHBox.getChildren().setAll(quoteCurrencyMarket, marketCodeAndPriceHBox);
+                quoteCurrencyLabel.setText(selectedMarket.getQuoteCurrencyDisplayName());
             }
         });
     }
 
     @Override
     protected void onViewDetached() {
-        headlineLabel.textProperty().unbind();
-        marketPrice.textProperty().unbind();
         tableView.dispose();
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
         tableView.setOnMouseClicked(null);
+        quoteCurrencyLabel.setOnMouseClicked(null);
+        root.setOnMouseClicked(null);
 
         if (model.getShowReputationInfo().get()) {
             Transitions.removeEffect(content);
@@ -220,13 +208,19 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         marketPin.unsubscribe();
     }
 
+    private void updateMarketSelectionTableVisibility(boolean shouldShow) {
+        tableViewWithSearchBox.setVisible(shouldShow);
+        tableViewWithSearchBox.setManaged(shouldShow);
+        controller.updateNavigationButtonsVisibility(!shouldShow);
+    }
+
     private Button createAndGetDirectionButton(String title) {
         Button button = new Button(title);
-        button.getStyleClass().addAll("card-button", "bisq-easy-trade-wizard-large-push-button");
+        button.getStyleClass().add("card-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
         button.setMinWidth(width);
-        button.setMinHeight(60);
+        button.setMinHeight(112);
         return button;
     }
 

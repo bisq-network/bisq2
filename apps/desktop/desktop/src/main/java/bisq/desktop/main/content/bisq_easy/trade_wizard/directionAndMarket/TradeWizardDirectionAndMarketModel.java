@@ -38,8 +38,6 @@ public class TradeWizardDirectionAndMarketModel implements Model {
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
-    private final StringProperty headline = new SimpleStringProperty();
-    private final StringProperty marketPrice = new SimpleStringProperty();
     private final ObjectProperty<TradeWizardDirectionAndMarketView.ListItem> selectedMarketListItem = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
@@ -53,8 +51,6 @@ public class TradeWizardDirectionAndMarketModel implements Model {
         direction.set(Direction.BUY);
         showReputationInfo.set(false);
         buyButtonDisabled.set(false);
-        headline.set(null);
-        marketPrice.set(null);
         selectedMarketListItem.set(null);
         searchText.set(null);
         selectedMarket.set(null);
