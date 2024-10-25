@@ -529,11 +529,11 @@
 }
 
 .card-button:hover {
-    -fx-background-color: -bisq-dark-grey-10;
+    -fx-background-color: -bisq-dark-grey-30;
 }
 
 .card-button:pressed {
-    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-color: -bisq-dark-grey-10;
 }
 
 .card-button:default {
