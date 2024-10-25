@@ -100,12 +100,10 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
-        double tableHeight = 260;
-        int tableWidth = 671;
-        tableView.setMinHeight(tableHeight);
-        tableView.setMaxHeight(tableHeight);
-        tableView.setMinWidth(tableWidth);
-        tableView.setMaxWidth(tableWidth);
+        double tableHeight = 250;
+        double tableWidth = 671;
+        tableView.setPrefSize(tableWidth, tableHeight);
+        tableView.setFixedCellSize(50);
         configTableView();
 
         StackPane.setMargin(searchBox, new Insets(5, 0, 0, 15));

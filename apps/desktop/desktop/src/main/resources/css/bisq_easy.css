@@ -1072,6 +1072,7 @@
     -fx-background-radius: 4;
     -fx-border-color: -bisq-dark-grey-20;
     -fx-border-radius: 4;
+    -fx-padding: 4;
 }
 
 .bisq-easy-trade-wizard-market.table-view.table-view {
