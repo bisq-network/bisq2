@@ -19,15 +19,16 @@ package bisq.network.p2p.node;
 
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.common.network.Address;
-import bisq.common.network.TransportType;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -56,7 +58,9 @@ public final class Capability implements NetworkProto {
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String applicationVersion;
 
-    public static Capability myCapability(Address address, List<TransportType> supportedTransportTypes, List<Feature> features) {
+    public static Capability myCapability(Address address,
+                                          List<TransportType> supportedTransportTypes,
+                                          List<Feature> features) {
         return new Capability(VERSION, address, supportedTransportTypes, features, ApplicationVersion.getVersion().getVersionAsString());
     }
 
@@ -69,7 +73,11 @@ public final class Capability implements NetworkProto {
     }
 
     @VisibleForTesting
-    public Capability(int version, Address address, List<TransportType> supportedTransportTypes, List<Feature> features, String applicationVersion) {
+    public Capability(int version,
+                      Address address,
+                      List<TransportType> supportedTransportTypes,
+                      List<Feature> features,
+                      String applicationVersion) {
         this.version = version;
         this.address = address;
         this.supportedTransportTypes = supportedTransportTypes;
@@ -115,10 +123,16 @@ public final class Capability implements NetworkProto {
         List<TransportType> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
                 .map(e -> ProtobufUtils.enumFromProto(TransportType.class, e))
                 .collect(Collectors.toList());
+        List<bisq.network.protobuf.Feature> featuresListProto = proto.getFeaturesList();
+        List<Feature> features = ProtobufUtils.fromProtoEnumList(Feature.class, featuresListProto);
+        if (featuresListProto.size() != features.size()) {
+            log.warn("The size of the resolved feature list is not same as the protobuf list's size. " +
+                    "This can happen if new, unrecognized protobuf elements have been received. Old clients ignore such new fields.");
+        }
         return new Capability(proto.getVersion(),
                 Address.fromProto(proto.getAddress()),
                 supportedTransportTypes,
-                ProtobufUtils.fromProtoEnumList(Feature.class, proto.getFeaturesList()),
+                features,
                 proto.getApplicationVersion());
     }
 }
