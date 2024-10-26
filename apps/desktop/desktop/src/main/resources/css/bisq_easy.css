@@ -1072,6 +1072,7 @@
     -fx-background-radius: 4;
     -fx-border-color: -bisq-dark-grey-20;
     -fx-border-radius: 4;
+    -fx-padding: 4;
 }
 
 .bisq-easy-trade-wizard-market.table-view.table-view {
@@ -1109,36 +1110,12 @@
     -fx-font-size: 0.9em;
 }
 
-.bisq-easy-trade-wizard-market-selection-menu {
-    -fx-background-color: -bisq-dark-grey-20;
-    -fx-background-radius: 4;
-    -fx-min-height: 60;
-    -fx-max-height: 60;
-    -fx-min-width: 655;
-    -fx-max-width: 655;
-    -fx-padding: 0 30;
+.bisq-easy-trade-wizard-quote-currency {
+    -fx-cursor: hand;
 }
 
-.bisq-easy-trade-wizard-market-selection-menu:hover {
-    -fx-background-color: -bisq-dark-grey-20;
-}
-
-.bisq-easy-trade-wizard-market-selection-menu .dropdown-menu-popup .menu-item .dropdown-menu-item-content {
-    -fx-padding: 0;
-}
-
-.bisq-easy-trade-wizard-market-selection-menu .dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content {
-    -fx-background-color: none;
-}
-
-.bisq-easy-trade-wizard-market-selection-menu .dropdown-menu-popup {
-    -fx-background-color: none;
-    -fx-background-radius: 0;
-    -fx-padding: 0;
-    -fx-border-color: none;
-    -fx-border-width: 0;
-    -fx-border-radius: 0;
-    -fx-effect: none;
+.bisq-easy-trade-wizard-quote-currency:hover {
+    -fx-underline: true;
 }
 
 
