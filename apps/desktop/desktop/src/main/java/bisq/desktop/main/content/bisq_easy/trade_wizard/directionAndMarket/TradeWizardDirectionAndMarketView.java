@@ -85,19 +85,18 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         searchBox = new SearchBox();
         searchBox.setPromptText(Res.get("bisqEasy.tradeWizard.market.columns.name").toUpperCase());
-        searchBox.setMinWidth(140);
-        searchBox.setMaxWidth(140);
+        searchBox.setMinWidth(170);
+        searchBox.setMaxWidth(170);
         searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
 
         tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
-        double tableHeight = 325;
+        double tableHeight = 312;
         double tableWidth = 600;
         tableView.setPrefSize(tableWidth, tableHeight);
         tableView.setFixedCellSize(55);
         configTableView();
 
-        StackPane.setMargin(searchBox, new Insets(5, 0, 0, 15));
+        StackPane.setMargin(searchBox, new Insets(1, 0, 0, 15));
         StackPane tableViewWithSearchBox = new StackPane(tableView, searchBox);
         tableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
         tableViewWithSearchBox.setPrefSize(tableWidth, tableHeight);
@@ -123,6 +122,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         StackPane.setMargin(reputationInfo, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, reputationInfo);
         root.setAlignment(Pos.CENTER);
+        root.getStyleClass().add("bisq-easy-trade-wizard-direction-step");
     }
 
     @Override
@@ -134,9 +134,13 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         // not when we set the selected item by code.
         tableView.setOnMouseClicked(e -> controller.onMarketListItemClicked(tableView.getSelectionModel().getSelectedItem()));
         quoteCurrencyLabel.setOnMouseClicked(e -> {
-            Bounds rootBounds = root.localToScreen(root.getBoundsInLocal());
-            Bounds labelBounds = quoteCurrencyLabel.localToScreen(quoteCurrencyLabel.getBoundsInLocal());
-            marketSelectionPopup.show(quoteCurrencyLabel, rootBounds.getMaxX() - 120, labelBounds.getMaxY() + 15);
+            if (!marketSelectionPopup.isShowing()) {
+                Bounds rootBounds = root.localToScreen(root.getBoundsInLocal());
+                Bounds labelBounds = quoteCurrencyLabel.localToScreen(quoteCurrencyLabel.getBoundsInLocal());
+                marketSelectionPopup.show(quoteCurrencyLabel, rootBounds.getMaxX() - 115, labelBounds.getMaxY() + 15);
+            } else {
+                marketSelectionPopup.hide();
+            }
         });
 
         searchBox.textProperty().bindBidirectional(model.getSearchText());
@@ -261,19 +265,19 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeWizardDirectionAndMarketView.ListItem>()
                 .left()
-                .minWidth(180)
+                .minWidth(200)
                 .comparator(Comparator.comparing(TradeWizardDirectionAndMarketView.ListItem::getQuoteCurrencyDisplayName))
                 .setCellFactory(getNameCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeWizardDirectionAndMarketView.ListItem>()
                 .title(Res.get("bisqEasy.tradeWizard.market.columns.numOffers"))
-                .minWidth(60)
+                .minWidth(80)
                 .valueSupplier(TradeWizardDirectionAndMarketView.ListItem::getNumOffers)
                 .comparator(Comparator.comparing(TradeWizardDirectionAndMarketView.ListItem::getNumOffersAsInteger))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<TradeWizardDirectionAndMarketView.ListItem>()
                 .title(Res.get("bisqEasy.tradeWizard.market.columns.numPeers"))
-                .minWidth(60)
+                .minWidth(80)
                 .valueSupplier(TradeWizardDirectionAndMarketView.ListItem::getNumUsers)
                 .comparator(Comparator.comparing(TradeWizardDirectionAndMarketView.ListItem::getNumUsersAsInteger))
                 .build());
@@ -288,7 +292,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
             {
                 label.setPadding(new Insets(0, 0, 0, 10));
                 label.setGraphicTextGap(8);
-                label.getStyleClass().add("bisq-text-8");
             }
 
             @Override
