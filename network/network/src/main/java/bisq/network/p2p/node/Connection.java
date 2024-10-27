@@ -318,7 +318,7 @@ public abstract class Connection {
     }
 
     boolean isStopped() {
-        return shutdownStarted || networkEnvelopeSocket.isClosed() || Thread.currentThread().isInterrupted();
+        return shutdownStarted;
     }
 
 
