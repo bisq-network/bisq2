@@ -167,7 +167,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         if (previousNetworkLoad.isEmpty()) {
             log.debug("No previous network load available");
             if (missing <= DIFFICULTY_TOLERANCE) {
-                log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
+                log.debug("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
                                 "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}",
                         deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty);
                 return false;
@@ -193,7 +193,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         }
 
         if (missing <= DIFFICULTY_TOLERANCE) {
-            log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
+            log.debug("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
                             "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}",
                     deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty);
             return false;
