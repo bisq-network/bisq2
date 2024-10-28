@@ -71,7 +71,7 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
     @Override
     public CompletableFuture<Boolean> initialize() {
         try {
-            String[] command = new String[]{"notify-send --help > nil"};
+            String[] command = {"/bin/sh", "-c", "notify-send --help > /dev/null"};
             checkArgument(Runtime.getRuntime().exec(command).waitFor() == 0, "notify-send is not supported");
 
             isSupported = true;
