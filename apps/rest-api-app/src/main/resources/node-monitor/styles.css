@@ -1,0 +1,187 @@
+/* Basic styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-top: 20px;
+}
+
+.node-block {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.node-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.status-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.status-loading {
+    background-color: yellow;
+}
+
+.status-ok {
+    background-color: green;
+}
+
+.status-error {
+    background-color: red;
+}
+
+.table-container {
+    margin-top: 10px;
+}
+
+/* Table styling */
+.sub-structure-title {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+
+th, td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    font-size: 0.85em;
+    background-color: #f2f2f2;
+    text-transform: capitalize;
+    cursor: help;
+    max-width: 120px;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}
+
+/* Styling for the global "Expand All" button */
+.toggle-all-button {
+    padding: 8px 12px;
+    margin: 10px auto;
+    display: block;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.toggle-all-button:hover {
+    background-color: #218838;
+}
+
+.toggle-button {
+    padding: 5px 10px;
+    margin-top: 5px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+}
+
+.toggle-button:hover {
+    background-color: #0056b3;
+}
+
+.toggle-button:focus,
+.toggle-all-button:focus {
+    outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    h2 {
+        font-size: 1.5em;
+    }
+    .node-block {
+        padding: 10px;
+        margin: 8px 10px;
+    }
+    th, td {
+        font-size: 0.75em;
+        padding: 6px;
+    }
+    th {
+        max-width: 80px;
+    }
+    .sub-structure-title {
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    h2 {
+        font-size: 1.2em;
+    }
+    .node-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    th, td {
+        font-size: 0.7em;
+        padding: 5px;
+    }
+    th {
+        max-width: 60px;
+    }
+    .status-circle {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+.hamburger-menu {
+    font-size: 24px;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    user-select: none;
+}
+
+#settingsPanel {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+#settingsPanel textarea {
+    width: 125%;
+}

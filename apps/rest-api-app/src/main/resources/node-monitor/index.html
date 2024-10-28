@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bisq Node Monitor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h2>Bisq Node Monitor</h2>
+
+<div class="hamburger-menu" id="hamburgerButton">
+    &#9776;
+</div>
+
+<div id="settingsPanel" style="display: none;">
+    <h3>Settings</h3>
+    <div>
+        <label>Host List (comma or newline separated):</label>
+        <textarea id="hostListInput" placeholder="Host:port list, separated by commas or new lines" rows="3" style="width: 100%;"></textarea>
+    </div>
+    <div>
+        <label>Port List (comma or newline separated, optional):</label>
+        <textarea id="portListInput" placeholder="Port list for filtering, separated by commas or new lines" rows="2" style="width: 100%;"></textarea>
+    </div>
+    <button id="saveConfigButton" class="toggle-button" style="margin-top: 10px;">Save Configuration</button>
+</div>
+
+<button id="toggleAllButton" class="toggle-all-button">Expand All Details</button>
+
+<div id="statusMessage" style="display: none; text-align: center; margin-top: 20px; color: grey;">
+    <!-- Dynamically generated message data will appear here -->
+</div>
+
+<div id="reportContainer">
+    <!-- Dynamically generated node data will appear here -->
+</div>
+
+<script src="helpers.js"></script>
+<script src="toggleFunctions.js"></script>
+<script src="ui.js"></script>
+<script src="app.js"></script>
+<script src="eventHandlers.js"></script>
+</body>
+</html>
+
