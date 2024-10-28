@@ -197,10 +197,6 @@ public class TradeWizardDirectionAndMarketController implements Controller {
                 .ifPresent(bisqEasyOfferbookSelectionService::selectChannel);
     }
 
-    void updateNavigationButtonsVisibility(boolean shouldShow) {
-        navigationButtonsVisibleHandler.accept(shouldShow);
-    }
-
     private void setDirection(Direction direction) {
         model.getDirection().set(direction);
     }

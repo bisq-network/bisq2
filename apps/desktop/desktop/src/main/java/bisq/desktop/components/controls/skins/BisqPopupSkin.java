@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package bisq.desktop.components.controls.skins;
 
 import bisq.desktop.components.controls.BisqPopup;
@@ -22,8 +23,8 @@ import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import lombok.Getter;
 
+@Getter
 public class BisqPopupSkin implements Skin<BisqPopup> {
-    @Getter
     private final BisqPopup skinnable;
 
     public BisqPopupSkin(final BisqPopup popup) {
