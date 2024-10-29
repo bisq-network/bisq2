@@ -54,6 +54,40 @@ tasks.register("cleanAll") {
     }
 }
 
+tasks.register("publishAll") {
+    group = "publish"
+    description = "Publish all the jars in the following modules to local maven repository"
+
+    doLast {
+        listOf(
+            ":account:publishToMavenLocal",
+            ":application:publishToMavenLocal",
+            ":bisq-easy:publishToMavenLocal",
+            ":bonded-roles:publishToMavenLocal",
+            ":chat:publishToMavenLocal",
+            ":common:publishToMavenLocal",
+            ":contract:publishToMavenLocal",
+            ":i18n:publishToMavenLocal",
+            ":identity:publishToMavenLocal",
+            ":network:publishToMavenLocal",
+            ":network:tor:publishToMavenLocal",
+            ":offer:publishToMavenLocal",
+            ":persistence:publishToMavenLocal",
+            ":presentation:publishToMavenLocal",
+            ":security:publishToMavenLocal",
+            ":settings:publishToMavenLocal",
+            ":support:publishToMavenLocal",
+            ":trade:publishToMavenLocal",
+            ":user:publishToMavenLocal",
+        ).forEach {
+            exec {
+                println("Executing Publish To Maven Local: $it")
+                commandLine("./gradlew", it)
+            }
+        }
+    }
+}
+
 group = "bisq"
 
 extensions.findByName("buildScan")?.withGroovyBuilder {

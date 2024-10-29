@@ -1,5 +1,6 @@
 plugins {
     java
+    id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
 tasks.named("clean") {
