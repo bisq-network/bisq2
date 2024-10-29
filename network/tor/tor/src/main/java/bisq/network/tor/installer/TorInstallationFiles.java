@@ -15,29 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.transport;
+package bisq.network.tor.installer;
 
-import bisq.common.network.Address;
-import bisq.network.tor.onionservice.CreateOnionServiceResponse;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
-import java.net.ServerSocket;
+import java.io.File;
+import java.nio.file.Path;
 
 @Getter
-@ToString
-@EqualsAndHashCode
-public final class ServerSocketResult {
-    private final ServerSocket serverSocket;
-    private final Address address;
+public class TorInstallationFiles {
+    private final File torDir;
+    private final File torBinary;
+    private final File torrcFile;
+    private final File versionFile;
 
-    public ServerSocketResult(ServerSocket serverSocket, Address address) {
-        this.serverSocket = serverSocket;
-        this.address = address;
-    }
-
-    public ServerSocketResult(CreateOnionServiceResponse response) {
-        this(response.getServerSocket(), Address.fromFullAddress(response.getOnionAddress().toString()));
+    public TorInstallationFiles(Path torDirPath) {
+        torDir = torDirPath.toFile();
+        torBinary = new File(torDir, "tor");
+        torrcFile = new File(torDir, "torrc");
+        versionFile = new File(torDir, "version");
     }
 }

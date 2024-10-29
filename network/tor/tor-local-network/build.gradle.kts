@@ -5,7 +5,7 @@ plugins {
 }
 
 application {
-    mainClass.set("bisq.tor.local_network.Main")
+    mainClass.set("bisq.network.tor.local_network.Main")
 }
 
 dependencies {

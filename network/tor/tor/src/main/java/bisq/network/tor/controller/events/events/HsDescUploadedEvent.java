@@ -15,29 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.transport;
+package bisq.network.tor.controller.events.events;
 
-import bisq.common.network.Address;
-import bisq.network.tor.onionservice.CreateOnionServiceResponse;
-import lombok.EqualsAndHashCode;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.net.ServerSocket;
-
+@Builder
 @Getter
 @ToString
-@EqualsAndHashCode
-public final class ServerSocketResult {
-    private final ServerSocket serverSocket;
-    private final Address address;
+public class HsDescUploadedEvent {
+    private final String hsAddress;
+    private final String authType;
+    private final String hsDir;
 
-    public ServerSocketResult(ServerSocket serverSocket, Address address) {
-        this.serverSocket = serverSocket;
-        this.address = address;
+    public static boolean isHsDescMessage(String action) {
+        return action.equals("UPLOADED");
     }
 
-    public ServerSocketResult(CreateOnionServiceResponse response) {
-        this(response.getServerSocket(), Address.fromFullAddress(response.getOnionAddress().toString()));
+    public static HsDescUploadedEvent fromHsDescMessage(String message) {
+        String[] items = message.split(" ");
+        if (items.length < 4) {
+            throw new IllegalStateException("Unknown HS_DESC message: " + message);
+        }
+
+        return HsDescUploadedEvent.builder()
+                .hsAddress(items[1])
+                .authType(items[2])
+                .hsDir(items[3])
+                .build();
     }
 }

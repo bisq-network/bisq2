@@ -28,7 +28,7 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.services.peer_group.BanList;
-import bisq.tor.TorAddressOwnershipProofGenerator;
+import bisq.network.tor.TorAddressOwnershipProofGenerator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
