@@ -2,8 +2,8 @@ package bisq.network.p2p.node.transport;
 
 import bisq.common.timer.Scheduler;
 import bisq.common.util.NetworkUtils;
-import bisq.i2p.I2pClient;
-import bisq.i2p.I2pEmbeddedRouter;
+import bisq.network.i2p.I2pClient;
+import bisq.network.i2p.I2pEmbeddedRouter;
 import bisq.network.NetworkService;
 import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;

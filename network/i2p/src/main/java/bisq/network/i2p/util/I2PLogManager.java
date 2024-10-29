@@ -1,4 +1,4 @@
-package bisq.i2p.util;
+package bisq.network.i2p.util;
 
 import net.i2p.I2PAppContext;
 import net.i2p.util.Log;

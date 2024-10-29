@@ -1,4 +1,4 @@
-package bisq.i2p.streaming;
+package bisq.network.i2p.streaming;
 
 
 import lombok.extern.slf4j.Slf4j;

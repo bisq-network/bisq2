@@ -1,8 +1,8 @@
-package bisq.i2p;
+package bisq.network.i2p;
 
 import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
-import bisq.i2p.util.I2PLogManager;
+import bisq.network.i2p.util.I2PLogManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.streaming.I2PSocketManager;
