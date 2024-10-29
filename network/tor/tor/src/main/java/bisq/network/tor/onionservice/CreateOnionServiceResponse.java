@@ -15,29 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.transport;
+package bisq.network.tor.onionservice;
 
-import bisq.common.network.Address;
-import bisq.network.tor.onionservice.CreateOnionServiceResponse;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.net.ServerSocket;
 
 @Getter
-@ToString
-@EqualsAndHashCode
-public final class ServerSocketResult {
+public class CreateOnionServiceResponse {
     private final ServerSocket serverSocket;
-    private final Address address;
+    private final OnionAddress onionAddress;
 
-    public ServerSocketResult(ServerSocket serverSocket, Address address) {
+    public CreateOnionServiceResponse(ServerSocket serverSocket, OnionAddress onionAddress) {
         this.serverSocket = serverSocket;
-        this.address = address;
-    }
-
-    public ServerSocketResult(CreateOnionServiceResponse response) {
-        this(response.getServerSocket(), Address.fromFullAddress(response.getOnionAddress().toString()));
+        this.onionAddress = onionAddress;
     }
 }
