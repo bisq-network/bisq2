@@ -13,9 +13,6 @@ dependencies {
         api("com.google.errorprone:error_prone_annotations") {
             version { require("2.5.1") }
         }
-        api("com.google.j2objc:j2objc-annotations") {
-            version { require("1.3") }
-        }
         api("com.google.guava:failureaccess") {
             version { require("1.0.1") }
         }
