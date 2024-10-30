@@ -55,7 +55,7 @@ tasks.register("cleanAll") {
 }
 
 tasks.register("publishAll") {
-    group = "publish"
+    group = "publishing"
     description = "Publish all the jars in the following modules to local maven repository"
 
     doLast {
