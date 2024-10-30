@@ -2,8 +2,7 @@
 
 All important roles and network nodes require a BSQ bond to secure the roles.
 For Seed nodes and oracle nodes we require at least 1 node which is available by default as otherwise it would be a
-chicken
-and egg problem.
+chicken-and-egg problem.
 The oracle node manages the registration and verification of the other nodes.
 
 ## Developer setup (localhost, regtest)
