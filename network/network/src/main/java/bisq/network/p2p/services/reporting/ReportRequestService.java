@@ -99,7 +99,13 @@ public class ReportRequestService implements Node.Listener {
         return handler.request()
                 .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
                 .whenComplete((report, throwable) -> {
-                    log.error("storageReporting {}", report);
+                    if (throwable != null) {
+                        log.error("storageReporting failed for address {} with exception: {}",
+                                address, throwable.getMessage());
+                    } else {
+                        log.info("storageReporting successful for address {} with report: {}",
+                                address, report);
+                    }
                     requestHandlerMap.remove(key);
                 });
     }
