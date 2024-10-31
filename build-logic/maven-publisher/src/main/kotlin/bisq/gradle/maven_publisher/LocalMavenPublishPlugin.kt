@@ -18,7 +18,7 @@ import java.util.*
 class LocalMavenPublishPlugin : Plugin<Project> {
     companion object {
         const val GROUP_SEPARATOR = "."
-        val COMPOSITE_PROJECTS_TO_INCLUDE = listOf("tor")
+        val COMPOSITE_PROJECTS_TO_INCLUDE = listOf("tor", "socks5-socket-channel")
     }
 
     private var rootVersion = "unspecified"
@@ -38,7 +38,8 @@ class LocalMavenPublishPlugin : Plugin<Project> {
                 applyPublishPlugin(project, group)
             } else {
                 project.subprojects {
-                    applyTaskRecursively(this, "${group}${GROUP_SEPARATOR}${project.name}")
+//                    applyTaskRecursively(this, "${group}${GROUP_SEPARATOR}${project.name}")
+                    applyTaskRecursively(this, group)
                 }
 
                 val existingTask = project.tasks.findByName("publishToMavenLocal")
@@ -60,6 +61,14 @@ class LocalMavenPublishPlugin : Plugin<Project> {
         project.afterEvaluate {
             val javaComponent = project.components.findByName("java")
             if (javaComponent != null) {
+                // Apply a default version to dependencies without a specified version
+//                project.configurations.all {
+//                    resolutionStrategy.eachDependency {
+//                        if (isVersionUnspecified(requested.version)) {
+//                            useVersion(project.version.toString()) // Apply the project's version as a default
+//                        }
+//                    }
+//                }
                 val protoSourcesJar = project.tasks.register("protoSourcesJar", Jar::class.java) {
                     archiveClassifier.set("proto-sources")
                     from(project.fileTree("${project.layout.buildDirectory}/generated/source/proto/main"))  // Adjust path if needed
@@ -72,8 +81,45 @@ class LocalMavenPublishPlugin : Plugin<Project> {
                             groupId = group
                             version = rootVersion
 
+//                            versionMapping {
+//                                usage("java-api") {
+//                                    fromResolutionOf("runtimeClasspath")
+//                                }
+//                                usage("java-runtime") {
+//                                    fromResolutionResult()
+//                                }
+//                            }
+
                             // Include the Protobuf sources JAR
                             artifact(protoSourcesJar)
+
+                            // hack to make sure the pom generated is compliant (without this it generates dependencies without the version)
+                            pom.withXml {
+                                val rootNode = asNode()
+
+//                                val addPlatformDependencies = handlePlatformDependency(rootNode)
+
+                                // Get all nodes with a name ending in "dependencies"
+                                val dependenciesNodes = rootNode.children().filter {
+                                    (it as? groovy.util.Node)?.name().toString().endsWith("dependencies")
+                                }.map { it as groovy.util.Node }
+
+                                // fixes corrupted pom not resolving dependencies when not explicitly specified in gradle configuration
+                                val dependenciesNode = dependenciesNodes.firstOrNull() ?: rootNode.appendNode("dependencies")
+                                dependenciesNode.children().forEach { dependencyNode ->
+                                    if (dependencyNode is groovy.util.Node) {
+                                        val versionNodes = dependencyNode.children().filter {
+                                            (it as? groovy.util.Node)?.name().toString().endsWith("version")
+                                        }.map { it as groovy.util.Node }
+                                        if (versionNodes.isEmpty()) {
+//                                            dependencyNode.appendNode("${rootNode.name().toString().removeSuffix("project")}version", "[${project.version}]")
+                                            dependencyNode.appendNode("version", rootVersion)
+                                        } else if (versionNodes[0].value().toString() == "unspecified") {
+                                            throw Error("${versionNodes[0].toString()} fucked")
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     repositories {
@@ -109,7 +155,7 @@ class LocalMavenPublishPlugin : Plugin<Project> {
 
     private fun getRootGroup(project: Project): String {
         if (COMPOSITE_PROJECTS_TO_INCLUDE.contains(project.name)) {
-            return "bisq.network"
+            return project.name
         }
         return "bisq"
     }
