@@ -15,7 +15,7 @@ dependencies {
     implementation(project(":offer"))
     implementation(project(":trade"))
 
-    implementation("network:network")
+    implementation("network:network:$version")
 
     implementation(libs.typesafe.config)
 }

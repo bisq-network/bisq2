@@ -11,8 +11,8 @@ dependencies {
     implementation(project(":identity"))
     implementation(project(":settings"))
 
-    implementation("network:network-identity")
-    implementation("network:network")
+    implementation("network:network-identity:$version")
+    implementation("network:network:$version")
 
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)

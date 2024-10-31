@@ -39,5 +39,3 @@ dependencies {
         }
     }
 }
-
-//version = rootProject.version

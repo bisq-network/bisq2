@@ -4,6 +4,8 @@ plugins {
     id("bisq.java-integration-tests")
 }
 
+version = rootProject.version
+
 dependencies {
     implementation("bisq:common")
     implementation("bisq:security")
@@ -11,7 +13,7 @@ dependencies {
 
     implementation(project(":network-identity"))
     implementation(project(":i2p"))
-    implementation("tor:tor")
+    implementation("tor:tor:$version")
 
     implementation(libs.bouncycastle)
     implementation(libs.failsafe)

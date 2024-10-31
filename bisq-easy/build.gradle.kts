@@ -19,10 +19,10 @@ dependencies {
     implementation(project(":support"))
     implementation(project(":presentation"))
 
-    implementation("network:network")
-    implementation("network:network-identity")
-    implementation("bitcoind:core")
-    implementation("wallets:wallet")
+    implementation("network:network:$version")
+    implementation("network:network-identity:$version")
+    implementation("bitcoind:core:$version")
+    implementation("wallets:wallet:$version")
     // implementation("wallets:electrum")
     // implementation("wallets:bitcoind")
 

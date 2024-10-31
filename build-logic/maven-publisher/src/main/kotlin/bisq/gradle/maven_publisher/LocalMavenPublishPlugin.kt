@@ -1,5 +1,6 @@
 package bisq.gradle.maven_publisher
 
+import groovy.util.Node
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
@@ -17,15 +18,18 @@ import java.util.*
  */
 class LocalMavenPublishPlugin : Plugin<Project> {
     companion object {
-        const val GROUP_SEPARATOR = "."
-        val COMPOSITE_PROJECTS_TO_INCLUDE = listOf("tor", "socks5-socket-channel")
+        const val DEFAULT_GROUP = "bisq"
+        val COMPOSITE_PROJECTS_TO_INCLUDE = listOf("tor", "network", "wallets", "bitcoind")
     }
 
     private var rootVersion = "unspecified"
 
     override fun apply(project: Project) {
-        this.loadRootVersion(project)
-        applyTaskRecursively(project, getRootGroup(project))
+        if (rootVersion == "unspecified") {
+            this.loadRootVersion(project)
+        }
+        val group = getRootGroup(project);
+        applyTaskRecursively(project, group)
     }
 
     private fun applyTaskRecursively(project: Project, group: String) {
@@ -38,7 +42,6 @@ class LocalMavenPublishPlugin : Plugin<Project> {
                 applyPublishPlugin(project, group)
             } else {
                 project.subprojects {
-//                    applyTaskRecursively(this, "${group}${GROUP_SEPARATOR}${project.name}")
                     applyTaskRecursively(this, group)
                 }
 
@@ -61,64 +64,33 @@ class LocalMavenPublishPlugin : Plugin<Project> {
         project.afterEvaluate {
             val javaComponent = project.components.findByName("java")
             if (javaComponent != null) {
-                // Apply a default version to dependencies without a specified version
-//                project.configurations.all {
-//                    resolutionStrategy.eachDependency {
-//                        if (isVersionUnspecified(requested.version)) {
-//                            useVersion(project.version.toString()) // Apply the project's version as a default
-//                        }
-//                    }
-//                }
-                val protoSourcesJar = project.tasks.register("protoSourcesJar", Jar::class.java) {
+                val protoSourcesJar = project.tasks.findByName("protoSourcesJar") ?: project.tasks.register("protoSourcesJar", Jar::class.java) {
                     archiveClassifier.set("proto-sources")
                     from(project.fileTree("${project.layout.buildDirectory}/generated/source/proto/main"))  // Adjust path if needed
                 }
+
+                if (rootVersion == "unspecified") {
+                    throw IllegalStateException("Root project version not set. Please set the rootVersion property.")
+                }
                 project.extensions.configure<PublishingExtension>("publishing") {
                     publications {
-                        create("mavenJava", MavenPublication::class) {
+//                        val publicationName = if (group == DEFAULT_GROUP) "mavenJava" else "mavenJava_${group}"
+                        val publicationName = "mavenJava"
+                        create(publicationName, MavenPublication::class) {
                             from(project.components["java"])  // Adjust if publishing other types (like Kotlin)
                             artifactId = project.name
                             groupId = group
                             version = rootVersion
 
-//                            versionMapping {
-//                                usage("java-api") {
-//                                    fromResolutionOf("runtimeClasspath")
-//                                }
-//                                usage("java-runtime") {
-//                                    fromResolutionResult()
-//                                }
-//                            }
+                            setupPublication(project, group, protoSourcesJar)
+                        }
+                        if (group != DEFAULT_GROUP) {
+                            create("mavenJava_bisqAlias", MavenPublication::class) {
+                                groupId = "bisq"
+                                artifactId = project.name
+                                version = rootVersion
 
-                            // Include the Protobuf sources JAR
-                            artifact(protoSourcesJar)
-
-                            // hack to make sure the pom generated is compliant (without this it generates dependencies without the version)
-                            pom.withXml {
-                                val rootNode = asNode()
-
-//                                val addPlatformDependencies = handlePlatformDependency(rootNode)
-
-                                // Get all nodes with a name ending in "dependencies"
-                                val dependenciesNodes = rootNode.children().filter {
-                                    (it as? groovy.util.Node)?.name().toString().endsWith("dependencies")
-                                }.map { it as groovy.util.Node }
-
-                                // fixes corrupted pom not resolving dependencies when not explicitly specified in gradle configuration
-                                val dependenciesNode = dependenciesNodes.firstOrNull() ?: rootNode.appendNode("dependencies")
-                                dependenciesNode.children().forEach { dependencyNode ->
-                                    if (dependencyNode is groovy.util.Node) {
-                                        val versionNodes = dependencyNode.children().filter {
-                                            (it as? groovy.util.Node)?.name().toString().endsWith("version")
-                                        }.map { it as groovy.util.Node }
-                                        if (versionNodes.isEmpty()) {
-//                                            dependencyNode.appendNode("${rootNode.name().toString().removeSuffix("project")}version", "[${project.version}]")
-                                            dependencyNode.appendNode("version", rootVersion)
-                                        } else if (versionNodes[0].value().toString() == "unspecified") {
-                                            throw Error("${versionNodes[0].toString()} fucked")
-                                        }
-                                    }
-                                }
+                                setupPublication(project, group, protoSourcesJar, true)
                             }
                         }
                     }
@@ -135,9 +107,45 @@ class LocalMavenPublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun loadRootVersion(project: Project) {
-        // Load properties from root gradle.properties file
-        val rootPropertiesFile = File(getRootGradlePropertiesFile(project), "gradle.properties")
+    private fun MavenPublication.setupPublication(project: Project, group: String, protoSourcesJar: Any, isAlias: Boolean = false) {
+        // Include the Protobuf sources JAR
+        artifact(protoSourcesJar)
+        // Reference the primary artifact and files
+        if (isAlias) {
+            artifact(project.tasks.named("jar"))
+        }
+
+        // hack to make sure the pom generated is compliant (without this it generates dependencies without the version)
+        pom.withXml {
+            val rootNode = asNode()
+            if (isAlias) {
+                rootNode.appendNode("description", "Alias of $group:${project.name}")
+            }
+
+            // Get all nodes with a name ending in "dependencies"
+            val dependenciesNodes = rootNode.children().filter {
+                (it as? Node)?.name().toString().endsWith("dependencies")
+            }.map { it as Node }
+
+            // fixes corrupted pom not resolving dependencies when not explicitly specified in gradle configuration
+            val dependenciesNode = dependenciesNodes.firstOrNull() ?: rootNode.appendNode("dependencies")
+            dependenciesNode.children().forEach { dependencyNode ->
+                if (dependencyNode is Node) {
+                    val versionNodes = dependencyNode.children().filter {
+                        (it as? Node)?.name().toString().endsWith("version")
+                    }.map { it as Node }
+                    if (versionNodes.isEmpty()) {
+                        dependencyNode.appendNode("version", rootVersion)
+                    }
+//                    else if (versionNodes[0].value() == null || versionNodes[0].value().toString() == "unspecified") {
+//                        throw Error("${versionNodes[0]}")
+//                    }
+                }
+            }
+        }
+    }
+
+    private fun loadRootVersion(project: Project) {        val rootPropertiesFile = File(getRootGradlePropertiesFile(project), "gradle.properties")
         val rootProperties = Properties()
         if (rootPropertiesFile.exists()) {
             rootProperties.load(rootPropertiesFile.inputStream())
@@ -147,8 +155,11 @@ class LocalMavenPublishPlugin : Plugin<Project> {
     }
 
     private fun getRootGradlePropertiesFile(project: Project): File {
-        if (COMPOSITE_PROJECTS_TO_INCLUDE.contains(project.name)) {
-            return project.projectDir.parentFile.parentFile
+        if (COMPOSITE_PROJECTS_TO_INCLUDE.contains(project.name) && project.childProjects.isNotEmpty()) {
+            return when (project.name) {
+                "tor", "bitcoind" -> project.projectDir.parentFile.parentFile
+                else -> project.projectDir.parentFile
+            }
         }
         return project.projectDir.parentFile
     }
@@ -157,6 +168,6 @@ class LocalMavenPublishPlugin : Plugin<Project> {
         if (COMPOSITE_PROJECTS_TO_INCLUDE.contains(project.name)) {
             return project.name
         }
-        return "bisq"
+        return DEFAULT_GROUP
     }
 }

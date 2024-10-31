@@ -10,5 +10,5 @@ dependencies {
     implementation(project(":security"))
     implementation(project(":identity"))
 
-    implementation("network:network")
+    implementation("network:network:$version")
 }
