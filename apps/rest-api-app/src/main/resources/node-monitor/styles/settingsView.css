@@ -1,0 +1,51 @@
+/* styles/settingsView.css */
+/* Settings panel container */
+#settingsPanel {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 650px;
+    margin: 20px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#settingsPanel h3 {
+    margin-top: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+
+#settingsPanel label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+}
+
+/* Text area styling for settings panel */
+#settingsPanel textarea {
+    padding: 8px;
+    font-size: 1.1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 100%;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+/* Specific styling for hamburger menu */
+.hamburger-menu {
+    font-size: 24px;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    user-select: none;
+    color: #333;
+}
+
+.hamburger-menu:hover {
+    color: #555;
+}

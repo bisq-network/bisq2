@@ -1,0 +1,19 @@
+/* styles/page-layout.css */
+.button-container {
+    display: flex;
+    align-items: center;
+    margin: 10px 20px;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    h2 {
+        font-size: 1.5em;
+    }
+}
+
+@media (max-width: 480px) {
+    h2 {
+        font-size: 1.2em;
+    }
+}

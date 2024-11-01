@@ -1,0 +1,66 @@
+/* styles/reportView.css */
+/* Node block container styling */
+.node-block {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Adds slight shadow for depth */
+}
+
+/* Header styling for each node */
+.node-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap; /* Allows wrapping on smaller screens */
+}
+
+/* Table styling for report details */
+.table-container {
+    margin-top: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+
+th, td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+/* Header styling for table columns */
+th {
+    font-size: 0.85em;
+    background-color: #f2f2f2;
+    text-transform: capitalize;
+    cursor: help;
+    max-width: 120px;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .node-block {
+        padding: 10px;
+        margin: 8px 10px;
+    }
+
+    th, td {
+        font-size: 0.75em;
+        padding: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .node-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

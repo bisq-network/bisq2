@@ -17,11 +17,9 @@
 
 package bisq.rest_api.endpoints;
 
-import bisq.common.util.CollectionUtil;
-import bisq.common.util.CompletableFutureUtils;
-import bisq.network.NetworkService;
 import bisq.common.network.Address;
-import bisq.network.p2p.services.reporting.Report;
+import bisq.common.util.CollectionUtil;
+import bisq.network.NetworkService;
 import bisq.rest_api.JaxRsApplication;
 import bisq.rest_api.RestApiApplicationService;
 import bisq.rest_api.dto.ReportDto;
@@ -49,10 +47,29 @@ import java.util.concurrent.CompletableFuture;
 @Tag(name = "Report API")
 public class ReportApi {
     private final NetworkService networkService;
+    private final RestApiApplicationService applicationService;
 
     public ReportApi(@Context Application application) {
-        RestApiApplicationService applicationService = ((JaxRsApplication) application).getApplicationService().get();
+        applicationService = ((JaxRsApplication) application).getApplicationService().get();
         networkService = applicationService.getNetworkService();
+    }
+
+    @Operation(description = "Get a address list of seed and oracle nodes")
+    @ApiResponse(responseCode = "200", description = "the list of seed and oracle node addresses",
+            content = {
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = ReportDto.class)
+                    )}
+    )
+    @GET
+    @Path("get-address-list")
+    public List<String> getAddressList() {
+        try {
+            return applicationService.getAddressList();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get the node address list");
+        }
     }
 
     @Operation(description = "Get report for given address")
@@ -66,13 +83,10 @@ public class ReportApi {
     @GET
     @Path("get-report/{address}")
     public ReportDto getReport(@Parameter(description = "address from which we request the report") @PathParam("address") String address) {
-        CompletableFuture<Report> future = networkService.requestReport(Address.fromFullAddress(address));
         try {
-            Report report = future.get();
-            log.info(report.toString());
-            return ReportDto.from(report);
+            return fetchReportForAddress(address).join();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to get report for address: " + address);
         }
     }
 
@@ -86,16 +100,47 @@ public class ReportApi {
     )
     @GET
     @Path("get-reports/{addresses}")
-    public List<ReportDto> getReports(@Parameter(description = "comma separated addresses from which we request the report") @PathParam("addresses") String addresses) {
-        List<CompletableFuture<Report>> futures = CollectionUtil.streamFromCsv(addresses)
-                .map(address -> networkService.requestReport(Address.fromFullAddress(address)))
-                .toList();
+    public List<ReportDto> getReports(
+            @Parameter(description = "comma separated addresses from which we request the report")
+            @PathParam("addresses") String addresses) {
+
+        List<String> addressList;
         try {
-            List<Report> reports = CompletableFutureUtils.allOf(futures).get();
-            log.info(reports.toString());
-            return reports.stream().map(ReportDto::from).toList();
+            addressList = CollectionUtil.streamFromCsv(addresses).toList();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to parse addresses from CSV input: " + addresses);
+        }
+
+
+        List<CompletableFuture<ReportDto>> futures = addressList.stream()
+                .map(this::fetchReportForAddress)
+                .toList();
+
+        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+
+        return allFutures.thenApply(v -> futures.stream()
+                        .map(CompletableFuture::join)
+                        .toList())
+                .join();
+    }
+
+    private CompletableFuture<ReportDto> fetchReportForAddress(String addressString) {
+        try {
+            Address address = Address.fromFullAddress(addressString);
+            return networkService.requestReport(address)
+                    .thenApply(report -> {
+                        log.info("Report successfully created for address: {}", address);
+                        return ReportDto.from(report);
+                    })
+                    .exceptionally(e -> {
+                        log.error("Failed to get report for address: {}. Nested: {}", address, e.getMessage());
+                        return ReportDto.fromError(e.getMessage());
+                    });
+        } catch (Exception e) {
+            log.error("Error creating report for address: {}. Nested: {}", addressString, e.getMessage());
+            return CompletableFuture.completedFuture(
+                    ReportDto.fromError(e.getMessage())
+            );
         }
     }
 }
