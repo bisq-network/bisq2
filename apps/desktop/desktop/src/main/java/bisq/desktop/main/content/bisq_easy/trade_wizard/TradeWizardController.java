@@ -27,7 +27,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket.TradeWizardDirectionAndMarketController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market.TradeWizardDirectionAndMarketController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods.TradeWizardPaymentMethodsController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.price.TradeWizardPriceController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.review.TradeWizardReviewController;
