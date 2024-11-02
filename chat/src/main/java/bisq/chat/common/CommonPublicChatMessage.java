@@ -128,7 +128,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
 
     @Override
     public double getCostFactor() {
-        return 0.3;
+        return 0.5;
     }
 
     @Override
