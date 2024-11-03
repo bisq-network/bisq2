@@ -41,7 +41,11 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.*;
+import bisq.offer.amount.spec.AmountSpecUtil;
+import bisq.offer.amount.spec.FixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
@@ -56,7 +60,6 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -90,7 +93,7 @@ public class TradeWizardAmountController implements Controller {
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyService bisqEasyService;
-    private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
+    private Subscription isRangeAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin;
 
     public TradeWizardAmountController(ServiceProvider serviceProvider, Region owner) {
@@ -201,10 +204,6 @@ public class TradeWizardAmountController implements Controller {
         return model.getQuoteSideAmountSpec();
     }
 
-    public ReadOnlyBooleanProperty getIsMinAmountEnabled() {
-        return model.getIsRangeAmountEnabled();
-    }
-
     @Override
     public void onActivate() {
         applyQuoteSideMinMaxRange();
@@ -263,7 +262,7 @@ public class TradeWizardAmountController implements Controller {
                     }
                 });
 
-        isMinAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isMinAmountEnabled -> {
+        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isMinAmountEnabled -> {
             model.getToggleButtonText().set(isMinAmountEnabled ?
                     Res.get("bisqEasy.tradeWizard.amount.removeMinAmountOption") :
                     Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
@@ -309,7 +308,7 @@ public class TradeWizardAmountController implements Controller {
 
     @Override
     public void onDeactivate() {
-        isMinAmountEnabledPin.unsubscribe();
+        isRangeAmountEnabledPin.unsubscribe();
         maxOrFixAmountCompBaseSideAmountPin.unsubscribe();
         maxAmountCompQuoteSideAmountPin.unsubscribe();
         minAmountCompBaseSideAmountPin.unsubscribe();
@@ -346,6 +345,20 @@ public class TradeWizardAmountController implements Controller {
         model.getIsRangeAmountEnabled().set(value);
         quoteSideAmountsChanged(!value);
         settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, value);
+    }
+
+    void useFixedAmount() {
+        updateIsRangeAmountEnabled(false);
+    }
+
+    void useRangeAmount() {
+        updateIsRangeAmountEnabled(true);
+    }
+
+    private void updateIsRangeAmountEnabled(boolean useRangeAmount) {
+        model.getIsRangeAmountEnabled().set(useRangeAmount);
+        quoteSideAmountsChanged(!useRangeAmount);
+        settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, useRangeAmount);
     }
 
     private void applyAmountSpec() {

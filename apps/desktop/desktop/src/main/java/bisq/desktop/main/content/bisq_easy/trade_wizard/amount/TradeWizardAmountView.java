@@ -42,13 +42,15 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountModel, TradeWizardAmountController> {
+    private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
+
     private final Label headlineLabel, amountLimitInfo, amountLimitInfoLeadLine, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, learnMoreHyperLink, linkToWiki;
     private final VBox minAmountRoot, content, amountLimitInfoOverlay;
     private final Button toggleButton, closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountLimitInfoHBox;
+    private final HBox amountLimitInfoHBox, amountModelsBox;
     private final HBox amountLimitInfoWithWarnIcon;
-    private Subscription isAmountLimitInfoVisiblePin, amountLimitInfoLeadLinePin;
+    private Subscription isAmountLimitInfoVisiblePin, amountLimitInfoLeadLinePin, isRangeAmountEnabledPin;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
@@ -104,7 +106,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         rangeAmountBox.getStyleClass().add("model-selection-item-box");
         rangeAmountBox.setAlignment(Pos.CENTER_LEFT);
 
-        HBox amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
+        amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
         amountModelsBox.getStyleClass().addAll("selection-models", "bisq-text-3");
 
         toggleButton = new Button(Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
@@ -148,6 +150,8 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         minAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
         toggleButton.visibleProperty().bind(model.getShowRangeAmounts());
         toggleButton.managedProperty().bind(model.getShowRangeAmounts());
+        amountModelsBox.visibleProperty().bind(model.getShowRangeAmounts());
+        amountModelsBox.managedProperty().bind(model.getShowRangeAmounts());
 
         amountLimitInfoLeadLinePin = EasyBind.subscribe(model.getAmountLimitInfoLeadLine(), value -> {
             boolean isEmpty = StringUtils.isEmpty(value);
@@ -173,11 +177,23 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
                     }
                 });
 
+        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
+            fixedAmount.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
+            rangeAmount.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
+            if (isRangeAmountEnabled) {
+                rangeAmount.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
+            } else {
+                fixedAmount.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
+            }
+        });
+
         amountLimitInfoAmount.setOnAction(e -> controller.onSetReputationBasedAmount());
         learnMoreHyperLink.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         closeOverlayButton.setOnAction(e -> controller.onCloseAmountLimitInfoOverlay());
         toggleButton.setOnAction(e -> controller.onToggleMinAmountVisibility());
+        fixedAmount.setOnAction(e -> controller.useFixedAmount());
+        rangeAmount.setOnAction(e -> controller.useRangeAmount());
     }
 
     @Override
@@ -196,15 +212,20 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         minAmountRoot.managedProperty().unbind();
         amountLimitInfoAmount.visibleProperty().unbind();
         amountLimitInfoAmount.managedProperty().unbind();
+        amountModelsBox.visibleProperty().unbind();
+        amountModelsBox.managedProperty().unbind();
 
         amountLimitInfoLeadLinePin.unsubscribe();
         isAmountLimitInfoVisiblePin.unsubscribe();
+        isRangeAmountEnabledPin.unsubscribe();
 
         amountLimitInfoAmount.setOnAction(null);
         learnMoreHyperLink.setOnAction(null);
         linkToWiki.setOnAction(null);
         closeOverlayButton.setOnAction(null);
         toggleButton.setOnAction(null);
+        fixedAmount.setOnAction(null);
+        rangeAmount.setOnAction(null);
     }
 
     private static VBox getAmountLimitInfoOverlay(Label amountLimitInfoOverlayInfo,
