@@ -40,7 +40,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
-    private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-price-model";
+    private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
 
     private final MaterialTextField percentageInput;
     private final VBox fieldsBox, learnWhyOverlay, content;
@@ -70,20 +70,20 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         // Pricing model selection
         percentagePrice = new Button(Res.get("bisqEasy.price.percentage.title"));
-        percentagePrice.getStyleClass().add("price-item");
+        percentagePrice.getStyleClass().add("model-selection-item");
         fixedPrice = new Button(Res.get("bisqEasy.price.tradePrice.title"));
-        fixedPrice.getStyleClass().add("price-item");
+        fixedPrice.getStyleClass().add("model-selection-item");
         Label separator = new Label("|");
 
         HBox percentagePriceBox = new HBox(percentagePrice);
-        percentagePriceBox.getStyleClass().add("price-item-box");
+        percentagePriceBox.getStyleClass().add("model-selection-item-box");
         percentagePriceBox.setAlignment(Pos.CENTER_RIGHT);
         HBox fixedPriceBox = new HBox(fixedPrice);
-        fixedPriceBox.getStyleClass().add("price-item-box");
+        fixedPriceBox.getStyleClass().add("model-selection-item-box");
         fixedPriceBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox pricingModels = new HBox(30, percentagePriceBox, separator, fixedPriceBox);
-        pricingModels.getStyleClass().addAll("pricing-models", "bisq-text-3");
+        pricingModels.getStyleClass().addAll("selection-models", "bisq-text-3");
 
         // Input box
         percentageInput = new MaterialTextField(Res.get("bisqEasy.price.percentage.inputBoxText"));

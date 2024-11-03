@@ -720,25 +720,29 @@
     -fx-alignment: center;
 }
 
-.bisq-easy-trade-wizard-price-step .pricing-models {
+.bisq-easy-trade-wizard-price-step .selection-models,
+.bisq-easy-trade-wizard-amount-step .selection-models {
     -fx-alignment: center;
     -fx-padding: 10 0 10 0;
 }
 
-.bisq-easy-trade-wizard-price-step .pricing-models .price-item-box {
+.bisq-easy-trade-wizard-price-step .selection-models .model-selection-item-box,
+.bisq-easy-trade-wizard-amount-step .selection-models .model-selection-item-box {
     -fx-max-width: 300;
     -fx-min-width: 300;
     -fx-pref-width: 300;
 }
 
-.bisq-easy-trade-wizard-price-step .pricing-models .price-item-box .price-item {
+.bisq-easy-trade-wizard-price-step .selection-models .model-selection-item-box .model-selection-item,
+.bisq-easy-trade-wizard-amount-step .selection-models .model-selection-item-box .model-selection-item {
     -fx-padding: 5;
     -fx-background-color: transparent;
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
 }
 
-.bisq-easy-trade-wizard-price-step .selected-price-model {
+.bisq-easy-trade-wizard-price-step .selected-model,
+.bisq-easy-trade-wizard-amount-step .selected-model {
     -fx-fill: -bisq2-green !important;
     -fx-text-fill: -bisq2-green !important;
 }

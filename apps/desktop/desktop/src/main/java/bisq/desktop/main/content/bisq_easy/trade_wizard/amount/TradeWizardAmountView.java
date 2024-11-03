@@ -45,7 +45,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
     private final Label headlineLabel, amountLimitInfo, amountLimitInfoLeadLine, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, learnMoreHyperLink, linkToWiki;
     private final VBox minAmountRoot, content, amountLimitInfoOverlay;
-    private final Button toggleButton, closeOverlayButton;
+    private final Button toggleButton, closeOverlayButton, fixedAmount, rangeAmount;
     private final HBox amountLimitInfoHBox;
     private final HBox amountLimitInfoWithWarnIcon;
     private Subscription isAmountLimitInfoVisiblePin, amountLimitInfoLeadLinePin;
@@ -90,13 +90,31 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoWithWarnIcon = new HBox(10, warningIcon, amountLimitInfoVBox);
         amountLimitInfoWithWarnIcon.setAlignment(Pos.CENTER);
 
+        // Amount model selection
+        fixedAmount = new Button(Res.get("bisqEasy.tradeWizard.amount.amountModel.fixedAmount"));
+        fixedAmount.getStyleClass().add("model-selection-item");
+        rangeAmount = new Button(Res.get("bisqEasy.tradeWizard.amount.amountModel.rangeAmount"));
+        rangeAmount.getStyleClass().add("model-selection-item");
+        Label separator = new Label("|");
+
+        HBox fixedAmountBox = new HBox(fixedAmount);
+        fixedAmountBox.getStyleClass().add("model-selection-item-box");
+        fixedAmountBox.setAlignment(Pos.CENTER_RIGHT);
+        HBox rangeAmountBox = new HBox(rangeAmount);
+        rangeAmountBox.getStyleClass().add("model-selection-item-box");
+        rangeAmountBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
+        amountModelsBox.getStyleClass().addAll("selection-models", "bisq-text-3");
+
         toggleButton = new Button(Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
         toggleButton.getStyleClass().add("outlined-button");
         toggleButton.setMinWidth(AmountComponent.View.AMOUNT_BOX_WIDTH);
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
         VBox.setMargin(amountLimitInfoWithWarnIcon, new Insets(15, 0, 15, 0));
-        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountBox, amountLimitInfoWithWarnIcon, toggleButton, Spacer.fillVBox());
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountModelsBox, amountBox, amountLimitInfoWithWarnIcon, toggleButton, Spacer.fillVBox());
+        content.getStyleClass().add("bisq-easy-trade-wizard-amount-step");
 
         amountLimitInfoOverlayInfo = new Label();
         linkToWikiText = new Label();
