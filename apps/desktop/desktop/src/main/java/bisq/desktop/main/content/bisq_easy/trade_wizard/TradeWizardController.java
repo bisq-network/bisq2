@@ -120,6 +120,7 @@ public class TradeWizardController extends NavigationController implements InitW
     public void initWithData(InitData initData) {
         boolean isCreateOfferMode = initData.isCreateOfferMode();
         model.setCreateOfferMode(isCreateOfferMode);
+        tradeWizardAmountAndPriceController.setIsCreateOfferMode(isCreateOfferMode);
         tradeWizardAmountController.setIsCreateOfferMode(isCreateOfferMode);
         model.getPriceProgressItemVisible().set(isCreateOfferMode);
     }
@@ -141,6 +142,8 @@ public class TradeWizardController extends NavigationController implements InitW
                 NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
         ));
 
+        // TODO: for take offer wizard we only want to add amount component
+
         if (model.getPriceProgressItemVisible().get()) {
             model.getChildTargets().add(3, NavigationTarget.TRADE_WIZARD_PRICE);
         } else {
@@ -149,6 +152,7 @@ public class TradeWizardController extends NavigationController implements InitW
 
         directionPin = EasyBind.subscribe(tradeWizardDirectionAndMarketController.getDirection(), direction -> {
             tradeWizardSelectOfferController.setDirection(direction);
+            tradeWizardAmountAndPriceController.setDirection(direction);
             tradeWizardAmountController.setDirection(direction);
             tradeWizardPaymentMethodsController.setDirection(direction);
             tradeWizardPriceController.setDirection(direction);
@@ -156,6 +160,7 @@ public class TradeWizardController extends NavigationController implements InitW
         marketPin = EasyBind.subscribe(tradeWizardDirectionAndMarketController.getMarket(), market -> {
             tradeWizardSelectOfferController.setMarket(market);
             tradeWizardPaymentMethodsController.setMarket(market);
+            tradeWizardAmountAndPriceController.setMarket(market);
             tradeWizardPriceController.setMarket(market);
             tradeWizardAmountController.setMarket(market);
             updateNextButtonDisabledState();
@@ -164,6 +169,7 @@ public class TradeWizardController extends NavigationController implements InitW
                 tradeWizardSelectOfferController::setQuoteSideAmountSpec);
         priceSpecPin = EasyBind.subscribe(tradeWizardPriceController.getPriceSpec(),
                 priceSpec -> {
+                    tradeWizardAmountAndPriceController.updateQuoteSideAmountSpecWithPriceSpec(priceSpec);
                     tradeWizardAmountController.updateQuoteSideAmountSpecWithPriceSpec(priceSpec);
                     tradeWizardSelectOfferController.setPriceSpec(priceSpec);
                 });
@@ -205,7 +211,7 @@ public class TradeWizardController extends NavigationController implements InitW
                         tradeWizardDirectionAndMarketController.getMarket().get(),
                         tradeWizardPaymentMethodsController.getBitcoinPaymentMethods(),
                         tradeWizardPaymentMethodsController.getFiatPaymentMethods(),
-                        tradeWizardAmountController.getQuoteSideAmountSpec().get(),
+                        tradeWizardAmountAndPriceController.getQuoteSideAmountSpec().get(),
                         tradeWizardPriceController.getPriceSpec().get()
                 );
                 model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.createOffer"));
@@ -303,7 +309,9 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private boolean validate(boolean calledFromNext) {
-        if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PRICE) {
+        if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_AMOUNT_AND_PRICE) {
+            return tradeWizardAmountAndPriceController.validate();
+        } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PRICE) {
             return tradeWizardPriceController.validate();
         } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_AMOUNT) {
             return tradeWizardAmountController.validate();

@@ -19,6 +19,8 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
 import bisq.desktop.common.view.View;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,11 +29,12 @@ public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAm
 
 
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,
-                                         TradeWizardAmountAndPriceController controller) {
+                                         TradeWizardAmountAndPriceController controller,
+                                         Pane amountSelection) {
         super(new StackPane(), model, controller);
 
-        Label label = new Label("Testing");
-        root.getChildren().add(label);
+        HBox hbox = new HBox(amountSelection);
+        root.getChildren().add(hbox);
     }
 
     @Override
