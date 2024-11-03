@@ -36,7 +36,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.ssl.SSLContexts;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -106,8 +105,7 @@ public class TorHttpClient extends BaseHttpClient {
         // connectSocket does NOT resolve hostname before passing it to proxy.
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new SocksConnectionSocketFactory())
-                .register("https", new SocksSSLConnectionSocketFactory(SSLContexts.createSystemDefault())).build();
-
+                .build();
         // Use FakeDNSResolver if not resolving DNS locally.
         // This prevents a local DNS lookup (which would be ignored anyway)
         PoolingHttpClientConnectionManager cm = socks5Proxy.resolveAddrLocally() ?
