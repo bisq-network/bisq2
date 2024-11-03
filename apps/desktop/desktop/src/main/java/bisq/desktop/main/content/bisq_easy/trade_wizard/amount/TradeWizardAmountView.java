@@ -144,8 +144,8 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         warningIcon.visibleProperty().bind(model.getIsWarningIconVisible());
         amountLimitInfoAmount.visibleProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
         amountLimitInfoAmount.managedProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
-        minAmountRoot.visibleProperty().bind(model.getIsMinAmountEnabled());
-        minAmountRoot.managedProperty().bind(model.getIsMinAmountEnabled());
+        minAmountRoot.visibleProperty().bind(model.getIsRangeAmountEnabled());
+        minAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
         toggleButton.visibleProperty().bind(model.getShowRangeAmounts());
         toggleButton.managedProperty().bind(model.getShowRangeAmounts());
 

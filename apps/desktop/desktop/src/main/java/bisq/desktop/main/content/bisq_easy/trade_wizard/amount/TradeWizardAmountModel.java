@@ -26,7 +26,12 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideAmountSpec;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -64,7 +69,7 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private long myReputationScore;
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
-    private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
+    private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
     private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
     private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();
     private final BooleanProperty isLearnMoreVisible = new SimpleBooleanProperty();
@@ -89,7 +94,7 @@ public class TradeWizardAmountModel implements Model {
         isCreateOfferMode = false;
         baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
-        isMinAmountEnabled.set(false);
+        isRangeAmountEnabled.set(false);
         isAmountLimitInfoOverlayVisible.set(false);
         isWarningIconVisible.set(false);
         isLearnMoreVisible.set(false);

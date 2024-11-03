@@ -117,7 +117,7 @@ public class TradeWizardAmountController implements Controller {
         model.setCreateOfferMode(isCreateOfferMode);
         model.getShowRangeAmounts().set(isCreateOfferMode);
         if (!isCreateOfferMode) {
-            model.getIsMinAmountEnabled().set(false);
+            model.getIsRangeAmountEnabled().set(false);
         }
     }
 
@@ -202,7 +202,7 @@ public class TradeWizardAmountController implements Controller {
     }
 
     public ReadOnlyBooleanProperty getIsMinAmountEnabled() {
-        return model.getIsMinAmountEnabled();
+        return model.getIsRangeAmountEnabled();
     }
 
     @Override
@@ -217,11 +217,11 @@ public class TradeWizardAmountController implements Controller {
                 Res.get("bisqEasy.tradeWizard.amount.headline.seller"));
 
         Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
-        model.getIsMinAmountEnabled().set(cookieValue && model.getShowRangeAmounts().get());
+        model.getIsRangeAmountEnabled().set(cookieValue && model.getShowRangeAmounts().get());
 
         minAmountCompBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
                 value -> {
-                    if (model.getIsMinAmountEnabled().get()) {
+                    if (model.getIsRangeAmountEnabled().get()) {
                         if (value != null && maxOrFixAmountComponent.getBaseSideAmount().get() != null &&
                                 value.getValue() > maxOrFixAmountComponent.getBaseSideAmount().get().getValue()) {
                             maxOrFixAmountComponent.setBaseSideAmount(value);
@@ -231,7 +231,7 @@ public class TradeWizardAmountController implements Controller {
         maxOrFixAmountCompBaseSideAmountPin = EasyBind.subscribe(maxOrFixAmountComponent.getBaseSideAmount(),
                 value -> {
                     if (value != null &&
-                            model.getIsMinAmountEnabled().get() &&
+                            model.getIsRangeAmountEnabled().get() &&
                             minAmountComponent.getBaseSideAmount().get() != null &&
                             value.getValue() < minAmountComponent.getBaseSideAmount().get().getValue()) {
                         minAmountComponent.setBaseSideAmount(value);
@@ -241,7 +241,7 @@ public class TradeWizardAmountController implements Controller {
         minAmountCompQuoteSideAmountPin = EasyBind.subscribe(minAmountComponent.getQuoteSideAmount(),
                 value -> {
                     if (value != null) {
-                        if (model.getIsMinAmountEnabled().get() &&
+                        if (model.getIsRangeAmountEnabled().get() &&
                                 maxOrFixAmountComponent.getQuoteSideAmount().get() != null &&
                                 value.getValue() > maxOrFixAmountComponent.getQuoteSideAmount().get().getValue()) {
                             maxOrFixAmountComponent.setQuoteSideAmount(value);
@@ -253,7 +253,7 @@ public class TradeWizardAmountController implements Controller {
         maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(maxOrFixAmountComponent.getQuoteSideAmount(),
                 value -> {
                     if (value != null) {
-                        if (model.getIsMinAmountEnabled().get() &&
+                        if (model.getIsRangeAmountEnabled().get() &&
                                 minAmountComponent.getQuoteSideAmount().get() != null &&
                                 value.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
                             minAmountComponent.setQuoteSideAmount(value);
@@ -263,7 +263,7 @@ public class TradeWizardAmountController implements Controller {
                     }
                 });
 
-        isMinAmountEnabledPin = EasyBind.subscribe(model.getIsMinAmountEnabled(), isMinAmountEnabled -> {
+        isMinAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isMinAmountEnabled -> {
             model.getToggleButtonText().set(isMinAmountEnabled ?
                     Res.get("bisqEasy.tradeWizard.amount.removeMinAmountOption") :
                     Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
@@ -342,8 +342,8 @@ public class TradeWizardAmountController implements Controller {
     }
 
     void onToggleMinAmountVisibility() {
-        boolean value = !model.getIsMinAmountEnabled().get();
-        model.getIsMinAmountEnabled().set(value);
+        boolean value = !model.getIsRangeAmountEnabled().get();
+        model.getIsRangeAmountEnabled().set(value);
         quoteSideAmountsChanged(!value);
         settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, value);
     }
@@ -354,7 +354,7 @@ public class TradeWizardAmountController implements Controller {
             return;
         }
 
-        if (model.getIsMinAmountEnabled().get()) {
+        if (model.getIsRangeAmountEnabled().get()) {
             Long minAmount = getAmountValue(minAmountComponent.getQuoteSideAmount());
             checkNotNull(minAmount);
             if (maxOrFixAmount.compareTo(minAmount) < 0) {
@@ -527,7 +527,7 @@ public class TradeWizardAmountController implements Controller {
             // Buyer
             String formattedAmountWithoutReputationNeeded = formatAmountWithCode(amountWithoutReputationNeeded);
             String formattedMaxOrFixedAmount = formatAmountWithCode(maxOrFixedQuoteSideAmount);
-            if (model.getIsMinAmountEnabled().get()) {
+            if (model.getIsRangeAmountEnabled().get()) {
                 // Amount range
                 String formattedMinAmount = formatAmountWithCode(minQuoteSideAmount);
                 boolean noReputationNeededForMinAmount = minQuoteSideAmount.isLessThanOrEqual(amountWithoutReputationNeeded);
