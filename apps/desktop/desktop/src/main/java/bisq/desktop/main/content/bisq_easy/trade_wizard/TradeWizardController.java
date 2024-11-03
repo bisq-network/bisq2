@@ -27,6 +27,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.TradeWizardAmountAndPriceController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market.TradeWizardDirectionAndMarketController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.payment_methods.TradeWizardPaymentMethodsController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.price.TradeWizardPriceController;
@@ -68,6 +69,7 @@ public class TradeWizardController extends NavigationController implements InitW
     @Getter
     private final TradeWizardView view;
     private final TradeWizardDirectionAndMarketController tradeWizardDirectionAndMarketController;
+    private final TradeWizardAmountAndPriceController tradeWizardAmountAndPriceController;
     private final TradeWizardPriceController tradeWizardPriceController;
     private final TradeWizardAmountController tradeWizardAmountController;
     private final TradeWizardPaymentMethodsController tradeWizardPaymentMethodsController;
@@ -92,6 +94,7 @@ public class TradeWizardController extends NavigationController implements InitW
                 this::onNext,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
+        tradeWizardAmountAndPriceController = new TradeWizardAmountAndPriceController(serviceProvider, view.getRoot());
         tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, view.getRoot());
         tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, view.getRoot());
         tradeWizardPaymentMethodsController = new TradeWizardPaymentMethodsController(serviceProvider, view.getRoot(), this::onNext);
@@ -131,6 +134,7 @@ public class TradeWizardController extends NavigationController implements InitW
         model.getChildTargets().clear();
         model.getChildTargets().addAll(List.of(
                 NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET,
+                NavigationTarget.TRADE_WIZARD_AMOUNT_AND_PRICE,
                 NavigationTarget.TRADE_WIZARD_AMOUNT,
                 NavigationTarget.TRADE_WIZARD_PAYMENT_METHODS,
                 NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
@@ -138,7 +142,7 @@ public class TradeWizardController extends NavigationController implements InitW
         ));
 
         if (model.getPriceProgressItemVisible().get()) {
-            model.getChildTargets().add(2, NavigationTarget.TRADE_WIZARD_PRICE);
+            model.getChildTargets().add(3, NavigationTarget.TRADE_WIZARD_PRICE);
         } else {
             model.getChildTargets().remove(NavigationTarget.TRADE_WIZARD_PRICE);
         }
@@ -233,6 +237,7 @@ public class TradeWizardController extends NavigationController implements InitW
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
             case TRADE_WIZARD_DIRECTION_AND_MARKET -> Optional.of(tradeWizardDirectionAndMarketController);
+            case TRADE_WIZARD_AMOUNT_AND_PRICE -> Optional.of(tradeWizardAmountAndPriceController);
             case TRADE_WIZARD_PRICE -> Optional.of(tradeWizardPriceController);
             case TRADE_WIZARD_PAYMENT_METHODS -> Optional.of(tradeWizardPaymentMethodsController);
             case TRADE_WIZARD_AMOUNT -> Optional.of(tradeWizardAmountController);
@@ -328,6 +333,7 @@ public class TradeWizardController extends NavigationController implements InitW
         resetSelectedChildTarget();
 
         tradeWizardDirectionAndMarketController.reset();
+        tradeWizardAmountAndPriceController.reset();
         tradeWizardPriceController.reset();
         tradeWizardAmountController.reset();
         tradeWizardPaymentMethodsController.reset();
