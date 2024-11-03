@@ -106,11 +106,8 @@ public class TorHttpClient extends BaseHttpClient {
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new SocksConnectionSocketFactory())
                 .build();
-        // Use FakeDNSResolver if not resolving DNS locally.
-        // This prevents a local DNS lookup (which would be ignored anyway)
-        PoolingHttpClientConnectionManager cm = socks5Proxy.resolveAddrLocally() ?
-                new PoolingHttpClientConnectionManager(reg) :
-                new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
+
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
         try {
             closeableHttpClient = checkNotNull(HttpClients.custom().setConnectionManager(cm).build());
             InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
