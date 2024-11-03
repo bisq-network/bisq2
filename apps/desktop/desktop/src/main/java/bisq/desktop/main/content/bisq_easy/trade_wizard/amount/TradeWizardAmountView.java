@@ -47,7 +47,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
     private final Label headlineLabel, amountLimitInfo, amountLimitInfoLeadLine, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, learnMoreHyperLink, linkToWiki;
     private final VBox minAmountRoot, content, amountLimitInfoOverlay;
-    private final Button toggleButton, closeOverlayButton, fixedAmount, rangeAmount;
+    private final Button closeOverlayButton, fixedAmount, rangeAmount;
     private final HBox amountLimitInfoHBox, amountModelsBox;
     private final HBox amountLimitInfoWithWarnIcon;
     private Subscription isAmountLimitInfoVisiblePin, amountLimitInfoLeadLinePin, isRangeAmountEnabledPin;
@@ -109,13 +109,9 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
         amountModelsBox.getStyleClass().addAll("selection-models", "bisq-text-3");
 
-        toggleButton = new Button(Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
-        toggleButton.getStyleClass().add("outlined-button");
-        toggleButton.setMinWidth(AmountComponent.View.AMOUNT_BOX_WIDTH);
-
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
         VBox.setMargin(amountLimitInfoWithWarnIcon, new Insets(15, 0, 15, 0));
-        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountModelsBox, amountBox, amountLimitInfoWithWarnIcon, toggleButton, Spacer.fillVBox());
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountModelsBox, amountBox, amountLimitInfoWithWarnIcon, Spacer.fillVBox());
         content.getStyleClass().add("bisq-easy-trade-wizard-amount-step");
 
         amountLimitInfoOverlayInfo = new Label();
@@ -138,7 +134,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoLeadLine.textProperty().bind(model.getAmountLimitInfoLeadLine());
         amountLimitInfoAmount.textProperty().bind(model.getAmountLimitInfoAmount());
         amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
-        toggleButton.textProperty().bind(model.getToggleButtonText());
         amountLimitInfoAmount.disableProperty().bind(model.getIsAmountHyperLinkDisabled());
 
         learnMoreHyperLink.visibleProperty().bind(model.getIsLearnMoreVisible());
@@ -148,8 +143,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoAmount.managedProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
         minAmountRoot.visibleProperty().bind(model.getIsRangeAmountEnabled());
         minAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
-        toggleButton.visibleProperty().bind(model.getShowRangeAmounts());
-        toggleButton.managedProperty().bind(model.getShowRangeAmounts());
         amountModelsBox.visibleProperty().bind(model.getShowRangeAmounts());
         amountModelsBox.managedProperty().bind(model.getShowRangeAmounts());
 
@@ -191,14 +184,12 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         learnMoreHyperLink.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         closeOverlayButton.setOnAction(e -> controller.onCloseAmountLimitInfoOverlay());
-        toggleButton.setOnAction(e -> controller.onToggleMinAmountVisibility());
         fixedAmount.setOnAction(e -> controller.useFixedAmount());
         rangeAmount.setOnAction(e -> controller.useRangeAmount());
     }
 
     @Override
     protected void onViewDetached() {
-        toggleButton.textProperty().unbind();
         amountLimitInfo.textProperty().unbind();
         amountLimitInfoLeadLine.textProperty().unbind();
         amountLimitInfoAmount.textProperty().unbind();
@@ -223,7 +214,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         learnMoreHyperLink.setOnAction(null);
         linkToWiki.setOnAction(null);
         closeOverlayButton.setOnAction(null);
-        toggleButton.setOnAction(null);
         fixedAmount.setOnAction(null);
         rangeAmount.setOnAction(null);
     }

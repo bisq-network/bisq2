@@ -73,7 +73,6 @@ public class TradeWizardAmountModel implements Model {
     private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
     private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();
     private final BooleanProperty isLearnMoreVisible = new SimpleBooleanProperty();
-    private final StringProperty toggleButtonText = new SimpleStringProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
     private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
@@ -98,7 +97,6 @@ public class TradeWizardAmountModel implements Model {
         isAmountLimitInfoOverlayVisible.set(false);
         isWarningIconVisible.set(false);
         isLearnMoreVisible.set(false);
-        toggleButtonText.set(null);
         priceTooltip.set(null);
         quoteSideAmountSpec.set(null);
         priceQuote.set(null);

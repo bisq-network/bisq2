@@ -263,10 +263,6 @@ public class TradeWizardAmountController implements Controller {
                 });
 
         isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isMinAmountEnabled -> {
-            model.getToggleButtonText().set(isMinAmountEnabled ?
-                    Res.get("bisqEasy.tradeWizard.amount.removeMinAmountOption") :
-                    Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
-
             maxOrFixAmountComponent.setDescription(isMinAmountEnabled ?
                     Res.get("bisqEasy.tradeWizard.amount.description.maxAmount") :
                     Res.get("bisqEasy.tradeWizard.amount.description.fixAmount"));
