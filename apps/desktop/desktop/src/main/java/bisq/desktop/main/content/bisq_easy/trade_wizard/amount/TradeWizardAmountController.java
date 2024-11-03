@@ -108,7 +108,6 @@ public class TradeWizardAmountController implements Controller {
         model = new TradeWizardAmountModel();
 
         minAmountComponent = new AmountComponent(serviceProvider, true);
-        minAmountComponent.setDescription(Res.get("bisqEasy.tradeWizard.amount.description.minAmount"));
         maxOrFixAmountComponent = new AmountComponent(serviceProvider, true);
 
         view = new TradeWizardAmountView(model, this,
@@ -262,14 +261,7 @@ public class TradeWizardAmountController implements Controller {
                     }
                 });
 
-        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isMinAmountEnabled -> {
-            maxOrFixAmountComponent.setDescription(isMinAmountEnabled ?
-                    Res.get("bisqEasy.tradeWizard.amount.description.maxAmount") :
-                    Res.get("bisqEasy.tradeWizard.amount.description.fixAmount"));
-
-            applyAmountSpec();
-        });
-
+        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isMinAmountEnabled -> applyAmountSpec());
         applyAmountSpec();
 
         if (model.isCreateOfferMode()) {
@@ -334,13 +326,6 @@ public class TradeWizardAmountController implements Controller {
 
     void onOpenWiki(String url) {
         Browser.open(url);
-    }
-
-    void onToggleMinAmountVisibility() {
-        boolean value = !model.getIsRangeAmountEnabled().get();
-        model.getIsRangeAmountEnabled().set(value);
-        quoteSideAmountsChanged(!value);
-        settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, value);
     }
 
     void useFixedAmount() {
