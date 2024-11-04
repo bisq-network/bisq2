@@ -28,6 +28,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -52,7 +54,6 @@ public class SmallAmountInput extends AmountInput {
     }
 
     private static class SmallAmountInputView extends View {
-
         private BisqTooltip tooltip;
 
         protected SmallAmountInputView(Model model, Controller controller) {
@@ -66,16 +67,15 @@ public class SmallAmountInput extends AmountInput {
             iconButton.setOpacity(ICON_OPACITY);
             tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
             iconButton.setTooltip(tooltip);
+            HBox.setMargin(iconButton, new Insets(0, 0, 8, 0));
             return iconButton;
         }
 
         @Override
         protected void initView() {
             root.setAlignment(Pos.CENTER);
-            root.setSpacing(3);
+            root.getStyleClass().add("small-amount-input");
             Button iconButton = createIconButton();
-            HBox.setMargin(textInput, new Insets(0, 0, 0, -35));
-            HBox.setMargin(iconButton, new Insets(-8, 0, 0, 1));
             root.getChildren().add(iconButton);
         }
 
@@ -83,17 +83,17 @@ public class SmallAmountInput extends AmountInput {
         protected TextField createTextInput() {
             var textInput = new TextField();
             textInput.setId(QUOTE_AMOUNT_ID);
-            textInput.setAlignment(Pos.CENTER_RIGHT);
-            textInput.setPadding(new Insets(0, 0, 0, 0));
+            textInput.getStyleClass().add("text-input");
+            textInput.setPadding(new Insets(0, 8, 3, 0));
             return textInput;
         }
 
         @Override
         protected Label createCodeLabel() {
             var codeLabel = new Label();
-            codeLabel.setAlignment(Pos.CENTER_LEFT);
             codeLabel.setId(QUOTE_AMOUNT_ID);
-            codeLabel.setPadding(new Insets(0, 0, 0, 0));
+            codeLabel.getStyleClass().add("currency-code");
+            codeLabel.setMinWidth(Label.USE_PREF_SIZE);
             return codeLabel;
         }
 
@@ -111,7 +111,6 @@ public class SmallAmountInput extends AmountInput {
     }
 
     private static class SmallAmountInputModel extends Model {
-
         private final StringProperty tooltip = new SimpleStringProperty(Res.get(DEFAULT_TOOLTIP));
 
         protected SmallAmountInputModel(boolean isBaseCurrency) {

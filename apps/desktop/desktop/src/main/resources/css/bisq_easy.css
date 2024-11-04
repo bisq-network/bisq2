@@ -716,6 +716,27 @@
  *                                                                             *
  ******************************************************************************/
 
+.small-amount-input {
+    -fx-padding: -7 55 0 0;
+}
+
+.small-amount-input .text-input,
+.small-amount-input .currency-code {
+    -fx-fill: -fx-mid-text-color !important;
+    -fx-text-fill: -fx-mid-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.small-amount-input .text-input {
+    -fx-font-size: 1.45em !important;
+    -fx-alignment: baseline-right;
+}
+
+.small-amount-input .currency-code {
+    -fx-font-size: 1.15em !important;
+    -fx-alignment: baseline-left;
+}
+
 .bisq-easy-trade-wizard-price-step .price-content {
     -fx-alignment: center;
 }

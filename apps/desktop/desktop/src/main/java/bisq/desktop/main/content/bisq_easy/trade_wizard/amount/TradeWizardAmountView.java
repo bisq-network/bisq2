@@ -58,10 +58,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
                                  AmountComponent maxOrFixAmountComponent) {
         super(new StackPane(), model, controller);
 
-        root.setAlignment(Pos.CENTER);
-        content = new VBox(10);
-        content.setAlignment(Pos.TOP_CENTER);
-
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
@@ -110,7 +106,9 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountModelsBox.getStyleClass().addAll("selection-models", "bisq-text-3");
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(amountLimitInfoWithWarnIcon, new Insets(15, 0, 15, 0));
+//        VBox.setMargin(amountLimitInfoWithWarnIcon, new Insets(15, 0, 15, 0));
+        content = new VBox(20);
+        content.setAlignment(Pos.TOP_CENTER);
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountModelsBox, amountBox, amountLimitInfoWithWarnIcon, Spacer.fillVBox());
         content.getStyleClass().add("bisq-easy-trade-wizard-amount-step");
 
@@ -122,6 +120,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
 
         StackPane.setMargin(amountLimitInfoOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, amountLimitInfoOverlay);
+        root.setAlignment(Pos.CENTER);
     }
 
     @Override

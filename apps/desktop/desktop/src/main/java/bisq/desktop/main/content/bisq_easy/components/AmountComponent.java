@@ -283,6 +283,7 @@ public class AmountComponent {
             model.getMaxRangeBaseSideValue().set(null);
             model.getMinRangeQuoteSideValue().set(null);
             model.getMaxRangeQuoteSideValue().set(null);
+            model.getDescription().set(Res.get("bisqEasy.tradeWizard.amount.description", model.getMarket().getQuoteCurrencyCode()));
             applyInitialRangeValues();
 
             model.getBaseSideAmount().addListener(baseSideAmountFromModelListener);
@@ -585,18 +586,14 @@ public class AmountComponent {
             root.setAlignment(Pos.TOP_CENTER);
 
             description = new Label();
-            description.setTextAlignment(TextAlignment.CENTER);
-            description.setAlignment(Pos.CENTER);
             description.getStyleClass().addAll("bisq-text-3", "wrap-text");
+            description.setMouseTransparent(true);
 
-            VBox.setMargin(quoteAmountRoot, new Insets(-15, 0, 0, 0));
-            VBox.setMargin(baseAmountRoot, new Insets(-17, 0, 0, 0));
-            VBox vbox = new VBox(0, quoteAmountRoot, baseAmountRoot);
+            VBox vbox = new VBox(0, description, quoteAmountRoot, baseAmountRoot);
             vbox.getStyleClass().add("bisq-dual-amount-bg");
-            vbox.setAlignment(Pos.CENTER);
             vbox.setMinWidth(AMOUNT_BOX_WIDTH);
             vbox.setMaxWidth(AMOUNT_BOX_WIDTH);
-            vbox.setPadding(new Insets(25, 20, 10, 20));
+            vbox.setPadding(new Insets(10, 20, 10, 20));
 
             Region line = new Region();
             line.setLayoutY(121);
@@ -612,7 +609,7 @@ public class AmountComponent {
             selectionLine.setLayoutY(119);
             selectionLine.setMouseTransparent(true);
 
-            Pane amountPane = new Pane(vbox, line, selectionLine);
+            Pane amountPane = new Pane(vbox/*, line, selectionLine*/);
             amountPane.setMaxWidth(AMOUNT_BOX_WIDTH);
 
             slider.setMin(model.getSliderMin());
@@ -627,8 +624,8 @@ public class AmountComponent {
             VBox sliderBox = new VBox(2, slider, new HBox(minRangeValue, Spacer.fillHBox(), maxRangeValue));
             sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH);
 
-            VBox.setMargin(amountPane, new Insets(0, 0, 20, 0));
-            root.getChildren().addAll(description, amountPane, sliderBox);
+//            VBox.setMargin(amountPane, new Insets(0, 0, 20, 0));
+            root.getChildren().addAll(amountPane, sliderBox);
         }
 
         @Override
@@ -644,7 +641,7 @@ public class AmountComponent {
             sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), slider::setStyle);
             slider.valueProperty().bindBidirectional(model.getSliderValue());
             model.getSliderFocus().bind(slider.focusedProperty());
-            description.textProperty().bind(model.description);
+            description.textProperty().bind(model.getDescription());
             minRangeValue.textProperty().bind(model.getMinRangeValueAsString());
             maxRangeValue.textProperty().bind(model.getMaxRangeValueAsString());
             // Needed to trigger focusOut event on amount components

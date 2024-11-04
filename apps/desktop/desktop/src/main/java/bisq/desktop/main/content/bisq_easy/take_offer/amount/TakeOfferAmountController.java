@@ -94,6 +94,7 @@ public class TakeOfferAmountController implements Controller {
                 applyQuoteSideMinMaxRange(quoteSideMinAmount, maxAmount);
 
                 long sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
+                // TODO: Move this outside of the component
                 amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description.limitedByTakersReputation",
                         sellersScore,
                         formattedMinAmount,
@@ -102,6 +103,7 @@ public class TakeOfferAmountController implements Controller {
                 // Range amounts buyer case
                 maxAmount = offersQuoteSideMaxOrFixedAmount;
                 applyQuoteSideMinMaxRange(quoteSideMinAmount, maxAmount);
+                // TODO: Move this outside of the component
                 amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
                         formattedMinAmount,
                         AmountFormatter.formatAmountWithCode(maxAmount)));
