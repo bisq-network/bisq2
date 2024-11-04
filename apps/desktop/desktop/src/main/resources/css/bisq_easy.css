@@ -716,6 +716,14 @@
  *                                                                             *
  ******************************************************************************/
 
+.amount-component .description {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-wrap-text: true;
+}
+
 .small-amount-input {
     -fx-padding: -7 55 0 0;
 }
@@ -728,12 +736,12 @@
 }
 
 .small-amount-input .text-input {
-    -fx-font-size: 1.45em !important;
+    -fx-font-size: 1.25em !important;
     -fx-alignment: baseline-right;
 }
 
 .small-amount-input .currency-code {
-    -fx-font-size: 1.15em !important;
+    -fx-font-size: 0.95em !important;
     -fx-alignment: baseline-left;
 }
 

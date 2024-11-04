@@ -28,8 +28,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -67,7 +65,7 @@ public class SmallAmountInput extends AmountInput {
             iconButton.setOpacity(ICON_OPACITY);
             tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
             iconButton.setTooltip(tooltip);
-            HBox.setMargin(iconButton, new Insets(0, 0, 8, 0));
+            HBox.setMargin(iconButton, new Insets(0, 0, 5, 0));
             return iconButton;
         }
 
@@ -84,7 +82,7 @@ public class SmallAmountInput extends AmountInput {
             var textInput = new TextField();
             textInput.setId(QUOTE_AMOUNT_ID);
             textInput.getStyleClass().add("text-input");
-            textInput.setPadding(new Insets(0, 8, 3, 0));
+            textInput.setPadding(new Insets(0, 7, 3, 0));
             return textInput;
         }
 

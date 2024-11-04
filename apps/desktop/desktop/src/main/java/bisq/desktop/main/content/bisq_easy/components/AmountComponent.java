@@ -32,7 +32,16 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -43,7 +52,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -565,6 +573,8 @@ public class AmountComponent {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         public final static int AMOUNT_BOX_WIDTH = 330;
+        public final static int AMOUNT_BOX_HEIGHT = 130;
+
         private final Slider slider = new Slider();
         private final Label minRangeValue, maxRangeValue, description;
         private final Region selectionLine;
@@ -583,22 +593,23 @@ public class AmountComponent {
             Pane quoteAmountRoot = quoteAmount.getRoot();
             this.quoteAmount = quoteAmount;
 
-            root.setAlignment(Pos.TOP_CENTER);
-
             description = new Label();
-            description.getStyleClass().addAll("bisq-text-3", "wrap-text");
+            description.getStyleClass().add("description");
             description.setMouseTransparent(true);
 
-            VBox vbox = new VBox(0, description, quoteAmountRoot, baseAmountRoot);
-            vbox.getStyleClass().add("bisq-dual-amount-bg");
-            vbox.setMinWidth(AMOUNT_BOX_WIDTH);
-            vbox.setMaxWidth(AMOUNT_BOX_WIDTH);
-            vbox.setPadding(new Insets(10, 20, 10, 20));
+            VBox amountVBox = new VBox(0, description, Spacer.fillVBox(), quoteAmountRoot,
+                    Spacer.fillVBox(), baseAmountRoot);
+            amountVBox.getStyleClass().add("bisq-dual-amount-bg");
+            amountVBox.setMinWidth(AMOUNT_BOX_WIDTH);
+            amountVBox.setMaxWidth(AMOUNT_BOX_WIDTH);
+            amountVBox.setMinHeight(AMOUNT_BOX_HEIGHT);
+            amountVBox.setMaxHeight(AMOUNT_BOX_HEIGHT);
+            amountVBox.setPadding(new Insets(5, 20, 10, 20));
 
             Region line = new Region();
-            line.setLayoutY(121);
             line.setPrefHeight(1);
             line.setPrefWidth(AMOUNT_BOX_WIDTH);
+            line.setLayoutY(AMOUNT_BOX_HEIGHT);
             line.setStyle("-fx-background-color: -bisq-mid-grey-20");
             line.setMouseTransparent(true);
 
@@ -606,10 +617,10 @@ public class AmountComponent {
             selectionLine.getStyleClass().add("material-text-field-selection-line");
             selectionLine.setPrefHeight(3);
             selectionLine.setPrefWidth(0);
-            selectionLine.setLayoutY(119);
+            selectionLine.setLayoutY(AMOUNT_BOX_HEIGHT - 2);
             selectionLine.setMouseTransparent(true);
 
-            Pane amountPane = new Pane(vbox/*, line, selectionLine*/);
+            Pane amountPane = new Pane(amountVBox, line, selectionLine);
             amountPane.setMaxWidth(AMOUNT_BOX_WIDTH);
 
             slider.setMin(model.getSliderMin());
@@ -626,6 +637,8 @@ public class AmountComponent {
 
 //            VBox.setMargin(amountPane, new Insets(0, 0, 20, 0));
             root.getChildren().addAll(amountPane, sliderBox);
+            root.getStyleClass().add("amount-component");
+            root.setAlignment(Pos.TOP_CENTER);
         }
 
         @Override

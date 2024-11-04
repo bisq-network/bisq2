@@ -26,11 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BigAmountInput extends AmountInput {
-
     private static final double TEXT_INPUT_PREF_WIDTH = 250;
     private static final String BIG_TEXT_INPUT_ID = "base-amount-text-field";
     private static final String SMALL_TEXT_INPUT_ID = "base-amount-text-field-small";
-    private static final int TEXT_LENGTH_THRESHOLD = 6;
+    private static final int TEXT_LENGTH_THRESHOLD = 9;
 
     public BigAmountInput(boolean isBaseCurrency) {
         super(isBaseCurrency);
@@ -48,6 +47,7 @@ public class BigAmountInput extends AmountInput {
             HBox.setMargin(textInput, new Insets(0, 0, 0, -30));
             root.setAlignment(Pos.BASELINE_CENTER);
             root.setSpacing(10);
+            root.getStyleClass().add("big-amount-input");
         }
 
         @Override
@@ -56,6 +56,7 @@ public class BigAmountInput extends AmountInput {
             textInput.setPrefWidth(TEXT_INPUT_PREF_WIDTH);
             textInput.setId(BIG_TEXT_INPUT_ID);
             textInput.setAlignment(Pos.BASELINE_RIGHT);
+            textInput.getStyleClass().add("text-input");
             textInput.setPadding(new Insets(0, 0, 5, 0));
             return textInput;
         }
@@ -63,8 +64,8 @@ public class BigAmountInput extends AmountInput {
         @Override
         protected Label createCodeLabel() {
             var codeLabel = new Label();
-            codeLabel.setPadding(new Insets(0, 0, 0, 0));
-            codeLabel.getStyleClass().add("bisq-text-9");
+            codeLabel.setPadding(new Insets(0, -20, 0, 0));
+            codeLabel.getStyleClass().add("currency-code");
             codeLabel.setAlignment(Pos.BASELINE_LEFT);
             return codeLabel;
         }
