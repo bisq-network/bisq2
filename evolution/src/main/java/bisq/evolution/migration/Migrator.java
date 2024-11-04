@@ -4,7 +4,6 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.platform.Version;
 import bisq.evolution.migration.migrations.Migration;
 import bisq.evolution.migration.migrations.MigrationFailedException;
-import bisq.evolution.migration.migrations.MigrationsForV2_1_2;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -18,10 +17,10 @@ public class Migrator {
     private final Path dataDir;
     private final List<Migration> allMigrations;
 
-    public Migrator(Version appVersion, Path dataDir) {
+    public Migrator(Version appVersion, Path dataDir, List<Migration> allMigrations) {
         this.appVersion = appVersion;
         this.dataDir = dataDir;
-        this.allMigrations = List.of(new MigrationsForV2_1_2());
+        this.allMigrations = allMigrations;
     }
 
     public void migrate() {

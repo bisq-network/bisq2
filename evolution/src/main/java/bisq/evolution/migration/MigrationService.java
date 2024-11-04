@@ -3,11 +3,14 @@ package bisq.evolution.migration;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.platform.Version;
+import bisq.evolution.migration.migrations.Migration;
+import bisq.evolution.migration.migrations.MigrationsForV2_1_2;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class MigrationService implements Service {
@@ -26,7 +29,8 @@ public class MigrationService implements Service {
         Version appVersion = ApplicationVersion.getVersion();
 
         if (dataDirVersion.below(appVersion)) {
-            Migrator migrator = new Migrator(appVersion, dataDir);
+            List<Migration> allMigrations = List.of(new MigrationsForV2_1_2());
+            Migrator migrator = new Migrator(appVersion, dataDir, allMigrations);
             migrator.migrate();
         }
 
