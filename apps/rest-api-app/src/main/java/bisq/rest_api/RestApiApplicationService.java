@@ -173,8 +173,7 @@ public class RestApiApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return migrationService.initialize()
-                .thenCompose(result -> memoryReportService.initialize())
+        return memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
@@ -255,7 +254,6 @@ public class RestApiApplicationService extends JavaSeApplicationService {
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown())
                 .thenCompose(result -> memoryReportService.shutdown())
-                .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> throwable == null)
                 .join());

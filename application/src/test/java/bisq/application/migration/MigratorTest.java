@@ -1,9 +1,9 @@
-package bisq.evolution.migration;
+package bisq.application.migration;
 
+import bisq.application.migration.migrations.Migration;
+import bisq.application.migration.migrations.MigrationFailedException;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.platform.Version;
-import bisq.evolution.migration.migrations.Migration;
-import bisq.evolution.migration.migrations.MigrationFailedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

@@ -1,10 +1,10 @@
-package bisq.evolution.migration;
+package bisq.application.migration;
 
+import bisq.application.migration.migrations.Migration;
+import bisq.application.migration.migrations.MigrationsForV2_1_2;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.platform.Version;
-import bisq.evolution.migration.migrations.Migration;
-import bisq.evolution.migration.migrations.MigrationsForV2_1_2;
 
 import java.io.File;
 import java.io.IOException;

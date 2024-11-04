@@ -1,5 +1,6 @@
-package bisq.evolution.migration;
+package bisq.application.migration;
 
+import bisq.application.migration.MigrationService;
 import bisq.common.platform.InvalidVersionException;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;

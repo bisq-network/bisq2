@@ -1,4 +1,4 @@
-package bisq.evolution.migration.migrations;
+package bisq.application.migration.migrations;
 
 public class MigrationFailedException extends RuntimeException {
     public MigrationFailedException(String message) {

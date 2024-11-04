@@ -1,5 +1,6 @@
-package bisq.evolution.migration.migrations;
+package bisq.application.migration.migrations;
 
+import bisq.application.migration.migrations.MigrationsForV2_1_2;
 import bisq.common.platform.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;

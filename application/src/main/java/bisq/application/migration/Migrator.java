@@ -1,9 +1,9 @@
-package bisq.evolution.migration;
+package bisq.application.migration;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.platform.Version;
-import bisq.evolution.migration.migrations.Migration;
-import bisq.evolution.migration.migrations.MigrationFailedException;
+import bisq.application.migration.migrations.Migration;
+import bisq.application.migration.migrations.MigrationFailedException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
