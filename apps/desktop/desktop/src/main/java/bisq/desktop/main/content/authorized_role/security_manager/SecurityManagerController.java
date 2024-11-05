@@ -25,6 +25,7 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
+import bisq.common.network.Address;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -46,6 +47,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class SecurityManagerController implements Controller {
@@ -92,6 +94,9 @@ public class SecurityManagerController implements Controller {
         bondedRoleSetPin = FxBindings.<BondedRole, SecurityManagerView.BondedRoleListItem>bind(model.getBondedRoleListItems())
                 .map(bondedRole -> new SecurityManagerView.BondedRoleListItem(bondedRole, this))
                 .to(authorizedBondedRolesService.getBondedRoles());
+
+        model.getBondedRoleSortedList().setComparator((o1, o2) -> getBondedRoleDisplayString(o1.getBondedRole())
+                .compareTo(getBondedRoleDisplayString(o2.getBondedRole())));
 
         difficultyAdjustmentListItemsPin = FxBindings.<AuthorizedDifficultyAdjustmentData, SecurityManagerView.DifficultyAdjustmentListItem>bind(model.getDifficultyAdjustmentListItems())
                 .map(SecurityManagerView.DifficultyAdjustmentListItem::new)
@@ -169,23 +174,31 @@ public class SecurityManagerController implements Controller {
         securityManagerService.removeAlert(authorizedAlertData, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
     }
 
-    String getBondedRoleShortDisplayString(BondedRole bondedRole) {
+    String getBondedRoleDisplayString(BondedRole bondedRole) {
         AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
-        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
+        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString().toUpperCase();
         String profileId = authorizedBondedRole.getProfileId();
-        String nickName = userProfileService.findUserProfile(profileId)
+        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
                 .map(UserProfile::getNickName)
-                .orElse(Res.get("data.na"));
-        return Res.get("authorizedRole.securityManager.selectedBondedRole", nickName, roleType, profileId);
+                .orElse(authorizedBondedRole.getBondUserName());
+        Optional<String> addresses = authorizedBondedRole.getAddressByTransportTypeMap()
+                .map(e -> e.values().stream()
+                        .map(Address::getFullAddress)
+                        .collect(Collectors.joining(", ")));
+        if (addresses.isPresent()) {
+            return Res.get("authorizedRole.securityManager.selectedBondedNode", roleType, nickNameOrBondName, profileId, addresses.get());
+        } else {
+            return Res.get("authorizedRole.securityManager.selectedBondedRole", roleType, nickNameOrBondName, profileId);
+        }
     }
 
-    String getBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
+    String getBannedBondedRoleDisplaySString(AuthorizedBondedRole authorizedBondedRole) {
         String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
         String profileId = authorizedBondedRole.getProfileId();
-        String nickName = userProfileService.findUserProfile(profileId)
+        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
                 .map(UserProfile::getNickName)
-                .orElse(Res.get("data.na"));
-        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickName, profileId);
+                .orElse(authorizedBondedRole.getBondUserName());
+        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickNameOrBondName, profileId);
     }
 
     void onPublishDifficultyAdjustmentFactor() {

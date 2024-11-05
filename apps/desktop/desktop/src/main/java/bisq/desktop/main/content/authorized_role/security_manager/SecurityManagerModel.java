@@ -40,6 +40,7 @@ public class SecurityManagerModel implements Model {
     private final ObservableList<AlertType> alertTypes = FXCollections.observableArrayList();
     private final ObjectProperty<BondedRoleListItem> selectedBondedRoleListItem = new SimpleObjectProperty<>();
     private final ObservableList<BondedRoleListItem> bondedRoleListItems = FXCollections.observableArrayList();
+    private final SortedList<BondedRoleListItem> bondedRoleSortedList = new SortedList<>(bondedRoleListItems);
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
     private final StringProperty headline = new SimpleStringProperty();

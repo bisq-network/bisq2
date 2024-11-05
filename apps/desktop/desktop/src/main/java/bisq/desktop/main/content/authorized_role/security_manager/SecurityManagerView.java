@@ -98,12 +98,12 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             }
         });
 
-        bondedRoleSelection = new AutoCompleteComboBox<>(model.getBondedRoleListItems(), Res.get("authorizedRole.securityManager.selectBondedRole"));
+        bondedRoleSelection = new AutoCompleteComboBox<>(model.getBondedRoleSortedList(), Res.get("authorizedRole.securityManager.selectBondedRole"));
         bondedRoleSelection.setPrefWidth(800);
         bondedRoleSelection.setConverter(new StringConverter<>() {
             @Override
             public String toString(BondedRoleListItem listItem) {
-                return listItem != null ? listItem.getDisplayString() : "";
+                return listItem != null ? controller.getBondedRoleDisplayString(listItem.getBondedRole()) : "";
             }
 
             @Override
@@ -321,6 +321,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .minWidth(150)
                 .comparator(Comparator.comparing(AlertListItem::getBondedRoleDisplayString))
                 .valueSupplier(AlertListItem::getBondedRoleDisplayString)
+                .tooltipSupplier(AlertListItem::getBondedRoleDisplayString)
                 .build());
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .isSortable(false)
@@ -412,7 +413,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             minVersion = this.authorizedAlertData.getMinVersion().orElse("");
             haltTrading = BooleanFormatter.toYesNo(this.authorizedAlertData.isHaltTrading());
             requireVersionForTrading = BooleanFormatter.toYesNo(this.authorizedAlertData.isRequireVersionForTrading());
-            bondedRoleDisplayString = authorizedAlertData.getBannedRole().map(controller::getBondedRoleDisplayString).orElse("");
+            bondedRoleDisplayString = authorizedAlertData.getBannedRole().map(controller::getBannedBondedRoleDisplaySString).orElse("");
         }
     }
 
@@ -426,7 +427,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
         public BondedRoleListItem(BondedRole bondedRole, SecurityManagerController controller) {
             this.bondedRole = bondedRole;
-            displayString = controller.getBondedRoleShortDisplayString(bondedRole);
+            displayString = controller.getBondedRoleDisplayString(bondedRole);
         }
     }
 }
