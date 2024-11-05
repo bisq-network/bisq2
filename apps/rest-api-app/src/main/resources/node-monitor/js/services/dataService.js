@@ -16,7 +16,8 @@ App.Services.DataService = class {
                 throw new Error(`Unexpected content type for ${host}: ${errorMessage}`);
             }
             const data = await response.json();
-            return { success: true, data: data };
+            const filteredData = this.#filterReportData(data);
+            return { success: true, data: filteredData };
         } catch (error) {
             throw new Error(`Network error: Unable to fetch report for ${host}: ${error.message}`);
         }
@@ -47,4 +48,13 @@ App.Services.DataService = class {
     //////////////////////
     // PRIVATE METHODS
     //////////////////////
+
+    #filterReportData(data) {
+        if (!data || typeof data !== 'object' || !data.report || typeof data.report !== 'object') {
+            return data;
+        }
+        const { version = null, serializedSize = null, excludedFields = null, ...filteredReport } = data.report;
+        return { ...data, report: filteredReport };
+
+    }
 };
