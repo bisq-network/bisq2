@@ -20,6 +20,8 @@ package bisq.rest_api;
 import bisq.account.AccountService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
@@ -297,13 +299,23 @@ public class RestApiApplicationService extends JavaSeApplicationService {
     }
 
     public List<String> getAddressList() {
+
+        Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
+                .filter(BondedRole::isBanned)
+                .map(BondedRole::getAuthorizedBondedRole)
+                .map(AuthorizedBondedRole::getAddressByTransportTypeMap)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMap(map -> map.values().stream())
+                .collect(Collectors.toSet());
         Map<TransportType, Set<Address>> seedAddressesByTransport = networkService.getSeedAddressesByTransportFromConfig();
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-
         List<String> addresslist = seedAddressesByTransport.entrySet().stream()
                 .filter(entry -> supportedTransportTypes.contains(entry.getKey()))
                 .flatMap(entry -> entry.getValue().stream())
-                .map(Address::toString).collect(Collectors.toList());
+                .filter(address -> !bannedAddresses.contains(address))
+                .map(Address::toString)
+                .collect(Collectors.toList());
 
         // Oracle Nodes
         addresslist.add("kr4yvzlhwt5binpw7js2tsfqv6mjd4klmslmcxw3c5izsaqh5vvsp6ad.onion:36185");
