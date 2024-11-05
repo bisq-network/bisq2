@@ -25,7 +25,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
@@ -51,7 +51,7 @@ public class TakeOfferAmountController implements Controller {
     private final TakeOfferAmountModel model;
     @Getter
     private final TakeOfferAmountView view;
-    private final AmountComponent amountComponent;
+    private final AmountSelectionController amountSelectionController;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
@@ -62,8 +62,8 @@ public class TakeOfferAmountController implements Controller {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        amountComponent = new AmountComponent(serviceProvider, true);
-        view = new TakeOfferAmountView(model, this, amountComponent.getView().getRoot());
+        amountSelectionController = new AmountSelectionController(serviceProvider, true);
+        view = new TakeOfferAmountView(model, this, amountSelectionController.getView().getRoot());
     }
 
     public void init(BisqEasyOffer bisqEasyOffer, Optional<Monetary> optionalReputationBasedQuoteSideAmount) {
@@ -71,12 +71,12 @@ public class TakeOfferAmountController implements Controller {
 
         Direction takersDirection = bisqEasyOffer.getTakersDirection();
         model.setHeadline(takersDirection.isBuy() ? Res.get("bisqEasy.takeOffer.amount.headline.buyer") : Res.get("bisqEasy.takeOffer.amount.headline.seller"));
-        amountComponent.setDirection(takersDirection);
+        amountSelectionController.setDirection(takersDirection);
         Market market = bisqEasyOffer.getMarket();
-        amountComponent.setMarket(market);
+        amountSelectionController.setMarket(market);
 
         PriceUtil.findQuote(marketPriceService, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
-                .ifPresent(amountComponent::setQuote);
+                .ifPresent(amountSelectionController::setQuote);
 
         Optional<Monetary> OptionalQuoteSideMinAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, bisqEasyOffer);
         if (OptionalQuoteSideMinAmount.isPresent()) {
@@ -90,12 +90,12 @@ public class TakeOfferAmountController implements Controller {
                 maxAmount = reputationBasedQuoteSideAmount.isGreaterThan(offersQuoteSideMaxOrFixedAmount)
                         ? offersQuoteSideMaxOrFixedAmount
                         : reputationBasedQuoteSideAmount;
-                amountComponent.setRightMarkerQuoteSideValue(maxAmount);
+                amountSelectionController.setRightMarkerQuoteSideValue(maxAmount);
                 applyQuoteSideMinMaxRange(quoteSideMinAmount, maxAmount);
 
                 long sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
                 // TODO: Move this outside of the component
-                amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description.limitedByTakersReputation",
+                amountSelectionController.setDescription(Res.get("bisqEasy.takeOffer.amount.description.limitedByTakersReputation",
                         sellersScore,
                         formattedMinAmount,
                         AmountFormatter.formatAmountWithCode(maxAmount)));
@@ -104,7 +104,7 @@ public class TakeOfferAmountController implements Controller {
                 maxAmount = offersQuoteSideMaxOrFixedAmount;
                 applyQuoteSideMinMaxRange(quoteSideMinAmount, maxAmount);
                 // TODO: Move this outside of the component
-                amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
+                amountSelectionController.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
                         formattedMinAmount,
                         AmountFormatter.formatAmountWithCode(maxAmount)));
             }
@@ -113,7 +113,7 @@ public class TakeOfferAmountController implements Controller {
                     : Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount");
             Optional<String> priceQuoteOptional = PriceUtil.findQuote(marketPriceService, model.getBisqEasyOffer())
                     .map(priceQuote -> "\n" + Res.get("bisqEasy.component.amount.baseSide.tooltip.taker.offerPrice", PriceFormatter.formatWithCode(priceQuote)));
-            priceQuoteOptional.ifPresent(priceQuote -> amountComponent.setTooltip(String.format("%s%s", btcAmount, priceQuote)));
+            priceQuoteOptional.ifPresent(priceQuote -> amountSelectionController.setTooltip(String.format("%s%s", btcAmount, priceQuote)));
         }
     }
 
@@ -127,9 +127,9 @@ public class TakeOfferAmountController implements Controller {
 
     @Override
     public void onActivate() {
-        baseSideAmountPin = EasyBind.subscribe(amountComponent.getBaseSideAmount(),
+        baseSideAmountPin = EasyBind.subscribe(amountSelectionController.getBaseSideAmount(),
                 amount -> model.getTakersBaseSideAmount().set(amount));
-        quoteSideAmountPin = EasyBind.subscribe(amountComponent.getQuoteSideAmount(),
+        quoteSideAmountPin = EasyBind.subscribe(amountSelectionController.getQuoteSideAmount(),
                 amount -> {
                     model.getTakersQuoteSideAmount().set(amount);
                     if (amount != null) {
@@ -149,7 +149,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     void onSetReputationBasedAmount() {
-        amountComponent.setQuoteSideAmount(amountComponent.getRightMarkerQuoteSideValue().round(0));
+        amountSelectionController.setQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
     }
 
     void onShowAmountLimitInfoOverlay() {
@@ -171,7 +171,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     private void applyQuoteSideMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
-        amountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+        amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
 
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         Market market = bisqEasyOffer.getMarket();
@@ -193,8 +193,8 @@ public class TakeOfferAmountController implements Controller {
 
             if (reputationBasedQuoteSideAmount.isLessThan(maxRangeValue)) {
                 model.getIsAmountLimitInfoVisible().set(true);
-                amountComponent.setRightMarkerQuoteSideValue(reputationBasedQuoteSideAmount);
-                amountComponent.setQuoteSideAmount(reputationBasedQuoteSideAmount);
+                amountSelectionController.setRightMarkerQuoteSideValue(reputationBasedQuoteSideAmount);
+                amountSelectionController.setQuoteSideAmount(reputationBasedQuoteSideAmount);
                 String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
 
                 if (sellersReputationScore <= MIN_REPUTAION_SCORE) {
@@ -230,13 +230,13 @@ public class TakeOfferAmountController implements Controller {
             model.setLinkToWikiText(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.linkToWikiText"));
             String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
             long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
-            Monetary quoteSideAmount = amountComponent.getQuoteSideAmount().get();
+            Monetary quoteSideAmount = amountSelectionController.getQuoteSideAmount().get();
 
             BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, myReputationScore)
                     .ifPresent(myReputationBasedQuoteSideAmount -> {
                         myReputationBasedQuoteSideAmount = myReputationBasedQuoteSideAmount.round(0);
                         model.getIsAmountHyperLinkDisabled().set(myReputationBasedQuoteSideAmount.isGreaterThan(maxRangeValue));
-                        amountComponent.setRightMarkerQuoteSideValue(myReputationBasedQuoteSideAmount);
+                        amountSelectionController.setRightMarkerQuoteSideValue(myReputationBasedQuoteSideAmount);
                         String formattedAmount = AmountFormatter.formatAmountWithCode(myReputationBasedQuoteSideAmount);
                         model.getIsAmountLimitInfoVisible().set(true);
                         model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoAmount", formattedAmount));
@@ -275,13 +275,13 @@ public class TakeOfferAmountController implements Controller {
     }
 
     private void applyReputationBasedQuoteSideAmount() {
-        amountComponent.setQuoteSideAmount(amountComponent.getRightMarkerQuoteSideValue().round(0));
+        amountSelectionController.setQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
     }
 
     private void maxOrFixedQuoteSideAmountChanged(Monetary value) {
-        if (amountComponent.getRightMarkerQuoteSideValue() == null) {
+        if (amountSelectionController.getRightMarkerQuoteSideValue() == null) {
             return;
         }
-        model.getIsWarningIconVisible().set(value.round(0).getValue() > amountComponent.getRightMarkerQuoteSideValue().round(0).getValue());
+        model.getIsWarningIconVisible().set(value.round(0).getValue() > amountSelectionController.getRightMarkerQuoteSideValue().round(0).getValue());
     }
 }

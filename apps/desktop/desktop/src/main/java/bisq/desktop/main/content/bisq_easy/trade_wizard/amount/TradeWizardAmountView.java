@@ -24,7 +24,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -54,15 +54,15 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
-                                 AmountComponent minAmountComponent,
-                                 AmountComponent maxOrFixAmountComponent) {
+                                 AmountSelectionController minAmountSelectionController,
+                                 AmountSelectionController maxOrFixAmountSelectionController) {
         super(new StackPane(), model, controller);
 
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        minAmountRoot = minAmountComponent.getView().getRoot();
-        HBox amountBox = new HBox(30, minAmountRoot, maxOrFixAmountComponent.getView().getRoot());
+        minAmountRoot = minAmountSelectionController.getView().getRoot();
+        HBox amountBox = new HBox(30, minAmountRoot, maxOrFixAmountSelectionController.getView().getRoot());
         amountBox.setAlignment(Pos.CENTER);
 
         amountLimitInfo = new Label();
