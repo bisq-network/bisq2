@@ -62,7 +62,7 @@ tasks.register("publishAll") {
         listOf(
             ":account:publishToMavenLocal",
             ":application:publishToMavenLocal",
-            ":bisq-easy:publishToMavenLocal",
+//            ":bisq-easy:publishToMavenLocal",
             ":bonded-roles:publishToMavenLocal",
             ":chat:publishToMavenLocal",
             ":common:publishToMavenLocal",
@@ -80,8 +80,8 @@ tasks.register("publishAll") {
             ":support:publishToMavenLocal",
             ":trade:publishToMavenLocal",
             ":user:publishToMavenLocal",
-            ":wallets:publishToMavenLocal",
-            ":wallets:bitcoind:publishToMavenLocal",
+//            ":wallets:publishToMavenLocal",
+//            ":wallets:bitcoind:publishToMavenLocal",
         ).forEach {
             exec {
                 println("Executing Publish To Maven Local: $it")
