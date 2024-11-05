@@ -19,6 +19,7 @@ package bisq.rest_api.endpoints;
 
 import bisq.common.network.Address;
 import bisq.common.util.CollectionUtil;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.rest_api.JaxRsApplication;
 import bisq.rest_api.RestApiApplicationService;
@@ -82,7 +83,9 @@ public class ReportApi {
     )
     @GET
     @Path("get-report/{address}")
-    public ReportDto getReport(@Parameter(description = "address from which we request the report") @PathParam("address") String address) {
+    public ReportDto getReport(
+            @Parameter(description = "address from which we request the report")
+            @PathParam("address") String address) {
         try {
             return fetchReportForAddress(address).join();
         } catch (Exception e) {
@@ -111,17 +114,13 @@ public class ReportApi {
             throw new RuntimeException("Failed to parse addresses from CSV input: " + addresses);
         }
 
-
         List<CompletableFuture<ReportDto>> futures = addressList.stream()
                 .map(this::fetchReportForAddress)
                 .toList();
 
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        CompletableFuture<List<ReportDto>> allFutures = CompletableFutureUtils.allOf(futures);
 
-        return allFutures.thenApply(v -> futures.stream()
-                        .map(CompletableFuture::join)
-                        .toList())
-                .join();
+        return allFutures.join();
     }
 
     private CompletableFuture<ReportDto> fetchReportForAddress(String addressString) {
