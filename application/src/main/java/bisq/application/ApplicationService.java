@@ -29,6 +29,7 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.util.ExceptionUtil;
+import bisq.application.migration.MigrationService;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import com.typesafe.config.ConfigFactory;
@@ -122,6 +123,7 @@ public abstract class ApplicationService implements Service {
     protected final Config config;
     @Getter
     protected final PersistenceService persistenceService;
+    private Optional<MigrationService> migrationService;
     private FileLock instanceLock;
 
     public ApplicationService(String configFileName, String[] args, Path userDataDir) {
@@ -178,6 +180,7 @@ public abstract class ApplicationService implements Service {
 
         String absoluteDataDirPath = dataDir.toAbsolutePath().toString();
         persistenceService = new PersistenceService(absoluteDataDirPath);
+        migrationService = Optional.of(new MigrationService(dataDir));
     }
 
     private void checkInstanceLock() {
@@ -204,7 +207,11 @@ public abstract class ApplicationService implements Service {
         return persistenceService.readAllPersisted();
     }
 
-    public abstract CompletableFuture<Boolean> initialize();
+    public CompletableFuture<Boolean> initialize() {
+        CompletableFuture<Boolean> completableFuture = migrationService.orElseThrow().initialize();
+        migrationService = Optional.empty();
+        return completableFuture;
+    }
 
     public abstract CompletableFuture<Boolean> shutdown();
 

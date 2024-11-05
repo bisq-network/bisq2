@@ -244,8 +244,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return migrationService.initialize()
-                .thenCompose(result -> memoryReportService.initialize())
+        return memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
@@ -338,7 +337,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> memoryReportService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> migrationService.shutdown().exceptionally(this::logError))
                 .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {

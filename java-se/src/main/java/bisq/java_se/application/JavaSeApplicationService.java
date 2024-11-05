@@ -21,7 +21,6 @@ import bisq.application.ApplicationService;
 import bisq.common.facades.FacadeProvider;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
-import bisq.evolution.migration.MigrationService;
 import bisq.java_se.facades.JavaSeGuavaFacade;
 import bisq.java_se.facades.JavaSeJdkFacade;
 import bisq.java_se.jvm.JvmMemoryReportService;
@@ -31,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public abstract class JavaSeApplicationService extends ApplicationService {
-    protected final MigrationService migrationService;
     protected final MemoryReportService memoryReportService;
 
     public JavaSeApplicationService(String configFileName, String[] args) {
@@ -43,7 +41,6 @@ public abstract class JavaSeApplicationService extends ApplicationService {
         FacadeProvider.setGuavaFacade(new JavaSeGuavaFacade());
         FacadeProvider.setJdkFacade(new JavaSeJdkFacade());
 
-        migrationService = new MigrationService(getConfig().getBaseDir());
         memoryReportService = new JvmMemoryReportService(getConfig().getMemoryReportIntervalSec(), getConfig().isIncludeThreadListInMemoryReport());
     }
 }

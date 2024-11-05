@@ -76,8 +76,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return migrationService.initialize()
-                .thenCompose(result -> memoryReportService.initialize())
+        return memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -105,7 +104,6 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
                 .thenCompose(result -> memoryReportService.shutdown())
-                .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable != null) {

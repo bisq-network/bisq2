@@ -82,8 +82,7 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return migrationService.initialize()
-                .thenCompose(result -> memoryReportService.initialize())
+        return memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
@@ -110,7 +109,6 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
                 .thenCompose(result -> memoryReportService.shutdown())
-                .thenCompose(result -> migrationService.shutdown())
                 .orTimeout(2, TimeUnit.MINUTES)
                 .handle((result, throwable) -> throwable == null)
                 .join());
