@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

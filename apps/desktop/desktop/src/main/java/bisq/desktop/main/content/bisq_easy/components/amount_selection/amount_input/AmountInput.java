@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -24,7 +24,14 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
@@ -37,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AmountInput {
-
     protected final Controller controller;
 
     public AmountInput(boolean isBaseCurrency) {
@@ -76,6 +82,10 @@ public abstract class AmountInput {
         TextField textInput = controller.view.textInput;
         textInput.requestFocus();
         textInput.selectRange(textInput.getLength(), textInput.getLength());
+    }
+
+    public void setShowHyphenInsteadOfCurrencyCode(boolean showHyphenInsteadOfCurrencyCode) {
+        controller.model.showHyphenInsteadOfCurrencyCode.set(showHyphenInsteadOfCurrencyCode);
     }
 
     protected static class Controller implements bisq.desktop.common.view.Controller {
@@ -169,6 +179,7 @@ public abstract class AmountInput {
         protected boolean hasFocus;
         @Setter
         protected boolean useLowPrecision = true;
+        protected final BooleanProperty showHyphenInsteadOfCurrencyCode = new SimpleBooleanProperty(false);
         private final BooleanProperty isAmountValid = new SimpleBooleanProperty(true);
 
         protected Model(boolean isBaseCurrency) {
@@ -180,6 +191,8 @@ public abstract class AmountInput {
             code.set(null);
             selectedMarket = null;
             hasFocus = false;
+            showHyphenInsteadOfCurrencyCode.set(false);
+            isAmountValid.set(false);
         }
     }
 
@@ -187,13 +200,15 @@ public abstract class AmountInput {
         protected final ChangeListener<Boolean> focusListener;
         protected final ChangeListener<Monetary> amountListener;
         protected final TextField textInput;
-        protected final Label codeLabel;
+        protected final Label hyphenLabel, codeLabel;
 
         protected View(Model model, Controller controller) {
             super(new HBox(), model, controller);
+
             textInput = createTextInput();
+            hyphenLabel = createHyphenLabel();
             codeLabel = createCodeLabel();
-            root.getChildren().addAll(textInput, codeLabel);
+            root.getChildren().addAll(textInput, hyphenLabel, codeLabel);
             focusListener = this::onFocusChanged;
             amountListener = this::onAmountChanged;
             initView();
@@ -201,6 +216,10 @@ public abstract class AmountInput {
 
         protected TextField createTextInput() {
             return new TextField();
+        }
+
+        protected Label createHyphenLabel() {
+            return new Label("-");
         }
 
         protected Label createCodeLabel() {
@@ -235,9 +254,15 @@ public abstract class AmountInput {
 
         @Override
         protected void onViewAttached() {
-            textInput.focusedProperty().addListener(focusListener);
+            hyphenLabel.visibleProperty().bind(model.showHyphenInsteadOfCurrencyCode);
+            hyphenLabel.managedProperty().bind(model.showHyphenInsteadOfCurrencyCode);
             codeLabel.textProperty().bind(model.code);
+            codeLabel.visibleProperty().bind(model.showHyphenInsteadOfCurrencyCode.not());
+            codeLabel.managedProperty().bind(model.showHyphenInsteadOfCurrencyCode.not());
+
+            textInput.focusedProperty().addListener(focusListener);
             model.amount.addListener(amountListener);
+
             applyAmount(model.amount.get());
             textInput.requestFocus();
             textInput.selectRange(textInput.getLength(), textInput.getLength());
@@ -245,8 +270,13 @@ public abstract class AmountInput {
 
         @Override
         protected void onViewDetached() {
-            textInput.focusedProperty().removeListener(focusListener);
+            hyphenLabel.visibleProperty().unbind();
+            hyphenLabel.managedProperty().unbind();
             codeLabel.textProperty().unbind();
+            codeLabel.visibleProperty().unbind();
+            codeLabel.managedProperty().unbind();
+
+            textInput.focusedProperty().removeListener(focusListener);
             model.amount.removeListener(amountListener);
         }
     }

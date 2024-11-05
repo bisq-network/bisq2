@@ -71,6 +71,7 @@ public class AmountSelectionModel implements Model {
     private final StringProperty description = new SimpleStringProperty();
     private final StringProperty minRangeValueAsString = new SimpleStringProperty();
     private final StringProperty maxRangeValueAsString = new SimpleStringProperty();
+    private final BooleanProperty useCompactFormat = new SimpleBooleanProperty();
 
     public AmountSelectionModel(boolean useQuoteCurrencyForMinMaxRange) {
         this.useQuoteCurrencyForMinMaxRange = useQuoteCurrencyForMinMaxRange;

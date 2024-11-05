@@ -108,6 +108,7 @@ public class TradeWizardAmountController implements Controller {
         model = new TradeWizardAmountModel();
 
         minAmountSelectionController = new AmountSelectionController(serviceProvider, true);
+        minAmountSelectionController.showHyphenInsteadOfCurrencyCode(true);
         maxOrFixAmountSelectionController = new AmountSelectionController(serviceProvider, true);
 
         view = new TradeWizardAmountView(model, this,
@@ -261,7 +262,11 @@ public class TradeWizardAmountController implements Controller {
                     }
                 });
 
-        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isMinAmountEnabled -> applyAmountSpec());
+        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
+            applyAmountSpec();
+            minAmountSelectionController.useCompactFormat(isRangeAmountEnabled);
+            maxOrFixAmountSelectionController.useCompactFormat(isRangeAmountEnabled);
+        });
         applyAmountSpec();
 
         if (model.isCreateOfferMode()) {

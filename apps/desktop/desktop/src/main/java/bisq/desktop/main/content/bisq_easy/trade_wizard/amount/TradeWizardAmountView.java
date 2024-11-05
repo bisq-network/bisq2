@@ -62,7 +62,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         minAmountRoot = minAmountSelectionController.getView().getRoot();
-        HBox amountBox = new HBox(30, minAmountRoot, maxOrFixAmountSelectionController.getView().getRoot());
+        HBox amountBox = new HBox(minAmountRoot, maxOrFixAmountSelectionController.getView().getRoot());
         amountBox.setAlignment(Pos.CENTER);
 
         amountLimitInfo = new Label();

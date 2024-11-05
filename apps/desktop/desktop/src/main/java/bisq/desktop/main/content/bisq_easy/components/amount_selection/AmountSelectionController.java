@@ -25,10 +25,10 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.components.AmountInput;
-import bisq.desktop.main.content.bisq_easy.components.BigAmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.AmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
-import bisq.desktop.main.content.bisq_easy.components.SmallAmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
@@ -105,11 +105,11 @@ public class AmountSelectionController implements Controller {
         };
     }
 
-    void setBaseSideAmount(Monetary value) {
+    public void setBaseSideAmount(Monetary value) {
         model.getBaseSideAmount().set(value);
     }
 
-    void setQuoteSideAmount(Monetary value) {
+    public void setQuoteSideAmount(Monetary value) {
         model.getQuoteSideAmount().set(value);
     }
 
@@ -129,7 +129,7 @@ public class AmountSelectionController implements Controller {
         model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("offer.buying") : Res.get("offer.selling"));
     }
 
-    void setTooltip(String tooltip) {
+    public void setTooltip(String tooltip) {
         baseSideAmountInput.setTooltip(tooltip);
     }
 
@@ -189,6 +189,15 @@ public class AmountSelectionController implements Controller {
 
     public Monetary getRightMarkerQuoteSideValue() {
         return model.getRightMarkerQuoteSideValue();
+    }
+
+    public void useCompactFormat(boolean useCompactFormat) {
+        model.getUseCompactFormat().set(useCompactFormat);
+    }
+
+    public void showHyphenInsteadOfCurrencyCode(boolean showHyphenInsteadOfCurrencyCode) {
+        quoteSideAmountInput.setShowHyphenInsteadOfCurrencyCode(showHyphenInsteadOfCurrencyCode);
+        baseSideAmountInput.setShowHyphenInsteadOfCurrencyCode(showHyphenInsteadOfCurrencyCode);
     }
 
     public void reset() {

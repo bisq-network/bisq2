@@ -21,8 +21,8 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.bisq_easy.components.BigAmountInput;
-import bisq.desktop.main.content.bisq_easy.components.SmallAmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,12 +47,12 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final Region selectionLine;
     private final SmallAmountInput baseAmount;
     private final BigAmountInput quoteAmount;
-    private Subscription baseAmountFocusPin, quoteAmountFocusPin, sliderTrackStylePin;
+    private Subscription baseAmountFocusPin, quoteAmountFocusPin, sliderTrackStylePin, useCompactFormatPin;
 
     AmountSelectionView(AmountSelectionModel model,
-                 AmountSelectionController controller,
-                 SmallAmountInput baseAmount,
-                 BigAmountInput quoteAmount) {
+                        AmountSelectionController controller,
+                        SmallAmountInput baseAmount,
+                        BigAmountInput quoteAmount) {
         super(new VBox(10), model, controller);
 
         Pane baseAmountRoot = baseAmount.getRoot();
@@ -124,6 +124,11 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         description.textProperty().bind(model.getDescription());
         minRangeValue.textProperty().bind(model.getMinRangeValueAsString());
         maxRangeValue.textProperty().bind(model.getMaxRangeValueAsString());
+
+        useCompactFormatPin = EasyBind.subscribe(model.getUseCompactFormat(), useCompactFormat -> {
+
+        });
+
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
         Parent node = root;

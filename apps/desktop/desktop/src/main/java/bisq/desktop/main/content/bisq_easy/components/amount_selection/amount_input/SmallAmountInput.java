@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
 
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -39,6 +39,7 @@ public class SmallAmountInput extends AmountInput {
 
     public SmallAmountInput(boolean isBaseCurrency) {
         super(isBaseCurrency);
+
         this.controller.setModel(new SmallAmountInputModel(isBaseCurrency));
         this.controller.setView(new SmallAmountInputView(controller.model, controller));
     }
@@ -53,6 +54,7 @@ public class SmallAmountInput extends AmountInput {
 
     private static class SmallAmountInputView extends View {
         private BisqTooltip tooltip;
+        private Button iconButton;
 
         protected SmallAmountInputView(Model model, Controller controller) {
             super(model, controller);
@@ -73,7 +75,7 @@ public class SmallAmountInput extends AmountInput {
         protected void initView() {
             root.setAlignment(Pos.CENTER);
             root.getStyleClass().add("small-amount-input");
-            Button iconButton = createIconButton();
+            iconButton = createIconButton();
             root.getChildren().add(iconButton);
         }
 
@@ -98,13 +100,19 @@ public class SmallAmountInput extends AmountInput {
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
+
             tooltip.textProperty().bind(((SmallAmountInputModel) model).tooltipProperty());
+            iconButton.visibleProperty().bind(model.showHyphenInsteadOfCurrencyCode);
+            iconButton.managedProperty().bind(model.showHyphenInsteadOfCurrencyCode);
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
+
             tooltip.textProperty().unbind();
+            iconButton.visibleProperty().unbind();
+            iconButton.managedProperty().unbind();
         }
     }
 
