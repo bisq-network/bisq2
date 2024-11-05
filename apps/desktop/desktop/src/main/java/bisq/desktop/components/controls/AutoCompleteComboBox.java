@@ -225,10 +225,14 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             String inputText = editor.getText();
             // Case 1: fire if input text selects (matches) an item
             String selectedItemAsString = getConverter().toString(getSelectionModel().getSelectedItem());
-            if (selectedItemAsString != null && selectedItemAsString.equals(inputText)) {
-                eventHandler.handle(e);
-                getParent().requestFocus();
-                return;
+            if (selectedItemAsString != null) {
+                // editor is not multiline, new lines are swallowed, so we remove the new line before we compare
+                selectedItemAsString = selectedItemAsString.replace("\n", "");
+                if (selectedItemAsString.equals(inputText)) {
+                    eventHandler.handle(e);
+                    getParent().requestFocus();
+                    return;
+                }
             }
 
             // Case 2: fire if the text is empty to support special "show all" case
