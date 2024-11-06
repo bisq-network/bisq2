@@ -127,9 +127,9 @@ public class TakeOfferAmountController implements Controller {
 
     @Override
     public void onActivate() {
-        baseSideAmountPin = EasyBind.subscribe(amountSelectionController.getBaseSideAmount(),
+        baseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedBaseSideAmount(),
                 amount -> model.getTakersBaseSideAmount().set(amount));
-        quoteSideAmountPin = EasyBind.subscribe(amountSelectionController.getQuoteSideAmount(),
+        quoteSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedQuoteSideAmount(),
                 amount -> {
                     model.getTakersQuoteSideAmount().set(amount);
                     if (amount != null) {
@@ -149,7 +149,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     void onSetReputationBasedAmount() {
-        amountSelectionController.setQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
+        amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
     }
 
     void onShowAmountLimitInfoOverlay() {
@@ -194,7 +194,7 @@ public class TakeOfferAmountController implements Controller {
             if (reputationBasedQuoteSideAmount.isLessThan(maxRangeValue)) {
                 model.getIsAmountLimitInfoVisible().set(true);
                 amountSelectionController.setRightMarkerQuoteSideValue(reputationBasedQuoteSideAmount);
-                amountSelectionController.setQuoteSideAmount(reputationBasedQuoteSideAmount);
+                amountSelectionController.setMaxOrFixedQuoteSideAmount(reputationBasedQuoteSideAmount);
                 String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
 
                 if (sellersReputationScore <= MIN_REPUTAION_SCORE) {
@@ -230,7 +230,7 @@ public class TakeOfferAmountController implements Controller {
             model.setLinkToWikiText(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.linkToWikiText"));
             String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
             long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
-            Monetary quoteSideAmount = amountSelectionController.getQuoteSideAmount().get();
+            Monetary quoteSideAmount = amountSelectionController.getMaxOrFixedQuoteSideAmount().get();
 
             BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, myReputationScore)
                     .ifPresent(myReputationBasedQuoteSideAmount -> {
@@ -275,7 +275,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     private void applyReputationBasedQuoteSideAmount() {
-        amountSelectionController.setQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
+        amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
     }
 
     private void maxOrFixedQuoteSideAmountChanged(Monetary value) {

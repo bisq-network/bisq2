@@ -716,28 +716,118 @@
  *                                                                             *
  ******************************************************************************/
 
-.amount-component .description {
+.amount-selection .description {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-wrap-text: true;
+    -fx-padding: 5 0 0 20;
 }
 
-.small-amount-input {
-    -fx-padding: -7 55 0 0;
+.amount-selection {
+    -fx-padding: 0 0 20 0;
+}
+
+.range-amount .max-or-fixed-amount .big-amount-input {
+    -fx-alignment: left;
+    /*-fx-background-color: red !important;*/
+}
+
+.range-amount .max-or-fixed-amount .big-amount-input .text-input {
+    /*-fx-background-color: green !important;*/
+    -fx-padding: 0 -35 0 10;
+}
+
+.range-amount .max-or-fixed-amount .big-amount-input .currency-code {
+    /*-fx-background-color: cyan;*/
+    -fx-padding: 5 0 0 -10;
+}
+
+.range-amount .max-or-fixed-amount .big-amount-input .text-input,
+.range-amount .max-or-fixed-amount .big-amount-input .currency-code {
+    -fx-alignment: baseline-left;
+}
+
+.range-amount .min-amount {
+    -fx-padding: 23 0 0 0;
+}
+
+.range-amount .max-or-fixed-amount {
+    -fx-padding: 30 0 0 0;
+}
+
+.range-amount .big-amount-input .text-input {
+    -fx-alignment: baseline-right;
+}
+
+.range-amount .max-or-fixed-amount .small-amount-input {
+    -fx-padding: 10 25 0 0;
+}
+
+.range-amount .min-amount .small-amount-input {
+    -fx-padding: 4 0 0 0;
+}
+
+.range-amount .quote-separator {
+    -fx-padding: 15 0 0 0;
+}
+
+.range-amount .base-separator {
+    -fx-padding: 5 0 0 0;
+}
+
+.fixed-amount .big-amount-input {
+    -fx-alignment: baseline-center;
+    /*-fx-background-color: blue;*/
+}
+
+.fixed-amount .big-amount-input .text-input {
+    /*-fx-background-color: green !important;*/
+    -fx-min-width: 250;
+    -fx-padding: 0
+}
+
+.big-amount-input .currency-code {
+    -fx-min-width: 30;
+}
+
+.fixed-amount .big-amount-input .text-input {
+    -fx-alignment: baseline-right;
+    -fx-padding: 0 0 0 -30;
+}
+
+.fixed-amount .big-amount-input {
+    -fx-padding: 0 30 0 0;
+    /*-fx-background-color: pink;*/
+}
+
+.fixed-amount .small-amount-input {
+    -fx-padding: 0 70 0 0;
+    /*-fx-background-color: pink;*/
 }
 
 .small-amount-input .text-input,
-.small-amount-input .currency-code {
+.small-amount-input .currency-code,
+.amount-separator .base-separator {
     -fx-fill: -fx-mid-text-color !important;
     -fx-text-fill: -fx-mid-text-color !important;
     -fx-font-family: "IBM Plex Sans Light" !important;
 }
 
-.small-amount-input .text-input {
+.small-amount-input .text-input,
+.amount-separator .base-separator  {
     -fx-font-size: 1.25em !important;
     -fx-alignment: baseline-right;
+}
+
+.amount-separator .quote-separator {
+    -fx-font-size: 2em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.amount-separator {
+    -fx-alignment: center;
 }
 
 .small-amount-input .currency-code {

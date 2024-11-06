@@ -43,27 +43,32 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountModel, TradeWizardAmountController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
+    private static final String RANGE_AMOUNT_STYLE_CLASS = "range-amount";
+    private static final String FIXED_AMOUNT_STYLE_CLASS = "fixed-amount";
 
+    private final AmountSelectionController amountSelectionController;
     private final Label headlineLabel, amountLimitInfo, amountLimitInfoLeadLine, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, learnMoreHyperLink, linkToWiki;
-    private final VBox minAmountRoot, content, amountLimitInfoOverlay;
+    private final VBox amountSelectionRoot, content, amountLimitInfoOverlay;
     private final Button closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountLimitInfoHBox, amountModelsBox;
-    private final HBox amountLimitInfoWithWarnIcon;
+    private final HBox amountLimitInfoHBox, amountModelsBox, amountLimitInfoWithWarnIcon, amountBox;
     private Subscription isAmountLimitInfoVisiblePin, amountLimitInfoLeadLinePin, isRangeAmountEnabledPin;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
-                                 AmountSelectionController minAmountSelectionController,
-                                 AmountSelectionController maxOrFixAmountSelectionController) {
+                                 AmountSelectionController amountSelectionController) {
         super(new StackPane(), model, controller);
+
+        this.amountSelectionController = amountSelectionController;
 
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        minAmountRoot = minAmountSelectionController.getView().getRoot();
-        HBox amountBox = new HBox(minAmountRoot, maxOrFixAmountSelectionController.getView().getRoot());
+        amountSelectionRoot = amountSelectionController.getView().getRoot();
+        amountSelectionRoot.getStyleClass().add("min-amount");
+        amountBox = new HBox(0, amountSelectionRoot);
         amountBox.setAlignment(Pos.CENTER);
+        amountBox.getStyleClass().add("amount-box");
 
         amountLimitInfo = new Label();
         amountLimitInfo.getStyleClass().add("trade-wizard-amount-limit-info");
@@ -140,8 +145,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         warningIcon.visibleProperty().bind(model.getIsWarningIconVisible());
         amountLimitInfoAmount.visibleProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
         amountLimitInfoAmount.managedProperty().bind(model.getAmountLimitInfoAmount().isEmpty().not());
-        minAmountRoot.visibleProperty().bind(model.getIsRangeAmountEnabled());
-        minAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
         amountModelsBox.visibleProperty().bind(model.getShowRangeAmounts());
         amountModelsBox.managedProperty().bind(model.getShowRangeAmounts());
 
@@ -177,6 +180,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
             } else {
                 fixedAmount.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
             }
+            amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
         amountLimitInfoAmount.setOnAction(e -> controller.onSetReputationBasedAmount());
@@ -198,8 +202,6 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         learnMoreHyperLink.visibleProperty().unbind();
         learnMoreHyperLink.managedProperty().unbind();
         warningIcon.visibleProperty().unbind();
-        minAmountRoot.visibleProperty().unbind();
-        minAmountRoot.managedProperty().unbind();
         amountLimitInfoAmount.visibleProperty().unbind();
         amountLimitInfoAmount.managedProperty().unbind();
         amountModelsBox.visibleProperty().unbind();

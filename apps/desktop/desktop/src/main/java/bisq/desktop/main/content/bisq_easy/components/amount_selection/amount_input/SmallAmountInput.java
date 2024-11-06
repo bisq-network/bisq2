@@ -37,10 +37,10 @@ public class SmallAmountInput extends AmountInput {
     private static final String DEFAULT_TOOLTIP = "bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice";
     private static final String QUOTE_AMOUNT_ID = "quote-amount-text-field";
 
-    public SmallAmountInput(boolean isBaseCurrency) {
-        super(isBaseCurrency);
+    public SmallAmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
+        super(isBaseCurrency, showCurrencyCode);
 
-        this.controller.setModel(new SmallAmountInputModel(isBaseCurrency));
+        this.controller.setModel(new SmallAmountInputModel(isBaseCurrency, showCurrencyCode));
         this.controller.setView(new SmallAmountInputView(controller.model, controller));
     }
 
@@ -58,6 +58,9 @@ public class SmallAmountInput extends AmountInput {
 
         protected SmallAmountInputView(Model model, Controller controller) {
             super(model, controller);
+
+            iconButton.setVisible(model.showCurrencyCode);
+            iconButton.setManaged(model.showCurrencyCode);
         }
 
         private Button createIconButton() {
@@ -102,8 +105,6 @@ public class SmallAmountInput extends AmountInput {
             super.onViewAttached();
 
             tooltip.textProperty().bind(((SmallAmountInputModel) model).tooltipProperty());
-            iconButton.visibleProperty().bind(model.showHyphenInsteadOfCurrencyCode);
-            iconButton.managedProperty().bind(model.showHyphenInsteadOfCurrencyCode);
         }
 
         @Override
@@ -111,16 +112,14 @@ public class SmallAmountInput extends AmountInput {
             super.onViewDetached();
 
             tooltip.textProperty().unbind();
-            iconButton.visibleProperty().unbind();
-            iconButton.managedProperty().unbind();
         }
     }
 
     private static class SmallAmountInputModel extends Model {
         private final StringProperty tooltip = new SimpleStringProperty(Res.get(DEFAULT_TOOLTIP));
 
-        protected SmallAmountInputModel(boolean isBaseCurrency) {
-            super(isBaseCurrency);
+        protected SmallAmountInputModel(boolean isBaseCurrency, boolean showCurrencyCode) {
+            super(isBaseCurrency, showCurrencyCode);
         }
 
         public StringProperty tooltipProperty() {

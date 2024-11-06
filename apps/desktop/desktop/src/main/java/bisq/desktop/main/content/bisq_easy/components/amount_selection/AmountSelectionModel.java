@@ -40,12 +40,16 @@ public class AmountSelectionModel implements Model {
     private final double sliderMin = 0;
     private final double sliderMax = 1;
 
-    private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> maxOrFixedBaseSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> maxOrFixedQuoteSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> minBaseSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> minQuoteSideAmount = new SimpleObjectProperty<>();
     private final StringProperty spendOrReceiveString = new SimpleStringProperty();
 
-    private final DoubleProperty sliderValue = new SimpleDoubleProperty();
+    private final DoubleProperty maxOrFixedSliderValue = new SimpleDoubleProperty();
+    private final DoubleProperty minSliderValue = new SimpleDoubleProperty();
     private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
+    private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
 
     @Setter
     private ObjectProperty<Monetary> minRangeMonetary = new SimpleObjectProperty<>(BisqEasyTradeAmountLimits.DEFAULT_MIN_BTC_TRADE_AMOUNT);
@@ -71,21 +75,25 @@ public class AmountSelectionModel implements Model {
     private final StringProperty description = new SimpleStringProperty();
     private final StringProperty minRangeValueAsString = new SimpleStringProperty();
     private final StringProperty maxRangeValueAsString = new SimpleStringProperty();
-    private final BooleanProperty useCompactFormat = new SimpleBooleanProperty();
+    private final BooleanProperty showRangeAmountSelection = new SimpleBooleanProperty(false);
 
     public AmountSelectionModel(boolean useQuoteCurrencyForMinMaxRange) {
         this.useQuoteCurrencyForMinMaxRange = useQuoteCurrencyForMinMaxRange;
     }
 
     void reset() {
-        baseSideAmount.set(null);
-        quoteSideAmount.set(null);
+        maxOrFixedBaseSideAmount.set(null);
+        maxOrFixedQuoteSideAmount.set(null);
+        minBaseSideAmount.set(null);
+        minQuoteSideAmount.set(null);
         spendOrReceiveString.set(null);
-        sliderValue.set(0L);
+        maxOrFixedSliderValue.set(0L);
+        minSliderValue.set(0L);
         sliderFocus.set(false);
         market = MarketRepository.getDefault();
         direction = Direction.BUY;
         leftMarkerQuoteSideValue = null;
         rightMarkerQuoteSideValue = null;
+        showRangeAmountSelection.set(false);
     }
 }

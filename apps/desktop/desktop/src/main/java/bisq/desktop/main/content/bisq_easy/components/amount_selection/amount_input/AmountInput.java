@@ -41,13 +41,15 @@ import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public abstract class AmountInput {
     protected final Controller controller;
 
-    public AmountInput(boolean isBaseCurrency) {
-        controller = new Controller(isBaseCurrency);
+    public AmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
+        controller = new Controller(isBaseCurrency, showCurrencyCode);
     }
 
     public ReadOnlyObjectProperty<Monetary> amountProperty() {
@@ -84,8 +86,8 @@ public abstract class AmountInput {
         textInput.selectRange(textInput.getLength(), textInput.getLength());
     }
 
-    public void setShowHyphenInsteadOfCurrencyCode(boolean showHyphenInsteadOfCurrencyCode) {
-        controller.model.showHyphenInsteadOfCurrencyCode.set(showHyphenInsteadOfCurrencyCode);
+    public void setUseVerySmallText(boolean useVerySmallText) {
+        controller.setUseVerySmallText(useVerySmallText);
     }
 
     protected static class Controller implements bisq.desktop.common.view.Controller {
@@ -96,8 +98,8 @@ public abstract class AmountInput {
         protected View view;
         protected final NumberValidator validator = new NumberValidator();
 
-        private Controller(boolean isBaseCurrency) {
-            model = new Model(isBaseCurrency);
+        private Controller(boolean isBaseCurrency, boolean showCurrencyCode) {
+            model = new Model(isBaseCurrency, showCurrencyCode);
             view = new View(model, this);
         }
 
@@ -151,6 +153,10 @@ public abstract class AmountInput {
             model.isAmountValid.set(true);
         }
 
+        private void setUseVerySmallText(boolean useVerySmallText) {
+            model.useVerySmallText.set(useVerySmallText);
+        }
+
         private void updateAmountIfNotFocused(String value) {
             if (!model.hasFocus) {
                 model.amount.set(AmountParser.parse(value, model.code.get()));
@@ -166,32 +172,31 @@ public abstract class AmountInput {
                     ? model.selectedMarket.getBaseCurrencyCode()
                     : model.selectedMarket.getQuoteCurrencyCode());
         }
-
-        protected void adjustTextFieldStyle() {
-        }
     }
 
     protected static class Model implements bisq.desktop.common.view.Model {
         protected final boolean isBaseCurrency;
+        protected final boolean showCurrencyCode;
         protected final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         protected final StringProperty code = new SimpleStringProperty();
+        protected final BooleanProperty useVerySmallText = new SimpleBooleanProperty();
         protected Market selectedMarket;
         protected boolean hasFocus;
         @Setter
         protected boolean useLowPrecision = true;
-        protected final BooleanProperty showHyphenInsteadOfCurrencyCode = new SimpleBooleanProperty(false);
         private final BooleanProperty isAmountValid = new SimpleBooleanProperty(true);
 
-        protected Model(boolean isBaseCurrency) {
+        protected Model(boolean isBaseCurrency, boolean showCurrencyCode) {
             this.isBaseCurrency = isBaseCurrency;
+            this.showCurrencyCode = showCurrencyCode;
         }
 
         void reset() {
             amount.set(null);
             code.set(null);
+            useVerySmallText.set(false);
             selectedMarket = null;
             hasFocus = false;
-            showHyphenInsteadOfCurrencyCode.set(false);
             isAmountValid.set(false);
         }
     }
@@ -200,15 +205,17 @@ public abstract class AmountInput {
         protected final ChangeListener<Boolean> focusListener;
         protected final ChangeListener<Monetary> amountListener;
         protected final TextField textInput;
-        protected final Label hyphenLabel, codeLabel;
+        protected final Label codeLabel;
+        private Subscription useVerySmallTextPin;
 
         protected View(Model model, Controller controller) {
             super(new HBox(), model, controller);
 
             textInput = createTextInput();
-            hyphenLabel = createHyphenLabel();
             codeLabel = createCodeLabel();
-            root.getChildren().addAll(textInput, hyphenLabel, codeLabel);
+            codeLabel.setVisible(model.showCurrencyCode);
+            codeLabel.setManaged(model.showCurrencyCode);
+            root.getChildren().addAll(textInput, codeLabel);
             focusListener = this::onFocusChanged;
             amountListener = this::onAmountChanged;
             initView();
@@ -216,10 +223,6 @@ public abstract class AmountInput {
 
         protected TextField createTextInput() {
             return new TextField();
-        }
-
-        protected Label createHyphenLabel() {
-            return new Label("-");
         }
 
         protected Label createCodeLabel() {
@@ -254,11 +257,7 @@ public abstract class AmountInput {
 
         @Override
         protected void onViewAttached() {
-            hyphenLabel.visibleProperty().bind(model.showHyphenInsteadOfCurrencyCode);
-            hyphenLabel.managedProperty().bind(model.showHyphenInsteadOfCurrencyCode);
             codeLabel.textProperty().bind(model.code);
-            codeLabel.visibleProperty().bind(model.showHyphenInsteadOfCurrencyCode.not());
-            codeLabel.managedProperty().bind(model.showHyphenInsteadOfCurrencyCode.not());
 
             textInput.focusedProperty().addListener(focusListener);
             model.amount.addListener(amountListener);
@@ -266,18 +265,18 @@ public abstract class AmountInput {
             applyAmount(model.amount.get());
             textInput.requestFocus();
             textInput.selectRange(textInput.getLength(), textInput.getLength());
+
+            useVerySmallTextPin = EasyBind.subscribe(model.useVerySmallText, useVerySmallText -> adjustTextFieldStyle());
         }
 
         @Override
         protected void onViewDetached() {
-            hyphenLabel.visibleProperty().unbind();
-            hyphenLabel.managedProperty().unbind();
             codeLabel.textProperty().unbind();
-            codeLabel.visibleProperty().unbind();
-            codeLabel.managedProperty().unbind();
 
             textInput.focusedProperty().removeListener(focusListener);
             model.amount.removeListener(amountListener);
+
+            useVerySmallTextPin.unsubscribe();
         }
     }
 }

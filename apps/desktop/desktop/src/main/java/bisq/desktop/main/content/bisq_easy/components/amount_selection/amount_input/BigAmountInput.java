@@ -17,35 +17,30 @@
 
 package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BigAmountInput extends AmountInput {
-    private static final double TEXT_INPUT_PREF_WIDTH = 250;
     private static final String BIG_TEXT_INPUT_ID = "base-amount-text-field";
     private static final String SMALL_TEXT_INPUT_ID = "base-amount-text-field-small";
+    private static final String VERY_SMALL_TEXT_INPUT_ID = "base-amount-text-field-very-small";
     private static final int TEXT_LENGTH_THRESHOLD = 9;
 
-    public BigAmountInput(boolean isBaseCurrency) {
-        super(isBaseCurrency);
-        this.controller.setView(new BigAmountInputView(controller.model, controller));
+    public BigAmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
+        super(isBaseCurrency, showCurrencyCode);
+
+        controller.setView(new BigAmountInputView(controller.model, controller));
     }
 
     private static class BigAmountInputView extends View {
-
         protected BigAmountInputView(Model model, Controller controller) {
             super(model, controller);
         }
 
         @Override
         public void initView() {
-            HBox.setMargin(textInput, new Insets(0, 0, 0, -30));
-            root.setAlignment(Pos.BASELINE_CENTER);
             root.setSpacing(10);
             root.getStyleClass().add("big-amount-input");
         }
@@ -53,29 +48,26 @@ public class BigAmountInput extends AmountInput {
         @Override
         protected TextField createTextInput() {
             var textInput = new TextField();
-            textInput.setPrefWidth(TEXT_INPUT_PREF_WIDTH);
             textInput.setId(BIG_TEXT_INPUT_ID);
-            textInput.setAlignment(Pos.BASELINE_RIGHT);
             textInput.getStyleClass().add("text-input");
-            textInput.setPadding(new Insets(0, 0, 5, 0));
             return textInput;
         }
 
         @Override
         protected Label createCodeLabel() {
             var codeLabel = new Label();
-            codeLabel.setPadding(new Insets(0, -20, 0, 0));
             codeLabel.getStyleClass().add("currency-code");
-            codeLabel.setAlignment(Pos.BASELINE_LEFT);
             return codeLabel;
         }
 
         @Override
         protected void adjustTextFieldStyle() {
-            if (textInput.getText().length() > TEXT_LENGTH_THRESHOLD) {
-                textInput.setId(SMALL_TEXT_INPUT_ID);
+            if (model.useVerySmallText.get()) {
+                textInput.setId(VERY_SMALL_TEXT_INPUT_ID);
             } else {
-                textInput.setId(BIG_TEXT_INPUT_ID);
+                textInput.setId(textInput.getText().length() > TEXT_LENGTH_THRESHOLD
+                        ? SMALL_TEXT_INPUT_ID
+                        : BIG_TEXT_INPUT_ID);
             }
         }
     }

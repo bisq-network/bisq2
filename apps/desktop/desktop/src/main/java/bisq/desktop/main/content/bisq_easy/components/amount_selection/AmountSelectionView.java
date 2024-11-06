@@ -24,7 +24,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
 import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
@@ -40,40 +39,65 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class AmountSelectionView extends View<VBox, AmountSelectionModel, AmountSelectionController> {
     public final static int AMOUNT_BOX_WIDTH = 330;
-    public final static int AMOUNT_BOX_HEIGHT = 130;
+    public final static int AMOUNT_BOX_HEIGHT = 120;
 
     private final Slider slider = new Slider();
     private final Label minRangeValue, maxRangeValue, description;
-    private final Region selectionLine;
-    private final SmallAmountInput baseAmount;
-    private final BigAmountInput quoteAmount;
-    private Subscription baseAmountFocusPin, quoteAmountFocusPin, sliderTrackStylePin, useCompactFormatPin;
+    private final Region line, selectionLine;
+    private final SmallAmountInput maxOrFixedBaseAmount, minBaseAmount;
+    private final BigAmountInput maxOrFixedQuoteAmount, minQuoteAmount;
+    private final VBox minAmountVBox, amountSeparatorVBox, sliderBox;
+    private Subscription maxOrFixedBaseAmountFocusPin, maxOrFixedQuoteAmountFocusPin,
+            minBaseAmountFocusPin, minQuoteAmountFocusPin, sliderTrackStylePin, isRangeAmountEnabledPin;
 
     AmountSelectionView(AmountSelectionModel model,
                         AmountSelectionController controller,
-                        SmallAmountInput baseAmount,
-                        BigAmountInput quoteAmount) {
+                        SmallAmountInput maxOrFixedBaseAmount,
+                        BigAmountInput maxOrFixedQuoteAmount,
+                        SmallAmountInput minBaseAmount,
+                        BigAmountInput minQuoteAmount) {
         super(new VBox(10), model, controller);
 
-        Pane baseAmountRoot = baseAmount.getRoot();
-        this.baseAmount = baseAmount;
-        Pane quoteAmountRoot = quoteAmount.getRoot();
-        this.quoteAmount = quoteAmount;
+        // max or fixed component
+        Pane maxOrFixedBaseAmountRoot = maxOrFixedBaseAmount.getRoot();
+        this.maxOrFixedBaseAmount = maxOrFixedBaseAmount;
+        Pane maxOrFixedQuoteAmountRoot = maxOrFixedQuoteAmount.getRoot();
+        this.maxOrFixedQuoteAmount = maxOrFixedQuoteAmount;
 
+        VBox maxOrFixedAmountVBox = new VBox(0, maxOrFixedQuoteAmountRoot, maxOrFixedBaseAmountRoot);
+        maxOrFixedAmountVBox.getStyleClass().add("max-or-fixed-amount");
+
+        // min component (only shown when using a range)
+        Pane minBaseAmountRoot = minBaseAmount.getRoot();
+        this.minBaseAmount = minBaseAmount;
+        Pane minQuoteAmountRoot = minQuoteAmount.getRoot();
+        this.minQuoteAmount = minQuoteAmount;
+
+        minAmountVBox = new VBox(0, minQuoteAmountRoot, minBaseAmountRoot);
+        minAmountVBox.getStyleClass().add("min-amount");
+
+        // rest of the component
         description = new Label();
         description.getStyleClass().add("description");
         description.setMouseTransparent(true);
 
-        VBox amountVBox = new VBox(0, description, Spacer.fillVBox(), quoteAmountRoot,
-                Spacer.fillVBox(), baseAmountRoot);
-        amountVBox.getStyleClass().add("bisq-dual-amount-bg");
-        amountVBox.setMinWidth(AMOUNT_BOX_WIDTH);
-        amountVBox.setMaxWidth(AMOUNT_BOX_WIDTH);
-        amountVBox.setMinHeight(AMOUNT_BOX_HEIGHT);
-        amountVBox.setMaxHeight(AMOUNT_BOX_HEIGHT);
-        amountVBox.setPadding(new Insets(5, 20, 10, 20));
+        Label quoteAmountSeparator = new Label("-");
+        quoteAmountSeparator.getStyleClass().add("quote-separator");
+        Label baseAmountSeparator = new Label("-");
+        baseAmountSeparator.getStyleClass().add("base-separator");
+        amountSeparatorVBox = new VBox(quoteAmountSeparator, baseAmountSeparator);
+        amountSeparatorVBox.getStyleClass().add("amount-separator");
+        HBox amountInputHBox = new HBox(minAmountVBox, amountSeparatorVBox, maxOrFixedAmountVBox);
+        amountInputHBox.setMaxWidth(AMOUNT_BOX_WIDTH);
+        amountInputHBox.setMinWidth(AMOUNT_BOX_WIDTH);
+        amountInputHBox.setMinHeight(AMOUNT_BOX_HEIGHT - 23);
+        amountInputHBox.setMaxHeight(AMOUNT_BOX_HEIGHT - 23);
+        amountInputHBox.getStyleClass().add("amount-input");
 
-        Region line = new Region();
+        VBox descriptionAndAmountVBox = new VBox(0, description, Spacer.fillVBox(), amountInputHBox);
+        descriptionAndAmountVBox.getStyleClass().add("bisq-dual-amount-bg");
+
+        line = new Region();
         line.setPrefHeight(1);
         line.setPrefWidth(AMOUNT_BOX_WIDTH);
         line.setLayoutY(AMOUNT_BOX_HEIGHT);
@@ -87,8 +111,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         selectionLine.setLayoutY(AMOUNT_BOX_HEIGHT - 2);
         selectionLine.setMouseTransparent(true);
 
-        Pane amountPane = new Pane(amountVBox, line, selectionLine);
+        Pane amountPane = new Pane(descriptionAndAmountVBox, line, selectionLine);
         amountPane.setMaxWidth(AMOUNT_BOX_WIDTH);
+        amountPane.setMinHeight(AMOUNT_BOX_HEIGHT);
+        amountPane.setMaxHeight(AMOUNT_BOX_HEIGHT);
 
         slider.setMin(model.getSliderMin());
         slider.setMax(model.getSliderMax());
@@ -99,35 +125,44 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxRangeValue = new Label();
         maxRangeValue.getStyleClass().add("bisq-small-light-label-dimmed");
 
-        VBox sliderBox = new VBox(2, slider, new HBox(minRangeValue, Spacer.fillHBox(), maxRangeValue));
+        sliderBox = new VBox(2, slider, new HBox(minRangeValue, Spacer.fillHBox(), maxRangeValue));
         sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH);
 
-//            VBox.setMargin(amountPane, new Insets(0, 0, 20, 0));
         root.getChildren().addAll(amountPane, sliderBox);
-        root.getStyleClass().add("amount-component");
         root.setAlignment(Pos.TOP_CENTER);
     }
 
     @Override
     protected void onViewAttached() {
         UIScheduler.run(() -> {
-            quoteAmount.requestFocus();
-            baseAmountFocusPin = EasyBind.subscribe(baseAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(quoteAmount.focusedProperty(), focus));
-            quoteAmountFocusPin = EasyBind.subscribe(quoteAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(baseAmount.focusedProperty(), focus));
+            maxOrFixedQuoteAmount.requestFocus();
+            maxOrFixedBaseAmountFocusPin = EasyBind.subscribe(maxOrFixedBaseAmount.focusedProperty(),
+                    focus -> onInputTextFieldFocus(maxOrFixedQuoteAmount.focusedProperty(), focus));
+            maxOrFixedQuoteAmountFocusPin = EasyBind.subscribe(maxOrFixedQuoteAmount.focusedProperty(),
+                    focus -> onInputTextFieldFocus(maxOrFixedBaseAmount.focusedProperty(), focus));
+            minBaseAmountFocusPin = EasyBind.subscribe(minBaseAmount.focusedProperty(),
+                    focus -> onInputTextFieldFocus(minQuoteAmount.focusedProperty(), focus));
+            minQuoteAmountFocusPin = EasyBind.subscribe(minQuoteAmount.focusedProperty(),
+                    focus -> onInputTextFieldFocus(minBaseAmount.focusedProperty(), focus));
         }).after(700);
 
+        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
+            root.getStyleClass().clear();
+            root.getStyleClass().add("amount-selection");
+            root.getStyleClass().add(isRangeAmountEnabled ? "range-amount" : "fixed-amount");
+            maxOrFixedQuoteAmount.setUseVerySmallText(isRangeAmountEnabled);
+            minQuoteAmount.setUseVerySmallText(isRangeAmountEnabled);
+        });
         sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), slider::setStyle);
-        slider.valueProperty().bindBidirectional(model.getSliderValue());
+        slider.valueProperty().bindBidirectional(model.getMaxOrFixedSliderValue());
         model.getSliderFocus().bind(slider.focusedProperty());
         description.textProperty().bind(model.getDescription());
         minRangeValue.textProperty().bind(model.getMinRangeValueAsString());
         maxRangeValue.textProperty().bind(model.getMaxRangeValueAsString());
-
-        useCompactFormatPin = EasyBind.subscribe(model.getUseCompactFormat(), useCompactFormat -> {
-
-        });
+        minAmountVBox.visibleProperty().bind(model.getIsRangeAmountEnabled());
+        minAmountVBox.managedProperty().bind(model.getIsRangeAmountEnabled());
+        amountSeparatorVBox.visibleProperty().bind(model.getIsRangeAmountEnabled());
+        amountSeparatorVBox.managedProperty().bind(model.getIsRangeAmountEnabled());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -140,20 +175,35 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
     @Override
     protected void onViewDetached() {
-        if (baseAmountFocusPin != null) {
-            baseAmountFocusPin.unsubscribe();
+        if (maxOrFixedBaseAmountFocusPin != null) {
+            maxOrFixedBaseAmountFocusPin.unsubscribe();
         }
-        if (quoteAmountFocusPin != null) {
-            quoteAmountFocusPin.unsubscribe();
+        if (maxOrFixedQuoteAmountFocusPin != null) {
+            maxOrFixedQuoteAmountFocusPin.unsubscribe();
         }
+        if (minBaseAmountFocusPin != null) {
+            minBaseAmountFocusPin.unsubscribe();
+        }
+        if (minQuoteAmountFocusPin != null) {
+            minQuoteAmountFocusPin.unsubscribe();
+        }
+        isRangeAmountEnabledPin.unsubscribe();
         sliderTrackStylePin.unsubscribe();
-        slider.valueProperty().unbindBidirectional(model.getSliderValue());
+        slider.valueProperty().unbindBidirectional(model.getMaxOrFixedSliderValue());
         model.getSliderFocus().unbind();
         description.textProperty().unbind();
         minRangeValue.textProperty().unbind();
         maxRangeValue.textProperty().unbind();
-        baseAmount.isAmountValidProperty().set(true);
-        quoteAmount.isAmountValidProperty().set(true);
+        minAmountVBox.visibleProperty().unbind();
+        minAmountVBox.managedProperty().unbind();
+        amountSeparatorVBox.visibleProperty().unbind();
+        amountSeparatorVBox.managedProperty().unbind();
+
+        maxOrFixedBaseAmount.isAmountValidProperty().set(true);
+        maxOrFixedQuoteAmount.isAmountValidProperty().set(true);
+        minBaseAmount.isAmountValidProperty().set(true);
+        minQuoteAmount.isAmountValidProperty().set(true);
+
         Parent node = root;
         while (node.getParent() != null) {
             node.setOnMousePressed(null);

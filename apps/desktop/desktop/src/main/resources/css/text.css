@@ -435,6 +435,15 @@
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
+#base-amount-text-field-very-small {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-size: 1.5em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
 #quote-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
