@@ -1,6 +1,5 @@
 plugins {
     id("bisq.java-library")
-    id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
 dependencies {
@@ -21,10 +20,8 @@ dependencies {
 
     implementation("network:network:$version")
     implementation("network:network-identity:$version")
-    implementation("bitcoind:core:$version")
-    implementation("wallets:wallet:$version")
-    // implementation("wallets:electrum")
-    // implementation("wallets:bitcoind")
+    implementation("bitcoind:core")
+    implementation("wallets:wallet")
 
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)
