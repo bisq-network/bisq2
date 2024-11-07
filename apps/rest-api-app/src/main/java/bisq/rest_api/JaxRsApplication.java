@@ -44,6 +44,7 @@ public class JaxRsApplication extends ResourceConfig implements Service {
     public CompletableFuture<Boolean> initialize() {
         httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), this);
         httpServer.createContext("/doc", new StaticFileHandler("/doc/v1/"));
+        httpServer.createContext("/node-monitor", new StaticFileHandler("/node-monitor/"));
         log.info("Server started at {}.", BASE_URL);
         return CompletableFuture.completedFuture(true);
     }

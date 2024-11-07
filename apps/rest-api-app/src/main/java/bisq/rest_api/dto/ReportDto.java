@@ -25,12 +25,21 @@ import lombok.Getter;
 @Schema(name = "Report")
 public final class ReportDto {
     private Report report;
+    private String errorMessage;
 
     public static ReportDto from(Report report) {
         ReportDto dto = new ReportDto();
         dto.report = report;
         return dto;
     }
+
+    public static ReportDto fromError(String errorMessage) {
+        ReportDto dto = new ReportDto();
+        dto.errorMessage = errorMessage;
+        return dto;
+    }
+
+    public boolean isSuccessful() {
+        return errorMessage == null;
+    }
 }
-
-

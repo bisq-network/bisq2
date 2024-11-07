@@ -1,0 +1,94 @@
+/* styles/global.css */
+/* Basic reset and global styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-top: 20px;
+}
+
+/* General error styling */
+.error {
+    color: red;
+    font-weight: bold;
+}
+
+/* Status indicator circles */
+.status-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+/* Colors for status */
+.status-loading {
+    background-color: yellow;
+}
+
+.status-ok {
+    background-color: green;
+}
+
+.status-error {
+    background-color: red;
+}
+
+/* Basic button styling to be extended in specific views */
+.button {
+    padding: 5px 10px;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    display: block;
+    max-width: 200px;
+    text-align: center;
+    background-color: #007bff;
+    margin-top: 5px;
+}
+
+.button--green {
+    background-color: #28a745;
+}
+
+.button--green:hover {
+    background-color: #218838;
+}
+
+.button--green:active {
+    background-color: #196f31;
+}
+
+.button--blue {
+    background-color: #007bff;
+}
+
+.button--blue:hover {
+    background-color: #0056b3;
+}
+
+.button--blue:active {
+    background-color: #004494;
+}
+
+/* Fetch Remote List Button - using orange for warning */
+.button--orange {
+    background-color: #ff8c00; /* Orange as a warning color */
+}
+
+.button--orange:hover {
+    background-color: #e07b00;
+}
+
+.button--orange:active {
+    background-color: #cc6f00;
+}
