@@ -1,17 +1,7 @@
 plugins {
     java
-    id("maven-publish") // for jitpack
+    id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
-
-group = "bisq"
-version = project.version
-//sourceCompatibility = 1.8 // java 8
-//targetCompatibility = 1.8
-
-//java {
-//    withJavadocJar()
-//    withSourcesJar()
-//}
 
 tasks.register("buildAll") {
     group = "build"

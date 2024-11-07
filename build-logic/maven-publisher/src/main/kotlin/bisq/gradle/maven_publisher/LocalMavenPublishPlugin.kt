@@ -75,8 +75,9 @@ class LocalMavenPublishPlugin : Plugin<Project> {
                 project.extensions.configure<PublishingExtension>("publishing") {
                     publications {
 //                        val publicationName = if (group == DEFAULT_GROUP) "mavenJava" else "mavenJava_${group}"
-                        val publicationName = "mavenJava"
-                        create(publicationName, MavenPublication::class) {
+                        var publicationName = "mavenJava"
+                        var existingPublication = findByName(publicationName) ?: create(publicationName, MavenPublication::class)
+                        (existingPublication as MavenPublication).apply {
                             from(project.components["java"])  // Adjust if publishing other types (like Kotlin)
                             artifactId = project.name
                             groupId = group
@@ -85,7 +86,9 @@ class LocalMavenPublishPlugin : Plugin<Project> {
                             setupPublication(project, group, protoSourcesJar)
                         }
                         if (group != DEFAULT_GROUP) {
-                            create("mavenJava_bisqAlias", MavenPublication::class) {
+                            publicationName = "mavenJava_bisqAlias"
+                            existingPublication = findByName(publicationName) ?: create(publicationName, MavenPublication::class)
+                            (existingPublication as MavenPublication).apply {
                                 groupId = "bisq"
                                 artifactId = project.name
                                 version = rootVersion
@@ -146,12 +149,16 @@ class LocalMavenPublishPlugin : Plugin<Project> {
     }
 
     private fun loadRootVersion(project: Project) {        val rootPropertiesFile = File(getRootGradlePropertiesFile(project), "gradle.properties")
-        val rootProperties = Properties()
-        if (rootPropertiesFile.exists()) {
-            rootProperties.load(rootPropertiesFile.inputStream())
-        }
+        if (project.version != "unspecified") {
+            rootVersion = project.version as String
+        } else {
+            val rootProperties = Properties()
+            if (rootPropertiesFile.exists()) {
+                rootProperties.load(rootPropertiesFile.inputStream())
+            }
 
-        rootVersion = rootProperties.getProperty("version", "unspecified")
+            rootVersion = rootProperties.getProperty("version", "unspecified")
+        }
     }
 
     private fun getRootGradlePropertiesFile(project: Project): File {

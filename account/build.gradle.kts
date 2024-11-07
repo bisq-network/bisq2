@@ -1,8 +1,9 @@
 plugins {
     id("bisq.java-library")
     id("bisq.protobuf")
-    id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
+
+version = rootProject.version
 
 dependencies {
     implementation(project(":i18n"))

@@ -3,7 +3,6 @@ plugins {
     id("bisq.java-conventions")
     id("bisq.java-integration-tests")
     id("bisq.protobuf")
-    id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
 
