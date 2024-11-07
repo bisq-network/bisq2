@@ -33,7 +33,7 @@ public class RestApiResourceConfig extends ResourceConfig {
             protected void configure() {
                 bind(new SwaggerResolution(baseUrl)).to(SwaggerResolution.class);
                 bind(new UserIdentityRestApi(applicationService.getUserService().getUserIdentityService())).to(UserIdentityRestApi.class);
-                bind(new ReportRestApi(applicationService.getNetworkService(), applicationService.getBondedRolesService())).to(ReportRestApi.class);
+                bind(new ReportRestApi(applicationService.getNetworkService(), applicationService.getBondedRolesService(), applicationService.getUserService())).to(ReportRestApi.class);
             }
         });
     }

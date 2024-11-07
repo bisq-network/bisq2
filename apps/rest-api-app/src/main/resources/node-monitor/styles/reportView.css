@@ -1,4 +1,5 @@
 /* styles/reportView.css */
+
 /* Node block container styling */
 .node-block {
     border: 1px solid #ddd;
@@ -6,7 +7,8 @@
     margin: 10px 20px;
     border-radius: 8px;
     background-color: #f9f9f9;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Adds slight shadow for depth */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Adds slight shadow for depth */
 }
 
 /* Header styling for each node */
@@ -14,7 +16,70 @@
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    flex-wrap: wrap; /* Allows wrapping on smaller screens */
+    flex-wrap: wrap;
+    /* Allows wrapping on smaller screens */
+    gap: 15px;
+    /* Adds space between elements */
+}
+
+/* Host, Role Type, and User styling */
+.node-header span:not(.status-circle) {
+    font-size: 1em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: #e9ecef;
+    /* Light background for readability */
+    color: #333;
+}
+
+/* Distinct styles for Role Type and User */
+div.node-header>span.role-type {
+    font-weight: bold;
+    background-color: #cce5ff;
+    color: #004085;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #b8daff;
+}
+
+.node-header .user-name {
+    font-style: italic;
+    color: #6c757d;
+    /* Gray color for user name */
+}
+
+/* Status indicator circles */
+.status-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 10px;
+    background-color: grey;
+    /* Default fallback color */
+}
+
+.status-loading {
+    background-color: yellow;
+}
+
+.status-ok {
+    background-color: green;
+}
+
+.status-error {
+    background-color: red;
+}
+
+.sub-structure-title {
+    display: inline-block;
+    font-weight: bold;
+    background-color: #e9ecef;
+    color: #495057;
+     padding: 4px 8px;
+    border-radius: 4px;
+    margin: 5px 0;
+    border: 1px solid #ced4da;
 }
 
 /* Table styling for report details */
@@ -28,13 +93,12 @@ table {
     margin-top: 5px;
 }
 
-th, td {
-    padding: 8px;
+th,
+td {
+    padding: 3px 3px;
     border: 1px solid #ddd;
-    text-align: left;
 }
 
-/* Header styling for table columns */
 th {
     font-size: 0.85em;
     background-color: #f2f2f2;
@@ -43,6 +107,75 @@ th {
     max-width: 120px;
     white-space: normal;
     word-wrap: break-word;
+    text-align: left;
+    /* Ensure headers are left-aligned */
+}
+
+td {
+    text-align: left;
+}
+
+td .button.toggle-button {
+    margin: 0 auto;
+}
+
+td.diff {
+    position: relative;
+    background: transparent;
+}
+
+td.diff.low {
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 240, 85, 1) 0%,
+        rgba(255, 240, 85, 0.25) 50%,
+        rgba(255, 240, 85, 0) 100%
+    );
+}
+
+td.diff.medium {
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 214, 153, 1) 0%, 
+        rgba(255, 214, 153, 0.25) 50%, 
+        rgba(255, 214, 153, 0) 100%
+    );
+}
+
+td.diff.high {
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 153, 153, 1) 0%, 
+        rgba(255, 153, 153, 0.25) 50%, 
+        rgba(255, 153, 153, 0) 100%
+    );
+}
+
+td.diff::after {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 1.2em;
+    color: #333;
+    content: ''; /* Platzhalter für Symbole */
+}
+
+td.flex-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+td.flex-container .button.toggle-button {
+    margin: 0 auto;
+}
+
+td.flex-container> :not(.button.toggle-button) {
+    flex-grow: 0;
+}
+
+td> :not(.button.toggle-button) {
+    flex-grow: 0;
 }
 
 /* Responsive adjustments */
@@ -52,7 +185,17 @@ th {
         margin: 8px 10px;
     }
 
-    th, td {
+    .node-header {
+        gap: 10px;
+        /* Adjust gap for smaller screens */
+    }
+
+    .node-header span:not(.status-circle) {
+        font-size: 0.9em;
+    }
+
+    th,
+    td {
         font-size: 0.75em;
         padding: 6px;
     }
@@ -62,5 +205,14 @@ th {
     .node-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .node-header span:not(.status-circle) {
+        margin-bottom: 5px;
+        /* Add space between wrapped items */
+    }
+
+    table {
+        font-size: 0.8em;
     }
 }

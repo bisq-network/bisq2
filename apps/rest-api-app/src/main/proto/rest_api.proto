@@ -1,0 +1,10 @@
+syntax = "proto3";
+package rest_api;
+option java_package = "bisq.rest_api.protobuf";
+option java_multiple_files = true;
+
+message AddressDetails {
+  string address = 1;
+  string bondedRoleType = 2;
+  string nickNameOrBondUserName = 3;
+}

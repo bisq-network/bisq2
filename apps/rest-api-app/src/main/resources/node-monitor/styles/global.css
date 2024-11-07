@@ -1,4 +1,5 @@
 /* styles/global.css */
+
 /* Basic reset and global styling */
 body {
     font-family: Arial, sans-serif;
@@ -41,7 +42,7 @@ h2 {
     background-color: red;
 }
 
-/* Basic button styling to be extended in specific views */
+/* Basic button styling */
 .button {
     padding: 5px 10px;
     color: #fff;
@@ -80,9 +81,9 @@ h2 {
     background-color: #004494;
 }
 
-/* Fetch Remote List Button - using orange for warning */
 .button--orange {
-    background-color: #ff8c00; /* Orange as a warning color */
+    background-color: #ff8c00;
+    /* Orange as a warning color */
 }
 
 .button--orange:hover {

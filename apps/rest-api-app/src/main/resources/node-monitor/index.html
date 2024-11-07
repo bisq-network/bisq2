@@ -1,8 +1,10 @@
 <!-- ./index.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bisq Node Monitor</title>
     <link rel="stylesheet" href="styles/global.css">
@@ -10,52 +12,75 @@
     <link rel="stylesheet" href="styles/reportView.css">
     <link rel="stylesheet" href="styles/page-layout.css">
 </head>
+
 <body>
 
-<h2>Bisq Node Monitor</h2>
+    <h2>Bisq Node Monitor</h2>
 
-<div class="hamburger-menu" id="hamburgerButton">
-    &#9776;
-</div>
-
-<div id="settingsPanel" style="display: none;">
-    <h3>Settings</h3>
-    <div>
-        <label>Host List (comma or newline separated):</label>
-        <textarea id="hostListInput" placeholder="Host:port list, separated by commas or new lines" rows="9" style="width: 100%;"></textarea>
+    <div class="hamburger-menu" id="hamburgerButton">
+        &#9776;
     </div>
-    <button id="fetchRemoteListButton" class="toggle-button" style="margin-top: 10px;">Fetch Remote Host List</button>
-    <div>
-        <label>Port List (comma or newline separated, optional):</label>
-        <textarea id="portListInput" placeholder="Port list for filtering, separated by commas or new lines" rows="3" style="width: 100%;"></textarea>
+
+    <div id="settingsPanel" style="display: none;">
+        <h3>Settings</h3>
+        <div>
+            <label>Address List (comma or newline separated):</label>
+            <textarea id="addressListInput"
+                placeholder="Address list in host:port format, separated by commas or new lines" rows="9"
+                style="width: 100%;"></textarea>
+        </div>
+        <button id="fetchRemoteListButton" class="toggle-button" style="margin-top: 10px;">Fetch Remote Address
+            List</button>
+        <div>
+            <label>Port List (comma or newline separated, optional):</label>
+            <textarea id="portListInput" placeholder="Port list for filtering, separated by commas or new lines"
+                rows="3" style="width: 100%;"></textarea>
+        </div>
+        <div id="thresholdSettings">
+            <div class="threshold-container">
+                <div class="threshold-text">
+                    <h4>Deviation Thresholds</h4>
+                    <p>For report diffs</p>
+                </div>
+                <div class="threshold-grid">
+                    <div>
+                        <label for="lowThreshold">LOW</label>
+                        <input id="lowThreshold" type="number" value="5">
+                    </div>
+                    <div>
+                        <label for="mediumThreshold">MEDIUM</label>
+                        <input id="mediumThreshold" type="number" value="20">
+                    </div>
+                    <div>
+                        <label for="highThreshold">HIGH</label>
+                        <input id="highThreshold" type="number" value="50">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="saveConfigButton" class="toggle-button" style="margin-top: 10px;">Save Configuration</button>
     </div>
-    <button id="saveConfigButton" class="toggle-button" style="margin-top: 10px;">Save Configuration</button>
-</div>
 
-<div class="button-container">
-    <button id="reloadButton" class="button button--green">Reload Data</button>
-    <button id="toggleAllButton" class="button button--blue" style="display: none;">Expand All Details</button>
-</div>
+    <div class="button-container">
+        <button id="reloadButton" class="button button--green">Reload Data</button>
+        <button id="toggleAllButton" class="button button--blue" style="display: none;">Expand All Details</button>
+    </div>
 
-<div id="statusMessage" style="display: none; text-align: center; margin-top: 20px; color: grey;">
-    <!-- Dynamically generated message data will appear here -->
-</div>
+    <div id="statusMessage" style="display: none; text-align: center; margin-top: 20px; color: grey;">
+        <!-- Dynamically generated message data will appear here -->
+    </div>
 
-<div id="reportContainer">
-    <!-- Dynamically generated node data will appear here -->
-</div>
+    <div id="reportContainer">
+        <!-- Dynamically generated node data will appear here -->
+    </div>
 
-<script>
-    window.App = window.App || {};
-</script>
+    <script>
+        window.App = window.App || {};
+    </script>
 
-<script src="js/constants.js"></script>
-<script src="js/services/storageService.js"></script>
-<script src="js/services/dataService.js"></script>
-<script src="js/views/settingsView.js"></script>
-<script src="js/views/reportView.js"></script>
-<script src="js/controllers/appController.js"></script>
-<script src="index.js"></script>
+    <script type="module" src="index.js"></script>
+
 </body>
-</html>
 
+</html>
