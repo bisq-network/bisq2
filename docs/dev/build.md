@@ -7,7 +7,22 @@
    cd bisq2
    ```
 
-2. **Build Bisq**
+2. **Install Dependencies:**
+   Bisq requires JDK 22. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+
+3. **Setup bitcoind git submodule:**
+   At project setup run first:
+   ```sh
+   git submodule init
+   git submodule update
+   ```
+
+   In case the submodule has changed after a project update, run:
+   ```sh
+   git submodule update
+   ```
+
+4. **Build Bisq**
 
    On macOS and Linux, execute:
    ```sh
@@ -22,7 +37,7 @@
    If you prefer to skip tests to speed up the building process, just append `-x test` to the previous commands.
 
 
-3. **Generate Seed Node & Desktop App Binaries**
+5. **Generate Seed Node & Desktop App Binaries**
 
    Seed Node:
    ```sh
@@ -36,13 +51,13 @@
    **For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
 
 
-4. **Generate Installers**
+6. **Generate Installers**
 
    ```sh
    ./gradlew :apps:desktop:desktop-app-launcher:clean :apps:desktop:desktop-app-launcher:generateInstallers
    ```
 
-5. **Other useful dev gradle commands**
+7. **Other useful dev gradle commands**
 
 For a quick full cleanup/rebuild you can use
 

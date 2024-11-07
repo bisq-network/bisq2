@@ -27,20 +27,35 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 1. **Clone Bisq 2:**
    ```bash
    git clone https://github.com/bisq-network/bisq2.git
+   cd bisq2
    ```
 
 2. **Install Dependencies:**
    Bisq requires JDK 22. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
 
-3. **Run desktop client:**
+3. **Setup bitcoind git submodule:**
+   At project setup run first:
+   ```bash
+   git submodule init
+   git submodule update
+   ```
+
+   In case the submodule has changed after a project update, run:
+   ```bash
+   git submodule update
+   ```
+
+4. **Run desktop client:**
    ```bash
    ./gradlew apps:desktop:desktop-app:run
    ```
 
-4. **Run desktop client with custom data directory:**
+5. **Run desktop client with custom data directory:**
    ```bash
    apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>
    ```
+
+**For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
 
 ## Community and Contributions
 
