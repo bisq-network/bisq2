@@ -1,6 +1,17 @@
 plugins {
     java
+    id("maven-publish") // for jitpack
 }
+
+group = "bisq"
+version = project.version
+//sourceCompatibility = 1.8 // java 8
+//targetCompatibility = 1.8
+
+//java {
+//    withJavadocJar()
+//    withSourcesJar()
+//}
 
 tasks.register("buildAll") {
     group = "build"
@@ -91,7 +102,10 @@ tasks.register("publishAll") {
     }
 }
 
-group = "bisq"
+// for jitpack publishing
+tasks.named("publishToMavenLocal").configure {
+    dependsOn("publishAll")
+}
 
 extensions.findByName("buildScan")?.withGroovyBuilder {
     setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
