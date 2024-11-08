@@ -18,6 +18,14 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
+}
+
 application {
     mainClass.set("bisq.desktop_app.DesktopApp")
 }
@@ -82,7 +90,7 @@ tasks {
 
     named<ShadowJar>("shadowJar") {
         val platformName = getPlatform().platformName
-        archiveClassifier.set(platformName + "-all")
+        archiveClassifier.set("$platformName-all")
     }
 
     distZip {

@@ -5,6 +5,12 @@ plugins {
     id("bisq.java-integration-tests")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
 electrum {
     version.set("4.2.2")
 }

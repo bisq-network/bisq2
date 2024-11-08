@@ -10,6 +10,7 @@ tasks.register("buildAll") {
     doLast {
         listOf(
             "build",
+            ":wallets:build",
             ":apps:seed-node-app:build",
             ":apps:seed-node-app:installDist",
             ":apps:desktop:desktop-app:build",
