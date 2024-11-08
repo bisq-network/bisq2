@@ -2,6 +2,12 @@ plugins {
     id("bisq.java-library")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
 dependencies {
     implementation(project(":persistence"))
     implementation(project(":i18n"))
