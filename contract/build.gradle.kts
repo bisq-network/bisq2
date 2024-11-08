@@ -11,6 +11,6 @@ dependencies {
     implementation(project(":account"))
     implementation(project(":offer"))
 
-    implementation("network:network")
-    implementation("network:network-identity")
+    implementation("network:network:$version")
+    implementation("network:network-identity:$version")
 }

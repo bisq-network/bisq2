@@ -1,5 +1,6 @@
 plugins {
     java
+    id("bisq.gradle.maven_publisher.LocalMavenPublishPlugin")
 }
 
 tasks.register("buildAll") {
@@ -9,6 +10,7 @@ tasks.register("buildAll") {
     doLast {
         listOf(
             "build",
+            ":wallets:build",
             ":apps:seed-node-app:build",
             ":apps:seed-node-app:installDist",
             ":apps:desktop:desktop-app:build",
@@ -54,7 +56,47 @@ tasks.register("cleanAll") {
     }
 }
 
-group = "bisq"
+tasks.register("publishAll") {
+    group = "publishing"
+    description = "Publish all the jars in the following modules to local maven repository"
+
+    doLast {
+        listOf(
+            ":account:publishToMavenLocal",
+            ":application:publishToMavenLocal",
+//            ":bisq-easy:publishToMavenLocal",
+            ":bonded-roles:publishToMavenLocal",
+            ":chat:publishToMavenLocal",
+            ":common:publishToMavenLocal",
+            ":contract:publishToMavenLocal",
+            ":i18n:publishToMavenLocal",
+            ":identity:publishToMavenLocal",
+            ":network:publishToMavenLocal",
+            ":network:tor:publishToMavenLocal",
+            ":offer:publishToMavenLocal",
+            ":persistence:publishToMavenLocal",
+            ":platform:publishToMavenLocal",
+            ":presentation:publishToMavenLocal",
+            ":security:publishToMavenLocal",
+            ":settings:publishToMavenLocal",
+            ":support:publishToMavenLocal",
+            ":trade:publishToMavenLocal",
+            ":user:publishToMavenLocal",
+//            ":wallets:publishToMavenLocal",
+//            ":wallets:bitcoind:publishToMavenLocal",
+        ).forEach {
+            exec {
+                println("Executing Publish To Maven Local: $it")
+                commandLine("./gradlew", it)
+            }
+        }
+    }
+}
+
+// for jitpack publishing
+tasks.named("publishToMavenLocal").configure {
+    dependsOn("publishAll")
+}
 
 extensions.findByName("buildScan")?.withGroovyBuilder {
     setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")

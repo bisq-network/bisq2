@@ -2,7 +2,6 @@ import bisq.gradle.common.getPlatform
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 import java.util.Properties
-import java.io.File
 
 // Function to read properties from a file - TODO find a way to reuse this code instead of copying when needed
 fun readPropertiesFile(filePath: String): Properties {
@@ -17,6 +16,14 @@ plugins {
     application
     alias(libs.plugins.openjfx)
     alias(libs.plugins.shadow)
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
 }
 
 application {
@@ -83,7 +90,7 @@ tasks {
 
     named<ShadowJar>("shadowJar") {
         val platformName = getPlatform().platformName
-        archiveClassifier.set(platformName + "-all")
+        archiveClassifier.set("$platformName-all")
     }
 
     distZip {

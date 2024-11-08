@@ -1,5 +1,20 @@
 plugins {
     `java-platform`
+    `maven-publish`
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("platform") {
+            from(components["javaPlatform"])
+        }
+    }
+//    repositories {
+//        maven {
+//            name = "myRepo"
+//            url = uri(layout.buildDirectory.dir("repo"))
+//        }
+//    }
 }
 
 dependencies {

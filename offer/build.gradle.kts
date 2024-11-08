@@ -12,8 +12,8 @@ dependencies {
     implementation(project(":presentation"))
     implementation(project(":bonded-roles"))
 
-    implementation("network:network")
-    implementation("network:network-identity")
+    implementation("network:network:$version")
+    implementation("network:network-identity:$version")
 
     implementation(libs.google.gson)
     implementation(libs.chimp.jsocks)

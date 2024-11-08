@@ -13,8 +13,10 @@ plugins {
     id("bisq.gradle.tor_binary.BisqTorBinaryPlugin")
 }
 
+val properties = readPropertiesFile("../../../gradle.properties")
+val bisqVersion: String = properties.getProperty("version", "unspecified")
+
 tor {
-    val properties = readPropertiesFile("../../../gradle.properties")
     val torVersion = properties.getProperty("tor.version", "unspecified")
     version.set(torVersion)
 }
@@ -30,10 +32,10 @@ sourceSets {
 dependencies {
     implementation(project(":tor-common"))
 
-    implementation("bisq:security")
+    implementation("bisq:security:$bisqVersion")
 
-    implementation("network:network-identity")
-    implementation("network:socks5-socket-channel")
+    implementation("network:network-identity:$bisqVersion")
+    implementation("network:socks5-socket-channel:$bisqVersion")
 
     implementation(libs.bouncycastle)
     implementation(libs.failsafe)

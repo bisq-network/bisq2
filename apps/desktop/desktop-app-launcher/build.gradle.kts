@@ -1,5 +1,4 @@
 import java.util.Properties
-import java.io.File
 
 // Function to read properties from a file - TODO find a way to reuse this code instead of copying when needed
 fun readPropertiesFile(filePath: String): Properties {
@@ -15,6 +14,15 @@ plugins {
     id("bisq.gradle.packaging.PackagingPlugin")
     alias(libs.plugins.openjfx)
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
+}
+
 
 application {
     mainClass.set("bisq.desktop_app_launcher.DesktopAppLauncher")

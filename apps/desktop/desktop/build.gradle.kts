@@ -3,6 +3,14 @@ plugins {
     alias(libs.plugins.openjfx)
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
+}
+
 javafx {
     version = "22.0.1"
     modules = listOf("javafx.controls", "javafx.media")

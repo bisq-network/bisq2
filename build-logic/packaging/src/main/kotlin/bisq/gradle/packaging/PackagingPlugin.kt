@@ -119,7 +119,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
                 }
             } else {
                 // Bisq2
-                22
+                17
             }
         }
         return javaVersion.map { JavaLanguageVersion.of(it) }

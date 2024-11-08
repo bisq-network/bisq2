@@ -2,6 +2,12 @@ plugins {
     id("bisq.java-library")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
 dependencies {
     implementation(project(":persistence"))
     implementation(project(":i18n"))
@@ -18,12 +24,10 @@ dependencies {
     implementation(project(":support"))
     implementation(project(":presentation"))
 
-    implementation("network:network")
-    implementation("network:network-identity")
+    implementation("network:network:$version")
+    implementation("network:network-identity:$version")
     implementation("bitcoind:core")
     implementation("wallets:wallet")
-    // implementation("wallets:electrum")
-    // implementation("wallets:bitcoind")
 
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)

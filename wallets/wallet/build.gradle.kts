@@ -4,6 +4,13 @@ plugins {
     id("bisq.protobuf")
 }
 
+// this one needs specific setup otherwise gives "invalid source release" error
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
 dependencies {
     implementation("bisq:persistence")
 

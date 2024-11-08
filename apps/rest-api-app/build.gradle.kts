@@ -3,6 +3,12 @@ plugins {
     application
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
 application {
     mainClass.set("bisq.rest_api.RestApiApp")
 }
