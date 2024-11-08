@@ -70,7 +70,8 @@ public class LanguageRepository {
             "pt-BR", // Portuguese (Brazil)
             "cs", // Czech
             "pcm", // Nigerian Pidgin
-            "ru" // Russian
+            "ru", // Russian
+            "af-ZA" // Afrikaans
             /*
             // not translated yet
             "pt", // Portuguese
