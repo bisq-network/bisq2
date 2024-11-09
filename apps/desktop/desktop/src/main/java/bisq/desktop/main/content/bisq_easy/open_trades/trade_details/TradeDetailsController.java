@@ -106,6 +106,7 @@ public class TradeDetailsController extends NavigationController implements Init
                 : trade.getPaymentAccountData().get());
         model.getIsPaymentAccountDataEmpty().set(trade.getPaymentAccountData().get() == null);
         model.getAssignedMediator().set(channel.getMediator().map(UserProfile::getNickName).orElse(""));
+        model.getHasMediatorBeenAssigned().set(channel.getMediator().isPresent());
     }
 
     @Override

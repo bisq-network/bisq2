@@ -47,6 +47,7 @@ public class TradeDetailsModel extends NavigationModel {
     private final SimpleStringProperty paymentAccountData = new SimpleStringProperty();
     private final SimpleBooleanProperty isPaymentAccountDataEmpty = new SimpleBooleanProperty();
     private final SimpleStringProperty assignedMediator = new SimpleStringProperty();
+    private final SimpleBooleanProperty hasMediatorBeenAssigned = new SimpleBooleanProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

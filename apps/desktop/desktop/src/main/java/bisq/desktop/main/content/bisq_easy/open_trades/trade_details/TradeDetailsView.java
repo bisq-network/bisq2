@@ -46,6 +46,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
         settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressLabel,
         paymentAccountDataLabel, assignedMediatorLabel;
+    private final HBox assignedMediatorBox;
     private Subscription isBtcPaymentAddressEmptyPin, isPaymentAccountDataEmptyPin;
 
     public TradeDetailsView(TradeDetailsModel model, TradeDetailsController controller) {
@@ -158,7 +159,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         // Assigned mediator
         assignedMediatorLabel = new Label();
         assignedMediatorLabel.getStyleClass().addAll("text-fill-white", "normal-text");
-        HBox assignedMediatorBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.assignedMediator", assignedMediatorLabel);
+        assignedMediatorBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.assignedMediator", assignedMediatorLabel);
 
         VBox.setMargin(headline, new Insets(-20, 0, -5, 0));
         VBox.setMargin(line, new Insets(0, 80, 0, 80));
@@ -218,6 +219,8 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         btcPaymentAddressLabel.textProperty().bind(model.getBtcPaymentAddress());
         paymentAccountDataLabel.textProperty().bind(model.getPaymentAccountData());
         assignedMediatorLabel.textProperty().bind(model.getAssignedMediator());
+        assignedMediatorBox.visibleProperty().bind(model.getHasMediatorBeenAssigned());
+        assignedMediatorBox.managedProperty().bind(model.getHasMediatorBeenAssigned());
 
         isBtcPaymentAddressEmptyPin = EasyBind.subscribe(model.getIsBtcPaymentDataEmpty(), isEmpty ->
             btcPaymentAddressLabel.getStyleClass().add(isEmpty ? "text-fill-grey-dimmed" : "text-fill-white"));
@@ -247,6 +250,8 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         btcPaymentAddressLabel.textProperty().unbind();
         paymentAccountDataLabel.textProperty().unbind();
         assignedMediatorLabel.textProperty().unbind();
+        assignedMediatorBox.visibleProperty().unbind();
+        assignedMediatorBox.managedProperty().unbind();
 
         isBtcPaymentAddressEmptyPin.unsubscribe();
         isPaymentAccountDataEmptyPin.unsubscribe();
