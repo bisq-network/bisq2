@@ -9,8 +9,8 @@ bisq = '2.1.2'
 annotations-lib = { strictly = '23.0.0' }
 
 apache-commons-lang-lib = { strictly = '3.14.0' }
-apache-httpcomponents-core-lib = { strictly = '4.4.16' }
-apache-httpcomponents-httpclient-lib = { strictly = '4.5.14' } # 5.3.1 would be better but has lot of API changes
+apache-httpcomponents-core-lib = { strictly = '5.3.1' }
+apache-httpcomponents-httpclient-lib = { strictly = '5.4.1' }
 apache-tomcat-annotations-api = { strictly = '6.0.53' }
 
 assertj-core-lib = { strictly = '3.22.0' }
@@ -77,8 +77,8 @@ zxing-lib = { strictly = '3.5.3' }
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
 apache-commons-lang = { module = 'org.apache.commons:commons-lang3', version.ref = 'apache-commons-lang-lib' }
-apache-httpcomponents-core = { module = 'org.apache.httpcomponents:httpcore', version.ref = 'apache-httpcomponents-core-lib' }
-apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents:httpclient', version.ref = 'apache-httpcomponents-httpclient-lib' }
+apache-httpcomponents-core = { module = 'org.apache.httpcomponents.core5:httpcore5', version.ref = 'apache-httpcomponents-core-lib' }
+apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents.client5:httpclient5', version.ref = 'apache-httpcomponents-httpclient-lib' }
 apache-tomcat-annotations-api = { module = 'org.apache.tomcat:annotations-api', version.ref = 'apache-tomcat-annotations-api' }
 assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
 

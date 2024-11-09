@@ -20,34 +20,25 @@ package bisq.network.http;
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
-import bisq.network.http.utils.*;
+import bisq.network.http.utils.HttpMethod;
+import bisq.network.http.utils.Socks5ProxyProvider;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.io.SocketConfig;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.*;
 
-// TODO (Critical) close connection if failing
 @Slf4j
 public class TorHttpClient extends BaseHttpClient {
     private final Socks5ProxyProvider socks5ProxyProvider;
@@ -88,7 +79,9 @@ public class TorHttpClient extends BaseHttpClient {
     }
 
     @Override
-    protected String doRequest(String param, HttpMethod httpMethod, Optional<Pair<String, String>> optionalHeader) throws IOException {
+    protected String doRequest(String param,
+                               HttpMethod httpMethod,
+                               Optional<Pair<String, String>> optionalHeader) throws IOException {
         checkArgument(!hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
         if (shutdownStarted) {
             return "";
@@ -99,54 +92,41 @@ public class TorHttpClient extends BaseHttpClient {
 
         long ts = System.currentTimeMillis();
         log.debug("doRequestWithProxy: baseUrl={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
-        // This code is adapted from:
-        //  http://stackoverflow.com/a/25203021/5616248
 
-        // Register our own SocketFactories to override createSocket() and connectSocket().
-        // connectSocket does NOT resolve hostname before passing it to proxy.
-        Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("http", new SocksConnectionSocketFactory())
-                .register("https", new SocksSSLConnectionSocketFactory(SSLContexts.createSystemDefault())).build();
-
-        // Use FakeDNSResolver if not resolving DNS locally.
-        // This prevents a local DNS lookup (which would be ignored anyway)
-        PoolingHttpClientConnectionManager cm = socks5Proxy.resolveAddrLocally() ?
-                new PoolingHttpClientConnectionManager(reg) :
-                new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
+        InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
+        // Use this to test with system-wide Tor proxy, or change port for another proxy.
+        // SocketAddress socksAddress = new InetSocketAddress("127.0.0.1", 9050);
+        var cm = new PoolingTorHttpClientConnectionManager();
+        cm.setDefaultSocketConfig(SocketConfig.custom()
+                .setSocksProxyAddress(socksAddress)
+                .build());
         try {
-            closeableHttpClient = checkNotNull(HttpClients.custom().setConnectionManager(cm).build());
-            InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
-
-            // Use this to test with system-wide Tor proxy, or change port for another proxy.
-            // InetSocketAddress socksAddress = new InetSocketAddress("127.0.0.1", 9050);
-
-            HttpClientContext context = HttpClientContext.create();
-            context.setAttribute("socks.address", socksAddress);
-
-            HttpUriRequest request = getHttpUriRequest(httpMethod, baseUrl, param);
+            closeableHttpClient = checkNotNull(HttpClients.custom()
+                    .setConnectionManager(cm).build());
+            var uri = URI.create(baseUrl);
+            var request = new HttpGet("/" + param);
             optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));
-
-            try (CloseableHttpResponse httpResponse = closeableHttpClient.execute(request, context)) {
-                String response = inputStreamToString(httpResponse.getEntity().getContent());
-                int statusCode = httpResponse.getStatusLine().getStatusCode();
+            var target = new HttpHost(uri.getScheme(), uri.getHost());
+            return closeableHttpClient.execute(target, request, response -> {
+                String responseString = inputStreamToString(response.getEntity().getContent());
+                int statusCode = response.getCode();
                 if (isSuccess(statusCode)) {
                     log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
                             baseUrl,
                             System.currentTimeMillis() - ts,
-                            StringUtils.fromBytes(response.getBytes().length),
+                            StringUtils.fromBytes(responseString.getBytes().length),
                             StringUtils.truncate(response, 2000),
                             param);
-                    return response;
+                    return responseString;
                 }
-
                 log.info("Received errorMsg '{}' with statusCode {} from {}. Response took: {} ms. param: {}",
-                        response,
+                        responseString,
                         statusCode,
                         baseUrl,
                         System.currentTimeMillis() - ts,
                         param);
-                throw new HttpException(response, statusCode);
-            }
+                throw new RuntimeException(responseString);
+            });
         } catch (Throwable t) {
             String message = "Error at doRequestWithProxy with url " + baseUrl + " and param " + param +
                     ". Throwable=" + t.getMessage();
@@ -157,22 +137,6 @@ public class TorHttpClient extends BaseHttpClient {
                 closeableHttpClient = null;
             }
             hasPendingRequest = false;
-        }
-    }
-
-    protected HttpUriRequest getHttpUriRequest(HttpMethod httpMethod, String baseUrl, String param)
-            throws UnsupportedEncodingException {
-        switch (httpMethod) {
-            case GET:
-                return new HttpGet(baseUrl + "/" + param);
-            case POST:
-                HttpPost httpPost = new HttpPost(baseUrl);
-                HttpEntity httpEntity = new StringEntity(param);
-                httpPost.setEntity(httpEntity);
-                return httpPost;
-
-            default:
-                throw new IllegalArgumentException("HttpMethod not supported: " + httpMethod);
         }
     }
 }
