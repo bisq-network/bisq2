@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -80,36 +81,37 @@ public class TradeDetailsController extends NavigationController implements Init
 
     @Override
     public void onActivate() {
-        model.getTradeDate().set(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
-        model.getMe().set(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
-        model.getPeer().set(channel.getPeer().getUserName());
-        model.getOfferType().set(trade.getOffer().getDirection().isBuy()
+        model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
+        model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
+        model.setPeer(channel.getPeer().getUserName());
+        model.setOfferType(trade.getOffer().getDirection().isBuy()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
-        model.getMarket().set(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
+        model.setMarket(Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.fiatMarket",
                 trade.getOffer().getMarket().getQuoteCurrencyCode()));
-        model.getFiatAmount().set(BisqEasyTradeFormatter.formatQuoteSideAmount(trade));
-        model.getFiatCurrency().set(trade.getOffer().getMarket().getQuoteCurrencyCode());
-        model.getBtcAmount().set(BisqEasyTradeFormatter.formatBaseSideAmount(trade));
-        model.getPrice().set(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(contract)));
-        model.getPriceCodes().set(trade.getOffer().getMarket().getMarketCodes());
-        model.getPriceSpec().set(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
+        model.setFiatAmount(BisqEasyTradeFormatter.formatQuoteSideAmount(trade));
+        model.setFiatCurrency(trade.getOffer().getMarket().getQuoteCurrencyCode());
+        model.setBtcAmount(BisqEasyTradeFormatter.formatBaseSideAmount(trade));
+        model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(contract)));
+        model.setPriceCodes(trade.getOffer().getMarket().getMarketCodes());
+        model.setPriceSpec(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
                 ? ""
                 : String.format("(%s)", BisqEasyServiceUtil.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
-        model.getPaymentMethod().set(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
-        model.getSettlementMethod().set(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
-        model.getTradeId().set(trade.getId());
-        model.getPeerNetworkAddress().set(channel.getPeer().getAddressByTransportDisplayString(50));
-        model.getBtcPaymentAddress().set(trade.getBitcoinPaymentData().get() == null
+        model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
+        model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
+        model.setTradeId(trade.getId());
+        model.setPeerNetworkAddress(channel.getPeer().getAddressByTransportDisplayString(50));
+        model.setOnChainSettlement(contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN);
+        model.setBtcPaymentAddress(trade.getBitcoinPaymentData().get() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
                 : trade.getBitcoinPaymentData().get());
-        model.getIsBtcPaymentDataEmpty().set(trade.getBitcoinPaymentData().get() == null);
-        model.getPaymentAccountData().set(trade.getPaymentAccountData().get() == null
+        model.setBtcPaymentDataEmpty(trade.getBitcoinPaymentData().get() == null);
+        model.setPaymentAccountData(trade.getPaymentAccountData().get() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
                 : trade.getPaymentAccountData().get());
-        model.getIsPaymentAccountDataEmpty().set(trade.getPaymentAccountData().get() == null);
-        model.getAssignedMediator().set(channel.getMediator().map(UserProfile::getUserName).orElse(""));
-        model.getHasMediatorBeenAssigned().set(channel.getMediator().isPresent());
+        model.setPaymentAccountDataEmpty(trade.getPaymentAccountData().get() == null);
+        model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
+        model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
     }
 
     @Override

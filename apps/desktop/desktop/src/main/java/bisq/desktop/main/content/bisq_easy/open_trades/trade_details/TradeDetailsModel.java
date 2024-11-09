@@ -19,35 +19,36 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
+@Setter
 public class TradeDetailsModel extends NavigationModel {
-    private final SimpleStringProperty tradeDate = new SimpleStringProperty();
-    private final SimpleStringProperty me = new SimpleStringProperty();
-    private final SimpleStringProperty peer = new SimpleStringProperty();
-    private final SimpleStringProperty offerType = new SimpleStringProperty();
-    private final SimpleStringProperty market = new SimpleStringProperty();
-    private final SimpleStringProperty fiatAmount = new SimpleStringProperty();
-    private final SimpleStringProperty fiatCurrency = new SimpleStringProperty();
-    private final SimpleStringProperty btcAmount = new SimpleStringProperty();
-    private final SimpleStringProperty price = new SimpleStringProperty();
-    private final SimpleStringProperty priceCodes = new SimpleStringProperty();
-    private final SimpleStringProperty priceSpec = new SimpleStringProperty();
-    private final SimpleStringProperty paymentMethod = new SimpleStringProperty();
-    private final SimpleStringProperty settlementMethod = new SimpleStringProperty();
-    private final SimpleStringProperty tradeId = new SimpleStringProperty();
-    private final SimpleStringProperty peerNetworkAddress = new SimpleStringProperty();
-    private final SimpleStringProperty btcPaymentAddress = new SimpleStringProperty();
-    private final SimpleBooleanProperty isBtcPaymentDataEmpty = new SimpleBooleanProperty();
-    private final SimpleStringProperty paymentAccountData = new SimpleStringProperty();
-    private final SimpleBooleanProperty isPaymentAccountDataEmpty = new SimpleBooleanProperty();
-    private final SimpleStringProperty assignedMediator = new SimpleStringProperty();
-    private final SimpleBooleanProperty hasMediatorBeenAssigned = new SimpleBooleanProperty();
+    private String tradeDate;
+    private String me;
+    private String peer;
+    private String offerType;
+    private String market;
+    private String fiatAmount;
+    private String fiatCurrency;
+    private String btcAmount;
+    private String price;
+    private String priceCodes;
+    private String priceSpec;
+    private String paymentMethod;
+    private String settlementMethod;
+    private String tradeId;
+    private String peerNetworkAddress;
+    private boolean isOnChainSettlement;
+    private String btcPaymentAddress;
+    private boolean isBtcPaymentDataEmpty;
+    private String paymentAccountData;
+    private boolean isPaymentAccountDataEmpty;
+    private String assignedMediator;
+    private boolean hasMediatorBeenAssigned;
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

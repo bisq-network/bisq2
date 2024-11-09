@@ -34,8 +34,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
@@ -44,12 +42,11 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
     private final Button closeButton;
     private final Label tradeDateLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
         fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
-        settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressLabel,
+        settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressTitleLabel, btcPaymentAddressDetailsLabel,
         paymentAccountDataLabel, assignedMediatorLabel;
     private final HBox assignedMediatorBox;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
         btcPaymentAddressCopyButton, paymentAccountDataCopyButton;
-    private Subscription isBtcPaymentAddressEmptyPin, isPaymentAccountDataEmptyPin;
 
     public TradeDetailsView(TradeDetailsModel model, TradeDetailsController controller) {
         super(new VBox(), model, controller);
@@ -158,12 +155,12 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
                 peerNetworkAddressLabel, Optional.of(peerNetworkAddressCopyButton));
 
         // BTC payment address
-        btcPaymentAddressLabel = new Label();
-        btcPaymentAddressLabel.getStyleClass().addAll("normal-text");
+        btcPaymentAddressTitleLabel = new Label();
+        btcPaymentAddressDetailsLabel = new Label();
+        btcPaymentAddressDetailsLabel.getStyleClass().addAll("normal-text");
         btcPaymentAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
-        btcPaymentAddressCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress.copy"));
-        HBox btcPaymentAddressBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.btcPaymentAddress",
-                btcPaymentAddressLabel, Optional.of(btcPaymentAddressCopyButton));
+        HBox btcPaymentAddressBox = createAndGetTitleAndDetailsBox(btcPaymentAddressTitleLabel,
+                btcPaymentAddressDetailsLabel, Optional.of(btcPaymentAddressCopyButton));
 
         // Payment account data
         paymentAccountDataLabel = new Label();
@@ -204,11 +201,16 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
     }
 
     private HBox createAndGetTitleAndDetailsBox(String title, Node detailsNode) {
-        return createAndGetTitleAndDetailsBox(title, detailsNode, Optional.empty());
+        Label titleLabel = new Label(Res.get(title));
+        return createAndGetTitleAndDetailsBox(titleLabel, detailsNode, Optional.empty());
     }
 
     private HBox createAndGetTitleAndDetailsBox(String title, Node detailsNode, Optional<BisqMenuItem> button) {
         Label titleLabel = new Label(Res.get(title));
+        return createAndGetTitleAndDetailsBox(titleLabel, detailsNode, button);
+    }
+
+    private HBox createAndGetTitleAndDetailsBox(Label titleLabel, Node detailsNode, Optional<BisqMenuItem> button) {
         double width = 180;
         titleLabel.setMaxWidth(width);
         titleLabel.setMinWidth(width);
@@ -228,72 +230,58 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
 
     @Override
     protected void onViewAttached() {
-        tradeDateLabel.textProperty().bind(model.getTradeDate());
-        meLabel.textProperty().bind(model.getMe());
-        peerLabel.textProperty().bind(model.getPeer());
-        offerTypeLabel.textProperty().bind(model.getOfferType());
-        marketLabel.textProperty().bind(model.getMarket());
-        fiatAmountLabel.textProperty().bind(model.getFiatAmount());
-        fiatCurrencyLabel.textProperty().bind(model.getFiatCurrency());
-        btcAmountLabel.textProperty().bind(model.getBtcAmount());
-        priceLabel.textProperty().bind(model.getPrice());
-        priceCodesLabel.textProperty().bind(model.getPriceCodes());
-        priceSpecLabel.textProperty().bind(model.getPriceSpec());
-        paymentMethodLabel.textProperty().bind(model.getPaymentMethod());
-        settlementMethodLabel.textProperty().bind(model.getSettlementMethod());
-        tradeIdLabel.textProperty().bind(model.getTradeId());
-        peerNetworkAddressLabel.textProperty().bind(model.getPeerNetworkAddress());
-        btcPaymentAddressLabel.textProperty().bind(model.getBtcPaymentAddress());
-        paymentAccountDataLabel.textProperty().bind(model.getPaymentAccountData());
-        assignedMediatorLabel.textProperty().bind(model.getAssignedMediator());
-        assignedMediatorBox.visibleProperty().bind(model.getHasMediatorBeenAssigned());
-        assignedMediatorBox.managedProperty().bind(model.getHasMediatorBeenAssigned());
+        tradeDateLabel.setText(model.getTradeDate());
+        meLabel.setText(model.getMe());
+        peerLabel.setText(model.getPeer());
+        offerTypeLabel.setText(model.getOfferType());
+        marketLabel.setText(model.getMarket());
+        fiatAmountLabel.setText(model.getFiatAmount());
+        fiatCurrencyLabel.setText(model.getFiatCurrency());
+        btcAmountLabel.setText(model.getBtcAmount());
+        priceLabel.setText(model.getPrice());
+        priceCodesLabel.setText(model.getPriceCodes());
+        priceSpecLabel.setText(model.getPriceSpec());
+        paymentMethodLabel.setText(model.getPaymentMethod());
+        settlementMethodLabel.setText(model.getSettlementMethod());
+        tradeIdLabel.setText(model.getTradeId());
+        peerNetworkAddressLabel.setText(model.getPeerNetworkAddress());
+        btcPaymentAddressTitleLabel.setText(model.isOnChainSettlement()
+                ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress")
+                : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice"));
+        btcPaymentAddressDetailsLabel.setText(model.getBtcPaymentAddress());
+        btcPaymentAddressCopyButton.setTooltip(model.isOnChainSettlement()
+                ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress.copy")
+                : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice.copy"));
+        paymentAccountDataLabel.setText(model.getPaymentAccountData());
+        assignedMediatorLabel.setText(model.getAssignedMediator());
+        assignedMediatorBox.setVisible(model.isHasMediatorBeenAssigned());
+        assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
 
-        isBtcPaymentAddressEmptyPin = EasyBind.subscribe(model.getIsBtcPaymentDataEmpty(), isEmpty -> {
-            btcPaymentAddressLabel.getStyleClass().remove("text-fill-grey-dimmed");
-            btcPaymentAddressLabel.getStyleClass().remove("text-fill-white");
-            btcPaymentAddressLabel.getStyleClass().add(isEmpty ? "text-fill-grey-dimmed" : "text-fill-white");
-        });
-        isPaymentAccountDataEmptyPin = EasyBind.subscribe(model.getIsPaymentAccountDataEmpty(), isEmpty -> {
+        if (model.isBtcPaymentDataEmpty()) {
+            btcPaymentAddressDetailsLabel.getStyleClass().remove("text-fill-grey-dimmed");
+            btcPaymentAddressDetailsLabel.getStyleClass().remove("text-fill-white");
+            btcPaymentAddressDetailsLabel.getStyleClass().add(model.isBtcPaymentDataEmpty()
+                    ? "text-fill-grey-dimmed"
+                    : "text-fill-white");
+        }
+        if (model.isPaymentAccountDataEmpty()) {
             paymentAccountDataLabel.getStyleClass().remove("text-fill-grey-dimmed");
             paymentAccountDataLabel.getStyleClass().remove("text-fill-white");
-            paymentAccountDataLabel.getStyleClass().add(isEmpty ? "text-fill-grey-dimmed" : "text-fill-white");
-        });
+            paymentAccountDataLabel.getStyleClass().add(model.isPaymentAccountDataEmpty()
+                    ? "text-fill-grey-dimmed"
+                    : "text-fill-white");
+        }
 
         closeButton.setOnAction(e -> controller.onClose());
-        tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer().get()));
-        tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId().get()));
-        peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress().get()));
-        btcPaymentAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBtcPaymentAddress().get()));
-        paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentAccountData().get()));
+        tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer()));
+        tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
+        peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress()));
+        btcPaymentAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBtcPaymentAddress()));
+        paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentAccountData()));
     }
 
     @Override
     protected void onViewDetached() {
-        tradeDateLabel.textProperty().unbind();
-        meLabel.textProperty().unbind();
-        peerLabel.textProperty().unbind();
-        offerTypeLabel.textProperty().unbind();
-        marketLabel.textProperty().unbind();
-        fiatAmountLabel.textProperty().unbind();
-        fiatCurrencyLabel.textProperty().unbind();
-        btcAmountLabel.textProperty().unbind();
-        priceLabel.textProperty().unbind();
-        priceCodesLabel.textProperty().unbind();
-        priceSpecLabel.textProperty().unbind();
-        paymentMethodLabel.textProperty().unbind();
-        settlementMethodLabel.textProperty().unbind();
-        tradeIdLabel.textProperty().unbind();
-        peerNetworkAddressLabel.textProperty().unbind();
-        btcPaymentAddressLabel.textProperty().unbind();
-        paymentAccountDataLabel.textProperty().unbind();
-        assignedMediatorLabel.textProperty().unbind();
-        assignedMediatorBox.visibleProperty().unbind();
-        assignedMediatorBox.managedProperty().unbind();
-
-        isBtcPaymentAddressEmptyPin.unsubscribe();
-        isPaymentAccountDataEmptyPin.unsubscribe();
-
         closeButton.setOnAction(null);
         tradersAndRoleCopyButton.setOnAction(null);
         tradeIdCopyButton.setOnAction(null);
