@@ -27,6 +27,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -81,7 +82,7 @@ public class TradeDetailsController extends NavigationController implements Init
     public void onActivate() {
         model.getTradeDate().set(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
         model.getMe().set(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
-        model.getPeer().set(channel.getPeer().getNickName());
+        model.getPeer().set(channel.getPeer().getUserName());
         model.getOfferType().set(trade.getOffer().getDirection().isBuy()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.buyOffer")
                 : Res.get("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket.sellOffer"));
@@ -92,7 +93,9 @@ public class TradeDetailsController extends NavigationController implements Init
         model.getBtcAmount().set(BisqEasyTradeFormatter.formatBaseSideAmount(trade));
         model.getPrice().set(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(contract)));
         model.getPriceCodes().set(trade.getOffer().getMarket().getMarketCodes());
-        model.getPriceSpec().set(String.format("(%s)", BisqEasyServiceUtil.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
+        model.getPriceSpec().set(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
+                ? ""
+                : String.format("(%s)", BisqEasyServiceUtil.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
         model.getPaymentMethod().set(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
         model.getSettlementMethod().set(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
         model.getTradeId().set(trade.getId());
@@ -105,7 +108,7 @@ public class TradeDetailsController extends NavigationController implements Init
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
                 : trade.getPaymentAccountData().get());
         model.getIsPaymentAccountDataEmpty().set(trade.getPaymentAccountData().get() == null);
-        model.getAssignedMediator().set(channel.getMediator().map(UserProfile::getNickName).orElse(""));
+        model.getAssignedMediator().set(channel.getMediator().map(UserProfile::getUserName).orElse(""));
         model.getHasMediatorBeenAssigned().set(channel.getMediator().isPresent());
     }
 

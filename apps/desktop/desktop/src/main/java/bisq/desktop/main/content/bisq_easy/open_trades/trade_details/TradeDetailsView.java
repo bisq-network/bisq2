@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
 
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqMenuItem;
-import bisq.desktop.components.controls.CopyOnClickLabel;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -30,9 +30,9 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -47,10 +47,12 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressLabel,
         paymentAccountDataLabel, assignedMediatorLabel;
     private final HBox assignedMediatorBox;
+    private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
+        btcPaymentAddressCopyButton, paymentAccountDataCopyButton;
     private Subscription isBtcPaymentAddressEmptyPin, isPaymentAccountDataEmptyPin;
 
     public TradeDetailsView(TradeDetailsModel model, TradeDetailsController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(), model, controller);
 
         closeButton = BisqIconButton.createIconButton("close");
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
@@ -68,20 +70,22 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
                 tradeDateLabel);
 
         // Traders / Roles
-        Label mePrefixLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.Me"));
+        Label mePrefixLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.me"));
         mePrefixLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
         meLabel = new Label();
         meLabel.getStyleClass().addAll("text-fill-white", "normal-text");
-        Label peerPrefixLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.Peer"));
+        Label offerTypeAndRoleSlashLabel = new Label("/");
+        offerTypeAndRoleSlashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        Label peerPrefixLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.peer"));
         peerPrefixLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
         peerLabel = new Label();
         peerLabel.getStyleClass().addAll("text-fill-white", "normal-text");
-        Label offerTypeAndRoleSlashLabel = new Label("/");
-        offerTypeAndRoleSlashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
         HBox tradersAndRoleDetailsHBox = new HBox(5, mePrefixLabel, meLabel, offerTypeAndRoleSlashLabel, peerPrefixLabel, peerLabel);
         tradersAndRoleDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
+        tradersAndRoleCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        tradersAndRoleCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.copy"));
         HBox tradersAndRoleBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.tradersAndRole",
-                tradersAndRoleDetailsHBox);
+                tradersAndRoleDetailsHBox, Optional.of(tradersAndRoleCopyButton));
 
         // Offer type and market
         offerTypeLabel = new Label();
@@ -133,40 +137,48 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         settlementMethodLabel = new Label();
         settlementMethodLabel.getStyleClass().addAll("text-fill-white", "normal-text");
         HBox paymentMethodsDetailsHBox = new HBox(5, paymentMethodLabel, paymentMethodsSlashLabel, settlementMethodLabel);
+        paymentMethodsDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
         HBox paymentMethodsBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.paymentAndSettlementMethods",
                 paymentMethodsDetailsHBox);
 
         // Trade ID
         tradeIdLabel = new Label();
         tradeIdLabel.getStyleClass().addAll("text-fill-white", "normal-text");
-        HBox tradeIdBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.tradeId", tradeIdLabel);
+        tradeIdCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        tradeIdCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.tradeId.copy"));
+        HBox tradeIdBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.tradeId", tradeIdLabel,
+                Optional.of(tradeIdCopyButton));
 
         // Peer network address
         peerNetworkAddressLabel = new Label();
         peerNetworkAddressLabel.getStyleClass().addAll("text-fill-white", "normal-text");
-        HBox peerNetworkAddressBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.peerNetworkAddress", peerNetworkAddressLabel);
+        peerNetworkAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        peerNetworkAddressCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.peerNetworkAddress.copy"));
+        HBox peerNetworkAddressBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.peerNetworkAddress",
+                peerNetworkAddressLabel, Optional.of(peerNetworkAddressCopyButton));
 
         // BTC payment address
         btcPaymentAddressLabel = new Label();
         btcPaymentAddressLabel.getStyleClass().addAll("normal-text");
-        HBox btcPaymentAddressBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.btcPaymentAddress", btcPaymentAddressLabel);
+        btcPaymentAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        btcPaymentAddressCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress.copy"));
+        HBox btcPaymentAddressBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.btcPaymentAddress",
+                btcPaymentAddressLabel, Optional.of(btcPaymentAddressCopyButton));
 
         // Payment account data
         paymentAccountDataLabel = new Label();
         paymentAccountDataLabel.getStyleClass().addAll("normal-text");
-        HBox paymentAccountDataBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.paymentAccountData", paymentAccountDataLabel);
+        paymentAccountDataCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        paymentAccountDataCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
+        HBox paymentAccountDataBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
+                paymentAccountDataLabel, Optional.of(paymentAccountDataCopyButton));
 
         // Assigned mediator
         assignedMediatorLabel = new Label();
         assignedMediatorLabel.getStyleClass().addAll("text-fill-white", "normal-text");
         assignedMediatorBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.assignedMediator", assignedMediatorLabel);
 
-        VBox.setMargin(headline, new Insets(-20, 0, -5, 0));
-        VBox.setMargin(line, new Insets(0, 80, 0, 80));
-        root.setAlignment(Pos.TOP_CENTER);
-        root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT);
-        root.getChildren().addAll(closeButtonRow,
+        VBox content = new VBox(20,
                 headline,
                 line,
                 tradeDateBox,
@@ -179,6 +191,16 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
                 btcPaymentAddressBox,
                 paymentAccountDataBox,
                 assignedMediatorBox);
+        content.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(headline, new Insets(-5, 0, -5, 0));
+        VBox.setMargin(line, new Insets(0, 0, 0, 0));
+        VBox.setMargin(content, new Insets(-40, 80, 0, 80));
+        VBox.setVgrow(content, Priority.ALWAYS);
+        root.setAlignment(Pos.TOP_CENTER);
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
+        root.getChildren().addAll(closeButtonRow, content);
     }
 
     private HBox createAndGetTitleAndDetailsBox(String title, Node detailsNode) {
@@ -195,7 +217,12 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
 
         HBox hBox = new HBox(titleLabel, detailsNode);
         hBox.setAlignment(Pos.BASELINE_LEFT);
-        VBox.setMargin(hBox, new Insets(0, 80, 0, 80));
+
+        if (button.isPresent()) {
+            button.get().useIconOnly(17);
+            HBox.setMargin(button.get(), new Insets(0, 0, 0, 40));
+            hBox.getChildren().addAll(Spacer.fillHBox(), button.get());
+        }
         return hBox;
     }
 
@@ -222,12 +249,23 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         assignedMediatorBox.visibleProperty().bind(model.getHasMediatorBeenAssigned());
         assignedMediatorBox.managedProperty().bind(model.getHasMediatorBeenAssigned());
 
-        isBtcPaymentAddressEmptyPin = EasyBind.subscribe(model.getIsBtcPaymentDataEmpty(), isEmpty ->
-            btcPaymentAddressLabel.getStyleClass().add(isEmpty ? "text-fill-grey-dimmed" : "text-fill-white"));
-        isPaymentAccountDataEmptyPin = EasyBind.subscribe(model.getIsPaymentAccountDataEmpty(), isEmpty ->
-            paymentAccountDataLabel.getStyleClass().add(isEmpty ? "text-fill-grey-dimmed" : "text-fill-white"));
+        isBtcPaymentAddressEmptyPin = EasyBind.subscribe(model.getIsBtcPaymentDataEmpty(), isEmpty -> {
+            btcPaymentAddressLabel.getStyleClass().remove("text-fill-grey-dimmed");
+            btcPaymentAddressLabel.getStyleClass().remove("text-fill-white");
+            btcPaymentAddressLabel.getStyleClass().add(isEmpty ? "text-fill-grey-dimmed" : "text-fill-white");
+        });
+        isPaymentAccountDataEmptyPin = EasyBind.subscribe(model.getIsPaymentAccountDataEmpty(), isEmpty -> {
+            paymentAccountDataLabel.getStyleClass().remove("text-fill-grey-dimmed");
+            paymentAccountDataLabel.getStyleClass().remove("text-fill-white");
+            paymentAccountDataLabel.getStyleClass().add(isEmpty ? "text-fill-grey-dimmed" : "text-fill-white");
+        });
 
         closeButton.setOnAction(e -> controller.onClose());
+        tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer().get()));
+        tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId().get()));
+        peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress().get()));
+        btcPaymentAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBtcPaymentAddress().get()));
+        paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentAccountData().get()));
     }
 
     @Override
@@ -257,6 +295,11 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         isPaymentAccountDataEmptyPin.unsubscribe();
 
         closeButton.setOnAction(null);
+        tradersAndRoleCopyButton.setOnAction(null);
+        tradeIdCopyButton.setOnAction(null);
+        peerNetworkAddressCopyButton.setOnAction(null);
+        btcPaymentAddressCopyButton.setOnAction(null);
+        paymentAccountDataCopyButton.setOnAction(null);
     }
 
     private Region getLine() {
