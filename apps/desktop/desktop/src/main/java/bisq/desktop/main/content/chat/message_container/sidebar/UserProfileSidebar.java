@@ -104,7 +104,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ReputationService reputationService;
         private final Runnable closeHandler;
         private final BannedUserService bannedUserService;
-        private UIScheduler livenessUpateScheduler;
+        private UIScheduler livenessUpdateScheduler;
 
         private Controller(ServiceProvider serviceProvider,
                            UserProfile userProfile,
@@ -143,11 +143,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na")));
 
-            if (livenessUpateScheduler != null) {
-                livenessUpateScheduler.stop();
-                livenessUpateScheduler = null;
+            if (livenessUpdateScheduler != null) {
+                livenessUpdateScheduler.stop();
+                livenessUpdateScheduler = null;
             }
-            livenessUpateScheduler = UIScheduler.run(() -> {
+            livenessUpdateScheduler = UIScheduler.run(() -> {
                         long publishDate = userProfile.getPublishDate();
                         if (publishDate == 0) {
                             model.getLivenessState().set(Res.get("data.na"));
@@ -171,9 +171,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
         @Override
         public void onDeactivate() {
-            if (livenessUpateScheduler != null) {
-                livenessUpateScheduler.stop();
-                livenessUpateScheduler = null;
+            if (livenessUpdateScheduler != null) {
+                livenessUpdateScheduler.stop();
+                livenessUpdateScheduler = null;
             }
             model.setCatHashImage(null);
         }

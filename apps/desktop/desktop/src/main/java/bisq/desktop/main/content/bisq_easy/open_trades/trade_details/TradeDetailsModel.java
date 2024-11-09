@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -26,22 +27,26 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class TradeDetailsModel extends NavigationModel {
-    private final SimpleStringProperty peerUsername = new SimpleStringProperty();
-    private final SimpleStringProperty tradeId = new SimpleStringProperty();
-    private final SimpleStringProperty amountInFiat = new SimpleStringProperty();
-    private final SimpleStringProperty currency = new SimpleStringProperty();
-    private final SimpleStringProperty bitcoinPaymentAddress = new SimpleStringProperty();
-    private final SimpleStringProperty amountInBTC = new SimpleStringProperty();
-    private final SimpleStringProperty tradePrice = new SimpleStringProperty();
+    private final SimpleStringProperty tradeDate = new SimpleStringProperty();
+    private final SimpleStringProperty me = new SimpleStringProperty();
+    private final SimpleStringProperty peer = new SimpleStringProperty();
+    private final SimpleStringProperty offerType = new SimpleStringProperty();
+    private final SimpleStringProperty market = new SimpleStringProperty();
+    private final SimpleStringProperty fiatAmount = new SimpleStringProperty();
+    private final SimpleStringProperty fiatCurrency = new SimpleStringProperty();
+    private final SimpleStringProperty btcAmount = new SimpleStringProperty();
+    private final SimpleStringProperty price = new SimpleStringProperty();
+    private final SimpleStringProperty priceCodes = new SimpleStringProperty();
     private final SimpleStringProperty priceSpec = new SimpleStringProperty();
-    private final SimpleStringProperty mySellBuyRole = new SimpleStringProperty();
-    private final SimpleStringProperty myMakerTakerRole = new SimpleStringProperty();
-    private final SimpleStringProperty offerTakenDateTime = new SimpleStringProperty();
-    private final SimpleStringProperty fiatPaymentMethod = new SimpleStringProperty();
-    private final SimpleStringProperty bitcoinPaymentMethod = new SimpleStringProperty();
+    private final SimpleStringProperty paymentMethod = new SimpleStringProperty();
+    private final SimpleStringProperty settlementMethod = new SimpleStringProperty();
+    private final SimpleStringProperty tradeId = new SimpleStringProperty();
     private final SimpleStringProperty peerNetworkAddress = new SimpleStringProperty();
+    private final SimpleStringProperty btcPaymentAddress = new SimpleStringProperty();
+    private final SimpleBooleanProperty isBtcPaymentDataEmpty = new SimpleBooleanProperty();
     private final SimpleStringProperty paymentAccountData = new SimpleStringProperty();
-    private final SimpleStringProperty mediator = new SimpleStringProperty();
+    private final SimpleBooleanProperty isPaymentAccountDataEmpty = new SimpleBooleanProperty();
+    private final SimpleStringProperty assignedMediator = new SimpleStringProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
