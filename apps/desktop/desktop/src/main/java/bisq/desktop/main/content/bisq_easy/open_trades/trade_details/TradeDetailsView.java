@@ -157,14 +157,12 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         // BTC payment address
         btcPaymentAddressTitleLabel = new Label();
         btcPaymentAddressDetailsLabel = new Label();
-        btcPaymentAddressDetailsLabel.getStyleClass().addAll("normal-text");
         btcPaymentAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
         HBox btcPaymentAddressBox = createAndGetTitleAndDetailsBox(btcPaymentAddressTitleLabel,
                 btcPaymentAddressDetailsLabel, Optional.of(btcPaymentAddressCopyButton));
 
         // Payment account data
         paymentAccountDataLabel = new Label();
-        paymentAccountDataLabel.getStyleClass().addAll("normal-text");
         paymentAccountDataCopyButton = new BisqMenuItem("copy-grey", "copy-white");
         paymentAccountDataCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
         HBox paymentAccountDataBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
@@ -256,21 +254,21 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         assignedMediatorLabel.setText(model.getAssignedMediator());
         assignedMediatorBox.setVisible(model.isHasMediatorBeenAssigned());
         assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
+        btcPaymentAddressCopyButton.setVisible(!model.isBtcPaymentDataEmpty());
+        btcPaymentAddressCopyButton.setManaged(!model.isBtcPaymentDataEmpty());
+        paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
+        paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
 
-        if (model.isBtcPaymentDataEmpty()) {
-            btcPaymentAddressDetailsLabel.getStyleClass().remove("text-fill-grey-dimmed");
-            btcPaymentAddressDetailsLabel.getStyleClass().remove("text-fill-white");
-            btcPaymentAddressDetailsLabel.getStyleClass().add(model.isBtcPaymentDataEmpty()
-                    ? "text-fill-grey-dimmed"
-                    : "text-fill-white");
-        }
-        if (model.isPaymentAccountDataEmpty()) {
-            paymentAccountDataLabel.getStyleClass().remove("text-fill-grey-dimmed");
-            paymentAccountDataLabel.getStyleClass().remove("text-fill-white");
-            paymentAccountDataLabel.getStyleClass().add(model.isPaymentAccountDataEmpty()
-                    ? "text-fill-grey-dimmed"
-                    : "text-fill-white");
-        }
+        btcPaymentAddressDetailsLabel.getStyleClass().clear();
+        btcPaymentAddressDetailsLabel.getStyleClass().add(model.isBtcPaymentDataEmpty()
+                ? "text-fill-grey-dimmed"
+                : "text-fill-white");
+        btcPaymentAddressDetailsLabel.getStyleClass().add("normal-text");
+        paymentAccountDataLabel.getStyleClass().clear();
+        paymentAccountDataLabel.getStyleClass().add(model.isPaymentAccountDataEmpty()
+                ? "text-fill-grey-dimmed"
+                : "text-fill-white");
+        paymentAccountDataLabel.getStyleClass().add("normal-text");
 
         closeButton.setOnAction(e -> controller.onClose());
         tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer()));
