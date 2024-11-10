@@ -108,10 +108,11 @@ public enum NavigationTarget {
     SIGNED_WITNESS_TAB_2(SIGNED_WITNESS, false),
     SIGNED_WITNESS_TAB_3(SIGNED_WITNESS, false),
 
-    USER_DETAILS(OVERLAY, false),
-    USER_DETAILS_OVERVIEW(USER_DETAILS, false),
-    USER_DETAILS_OFFERS(USER_DETAILS, false),
-    USER_DETAILS_REPUTATION(USER_DETAILS, false),
+    USER_CARD(OVERLAY, false),
+    USER_CARD_OVERVIEW(USER_CARD, false),
+    USER_CARD_DETAILS(USER_CARD, false),
+    USER_CARD_OFFERS(USER_CARD, false),
+    USER_CARD_REPUTATION(USER_CARD, false),
 
 
     //////////////////////////////////////////////////////////////////////

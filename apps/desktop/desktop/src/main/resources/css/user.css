@@ -139,3 +139,7 @@
 .user-details-popup .user-profile-display .username-and-reputation-box {
     -fx-spacing: 10;
 }
+
+.user-details-popup .bisq-common-bg {
+    -fx-padding: 35 !important;
+}

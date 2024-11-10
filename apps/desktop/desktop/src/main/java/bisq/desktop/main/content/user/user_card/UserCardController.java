@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_details_popup;
+package bisq.desktop.main.content.user.user_card;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.user.user_card.details.UserCardDetailsController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
@@ -33,8 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class UserDetailsPopupController extends TabController<UserDetailsPopupModel>
-        implements InitWithDataController<UserDetailsPopupController.InitData> {
+public class UserCardController extends TabController<UserCardModel>
+        implements InitWithDataController<UserCardController.InitData> {
     @Getter
     @EqualsAndHashCode
     @ToString
@@ -47,17 +48,17 @@ public class UserDetailsPopupController extends TabController<UserDetailsPopupMo
     }
 
     @Getter
-    private final UserDetailsPopupView view;
+    private final UserCardView view;
     private final ServiceProvider serviceProvider;
     private final ReputationService reputationService;
     private UserProfile userProfile;
 
-    public UserDetailsPopupController(ServiceProvider serviceProvider) {
-        super(new UserDetailsPopupModel(), NavigationTarget.USER_DETAILS);
+    public UserCardController(ServiceProvider serviceProvider) {
+        super(new UserCardModel(), NavigationTarget.USER_CARD);
 
         this.serviceProvider = serviceProvider;
         reputationService = serviceProvider.getUserService().getReputationService();
-        view = new UserDetailsPopupView(model, this);
+        view = new UserCardView(model, this);
     }
 
     @Override
@@ -73,7 +74,7 @@ public class UserDetailsPopupController extends TabController<UserDetailsPopupMo
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-//            case USER_DETAILS_OVERVIEW -> Optional.of(new (serviceProvider));
+            case USER_CARD_OVERVIEW -> Optional.of(new UserCardDetailsController(serviceProvider, userProfile));
 //            case USER_DETAILS_OFFERS -> Optional.of(new (serviceProvider));
 //            case USER_DETAILS_REPUTATION -> Optional.of(new (serviceProvider));
             default -> Optional.empty();

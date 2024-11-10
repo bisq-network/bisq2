@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_details_popup;
+package bisq.desktop.main.content.user.user_card;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
@@ -27,13 +27,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class UserDetailsPopupModel extends TabModel {
+public class UserCardModel extends TabModel {
     @Setter
     private UserProfile userProfile;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_DETAILS_OVERVIEW;
+        return NavigationTarget.USER_CARD_OVERVIEW;
     }
 }
