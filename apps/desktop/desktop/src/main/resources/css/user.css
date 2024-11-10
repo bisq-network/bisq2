@@ -113,7 +113,7 @@
     -fx-alignment: center;
 }
 
-.user-profile-selection-material-design .user-profile-display {
+.user-profile-selection-material-design .user-profile-display-name {
     -fx-font-size: 0.8em !important;
 }
 
@@ -122,4 +122,20 @@
     -fx-padding: 0 10 !important;
     -fx-min-height: 35;
     -fx-alignment: center;
+}
+
+/*******************************************************************************
+ * User Details Popup                                                          *
+ ******************************************************************************/
+
+.user-details-popup .user-profile-display {
+    -fx-spacing: 30 !important;
+}
+
+.user-details-popup .user-profile-display .user-profile-display-name {
+    -fx-font-size: 1.8em !important;
+}
+
+.user-details-popup .user-profile-display .username-and-reputation-box {
+    -fx-spacing: 10;
 }

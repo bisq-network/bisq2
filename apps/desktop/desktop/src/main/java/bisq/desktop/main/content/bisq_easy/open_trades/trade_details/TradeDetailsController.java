@@ -63,7 +63,7 @@ public class TradeDetailsController extends NavigationController implements Init
     private final TradeDetailsView view;
     private BisqEasyTrade trade;
     private BisqEasyOpenTradeChannel channel;
-    BisqEasyContract contract;
+    private BisqEasyContract contract;
 
     public TradeDetailsController(ServiceProvider serviceProvider) {
         super(NavigationTarget.BISQ_EASY_TRADE_DETAILS);

@@ -30,6 +30,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
 import bisq.desktop.main.content.chat.message_container.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.message_container.sidebar.UserProfileSidebar;
+import bisq.desktop.main.content.user.user_details_popup.UserDetailsPopupController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -133,6 +134,8 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         userProfileSidebar.setOnMentionUserHandler(chatMessageContainerController::mentionUser);
         model.setChatUserDetails(Optional.of(userProfileSidebar));
         model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
+
+        Navigation.navigateTo(NavigationTarget.USER_DETAILS, new UserDetailsPopupController.InitData(userProfile));
     }
 
     protected void selectedChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
