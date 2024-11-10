@@ -20,7 +20,9 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -31,6 +33,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +45,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     private final HBox phaseAndInfoHBox, cancelledHBox, interruptedHBox, errorHBox, isInMediationHBox;
     private final Button cancelButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
             rejectPriceButton;
+    private final Button tradeDetailsButton;
     private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay, sellerPriceDescriptionApprovalOverlay;
     private final VBox tradePhaseBox, tradeDataHeaderBox, sellerPriceApprovalOverlay;
     private final Pane sellerPriceApprovalContent;
@@ -58,7 +62,10 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.setMinWidth(160);
         cancelButton.getStyleClass().add("outlined-button");
 
-        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), cancelButton);
+        ImageView greenInfoIcon = ImageUtil.getImageViewById("icon-info-green");
+        tradeDetailsButton = BisqIconButton.createIconButton(greenInfoIcon, Res.get("bisqEasy.openTrades.tradeDetails.open"));
+
+        tradeDataHeader.getChildren().addAll(tradeDetailsButton, Spacer.fillHBox(), cancelButton);
         tradeDataHeaderBox = new VBox(tradeDataHeader, Layout.hLine());
 
 
@@ -186,6 +193,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         });
 
         cancelButton.setOnAction(e -> controller.onInterruptTrade());
+        tradeDetailsButton.setOnAction(e -> controller.onViewTradeDetails());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
         rejectPriceButton.setOnAction(e -> controller.onRejectPrice());
@@ -227,6 +235,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         showSellersPriceApprovalOverlayPin.unsubscribe();
 
         cancelButton.setOnAction(null);
+        tradeDetailsButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
         exportButton.setOnAction(null);
         rejectPriceButton.setOnAction(null);
