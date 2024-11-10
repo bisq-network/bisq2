@@ -17,265 +17,275 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
 
-import bisq.desktop.common.utils.GridPaneUtil;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.CopyOnClickLabel;
-import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, TradeDetailsController> {
-
-    private final Label headline, processHeadline, processDescription, myRoleLabel, amountLabel, paymentMethodLabel;
-    private final Label tradePriceLabel, tradeIdLabel, peerUsernameLabel, dateLabel, mediatorLabel, peerNetworkAddressLabel;
-    private final CopyOnClickLabel tradeAmountFiat, tradeAmountBtc, tradeId;
-    private final Text makerTakerRole, buySellRole, btcPaymentMethod, currency, fiatPaymentMethod, btcLabel;
-    private final Text tradePriceAmount, priceSpec, peerUsername, tradeDate, mediator, peerNetworkAddress;
     private final Button closeButton;
-    MaterialTextField btcPaymentAddress, paymentAccountData;
+    private final Label tradeDateLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
+        fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
+        settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressTitleLabel, btcPaymentAddressDetailsLabel,
+        paymentAccountDataLabel, assignedMediatorLabel;
+    private final HBox assignedMediatorBox;
+    private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
+        btcPaymentAddressCopyButton, paymentAccountDataCopyButton;
 
     public TradeDetailsView(TradeDetailsModel model, TradeDetailsController controller) {
         super(new VBox(), model, controller);
 
-        root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT);
         closeButton = BisqIconButton.createIconButton("close");
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
-        closeButtonRow.setPadding(new Insets(0, 10, 0, 10));
-        closeButtonRow.getStyleClass().add("trade-details-close-button-row");
-        closeButtonRow.setAlignment(Pos.CENTER_RIGHT);
-        root.getChildren().add(closeButtonRow);
+        closeButtonRow.setPadding(new Insets(15, 15, 0, 0));
 
-        Region emptySpace = new Region();
-        emptySpace.setMinHeight(30);
-        emptySpace.setMaxHeight(30);
-        headline = createLabel("trade-details-headline");
-        VBox headlineBox = new VBox(5, emptySpace, headline);
-        headlineBox.setAlignment(Pos.CENTER);
-        Region line1 = getLine();
-        headlineBox.getChildren().add(line1);
-        root.getChildren().add(headlineBox);
+        Label headline = new Label(Res.get("bisqEasy.openTrades.tradeDetails.headline"));
+        headline.getStyleClass().add("bisq-text-17");
 
-        int numColumns = 3;
-        GridPane gridPane = new GridPane();
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
-        gridPane.setAlignment(Pos.BOTTOM_LEFT);
-        GridPaneUtil.setGridPaneMultiColumnsConstraints(gridPane, numColumns);
+        Region line = getLine();
 
-        int rowIndex = 0;
-        Insets topInset = new Insets(0, 0, -14, 0);
-        myRoleLabel = createLabel("trade-details-small-grey");
-        GridPane.setMargin(myRoleLabel, topInset);
-        gridPane.add(myRoleLabel, 0, rowIndex);
-        amountLabel = createLabel("trade-details-small-grey");
-        GridPane.setMargin(amountLabel, topInset);
-        gridPane.add(amountLabel, 1, rowIndex);
-        paymentMethodLabel = createLabel("trade-details-small-grey");
-        GridPane.setMargin(paymentMethodLabel, topInset);
-        gridPane.add(paymentMethodLabel, 2, rowIndex);
+        // Trade date
+        tradeDateLabel = new Label();
+        tradeDateLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        HBox tradeDateBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.tradeDate",
+                tradeDateLabel);
 
-        rowIndex++;
-        makerTakerRole = createText("trade-details-large-light");
-        gridPane.add(makerTakerRole, 0, rowIndex);
-        tradeAmountFiat = createCopyOnClickLabel("trade-details-large-light");
-        currency = createText("trade-details-medium-grey");
-        HBox fiatText = new HBox(5, tradeAmountFiat, currency);
-        fiatText.setAlignment(Pos.BASELINE_LEFT);
-        gridPane.add(fiatText, 1, rowIndex);
-        fiatPaymentMethod = createText("trade-details-large-light");
-        gridPane.add(fiatPaymentMethod, 2, rowIndex);
+        // Traders / Roles
+        Label mePrefixLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.me"));
+        mePrefixLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        meLabel = new Label();
+        meLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        Label offerTypeAndRoleSlashLabel = new Label("/");
+        offerTypeAndRoleSlashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        Label peerPrefixLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.peer"));
+        peerPrefixLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        peerLabel = new Label();
+        peerLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        HBox tradersAndRoleDetailsHBox = new HBox(5, mePrefixLabel, meLabel, offerTypeAndRoleSlashLabel, peerPrefixLabel, peerLabel);
+        tradersAndRoleDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
+        tradersAndRoleCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        tradersAndRoleCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.copy"));
+        HBox tradersAndRoleBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.tradersAndRole",
+                tradersAndRoleDetailsHBox, Optional.of(tradersAndRoleCopyButton));
 
-        rowIndex++;
-        buySellRole = createText("trade-details-large-light");
-        gridPane.add(buySellRole, 0, rowIndex);
-        tradeAmountBtc = createCopyOnClickLabel("trade-details-large-light");
-        btcLabel = createText("trade-details-medium-grey");
-        HBox btcText = new HBox(5, tradeAmountBtc, btcLabel);
-        btcText.setAlignment(Pos.BASELINE_LEFT);
-        gridPane.add(btcText, 1, rowIndex);
-        btcPaymentMethod = createText("trade-details-large-light");
-        gridPane.add(btcPaymentMethod, 2, rowIndex);
+        // Offer type and market
+        offerTypeLabel = new Label();
+        offerTypeLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        Label offerAndMarketslashLabel = new Label("/");
+        offerAndMarketslashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        marketLabel = new Label();
+        marketLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        HBox offerTypeAndMarketDetailsHBox = new HBox(5, offerTypeLabel, offerAndMarketslashLabel, marketLabel);
+        offerTypeAndMarketDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox offerTypeAndMarketBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket",
+                offerTypeAndMarketDetailsHBox);
 
-        rowIndex++;
-        Region emptyRow1 = new Region();
-        GridPane.setColumnSpan(emptyRow1, numColumns);
-        emptyRow1.setPrefHeight(40);
-        gridPane.add(emptyRow1, 0, rowIndex);
-        rowIndex++;
-        Region line3 = getLine();
-        GridPane.setColumnSpan(line3, numColumns);
-        gridPane.add(line3, 0, rowIndex);
+        // Amount and price
+        fiatAmountLabel = new Label();
+        fiatAmountLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        fiatCurrencyLabel = new Label();
+        fiatCurrencyLabel.getStyleClass().addAll("text-fill-white", "small-text");
 
-        rowIndex++;
-        tradePriceLabel = createLabel("trade-details-medium-grey");
-        tradePriceLabel.setAlignment(Pos.BOTTOM_LEFT);
-        gridPane.add(tradePriceLabel, 0, rowIndex);
-        tradePriceAmount = createText("trade-details-medium-light");
-        priceSpec = createText("trade-details-medium-grey");
-        HBox tradePriceBox = new HBox(5, tradePriceAmount, priceSpec);
-        tradePriceBox.setAlignment(Pos.BOTTOM_LEFT);
-        GridPane.setColumnSpan(tradePriceBox, 2);
-        gridPane.add(tradePriceBox, 1, rowIndex);
-        rowIndex++;
-        tradeIdLabel = createLabel("trade-details-medium-grey");
-        gridPane.add(tradeIdLabel, 0, rowIndex);
-        tradeId = createCopyOnClickLabel("trade-details-medium-light");
-        GridPane.setColumnSpan(tradeId, 2);
-        gridPane.add(tradeId, 1, rowIndex);
-        rowIndex++;
-        dateLabel = createLabel("trade-details-medium-grey");
-        gridPane.add(dateLabel, 0, rowIndex);
-        tradeDate = createText("trade-details-medium-light");
-        GridPane.setColumnSpan(tradeDate, 2);
-        gridPane.add(tradeDate, 1, rowIndex);
-        rowIndex++;
-        peerUsernameLabel = createLabel("trade-details-medium-grey");
-        gridPane.add(peerUsernameLabel, 0, rowIndex);
-        peerUsername = createText("trade-details-medium-light");
-        GridPane.setColumnSpan(peerUsername, 2);
-        gridPane.add(peerUsername, 1, rowIndex);
-        rowIndex++;
-        peerNetworkAddressLabel = createLabel("trade-details-medium-grey");
-        gridPane.add(peerNetworkAddressLabel, 0, rowIndex);
-        peerNetworkAddress = createText("trade-details-medium-light");
-        GridPane.setColumnSpan(peerNetworkAddress, 2);
-        gridPane.add(peerNetworkAddress, 1, rowIndex);
-        rowIndex++;
-        mediatorLabel = createLabel("trade-details-medium-grey");
-        gridPane.add(mediatorLabel, 0, rowIndex);
-        mediator = createText("trade-details-medium-light");
-        GridPane.setColumnSpan(mediator, 2);
-        gridPane.add(mediator, 1, rowIndex);
+        Label openParenthesisLabel = new Label("(");
+        openParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        btcAmountLabel = new Label();
+        btcAmountLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        btcAmountLabel.setPadding(new Insets(0, 5, 0, 0));
+        Label btcLabel = new Label("BTC");
+        btcLabel.getStyleClass().addAll("text-fill-grey-dimmed", "small-text");
+        Label closingParenthesisLabel = new Label(")");
+        closingParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        HBox btcAmountHBoxbtcAmountHBox = new HBox(openParenthesisLabel, btcAmountLabel, btcLabel, closingParenthesisLabel);
+        btcAmountHBoxbtcAmountHBox.setAlignment(Pos.BASELINE_LEFT);
+        Label atLabel = new Label("@");
+        atLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        priceLabel = new Label();
+        priceLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        priceCodesLabel = new Label();
+        priceCodesLabel.getStyleClass().addAll("text-fill-white", "small-text");
+        priceSpecLabel = new Label();
+        priceSpecLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        HBox amountAndPriceDetailsHBox = new HBox(5, fiatAmountLabel, fiatCurrencyLabel, btcAmountHBoxbtcAmountHBox,
+                atLabel, priceLabel, priceCodesLabel, priceSpecLabel);
+        amountAndPriceDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox amountAndPriceBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.amountAndPrice", amountAndPriceDetailsHBox);
 
-        // process information section
-        rowIndex++;
-        Region emptyRow2 = new Region();
-        GridPane.setColumnSpan(emptyRow2, numColumns);
-        emptyRow2.setPrefHeight(40);
-        gridPane.add(emptyRow2, 0, rowIndex);
-        rowIndex++;
-        processHeadline = createLabel("trade-details-medium-light");
-        GridPane.setColumnSpan(processHeadline, numColumns);
-        gridPane.add(processHeadline, 0, rowIndex);
-        rowIndex++;
-        processDescription = createLabel("trade-details-small-grey");
-        processDescription.setPadding(new Insets(-10, 0, 0, 0));
-        GridPane.setColumnSpan(processDescription, numColumns);
-        gridPane.add(processDescription, 0, rowIndex);
-        rowIndex++;
-        Region line2 = getLine();
-        GridPane.setColumnSpan(line2, numColumns);
-        gridPane.add(line2, 0, rowIndex);
-        rowIndex++;
-        btcPaymentAddress = new MaterialTextField(Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress"));
-        btcPaymentAddress.setEditable(false);
-        btcPaymentAddress.showCopyIcon();
-        GridPane.setColumnSpan(btcPaymentAddress, numColumns);
-        gridPane.add(btcPaymentAddress, 0, rowIndex);
-        rowIndex++;
-        paymentAccountData = new MaterialTextField(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData"));
-        paymentAccountData.setEditable(false);
-        paymentAccountData.showCopyIcon();
-        GridPane.setColumnSpan(paymentAccountData, numColumns);
-        gridPane.add(paymentAccountData, 0, rowIndex);
+        // Payment and settlement methods
+        paymentMethodLabel = new Label();
+        paymentMethodLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        Label paymentMethodsSlashLabel = new Label("/");
+        paymentMethodsSlashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        settlementMethodLabel = new Label();
+        settlementMethodLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        HBox paymentMethodsDetailsHBox = new HBox(5, paymentMethodLabel, paymentMethodsSlashLabel, settlementMethodLabel);
+        paymentMethodsDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox paymentMethodsBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.paymentAndSettlementMethods",
+                paymentMethodsDetailsHBox);
 
-        gridPane.setPadding(new Insets(10, 40, 10, 20));
-        ScrollPane scrollPane = new ScrollPane(gridPane);
-        scrollPane.setFitToWidth(true);
-        VBox container = new VBox(scrollPane);
-        container.setPadding(new Insets(10, 22, 10, 20));
-        root.getChildren().addAll(container);
+        // Trade ID
+        tradeIdLabel = new Label();
+        tradeIdLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        tradeIdCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        tradeIdCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.tradeId.copy"));
+        HBox tradeIdBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.tradeId", tradeIdLabel,
+                Optional.of(tradeIdCopyButton));
+
+        // Peer network address
+        peerNetworkAddressLabel = new Label();
+        peerNetworkAddressLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        peerNetworkAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        peerNetworkAddressCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.peerNetworkAddress.copy"));
+        HBox peerNetworkAddressBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.peerNetworkAddress",
+                peerNetworkAddressLabel, Optional.of(peerNetworkAddressCopyButton));
+
+        // BTC payment address
+        btcPaymentAddressTitleLabel = new Label();
+        btcPaymentAddressDetailsLabel = new Label();
+        btcPaymentAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        HBox btcPaymentAddressBox = createAndGetTitleAndDetailsBox(btcPaymentAddressTitleLabel,
+                btcPaymentAddressDetailsLabel, Optional.of(btcPaymentAddressCopyButton));
+
+        // Payment account data
+        paymentAccountDataLabel = new Label();
+        paymentAccountDataCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        paymentAccountDataCopyButton.setTooltip(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
+        HBox paymentAccountDataBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
+                paymentAccountDataLabel, Optional.of(paymentAccountDataCopyButton));
+
+        // Assigned mediator
+        assignedMediatorLabel = new Label();
+        assignedMediatorLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+        assignedMediatorBox = createAndGetTitleAndDetailsBox("bisqEasy.openTrades.tradeDetails.assignedMediator", assignedMediatorLabel);
+
+        VBox content = new VBox(20,
+                headline,
+                line,
+                tradeDateBox,
+                tradersAndRoleBox,
+                offerTypeAndMarketBox,
+                amountAndPriceBox,
+                paymentMethodsBox,
+                tradeIdBox,
+                peerNetworkAddressBox,
+                btcPaymentAddressBox,
+                paymentAccountDataBox,
+                assignedMediatorBox);
+        content.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(headline, new Insets(-5, 0, -5, 0));
+        VBox.setMargin(line, new Insets(0, 0, 0, 0));
+        VBox.setMargin(content, new Insets(-40, 80, 0, 80));
+        VBox.setVgrow(content, Priority.ALWAYS);
+        root.setAlignment(Pos.TOP_CENTER);
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
+        root.getChildren().addAll(closeButtonRow, content);
+    }
+
+    private HBox createAndGetTitleAndDetailsBox(String title, Node detailsNode) {
+        Label titleLabel = new Label(Res.get(title));
+        return createAndGetTitleAndDetailsBox(titleLabel, detailsNode, Optional.empty());
+    }
+
+    private HBox createAndGetTitleAndDetailsBox(String title, Node detailsNode, Optional<BisqMenuItem> button) {
+        Label titleLabel = new Label(Res.get(title));
+        return createAndGetTitleAndDetailsBox(titleLabel, detailsNode, button);
+    }
+
+    private HBox createAndGetTitleAndDetailsBox(Label titleLabel, Node detailsNode, Optional<BisqMenuItem> button) {
+        double width = 180;
+        titleLabel.setMaxWidth(width);
+        titleLabel.setMinWidth(width);
+        titleLabel.setPrefWidth(width);
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
+
+        HBox hBox = new HBox(titleLabel, detailsNode);
+        hBox.setAlignment(Pos.BASELINE_LEFT);
+
+        if (button.isPresent()) {
+            button.get().useIconOnly(17);
+            HBox.setMargin(button.get(), new Insets(0, 0, 0, 40));
+            hBox.getChildren().addAll(Spacer.fillHBox(), button.get());
+        }
+        return hBox;
     }
 
     @Override
     protected void onViewAttached() {
-        headline.setText(Res.get("bisqEasy.openTrades.tradeDetails.headline"));
-        processHeadline.setText(Res.get("bisqEasy.openTrades.tradeDetails.processSection"));
-        myRoleLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.myRole"));
-        amountLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.amount"));
-        paymentMethodLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.paymentMethod"));
-        processDescription.setText(Res.get("bisqEasy.openTrades.tradeDetails.processDescription"));
-        btcLabel.setText("BTC");
-        tradePriceLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.tradePrice"));
-        tradeIdLabel.setText(Res.get("bisqEasy.openTrades.table.tradeId"));
-        peerUsernameLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.peerUsername"));
-        peerNetworkAddressLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.peerNetworkAddress"));
-        dateLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.offerTakenDate"));
-        mediatorLabel.setText(Res.get("bisqEasy.openTrades.tradeDetails.selectedMediator"));
+        tradeDateLabel.setText(model.getTradeDate());
+        meLabel.setText(model.getMe());
+        peerLabel.setText(model.getPeer());
+        offerTypeLabel.setText(model.getOfferType());
+        marketLabel.setText(model.getMarket());
+        fiatAmountLabel.setText(model.getFiatAmount());
+        fiatCurrencyLabel.setText(model.getFiatCurrency());
+        btcAmountLabel.setText(model.getBtcAmount());
+        priceLabel.setText(model.getPrice());
+        priceCodesLabel.setText(model.getPriceCodes());
+        priceSpecLabel.setText(model.getPriceSpec());
+        paymentMethodLabel.setText(model.getPaymentMethod());
+        settlementMethodLabel.setText(model.getSettlementMethod());
+        tradeIdLabel.setText(model.getTradeId());
+        peerNetworkAddressLabel.setText(model.getPeerNetworkAddress());
+        btcPaymentAddressTitleLabel.setText(model.isOnChainSettlement()
+                ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress")
+                : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice"));
+        btcPaymentAddressDetailsLabel.setText(model.getBtcPaymentAddress());
+        btcPaymentAddressCopyButton.setTooltip(model.isOnChainSettlement()
+                ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress.copy")
+                : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice.copy"));
+        paymentAccountDataLabel.setText(model.getPaymentAccountData());
+        assignedMediatorLabel.setText(model.getAssignedMediator());
+        assignedMediatorBox.setVisible(model.isHasMediatorBeenAssigned());
+        assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
+        btcPaymentAddressCopyButton.setVisible(!model.isBtcPaymentDataEmpty());
+        btcPaymentAddressCopyButton.setManaged(!model.isBtcPaymentDataEmpty());
+        paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
+        paymentAccountDataCopyButton.setVisible(!model.isPaymentAccountDataEmpty());
 
-        buySellRole.textProperty().bind(model.getMySellBuyRole());
-        makerTakerRole.textProperty().bind(model.getMyMakerTakerRole());
-        tradeAmountFiat.textProperty().bind(model.getAmountInFiat());
-        currency.textProperty().bind(model.getCurrency());
-        tradeAmountBtc.textProperty().bind(model.getAmountInBTC());
-        btcPaymentMethod.textProperty().bind(model.getBitcoinPaymentMethod());
-        fiatPaymentMethod.textProperty().bind(model.getFiatPaymentMethod());
-        btcPaymentAddress.textProperty().bind(model.getBitcoinPaymentAddress());
-        paymentAccountData.textProperty().bind(model.getPaymentAccountData());
-        tradePriceAmount.textProperty().bind(model.getTradePrice());
-        priceSpec.textProperty().bind(model.getPriceSpec());
-        tradeId.textProperty().bind(model.getTradeId());
-        peerUsername.textProperty().bind(model.getPeerUsername());
-        peerNetworkAddress.textProperty().bind(model.getPeerNetworkAddress());
-        tradeDate.textProperty().bind(model.getOfferTakenDateTime());
-        mediator.textProperty().bind(model.getMediator());
+        btcPaymentAddressDetailsLabel.getStyleClass().clear();
+        btcPaymentAddressDetailsLabel.getStyleClass().add(model.isBtcPaymentDataEmpty()
+                ? "text-fill-grey-dimmed"
+                : "text-fill-white");
+        btcPaymentAddressDetailsLabel.getStyleClass().add("normal-text");
+        paymentAccountDataLabel.getStyleClass().clear();
+        paymentAccountDataLabel.getStyleClass().add(model.isPaymentAccountDataEmpty()
+                ? "text-fill-grey-dimmed"
+                : "text-fill-white");
+        paymentAccountDataLabel.getStyleClass().add("normal-text");
 
         closeButton.setOnAction(e -> controller.onClose());
+        tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer()));
+        tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
+        peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress()));
+        btcPaymentAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBtcPaymentAddress()));
+        paymentAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentAccountData()));
     }
 
     @Override
     protected void onViewDetached() {
-        buySellRole.textProperty().unbind();
-        makerTakerRole.textProperty().unbind();
-        tradeAmountFiat.textProperty().unbind();
-        currency.textProperty().unbind();
-        tradeAmountBtc.textProperty().unbind();
-        btcPaymentMethod.textProperty().unbind();
-        fiatPaymentMethod.textProperty().unbind();
-        btcPaymentAddress.textProperty().unbind();
-        paymentAccountData.textProperty().unbind();
-        tradePriceAmount.textProperty().unbind();
-        priceSpec.textProperty().unbind();
-        tradeId.textProperty().unbind();
-        peerUsername.textProperty().unbind();
-        peerNetworkAddress.textProperty().unbind();
-        tradeDate.textProperty().unbind();
-        mediator.textProperty().unbind();
-
         closeButton.setOnAction(null);
-    }
-
-    private Label createLabel(String style) {
-        Label label = new Label();
-        label.getStyleClass().add(style);
-        return label;
-    }
-
-    private Text createText(String style) {
-        Text text = new Text();
-        text.getStyleClass().add(style);
-        return text;
-    }
-
-    private CopyOnClickLabel createCopyOnClickLabel(String style) {
-        CopyOnClickLabel text = new CopyOnClickLabel("");
-        text.getStyleClass().add(style);
-        return text;
+        tradersAndRoleCopyButton.setOnAction(null);
+        tradeIdCopyButton.setOnAction(null);
+        peerNetworkAddressCopyButton.setOnAction(null);
+        btcPaymentAddressCopyButton.setOnAction(null);
+        paymentAccountDataCopyButton.setOnAction(null);
     }
 
     private Region getLine() {
