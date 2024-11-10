@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.user_card.details;
 
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -34,6 +35,7 @@ import java.util.Optional;
 public class UserCardDetailsView extends View<VBox, UserCardDetailsModel, UserCardDetailsController> {
     private final Label botIdLabel, userIdLabel, transportAddressLabel, totalReputationScoreLabel, profileAgeLabel,
             lastUserActivityLabel, versionLabel;
+    private final BisqMenuItem botIdCopyButton, userIdCopyButton, transportAddressCopyButton;
 
     public UserCardDetailsView(UserCardDetailsModel model,
                                UserCardDetailsController controller) {
@@ -41,16 +43,21 @@ public class UserCardDetailsView extends View<VBox, UserCardDetailsModel, UserCa
 
         // Bot ID
         botIdLabel = new Label();
-        HBox botIdBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.botId", botIdLabel);
+        botIdCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        HBox botIdBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.botId",
+                botIdLabel, Optional.of(botIdCopyButton));
 
         // User ID
         userIdLabel = new Label();
-        HBox userIdBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.userId", userIdLabel);
+        userIdCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        HBox userIdBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.userId",
+                userIdLabel, Optional.of(userIdCopyButton));
 
         // Transport address
         transportAddressLabel = new Label();
+        transportAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
         HBox transportAddressBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.transportAddress",
-                transportAddressLabel);
+                transportAddressLabel, Optional.of(transportAddressCopyButton));
 
         // Total reputation score
         totalReputationScoreLabel = new Label();
@@ -86,6 +93,10 @@ public class UserCardDetailsView extends View<VBox, UserCardDetailsModel, UserCa
         profileAgeLabel.textProperty().bind(model.getProfileAge());
         lastUserActivityLabel.textProperty().bind(model.getLastUserActivity());
         versionLabel.textProperty().bind(model.getVersion());
+
+        botIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBotId().get()));
+        userIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getUserId().get()));
+        transportAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTransportAddress().get()));
     }
 
     @Override
@@ -97,6 +108,10 @@ public class UserCardDetailsView extends View<VBox, UserCardDetailsModel, UserCa
         profileAgeLabel.textProperty().unbind();
         lastUserActivityLabel.textProperty().unbind();
         versionLabel.textProperty().unbind();
+
+        botIdCopyButton.setOnAction(null);
+        userIdCopyButton.setOnAction(null);
+        transportAddressCopyButton.setOnAction(null);
     }
 
     private HBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel) {
@@ -105,7 +120,7 @@ public class UserCardDetailsView extends View<VBox, UserCardDetailsModel, UserCa
 
     private HBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, Optional<BisqMenuItem> button) {
         Label titleLabel = new Label(Res.get(title));
-        double width = 180;
+        double width = 200;
         titleLabel.setMaxWidth(width);
         titleLabel.setMinWidth(width);
         titleLabel.setPrefWidth(width);
