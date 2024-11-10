@@ -137,9 +137,9 @@ public class UserCardController extends TabController<UserCardModel>
     void onReportUser() {
         if (selectedChannel.isPresent()) {
             ChatChannelDomain chatChannelDomain = selectedChannel.get().getChatChannelDomain();
-            // FIXME
-//            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
-//                        new ReportToModeratorWindow.InitData(model.getUserProfile(), chatChannelDomain));
+            OverlayController.hide(() ->
+                    Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
+                            new ReportToModeratorWindow.InitData(model.getUserProfile(), chatChannelDomain)));
         }
     }
 

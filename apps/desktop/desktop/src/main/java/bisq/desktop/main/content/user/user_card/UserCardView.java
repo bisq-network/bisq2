@@ -137,10 +137,10 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
 
         HBox userNameBox = new HBox(10, userNickNameLabel, userNymLabel);
         userNameBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox userOptionsBox = new HBox(30, privateMsg, ignore, undoIgnore, report);
-        VBox userNameReputationAndOptionsBox = new VBox(5, userNameBox, reputationScoreDisplay, Spacer.fillVBox(), userOptionsBox);
-        userNameReputationAndOptionsBox.getStyleClass().add("header-content");
-        HBox header = new HBox(40, userProfileIcon, userNameReputationAndOptionsBox);
+        HBox userActionsBox = new HBox(30, privateMsg, ignore, undoIgnore, report);
+        VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationScoreDisplay, Spacer.fillVBox(), userActionsBox);
+        userNameReputationAndActionsBox.getStyleClass().add("header-content");
+        HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);
         header.setPadding(new Insets(0, 0, 20, 0));
 
         tabs.setFillHeight(true);
