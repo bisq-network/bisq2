@@ -21,7 +21,9 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +33,8 @@ public class UserCardModel extends TabModel {
     @Setter
     private UserProfile userProfile;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
+    private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowReportButton = new SimpleBooleanProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

@@ -125,21 +125,24 @@
 }
 
 /*******************************************************************************
- * User Details Popup                                                          *
+ * User Card                                                                   *
  ******************************************************************************/
 
-.user-details-popup .user-profile-display {
-    -fx-spacing: 30 !important;
+.user-card .header-content {
+    -fx-max-height: 100;
+    -fx-pref-height: 100;
+    -fx-min-height: 100;
+    -fx-padding: 2 0 2 0;
 }
 
-.user-details-popup .user-profile-display .user-profile-display-name {
-    -fx-font-size: 1.8em !important;
+.user-card .header-content .user-nickname {
+
 }
 
-.user-details-popup .user-profile-display .username-and-reputation-box {
-    -fx-spacing: 10;
+.user-card .header-content .user-nym {
+
 }
 
-.user-details-popup .bisq-common-bg {
+.user-card .bisq-common-bg {
     -fx-padding: 35 !important;
 }

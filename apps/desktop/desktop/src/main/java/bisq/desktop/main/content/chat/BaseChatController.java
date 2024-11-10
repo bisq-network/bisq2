@@ -135,7 +135,12 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         model.setChatUserDetails(Optional.of(userProfileSidebar));
         model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
 
-        Navigation.navigateTo(NavigationTarget.USER_CARD, new UserCardController.InitData(userProfile));
+        Navigation.navigateTo(NavigationTarget.USER_CARD,
+                new UserCardController.InitData(
+                        userProfile,
+                        model.getSelectedChannel(),
+                        chatMessageContainerController::createAndSelectTwoPartyPrivateChatChannel,
+                        chatMessageContainerController::refreshMessages));
     }
 
     protected void selectedChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {

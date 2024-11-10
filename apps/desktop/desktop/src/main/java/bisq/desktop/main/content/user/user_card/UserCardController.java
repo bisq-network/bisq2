@@ -18,20 +18,30 @@
 package bisq.desktop.main.content.user.user_card;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.user_card.details.UserCardDetailsController;
 import bisq.desktop.overlay.OverlayController;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Slf4j
 public class UserCardController extends TabController<UserCardModel>
@@ -41,9 +51,22 @@ public class UserCardController extends TabController<UserCardModel>
     @ToString
     public static class InitData {
         private final UserProfile userProfile;
+        private final Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
+        private final Optional<Consumer<UserProfile>> sendPrivateMessageHandler;
+        private final Optional<Runnable> ignoreUserStateHandler;
+
+        public InitData(UserProfile userProfile,
+                        @Nullable ChatChannel<? extends ChatMessage> selectedChannel,
+                        Consumer<UserProfile> sendPrivateMessageHandler,
+                        Runnable ignoreUserStateHandler) {
+            this.userProfile = userProfile;
+            this.selectedChannel = Optional.ofNullable(selectedChannel);
+            this.sendPrivateMessageHandler = Optional.ofNullable(sendPrivateMessageHandler);
+            this.ignoreUserStateHandler = Optional.ofNullable(ignoreUserStateHandler);
+        }
 
         public InitData(UserProfile userProfile) {
-            this.userProfile = userProfile;
+            this(userProfile, null, null, null);
         }
     }
 
@@ -51,13 +74,20 @@ public class UserCardController extends TabController<UserCardModel>
     private final UserCardView view;
     private final ServiceProvider serviceProvider;
     private final ReputationService reputationService;
+    private final BannedUserService bannedUserService;
+    private final UserProfileService userProfileService;
     private UserProfile userProfile;
+    private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
+    private Optional<Consumer<UserProfile>> sendPrivateMessageHandler;
+    private Optional<Runnable> ignoreUserStateHandler;
 
     public UserCardController(ServiceProvider serviceProvider) {
         super(new UserCardModel(), NavigationTarget.USER_CARD);
 
         this.serviceProvider = serviceProvider;
         reputationService = serviceProvider.getUserService().getReputationService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
         view = new UserCardView(model, this);
     }
 
@@ -65,6 +95,7 @@ public class UserCardController extends TabController<UserCardModel>
     public void onActivate() {
         model.setUserProfile(userProfile);
         model.getReputationScore().set(reputationService.getReputationScore(userProfile));
+        model.getShouldShowReportButton().set(selectedChannel.isPresent());
     }
 
     @Override
@@ -84,9 +115,39 @@ public class UserCardController extends TabController<UserCardModel>
     @Override
     public void initWithData(InitData initData) {
         userProfile = initData.userProfile;
+        selectedChannel = initData.selectedChannel;
+        sendPrivateMessageHandler = initData.sendPrivateMessageHandler;
+        ignoreUserStateHandler = initData.ignoreUserStateHandler;
+    }
+
+    void onSendPrivateMessage() {
+        sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.getUserProfile()));
+    }
+
+    void onToggleIgnoreUser() {
+        model.getIgnoreUserSelected().set(!model.getIgnoreUserSelected().get());
+        if (model.getIgnoreUserSelected().get()) {
+            userProfileService.ignoreUserProfile(model.getUserProfile());
+        } else {
+            userProfileService.undoIgnoreUserProfile(model.getUserProfile());
+        }
+        ignoreUserStateHandler.ifPresent(Runnable::run);
+    }
+
+    void onReportUser() {
+        if (selectedChannel.isPresent()) {
+            ChatChannelDomain chatChannelDomain = selectedChannel.get().getChatChannelDomain();
+            // FIXME
+//            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
+//                        new ReportToModeratorWindow.InitData(model.getUserProfile(), chatChannelDomain));
+        }
     }
 
     void onClose() {
         OverlayController.hide();
+    }
+
+    public boolean isUserProfileBanned() {
+        return bannedUserService.isUserProfileBanned(model.getUserProfile());
     }
 }
