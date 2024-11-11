@@ -135,12 +135,12 @@
     -fx-padding: 2 0 2 0;
 }
 
-.user-card .header-content .user-nickname {
-
+.user-card .overview .title {
+    -fx-font-size: 1.3em;
 }
 
-.user-card .header-content .user-nym {
-
+.user-card .overview .details {
+    /*-fx-background-color: pink;*/
 }
 
 .user-card .bisq-common-bg {

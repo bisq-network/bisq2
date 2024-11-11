@@ -27,6 +27,7 @@ import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
+import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -44,7 +45,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
     private Label userNickNameLabel, userNymLabel;
     private BisqMenuItem privateMsg, ignore, undoIgnore, report;
     private Button closeButton;
-    private Subscription reputationScorePin;
+    private Subscription userProfilePin, reputationScorePin;
 
     public UserCardView(UserCardModel model, UserCardController controller) {
         super(model, controller);
@@ -64,17 +65,6 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
 
     @Override
     protected void onViewAttached() {
-        userProfileIcon.setUserProfile(model.getUserProfile());
-        String nickname = model.getUserProfile().getNickName();
-        userNickNameLabel.setText(controller.isUserProfileBanned()
-                ? Res.get("user.userCard.userNickname.banned", nickname)
-                : nickname);
-        userNymLabel.setText(String.format("[%s]", model.getUserProfile().getNym()));
-        if (controller.isUserProfileBanned()) {
-            userNickNameLabel.getStyleClass().add("error");
-            userNymLabel.getStyleClass().add("error");
-        }
-
         ignore.visibleProperty().bind(model.getIgnoreUserSelected().not());
         ignore.managedProperty().bind(model.getIgnoreUserSelected().not());
         undoIgnore.visibleProperty().bind(model.getIgnoreUserSelected());
@@ -84,6 +74,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         overviewTabButton.visibleProperty().bind(model.getShouldShowOverviewTab());
         overviewTabButton.managedProperty().bind(model.getShouldShowOverviewTab());
 
+        userProfilePin = EasyBind.subscribe(model.getUserProfile(), this::updateUserProfile);
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
             if (reputationScore != null) {
                 reputationScoreDisplay.setReputationScore(reputationScore);
@@ -108,6 +99,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         overviewTabButton.visibleProperty().unbind();
         overviewTabButton.managedProperty().unbind();
 
+        userProfilePin.unsubscribe();
         reputationScorePin.unsubscribe();
 
         privateMsg.setOnAction(null);
@@ -162,5 +154,18 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         super.setupLineAndMarker();
 
         lineSidePadding = SIDE_PADDING;
+    }
+
+    private void updateUserProfile(UserProfile userProfile) {
+        userProfileIcon.setUserProfile(userProfile);
+        String nickname = userProfile.getNickName();
+        userNickNameLabel.setText(controller.isUserProfileBanned()
+                ? Res.get("user.userCard.userNickname.banned", nickname)
+                : nickname);
+        userNymLabel.setText(String.format("[%s]", userProfile.getNym()));
+        if (controller.isUserProfileBanned()) {
+            userNickNameLabel.getStyleClass().add("error");
+            userNymLabel.getStyleClass().add("error");
+        }
     }
 }

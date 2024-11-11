@@ -38,6 +38,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -72,67 +74,80 @@ public class UserCardController extends TabController<UserCardModel>
 
     @Getter
     private final UserCardView view;
-    private final ServiceProvider serviceProvider;
     private final ReputationService reputationService;
     private final BannedUserService bannedUserService;
     private final UserProfileService userProfileService;
-    private UserProfile userProfile;
+    private final UserCardOverviewController userCardOverviewController;
+    private final UserCardDetailsController userCardDetailsController;
     private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
     private Optional<Consumer<UserProfile>> sendPrivateMessageHandler;
     private Optional<Runnable> ignoreUserStateHandler;
+    private Subscription userProfilePin;
 
     public UserCardController(ServiceProvider serviceProvider) {
         super(new UserCardModel(), NavigationTarget.USER_CARD);
 
-        this.serviceProvider = serviceProvider;
         reputationService = serviceProvider.getUserService().getReputationService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
+        userCardOverviewController = new UserCardOverviewController(serviceProvider);
+        userCardDetailsController = new UserCardDetailsController(serviceProvider);
         view = new UserCardView(model, this);
     }
 
     @Override
     public void onActivate() {
-        model.setUserProfile(userProfile);
-        model.getReputationScore().set(reputationService.getReputationScore(userProfile));
-        model.getShouldShowReportButton().set(selectedChannel.isPresent());
-        boolean hasStatementOrTerms = !userProfile.getStatement().isEmpty() || !userProfile.getTerms().isEmpty();
-        model.getShouldShowOverviewTab().set(hasStatementOrTerms);
+        userProfilePin = EasyBind.subscribe(model.getUserProfile(), userProfile -> {
+            model.getReputationScore().set(reputationService.getReputationScore(userProfile));
+            model.getShouldShowReportButton().set(selectedChannel.isPresent());
+            boolean hasStatementOrTerms = !(userProfile.getStatement().isEmpty() && userProfile.getTerms().isEmpty());
+            model.getShouldShowOverviewTab().set(hasStatementOrTerms);
+            Navigation.navigateTo(hasStatementOrTerms
+                    ? NavigationTarget.USER_CARD_OVERVIEW
+                    : NavigationTarget.USER_CARD_DETAILS);
+            userCardDetailsController.updateUserProfileData(userProfile);
+            userCardOverviewController.updateUserProfileData(userProfile);
+        });
     }
 
     @Override
     public void onDeactivate() {
+        userProfilePin.unsubscribe();
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case USER_CARD_OVERVIEW -> Optional.of(new UserCardOverviewController(serviceProvider, userProfile));
-            case USER_CARD_DETAILS -> Optional.of(new UserCardDetailsController(serviceProvider, userProfile));
-//            case USER_DETAILS_OFFERS -> Optional.of(new (serviceProvider));
-//            case USER_DETAILS_REPUTATION -> Optional.of(new (serviceProvider));
+            case USER_CARD_OVERVIEW -> Optional.of(userCardOverviewController);
+            case USER_CARD_DETAILS -> Optional.of(userCardDetailsController);
+//            case USER_DETAILS_OFFERS -> Optional.of();
+//            case USER_DETAILS_REPUTATION -> Optional.of();
             default -> Optional.empty();
         };
     }
 
     @Override
     public void initWithData(InitData initData) {
-        userProfile = initData.userProfile;
         selectedChannel = initData.selectedChannel;
         sendPrivateMessageHandler = initData.sendPrivateMessageHandler;
         ignoreUserStateHandler = initData.ignoreUserStateHandler;
+        model.getUserProfile().set(initData.userProfile);
+    }
+
+    boolean isUserProfileBanned() {
+        return bannedUserService.isUserProfileBanned(model.getUserProfile().get());
     }
 
     void onSendPrivateMessage() {
-        sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.getUserProfile()));
+        sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.getUserProfile().get()));
     }
 
     void onToggleIgnoreUser() {
         model.getIgnoreUserSelected().set(!model.getIgnoreUserSelected().get());
         if (model.getIgnoreUserSelected().get()) {
-            userProfileService.ignoreUserProfile(model.getUserProfile());
+            userProfileService.ignoreUserProfile(model.getUserProfile().get());
         } else {
-            userProfileService.undoIgnoreUserProfile(model.getUserProfile());
+            userProfileService.undoIgnoreUserProfile(model.getUserProfile().get());
         }
         ignoreUserStateHandler.ifPresent(Runnable::run);
     }
@@ -142,15 +157,11 @@ public class UserCardController extends TabController<UserCardModel>
             ChatChannelDomain chatChannelDomain = selectedChannel.get().getChatChannelDomain();
             OverlayController.hide(() ->
                     Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
-                            new ReportToModeratorWindow.InitData(model.getUserProfile(), chatChannelDomain)));
+                            new ReportToModeratorWindow.InitData(model.getUserProfile().get(), chatChannelDomain)));
         }
     }
 
     void onClose() {
         OverlayController.hide();
-    }
-
-    public boolean isUserProfileBanned() {
-        return bannedUserService.isUserProfileBanned(model.getUserProfile());
     }
 }

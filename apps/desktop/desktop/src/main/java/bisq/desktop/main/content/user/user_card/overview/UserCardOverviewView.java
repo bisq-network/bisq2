@@ -18,6 +18,9 @@
 package bisq.desktop.main.content.user.user_card.overview;
 
 import bisq.desktop.common.view.View;
+import bisq.i18n.Res;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -32,18 +35,46 @@ public class UserCardOverviewView extends View<VBox, UserCardOverviewModel, User
 
         // Statement
         statementLabel = new Label();
+        VBox statementBox = createAndGetTitleAndDetailsBox("user.userCard.overview.statement", statementLabel, 30);
 
         // Trade terms
         tradeTermsLabel = new Label();
+        VBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.userCard.overview.tradeTerms", tradeTermsLabel, 100);
+
+        VBox contentBox = new VBox(20, statementBox, tradeTermsBox);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        contentBox.setAlignment(Pos.TOP_LEFT);
+        contentBox.setMinHeight(307);
+        contentBox.setPrefHeight(307);
+        contentBox.setMaxHeight(307);
+
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(20, 0, 20, 0));
+        root.getStyleClass().add("overview");
     }
 
     @Override
     protected void onViewAttached() {
-
+        statementLabel.textProperty().bind(model.getStatement());
+        tradeTermsLabel.textProperty().bind(model.getTradeTerms());
     }
 
     @Override
     protected void onViewDetached() {
+        statementLabel.textProperty().unbind();
+        tradeTermsLabel.textProperty().unbind();
+    }
 
+    private VBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, double height) {
+        Label titleLabel = new Label(Res.get(title));
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "title");
+        detailsLabel.getStyleClass().addAll("text-fill-white", "normal-text", "details");
+        detailsLabel.setWrapText(true);
+        detailsLabel.setMinHeight(height);
+        detailsLabel.setPrefHeight(height);
+        detailsLabel.setMaxHeight(height);
+        detailsLabel.setAlignment(Pos.TOP_LEFT);
+        VBox vBox = new VBox(10, titleLabel, detailsLabel);
+        return vBox;
     }
 }

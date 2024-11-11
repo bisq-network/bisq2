@@ -26,12 +26,10 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class UserCardModel extends TabModel {
-    @Setter
-    private UserProfile userProfile;
+    private final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowReportButton = new SimpleBooleanProperty();
@@ -39,8 +37,6 @@ public class UserCardModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return shouldShowOverviewTab.get()
-                ? NavigationTarget.USER_CARD_OVERVIEW
-                : NavigationTarget.USER_CARD_DETAILS;
+        return NavigationTarget.USER_CARD_DETAILS;
     }
 }

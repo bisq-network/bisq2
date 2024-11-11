@@ -26,21 +26,22 @@ public class UserCardOverviewController implements Controller {
     @Getter
     private final UserCardOverviewView view;
     private final UserCardOverviewModel model;
-    private final UserProfile userProfile;
 
-    public UserCardOverviewController(ServiceProvider serviceProvider, UserProfile userProfile) {
-        this.userProfile = userProfile;
+    public UserCardOverviewController(ServiceProvider serviceProvider) {
         model = new UserCardOverviewModel();
         view = new UserCardOverviewView(model, this);
     }
 
     @Override
     public void onActivate() {
-
     }
 
     @Override
     public void onDeactivate() {
+    }
 
+    public void updateUserProfileData(UserProfile userProfile) {
+        model.getStatement().set(userProfile.getStatement());
+        model.getTradeTerms().set(userProfile.getTerms());
     }
 }

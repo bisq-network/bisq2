@@ -35,13 +35,11 @@ public class UserCardDetailsController implements Controller {
     @Getter
     private final UserCardDetailsView view;
     private final UserCardDetailsModel model;
-    private final UserProfile userProfile;
     private final ReputationService reputationService;
     private Pin reputationChangedPin;
     private UIScheduler livenessUpdateScheduler;
 
-    public UserCardDetailsController(ServiceProvider serviceProvider, UserProfile userProfile) {
-        this.userProfile = userProfile;
+    public UserCardDetailsController(ServiceProvider serviceProvider) {
         model = new UserCardDetailsModel();
         view = new UserCardDetailsView(model, this);
         reputationService = serviceProvider.getUserService().getReputationService();
@@ -49,10 +47,25 @@ public class UserCardDetailsController implements Controller {
 
     @Override
     public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+        reputationChangedPin.unbind();
+        if (livenessUpdateScheduler != null) {
+            livenessUpdateScheduler.stop();
+            livenessUpdateScheduler = null;
+        }
+    }
+
+    public void updateUserProfileData(UserProfile userProfile) {
         model.getBotId().set(userProfile.getNym());
         model.getUserId().set(userProfile.getId());
         model.getTransportAddress().set(userProfile.getAddressByTransportDisplayString());
-        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(this::updateTotalReputationScore));
+        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(() -> {
+            ReputationScore reputationScore = reputationService.getReputationScore(userProfile);
+            model.getTotalReputationScore().set(String.valueOf(reputationScore.getTotalScore()));
+        }));
         model.getProfileAge().set(reputationService.getProfileAgeService().getProfileAge(userProfile)
                 .map(TimeFormatter::formatAgeInDays)
                 .orElse(Res.get("data.na")));
@@ -73,24 +86,5 @@ public class UserCardDetailsController implements Controller {
                 .periodically(0, 1, TimeUnit.SECONDS);
         String version = userProfile.getApplicationVersion();
         model.getVersion().set(version.isEmpty() ? Res.get("data.na") : version);
-    }
-
-    @Override
-    public void onDeactivate() {
-        model.getBotId().unbind();
-        model.getUserId().unbind();
-        model.getTransportAddress().unbind();
-        reputationChangedPin.unbind();
-        model.getProfileAge().unbind();
-        if (livenessUpdateScheduler != null) {
-            livenessUpdateScheduler.stop();
-            livenessUpdateScheduler = null;
-        }
-        model.getVersion().unbind();
-    }
-
-    private void updateTotalReputationScore() {
-        ReputationScore reputationScore = reputationService.getReputationScore(userProfile);
-        model.getTotalReputationScore().set(String.valueOf(reputationScore.getTotalScore()));
     }
 }
