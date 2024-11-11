@@ -139,10 +139,6 @@
     -fx-font-size: 1.3em;
 }
 
-.user-card .overview .details {
-    /*-fx-background-color: pink;*/
-}
-
 .user-card .bisq-common-bg {
     -fx-padding: 35 !important;
 }

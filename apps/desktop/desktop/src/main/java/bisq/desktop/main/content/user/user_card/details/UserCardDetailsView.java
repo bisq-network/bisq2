@@ -44,36 +44,36 @@ public class UserCardDetailsView extends View<VBox, UserCardDetailsModel, UserCa
         // Bot ID
         botIdLabel = new Label();
         botIdCopyButton = new BisqMenuItem("copy-grey", "copy-white");
-        HBox botIdBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.botId",
+        HBox botIdBox = createAndGetTitleAndDetailsBox("user.userCard.details.botId",
                 botIdLabel, Optional.of(botIdCopyButton));
 
         // User ID
         userIdLabel = new Label();
         userIdCopyButton = new BisqMenuItem("copy-grey", "copy-white");
-        HBox userIdBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.userId",
+        HBox userIdBox = createAndGetTitleAndDetailsBox("user.userCard.details.userId",
                 userIdLabel, Optional.of(userIdCopyButton));
 
         // Transport address
         transportAddressLabel = new Label();
         transportAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
-        HBox transportAddressBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.transportAddress",
+        HBox transportAddressBox = createAndGetTitleAndDetailsBox("user.userCard.details.transportAddress",
                 transportAddressLabel, Optional.of(transportAddressCopyButton));
 
         // Total reputation score
         totalReputationScoreLabel = new Label();
-        HBox totalReputationScoreBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.totalReputationScore", totalReputationScoreLabel);
+        HBox totalReputationScoreBox = createAndGetTitleAndDetailsBox("user.userCard.details.totalReputationScore", totalReputationScoreLabel);
 
         // Profile age
         profileAgeLabel = new Label();
-        HBox profileAgeBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.profileAge", profileAgeLabel);
+        HBox profileAgeBox = createAndGetTitleAndDetailsBox("user.userCard.details.profileAge", profileAgeLabel);
 
         // Last user activity
         lastUserActivityLabel = new Label();
-        HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.lastUserActivity", lastUserActivityLabel);
+        HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.userCard.details.lastUserActivity", lastUserActivityLabel);
 
         // Version
         versionLabel = new Label();
-        HBox versionBox = createAndGetTitleAndDetailsBox("user.userDetailsPopup.details.version", versionLabel);
+        HBox versionBox = createAndGetTitleAndDetailsBox("user.userCard.details.version", versionLabel);
 
         VBox contentBox = new VBox(16, botIdBox, userIdBox, transportAddressBox, totalReputationScoreBox, profileAgeBox,
                 lastUserActivityBox, versionBox);

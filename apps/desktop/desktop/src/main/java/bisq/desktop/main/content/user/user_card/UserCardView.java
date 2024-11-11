@@ -57,10 +57,10 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
         root.getStyleClass().add("user-card");
 
-        overviewTabButton = addTab(Res.get("user.userDetailsPopup.tab.overview"), NavigationTarget.USER_CARD_OVERVIEW);
-        addTab(Res.get("user.userDetailsPopup.tab.details"), NavigationTarget.USER_CARD_DETAILS);
-//        addTab(Res.get("user.userDetailsPopup.tab.offers"), NavigationTarget.USER_CARD_OFFERS);
-//        addTab(Res.get("user.userDetailsPopup.tab.reputation"), NavigationTarget.USER_CARD_REPUTATION);
+        overviewTabButton = addTab(Res.get("user.userCard.tab.overview"), NavigationTarget.USER_CARD_OVERVIEW);
+        addTab(Res.get("user.userCard.tab.details"), NavigationTarget.USER_CARD_DETAILS);
+//        addTab(Res.get("user.userCard.tab.offers"), NavigationTarget.USER_CARD_OFFERS);
+//        addTab(Res.get("user.userCard.tab.reputation"), NavigationTarget.USER_CARD_REPUTATION);
     }
 
     @Override
