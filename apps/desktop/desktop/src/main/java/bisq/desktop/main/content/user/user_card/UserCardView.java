@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.user_card;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -37,6 +38,7 @@ import org.fxmisc.easybind.Subscription;
 
 public class UserCardView extends TabView<UserCardModel, UserCardController> {
     private final UserCardController controller;
+    private final TabButton overviewTabButton;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel;
@@ -54,7 +56,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
         root.getStyleClass().add("user-card");
 
-        addTab(Res.get("user.userDetailsPopup.tab.overview"), NavigationTarget.USER_CARD_OVERVIEW);
+        overviewTabButton = addTab(Res.get("user.userDetailsPopup.tab.overview"), NavigationTarget.USER_CARD_OVERVIEW);
         addTab(Res.get("user.userDetailsPopup.tab.details"), NavigationTarget.USER_CARD_DETAILS);
 //        addTab(Res.get("user.userDetailsPopup.tab.offers"), NavigationTarget.USER_CARD_OFFERS);
 //        addTab(Res.get("user.userDetailsPopup.tab.reputation"), NavigationTarget.USER_CARD_REPUTATION);
@@ -79,6 +81,8 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         undoIgnore.managedProperty().bind(model.getIgnoreUserSelected());
         report.visibleProperty().bind(model.getShouldShowReportButton());
         report.managedProperty().bind(model.getShouldShowReportButton());
+        overviewTabButton.visibleProperty().bind(model.getShouldShowOverviewTab());
+        overviewTabButton.managedProperty().bind(model.getShouldShowOverviewTab());
 
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
             if (reputationScore != null) {
@@ -101,6 +105,8 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         undoIgnore.managedProperty().unbind();
         report.visibleProperty().unbind();
         report.managedProperty().unbind();
+        overviewTabButton.visibleProperty().unbind();
+        overviewTabButton.managedProperty().unbind();
 
         reputationScorePin.unsubscribe();
 

@@ -35,9 +35,12 @@ public class UserCardModel extends TabModel {
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowReportButton = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowOverviewTab = new SimpleBooleanProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_CARD_OVERVIEW;
+        return shouldShowOverviewTab.get()
+                ? NavigationTarget.USER_CARD_OVERVIEW
+                : NavigationTarget.USER_CARD_DETAILS;
     }
 }

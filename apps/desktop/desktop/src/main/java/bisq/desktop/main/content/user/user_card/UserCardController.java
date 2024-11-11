@@ -22,13 +22,13 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.user_card.details.UserCardDetailsController;
+import bisq.desktop.main.content.user.user_card.overview.UserCardOverviewController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
@@ -96,6 +96,8 @@ public class UserCardController extends TabController<UserCardModel>
         model.setUserProfile(userProfile);
         model.getReputationScore().set(reputationService.getReputationScore(userProfile));
         model.getShouldShowReportButton().set(selectedChannel.isPresent());
+        boolean hasStatementOrTerms = !userProfile.getStatement().isEmpty() || !userProfile.getTerms().isEmpty();
+        model.getShouldShowOverviewTab().set(hasStatementOrTerms);
     }
 
     @Override
@@ -105,7 +107,8 @@ public class UserCardController extends TabController<UserCardModel>
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case USER_CARD_OVERVIEW -> Optional.of(new UserCardDetailsController(serviceProvider, userProfile));
+            case USER_CARD_OVERVIEW -> Optional.of(new UserCardOverviewController(serviceProvider, userProfile));
+            case USER_CARD_DETAILS -> Optional.of(new UserCardDetailsController(serviceProvider, userProfile));
 //            case USER_DETAILS_OFFERS -> Optional.of(new (serviceProvider));
 //            case USER_DETAILS_REPUTATION -> Optional.of(new (serviceProvider));
             default -> Optional.empty();
