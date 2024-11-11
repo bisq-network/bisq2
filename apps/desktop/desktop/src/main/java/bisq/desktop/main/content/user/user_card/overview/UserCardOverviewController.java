@@ -41,7 +41,7 @@ public class UserCardOverviewController implements Controller {
     }
 
     public void updateUserProfileData(UserProfile userProfile) {
-        model.getStatement().set(userProfile.getStatement());
-        model.getTradeTerms().set(userProfile.getTerms());
+        model.getStatement().set(userProfile.getStatement().isBlank() ? "-" : userProfile.getStatement());
+        model.getTradeTerms().set(userProfile.getTerms().isBlank() ? "-" : userProfile.getTerms());
     }
 }

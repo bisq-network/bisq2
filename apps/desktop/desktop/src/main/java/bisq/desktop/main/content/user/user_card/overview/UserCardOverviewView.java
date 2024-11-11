@@ -67,14 +67,13 @@ public class UserCardOverviewView extends View<VBox, UserCardOverviewModel, User
 
     private VBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, double height) {
         Label titleLabel = new Label(Res.get(title));
-        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "title");
-        detailsLabel.getStyleClass().addAll("text-fill-white", "normal-text", "details");
+        titleLabel.getStyleClass().addAll("text-fill-white", "title");
+        detailsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
         detailsLabel.setWrapText(true);
         detailsLabel.setMinHeight(height);
         detailsLabel.setPrefHeight(height);
         detailsLabel.setMaxHeight(height);
         detailsLabel.setAlignment(Pos.TOP_LEFT);
-        VBox vBox = new VBox(10, titleLabel, detailsLabel);
-        return vBox;
+        return new VBox(7, titleLabel, detailsLabel);
     }
 }

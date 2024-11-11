@@ -102,10 +102,6 @@ public class UserCardController extends TabController<UserCardModel>
         userProfilePin = EasyBind.subscribe(model.getUserProfile(), userProfile -> {
             model.getReputationScore().set(reputationService.getReputationScore(userProfile));
             model.getShouldShowReportButton().set(selectedChannel.isPresent());
-            boolean hasStatementOrTerms = !(userProfile.getStatement().isEmpty() && userProfile.getTerms().isEmpty());
-            Navigation.navigateTo(hasStatementOrTerms
-                    ? NavigationTarget.USER_CARD_OVERVIEW
-                    : NavigationTarget.USER_CARD_DETAILS);
             userCardDetailsController.updateUserProfileData(userProfile);
             userCardOverviewController.updateUserProfileData(userProfile);
         });

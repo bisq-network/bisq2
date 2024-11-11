@@ -136,7 +136,8 @@
 }
 
 .user-card .overview .title {
-    -fx-font-size: 1.3em;
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .user-card .bisq-common-bg {

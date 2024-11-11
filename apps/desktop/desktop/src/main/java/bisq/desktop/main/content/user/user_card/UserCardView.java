@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.user_card;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;

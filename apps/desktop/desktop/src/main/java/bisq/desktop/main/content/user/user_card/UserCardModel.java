@@ -36,6 +36,6 @@ public class UserCardModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_CARD_DETAILS;
+        return NavigationTarget.USER_CARD_OVERVIEW;
     }
 }
