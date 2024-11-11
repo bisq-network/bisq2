@@ -66,10 +66,10 @@ public class ChannelSidebar {
 
     public ChannelSidebar(ServiceProvider serviceProvider,
                           Runnable closeHandler,
-                          Consumer<UserProfile> openUserProfileSidebarHandler) {
+                          Consumer<UserProfile> openUserCardHandler) {
         controller = new Controller(serviceProvider,
                 closeHandler,
-                openUserProfileSidebarHandler);
+                openUserCardHandler);
     }
 
     public Pane getRoot() {

@@ -98,17 +98,21 @@ public enum NavigationTarget {
     BSQ_BOND_TAB_2(BSQ_BOND, false),
     BSQ_BOND_TAB_3(BSQ_BOND, false),
 
-
     ACCOUNT_AGE(OVERLAY, false),
     ACCOUNT_AGE_TAB_1(ACCOUNT_AGE, false),
     ACCOUNT_AGE_TAB_2(ACCOUNT_AGE, false),
     ACCOUNT_AGE_TAB_3(ACCOUNT_AGE, false),
 
-
     SIGNED_WITNESS(OVERLAY, false),
     SIGNED_WITNESS_TAB_1(SIGNED_WITNESS, false),
     SIGNED_WITNESS_TAB_2(SIGNED_WITNESS, false),
     SIGNED_WITNESS_TAB_3(SIGNED_WITNESS, false),
+
+    USER_CARD(OVERLAY, false),
+    USER_CARD_OVERVIEW(USER_CARD, false),
+    USER_CARD_DETAILS(USER_CARD, false),
+    USER_CARD_OFFERS(USER_CARD, false),
+    USER_CARD_REPUTATION(USER_CARD, false),
 
 
     //////////////////////////////////////////////////////////////////////

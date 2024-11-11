@@ -57,14 +57,16 @@ public class UserProfileDisplay extends HBox {
     public UserProfileDisplay(@Nullable UserProfile userProfile, double size, @Nullable ReputationScore reputationScore) {
         super(10);
 
+        getStyleClass().add("user-profile-display");
         setAlignment(Pos.CENTER_LEFT);
 
         userProfileIcon = new UserProfileIcon(size);
         userName = new Label();
-        userName.getStyleClass().add("user-profile-display");
+        userName.getStyleClass().add("user-profile-display-name");
         reputationScoreDisplay = new ReputationScoreDisplay();
         reputationScoreDisplay.setScale(0.75);
         VBox vBox = new VBox(userName, reputationScoreDisplay);
+        vBox.getStyleClass().add("username-and-reputation-box");
         vBox.setFillWidth(true);
         vBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(vBox, Priority.ALWAYS);
@@ -110,5 +112,9 @@ public class UserProfileDisplay extends HBox {
 
     public Tooltip getTooltip() {
         return userProfileIcon.getTooltip();
+    }
+
+    public void setReputationScoreDisplayScale(double scale) {
+        reputationScoreDisplay.setScale(scale);
     }
 }

@@ -212,7 +212,7 @@
  * Components                                                                  *
  ******************************************************************************/
 
-.user-profile-display {
+.user-profile-display-name {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.1em;

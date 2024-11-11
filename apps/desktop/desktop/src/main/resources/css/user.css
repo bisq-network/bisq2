@@ -113,7 +113,7 @@
     -fx-alignment: center;
 }
 
-.user-profile-selection-material-design .user-profile-display {
+.user-profile-selection-material-design .user-profile-display-name {
     -fx-font-size: 0.8em !important;
 }
 
@@ -122,4 +122,24 @@
     -fx-padding: 0 10 !important;
     -fx-min-height: 35;
     -fx-alignment: center;
+}
+
+/*******************************************************************************
+ * User Card                                                                   *
+ ******************************************************************************/
+
+.user-card .header-content {
+    -fx-max-height: 100;
+    -fx-pref-height: 100;
+    -fx-min-height: 100;
+    -fx-padding: 2 0 2 0;
+}
+
+.user-card .overview .title {
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.user-card .bisq-common-bg {
+    -fx-padding: 35 !important;
 }

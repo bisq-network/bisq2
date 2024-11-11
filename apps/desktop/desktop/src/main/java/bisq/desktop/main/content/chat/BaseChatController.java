@@ -30,6 +30,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
 import bisq.desktop.main.content.chat.message_container.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.message_container.sidebar.UserProfileSidebar;
+import bisq.desktop.main.content.user.user_card.UserCardController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -72,14 +73,14 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider,
                 chatChannelDomain,
-                this::openUserProfileSidebar);
+                this::openUserCard);
 
         channelSidebar = new ChannelSidebar(serviceProvider,
                 () -> {
                     doCloseSideBar();
                     chatMessageContainerController.resetSelectedChatMessage();
                 },
-                this::openUserProfileSidebar);
+                this::openUserCard);
 
         createDependencies(chatChannelDomain);
 
@@ -116,23 +117,38 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
     public abstract V createAndGetView();
 
-    protected void openUserProfileSidebar(UserProfile userProfile) {
-        doCloseSideBar();
-        model.getSideBarVisible().set(true);
+    protected void openUserCard(UserProfile userProfile) {
+//        doCloseSideBar();
+//        model.getSideBarVisible().set(true);
 
-        UserProfileSidebar userProfileSidebar = new UserProfileSidebar(serviceProvider,
-                userProfile,
-                model.getSelectedChannel(),
-                () -> {
-                    doCloseSideBar();
-                    chatMessageContainerController.resetSelectedChatMessage();
-                });
-        model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
-        userProfileSidebar.setOnSendPrivateMessageHandler(chatMessageContainerController::createAndSelectTwoPartyPrivateChatChannel);
-        userProfileSidebar.setIgnoreUserStateHandler(chatMessageContainerController::refreshMessages);
-        userProfileSidebar.setOnMentionUserHandler(chatMessageContainerController::mentionUser);
-        model.setChatUserDetails(Optional.of(userProfileSidebar));
-        model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
+//        UserProfileSidebar userProfileSidebar = new UserProfileSidebar(serviceProvider,
+//                userProfile,
+//                model.getSelectedChannel(),
+//                () -> {
+//                    doCloseSideBar();
+//                    chatMessageContainerController.resetSelectedChatMessage();
+//                });
+//        model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
+//        userProfileSidebar.setOnSendPrivateMessageHandler(chatMessageContainerController::createAndSelectTwoPartyPrivateChatChannel);
+//        userProfileSidebar.setIgnoreUserStateHandler(chatMessageContainerController::refreshMessages);
+//        userProfileSidebar.setOnMentionUserHandler(chatMessageContainerController::mentionUser);
+//        model.setChatUserDetails(Optional.of(userProfileSidebar));
+//        model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
+
+        cleanupChatUserDetails();
+        cleanupChannelInfo();
+
+        Navigation.navigateTo(NavigationTarget.USER_CARD,
+                new UserCardController.InitData(
+                        userProfile,
+                        model.getSelectedChannel(),
+                        chatMessageContainerController::createAndSelectTwoPartyPrivateChatChannel,
+                        chatMessageContainerController::refreshMessages,
+                        () -> {
+                            cleanupChatUserDetails();
+                            cleanupChannelInfo();
+                            chatMessageContainerController.resetSelectedChatMessage();
+                        }));
     }
 
     protected void selectedChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {

@@ -36,6 +36,7 @@ import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputati
 import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
 import bisq.desktop.main.content.reputation.build_reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.main.content.user.accounts.create.CreatePaymentAccountController;
+import bisq.desktop.main.content.user.user_card.UserCardController;
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
 import bisq.desktop.overlay.chat_rules.ChatRulesController;
 import bisq.desktop.overlay.onboarding.OnboardingController;
@@ -146,6 +147,7 @@ public class OverlayController extends NavigationController {
             case ACCOUNT_AGE -> Optional.of(new AccountAgeController(serviceProvider));
             case SIGNED_WITNESS -> Optional.of(new SignedWitnessController(serviceProvider));
             case REPORT_TO_MODERATOR -> Optional.of(new ReportToModeratorWindow(serviceProvider).getController());
+            case USER_CARD -> Optional.of(new UserCardController(serviceProvider));
             default -> Optional.empty();
         };
     }
