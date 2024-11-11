@@ -103,7 +103,6 @@ public class UserCardController extends TabController<UserCardModel>
             model.getReputationScore().set(reputationService.getReputationScore(userProfile));
             model.getShouldShowReportButton().set(selectedChannel.isPresent());
             boolean hasStatementOrTerms = !(userProfile.getStatement().isEmpty() && userProfile.getTerms().isEmpty());
-            model.getShouldShowOverviewTab().set(hasStatementOrTerms);
             Navigation.navigateTo(hasStatementOrTerms
                     ? NavigationTarget.USER_CARD_OVERVIEW
                     : NavigationTarget.USER_CARD_DETAILS);

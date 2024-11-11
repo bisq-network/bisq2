@@ -39,7 +39,6 @@ import org.fxmisc.easybind.Subscription;
 
 public class UserCardView extends TabView<UserCardModel, UserCardController> {
     private final UserCardController controller;
-    private final TabButton overviewTabButton;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel;
@@ -57,7 +56,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
         root.getStyleClass().add("user-card");
 
-        overviewTabButton = addTab(Res.get("user.userCard.tab.overview"), NavigationTarget.USER_CARD_OVERVIEW);
+        addTab(Res.get("user.userCard.tab.overview"), NavigationTarget.USER_CARD_OVERVIEW);
         addTab(Res.get("user.userCard.tab.details"), NavigationTarget.USER_CARD_DETAILS);
 //        addTab(Res.get("user.userCard.tab.offers"), NavigationTarget.USER_CARD_OFFERS);
 //        addTab(Res.get("user.userCard.tab.reputation"), NavigationTarget.USER_CARD_REPUTATION);
@@ -71,8 +70,6 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         undoIgnore.managedProperty().bind(model.getIgnoreUserSelected());
         report.visibleProperty().bind(model.getShouldShowReportButton());
         report.managedProperty().bind(model.getShouldShowReportButton());
-        overviewTabButton.visibleProperty().bind(model.getShouldShowOverviewTab());
-        overviewTabButton.managedProperty().bind(model.getShouldShowOverviewTab());
 
         userProfilePin = EasyBind.subscribe(model.getUserProfile(), this::updateUserProfile);
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
@@ -96,8 +93,6 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         undoIgnore.managedProperty().unbind();
         report.visibleProperty().unbind();
         report.managedProperty().unbind();
-        overviewTabButton.visibleProperty().unbind();
-        overviewTabButton.managedProperty().unbind();
 
         userProfilePin.unsubscribe();
         reputationScorePin.unsubscribe();
