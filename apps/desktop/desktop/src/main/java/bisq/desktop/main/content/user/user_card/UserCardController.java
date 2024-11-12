@@ -21,6 +21,7 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
+import bisq.chat.ChatService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
@@ -43,7 +44,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 @Slf4j
 public class UserCardController extends TabController<UserCardModel>
@@ -54,23 +54,20 @@ public class UserCardController extends TabController<UserCardModel>
     public static class InitData {
         private final UserProfile userProfile;
         private final Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
-        private final Optional<Consumer<UserProfile>> sendPrivateMessageHandler;
         private final Optional<Runnable> ignoreUserStateHandler, closeHandler;
 
         public InitData(UserProfile userProfile,
                         @Nullable ChatChannel<? extends ChatMessage> selectedChannel,
-                        Consumer<UserProfile> sendPrivateMessageHandler,
                         Runnable ignoreUserStateHandler,
                         Runnable closeHandler) {
             this.userProfile = userProfile;
             this.selectedChannel = Optional.ofNullable(selectedChannel);
-            this.sendPrivateMessageHandler = Optional.ofNullable(sendPrivateMessageHandler);
             this.ignoreUserStateHandler = Optional.ofNullable(ignoreUserStateHandler);
             this.closeHandler = Optional.ofNullable(closeHandler);
         }
 
         public InitData(UserProfile userProfile) {
-            this(userProfile, null, null, null, null);
+            this(userProfile, null, null, null);
         }
     }
 
@@ -79,10 +76,10 @@ public class UserCardController extends TabController<UserCardModel>
     private final ReputationService reputationService;
     private final BannedUserService bannedUserService;
     private final UserProfileService userProfileService;
+    private final ChatService chatService;
     private final UserCardOverviewController userCardOverviewController;
     private final UserCardDetailsController userCardDetailsController;
     private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
-    private Optional<Consumer<UserProfile>> sendPrivateMessageHandler;
     private Optional<Runnable> ignoreUserStateHandler, closeHandler;
     private Subscription userProfilePin;
 
@@ -92,6 +89,7 @@ public class UserCardController extends TabController<UserCardModel>
         reputationService = serviceProvider.getUserService().getReputationService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
+        chatService = serviceProvider.getChatService();
         userCardOverviewController = new UserCardOverviewController(serviceProvider);
         userCardDetailsController = new UserCardDetailsController(serviceProvider);
         view = new UserCardView(model, this);
@@ -126,7 +124,6 @@ public class UserCardController extends TabController<UserCardModel>
     @Override
     public void initWithData(InitData initData) {
         selectedChannel = initData.selectedChannel;
-        sendPrivateMessageHandler = initData.sendPrivateMessageHandler;
         ignoreUserStateHandler = initData.ignoreUserStateHandler;
         closeHandler = initData.closeHandler;
         model.getUserProfile().set(initData.userProfile);
@@ -137,7 +134,12 @@ public class UserCardController extends TabController<UserCardModel>
     }
 
     void onSendPrivateMessage() {
-        sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.getUserProfile().get()));
+        OverlayController.hide(() -> {
+            chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, model.getUserProfile().get())
+                    .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
+            closeHandler.ifPresent(Runnable::run);
+        });
+
     }
 
     void onToggleIgnoreUser() {
