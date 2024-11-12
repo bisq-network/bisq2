@@ -125,21 +125,21 @@
 }
 
 /*******************************************************************************
- * User Card                                                                   *
+ * Profile Card                                                                *
  ******************************************************************************/
 
-.user-card .header-content {
+.profile-card .header-content {
     -fx-max-height: 100;
     -fx-pref-height: 100;
     -fx-min-height: 100;
     -fx-padding: 2 0 2 0;
 }
 
-.user-card .overview .title {
+.profile-card .overview .title {
     -fx-font-size: 1.4em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.user-card .bisq-common-bg {
+.profile-card .bisq-common-bg {
     -fx-padding: 35 !important;
 }

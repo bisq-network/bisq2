@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_card;
+package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
@@ -28,7 +28,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
-public class UserCardModel extends TabModel {
+public class ProfileCardModel extends TabModel {
     private final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
@@ -37,6 +37,6 @@ public class UserCardModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_CARD_OVERVIEW;
+        return NavigationTarget.PROFILE_CARD_OVERVIEW;
     }
 }

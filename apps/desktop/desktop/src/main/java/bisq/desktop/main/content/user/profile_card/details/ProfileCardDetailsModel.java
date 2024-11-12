@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_card.overview;
+package bisq.desktop.main.content.user.profile_card.details;
 
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.SimpleStringProperty;
@@ -25,7 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class UserCardOverviewModel implements Model {
-    private final StringProperty statement = new SimpleStringProperty();
-    private final StringProperty tradeTerms = new SimpleStringProperty();
+public class ProfileCardDetailsModel implements Model {
+    private final StringProperty botId = new SimpleStringProperty();
+    private final StringProperty userId = new SimpleStringProperty();
+    private final StringProperty transportAddress = new SimpleStringProperty();
+    private final StringProperty totalReputationScore = new SimpleStringProperty();
+    private final StringProperty profileAge = new SimpleStringProperty();
+    private final StringProperty lastUserActivity = new SimpleStringProperty();
+    private final StringProperty version = new SimpleStringProperty();
 }

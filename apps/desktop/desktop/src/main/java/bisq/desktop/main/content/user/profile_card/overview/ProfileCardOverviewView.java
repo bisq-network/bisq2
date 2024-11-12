@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_card.overview;
+package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -26,20 +26,20 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UserCardOverviewView extends View<VBox, UserCardOverviewModel, UserCardOverviewController> {
+public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel, ProfileCardOverviewController> {
     private final Label statementLabel, tradeTermsLabel;
 
-    public UserCardOverviewView(UserCardOverviewModel model,
-                                UserCardOverviewController controller) {
+    public ProfileCardOverviewView(ProfileCardOverviewModel model,
+                                   ProfileCardOverviewController controller) {
         super(new VBox(), model, controller);
 
         // Statement
         statementLabel = new Label();
-        VBox statementBox = createAndGetTitleAndDetailsBox("user.userCard.overview.statement", statementLabel, 30);
+        VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 30);
 
         // Trade terms
         tradeTermsLabel = new Label();
-        VBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.userCard.overview.tradeTerms", tradeTermsLabel, 100);
+        VBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.tradeTerms", tradeTermsLabel, 100);
 
         VBox contentBox = new VBox(20, statementBox, tradeTermsBox);
         contentBox.getStyleClass().add("bisq-common-bg");

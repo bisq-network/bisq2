@@ -29,8 +29,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
 import bisq.desktop.main.content.chat.message_container.sidebar.ChannelSidebar;
-import bisq.desktop.main.content.chat.message_container.sidebar.UserProfileSidebar;
-import bisq.desktop.main.content.user.user_card.UserCardController;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -73,14 +72,14 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider,
                 chatChannelDomain,
-                this::openUserCard);
+                this::openProfileCard);
 
         channelSidebar = new ChannelSidebar(serviceProvider,
                 () -> {
                     doCloseSideBar();
                     chatMessageContainerController.resetSelectedChatMessage();
                 },
-                this::openUserCard);
+                this::openProfileCard);
 
         createDependencies(chatChannelDomain);
 
@@ -117,7 +116,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
     public abstract V createAndGetView();
 
-    protected void openUserCard(UserProfile userProfile) {
+    protected void openProfileCard(UserProfile userProfile) {
 //        doCloseSideBar();
 //        model.getSideBarVisible().set(true);
 
@@ -138,8 +137,8 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         cleanupChatUserDetails();
         cleanupChannelInfo();
 
-        Navigation.navigateTo(NavigationTarget.USER_CARD,
-                new UserCardController.InitData(
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                new ProfileCardController.InitData(
                         userProfile,
                         model.getSelectedChannel(),
                         chatMessageContainerController::refreshMessages,

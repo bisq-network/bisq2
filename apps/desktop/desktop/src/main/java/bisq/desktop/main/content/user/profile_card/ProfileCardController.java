@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_card;
+package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
@@ -28,8 +28,8 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
-import bisq.desktop.main.content.user.user_card.details.UserCardDetailsController;
-import bisq.desktop.main.content.user.user_card.overview.UserCardOverviewController;
+import bisq.desktop.main.content.user.profile_card.details.ProfileCardDetailsController;
+import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
@@ -47,8 +47,8 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Slf4j
-public class UserCardController extends TabController<UserCardModel>
-        implements InitWithDataController<UserCardController.InitData> {
+public class ProfileCardController extends TabController<ProfileCardModel>
+        implements InitWithDataController<ProfileCardController.InitData> {
     @Getter
     @EqualsAndHashCode
     @ToString
@@ -73,37 +73,37 @@ public class UserCardController extends TabController<UserCardModel>
     }
 
     @Getter
-    private final UserCardView view;
+    private final ProfileCardView view;
     private final ReputationService reputationService;
     private final BannedUserService bannedUserService;
     private final UserProfileService userProfileService;
     private final ChatService chatService;
     protected final UserIdentityService userIdentityService;
-    private final UserCardOverviewController userCardOverviewController;
-    private final UserCardDetailsController userCardDetailsController;
+    private final ProfileCardOverviewController profileCardOverviewController;
+    private final ProfileCardDetailsController profileCardDetailsController;
     private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
     private Optional<Runnable> ignoreUserStateHandler, closeHandler;
     private Subscription userProfilePin;
 
-    public UserCardController(ServiceProvider serviceProvider) {
-        super(new UserCardModel(), NavigationTarget.USER_CARD);
+    public ProfileCardController(ServiceProvider serviceProvider) {
+        super(new ProfileCardModel(), NavigationTarget.PROFILE_CARD);
 
         reputationService = serviceProvider.getUserService().getReputationService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         chatService = serviceProvider.getChatService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        userCardOverviewController = new UserCardOverviewController(serviceProvider);
-        userCardDetailsController = new UserCardDetailsController(serviceProvider);
-        view = new UserCardView(model, this);
+        profileCardOverviewController = new ProfileCardOverviewController(serviceProvider);
+        profileCardDetailsController = new ProfileCardDetailsController(serviceProvider);
+        view = new ProfileCardView(model, this);
     }
 
     @Override
     public void onActivate() {
         userProfilePin = EasyBind.subscribe(model.getUserProfile(), userProfile -> {
             model.getReputationScore().set(reputationService.getReputationScore(userProfile));
-            userCardDetailsController.updateUserProfileData(userProfile);
-            userCardOverviewController.updateUserProfileData(userProfile);
+            profileCardDetailsController.updateUserProfileData(userProfile);
+            profileCardOverviewController.updateUserProfileData(userProfile);
             boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
             model.getShouldShowReportButton().set(!isMyProfile && selectedChannel.isPresent());
             model.getShouldShowUserActionsMenu().set(!isMyProfile);
@@ -118,8 +118,8 @@ public class UserCardController extends TabController<UserCardModel>
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case USER_CARD_OVERVIEW -> Optional.of(userCardOverviewController);
-            case USER_CARD_DETAILS -> Optional.of(userCardDetailsController);
+            case PROFILE_CARD_OVERVIEW -> Optional.of(profileCardOverviewController);
+            case PROFILE_CARD_DETAILS -> Optional.of(profileCardDetailsController);
 //            case USER_DETAILS_OFFERS -> Optional.of();
 //            case USER_DETAILS_REPUTATION -> Optional.of();
             default -> Optional.empty();
