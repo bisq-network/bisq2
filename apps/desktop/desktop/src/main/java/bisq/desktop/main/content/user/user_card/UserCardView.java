@@ -43,6 +43,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
     private Label userNickNameLabel, userNymLabel;
     private BisqMenuItem privateMsg, ignore, undoIgnore, report;
     private Button closeButton;
+    private HBox userActionsBox;
     private Subscription userProfilePin, reputationScorePin;
 
     public UserCardView(UserCardModel model, UserCardController controller) {
@@ -69,6 +70,8 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         undoIgnore.managedProperty().bind(model.getIgnoreUserSelected());
         report.visibleProperty().bind(model.getShouldShowReportButton());
         report.managedProperty().bind(model.getShouldShowReportButton());
+        userActionsBox.visibleProperty().bind(model.getShouldShowUserActionsMenu());
+        userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
 
         userProfilePin = EasyBind.subscribe(model.getUserProfile(), this::updateUserProfile);
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
@@ -92,6 +95,8 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         undoIgnore.managedProperty().unbind();
         report.visibleProperty().unbind();
         report.managedProperty().unbind();
+        userActionsBox.visibleProperty().unbind();
+        userActionsBox.managedProperty().unbind();
 
         userProfilePin.unsubscribe();
         reputationScorePin.unsubscribe();
@@ -129,7 +134,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
 
         HBox userNameBox = new HBox(10, userNickNameLabel, userNymLabel);
         userNameBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox userActionsBox = new HBox(30, privateMsg, ignore, undoIgnore, report);
+        userActionsBox = new HBox(30, privateMsg, ignore, undoIgnore, report);
         VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationScoreDisplay, Spacer.fillVBox(), userActionsBox);
         userNameReputationAndActionsBox.getStyleClass().add("header-content");
         HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);

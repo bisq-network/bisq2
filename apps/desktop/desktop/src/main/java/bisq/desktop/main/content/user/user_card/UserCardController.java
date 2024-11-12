@@ -32,6 +32,7 @@ import bisq.desktop.main.content.user.user_card.details.UserCardDetailsControlle
 import bisq.desktop.main.content.user.user_card.overview.UserCardOverviewController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -77,6 +78,7 @@ public class UserCardController extends TabController<UserCardModel>
     private final BannedUserService bannedUserService;
     private final UserProfileService userProfileService;
     private final ChatService chatService;
+    protected final UserIdentityService userIdentityService;
     private final UserCardOverviewController userCardOverviewController;
     private final UserCardDetailsController userCardDetailsController;
     private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
@@ -90,6 +92,7 @@ public class UserCardController extends TabController<UserCardModel>
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         chatService = serviceProvider.getChatService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userCardOverviewController = new UserCardOverviewController(serviceProvider);
         userCardDetailsController = new UserCardDetailsController(serviceProvider);
         view = new UserCardView(model, this);
@@ -99,9 +102,11 @@ public class UserCardController extends TabController<UserCardModel>
     public void onActivate() {
         userProfilePin = EasyBind.subscribe(model.getUserProfile(), userProfile -> {
             model.getReputationScore().set(reputationService.getReputationScore(userProfile));
-            model.getShouldShowReportButton().set(selectedChannel.isPresent());
             userCardDetailsController.updateUserProfileData(userProfile);
             userCardOverviewController.updateUserProfileData(userProfile);
+            boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
+            model.getShouldShowReportButton().set(!isMyProfile && selectedChannel.isPresent());
+            model.getShouldShowUserActionsMenu().set(!isMyProfile);
         });
     }
 
