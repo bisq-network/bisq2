@@ -58,7 +58,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     private final ChatMessageContainerModel model;
     @Getter
     private final ChatMessageContainerView view;
-    private final Consumer<UserProfile> openUserCardHandler;
+    private final Consumer<UserProfile> openProfileCardHandler;
     private final UserIdentityService userIdentityService;
     private final CitationBlock citationBlock;
     private final ChatMessagesListController chatMessagesListController;
@@ -69,8 +69,8 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
     public ChatMessageContainerController(ServiceProvider serviceProvider,
                                           ChatChannelDomain chatChannelDomain,
-                                          Consumer<UserProfile> openUserCardHandler) {
-        this.openUserCardHandler = openUserCardHandler;
+                                          Consumer<UserProfile> openProfileCardHandler) {
+        this.openProfileCardHandler = openProfileCardHandler;
 
         chatService = serviceProvider.getChatService();
         settingsService = serviceProvider.getSettingsService();
@@ -174,7 +174,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     private void showChatUserDetailsHandler(ChatMessage chatMessage) {
         model.setSelectedChatMessage(chatMessage);
         userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
-                .ifPresent(openUserCardHandler);
+                .ifPresent(openProfileCardHandler);
     }
 
     private void mentionUserHandler(UserProfile userProfile) {

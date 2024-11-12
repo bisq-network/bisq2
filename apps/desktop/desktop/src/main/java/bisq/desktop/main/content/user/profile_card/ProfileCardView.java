@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_card;
+package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.TabView;
@@ -36,8 +36,8 @@ import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-public class UserCardView extends TabView<UserCardModel, UserCardController> {
-    private final UserCardController controller;
+public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardController> {
+    private final ProfileCardController controller;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel;
@@ -46,7 +46,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
     private HBox userActionsBox;
     private Subscription userProfilePin, reputationScorePin;
 
-    public UserCardView(UserCardModel model, UserCardController controller) {
+    public ProfileCardView(ProfileCardModel model, ProfileCardController controller) {
         super(model, controller);
 
         this.controller = controller;
@@ -54,12 +54,12 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-        root.getStyleClass().add("user-card");
+        root.getStyleClass().add("profile-card");
 
-        addTab(Res.get("user.userCard.tab.overview"), NavigationTarget.USER_CARD_OVERVIEW);
-        addTab(Res.get("user.userCard.tab.details"), NavigationTarget.USER_CARD_DETAILS);
-//        addTab(Res.get("user.userCard.tab.offers"), NavigationTarget.USER_CARD_OFFERS);
-//        addTab(Res.get("user.userCard.tab.reputation"), NavigationTarget.USER_CARD_REPUTATION);
+        addTab(Res.get("user.profileCard.tab.overview"), NavigationTarget.PROFILE_CARD_OVERVIEW);
+        addTab(Res.get("user.profileCard.tab.details"), NavigationTarget.PROFILE_CARD_DETAILS);
+//        addTab(Res.get("user.profileCard.tab.offers"), NavigationTarget.USER_CARD_OFFERS);
+//        addTab(Res.get("user.profileCard.tab.reputation"), NavigationTarget.USER_CARD_REPUTATION);
     }
 
     @Override
@@ -163,7 +163,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         userProfileIcon.setUserProfile(userProfile);
         String nickname = userProfile.getNickName();
         userNickNameLabel.setText(controller.isUserProfileBanned()
-                ? Res.get("user.userCard.userNickname.banned", nickname)
+                ? Res.get("user.profileCard.userNickname.banned", nickname)
                 : nickname);
         userNymLabel.setText(String.format("[%s]", userProfile.getNym()));
         if (controller.isUserProfileBanned()) {

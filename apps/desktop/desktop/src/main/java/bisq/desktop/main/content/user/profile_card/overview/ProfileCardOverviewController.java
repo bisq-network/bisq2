@@ -15,21 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_card.overview;
+package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 
-public class UserCardOverviewController implements Controller {
+public class ProfileCardOverviewController implements Controller {
     @Getter
-    private final UserCardOverviewView view;
-    private final UserCardOverviewModel model;
+    private final ProfileCardOverviewView view;
+    private final ProfileCardOverviewModel model;
 
-    public UserCardOverviewController(ServiceProvider serviceProvider) {
-        model = new UserCardOverviewModel();
-        view = new UserCardOverviewView(model, this);
+    public ProfileCardOverviewController(ServiceProvider serviceProvider) {
+        model = new ProfileCardOverviewModel();
+        view = new ProfileCardOverviewView(model, this);
     }
 
     @Override

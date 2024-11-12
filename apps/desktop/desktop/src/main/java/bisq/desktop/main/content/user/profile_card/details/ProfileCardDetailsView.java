@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_card.details;
+package bisq.desktop.main.content.user.profile_card.details;
 
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.View;
@@ -32,48 +32,48 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class UserCardDetailsView extends View<VBox, UserCardDetailsModel, UserCardDetailsController> {
+public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, ProfileCardDetailsController> {
     private final Label botIdLabel, userIdLabel, transportAddressLabel, totalReputationScoreLabel, profileAgeLabel,
             lastUserActivityLabel, versionLabel;
     private final BisqMenuItem botIdCopyButton, userIdCopyButton, transportAddressCopyButton;
 
-    public UserCardDetailsView(UserCardDetailsModel model,
-                               UserCardDetailsController controller) {
+    public ProfileCardDetailsView(ProfileCardDetailsModel model,
+                                  ProfileCardDetailsController controller) {
         super(new VBox(), model, controller);
 
         // Bot ID
         botIdLabel = new Label();
         botIdCopyButton = new BisqMenuItem("copy-grey", "copy-white");
-        HBox botIdBox = createAndGetTitleAndDetailsBox("user.userCard.details.botId",
+        HBox botIdBox = createAndGetTitleAndDetailsBox("user.profileCard.details.botId",
                 botIdLabel, Optional.of(botIdCopyButton));
 
         // User ID
         userIdLabel = new Label();
         userIdCopyButton = new BisqMenuItem("copy-grey", "copy-white");
-        HBox userIdBox = createAndGetTitleAndDetailsBox("user.userCard.details.userId",
+        HBox userIdBox = createAndGetTitleAndDetailsBox("user.profileCard.details.userId",
                 userIdLabel, Optional.of(userIdCopyButton));
 
         // Transport address
         transportAddressLabel = new Label();
         transportAddressCopyButton = new BisqMenuItem("copy-grey", "copy-white");
-        HBox transportAddressBox = createAndGetTitleAndDetailsBox("user.userCard.details.transportAddress",
+        HBox transportAddressBox = createAndGetTitleAndDetailsBox("user.profileCard.details.transportAddress",
                 transportAddressLabel, Optional.of(transportAddressCopyButton));
 
         // Total reputation score
         totalReputationScoreLabel = new Label();
-        HBox totalReputationScoreBox = createAndGetTitleAndDetailsBox("user.userCard.details.totalReputationScore", totalReputationScoreLabel);
+        HBox totalReputationScoreBox = createAndGetTitleAndDetailsBox("user.profileCard.details.totalReputationScore", totalReputationScoreLabel);
 
         // Profile age
         profileAgeLabel = new Label();
-        HBox profileAgeBox = createAndGetTitleAndDetailsBox("user.userCard.details.profileAge", profileAgeLabel);
+        HBox profileAgeBox = createAndGetTitleAndDetailsBox("user.profileCard.details.profileAge", profileAgeLabel);
 
         // Last user activity
         lastUserActivityLabel = new Label();
-        HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.userCard.details.lastUserActivity", lastUserActivityLabel);
+        HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.profileCard.details.lastUserActivity", lastUserActivityLabel);
 
         // Version
         versionLabel = new Label();
-        HBox versionBox = createAndGetTitleAndDetailsBox("user.userCard.details.version", versionLabel);
+        HBox versionBox = createAndGetTitleAndDetailsBox("user.profileCard.details.version", versionLabel);
 
         VBox contentBox = new VBox(16, botIdBox, userIdBox, transportAddressBox, totalReputationScoreBox, profileAgeBox,
                 lastUserActivityBox, versionBox);

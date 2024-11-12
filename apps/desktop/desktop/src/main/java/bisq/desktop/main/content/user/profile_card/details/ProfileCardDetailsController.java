@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.user_card.details;
+package bisq.desktop.main.content.user.profile_card.details;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -31,17 +31,17 @@ import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 
-public class UserCardDetailsController implements Controller {
+public class ProfileCardDetailsController implements Controller {
     @Getter
-    private final UserCardDetailsView view;
-    private final UserCardDetailsModel model;
+    private final ProfileCardDetailsView view;
+    private final ProfileCardDetailsModel model;
     private final ReputationService reputationService;
     private Pin reputationChangedPin;
     private UIScheduler livenessUpdateScheduler;
 
-    public UserCardDetailsController(ServiceProvider serviceProvider) {
-        model = new UserCardDetailsModel();
-        view = new UserCardDetailsView(model, this);
+    public ProfileCardDetailsController(ServiceProvider serviceProvider) {
+        model = new ProfileCardDetailsModel();
+        view = new ProfileCardDetailsView(model, this);
         reputationService = serviceProvider.getUserService().getReputationService();
     }
 
