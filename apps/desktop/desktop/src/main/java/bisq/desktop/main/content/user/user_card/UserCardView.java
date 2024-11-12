@@ -41,7 +41,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel;
-    private BisqMenuItem privateMsg, ignore, undoIgnore, report;
+    private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report;
     private Button closeButton;
     private HBox userActionsBox;
     private Subscription userProfilePin, reputationScorePin;
@@ -64,10 +64,12 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
 
     @Override
     protected void onViewAttached() {
-        ignore.visibleProperty().bind(model.getIgnoreUserSelected().not());
-        ignore.managedProperty().bind(model.getIgnoreUserSelected().not());
-        undoIgnore.visibleProperty().bind(model.getIgnoreUserSelected());
-        undoIgnore.managedProperty().bind(model.getIgnoreUserSelected());
+        sendPrivateMsg.visibleProperty().bind(model.getShouldShowUserActionsMenu());
+        sendPrivateMsg.managedProperty().bind(model.getShouldShowUserActionsMenu());
+        ignore.visibleProperty().bind(model.getIgnoreUserSelected().not().and(model.getShouldShowUserActionsMenu()));
+        ignore.managedProperty().bind(model.getIgnoreUserSelected().not().and(model.getShouldShowUserActionsMenu()));
+        undoIgnore.visibleProperty().bind(model.getIgnoreUserSelected().and(model.getShouldShowUserActionsMenu()));
+        undoIgnore.managedProperty().bind(model.getIgnoreUserSelected().and(model.getShouldShowUserActionsMenu()));
         report.visibleProperty().bind(model.getShouldShowReportButton());
         report.managedProperty().bind(model.getShouldShowReportButton());
         userActionsBox.visibleProperty().bind(model.getShouldShowUserActionsMenu());
@@ -80,7 +82,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
             }
         });
 
-        privateMsg.setOnAction(e -> controller.onSendPrivateMessage());
+        sendPrivateMsg.setOnAction(e -> controller.onSendPrivateMessage());
         ignore.setOnAction(e -> controller.onToggleIgnoreUser());
         undoIgnore.setOnAction(e -> controller.onToggleIgnoreUser());
         report.setOnAction(e -> controller.onReportUser());
@@ -89,6 +91,8 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
 
     @Override
     protected void onViewDetached() {
+        sendPrivateMsg.visibleProperty().unbind();
+        sendPrivateMsg.managedProperty().unbind();
         ignore.visibleProperty().unbind();
         ignore.managedProperty().unbind();
         undoIgnore.visibleProperty().unbind();
@@ -101,7 +105,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         userProfilePin.unsubscribe();
         reputationScorePin.unsubscribe();
 
-        privateMsg.setOnAction(null);
+        sendPrivateMsg.setOnAction(null);
         ignore.setOnAction(null);
         undoIgnore.setOnAction(null);
         report.setOnAction(null);
@@ -123,7 +127,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
         userNymLabel = new Label();
         userNymLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
 
-        privateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white",
+        sendPrivateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white",
                 Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
         ignore = new BisqMenuItem("ignore-grey", "ignore-white",
                 Res.get("chat.sideBar.userProfile.ignore"));
@@ -134,7 +138,7 @@ public class UserCardView extends TabView<UserCardModel, UserCardController> {
 
         HBox userNameBox = new HBox(10, userNickNameLabel, userNymLabel);
         userNameBox.setAlignment(Pos.BASELINE_LEFT);
-        userActionsBox = new HBox(30, privateMsg, ignore, undoIgnore, report);
+        userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report);
         VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationScoreDisplay, Spacer.fillVBox(), userActionsBox);
         userNameReputationAndActionsBox.getStyleClass().add("header-content");
         HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);
