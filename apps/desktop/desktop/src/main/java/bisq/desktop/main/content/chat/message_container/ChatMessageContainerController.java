@@ -111,15 +111,6 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         mentionUserHandler(userProfile);
     }
 
-    public void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
-        chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer)
-                .ifPresent(channel -> {
-                    if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
-                        Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
-                    }
-                });
-    }
-
     public void enableChatDialog(boolean isEnabled) {
         model.getChatDialogEnabled().set(isEnabled);
     }

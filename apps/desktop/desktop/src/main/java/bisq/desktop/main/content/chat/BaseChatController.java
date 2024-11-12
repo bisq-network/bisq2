@@ -142,7 +142,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 new UserCardController.InitData(
                         userProfile,
                         model.getSelectedChannel(),
-                        chatMessageContainerController::createAndSelectTwoPartyPrivateChatChannel,
                         chatMessageContainerController::refreshMessages,
                         () -> {
                             cleanupChatUserDetails();
