@@ -4,6 +4,7 @@ import bisq.common.application.Service;
 import bisq.rest_api.endpoints.ChatApi;
 import bisq.rest_api.endpoints.KeyBundleApi;
 import bisq.rest_api.endpoints.ReportApi;
+import bisq.rest_api.endpoints.UserProfileApi;
 import bisq.rest_api.error.CustomExceptionMapper;
 import bisq.rest_api.error.StatusException;
 import bisq.rest_api.util.StaticFileHandler;
@@ -36,6 +37,7 @@ public class JaxRsApplication extends ResourceConfig implements Service {
                 .register(StatusException.StatusExceptionMapper.class)
                 .register(KeyBundleApi.class)
                 .register(ChatApi.class)
+                .register(UserProfileApi.class)
                 .register(ReportApi.class)
                 .register(SwaggerResolution.class);
     }
