@@ -17,7 +17,7 @@
 
 package bisq.user.identity;
 
-import bisq.security.keys.KeyPairJsonSer;
+import bisq.security.keys.JsonSerialization;
 import bisq.security.pow.ProofOfWork;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -29,8 +29,8 @@ import java.security.KeyPair;
 @Getter
 @Schema(name = "PreparedData")
 public final class PreparedData {
-    @JsonSerialize(using = KeyPairJsonSer.Serializer.class)
-    @JsonDeserialize(using = KeyPairJsonSer.Deserializer.class)
+    @JsonSerialize(using = JsonSerialization.KeyPair.Serializer.class)
+    @JsonDeserialize(using = JsonSerialization.KeyPair.Deserializer.class)
     private KeyPair keyPair;
     private String id;
     private String nym;

@@ -17,7 +17,7 @@
 
 package bisq.network.identity;
 
-import bisq.security.keys.KeyPairJsonSer;
+import bisq.security.keys.JsonSerialization;
 import bisq.security.keys.PubKey;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -31,8 +31,8 @@ import java.util.Objects;
 @ToString
 public final class NetworkIdWithKeyPair {
     private final NetworkId networkId;
-    @JsonSerialize(using = KeyPairJsonSer.Serializer.class)
-    @JsonDeserialize(using = KeyPairJsonSer.Deserializer.class)
+    @JsonSerialize(using = JsonSerialization.KeyPair.Serializer.class)
+    @JsonDeserialize(using = JsonSerialization.KeyPair.Deserializer.class)
     private final KeyPair keyPair;
 
     public NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) {

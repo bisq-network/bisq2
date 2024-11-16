@@ -17,9 +17,7 @@
 
 package bisq.rest_api;
 
-import bisq.security.keys.KeyPairJsonSer;
-import bisq.security.keys.PrivateKeyJsonSer;
-import bisq.security.keys.PublicKeyJsonSer;
+import bisq.security.keys.JsonSerialization;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import java.security.KeyPair;
@@ -28,10 +26,10 @@ import java.security.PublicKey;
 
 public class SerializationModule extends SimpleModule {
     public SerializationModule() {
-        addSerializer(KeyPair.class, new KeyPairJsonSer.Serializer());
-        addSerializer(PublicKey.class, new PublicKeyJsonSer.Serializer());
-        addDeserializer(PublicKey.class, new PublicKeyJsonSer.Deserializer());
-        addSerializer(PrivateKey.class, new PrivateKeyJsonSer.Serializer());
-        addDeserializer(PrivateKey.class, new PrivateKeyJsonSer.Deserializer());
+        addSerializer(KeyPair.class, new JsonSerialization.KeyPair.Serializer());
+        addSerializer(PublicKey.class, new JsonSerialization.PublicKey.Serializer());
+        addDeserializer(PublicKey.class, new JsonSerialization.PublicKey.Deserializer());
+        addSerializer(PrivateKey.class, new JsonSerialization.PrivateKey.Serializer());
+        addDeserializer(PrivateKey.class, new JsonSerialization.PrivateKey.Deserializer());
     }
 }

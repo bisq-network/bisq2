@@ -16,8 +16,8 @@ import java.security.KeyPair;
 public class KeyBundle implements PersistableProto {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    @JsonSerialize(using = KeyPairJsonSer.Serializer.class)
-    @JsonDeserialize(using = KeyPairJsonSer.Deserializer.class)
+    @JsonSerialize(using = JsonSerialization.KeyPair.Serializer.class)
+    @JsonDeserialize(using = JsonSerialization.KeyPair.Deserializer.class)
     private final KeyPair keyPair;
     private final TorKeyPair torKeyPair;
     private final String keyId;
