@@ -58,8 +58,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
         addTab(Res.get("user.profileCard.tab.overview"), NavigationTarget.PROFILE_CARD_OVERVIEW);
         addTab(Res.get("user.profileCard.tab.details"), NavigationTarget.PROFILE_CARD_DETAILS);
-//        addTab(Res.get("user.profileCard.tab.offers"), NavigationTarget.USER_CARD_OFFERS);
-//        addTab(Res.get("user.profileCard.tab.reputation"), NavigationTarget.USER_CARD_REPUTATION);
+//        addTab(Res.get("user.profileCard.tab.offers"), NavigationTarget.PROFILE_CARD_OFFERS);
+        addTab(Res.get("user.profileCard.tab.reputation"), NavigationTarget.PROFILE_CARD_REPUTATION);
     }
 
     @Override

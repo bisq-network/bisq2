@@ -30,6 +30,7 @@ import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.profile_card.details.ProfileCardDetailsController;
 import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
+import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
@@ -81,6 +82,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     protected final UserIdentityService userIdentityService;
     private final ProfileCardOverviewController profileCardOverviewController;
     private final ProfileCardDetailsController profileCardDetailsController;
+    private final ProfileCardReputationController profileCardReputationController;
     private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
     private Optional<Runnable> ignoreUserStateHandler, closeHandler;
     private Subscription userProfilePin;
@@ -95,6 +97,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         profileCardOverviewController = new ProfileCardOverviewController(serviceProvider);
         profileCardDetailsController = new ProfileCardDetailsController(serviceProvider);
+        profileCardReputationController = new ProfileCardReputationController(serviceProvider);
         view = new ProfileCardView(model, this);
     }
 
@@ -102,8 +105,9 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     public void onActivate() {
         userProfilePin = EasyBind.subscribe(model.getUserProfile(), userProfile -> {
             model.getReputationScore().set(reputationService.getReputationScore(userProfile));
-            profileCardDetailsController.updateUserProfileData(userProfile);
             profileCardOverviewController.updateUserProfileData(userProfile);
+            profileCardDetailsController.updateUserProfileData(userProfile);
+            profileCardReputationController.updateUserProfileData(userProfile);
             boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
             model.getShouldShowReportButton().set(!isMyProfile && selectedChannel.isPresent());
             model.getShouldShowUserActionsMenu().set(!isMyProfile);
@@ -120,8 +124,8 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         return switch (navigationTarget) {
             case PROFILE_CARD_OVERVIEW -> Optional.of(profileCardOverviewController);
             case PROFILE_CARD_DETAILS -> Optional.of(profileCardDetailsController);
-//            case USER_DETAILS_OFFERS -> Optional.of();
-//            case USER_DETAILS_REPUTATION -> Optional.of();
+//            case PROFILE_CARD_OFFERS -> Optional.of();
+            case PROFILE_CARD_REPUTATION -> Optional.of(profileCardReputationController);
             default -> Optional.empty();
         };
     }

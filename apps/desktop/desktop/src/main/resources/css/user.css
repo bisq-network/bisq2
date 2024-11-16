@@ -143,3 +143,30 @@
 .profile-card .bisq-common-bg {
     -fx-padding: 35 !important;
 }
+
+.profile-card .reputation .header {
+    -fx-pref-height: 8;
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.profile-card .reputation .reputation-table.table-view {
+    -fx-pref-height: 300;
+    -fx-background-radius: 0 0 8 8;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+
+.profile-card .reputation .reputation-table.table-view .table-cell .text {
+    -fx-font-size: 0.9em;
+    -fx-padding: 0;
+}
+
+.profile-card .reputation .reputation-table.table-view .column-header {
+    -fx-pref-height: 25;
+}
+
+.profile-card .reputation .reputation-table.table-view .table-row-cell {
+    -fx-border-width: 0;
+}
