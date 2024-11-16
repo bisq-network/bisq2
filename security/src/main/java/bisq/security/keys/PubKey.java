@@ -21,6 +21,9 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.DigestUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,6 +41,8 @@ public final class PubKey implements NetworkProto {
     // Therefor we can include it for @EqualsAndHashCode.
     @Getter
     @ToString.Exclude
+    @JsonSerialize(using = PublicKeyJsonSer.Serializer.class)
+    @JsonDeserialize(using = PublicKeyJsonSer.Deserializer.class)
     private final PublicKey publicKey;
     @Getter
     private final String keyId;
