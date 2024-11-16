@@ -33,9 +33,11 @@ import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +54,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
+@Schema(name = "UserProfile")
 public final class UserProfile implements DistributedData, PublishDateAware {
     public static final int VERSION = 1;
     public static final int MAX_LENGTH_NICK_NAME = 100;
@@ -102,12 +105,15 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final int avatarVersion;
     @ExcludeForHash
+    @JsonIgnore
     private final int version;
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String applicationVersion;
 
     private transient String nym;
+    @JsonIgnore
     private transient ByteArray proofOfBurnHash;
+    @JsonIgnore
     private transient ByteArray bondedReputationHash;
     private transient long publishDate;
 
@@ -201,6 +207,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         this.publishDate = publishDate;
     }
 
+    @JsonIgnore
     @Override
     public double getCostFactor() {
         return 0.3;
@@ -219,6 +226,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         return networkId.getPubKey().getHash();
     }
 
+    @JsonIgnore
     public String getPubKeyAsHex() {
         return Hex.encode(networkId.getPubKey().getPublicKey().getEncoded());
     }
@@ -234,6 +242,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         return nym;
     }
 
+    @JsonIgnore
     public ByteArray getProofOfBurnKey() {
         if (proofOfBurnHash == null) {
             // Must be compatible with Bisq 1 proofOfBurn input
@@ -242,6 +251,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         return proofOfBurnHash;
     }
 
+    @JsonIgnore
     public ByteArray getBondedReputationKey() {
         if (bondedReputationHash == null) {
             bondedReputationHash = new ByteArray(DigestUtil.hash(getPubKeyHash()));
@@ -249,18 +259,22 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         return bondedReputationHash;
     }
 
+    @JsonIgnore
     public ByteArray getAccountAgeKey() {
         return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
     }
 
+    @JsonIgnore
     public ByteArray getProfileAgeKey() {
         return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
     }
 
+    @JsonIgnore
     public ByteArray getSignedWitnessKey() {
         return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
     }
 
+    @JsonIgnore
     public String getTooltipString() {
         return Res.get("user.userProfile.tooltip",
                 nickName, getNym(), getId(), getAddressByTransportDisplayString());
@@ -270,10 +284,12 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         return UserNameLookup.getUserName(getNym(), nickName);
     }
 
+    @JsonIgnore
     public String getAddressByTransportDisplayString() {
         return getAddressByTransportDisplayString(Integer.MAX_VALUE);
     }
 
+    @JsonIgnore
     public String getAddressByTransportDisplayString(int maxAddressLength) {
         return Joiner.on("\n").join(networkId.getAddressByTransportTypeMap().entrySet().stream()
                 .map(e -> Res.get("user.userProfile.addressByTransport." + e.getKey().name(),
