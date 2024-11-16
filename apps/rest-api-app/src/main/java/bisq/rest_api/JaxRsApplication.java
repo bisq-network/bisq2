@@ -7,7 +7,7 @@ import bisq.rest_api.endpoints.ReportApi;
 import bisq.rest_api.error.CustomExceptionMapper;
 import bisq.rest_api.error.StatusException;
 import bisq.rest_api.util.StaticFileHandler;
-import bisq.user.profile.UserProfileApi;
+import bisq.user.identity.UserIdentityApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class JaxRsApplication extends ResourceConfig implements Service {
                 .register(mapper)
                 .register(new KeyBundleApi(applicationService.getKeyBundleService()))
                 .register(new ChatApi(applicationService.getChatService()))
-                .register(new UserProfileApi(applicationService.getKeyBundleService(), applicationService.getUserService()))
+                .register(new UserIdentityApi(applicationService.getKeyBundleService(), applicationService.getUserService()))
                 .register(new ReportApi(applicationService.getNetworkService(), applicationService.getBondedRolesService()));
     }
 

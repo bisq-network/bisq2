@@ -15,15 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user.profile;
+package bisq.user.identity;
 
 import bisq.common.encoding.Hex;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.UserService;
-import bisq.user.identity.NymIdGenerator;
-import bisq.user.identity.UserIdentity;
+import bisq.user.profile.UserProfile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,14 +36,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-@Path("/user-profile")
+@Path("/user-identity")
 @Produces(MediaType.APPLICATION_JSON)
-@Tag(name = "User profile API")
-public class UserProfileApi {
+@Tag(name = "User Identity API")
+public class UserIdentityApi {
     public KeyBundleService keyBundleService;
     public UserService userService;
 
-    public UserProfileApi(KeyBundleService keyBundleService, UserService userService) {
+    public UserIdentityApi(KeyBundleService keyBundleService, UserService userService) {
         this.keyBundleService = keyBundleService;
         this.userService = userService;
     }
@@ -55,18 +54,18 @@ public class UserProfileApi {
             content = {
                     @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = UserProfilePreparedData.class)
+                            schema = @Schema(implementation = PreparedData.class)
                     )}
     )
     @GET
-    @Path("get-user-profile-prepared-data")
-    public UserProfilePreparedData getUserProfilePreparedData() {
+    @Path("get-prepared-data")
+    public PreparedData getPreparedData() {
         KeyPair keyPair = keyBundleService.generateKeyPair();
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         String id = Hex.encode(pubKeyHash);
         ProofOfWork proofOfWork = userService.getUserIdentityService().mintNymProofOfWork(pubKeyHash);
         String nym = NymIdGenerator.generate(pubKeyHash, proofOfWork.getSolution());
-        return UserProfilePreparedData.from(keyPair, id, nym, proofOfWork);
+        return PreparedData.from(keyPair, id, nym, proofOfWork);
     }
 
     @Operation(summary = "")
@@ -78,27 +77,26 @@ public class UserProfileApi {
                             schema = @Schema(implementation = UserProfile.class)
                     )}
     )
-    @POST
-    @Path("create-and-publish-new-user-profile")
-    public UserProfile createAndPublishNewUserProfile(@QueryParam("nick-name") String nickName,
-                                                      @QueryParam("terms") @DefaultValue("") String terms,
-                                                      @QueryParam("statement") @DefaultValue("") String statement,
-                                                      @QueryParam("user-profile-prepared-data") String userProfilePreparedDataJson) {
+    @GET
+    @Path("create-and-publish")
+    public UserIdentity createUserIdentityAndPublishUserProfile(@QueryParam("nick-name") String nickName,
+                                                                @QueryParam("terms") @DefaultValue("") String terms,
+                                                                @QueryParam("statement") @DefaultValue("") String statement,
+                                                                @QueryParam("prepared-data") String preparedDataJson) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            UserProfilePreparedData userProfilePreparedData = objectMapper.readValue(userProfilePreparedDataJson, UserProfilePreparedData.class);
-            KeyPair keyPair = userProfilePreparedData.getKeyPair();
+            PreparedData preparedData = objectMapper.readValue(preparedDataJson, PreparedData.class);
+            KeyPair keyPair = preparedData.getKeyPair();
             byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
-            ProofOfWork proofOfWork = userProfilePreparedData.getProofOfWork();
+            ProofOfWork proofOfWork = preparedData.getProofOfWork();
             int avatarVersion = 0;
-            UserIdentity userIdentity = userService.getUserIdentityService().createAndPublishNewUserProfile(nickName,
+            return userService.getUserIdentityService().createAndPublishNewUserProfile(nickName,
                     keyPair,
                     pubKeyHash,
                     proofOfWork,
                     avatarVersion,
                     terms,
                     statement).get();
-            return userIdentity.getUserProfile();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

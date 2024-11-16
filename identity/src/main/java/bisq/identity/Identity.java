@@ -22,6 +22,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.PubKey;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -62,22 +63,27 @@ public final class Identity implements PersistableProto {
                 KeyBundle.fromProto(proto.getKeyBundle()));
     }
 
+    @JsonIgnore
     public NetworkIdWithKeyPair getNetworkIdWithKeyPair() {
         return new NetworkIdWithKeyPair(networkId, keyBundle.getKeyPair());
     }
 
+    @JsonIgnore
     public String getId() {
         return networkId.getPubKey().getId();
     }
 
+    @JsonIgnore
     public PubKey getPubKey() {
         return networkId.getPubKey();
     }
 
+    @JsonIgnore
     public byte[] getPubKeyHash() {
         return networkId.getPubKey().getHash();
     }
 
+    @JsonIgnore
     public boolean isDefaultTag() {
         return tag.equals(IdentityService.DEFAULT_IDENTITY_TAG);
     }
