@@ -8,6 +8,7 @@ import bisq.rest_api.endpoints.UserProfileApi;
 import bisq.rest_api.error.CustomExceptionMapper;
 import bisq.rest_api.error.StatusException;
 import bisq.rest_api.util.StaticFileHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,13 +34,18 @@ public class JaxRsApplication extends ResourceConfig implements Service {
     public JaxRsApplication(String[] args, Supplier<RestApiApplicationService> applicationService) {
         this.applicationService = applicationService;
         // 'config' acts as application in jax-rs
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new SerializationModule());
+
         register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
                 .register(KeyBundleApi.class)
                 .register(ChatApi.class)
                 .register(UserProfileApi.class)
                 .register(ReportApi.class)
-                .register(SwaggerResolution.class);
+                .register(SwaggerResolution.class)
+                .register(mapper);
     }
 
     @Override
