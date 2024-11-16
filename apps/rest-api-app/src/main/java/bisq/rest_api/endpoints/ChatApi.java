@@ -2,8 +2,6 @@ package bisq.rest_api.endpoints;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
-import bisq.rest_api.JaxRsApplication;
-import bisq.rest_api.RestApiApplicationService;
 import bisq.rest_api.dto.BisqEasyPublicChatChannelDto;
 import bisq.rest_api.dto.CommonPublicChatChannelDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,8 +12,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Application;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,12 +23,10 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Chat API")
 public class ChatApi {
-
     private final ChatService chatService;
 
-    public ChatApi(@Context Application application) {
-        RestApiApplicationService applicationService = ((JaxRsApplication) application).getApplicationService().get();
-        chatService = applicationService.getChatService();
+    public ChatApi(ChatService chatService) {
+        this.chatService = chatService;
     }
 
     @GET

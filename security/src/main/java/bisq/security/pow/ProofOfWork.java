@@ -21,6 +21,9 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -47,12 +50,13 @@ public final class ProofOfWork implements NetworkProto {
     private final byte[] solution; // 72 bytes
     private final long duration;
 
-    public ProofOfWork(byte[] payload,
-                       long counter,
-                       @Nullable byte[] challenge,
-                       double difficulty,
-                       byte[] solution,
-                       long duration) {
+    @JsonCreator
+    public ProofOfWork(@JsonProperty("payload") byte[] payload,
+                       @JsonProperty("counter") long counter,
+                       @JsonProperty("challenge") @Nullable byte[] challenge,
+                       @JsonProperty("difficulty") double difficulty,
+                       @JsonProperty("solution") byte[] solution,
+                       @JsonProperty("duration") long duration) {
         this.payload = payload;
         this.counter = counter;
         this.challenge = challenge;
@@ -106,6 +110,7 @@ public final class ProofOfWork implements NetworkProto {
         );
     }
 
+    @JsonIgnore
     public double getLog2Difficulty() {
         return MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2);
     }

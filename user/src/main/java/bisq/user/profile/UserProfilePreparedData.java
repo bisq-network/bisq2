@@ -15,31 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api.dto;
+package bisq.user.profile;
 
-import bisq.common.encoding.Hex;
+import bisq.security.keys.KeyPairJsonSer;
+import bisq.security.pow.ProofOfWork;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 import java.security.KeyPair;
-import java.util.Base64;
 
 @Getter
-@Schema(name = "UserProfileDto")
-public final class UserProfileDto {
-    private String privateKeyAsBase64;
-    private String publicKeyAsBase64;
+@Schema(name = "UserProfilePreparedData")
+public final class UserProfilePreparedData {
+    @JsonSerialize(using = KeyPairJsonSer.Serializer.class)
+    @JsonDeserialize(using = KeyPairJsonSer.Deserializer.class)
+    private KeyPair keyPair;
     private String id;
     private String nym;
-    private String powSolutionAsHex;
+    private ProofOfWork proofOfWork;
 
-    public static UserProfileDto from(KeyPair keyPair, String id, String nym, byte[] powSolution) {
-        UserProfileDto dto = new UserProfileDto();
-        dto.publicKeyAsBase64 = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
-        dto.privateKeyAsBase64 = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
+    public static UserProfilePreparedData from(KeyPair keyPair, String id, String nym, ProofOfWork proofOfWork) {
+        UserProfilePreparedData dto = new UserProfilePreparedData();
+        dto.keyPair = keyPair;
         dto.id = id;
         dto.nym = nym;
-        dto.powSolutionAsHex = Hex.encode(powSolution);
+        dto.proofOfWork = proofOfWork;
         return dto;
     }
 }

@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.proto.NetworkProto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.Any;
 
 // Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
@@ -31,13 +32,17 @@ public interface DistributedData extends NetworkProto {
         return Any.pack(toProto(serializeForHash));
     }
 
+    @JsonIgnore
     MetaData getMetaData();
 
+    @JsonIgnore
     default String getClassName() {
         return getMetaData().getClassName();
     }
 
+    @JsonIgnore
     boolean isDataInvalid(byte[] pubKeyHash);
 
+    @JsonIgnore
     double getCostFactor();
 }

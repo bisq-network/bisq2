@@ -36,7 +36,7 @@ public class RestApiApp extends Executable<RestApiApplicationService> {
 
     @Override
     protected void launchApplication(String[] args) {
-        jaxRsApplication = new JaxRsApplication(args, () -> applicationService);
+        jaxRsApplication = new JaxRsApplication(args,applicationService);
 
         super.launchApplication(args);
     }

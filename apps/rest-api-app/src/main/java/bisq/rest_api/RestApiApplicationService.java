@@ -267,7 +267,7 @@ public class RestApiApplicationService extends JavaSeApplicationService {
                 .join());
     }
 
-    public KeyBundleService getKeyPairService() {
+    public KeyBundleService getKeyBundleService() {
         return securityService.getKeyBundleService();
     }
 
@@ -299,7 +299,6 @@ public class RestApiApplicationService extends JavaSeApplicationService {
     }
 
     public List<String> getAddressList() {
-
         Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
                 .filter(BondedRole::isBanned)
                 .map(BondedRole::getAuthorizedBondedRole)

@@ -59,4 +59,5 @@ sourceSets["main"].java.srcDir(layout.buildDirectory.dir("generated/source/versi
 dependencies {
     implementation(libs.typesafe.config)
     implementation(libs.annotations)
+    implementation(libs.bundles.jackson)
 }

@@ -8,4 +8,5 @@ dependencies {
     implementation("bisq:security")
 
     implementation(libs.bouncycastle)
+    implementation(libs.bundles.jackson)
 }

@@ -4,19 +4,18 @@ import bisq.common.application.Service;
 import bisq.rest_api.endpoints.ChatApi;
 import bisq.rest_api.endpoints.KeyBundleApi;
 import bisq.rest_api.endpoints.ReportApi;
-import bisq.rest_api.endpoints.UserProfileApi;
 import bisq.rest_api.error.CustomExceptionMapper;
 import bisq.rest_api.error.StatusException;
 import bisq.rest_api.util.StaticFileHandler;
+import bisq.user.profile.UserProfileApi;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 /**
  * JAX-RS application for the Bisq REST API
@@ -26,20 +25,20 @@ public class JaxRsApplication extends ResourceConfig implements Service {
     //todo (refactor, low prio) use config
     public static final String BASE_URL = "http://localhost:8082/api/v1";
 
-    @Getter
-    private final Supplier<RestApiApplicationService> applicationService;
     private HttpServer httpServer;
 
-    public JaxRsApplication(String[] args, Supplier<RestApiApplicationService> applicationService) {
-        this.applicationService = applicationService;
-        // 'config' acts as application in jax-rs
+    public JaxRsApplication(String[] args, RestApiApplicationService applicationService) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new SerializationModule());
+
         register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
-                .register(KeyBundleApi.class)
-                .register(ChatApi.class)
-                .register(UserProfileApi.class)
-                .register(ReportApi.class)
-                .register(SwaggerResolution.class);
+                .register(SwaggerResolution.class)
+                .register(mapper)
+                .register(new KeyBundleApi(applicationService.getKeyBundleService()))
+                .register(new ChatApi(applicationService.getChatService()))
+                .register(new UserProfileApi(applicationService.getKeyBundleService(), applicationService.getUserService()))
+                .register(new ReportApi(applicationService.getNetworkService(), applicationService.getBondedRolesService()));
     }
 
     @Override
