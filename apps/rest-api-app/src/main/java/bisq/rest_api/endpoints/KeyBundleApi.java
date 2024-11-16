@@ -17,8 +17,6 @@
 
 package bisq.rest_api.endpoints;
 
-import bisq.rest_api.JaxRsApplication;
-import bisq.rest_api.RestApiApplicationService;
 import bisq.rest_api.dto.KeyBundleDto;
 import bisq.rest_api.error.StatusException;
 import bisq.security.keys.KeyBundle;
@@ -33,8 +31,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Application;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -48,9 +44,8 @@ public class KeyBundleApi {
 
     private final KeyBundleService keyBundleService;
 
-    public KeyBundleApi(@Context Application application) {
-        RestApiApplicationService applicationService = ((JaxRsApplication) application).getApplicationService().get();
-        keyBundleService = applicationService.getSecurityService().getKeyBundleService();
+    public KeyBundleApi(KeyBundleService keyBundleService) {
+        this.keyBundleService = keyBundleService;
     }
 
     /**

@@ -41,7 +41,6 @@ dependencies {
     implementation(libs.typesafe.config)
     implementation(libs.bundles.glassfish.jersey)
     implementation(libs.bundles.jackson)
-
     implementation(libs.swagger.jaxrs2.jakarta)
 }
 
