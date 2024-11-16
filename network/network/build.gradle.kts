@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.bouncycastle)
     implementation(libs.failsafe)
     implementation(libs.typesafe.config)
+    implementation(libs.bundles.jackson)
 
     implementation(libs.apache.httpcomponents.httpclient)
     implementation(libs.chimp.jsocks)
