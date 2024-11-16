@@ -1,6 +1,9 @@
 package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -13,13 +16,17 @@ import java.security.KeyPair;
 public class KeyBundle implements PersistableProto {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @JsonSerialize(using = KeyPairJsonSer.Serializer.class)
+    @JsonDeserialize(using = KeyPairJsonSer.Deserializer.class)
     private final KeyPair keyPair;
     private final TorKeyPair torKeyPair;
     private final String keyId;
     @ToString.Exclude
+    @JsonIgnore
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final byte[] encodedPrivateKey;
     @ToString.Exclude
+    @JsonIgnore
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final byte[] encodedPublicKey;
     // private final I2pKeyPair i2PKeyPair;

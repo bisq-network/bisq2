@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user.profile;
+package bisq.user.identity;
 
 import bisq.security.keys.KeyPairJsonSer;
 import bisq.security.pow.ProofOfWork;
@@ -27,8 +27,8 @@ import lombok.Getter;
 import java.security.KeyPair;
 
 @Getter
-@Schema(name = "UserProfilePreparedData")
-public final class UserProfilePreparedData {
+@Schema(name = "PreparedData")
+public final class PreparedData {
     @JsonSerialize(using = KeyPairJsonSer.Serializer.class)
     @JsonDeserialize(using = KeyPairJsonSer.Deserializer.class)
     private KeyPair keyPair;
@@ -36,8 +36,8 @@ public final class UserProfilePreparedData {
     private String nym;
     private ProofOfWork proofOfWork;
 
-    public static UserProfilePreparedData from(KeyPair keyPair, String id, String nym, ProofOfWork proofOfWork) {
-        UserProfilePreparedData dto = new UserProfilePreparedData();
+    public static PreparedData from(KeyPair keyPair, String id, String nym, ProofOfWork proofOfWork) {
+        PreparedData dto = new PreparedData();
         dto.keyPair = keyPair;
         dto.id = id;
         dto.nym = nym;

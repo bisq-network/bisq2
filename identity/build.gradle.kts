@@ -11,4 +11,5 @@ dependencies {
     implementation("network:network-identity:$version")
 
     implementation(libs.typesafe.config)
+    implementation(libs.bundles.jackson)
 }
