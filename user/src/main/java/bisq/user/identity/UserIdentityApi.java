@@ -77,9 +77,9 @@ public class UserIdentityApi {
                             schema = @Schema(implementation = UserProfile.class)
                     )}
     )
-    @GET
+    @POST
     @Path("create-and-publish")
-    public UserIdentity createUserIdentityAndPublishUserProfile(@QueryParam("nick-name") String nickName,
+    public String createUserIdentityAndPublishUserProfile(@QueryParam("nick-name") String nickName,
                                                                 @QueryParam("terms") @DefaultValue("") String terms,
                                                                 @QueryParam("statement") @DefaultValue("") String statement,
                                                                 @QueryParam("prepared-data") String preparedDataJson) {
@@ -96,7 +96,7 @@ public class UserIdentityApi {
                     proofOfWork,
                     avatarVersion,
                     terms,
-                    statement).get();
+                    statement).get().getUserProfile().getId();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
