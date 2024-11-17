@@ -11,6 +11,7 @@ import bisq.user.identity.UserIdentityServiceApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * JAX-RS application for the Bisq REST API
+ * Swagger docs at: http://localhost:8082/doc/v1/index.html
  */
 @Slf4j
 public class JaxRsApplication extends ResourceConfig implements Service {
@@ -30,15 +32,28 @@ public class JaxRsApplication extends ResourceConfig implements Service {
     public JaxRsApplication(String[] args, RestApiApplicationService applicationService) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new SerializationModule());
-
         register(CustomExceptionMapper.class)
-                .register(RestApiException.StatusExceptionMapper.class)
-                .register(SwaggerResolution.class)
+                .register(RestApiException.Mapper.class)
                 .register(mapper)
-                .register(new KeyBundleApi(applicationService.getKeyBundleService()))
-                .register(new ChatApi(applicationService.getChatService()))
-                .register(new UserIdentityServiceApi(applicationService.getUserService().getUserIdentityService()))
-                .register(new ReportApi(applicationService.getNetworkService(), applicationService.getBondedRolesService()));
+                .register(SwaggerResolution.class);
+
+        // Swagger/OpenApi does not work when using instances at register instead of classes.
+        // As we want to pass the dependencies in the constructor, so we need the hack
+        // with AbstractBinder to register resources as classes for Swagger
+        register(KeyBundleApi.class);
+        register(ChatApi.class);
+        register(UserIdentityServiceApi.class);
+        register(ReportApi.class);
+
+        register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(new KeyBundleApi(applicationService.getKeyBundleService())).to(KeyBundleApi.class);
+                bind(new ChatApi(applicationService.getChatService())).to(ChatApi.class);
+                bind(new UserIdentityServiceApi(applicationService.getUserService().getUserIdentityService())).to(UserIdentityServiceApi.class);
+                bind(new ReportApi(applicationService.getNetworkService(), applicationService.getBondedRolesService())).to(ReportApi.class);
+            }
+        });
     }
 
     @Override
@@ -53,7 +68,7 @@ public class JaxRsApplication extends ResourceConfig implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         if (httpServer != null) {
-            httpServer.stop(2);
+            httpServer.stop(1);
         }
         return CompletableFuture.completedFuture(true);
     }

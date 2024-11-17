@@ -39,7 +39,7 @@ public class RestApiException extends RuntimeException {
         this.httpStatus = httpStatus;
     }
 
-    public static class StatusExceptionMapper implements ExceptionMapper<RestApiException> {
+    public static class Mapper implements ExceptionMapper<RestApiException> {
         @Override
         public Response toResponse(RestApiException exception) {
             return Response.status(exception.getHttpStatus())
