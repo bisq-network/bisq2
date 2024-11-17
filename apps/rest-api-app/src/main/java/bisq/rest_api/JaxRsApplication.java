@@ -3,9 +3,7 @@ package bisq.rest_api;
 import bisq.common.application.Service;
 import bisq.common.rest_api.error.CustomExceptionMapper;
 import bisq.common.rest_api.error.RestApiException;
-import bisq.rest_api.endpoints.ChatApi;
-import bisq.rest_api.endpoints.KeyBundleApi;
-import bisq.rest_api.endpoints.ReportApi;
+import bisq.rest_api.report.ReportApi;
 import bisq.rest_api.util.StaticFileHandler;
 import bisq.user.identity.UserIdentityServiceApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,16 +38,12 @@ public class JaxRsApplication extends ResourceConfig implements Service {
         // Swagger/OpenApi does not work when using instances at register instead of classes.
         // As we want to pass the dependencies in the constructor, so we need the hack
         // with AbstractBinder to register resources as classes for Swagger
-        register(KeyBundleApi.class);
-        register(ChatApi.class);
         register(UserIdentityServiceApi.class);
         register(ReportApi.class);
 
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(new KeyBundleApi(applicationService.getKeyBundleService())).to(KeyBundleApi.class);
-                bind(new ChatApi(applicationService.getChatService())).to(ChatApi.class);
                 bind(new UserIdentityServiceApi(applicationService.getUserService().getUserIdentityService())).to(UserIdentityServiceApi.class);
                 bind(new ReportApi(applicationService.getNetworkService(), applicationService.getBondedRolesService())).to(ReportApi.class);
             }

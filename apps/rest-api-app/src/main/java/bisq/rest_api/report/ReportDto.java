@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api.dto;
+package bisq.rest_api.report;
 
 import bisq.network.p2p.services.reporting.Report;
 import io.swagger.v3.oas.annotations.media.Schema;
