@@ -263,7 +263,7 @@ public class ChannelSidebar {
                         private final Label userName = new Label();
                         private final BisqTooltip tooltip = new BisqTooltip();
                         private final ImageView catHashImageView = new ImageView();
-                        private final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("chat.sideBar.userProfile.undoIgnore"));
+                        private final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("user.profileCard.userActions.undoIgnore"));
                         private final HBox userHBox = new HBox(10, catHashImageView, userName);
                         private final HBox hBox = new HBox(10, userHBox, Spacer.fillHBox(), undoIgnoreUserButton);
 

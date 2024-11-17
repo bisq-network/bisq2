@@ -144,13 +144,13 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userNymLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
 
         sendPrivateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white",
-                Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
+                Res.get("user.profileCard.userActions.sendPrivateMessage"));
         ignore = new BisqMenuItem("ignore-grey", "ignore-white",
-                Res.get("chat.sideBar.userProfile.ignore"));
+                Res.get("user.profileCard.userActions.ignore"));
         undoIgnore = new BisqMenuItem("undo-ignore-grey", "undo-ignore-white",
-                Res.get("chat.sideBar.userProfile.undoIgnore"));
+                Res.get("user.profileCard.userActions.undoIgnore"));
         report = new BisqMenuItem("report-grey", "report-white",
-                Res.get("chat.sideBar.userProfile.report"));
+                Res.get("user.profileCard.userActions.report"));
 
         HBox userNameBox = new HBox(10, userNickNameLabel, userNymLabel);
         userNameBox.setAlignment(Pos.BASELINE_LEFT);
