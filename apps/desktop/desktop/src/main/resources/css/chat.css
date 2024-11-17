@@ -353,31 +353,6 @@
  * Side bar                                                                    *
  ******************************************************************************/
 
-.chat-side-bar-user-profile-nickname {
-    -fx-font-size: 1.7em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -fx-light-text-color;
-}
-
-.chat-side-bar-user-profile-small-headline {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 0.9em;
-}
-
-.chat-side-bar-user-profile-small-value {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Light";
-    -fx-font-size: 1em;
-}
-
-.chat-side-bar-user-profile.text-area {
-    -fx-font-size: 1em;
-    -fx-background-color: rgba(255, 255, 255, 0.05);
-}
-
 .chat-container {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8 8 0 0;
