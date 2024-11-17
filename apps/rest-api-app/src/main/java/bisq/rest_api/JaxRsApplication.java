@@ -50,6 +50,7 @@ public class JaxRsApplication extends ResourceConfig implements Service {
                 bind(new ReportApi(applicationService.getNetworkService(), applicationService.getBondedRolesService())).to(ReportApi.class);
             }
         });
+
     }
 
     @Override

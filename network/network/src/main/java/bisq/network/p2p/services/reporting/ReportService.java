@@ -15,31 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api.report;
+package bisq.network.p2p.services.reporting;
 
-import bisq.network.p2p.services.reporting.Report;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-
-@Getter
-@Schema(name = "Report")
-public final class ReportDto {
-    private Report report;
-    private String errorMessage;
-
-    public static ReportDto from(Report report) {
-        ReportDto dto = new ReportDto();
-        dto.report = report;
-        return dto;
-    }
-
-    public static ReportDto fromError(String errorMessage) {
-        ReportDto dto = new ReportDto();
-        dto.errorMessage = errorMessage;
-        return dto;
-    }
-
-    public boolean isSuccessful() {
-        return errorMessage == null;
-    }
+public class ReportService {
 }
