@@ -40,7 +40,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private final ProfileCardController controller;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
-    private Label userNickNameLabel, userNymLabel;
+    private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
     private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report;
     private Button closeButton;
     private HBox userActionsBox;
@@ -79,6 +79,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
             if (reputationScore != null) {
                 reputationScoreDisplay.setReputationScore(reputationScore);
+                totalRepScoreLabel.setText(String.valueOf(reputationScore.getTotalScore()));
+                rankingLabel.setText(reputationScore.getRankingAsString());
             }
         });
 
@@ -122,24 +124,40 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         reputationScoreDisplay = new ReputationScoreDisplay();
         reputationScoreDisplay.setScale(1.5);
 
+        Label totalRepScoreTitleLabel = new Label(Res.get("user.profileCard.reputation.totalReputationScore"));
+        totalRepScoreTitleLabel.getStyleClass().add("text-fill-grey-dimmed");
+        totalRepScoreLabel = new Label();
+        totalRepScoreLabel.getStyleClass().add("total-score");
+        HBox totalRepScoreBox = new HBox(5, totalRepScoreTitleLabel, totalRepScoreLabel);
+        totalRepScoreBox.getStyleClass().add("total-score-box");
+
+        Label rankigTitleLabel = new Label(Res.get("user.profileCard.reputation.ranking"));
+        rankigTitleLabel.getStyleClass().add("text-fill-grey-dimmed");
+        rankingLabel = new Label();
+        rankingLabel.getStyleClass().add("ranking");
+        HBox rankingBox = new HBox(5, rankigTitleLabel, rankingLabel);
+        rankingBox.getStyleClass().add("ranking-box");
+
         userNickNameLabel = new Label();
         userNickNameLabel.getStyleClass().addAll("text-fill-white", "large-text");
         userNymLabel = new Label();
         userNymLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
 
         sendPrivateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white",
-                Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
+                Res.get("user.profileCard.userActions.sendPrivateMessage"));
         ignore = new BisqMenuItem("ignore-grey", "ignore-white",
-                Res.get("chat.sideBar.userProfile.ignore"));
+                Res.get("user.profileCard.userActions.ignore"));
         undoIgnore = new BisqMenuItem("undo-ignore-grey", "undo-ignore-white",
-                Res.get("chat.sideBar.userProfile.undoIgnore"));
+                Res.get("user.profileCard.userActions.undoIgnore"));
         report = new BisqMenuItem("report-grey", "report-white",
-                Res.get("chat.sideBar.userProfile.report"));
+                Res.get("user.profileCard.userActions.report"));
 
         HBox userNameBox = new HBox(10, userNickNameLabel, userNymLabel);
         userNameBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreBox, rankingBox);
+        reputationBox.setAlignment(Pos.BOTTOM_LEFT);
         userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report);
-        VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationScoreDisplay, Spacer.fillVBox(), userActionsBox);
+        VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationBox, Spacer.fillVBox(), userActionsBox);
         userNameReputationAndActionsBox.getStyleClass().add("header-content");
         HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);
         header.setPadding(new Insets(0, 0, 20, 0));

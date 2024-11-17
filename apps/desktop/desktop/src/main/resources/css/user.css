@@ -132,7 +132,18 @@
     -fx-max-height: 100;
     -fx-pref-height: 100;
     -fx-min-height: 100;
-    -fx-padding: 2 0 2 0;
+    -fx-padding: 0 0 2 0;
+}
+
+.profile-card .total-score,
+.profile-card .ranking {
+    -fx-font-size: 1.2em;
+}
+
+.profile-card .total-score-box,
+.profile-card .ranking-box {
+    -fx-alignment: baseline-left;
+    -fx-padding: 0 0 -3 0;
 }
 
 .profile-card .overview .title {

@@ -90,7 +90,7 @@ public class ChannelSidebar {
         private final View view;
         private final Runnable closeHandler;
         private final UserProfileService userProfileService;
-        private final Consumer<UserProfile> openUserProfileSidebarHandler;
+        private final Consumer<UserProfile> openProfileCardHandler;
         private final NotificationsSidebar notificationsSidebar;
         private final ChatService chatService;
         private final BannedUserService bannedUserService;
@@ -100,9 +100,9 @@ public class ChannelSidebar {
 
         private Controller(ServiceProvider serviceProvider,
                            Runnable closeHandler,
-                           Consumer<UserProfile> openUserProfileSidebarHandler) {
+                           Consumer<UserProfile> openProfileCardHandler) {
             this.closeHandler = closeHandler;
-            this.openUserProfileSidebarHandler = openUserProfileSidebarHandler;
+            this.openProfileCardHandler = openProfileCardHandler;
 
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             chatService = serviceProvider.getChatService();
@@ -177,8 +177,8 @@ public class ChannelSidebar {
             closeHandler.run();
         }
 
-        void onOpenUserProfileSidebar(UserProfile userProfile) {
-            openUserProfileSidebarHandler.accept(userProfile);
+        void onOpenProfileCard(UserProfile userProfile) {
+            openProfileCardHandler.accept(userProfile);
         }
     }
 
@@ -263,7 +263,7 @@ public class ChannelSidebar {
                         private final Label userName = new Label();
                         private final BisqTooltip tooltip = new BisqTooltip();
                         private final ImageView catHashImageView = new ImageView();
-                        private final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("chat.sideBar.userProfile.undoIgnore"));
+                        private final Hyperlink undoIgnoreUserButton = new Hyperlink(Res.get("user.profileCard.userActions.undoIgnore"));
                         private final HBox userHBox = new HBox(10, catHashImageView, userName);
                         private final HBox hBox = new HBox(10, userHBox, Spacer.fillHBox(), undoIgnoreUserButton);
 
@@ -306,7 +306,7 @@ public class ChannelSidebar {
                                 userHBox.setOpacity(isIgnored ? 0.4 : 1);
 
                                 // With setOnMouseClicked or released it does not work well (prob. due handlers inside the components)
-                                userHBox.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(userProfile));
+                                userHBox.setOnMousePressed(e -> controller.onOpenProfileCard(userProfile));
                                 // catHashImageView.setOnMousePressed(e -> controller.onOpenUserProfileSidebar(item.getUserProfile()));
                                 undoIgnoreUserButton.setOnAction(e -> {
                                     controller.onUndoIgnoreUser(userProfile);
