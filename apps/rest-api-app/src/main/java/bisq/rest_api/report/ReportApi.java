@@ -22,9 +22,11 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
+import bisq.common.rest_api.error.RestApiException;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.reporting.Report;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -42,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -62,12 +63,11 @@ public class ReportApi {
     @ApiResponse(responseCode = "200", description = "the list of seed and oracle node addresses",
             content = {
                     @Content(
-                            mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = ReportDto.class)
+                            mediaType = MediaType.APPLICATION_JSON
                     )}
     )
     @GET
-    @Path("get-address-list")
+    @Path("address-list")
     public List<String> getAddressList() {
         try {
             Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
@@ -92,27 +92,31 @@ public class ReportApi {
             addresslist.add("s2yxxqvyofzud32mxliya3dihj5rdlowagkblqqtntxhi7cbdaufqkid.onion:54467");
             return addresslist;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get the node address list");
+            throw new RestApiException(e);
         }
     }
+
 
     @Operation(description = "Get report for given address")
     @ApiResponse(responseCode = "200", description = "the report for the given address",
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = ReportDto.class)
+                            schema = @Schema(implementation = Report.class)
                     )}
     )
     @GET
-    @Path("get-report/{address}")
-    public ReportDto getReport(
+    @Path("{address}")
+    public Report getReport(
             @Parameter(description = "address from which we request the report")
             @PathParam("address") String address) {
         try {
-            return fetchReportForAddress(address).join();
+            return networkService.requestReport(Address.fromFullAddress(address)).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupt status
+            throw new RestApiException(e);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get report for address: " + address);
+            throw new RestApiException(e);
         }
     }
 
@@ -121,48 +125,24 @@ public class ReportApi {
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = ReportDto.class)
+                            schema = @Schema(implementation = Report.class)
                     )}
     )
     @GET
-    @Path("get-reports/{addresses}")
-    public List<ReportDto> getReports(
+    @Path("reports/{addresses}")
+    public List<Report> getReports(
             @Parameter(description = "comma separated addresses from which we request the report")
             @PathParam("addresses") String addresses) {
-
-        List<String> addressList;
         try {
-            addressList = CollectionUtil.streamFromCsv(addresses).toList();
+            List<String> addressList = CollectionUtil.streamFromCsv(addresses).toList();
+            return CompletableFutureUtils.allOf(addressList.stream()
+                            .map(address -> networkService.requestReport(Address.fromFullAddress(address))))
+                    .get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupt status
+            throw new RestApiException(e);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse addresses from CSV input: " + addresses);
-        }
-
-        List<CompletableFuture<ReportDto>> futures = addressList.stream()
-                .map(this::fetchReportForAddress)
-                .toList();
-
-        CompletableFuture<List<ReportDto>> allFutures = CompletableFutureUtils.allOf(futures);
-
-        return allFutures.join();
-    }
-
-    private CompletableFuture<ReportDto> fetchReportForAddress(String addressString) {
-        try {
-            Address address = Address.fromFullAddress(addressString);
-            return networkService.requestReport(address)
-                    .thenApply(report -> {
-                        log.info("Report successfully created for address: {}", address);
-                        return ReportDto.from(report);
-                    })
-                    .exceptionally(e -> {
-                        log.error("Failed to get report for address: {}. Nested: {}", address, e.getMessage());
-                        return ReportDto.fromError(e.getMessage());
-                    });
-        } catch (Exception e) {
-            log.error("Error creating report for address: {}. Nested: {}", addressString, e.getMessage());
-            return CompletableFuture.completedFuture(
-                    ReportDto.fromError(e.getMessage())
-            );
+            throw new RestApiException(e);
         }
     }
 }

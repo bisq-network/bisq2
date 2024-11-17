@@ -30,7 +30,10 @@ App.Views.ReportView = class {
 
         const statusCircle = document.createElement('span');
         statusCircle.classList.add('status-circle');
-        statusCircle.classList.add(data.successful ? 'status-ok' : 'status-error');
+
+        //todo
+        //statusCircle.classList.add(data.successful ? 'status-ok' : 'status-error');
+        statusCircle.classList.add('status-ok');
         header.appendChild(statusCircle);
 
         const hostText = document.createElement('span');
@@ -39,15 +42,16 @@ App.Views.ReportView = class {
 
         nodeBlock.appendChild(header);
 
-        if (data.successful) {
-            const mainTable = this.#createTable(data.report, "Report", 0);
+        //todo
+        //if (data.successful) {
+            const mainTable = this.#createTable(data, "Report", 0);
             nodeBlock.appendChild(mainTable);
-        } else {
+       /* } else {
             const errorDiv = document.createElement('div');
             errorDiv.classList.add('error');
             errorDiv.textContent = data.errorMessage || App.Constants.STATUS_ERROR;
             nodeBlock.appendChild(errorDiv);
-        }
+        }*/
     }
 
     toggleDetailButton(button, expand) {

@@ -15,7 +15,5 @@ dependencies {
 
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)
-    implementation(libs.swagger.jaxrs2.jakarta)
-    implementation(libs.bundles.glassfish.jersey)
-    implementation(libs.bundles.jackson)
+    implementation(libs.bundles.rest.api.libs)
 }

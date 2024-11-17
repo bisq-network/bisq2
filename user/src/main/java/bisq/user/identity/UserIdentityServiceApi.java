@@ -19,7 +19,6 @@ package bisq.user.identity;
 
 import bisq.common.rest_api.error.RestApiException;
 import bisq.security.DigestUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,7 +34,6 @@ import lombok.Data;
 import java.security.KeyPair;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 @Path("/user-identity")
 @Produces(MediaType.APPLICATION_JSON)
@@ -133,14 +131,11 @@ public class UserIdentityServiceApi {
                     request.terms,
                     request.statement).get();
             return Collections.singletonMap("userProfileId", userIdentity.getId());
-        } catch (JsonProcessingException e) {
-            throw new RestApiException(Response.Status.BAD_REQUEST,
-                    "Invalid input: Unable to process JSON");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore interrupt status
-            throw new RestApiException(Response.Status.REQUEST_TIMEOUT, "The request was interrupted or timed out");
-        } catch (ExecutionException e) {
-            throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "An error occurred while processing the request");
+            throw new RestApiException(e);
+        } catch (Exception e) {
+            throw new RestApiException(e);
         }
     }
 

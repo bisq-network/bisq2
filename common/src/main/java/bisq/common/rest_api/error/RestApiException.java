@@ -14,24 +14,54 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package bisq.common.rest_api.error;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Provider
+@Getter
 public class RestApiException extends RuntimeException {
-
-    @Getter
-    @Setter
     protected Response.Status httpStatus;
 
+    private static Response.Status getStatus(Exception exception) {
+        if (exception instanceof InterruptedException) {
+            return Response.Status.REQUEST_TIMEOUT;
+        } else if (exception instanceof ExecutionException) {
+            return Response.Status.INTERNAL_SERVER_ERROR;
+        } else if (exception instanceof JsonProcessingException) {
+            return Response.Status.BAD_REQUEST;
+        } else {
+            return Response.Status.INTERNAL_SERVER_ERROR;
+        }
+    }
+
+
+    private static String getMessage(Exception exception) {
+        if (exception instanceof InterruptedException) {
+            return "The request was interrupted or timed out. ";
+        } else if (exception instanceof ExecutionException) {
+            return "An error occurred while processing the request. ";
+        } else if (exception instanceof JsonProcessingException) {
+            return "Invalid input: Unable to process JSON. ";
+        } else {
+            return "An error occurred. ";
+        }
+    }
+
     public RestApiException() {
+    }
+
+    public RestApiException(Exception exception) {
+        this(getStatus(exception), getMessage(exception));
     }
 
     public RestApiException(Response.Status httpStatus, String message) {

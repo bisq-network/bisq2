@@ -1,7 +1,7 @@
 // js/constants.js
 App.Constants = {
-    API_URL_GET_REPORT: 'http://localhost:8082/api/v1/report/get-report',
-    API_URL_GET_ADDRESS_LIST: 'http://localhost:8082/api/v1/report/get-address-list',
+    API_URL_GET_REPORT: 'http://localhost:8082/api/v1/report',
+    API_URL_GET_ADDRESS_LIST: 'http://localhost:8082/api/v1/report/address-list',
     STATUS_ERROR: "Failed to fetch data",
     STATUS_ENTER_HOSTS: "Please enter a Host:port list in the settings to start fetching data.",
     PLACEHOLDER_HOST_LIST: "Host:port list, separated by commas or new lines.\n# Comments and empty lines are alowed.",
