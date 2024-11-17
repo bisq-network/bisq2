@@ -14,21 +14,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package bisq.rest_api.error;
+package bisq.common.rest_api.error;
 
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Provider
-public class CustomExceptionMapper implements ExceptionMapper<Exception> {
-    @Override
-    public Response toResponse(Exception exception) {
-        log.error(exception.getMessage(), exception);
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(new ErrorMessage(exception.getMessage()))
-                .build();
+public class RestApiException extends RuntimeException {
+
+    @Getter
+    @Setter
+    protected Response.Status httpStatus;
+
+    public RestApiException() {
+    }
+
+    public RestApiException(Response.Status httpStatus, String message) {
+        super(message);
+        this.httpStatus = httpStatus;
+    }
+
+    public static class Mapper implements ExceptionMapper<RestApiException> {
+        @Override
+        public Response toResponse(RestApiException exception) {
+            return Response.status(exception.getHttpStatus())
+                    .entity(new ErrorMessage(exception.getMessage()))
+                    .build();
+        }
     }
 }

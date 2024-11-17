@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api.endpoints;
+package bisq.rest_api.report;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
@@ -25,7 +25,6 @@ import bisq.common.network.TransportType;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
-import bisq.rest_api.dto.ReportDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

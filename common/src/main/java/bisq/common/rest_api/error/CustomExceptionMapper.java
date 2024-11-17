@@ -14,19 +14,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package bisq.rest_api.error;
+package bisq.common.rest_api.error;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-@ToString
-@EqualsAndHashCode
-public final class ErrorMessage {
-    private final String error;
-
-    public ErrorMessage(String error) {
-        this.error = error;
+@Slf4j
+@Provider
+public class CustomExceptionMapper implements ExceptionMapper<Exception> {
+    @Override
+    public Response toResponse(Exception exception) {
+        log.error(exception.getMessage(), exception);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(new ErrorMessage(exception.getMessage()))
+                .build();
     }
 }

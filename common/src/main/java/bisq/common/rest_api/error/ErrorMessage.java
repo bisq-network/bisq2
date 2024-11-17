@@ -14,32 +14,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+package bisq.common.rest_api.error;
 
-package bisq.rest_api.dto;
-
-import bisq.network.p2p.services.reporting.Report;
-import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
-@Schema(name = "Report")
-public final class ReportDto {
-    private Report report;
-    private String errorMessage;
+@ToString
+@EqualsAndHashCode
+public final class ErrorMessage {
+    private final String error;
 
-    public static ReportDto from(Report report) {
-        ReportDto dto = new ReportDto();
-        dto.report = report;
-        return dto;
-    }
-
-    public static ReportDto fromError(String errorMessage) {
-        ReportDto dto = new ReportDto();
-        dto.errorMessage = errorMessage;
-        return dto;
-    }
-
-    public boolean isSuccessful() {
-        return errorMessage == null;
+    public ErrorMessage(String error) {
+        this.error = error;
     }
 }

@@ -60,4 +60,6 @@ dependencies {
     implementation(libs.typesafe.config)
     implementation(libs.annotations)
     implementation(libs.bundles.jackson)
+    implementation(libs.swagger.jaxrs2.jakarta)
+    implementation(libs.bundles.glassfish.jersey)
 }
