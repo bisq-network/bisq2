@@ -95,11 +95,14 @@ public class RestApiApplicationService extends JavaSeApplicationService {
     private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
+    private final com.typesafe.config.Config restApiConfig;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     public RestApiApplicationService(String[] args) {
         super("rest_api", args);
+
+        restApiConfig= getConfig("restApi");
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
