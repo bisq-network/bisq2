@@ -22,6 +22,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
+import bisq.common.rest_api.error.RestApiException;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
@@ -36,6 +37,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -67,7 +69,7 @@ public class ReportApi {
                     )}
     )
     @GET
-    @Path("get-address-list")
+    @Path("address-list")
     public List<String> getAddressList() {
         try {
             Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
@@ -92,7 +94,7 @@ public class ReportApi {
             addresslist.add("s2yxxqvyofzud32mxliya3dihj5rdlowagkblqqtntxhi7cbdaufqkid.onion:54467");
             return addresslist;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get the node address list");
+            throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "Failed to get the node address list");
         }
     }
 
@@ -105,7 +107,7 @@ public class ReportApi {
                     )}
     )
     @GET
-    @Path("get-report/{address}")
+    @Path("{address}")
     public ReportDto getReport(
             @Parameter(description = "address from which we request the report")
             @PathParam("address") String address) {
@@ -125,7 +127,7 @@ public class ReportApi {
                     )}
     )
     @GET
-    @Path("get-reports/{addresses}")
+    @Path("reports/{addresses}")
     public List<ReportDto> getReports(
             @Parameter(description = "comma separated addresses from which we request the report")
             @PathParam("addresses") String addresses) {
