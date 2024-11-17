@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api;
+package bisq.rest_api.util;
 
 import bisq.security.keys.JsonSerialization;
 import com.fasterxml.jackson.databind.module.SimpleModule;
