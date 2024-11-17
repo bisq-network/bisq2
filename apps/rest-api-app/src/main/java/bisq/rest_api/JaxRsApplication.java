@@ -1,13 +1,13 @@
 package bisq.rest_api;
 
 import bisq.common.application.Service;
+import bisq.common.rest_api.error.CustomExceptionMapper;
+import bisq.common.rest_api.error.RestApiException;
 import bisq.rest_api.endpoints.ChatApi;
 import bisq.rest_api.endpoints.KeyBundleApi;
 import bisq.rest_api.endpoints.ReportApi;
-import bisq.rest_api.error.CustomExceptionMapper;
-import bisq.rest_api.error.StatusException;
 import bisq.rest_api.util.StaticFileHandler;
-import bisq.user.identity.UserIdentityApi;
+import bisq.user.identity.UserIdentityServiceApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import lombok.extern.slf4j.Slf4j;
@@ -32,12 +32,12 @@ public class JaxRsApplication extends ResourceConfig implements Service {
         mapper.registerModule(new SerializationModule());
 
         register(CustomExceptionMapper.class)
-                .register(StatusException.StatusExceptionMapper.class)
+                .register(RestApiException.StatusExceptionMapper.class)
                 .register(SwaggerResolution.class)
                 .register(mapper)
                 .register(new KeyBundleApi(applicationService.getKeyBundleService()))
                 .register(new ChatApi(applicationService.getChatService()))
-                .register(new UserIdentityApi(applicationService.getKeyBundleService(), applicationService.getUserService()))
+                .register(new UserIdentityServiceApi(applicationService.getUserService().getUserIdentityService()))
                 .register(new ReportApi(applicationService.getNetworkService(), applicationService.getBondedRolesService()));
     }
 

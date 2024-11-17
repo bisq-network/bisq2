@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package bisq.rest_api.error;
+package bisq.common.rest_api.error;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

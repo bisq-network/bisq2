@@ -32,6 +32,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.AesSecretKey;
+import bisq.security.DigestUtil;
 import bisq.security.EncryptedData;
 import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWork;
@@ -57,6 +58,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     @Getter
     private final Persistence<UserIdentityStore> persistence;
     private final HashCashProofOfWorkService hashCashProofOfWorkService;
+    public final SecurityService securityService;
     private final IdentityService identityService;
     private final NetworkService networkService;
 
@@ -70,6 +72,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         hashCashProofOfWorkService = securityService.getHashCashProofOfWorkService();
+        this.securityService = securityService;
         this.identityService = identityService;
         this.networkService = networkService;
     }
@@ -269,6 +272,20 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
 
         return networkService.refreshAuthenticatedData(userProfile, keyPair);
+    }
+
+    /**
+     * Generates prepared data for a new user identity.
+     *
+     * @return PreparedData object containing key pair, public key hash, ID, Nym, and Proof of Work.
+     */
+    public PreparedData getPreparedData() {
+        KeyPair keyPair = securityService.getKeyBundleService().generateKeyPair();
+        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
+        String id = Hex.encode(pubKeyHash);
+        ProofOfWork proofOfWork = mintNymProofOfWork(pubKeyHash);
+        String nym = NymIdGenerator.generate(pubKeyHash, proofOfWork.getSolution());
+        return PreparedData.from(keyPair, id, nym, proofOfWork);
     }
 
     private UserIdentity createUserIdentity(String nickName,

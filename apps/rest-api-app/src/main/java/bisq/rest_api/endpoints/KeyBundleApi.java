@@ -18,7 +18,7 @@
 package bisq.rest_api.endpoints;
 
 import bisq.rest_api.dto.KeyBundleDto;
-import bisq.rest_api.error.StatusException;
+import bisq.common.rest_api.error.RestApiException;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -86,6 +86,6 @@ public class KeyBundleApi {
     @Path("get/{key-id}")
     public KeyBundleDto findKeyBundle(@Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
         return KeyBundleDto.from(keyBundleService.findKeyBundle(keyId)
-                .orElseThrow(() -> new StatusException(Response.Status.NOT_FOUND, "Could not find the key bundle for ID " + keyId)));
+                .orElseThrow(() -> new RestApiException(Response.Status.NOT_FOUND, "Could not find the key bundle for ID " + keyId)));
     }
 }
