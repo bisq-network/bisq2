@@ -18,7 +18,11 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.observable.Pin;
@@ -41,7 +45,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
 public abstract class BaseChatController<V extends BaseChatView, M extends BaseChatModel> extends NavigationController {
@@ -117,24 +120,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     public abstract V createAndGetView();
 
     protected void openProfileCard(UserProfile userProfile) {
-//        doCloseSideBar();
-//        model.getSideBarVisible().set(true);
-
-//        UserProfileSidebar userProfileSidebar = new UserProfileSidebar(serviceProvider,
-//                userProfile,
-//                model.getSelectedChannel(),
-//                () -> {
-//                    doCloseSideBar();
-//                    chatMessageContainerController.resetSelectedChatMessage();
-//                });
-//        model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
-//        userProfileSidebar.setOnSendPrivateMessageHandler(chatMessageContainerController::createAndSelectTwoPartyPrivateChatChannel);
-//        userProfileSidebar.setIgnoreUserStateHandler(chatMessageContainerController::refreshMessages);
-//        userProfileSidebar.setOnMentionUserHandler(chatMessageContainerController::mentionUser);
-//        model.setChatUserDetails(Optional.of(userProfileSidebar));
-//        model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
-
-        cleanupChatUserDetails();
         cleanupChannelInfo();
 
         Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
@@ -143,7 +128,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                         model.getSelectedChannel(),
                         chatMessageContainerController::refreshMessages,
                         () -> {
-                            cleanupChatUserDetails();
                             cleanupChannelInfo();
                             chatMessageContainerController.resetSelectedChatMessage();
                         }));
@@ -214,7 +198,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         model.getChannelSidebarVisible().set(false);
         model.getSideBarChanged().set(!model.getSideBarChanged().get());
 
-        cleanupChatUserDetails();
         cleanupChannelInfo();
     }
 
@@ -224,14 +207,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
             chatMessageContainerController.refreshMessages();
             channelSidebar.setChannel(model.getSelectedChannel());
         });
-    }
-
-    private void cleanupChatUserDetails() {
-        model.getChatUserDetails().ifPresent(e -> e.setOnMentionUserHandler(null));
-        model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessageHandler(null));
-        model.getChatUserDetails().ifPresent(e -> e.setIgnoreUserStateHandler(null));
-        model.setChatUserDetails(Optional.empty());
-        model.getChatUserDetailsRoot().set(null);
     }
 
     private void cleanupChannelInfo() {

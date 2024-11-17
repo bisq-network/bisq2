@@ -54,8 +54,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final DropdownMenu notificationsSettingsMenu = new DropdownMenu("icon-bell-grey", "icon-bell-white", true);
     protected DropdownBisqMenuItem helpButton, infoButton;
     private NotificationSettingMenuItem globalDefault, all, mention, off;
-    protected Pane chatUserOverviewRoot;
-    protected Subscription channelIconPin, chatUserOverviewRootSubscription, selectedNotificationSettingPin;
+    protected Subscription channelIconPin, selectedNotificationSettingPin;
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -116,19 +115,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
             off.setOnAction(e -> controller.onSetNotificationType(off.getType()));
         }
 
-        chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
-                pane -> {
-                    if (chatUserOverviewRoot != null) {
-                        sideBar.getChildren().remove(chatUserOverviewRoot);
-                        chatUserOverviewRoot = null;
-                    }
-
-                    if (pane != null) {
-                        sideBar.getChildren().add(pane);
-                        chatUserOverviewRoot = pane;
-                    }
-                });
-
         channelIconPin = EasyBind.subscribe(model.getChannelIconId(), channelIconId -> {
             ImageView image = ImageUtil.getImageViewById(channelIconId);
             image.setScaleX(1.25);
@@ -169,7 +155,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
             off.dispose();
         }
 
-        chatUserOverviewRootSubscription.unsubscribe();
         channelIconPin.unsubscribe();
         selectedNotificationSettingPin.unsubscribe();
     }

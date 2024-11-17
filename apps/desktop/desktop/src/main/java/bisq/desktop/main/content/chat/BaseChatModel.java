@@ -22,16 +22,19 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.main.content.chat.message_container.sidebar.UserProfileSidebar;
 import bisq.i18n.Res;
-import javafx.beans.property.*;
-import javafx.scene.layout.Pane;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Optional;
 
 @Slf4j
 @Getter
@@ -42,14 +45,11 @@ public abstract class BaseChatModel extends NavigationModel {
     private final StringProperty channelDescription = new SimpleStringProperty("");
     private final StringProperty channelIconId = new SimpleStringProperty("");
     private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
-    private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
     private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
     private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelSidebarVisible = new SimpleBooleanProperty();
     private final String helpTitle;
-    @Setter
-    private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
     private final StringProperty searchText = new SimpleStringProperty();
     private final ObjectProperty<ChatChannelNotificationType> selectedNotificationSetting = new SimpleObjectProperty<>(ChatChannelNotificationType.GLOBAL_DEFAULT);
 
