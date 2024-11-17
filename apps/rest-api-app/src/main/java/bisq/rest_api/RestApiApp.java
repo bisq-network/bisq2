@@ -19,8 +19,19 @@ package bisq.rest_api;
 
 import bisq.application.Executable;
 import bisq.common.threading.ThreadName;
+import bisq.rest_api.util.StaticFileHandler;
+import com.sun.net.httpserver.HttpServer;
+import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 
+import java.net.URI;
+import java.util.Optional;
+
+/**
+ * JAX-RS application for the Bisq REST API
+ * Swagger docs at: http://localhost:8082/doc/v1/index.html
+ */
 @Slf4j
 public class RestApiApp extends Executable<RestApiApplicationService> {
     public static void main(String[] args) {
@@ -28,7 +39,11 @@ public class RestApiApp extends Executable<RestApiApplicationService> {
         new RestApiApp(args);
     }
 
-    private JaxRsApplication jaxRsApplication;
+    public static final String BASE_PATH = "/api/v1";
+    private String baseUrl;
+
+    private RestApiResourceConfig restApiResourceConfig;
+    private Optional<HttpServer> httpServer = Optional.empty();
 
     public RestApiApp(String[] args) {
         super(args);
@@ -36,14 +51,23 @@ public class RestApiApp extends Executable<RestApiApplicationService> {
 
     @Override
     protected void launchApplication(String[] args) {
-        jaxRsApplication = new JaxRsApplication(args,applicationService);
+        Config restApiConfig = applicationService.getRestApiConfig();
+        String host = restApiConfig.getString("host");
+        int port = restApiConfig.getInt("port");
+        baseUrl = host + ":" + port + BASE_PATH;
+
+        restApiResourceConfig = new RestApiResourceConfig(applicationService, baseUrl);
 
         super.launchApplication(args);
     }
 
     @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
-        jaxRsApplication.initialize();
+        var server = JdkHttpServerFactory.createHttpServer(URI.create(baseUrl), restApiResourceConfig);
+        server.createContext("/doc", new StaticFileHandler("/doc/v1/"));
+        server.createContext("/node-monitor", new StaticFileHandler("/node-monitor/"));
+        log.info("Server started at {}.", baseUrl);
+        httpServer = Optional.of(server);
     }
 
     @Override
@@ -53,9 +77,7 @@ public class RestApiApp extends Executable<RestApiApplicationService> {
 
     @Override
     public void shutdown() {
-        if (jaxRsApplication != null) {
-            jaxRsApplication.shutdown();
-        }
+        httpServer.ifPresent(httpServer -> httpServer.stop(1));
 
         super.shutdown();
     }

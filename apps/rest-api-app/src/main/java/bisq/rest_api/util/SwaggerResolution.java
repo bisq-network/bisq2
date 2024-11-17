@@ -16,7 +16,6 @@
  */
 package bisq.rest_api.util;
 
-import bisq.rest_api.JaxRsApplication;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.Reader;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -39,6 +38,11 @@ import lombok.extern.slf4j.Slf4j;
 @Hidden
 public class SwaggerResolution {
     private static String swaggerJson;
+    private final String baseUrl;
+
+    public SwaggerResolution(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
 
     @GET
     public String swagIt(@Context Application application) {
@@ -48,14 +52,11 @@ public class SwaggerResolution {
                 Info info = new Info()
                         .title("Bisq 2 REST API")
                         .description("This is the rest API description for Bisq2, For more Information about Bisq, see https://bisq.network")
-//                        .termsOfService("http://swagger.io/terms/")
-//                        .contact(new Contact()
-//                                .email("apiteam@swagger.io"))
                         .license(new License()
                                 .name("GNU Affero General Public License")
                                 .url("https://github.com/bisq-network/bisq2/blob/main/LICENSE"));
 
-                api.info(info).addServersItem(new Server().url(JaxRsApplication.BASE_URL));
+                api.info(info).addServersItem(new Server().url(baseUrl));
                 SwaggerConfiguration configuration = new SwaggerConfiguration().openAPI(api);
                 Reader reader = new Reader(configuration);
                 OpenAPI openAPI = reader.read(application.getClasses());

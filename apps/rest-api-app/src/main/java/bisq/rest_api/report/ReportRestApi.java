@@ -50,11 +50,11 @@ import java.util.stream.Collectors;
 @Path("/report")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Report API")
-public class ReportApi {
+public class ReportRestApi {
     private final NetworkService networkService;
     private final BondedRolesService bondedRolesService;
 
-    public ReportApi(NetworkService networkService, BondedRolesService bondedRolesService) {
+    public ReportRestApi(NetworkService networkService, BondedRolesService bondedRolesService) {
         this.networkService = networkService;
         this.bondedRolesService = bondedRolesService;
     }

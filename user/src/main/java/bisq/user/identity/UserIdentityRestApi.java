@@ -39,10 +39,10 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "User Identity API")
-public class UserIdentityServiceApi {
+public class UserIdentityRestApi {
     private final UserIdentityService userIdentityService;
 
-    public UserIdentityServiceApi(UserIdentityService userIdentityService) {
+    public UserIdentityRestApi(UserIdentityService userIdentityService) {
         this.userIdentityService = userIdentityService;
     }
 
