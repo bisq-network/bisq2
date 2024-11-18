@@ -218,6 +218,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
     }
 
+    @JsonIgnore
     public boolean isDataInvalid() {
         return !Arrays.equals(proofOfWork.getPayload(), getPubKeyHash());
     }

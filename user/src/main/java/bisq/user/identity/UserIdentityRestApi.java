@@ -19,6 +19,7 @@ package bisq.user.identity;
 
 import bisq.common.rest_api.error.RestApiException;
 import bisq.security.DigestUtil;
+import bisq.user.profile.UserProfile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,7 +34,9 @@ import lombok.Data;
 
 import java.security.KeyPair;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Path("/user-identity")
 @Produces(MediaType.APPLICATION_JSON)
@@ -70,13 +73,13 @@ public class UserIdentityRestApi {
     /**
      * Retrieves the user identity for the specified profile ID.
      *
-     * @param userProfileId the unique ID of the user profile.
+     * @param id the unique ID of the user identity. This is the same as the user profile ID and is the hash of the public key in Hex encoding.
      * @return UserIdentity object if found.
-     * @throws RestApiException with HTTP 404 status if the profile ID is not found.
+     * @throws RestApiException with HTTP 404 status if the user identity is not found.
      */
     @Operation(
             summary = "Get User Identity",
-            description = "Retrieves the user identity for the specified profile ID.",
+            description = "Retrieves the user identity for the specified ID.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "User identity retrieved successfully",
                             content = @Content(schema = @Schema(implementation = UserIdentity.class))),
@@ -85,13 +88,58 @@ public class UserIdentityRestApi {
             }
     )
     @GET
-    @Path("{user-profile-id}")
-    public UserIdentity getUserIdentity(@PathParam("user-profile-id") String userProfileId) {
-        return userIdentityService.findUserIdentity(userProfileId)
+    @Path("{id}")
+    public UserIdentity getUserIdentity(@PathParam("id") String id) {
+        return userIdentityService.findUserIdentity(id)
                 .orElseThrow(() -> new RestApiException(Response.Status.NOT_FOUND,
-                        "Could not find user identity for userProfileId " + userProfileId));
+                        "Could not find user identity for id " + id));
     }
 
+
+    /**
+     * Retrieves all user identity IDs.
+     *
+     * @return List of user identity IDs.
+     */
+    @Operation(
+            summary = "Get User Identity",
+            description = "Retrieves the user identity for the specified profile ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User identity IDs retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = UserIdentity.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    @GET
+    @Path("/ids")
+    public List<String> getUserIdentityIds() {
+        return userIdentityService.getUserIdentities().stream().map(UserIdentity::getId).collect(Collectors.toList());
+    }
+
+
+    /**
+     * Retrieves all user identity IDs.
+     *
+     * @return List of user identity IDs.
+     */
+    @Operation(
+            summary = "Get User Identity",
+            description = "Retrieves the user identity for the specified profile ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User identity IDs retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = UserIdentity.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    @GET
+    @Path("/selected/user-profile")
+    public UserProfile getSelectedUserProfile() {
+        UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+        if (selectedUserIdentity == null) {
+            throw new RestApiException(Response.Status.NOT_FOUND, "Could not find a selected user identity");
+        }
+        return selectedUserIdentity.getUserProfile();
+    }
 
     /**
      * Creates a new user identity and publishes the user profile.

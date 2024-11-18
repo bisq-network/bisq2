@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.DigestUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.protobuf.ByteString;
@@ -47,7 +48,9 @@ public final class PubKey implements NetworkProto {
     private final String keyId;
 
     @ToString.Exclude
+    @JsonIgnore
     private transient byte[] hash;
+    @JsonIgnore
     private transient String id;
 
     public PubKey(PublicKey publicKey, String keyId) {
