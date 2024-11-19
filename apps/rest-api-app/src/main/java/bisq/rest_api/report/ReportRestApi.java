@@ -154,8 +154,8 @@ public class ReportRestApi {
     @Path("/addresses/details")
     @Operation(description = "Get address info for a set of host:port addresses")
     @ApiResponse(responseCode = "200", description = "The set of address info (host, role type, nickname or bond name)",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = bisq.rest_api.proto.AddressDetails[].class)))
-    public List<bisq.rest_api.proto.AddressDetails> getAddressDetailsDto(
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddressDetails[].class)))
+    public List<AddressDetails> getAddressDetailsDto(
             @QueryParam("addresses") String addresses) {  // Comma-separated list
         try {
             log.info("Received request to get address infos for: {}", addresses);
@@ -166,13 +166,13 @@ public class ReportRestApi {
         }
     }
 
-    public List<bisq.rest_api.proto.AddressDetails> getAddressDetailsProtobufs(List<String> addressList) {
+    public List<AddressDetails> getAddressDetailsProtobufs(List<String> addressList) {
         Set<BondedRole> bondedRoles = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles();
         return bondedRoles.stream()
                 .flatMap(bondedRole -> bondedRole.getAuthorizedBondedRole().getAddressByTransportTypeMap()
                         .map(addressMap -> addressMap.entrySet().stream()
                                 .filter(entry -> addressList.contains(entry.getValue().toString())) // Nutze addressList
-                                .map(entry -> new bisq.rest_api.proto.AddressDetails(
+                                .map(entry -> new AddressDetails(
                                         entry.getValue().toString(),
                                         bondedRole.getAuthorizedBondedRole().getBondedRoleType().name(),
                                         userService.getUserProfileService()
@@ -182,6 +182,5 @@ public class ReportRestApi {
                                 ))
                         ).orElse(Stream.empty()))
                 .collect(Collectors.toList());
-
     }
 }
