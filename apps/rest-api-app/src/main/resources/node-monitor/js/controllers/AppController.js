@@ -39,6 +39,7 @@ export class AppController {
 
     async initApp() {
         try {
+            this.#initSettings();
             await this.#updateAddressesAndLoadAllReports();
             this.#setInitialUIState();
             await this.#loadAddressDetails();
@@ -61,6 +62,11 @@ export class AppController {
     //////////////////////
     // PRIVATE METHODS
     //////////////////////
+
+    #initSettings() {
+        const savedThresholds = this.storageService.getDeviationThresholds() || Constants.DEFAULT_DEVIATION_THRESHOLDS;
+        Constants.initialize({ DEVIATION_THRESHOLDS: savedThresholds });
+    }
 
     #setInitialUIState() {
         const hasAddresses = this.addressList && this.addressList.length > 0;
