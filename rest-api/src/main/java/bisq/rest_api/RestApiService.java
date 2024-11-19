@@ -20,12 +20,12 @@ package bisq.rest_api;
 import bisq.common.application.Service;
 import bisq.rest_api.util.StaticFileHandler;
 import com.sun.net.httpserver.HttpServer;
-import com.typesafe.config.ConfigList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -43,18 +43,18 @@ public class RestApiService implements Service {
         private final String host;
         private final int port;
         private final boolean localhostOnly;
-        private final ConfigList whiteListEndPoints;
-        private final ConfigList blackListEndPoints;
-        private final ConfigList supportedAuth;
+        private final List<String> whiteListEndPoints;
+        private final List<String> blackListEndPoints;
+        private final List<String> supportedAuth;
         private final String baseUrl;
 
         public Config(boolean enabled,
                       String host,
                       int port,
                       boolean localhostOnly,
-                      ConfigList whiteListEndPoints,
-                      ConfigList blackListEndPoints,
-                      ConfigList supportedAuth) {
+                      List<String> whiteListEndPoints,
+                      List<String> blackListEndPoints,
+                      List<String> supportedAuth) {
             this.enabled = enabled;
             this.host = host;
             this.port = port;
@@ -72,9 +72,9 @@ public class RestApiService implements Service {
                     config.getConfig("server").getString("host"),
                     config.getConfig("server").getInt("port"),
                     config.getBoolean("localhostOnly"),
-                    config.getList("whiteListEndPoints"),
-                    config.getList("blackListEndPoints"),
-                    config.getList("supportedAuth")
+                    config.getStringList("whiteListEndPoints"),
+                    config.getStringList("blackListEndPoints"),
+                    config.getStringList("supportedAuth")
             );
         }
     }

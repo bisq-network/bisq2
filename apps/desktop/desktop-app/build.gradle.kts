@@ -60,6 +60,7 @@ dependencies {
     implementation("bisq:application")
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
+    implementation("bisq:rest-api")
 
     implementation(project(":desktop"))
 
@@ -70,6 +71,7 @@ dependencies {
     // implementation("wallets:bitcoind")
 
     implementation(libs.typesafe.config)
+    implementation(libs.bundles.rest.api.libs)
 }
 
 tasks {
