@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api_node;
+package bisq.node_monitor_app;
 
 import bisq.account.AccountService;
 import bisq.application.State;
@@ -36,6 +36,7 @@ import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
+import bisq.node_monitor.NodeMonitorService;
 import bisq.rest_api.RestApiService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;
@@ -62,7 +63,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Getter
 @Slf4j
-public class RestApiApplicationService extends JavaSeApplicationService {
+public class NodeMonitorApplicationService extends JavaSeApplicationService {
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
     private final NetworkService networkService;
@@ -79,9 +80,10 @@ public class RestApiApplicationService extends JavaSeApplicationService {
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
     private final RestApiService restApiService;
+    private final NodeMonitorService nodeMonitorService;
 
-    public RestApiApplicationService(String[] args) {
-        super("rest_api_app", args);
+    public NodeMonitorApplicationService(String[] args) {
+        super("node_monitor", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
@@ -159,9 +161,11 @@ public class RestApiApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
+        nodeMonitorService = new NodeMonitorService(networkService, userService, bondedRolesService);
+
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
-        var restApiResourceConfig = new RestApiResourceConfig(restApiConfig, networkService, userService, bondedRolesService);
-        restApiService=new RestApiService(restApiConfig, restApiResourceConfig);
+        var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService);
+        restApiService = new RestApiService(restApiConfig, restApiResourceConfig);
     }
 
     @Override
@@ -207,6 +211,7 @@ public class RestApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
                 .thenCompose(result -> restApiService.initialize())
+                .thenCompose(result -> nodeMonitorService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -231,7 +236,8 @@ public class RestApiApplicationService extends JavaSeApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> restApiService.shutdown()
+        return supplyAsync(() -> nodeMonitorService.shutdown()
+                .thenCompose(result -> restApiService.shutdown())
                 .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())

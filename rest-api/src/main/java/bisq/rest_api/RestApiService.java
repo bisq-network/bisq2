@@ -91,7 +91,7 @@ public class RestApiService implements Service {
 
         if (config.isEnabled() && config.isLocalhostOnly()) {
             String host = config.getHost();
-            checkArgument(host.equals("127.0.0.1") || host.equals("localhost"),
+            checkArgument(host.equals("http://127.0.0.1") || host.equals("http://localhost"),
                     "The localhostOnly flag is set true but the server host is not localhost. host=" + host);
         }
     }
@@ -102,13 +102,17 @@ public class RestApiService implements Service {
             return CompletableFuture.supplyAsync(() -> {
                 HttpServer server = JdkHttpServerFactory.createHttpServer(URI.create(config.getBaseUrl()), restApiResourceConfig);
                 httpServer = Optional.of(server);
-                addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
+                addDocs();
                 log.info("Server started at {}.", config.getBaseUrl());
                 return true;
             });
         } else {
             return CompletableFuture.completedFuture(true);
         }
+    }
+
+    protected void addDocs() {
+        addStaticFileHandler("/doc", new StaticFileHandler("/doc/v1/"));
     }
 
     public void addStaticFileHandler(String path, StaticFileHandler handler) {

@@ -15,20 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api_node.report;
+package bisq.node_monitor;
 
-import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
-import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.network.Address;
-import bisq.common.network.TransportType;
 import bisq.common.rest_api.error.RestApiException;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.reporting.Report;
-import bisq.user.UserService;
-import bisq.user.profile.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,27 +34,18 @@ import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Path("/report")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Report API")
-public class ReportRestApi {
+public class NodeMonitorRestApi {
     private final NetworkService networkService;
-    private final BondedRolesService bondedRolesService;
-    private final UserService userService;
+    private final NodeMonitorService nodeMonitorService;
 
-    public ReportRestApi(NetworkService networkService,
-                         BondedRolesService bondedRolesService,
-                         UserService userService) {
+    public NodeMonitorRestApi(NetworkService networkService, NodeMonitorService nodeMonitorService) {
         this.networkService = networkService;
-        this.bondedRolesService = bondedRolesService;
-        this.userService = userService;
+        this.nodeMonitorService = nodeMonitorService;
     }
 
     @Operation(description = "Get a address list of seed and oracle nodes")
@@ -74,27 +59,7 @@ public class ReportRestApi {
     @Path("addresses")
     public List<String> getAddressList() {
         try {
-            Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
-                    .filter(BondedRole::isBanned)
-                    .map(BondedRole::getAuthorizedBondedRole)
-                    .map(AuthorizedBondedRole::getAddressByTransportTypeMap)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .flatMap(map -> map.values().stream())
-                    .collect(Collectors.toSet());
-            Map<TransportType, Set<Address>> seedAddressesByTransport = networkService.getSeedAddressesByTransportFromConfig();
-            Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-            List<String> addresslist = seedAddressesByTransport.entrySet().stream()
-                    .filter(entry -> supportedTransportTypes.contains(entry.getKey()))
-                    .flatMap(entry -> entry.getValue().stream())
-                    .filter(address -> !bannedAddresses.contains(address))
-                    .map(Address::toString)
-                    .collect(Collectors.toList());
-
-            // Oracle Nodes
-            addresslist.add("kr4yvzlhwt5binpw7js2tsfqv6mjd4klmslmcxw3c5izsaqh5vvsp6ad.onion:36185");
-            addresslist.add("s2yxxqvyofzud32mxliya3dihj5rdlowagkblqqtntxhi7cbdaufqkid.onion:54467");
-            return addresslist;
+            return nodeMonitorService.getAddressList();
         } catch (Exception e) {
             throw new RestApiException(e);
         }
@@ -155,32 +120,13 @@ public class ReportRestApi {
     @Operation(description = "Get address info for a set of host:port addresses")
     @ApiResponse(responseCode = "200", description = "The set of address info (host, role type, nickname or bond name)",
             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddressDetails[].class)))
-    public List<AddressDetails> getAddressDetailsDto(
-            @QueryParam("addresses") String addresses) {  // Comma-separated list
+    public List<AddressDetails> getAddressDetails(@QueryParam("addresses") String addresses) {  // Comma-separated list
         try {
             log.info("Received request to get address infos for: {}", addresses);
             List<String> addressList = CollectionUtil.streamFromCsv(addresses).toList();
-            return getAddressDetailsProtobufs(addressList);
+            return nodeMonitorService.getAddressDetails(addressList);
         } catch (Exception e) {
             throw new RestApiException(e);
         }
-    }
-
-    public List<AddressDetails> getAddressDetailsProtobufs(List<String> addressList) {
-        Set<BondedRole> bondedRoles = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles();
-        return bondedRoles.stream()
-                .flatMap(bondedRole -> bondedRole.getAuthorizedBondedRole().getAddressByTransportTypeMap()
-                        .map(addressMap -> addressMap.entrySet().stream()
-                                .filter(entry -> addressList.contains(entry.getValue().toString())) // Nutze addressList
-                                .map(entry -> new AddressDetails(
-                                        entry.getValue().toString(),
-                                        bondedRole.getAuthorizedBondedRole().getBondedRoleType().name(),
-                                        userService.getUserProfileService()
-                                                .findUserProfile(bondedRole.getAuthorizedBondedRole().getProfileId())
-                                                .map(UserProfile::getNickName)
-                                                .orElse(bondedRole.getAuthorizedBondedRole().getBondUserName())
-                                ))
-                        ).orElse(Stream.empty()))
-                .collect(Collectors.toList());
     }
 }

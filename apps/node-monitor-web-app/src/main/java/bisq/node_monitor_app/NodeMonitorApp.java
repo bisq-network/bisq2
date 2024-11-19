@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api_node;
+package bisq.node_monitor_app;
 
 import bisq.application.Executable;
 import bisq.common.threading.ThreadName;
@@ -28,23 +28,24 @@ import lombok.extern.slf4j.Slf4j;
  * Swagger docs at: http://localhost:8082/doc/v1/index.html
  */
 @Slf4j
-public class RestApiApp extends Executable<RestApiApplicationService> {
+public class NodeMonitorApp extends Executable<NodeMonitorApplicationService> {
     public static void main(String[] args) {
-        ThreadName.set(RestApiApp.class, "main");
-        new RestApiApp(args);
+        ThreadName.set(NodeMonitorApp.class, "main");
+        new NodeMonitorApp(args);
     }
 
-    public RestApiApp(String[] args) {
+    public NodeMonitorApp(String[] args) {
         super(args);
     }
 
     @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         RestApiService restApiService = applicationService.getRestApiService();
+        restApiService.addStaticFileHandler("/node-monitor", new StaticFileHandler("/node-monitor/"));
     }
 
     @Override
-    protected RestApiApplicationService createApplicationService(String[] args) {
-        return new RestApiApplicationService(args);
+    protected NodeMonitorApplicationService createApplicationService(String[] args) {
+        return new NodeMonitorApplicationService(args);
     }
 }

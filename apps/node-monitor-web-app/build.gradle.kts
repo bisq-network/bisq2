@@ -10,7 +10,7 @@ java {
 }
 
 application {
-    mainClass.set("bisq.rest_api_node.RestApiApp")
+    mainClass.set("bisq.node_monitor_app.NodeMonitorApp")
 }
 
 dependencies {

@@ -4,7 +4,6 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.network.NetworkService;
 import bisq.rest_api.BaseRestApiResourceConfig;
 import bisq.rest_api.RestApiService;
-import bisq.rest_api_node.report.ReportRestApi;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentityRestApi;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +23,11 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         // As we want to pass the dependencies in the constructor, so we need the hack
         // with AbstractBinder to register resources as classes for Swagger
         register(UserIdentityRestApi.class);
-        register(ReportRestApi.class);
 
         register(new AbstractBinder() {
             @Override
             protected void configure() {
                 bind(new UserIdentityRestApi(userService.getUserIdentityService())).to(UserIdentityRestApi.class);
-                bind(new ReportRestApi(networkService, bondedRolesService)).to(ReportRestApi.class);
             }
         });
     }
