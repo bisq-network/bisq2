@@ -17,6 +17,7 @@
 
 package bisq.application;
 
+import bisq.application.migration.MigrationService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
 import bisq.common.application.OptionUtils;
@@ -28,8 +29,8 @@ import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
+import bisq.common.observable.Observable;
 import bisq.common.util.ExceptionUtil;
-import bisq.application.migration.MigrationService;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import com.typesafe.config.ConfigFactory;
@@ -47,6 +48,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class ApplicationService implements Service {
@@ -125,6 +128,8 @@ public abstract class ApplicationService implements Service {
     protected final PersistenceService persistenceService;
     private Optional<MigrationService> migrationService;
     private FileLock instanceLock;
+    @Getter
+    protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     public ApplicationService(String configFileName, String[] args, Path userDataDir) {
         com.typesafe.config.Config defaultTypesafeConfig = ConfigFactory.load(configFileName);
@@ -221,5 +226,12 @@ public abstract class ApplicationService implements Service {
 
     protected boolean hasConfig(String path) {
         return typesafeAppConfig.hasPath(path);
+    }
+
+    protected void setState(State newState) {
+        checkArgument(state.get().ordinal() < newState.ordinal(),
+                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
+        state.set(newState);
+        log.info("New state {}", newState);
     }
 }

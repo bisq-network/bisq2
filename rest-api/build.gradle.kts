@@ -1,16 +1,11 @@
 plugins {
     id("bisq.java-library")
-    application
 }
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(22))
     }
-}
-
-application {
-    mainClass.set("bisq.rest_api_node.RestApiApp")
 }
 
 dependencies {
@@ -33,7 +28,6 @@ dependencies {
     implementation("bisq:application")
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
-    implementation("bisq:rest-api")
 
     implementation("network:network")
     implementation("bitcoind:core")
@@ -41,14 +35,4 @@ dependencies {
 
     implementation(libs.typesafe.config)
     implementation(libs.bundles.rest.api.libs)
-}
-
-tasks {
-    distZip {
-        enabled = false
-    }
-
-    distTar {
-        enabled = false
-    }
 }

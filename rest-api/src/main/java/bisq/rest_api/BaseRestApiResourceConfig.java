@@ -2,18 +2,15 @@ package bisq.rest_api;
 
 import bisq.common.rest_api.error.CustomExceptionMapper;
 import bisq.common.rest_api.error.RestApiException;
-import bisq.rest_api.report.ReportRestApi;
 import bisq.rest_api.util.SerializationModule;
 import bisq.rest_api.util.SwaggerResolution;
-import bisq.user.identity.UserIdentityRestApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
-@Slf4j
-public class RestApiResourceConfig extends ResourceConfig {
-    public RestApiResourceConfig(RestApiApplicationService applicationService, String baseUrl) {
+public abstract class BaseRestApiResourceConfig extends ResourceConfig {
+    public BaseRestApiResourceConfig(RestApiService.Config config) {
+        super();
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new SerializationModule());
 
@@ -25,15 +22,11 @@ public class RestApiResourceConfig extends ResourceConfig {
         // As we want to pass the dependencies in the constructor, so we need the hack
         // with AbstractBinder to register resources as classes for Swagger
         register(SwaggerResolution.class);
-        register(UserIdentityRestApi.class);
-        register(ReportRestApi.class);
 
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(new SwaggerResolution(baseUrl)).to(SwaggerResolution.class);
-                bind(new UserIdentityRestApi(applicationService.getUserService().getUserIdentityService())).to(UserIdentityRestApi.class);
-                bind(new ReportRestApi(applicationService.getNetworkService(), applicationService.getBondedRolesService(), applicationService.getUserService())).to(ReportRestApi.class);
+                bind(new SwaggerResolution(config.getBaseUrl())).to(SwaggerResolution.class);
             }
         });
     }

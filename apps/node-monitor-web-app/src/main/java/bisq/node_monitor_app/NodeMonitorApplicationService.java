@@ -15,24 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop_app;
+package bisq.node_monitor_app;
 
 import bisq.account.AccountService;
-import bisq.application.ShutDownHandler;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
-import bisq.desktop.ServiceProvider;
-import bisq.desktop.webcam.WebcamAppService;
-import bisq.evolution.updater.UpdaterService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -43,9 +36,10 @@ import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
+import bisq.node_monitor.NodeMonitorService;
+import bisq.rest_api.RestApiService;
 import bisq.security.SecurityService;
-import bisq.settings.DontShowAgainService;
-import bisq.settings.FavouriteMarketsService;
+import bisq.security.keys.KeyBundleService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -59,7 +53,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -68,19 +61,9 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  * Initializes the domain instances according to the requirements of their dependencies either in sequence
  * or in parallel.
  */
-
+@Getter
 @Slf4j
-public class DesktopApplicationService extends JavaSeApplicationService {
-    public static final long STARTUP_TIMEOUT_SEC = 300;
-    public static final long SHUTDOWN_TIMEOUT_SEC = 10;
-
-    @Getter
-    private final ServiceProvider serviceProvider;
-    @Getter
-    private final Observable<String> shutDownErrorMessage = new Observable<>();
-    @Getter
-    private final Observable<String> startupErrorMessage = new Observable<>();
-
+public class NodeMonitorApplicationService extends JavaSeApplicationService {
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
     private final NetworkService networkService;
@@ -95,18 +78,14 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final SupportService supportService;
     private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
-    private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
-    private final AlertNotificationsService alertNotificationsService;
-    private final FavouriteMarketsService favouriteMarketsService;
-    private final DontShowAgainService dontShowAgainService;
-    private final WebcamAppService webcamAppService;
+    private final RestApiService restApiService;
+    private final NodeMonitorService nodeMonitorService;
 
-    public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
-        super("desktop", args);
+    public NodeMonitorApplicationService(String[] args) {
+        super("node_monitor", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
-
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
         //noinspection SwitchStatementWithTooFewBranches
@@ -136,7 +115,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                getPersistenceService(),
+                persistenceService,
                 networkService);
 
         accountService = new AccountService(persistenceService);
@@ -162,16 +141,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 systemNotificationService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
-                persistenceService,
-                networkService,
-                chatService,
-                userService,
-                bondedRolesService);
+                persistenceService, networkService, chatService, userService, bondedRolesService);
 
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
-
-        updaterService = new UpdaterService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
@@ -188,56 +161,11 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
-        alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService());
+        nodeMonitorService = new NodeMonitorService(networkService, userService, bondedRolesService);
 
-        favouriteMarketsService = new FavouriteMarketsService(settingsService);
-
-        dontShowAgainService = new DontShowAgainService(settingsService);
-        webcamAppService = new WebcamAppService(config);
-
-        // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
-        serviceProvider = new ServiceProvider(shutDownHandler,
-                getConfig(),
-                persistenceService,
-                securityService,
-                walletService,
-                networkService,
-                identityService,
-                bondedRolesService,
-                accountService,
-                offerService,
-                contractService,
-                userService,
-                chatService,
-                settingsService,
-                supportService,
-                systemNotificationService,
-                tradeService,
-                updaterService,
-                bisqEasyService,
-                alertNotificationsService,
-                favouriteMarketsService,
-                dontShowAgainService,
-                webcamAppService);
-    }
-
-    private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
-        try {
-            switch (OS.getOS()) {
-                case LINUX:
-                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
-                case MAC_OS:
-                    return Optional.of(new OsxNotificationService());
-                case WINDOWS:
-                    return Optional.of(new AwtNotificationService());
-                default:
-                case ANDROID:
-                    return Optional.empty();
-            }
-        } catch (Exception e) {
-            log.warn("Could not create SystemNotificationDelegate for {}", OS.getOsName());
-            return Optional.empty();
-        }
+        var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
+        var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService);
+        restApiService = new RestApiService(restApiConfig, restApiResourceConfig);
     }
 
     @Override
@@ -276,86 +204,82 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
+                .thenCompose(result -> systemNotificationService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
-                .thenCompose(result -> systemNotificationService.initialize())
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
-                .thenCompose(result -> updaterService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
-                .thenCompose(result -> alertNotificationsService.initialize())
-                .thenCompose(result -> favouriteMarketsService.initialize())
-                .thenCompose(result -> dontShowAgainService.initialize())
-                .thenCompose(result -> webcamAppService.initialize())
-                .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
-                .handle((result, throwable) -> {
+                .thenCompose(result -> restApiService.initialize())
+                .thenCompose(result -> nodeMonitorService.initialize())
+                .orTimeout(5, TimeUnit.MINUTES)
+                .whenComplete((success, throwable) -> {
                     if (throwable == null) {
-                        if (result != null && result) {
+                        if (success) {
                             setState(State.APP_INITIALIZED);
+
+                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
+
                             log.info("ApplicationService initialized");
-                            return true;
                         } else {
-                            startupErrorMessage.set("Initializing applicationService failed with result=false");
-                            log.error(startupErrorMessage.get());
+                            setState(State.FAILED);
+                            log.error("Initializing applicationService failed");
                         }
                     } else {
+                        setState(State.FAILED);
                         log.error("Initializing applicationService failed", throwable);
-                        startupErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
                     }
-                    setState(State.FAILED);
-                    return false;
                 });
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         // We shut down services in opposite order as they are initialized
-        // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
-        // interrupt the shutdown sequence.
-        return supplyAsync(() -> webcamAppService.shutdown().exceptionally(this::logError)
-                .thenCompose(result -> dontShowAgainService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> favouriteMarketsService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> alertNotificationsService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> bisqEasyService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> updaterService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> tradeService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> supportService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> systemNotificationService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> chatService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> offerService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> settingsService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> userService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> contractService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> accountService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> bondedRolesService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> identityService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> networkService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> walletService.map(service -> service.shutdown().exceptionally(this::logError))
+        return supplyAsync(() -> nodeMonitorService.shutdown()
+                .thenCompose(result -> restApiService.shutdown())
+                .thenCompose(result -> bisqEasyService.shutdown())
+                .thenCompose(result -> tradeService.shutdown())
+                .thenCompose(result -> supportService.shutdown())
+                .thenCompose(result -> chatService.shutdown())
+                .thenCompose(result -> offerService.shutdown())
+                .thenCompose(result -> systemNotificationService.shutdown())
+                .thenCompose(result -> settingsService.shutdown())
+                .thenCompose(result -> userService.shutdown())
+                .thenCompose(result -> contractService.shutdown())
+                .thenCompose(result -> accountService.shutdown())
+                .thenCompose(result -> bondedRolesService.shutdown())
+                .thenCompose(result -> identityService.shutdown())
+                .thenCompose(result -> networkService.shutdown())
+                .thenCompose(result -> walletService.map(Service::shutdown)
                         .orElse(CompletableFuture.completedFuture(true)))
-                .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> memoryReportService.shutdown().exceptionally(this::logError))
-                .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
-                .handle((result, throwable) -> {
-                    if (throwable == null) {
-                        if (result != null && result) {
-                            log.info("ApplicationService shutdown completed");
-                            return true;
-                        } else {
-                            startupErrorMessage.set("Shutdown applicationService failed with result=false");
-                            log.error(shutDownErrorMessage.get());
-                        }
-                    } else {
-                        log.error("Shutdown applicationService failed", throwable);
-                        shutDownErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
-                    }
-                    return false;
-                })
+                .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> memoryReportService.shutdown())
+                .orTimeout(10, TimeUnit.SECONDS)
+                .handle((result, throwable) -> throwable == null)
                 .join());
     }
 
-    private boolean logError(Throwable throwable) {
-        log.error("Exception at shutdown", throwable);
-        return false;
+    public KeyBundleService getKeyBundleService() {
+        return securityService.getKeyBundleService();
+    }
+
+    private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
+        try {
+            switch (OS.getOS()) {
+                case LINUX:
+                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
+                case MAC_OS:
+                    return Optional.of(new OsxNotificationService());
+                case WINDOWS:
+                    return Optional.of(new AwtNotificationService());
+                default:
+                case ANDROID:
+                    return Optional.empty();
+            }
+        } catch (Exception e) {
+            log.warn("Could not create SystemNotificationDelegate for {}", OS.getOsName());
+            return Optional.empty();
+        }
     }
 }

@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api;
+package bisq.rest_api_node;
 
 import bisq.account.AccountService;
+import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
@@ -36,6 +36,7 @@ import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
+import bisq.rest_api.RestApiService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;
 import bisq.settings.SettingsService;
@@ -51,7 +52,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -63,15 +63,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Getter
 @Slf4j
 public class RestApiApplicationService extends JavaSeApplicationService {
-    public enum State {
-        INITIALIZE_APP,
-        INITIALIZE_NETWORK,
-        INITIALIZE_WALLET,
-        INITIALIZE_SERVICES,
-        APP_INITIALIZED,
-        FAILED
-    }
-
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
     private final NetworkService networkService;
@@ -87,14 +78,10 @@ public class RestApiApplicationService extends JavaSeApplicationService {
     private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
-    private final com.typesafe.config.Config restApiConfig;
-
-    private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
+    private final RestApiService restApiService;
 
     public RestApiApplicationService(String[] args) {
-        super("rest_api", args);
-
-        restApiConfig = getConfig("restApi");
+        super("rest_api_app", args);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
@@ -172,6 +159,9 @@ public class RestApiApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
+        var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
+        var restApiResourceConfig = new RestApiResourceConfig(restApiConfig, networkService, userService, bondedRolesService);
+        restApiService=new RestApiService(restApiConfig, restApiResourceConfig);
     }
 
     @Override
@@ -216,6 +206,7 @@ public class RestApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
+                .thenCompose(result -> restApiService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -240,7 +231,8 @@ public class RestApiApplicationService extends JavaSeApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> bisqEasyService.shutdown()
+        return supplyAsync(() -> restApiService.shutdown()
+                .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
@@ -264,13 +256,6 @@ public class RestApiApplicationService extends JavaSeApplicationService {
 
     public KeyBundleService getKeyBundleService() {
         return securityService.getKeyBundleService();
-    }
-
-    private void setState(State newState) {
-        checkArgument(state.get().ordinal() < newState.ordinal(),
-                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
-        state.set(newState);
-        log.info("New state {}", newState);
     }
 
     private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
