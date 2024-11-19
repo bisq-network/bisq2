@@ -15,18 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api;
+package bisq.rest_api_node;
 
 import bisq.application.Executable;
 import bisq.common.threading.ThreadName;
+import bisq.rest_api.RestApiService;
 import bisq.rest_api.util.StaticFileHandler;
-import com.sun.net.httpserver.HttpServer;
-import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
-
-import java.net.URI;
-import java.util.Optional;
 
 /**
  * JAX-RS application for the Bisq REST API
@@ -39,46 +34,18 @@ public class RestApiApp extends Executable<RestApiApplicationService> {
         new RestApiApp(args);
     }
 
-    public static final String BASE_PATH = "/api/v1";
-    private String baseUrl;
-
-    private RestApiResourceConfig restApiResourceConfig;
-    private Optional<HttpServer> httpServer = Optional.empty();
-
     public RestApiApp(String[] args) {
         super(args);
     }
 
     @Override
-    protected void launchApplication(String[] args) {
-        Config restApiConfig = applicationService.getRestApiConfig();
-        String host = restApiConfig.getString("host");
-        int port = restApiConfig.getInt("port");
-        baseUrl = host + ":" + port + BASE_PATH;
-
-        restApiResourceConfig = new RestApiResourceConfig(applicationService, baseUrl);
-
-        super.launchApplication(args);
-    }
-
-    @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
-        var server = JdkHttpServerFactory.createHttpServer(URI.create(baseUrl), restApiResourceConfig);
-        server.createContext("/doc", new StaticFileHandler("/doc/v1/"));
-        server.createContext("/node-monitor", new StaticFileHandler("/node-monitor/"));
-        log.info("Server started at {}.", baseUrl);
-        httpServer = Optional.of(server);
+        RestApiService restApiService = applicationService.getRestApiService();
+        restApiService.addStaticFileHandler("/node-monitor", new StaticFileHandler("/node-monitor/"));
     }
 
     @Override
     protected RestApiApplicationService createApplicationService(String[] args) {
         return new RestApiApplicationService(args);
-    }
-
-    @Override
-    public void shutdown() {
-        httpServer.ifPresent(httpServer -> httpServer.stop(1));
-
-        super.shutdown();
     }
 }

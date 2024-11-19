@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.rest_api.report;
+package bisq.rest_api_node.report;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;

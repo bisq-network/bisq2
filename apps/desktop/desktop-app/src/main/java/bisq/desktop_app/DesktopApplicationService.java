@@ -77,8 +77,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     @Getter
     private final ServiceProvider serviceProvider;
     @Getter
-    private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
-    @Getter
     private final Observable<String> shutDownErrorMessage = new Observable<>();
     @Getter
     private final Observable<String> startupErrorMessage = new Observable<>();
@@ -354,13 +352,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                     return false;
                 })
                 .join());
-    }
-
-    private void setState(State newState) {
-        checkArgument(state.get().ordinal() < newState.ordinal(),
-                "New state %s must have a higher ordinal as the current state %s", newState, state.get());
-        state.set(newState);
-        log.info("New state {}", newState);
     }
 
     private boolean logError(Throwable throwable) {

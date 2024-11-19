@@ -7,6 +7,4 @@ dependencies {
     implementation(project(":persistence"))
     implementation(project(":i18n"))
     implementation(project(":settings"))
-
-    implementation(libs.java.dev.jna)
 }
