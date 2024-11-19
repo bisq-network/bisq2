@@ -20,12 +20,8 @@ package bisq.rest_api;
 import bisq.account.AccountService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
-import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.common.network.Address;
-import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
@@ -51,13 +47,9 @@ import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -102,7 +94,7 @@ public class RestApiApplicationService extends JavaSeApplicationService {
     public RestApiApplicationService(String[] args) {
         super("rest_api", args);
 
-        restApiConfig= getConfig("restApi");
+        restApiConfig = getConfig("restApi");
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
@@ -274,7 +266,6 @@ public class RestApiApplicationService extends JavaSeApplicationService {
         return securityService.getKeyBundleService();
     }
 
-
     private void setState(State newState) {
         checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
@@ -299,30 +290,5 @@ public class RestApiApplicationService extends JavaSeApplicationService {
             log.warn("Could not create SystemNotificationDelegate for {}", OS.getOsName());
             return Optional.empty();
         }
-    }
-
-    public List<String> getAddressList() {
-        Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
-                .filter(BondedRole::isBanned)
-                .map(BondedRole::getAuthorizedBondedRole)
-                .map(AuthorizedBondedRole::getAddressByTransportTypeMap)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .flatMap(map -> map.values().stream())
-                .collect(Collectors.toSet());
-        Map<TransportType, Set<Address>> seedAddressesByTransport = networkService.getSeedAddressesByTransportFromConfig();
-        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        List<String> addresslist = seedAddressesByTransport.entrySet().stream()
-                .filter(entry -> supportedTransportTypes.contains(entry.getKey()))
-                .flatMap(entry -> entry.getValue().stream())
-                .filter(address -> !bannedAddresses.contains(address))
-                .map(Address::toString)
-                .collect(Collectors.toList());
-
-        // Oracle Nodes
-        addresslist.add("kr4yvzlhwt5binpw7js2tsfqv6mjd4klmslmcxw3c5izsaqh5vvsp6ad.onion:36185");
-        addresslist.add("s2yxxqvyofzud32mxliya3dihj5rdlowagkblqqtntxhi7cbdaufqkid.onion:54467");
-
-        return addresslist;
     }
 }

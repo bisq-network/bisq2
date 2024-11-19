@@ -1,4 +1,4 @@
-// index.js
+// js/utils/FormatUtils.js
 
 /*
  * This file is part of Bisq.
@@ -17,16 +17,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { AppController } from './js/controllers/AppController.js';
-import { DataService } from './js/services/DataService.js';
-import { StorageService } from './js/services/StorageService.js';
+export class FormatUtils {
 
-window.App = window.App || {};
+    static formatNumber(value, decimalPlaces = 2) {
+        if (typeof value !== 'number' || isNaN(value)) {
+            throw new Error('Invalid value: The input must be a valid number.');
+        }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const dataService = new DataService();
-    const storageService = new StorageService();
-
-    const appController = new AppController(dataService, storageService);
-    appController.initApp();
-});
+        return Number.isInteger(value) ? value.toString() : value.toFixed(decimalPlaces);
+    }
+}

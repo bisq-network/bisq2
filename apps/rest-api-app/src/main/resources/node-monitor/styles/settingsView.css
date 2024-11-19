@@ -1,4 +1,20 @@
 /* styles/settingsView.css */
+
+/* Specific styling for hamburger menu */
+.hamburger-menu {
+    font-size: 24px;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    user-select: none;
+    color: #333;
+}
+
+.hamburger-menu:hover {
+    color: #555;
+}
+
 /* Settings panel container */
 #settingsPanel {
     padding: 15px;
@@ -35,17 +51,75 @@
     box-sizing: border-box;
 }
 
-/* Specific styling for hamburger menu */
-.hamburger-menu {
-    font-size: 24px;
-    cursor: pointer;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    user-select: none;
+#thresholdSettings {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.threshold-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+}
+
+.threshold-text {
+    text-align: left;
+    font-size: 1em;
     color: #333;
 }
 
-.hamburger-menu:hover {
+.threshold-text h4 {
+    font-size: 1.2em;
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.threshold-text p {
+    margin: 0;
+    font-size: 1em;
     color: #555;
+    line-height: 1.4;
+}
+
+.threshold-grid {
+    display: flex;
+    gap: 10px;
+}
+
+.threshold-grid div {
+    text-align: center;
+}
+
+.threshold-grid label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 3px;
+    font-size: 0.8em;
+}
+
+.threshold-grid input {
+    width: 45px;
+    padding: 3px;
+    font-size: 0.9em;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .threshold-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .threshold-grid {
+        justify-content: flex-start;
+        gap: 10px;
+    }
 }

@@ -27,16 +27,15 @@ import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.reporting.Report;
+import bisq.user.UserService;
+import bisq.user.profile.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Path("/report")
@@ -53,10 +53,14 @@ import java.util.stream.Collectors;
 public class ReportRestApi {
     private final NetworkService networkService;
     private final BondedRolesService bondedRolesService;
+    private final UserService userService;
 
-    public ReportRestApi(NetworkService networkService, BondedRolesService bondedRolesService) {
+    public ReportRestApi(NetworkService networkService,
+                         BondedRolesService bondedRolesService,
+                         UserService userService) {
         this.networkService = networkService;
         this.bondedRolesService = bondedRolesService;
+        this.userService = userService;
     }
 
     @Operation(description = "Get a address list of seed and oracle nodes")
@@ -67,7 +71,7 @@ public class ReportRestApi {
                     )}
     )
     @GET
-    @Path("address-list")
+    @Path("addresses")
     public List<String> getAddressList() {
         try {
             Set<Address> bannedAddresses = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles().stream()
@@ -144,5 +148,39 @@ public class ReportRestApi {
         } catch (Exception e) {
             throw new RestApiException(e);
         }
+    }
+
+    @GET
+    @Path("/addresses/details")
+    @Operation(description = "Get address info for a set of host:port addresses")
+    @ApiResponse(responseCode = "200", description = "The set of address info (host, role type, nickname or bond name)",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddressDetails[].class)))
+    public List<AddressDetails> getAddressDetailsDto(
+            @QueryParam("addresses") String addresses) {  // Comma-separated list
+        try {
+            log.info("Received request to get address infos for: {}", addresses);
+            List<String> addressList = CollectionUtil.streamFromCsv(addresses).toList();
+            return getAddressDetailsProtobufs(addressList);
+        } catch (Exception e) {
+            throw new RestApiException(e);
+        }
+    }
+
+    public List<AddressDetails> getAddressDetailsProtobufs(List<String> addressList) {
+        Set<BondedRole> bondedRoles = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles();
+        return bondedRoles.stream()
+                .flatMap(bondedRole -> bondedRole.getAuthorizedBondedRole().getAddressByTransportTypeMap()
+                        .map(addressMap -> addressMap.entrySet().stream()
+                                .filter(entry -> addressList.contains(entry.getValue().toString())) // Nutze addressList
+                                .map(entry -> new AddressDetails(
+                                        entry.getValue().toString(),
+                                        bondedRole.getAuthorizedBondedRole().getBondedRoleType().name(),
+                                        userService.getUserProfileService()
+                                                .findUserProfile(bondedRole.getAuthorizedBondedRole().getProfileId())
+                                                .map(UserProfile::getNickName)
+                                                .orElse(bondedRole.getAuthorizedBondedRole().getBondUserName())
+                                ))
+                        ).orElse(Stream.empty()))
+                .collect(Collectors.toList());
     }
 }
