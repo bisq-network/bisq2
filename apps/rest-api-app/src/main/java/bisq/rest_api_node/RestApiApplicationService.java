@@ -36,6 +36,7 @@ import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
+import bisq.rest_api.RestApiResourceConfig;
 import bisq.rest_api.RestApiService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;

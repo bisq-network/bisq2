@@ -43,6 +43,8 @@ import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
+import bisq.rest_api.RestApiResourceConfig;
+import bisq.rest_api.RestApiService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
@@ -59,7 +61,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -101,6 +102,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
+    private final RestApiService restApiService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -219,25 +221,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 favouriteMarketsService,
                 dontShowAgainService,
                 webcamAppService);
-    }
 
-    private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
-        try {
-            switch (OS.getOS()) {
-                case LINUX:
-                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
-                case MAC_OS:
-                    return Optional.of(new OsxNotificationService());
-                case WINDOWS:
-                    return Optional.of(new AwtNotificationService());
-                default:
-                case ANDROID:
-                    return Optional.empty();
-            }
-        } catch (Exception e) {
-            log.warn("Could not create SystemNotificationDelegate for {}", OS.getOsName());
-            return Optional.empty();
-        }
+        var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
+        var restApiResourceConfig = new RestApiResourceConfig(restApiConfig, networkService, userService, bondedRolesService);
+        restApiService = new RestApiService(restApiConfig, restApiResourceConfig);
     }
 
     @Override
@@ -287,6 +274,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> favouriteMarketsService.initialize())
                 .thenCompose(result -> dontShowAgainService.initialize())
                 .thenCompose(result -> webcamAppService.initialize())
+                .thenCompose(result -> restApiService.initialize())
                 .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {
@@ -313,7 +301,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         // We shut down services in opposite order as they are initialized
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
-        return supplyAsync(() -> webcamAppService.shutdown().exceptionally(this::logError)
+        return supplyAsync(() -> restApiService.shutdown().exceptionally(this::logError)
+                .thenCompose(result -> webcamAppService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> dontShowAgainService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> favouriteMarketsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> alertNotificationsService.shutdown().exceptionally(this::logError))
@@ -352,6 +341,26 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                     return false;
                 })
                 .join());
+    }
+
+
+    private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
+        try {
+            switch (OS.getOS()) {
+                case LINUX:
+                    return Optional.of(new LinuxNotificationService(config.getBaseDir(), settingsService));
+                case MAC_OS:
+                    return Optional.of(new OsxNotificationService());
+                case WINDOWS:
+                    return Optional.of(new AwtNotificationService());
+                default:
+                case ANDROID:
+                    return Optional.empty();
+            }
+        } catch (Exception e) {
+            log.warn("Could not create SystemNotificationDelegate for {}", OS.getOsName());
+            return Optional.empty();
+        }
     }
 
     private boolean logError(Throwable throwable) {

@@ -1,9 +1,7 @@
-package bisq.rest_api_node;
+package bisq.rest_api;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.network.NetworkService;
-import bisq.rest_api.BaseRestApiResourceConfig;
-import bisq.rest_api.RestApiService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentityRestApi;
 import lombok.extern.slf4j.Slf4j;
