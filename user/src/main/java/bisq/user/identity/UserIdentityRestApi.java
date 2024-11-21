@@ -19,25 +19,26 @@ package bisq.user.identity;
 
 import bisq.common.rest_api.error.RestApiException;
 import bisq.security.DigestUtil;
-import bisq.user.profile.UserProfile;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Path("/user-identity")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -63,10 +64,15 @@ public class UserIdentityRestApi {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Prepared Data created successfully"),
+    })
     @GET
     @Path("prepared-data")
-    public PreparedData getPreparedData() {
-        return userIdentityService.getPreparedData();
+    public Response createPreparedData() {
+        return Response.status(Response.Status.CREATED)
+                .entity(userIdentityService.createPreparedData())
+                .build();
     }
 
 
@@ -89,10 +95,15 @@ public class UserIdentityRestApi {
     )
     @GET
     @Path("{id}")
-    public UserIdentity getUserIdentity(@PathParam("id") String id) {
-        return userIdentityService.findUserIdentity(id)
-                .orElseThrow(() -> new RestApiException(Response.Status.NOT_FOUND,
-                        "Could not find user identity for id " + id));
+    public Response getUserIdentity(@PathParam("id") String id) {
+        Optional<UserIdentity> userIdentity = userIdentityService.findUserIdentity(id);
+        if (userIdentity.isEmpty()) {
+            throw new RestApiException(Response.Status.NOT_FOUND,
+                    "Could not find user identity for id " + id);
+        }
+        return Response.status(Response.Status.OK)
+                .entity(userIdentity.get())
+                .build();
     }
 
 
@@ -112,8 +123,11 @@ public class UserIdentityRestApi {
     )
     @GET
     @Path("/ids")
-    public List<String> getUserIdentityIds() {
-        return userIdentityService.getUserIdentities().stream().map(UserIdentity::getId).collect(Collectors.toList());
+    public Response getUserIdentityIds() {
+        List<String> list = userIdentityService.getUserIdentities().stream().map(UserIdentity::getId).collect(Collectors.toList());
+        return Response.status(Response.Status.OK)
+                .entity(list)
+                .build();
     }
 
 
@@ -133,12 +147,14 @@ public class UserIdentityRestApi {
     )
     @GET
     @Path("/selected/user-profile")
-    public UserProfile getSelectedUserProfile() {
+    public Response getSelectedUserProfile() {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {
             throw new RestApiException(Response.Status.NOT_FOUND, "Could not find a selected user identity");
         }
-        return selectedUserIdentity.getUserProfile();
+        return Response.status(Response.Status.OK)
+                .entity(selectedUserIdentity.getUserProfile())
+                .build();
     }
 
     /**
@@ -154,10 +170,12 @@ public class UserIdentityRestApi {
             description = "Creates a new user identity and publishes the associated user profile.",
             requestBody = @RequestBody(
                     description = "Request payload containing user nickname, terms, statement, and prepared data.",
-                    content = @Content(schema = @Schema(implementation = CreateUserIdentityRequest.class))
+                    content = @Content(schema = @Schema(implementation = CreateUserIdentityRequest.class,
+                            example = "{ \"nickName\": \"satoshi\", \"preparedData\": { \"keyPair\": { \"privateKey\": \"MIGNAgEAMBAGByqGSM49AgEGBSuBBAAKBHYwdAIBAQQgky6PNO163DColHrGmSNMgY93amwpAO8ZA8/Pb+Xl5magBwYFK4EEAAqhRANCAARyZim9kPgZixR2+ALUs72fO2zzSkeV89w4oQpkRUct5ob4yHRIIwwrggjoCGmNUWqX/pNA18R46vNYTp8NWuSu\", \"publicKey\": \"MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEcmYpvZD4GYsUdvgC1LO9nzts80pHlfPcOKEKZEVHLeaG+Mh0SCMMK4II6AhpjVFql/6TQNfEeOrzWE6fDVrkrg==\" }, \"id\": \"b0edc477ec967379867ae44b1e030fa4f8e68327\", \"nym\": \"Ravenously-Poignant-Coordinate-695\", \"proofOfWork\": { \"payload\": [-80, -19, -60, 119, -20, -106, 115, 121, -122, 122, -28, 75, 30, 3, 15, -92, -8, -26, -125, 39], \"counter\": 93211, \"difficulty\": 65536.0, \"solution\": [0, 0, 0, 0, 0, 1, 108, 27], \"duration\": 19 } } }"
+                    ))
             ),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "User identity created successfully",
+                    @ApiResponse(responseCode = "201", description = "User identity created successfully",
                             content = @Content(schema = @Schema(example = "{ \"userProfileId\": \"d22d7b62ef442b5df03378f134bc8f54a2171cba\" }"))),
                     @ApiResponse(responseCode = "400", description = "Invalid input"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -165,9 +183,9 @@ public class UserIdentityRestApi {
     )
     @POST
     @Path("user-identities")
-    public Map<String, String> createUserIdentityAndPublishUserProfile2(CreateUserIdentityRequest request) {
+    public Response createUserIdentityAndPublishUserProfile(CreateUserIdentityRequest request) {
         try {
-            PreparedData preparedData = new ObjectMapper().readValue(request.preparedDataJson, PreparedData.class);
+            PreparedData preparedData = request.preparedData;
             KeyPair keyPair = preparedData.getKeyPair();
             byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
             int avatarVersion = 0;
@@ -178,7 +196,9 @@ public class UserIdentityRestApi {
                     avatarVersion,
                     request.terms,
                     request.statement).get();
-            return Collections.singletonMap("userProfileId", userIdentity.getId());
+            return Response.status(Response.Status.CREATED)
+                    .entity(new UserProfileResponse(userIdentity.getId()))
+                    .build();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore interrupt status
             throw new RestApiException(e);
@@ -194,7 +214,7 @@ public class UserIdentityRestApi {
     @Data
     @Schema(description = "Request payload for creating a new user identity.")
     public static class CreateUserIdentityRequest {
-        @Schema(description = "Nickname for the user", example = "JohnDoe", required = true)
+        @Schema(description = "Nickname for the user", example = "Satoshi", required = true)
         private String nickName;
 
         @Schema(description = "User terms and conditions", example = "I guarantee to complete the trade in 24 hours")
@@ -203,8 +223,17 @@ public class UserIdentityRestApi {
         @Schema(description = "User statement", example = "I am Satoshi")
         private String statement = "";
 
-        @Schema(description = "Prepared data in JSON format", required = true,
-                example = "{ \"keyPair\": {}, \"proofOfWork\": {} }")
-        private String preparedDataJson;
+        @Schema(description = "Prepared data as json object", required = true)
+        private PreparedData preparedData;
+    }
+
+    @Getter
+    @Schema(name = "UserProfileResponse")
+    public static class UserProfileResponse {
+        private final String userProfileId;
+
+        public UserProfileResponse(String userProfileId) {
+            this.userProfileId = userProfileId;
+        }
     }
 }

@@ -279,7 +279,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
      *
      * @return PreparedData object containing key pair, public key hash, ID, Nym, and Proof of Work.
      */
-    public PreparedData getPreparedData() {
+    public PreparedData createPreparedData() {
         KeyPair keyPair = securityService.getKeyBundleService().generateKeyPair();
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         String id = Hex.encode(pubKeyHash);
