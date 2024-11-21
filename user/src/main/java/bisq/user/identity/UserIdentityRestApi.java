@@ -19,12 +19,12 @@ package bisq.user.identity;
 
 import bisq.common.rest_api.error.RestApiException;
 import bisq.security.DigestUtil;
+import bisq.user.profile.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -36,53 +36,46 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Path("/user-identity")
+@Path("/user-identities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "User Identity API")
 public class UserIdentityRestApi {
+    private static final Set<String> MAIN_CURRENCIES = Set.of("usd", "eur", "gbp", "cad", "aud", "rub", "cny", "inr", "ngn");
+
     private final UserIdentityService userIdentityService;
 
     public UserIdentityRestApi(UserIdentityService userIdentityService) {
         this.userIdentityService = userIdentityService;
     }
 
-    /**
-     * Generates prepared data for a new user identity.
-     *
-     * @return PreparedData object containing key pair, public key hash, ID, Nym, and Proof of Work.
-     */
+    @GET
+    @Path("/prepared-data")
     @Operation(
             summary = "Generate Prepared Data",
-            description = "Generates prepared data including a key pair, public key hash, Nym, and proof of work for a new user identity.",
+            description = "Generates a key pair, public key hash, Nym, and proof of work for a new user identity.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Prepared data generated successfully",
+                    @ApiResponse(responseCode = "201", description = "Prepared data generated successfully",
                             content = @Content(schema = @Schema(implementation = PreparedData.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Prepared Data created successfully"),
-    })
-    @GET
-    @Path("prepared-data")
     public Response createPreparedData() {
-        return Response.status(Response.Status.CREATED)
-                .entity(userIdentityService.createPreparedData())
-                .build();
+        try {
+            PreparedData preparedData = userIdentityService.createPreparedData();
+            return buildResponse(Response.Status.CREATED, preparedData);
+        } catch (Exception e) {
+            log.error("Error generating prepared data", e);
+            throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "Could not generate prepared data.");
+        }
     }
 
-
-    /**
-     * Retrieves the user identity for the specified profile ID.
-     *
-     * @param id the unique ID of the user identity. This is the same as the user profile ID and is the hash of the public key in Hex encoding.
-     * @return UserIdentity object if found.
-     * @throws RestApiException with HTTP 404 status if the user identity is not found.
-     */
+    @GET
+    @Path("/{id}")
     @Operation(
             summary = "Get User Identity",
             description = "Retrieves the user identity for the specified ID.",
@@ -93,86 +86,62 @@ public class UserIdentityRestApi {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @GET
-    @Path("{id}")
     public Response getUserIdentity(@PathParam("id") String id) {
         Optional<UserIdentity> userIdentity = userIdentityService.findUserIdentity(id);
         if (userIdentity.isEmpty()) {
             throw new RestApiException(Response.Status.NOT_FOUND,
-                    "Could not find user identity for id " + id);
+                    "Could not find user identity for ID: " + id);
         }
-        return Response.status(Response.Status.OK)
-                .entity(userIdentity.get())
-                .build();
+        return buildResponse(Response.Status.OK, userIdentity.get());
     }
 
-
-    /**
-     * Retrieves all user identity IDs.
-     *
-     * @return List of user identity IDs.
-     */
-    @Operation(
-            summary = "Get User Identity",
-            description = "Retrieves the user identity for the specified profile ID.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "User identity IDs retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = UserIdentity.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error")
-            }
-    )
     @GET
     @Path("/ids")
-    public Response getUserIdentityIds() {
-        List<String> list = userIdentityService.getUserIdentities().stream().map(UserIdentity::getId).collect(Collectors.toList());
-        return Response.status(Response.Status.OK)
-                .entity(list)
-                .build();
-    }
-
-
-    /**
-     * Retrieves all user identity IDs.
-     *
-     * @return List of user identity IDs.
-     */
     @Operation(
-            summary = "Get User Identity",
-            description = "Retrieves the user identity for the specified profile ID.",
+            summary = "Get All User Identity IDs",
+            description = "Retrieves a list of all user identity IDs.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "User identity IDs retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = UserIdentity.class))),
+                            content = @Content(schema = @Schema(type = "array", implementation = String.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
+    public Response getUserIdentityIds() {
+        List<String> ids = userIdentityService.getUserIdentities()
+                .stream()
+                .map(UserIdentity::getId)
+                .collect(Collectors.toList());
+        return buildResponse(Response.Status.OK, ids);
+    }
+
     @GET
-    @Path("/selected/user-profile")
+    @Path("/selected")
+    @Operation(
+            summary = "Get Selected User Profile",
+            description = "Retrieves the selected user profile.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Selected user profile retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = UserProfile.class))),
+                    @ApiResponse(responseCode = "404", description = "No selected user identity found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
     public Response getSelectedUserProfile() {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {
-            throw new RestApiException(Response.Status.NOT_FOUND, "Could not find a selected user identity");
+            throw new RestApiException(Response.Status.NOT_FOUND, "No selected user identity found.");
         }
-        return Response.status(Response.Status.OK)
-                .entity(selectedUserIdentity.getUserProfile())
-                .build();
+        UserProfile userProfile = selectedUserIdentity.getUserProfile();
+        return buildResponse(Response.Status.OK, userProfile);
     }
 
-    /**
-     * Creates a new user identity and publishes the user profile.
-     *
-     * @param request the CreateUserIdentityRequest object containing user details and prepared data.
-     * @return Map with the created user profile ID.
-     * @throws RestApiException with HTTP 400 if the input is invalid.
-     * @throws RestApiException with HTTP 500 if an internal error occurs.
-     */
+    @POST
     @Operation(
             summary = "Create and Publish User Identity",
             description = "Creates a new user identity and publishes the associated user profile.",
             requestBody = @RequestBody(
                     description = "Request payload containing user nickname, terms, statement, and prepared data.",
-                    content = @Content(schema = @Schema(implementation = CreateUserIdentityRequest.class,
-                            example = "{ \"nickName\": \"satoshi\", \"preparedData\": { \"keyPair\": { \"privateKey\": \"MIGNAgEAMBAGByqGSM49AgEGBSuBBAAKBHYwdAIBAQQgky6PNO163DColHrGmSNMgY93amwpAO8ZA8/Pb+Xl5magBwYFK4EEAAqhRANCAARyZim9kPgZixR2+ALUs72fO2zzSkeV89w4oQpkRUct5ob4yHRIIwwrggjoCGmNUWqX/pNA18R46vNYTp8NWuSu\", \"publicKey\": \"MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEcmYpvZD4GYsUdvgC1LO9nzts80pHlfPcOKEKZEVHLeaG+Mh0SCMMK4II6AhpjVFql/6TQNfEeOrzWE6fDVrkrg==\" }, \"id\": \"b0edc477ec967379867ae44b1e030fa4f8e68327\", \"nym\": \"Ravenously-Poignant-Coordinate-695\", \"proofOfWork\": { \"payload\": [-80, -19, -60, 119, -20, -106, 115, 121, -122, 122, -28, 75, 30, 3, 15, -92, -8, -26, -125, 39], \"counter\": 93211, \"difficulty\": 65536.0, \"solution\": [0, 0, 0, 0, 0, 1, 108, 27], \"duration\": 19 } } }"
-                    ))
+                    content = @Content(schema = @Schema(implementation = CreateUserIdentityRequest.class))
             ),
             responses = {
                     @ApiResponse(responseCode = "201", description = "User identity created successfully",
@@ -181,8 +150,6 @@ public class UserIdentityRestApi {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @POST
-    @Path("user-identities")
     public Response createUserIdentityAndPublishUserProfile(CreateUserIdentityRequest request) {
         try {
             PreparedData preparedData = request.preparedData;
@@ -196,21 +163,22 @@ public class UserIdentityRestApi {
                     avatarVersion,
                     request.terms,
                     request.statement).get();
-            return Response.status(Response.Status.CREATED)
-                    .entity(new UserProfileResponse(userIdentity.getId()))
-                    .build();
+            return buildResponse(Response.Status.CREATED, new UserProfileResponse(userIdentity.getId()));
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore interrupt status
-            throw new RestApiException(e);
+            Thread.currentThread().interrupt();
+            throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "Thread was interrupted.");
+        } catch (IllegalArgumentException e) {
+            throw new RestApiException(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage());
         } catch (Exception e) {
-            throw new RestApiException(e);
+            log.error("Error creating user identity", e);
+            throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "An unexpected error occurred.");
         }
     }
 
+    private Response buildResponse(Response.Status status, Object entity) {
+        return Response.status(status).entity(entity).build();
+    }
 
-    /**
-     * Request DTO for creating a new user identity.
-     */
     @Data
     @Schema(description = "Request payload for creating a new user identity.")
     public static class CreateUserIdentityRequest {
@@ -223,12 +191,12 @@ public class UserIdentityRestApi {
         @Schema(description = "User statement", example = "I am Satoshi")
         private String statement = "";
 
-        @Schema(description = "Prepared data as json object", required = true)
+        @Schema(description = "Prepared data as JSON object", required = true)
         private PreparedData preparedData;
     }
 
     @Getter
-    @Schema(name = "UserProfileResponse")
+    @Schema(name = "UserProfileResponse", description = "Response payload containing the user profile ID.")
     public static class UserProfileResponse {
         private final String userProfileId;
 
