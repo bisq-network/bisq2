@@ -31,9 +31,15 @@ import java.security.KeyPair;
 public final class PreparedData {
     @JsonSerialize(using = JsonSerialization.KeyPair.Serializer.class)
     @JsonDeserialize(using = JsonSerialization.KeyPair.Deserializer.class)
+    @Schema(description = "Key pair",
+            example = "{ \"privateKey\": \"MIGNAgEAMBAGByqGSM49AgEGBSuBBAAKBHYwdAIBAQQgky6PNO163DColHrGmSNMgY93amwpAO8ZA8/Pb+Xl5magBwYFK4EEAAqhRANCAARyZim9kPgZixR2+ALUs72fO2zzSkeV89w4oQpkRUct5ob4yHRIIwwrggjoCGmNUWqX/pNA18R46vNYTp8NWuSu\", \"publicKey\": \"MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEcmYpvZD4GYsUdvgC1LO9nzts80pHlfPcOKEKZEVHLeaG+Mh0SCMMK4II6AhpjVFql/6TQNfEeOrzWE6fDVrkrg==\" }")
     private KeyPair keyPair;
+    @Schema(description = "ID", example = "b0edc477ec967379867ae44b1e030fa4f8e68327")
     private String id;
+    @Schema(description = "Nym", example = "Ravenously-Poignant-Coordinate-695")
     private String nym;
+    @Schema(description = "User statement",
+            example = "{ \"payload\": \"[-80, -19, -60, 119, -20, -106, 115, 121, -122, 122, -28, 75, 30, 3, 15, -92, -8, -26, -125, 39]\", \"counter\": 93211, \"difficulty\": 65536.0, \"solution\": [0, 0, 0, 0, 0, 1, 108, 27], \"duration\": 19 }")
     private ProofOfWork proofOfWork;
 
     public static PreparedData from(KeyPair keyPair, String id, String nym, ProofOfWork proofOfWork) {
