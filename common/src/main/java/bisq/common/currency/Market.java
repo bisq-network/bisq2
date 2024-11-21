@@ -20,6 +20,7 @@ package bisq.common.currency;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
 import bisq.common.validation.NetworkDataValidation;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -84,12 +85,14 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
                 proto.getQuoteCurrencyName());
     }
 
+    @JsonIgnore
     public String getQuoteCurrencyDisplayName() {
         return FiatCurrency.isFiat(quoteCurrencyCode)
                 ? FiatCurrencyRepository.getDisplayName(quoteCurrencyCode).orElse(quoteCurrencyName)
                 : quoteCurrencyName;
     }
 
+    @JsonIgnore
     public String getBaseCurrencyDisplayName() {
         return FiatCurrency.isFiat(baseCurrencyCode)
                 ? FiatCurrencyRepository.getDisplayName(baseCurrencyCode).orElse(baseCurrencyName)
@@ -97,21 +100,26 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     }
 
     //todo (refactor, low prio) make static utils
+    @JsonIgnore
     public String getFiatCurrencyName() {
         return isFiat() ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
     }
 
+    @JsonIgnore
     public boolean isFiat() {
         return FiatCurrency.isFiat(quoteCurrencyCode);
     }
 
+    @JsonIgnore
     public String getMarketCodes() {
         return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
     }
+
     public static String createBitcoinFiatMarketCodes(String baseCurrencyCode, String quoteCurrencyCode) {
         return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
     }
 
+    @JsonIgnore
     public String getMarketDisplayName() {
         return getBaseCurrencyDisplayName() + QUOTE_SEPARATOR + getQuoteCurrencyDisplayName();
     }

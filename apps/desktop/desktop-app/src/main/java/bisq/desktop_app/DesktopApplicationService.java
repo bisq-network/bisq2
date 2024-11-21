@@ -223,7 +223,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 webcamAppService);
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
-        var restApiResourceConfig = new RestApiResourceConfig(restApiConfig, networkService, userService, bondedRolesService);
+        var restApiResourceConfig = new RestApiResourceConfig(restApiConfig, networkService, userService, bondedRolesService, chatService);
         restApiService = new RestApiService(restApiConfig, restApiResourceConfig);
     }
 

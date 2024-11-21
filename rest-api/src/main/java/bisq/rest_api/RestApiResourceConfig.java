@@ -1,6 +1,8 @@
 package bisq.rest_api;
 
 import bisq.bonded_roles.BondedRolesService;
+import bisq.chat.ChatService;
+import bisq.chat.bisqeasy.offerbook.OfferbookRestApi;
 import bisq.network.NetworkService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentityRestApi;
@@ -12,7 +14,8 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
     public RestApiResourceConfig(RestApiService.Config config,
                                  NetworkService networkService,
                                  UserService userService,
-                                 BondedRolesService bondedRolesService) {
+                                 BondedRolesService bondedRolesService,
+                                 ChatService chatService) {
         super(config);
 
         //todo apply filtering with whiteListEndPoints/whiteListEndPoints
@@ -21,11 +24,13 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         // As we want to pass the dependencies in the constructor, so we need the hack
         // with AbstractBinder to register resources as classes for Swagger
         register(UserIdentityRestApi.class);
+        register(OfferbookRestApi.class);
 
         register(new AbstractBinder() {
             @Override
             protected void configure() {
                 bind(new UserIdentityRestApi(userService.getUserIdentityService())).to(UserIdentityRestApi.class);
+                bind(new OfferbookRestApi(chatService.getBisqEasyOfferbookChannelService())).to(OfferbookRestApi.class);
             }
         });
     }
