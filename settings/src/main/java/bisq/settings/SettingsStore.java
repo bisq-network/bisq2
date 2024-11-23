@@ -43,6 +43,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Market> selectedMarket = new Observable<>();
     @Deprecated(since = "2.1.1")
     private final Observable<Long> minRequiredReputationScore = new Observable<>();
+    @Deprecated(since = "2.1.2")
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>();
@@ -64,6 +65,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<String> backupLocation = new Observable<>();
     final Observable<Boolean> showMyOffersOnly = new Observable<>();
     final Observable<Double> totalMaxBackupSizeInMB = new Observable<>();
+    final Observable<String> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -90,7 +92,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 PlatformUtils.getHomeDirectory(),
                 false,
-                BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB);
+                BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB,
+                "");
     }
 
     public SettingsStore(Cookie cookie,
@@ -117,7 +120,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean showMarketSelectionListCollapsed,
                          String backupLocation,
                          boolean showMyOffersOnly,
-                         double totalMaxBackupSizeInMB) {
+                         double totalMaxBackupSizeInMB,
+                         String bisqEasyOfferbookMessageTypeFilter) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -143,6 +147,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.backupLocation.set(backupLocation);
         this.showMyOffersOnly.set(showMyOffersOnly);
         this.totalMaxBackupSizeInMB.set(totalMaxBackupSizeInMB);
+        this.bisqEasyOfferbookMessageTypeFilter.set(bisqEasyOfferbookMessageTypeFilter);
     }
 
     @Override
@@ -172,7 +177,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get())
                 .setBackupLocation(backupLocation.get())
                 .setShowMyOffersOnly(showMyOffersOnly.get())
-                .setTotalMaxBackupSizeInMB(totalMaxBackupSizeInMB.get());
+                .setTotalMaxBackupSizeInMB(totalMaxBackupSizeInMB.get())
+                .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get());
     }
 
     @Override
@@ -218,7 +224,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getShowMarketSelectionListCollapsed(),
                 proto.getBackupLocation(),
                 proto.getShowMyOffersOnly(),
-                totalMaxBackupSizeInMB);
+                totalMaxBackupSizeInMB,
+                proto.getBisqEasyOfferbookMessageTypeFilter());
     }
 
     @Override
@@ -258,7 +265,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 showMarketSelectionListCollapsed.get(),
                 backupLocation.get(),
                 showMyOffersOnly.get(),
-                totalMaxBackupSizeInMB.get());
+                totalMaxBackupSizeInMB.get(),
+                bisqEasyOfferbookMessageTypeFilter.get());
     }
 
     @Override
@@ -289,6 +297,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             backupLocation.set(persisted.backupLocation.get());
             showMyOffersOnly.set(persisted.showMyOffersOnly.get());
             totalMaxBackupSizeInMB.set(persisted.totalMaxBackupSizeInMB.get());
+            bisqEasyOfferbookMessageTypeFilter.set(persisted.bisqEasyOfferbookMessageTypeFilter.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }
