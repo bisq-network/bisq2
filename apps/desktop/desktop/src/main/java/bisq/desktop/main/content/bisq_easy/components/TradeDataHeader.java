@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.components;
 
-import bisq.bisq_easy.BisqEasyUtil;
+import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Triple;
 import bisq.common.monetary.Coin;
@@ -95,7 +95,7 @@ public class TradeDataHeader {
                 if (channel == null) {
                     return;
                 }
-                Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyUtil.findTradeFromChannel(userIdentityService,
+                Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService,
                         bisqEasyTradeService,
                         channel);
                 if (optionalBisqEasyTrade.isEmpty()) {

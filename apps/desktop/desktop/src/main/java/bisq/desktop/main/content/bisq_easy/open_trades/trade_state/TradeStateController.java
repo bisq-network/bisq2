@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.bisq_easy.BisqEasyUtil;
+import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
@@ -109,7 +109,7 @@ public class TradeStateController implements Controller {
                 return;
             }
 
-            Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyUtil.findTradeFromChannel(userIdentityService, bisqEasyTradeService, channel);
+            Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService, bisqEasyTradeService, channel);
             if (optionalBisqEasyTrade.isEmpty()) {
                 model.resetAll();
                 return;
@@ -165,10 +165,10 @@ public class TradeStateController implements Controller {
 
             model.getBuyerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
-                            BisqEasyUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
+                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
             model.getSellerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            BisqEasyUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())));
+                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())));
         });
     }
 
@@ -221,7 +221,7 @@ public class TradeStateController implements Controller {
 
     void onViewTradeDetails() {
         BisqEasyOpenTradeChannel channel = model.getChannel().get();
-        Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyUtil.findTradeFromChannel(userIdentityService,
+        Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService,
                 bisqEasyTradeService,
                 channel);
         if (optionalBisqEasyTrade.isEmpty()) {

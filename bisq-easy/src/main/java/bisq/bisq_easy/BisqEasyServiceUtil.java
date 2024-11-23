@@ -49,7 +49,7 @@ import bisq.user.profile.UserProfileService;
 import java.util.List;
 import java.util.Optional;
 
-public class BisqEasyUtil {
+public class BisqEasyServiceUtil {
 
     public static boolean authorNotBannedOrIgnored(UserProfileService userProfileService,
                                                    BannedUserService bannedUserService,
