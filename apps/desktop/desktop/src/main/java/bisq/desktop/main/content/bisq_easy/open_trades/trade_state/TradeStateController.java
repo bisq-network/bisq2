@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.bisq_easy.BisqEasyUtil;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
@@ -162,10 +163,10 @@ public class TradeStateController implements Controller {
 
             model.getBuyerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
+                            BisqEasyUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
             model.getSellerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())));
+                            BisqEasyUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())));
         });
     }
 

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.bisq_easy.BisqEasyUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -270,7 +271,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
             Market market = offer.getMarket();
             String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-            String priceSpecAsString = BisqEasyServiceUtil.getFormattedPriceSpec(priceSpec);
+            String priceSpecAsString = BisqEasyUtil.getFormattedPriceSpec(priceSpec);
             return Optional.of(new Pair<>(quoteAmountAsString, priceSpecAsString));
         }
         return Optional.empty();

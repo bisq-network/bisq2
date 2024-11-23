@@ -18,13 +18,19 @@
 package bisq.bisq_easy;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.i18n.Res;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
+import bisq.presentation.formatters.PercentageFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 
 import java.util.Optional;
 
-public class BisqEasyOfferbookUtil {
+public class BisqEasyUtil {
 
     public static boolean authorNotBannedOrIgnored(UserProfileService userProfileService,
                                                    BannedUserService bannedUserService,
@@ -47,5 +53,30 @@ public class BisqEasyOfferbookUtil {
             return false;
         }
         return true;
+    }
+
+    public static String getFormattedPriceSpec(PriceSpec priceSpec) {
+        return getFormattedPriceSpec(priceSpec, false);
+    }
+
+    public static String getFormattedPriceSpec(PriceSpec priceSpec, boolean abbreviated) {
+        String priceInfo;
+        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
+            String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
+            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
+        } else if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
+            String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
+            priceInfo = Res.get(floatPriceSpec.getPercentage() >= 0
+                    ? abbreviated
+                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
+                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.above"
+                    : abbreviated
+                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus"
+                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.below"
+                    , percent);
+        } else {
+            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
+        }
+        return priceInfo;
     }
 }
