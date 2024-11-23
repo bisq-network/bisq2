@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
+import bisq.bisq_easy.BisqEasyUtil;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
@@ -30,7 +31,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
@@ -409,6 +409,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
 
     private boolean hasTradeForChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         return chatChannel instanceof BisqEasyOpenTradeChannel channel &&
-                BisqEasyServiceUtil.findTradeFromChannel(userIdentityService, bisqEasyTradeService, channel).isPresent();
+                BisqEasyUtil.findTradeFromChannel(userIdentityService, bisqEasyTradeService, channel).isPresent();
     }
 }

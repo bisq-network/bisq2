@@ -42,7 +42,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -318,7 +317,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
         String btcPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
         String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        return BisqEasyServiceUtil.createBasicOfferBookMessage(marketPriceService,
+        return BisqEasyUtil.createBasicOfferBookMessage(marketPriceService,
                 bisqEasyOffer.getMarket(),
                 btcPaymentMethods,
                 fiatPaymentMethods,
