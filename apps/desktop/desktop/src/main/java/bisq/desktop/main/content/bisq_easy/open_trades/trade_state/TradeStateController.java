@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.BisqEasyUtil;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
@@ -30,13 +31,12 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
-import bisq.desktop.common.view.Navigation;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.DontShowAgainService;
@@ -44,6 +44,7 @@ import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -68,6 +69,7 @@ public class TradeStateController implements Controller {
     private final MediationRequestService mediationRequestService;
     private final DontShowAgainService dontShowAgainService;
     private final LeavePrivateChatManager leavePrivateChatManager;
+    private final UserIdentityService userIdentityService;
     private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin;
     private Subscription channelPin, hasBuyerAcceptedPriceSpecPin;
 
@@ -79,6 +81,7 @@ public class TradeStateController implements Controller {
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
+        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
 
         tradePhaseBox = new TradePhaseBox(serviceProvider);
         tradeDataHeader = new TradeDataHeader(serviceProvider, Res.get("bisqEasy.tradeState.header.peer").toUpperCase());
@@ -107,7 +110,7 @@ public class TradeStateController implements Controller {
                 return;
             }
 
-            Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(serviceProvider, channel);
+            Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService, bisqEasyTradeService, channel);
             if (optionalBisqEasyTrade.isEmpty()) {
                 model.resetAll();
                 return;
@@ -132,15 +135,15 @@ public class TradeStateController implements Controller {
                     }));
 
             errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
-                if (errorMessage != null) {
-                    String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
-                    if (dontShowAgainService.showAgain(key)) {
-                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                        errorMessage,
-                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
-                                .dontShowAgainId(key)
-                                .show());
-                    }
+                        if (errorMessage != null) {
+                            String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
+                            if (dontShowAgainService.showAgain(key)) {
+                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
+                                                errorMessage,
+                                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
+                                        .dontShowAgainId(key)
+                                        .show());
+                            }
                         }
                     }
             );
@@ -219,7 +222,8 @@ public class TradeStateController implements Controller {
 
     void onViewTradeDetails() {
         BisqEasyOpenTradeChannel channel = model.getChannel().get();
-        Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(serviceProvider,
+        Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService,
+                bisqEasyTradeService,
                 channel);
         if (optionalBisqEasyTrade.isEmpty()) {
             model.resetAll();
@@ -309,14 +313,14 @@ public class TradeStateController implements Controller {
                 break;
             case TAKER_SENT_TAKE_OFFER_REQUEST:
 
-            // Seller
+                // Seller
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
             case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            // Buyer
+                // Buyer
             case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
             case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:

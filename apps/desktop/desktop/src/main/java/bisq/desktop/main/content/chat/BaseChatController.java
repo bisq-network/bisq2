@@ -35,6 +35,7 @@ import bisq.desktop.main.content.chat.message_container.ChatMessageContainerCont
 import bisq.desktop.main.content.chat.message_container.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -59,6 +60,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final UserProfileService userProfileService;
     protected final ChannelSidebar channelSidebar;
     protected final ChatMessageContainerController chatMessageContainerController;
+    private final BisqEasyTradeService bisqEasyTradeService;
     protected Subscription searchTextPin;
     protected Pin selectedChannelPin, selectedNotificationSettingPin;
 
@@ -72,6 +74,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         selectionService = chatService.getChatChannelSelectionService(chatChannelDomain);
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
+        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
 
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider,
                 chatChannelDomain,

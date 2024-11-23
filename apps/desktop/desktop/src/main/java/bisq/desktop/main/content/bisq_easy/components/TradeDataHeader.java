@@ -28,6 +28,8 @@ import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -70,11 +72,13 @@ public class TradeDataHeader {
         private final View view;
         private final Model model;
         private final ReputationService reputationService;
-        private final ServiceProvider serviceProvider;
+        private final UserIdentityService userIdentityService;
+        private final BisqEasyTradeService bisqEasyTradeService;
         private Subscription channelPin;
 
         private Controller(ServiceProvider serviceProvider, String peerDescription) {
-            this.serviceProvider = serviceProvider;
+            userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+            bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             reputationService = serviceProvider.getUserService().getReputationService();
 
             model = new Model(peerDescription);
@@ -91,7 +95,9 @@ public class TradeDataHeader {
                 if (channel == null) {
                     return;
                 }
-                Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(serviceProvider, channel);
+                Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService,
+                        bisqEasyTradeService,
+                        channel);
                 if (optionalBisqEasyTrade.isEmpty()) {
                     return;
                 }

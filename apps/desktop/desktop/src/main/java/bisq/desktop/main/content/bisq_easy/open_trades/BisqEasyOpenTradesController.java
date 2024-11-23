@@ -409,6 +409,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
 
     private boolean hasTradeForChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         return chatChannel instanceof BisqEasyOpenTradeChannel channel &&
-                BisqEasyServiceUtil.findTradeFromChannel(serviceProvider, channel).isPresent();
+                BisqEasyServiceUtil.findTradeFromChannel(userIdentityService, bisqEasyTradeService, channel).isPresent();
     }
 }
