@@ -26,8 +26,6 @@ dependencies {
 
     implementation("network:network:$version")
     implementation("network:network-identity:$version")
-    implementation("bitcoind:core")
-    implementation("wallets:wallet")
 
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)

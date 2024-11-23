@@ -83,8 +83,7 @@ tasks.register("publishAll") {
             ":support:publishToMavenLocal",
             ":trade:publishToMavenLocal",
             ":user:publishToMavenLocal",
-//            ":wallets:publishToMavenLocal",
-//            ":wallets:bitcoind:publishToMavenLocal",
+            ":bisq-easy:publishToMavenLocal",
         ).forEach {
             exec {
                 println("Executing Publish To Maven Local: $it")
