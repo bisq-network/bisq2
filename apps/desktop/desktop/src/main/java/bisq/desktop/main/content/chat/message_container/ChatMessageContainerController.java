@@ -39,6 +39,7 @@ import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
+import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -263,10 +264,11 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
             String dontShowAgainId = "sendMsgOfferOnlyWarn";
-            if (settingsService.getOffersOnly().get()) {
+            boolean hasShowOnlyOffersFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == ChatMessageType.OFFER;
+            if (hasShowOnlyOffersFilter) {
                 new Popup().information(Res.get("chat.message.send.offerOnly.warn"))
                         .actionButtonText(Res.get("confirmation.yes"))
-                        .onAction(() -> settingsService.getOffersOnly().set(false))
+                        .onAction(() -> settingsService.getBisqEasyOfferbookMessageTypeFilter().set(ChatMessageType.ALL))
                         .closeButtonText(Res.get("confirmation.no"))
                         .dontShowAgainId(dontShowAgainId)
                         .show();

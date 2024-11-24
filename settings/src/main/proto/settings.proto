@@ -38,6 +38,13 @@ enum ChatNotificationType {
   CHATNOTIFICATIONTYPE_OFF = 3;
 }
 
+enum ChatMessageType {
+  CHATMESSAGETYPE_UNSPECIFIED = 0;
+  CHATMESSAGETYPE_ALL = 1;
+  CHATMESSAGETYPE_OFFER = 2;
+  CHATMESSAGETYPE_TEXT = 3;
+}
+
 message SettingsStore {
   Cookie cookie = 1;
   map<string, bool> dontShowAgainMap = 2;
@@ -64,5 +71,5 @@ message SettingsStore {
   string backupLocation = 23;
   bool showMyOffersOnly = 24;
   double totalMaxBackupSizeInMB = 25;
-  string bisqEasyOfferbookMessageTypeFilter = 26;
+  ChatMessageType bisqEasyOfferbookMessageTypeFilter = 26;
 }

@@ -73,7 +73,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         log.info("initialize");
         // If used with FxBindings.bindBiDir we need to trigger persist call
         getIsTacAccepted().addObserver(value -> persist());
-        getOffersOnly().addObserver(value -> persist());
         getChatNotificationType().addObserver(value -> persist());
         getUseAnimations().addObserver(value -> persist());
         getPreventStandbyMode().addObserver(value -> persist());
@@ -96,6 +95,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
             BackupService.setTotalMaxBackupSize(ByteUnit.MB.toBytes(value));
             persist();
         });
+        getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist());
 
         isInitialized = true;
 
@@ -145,10 +145,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Boolean> getUseAnimations() {
         return persistableStore.useAnimations;
-    }
-
-    public Observable<Boolean> getOffersOnly() {
-        return persistableStore.offersOnly;
     }
 
     public Observable<Boolean> getTradeRulesConfirmed() {
@@ -221,6 +217,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Double> getTotalMaxBackupSizeInMB() {
         return persistableStore.totalMaxBackupSizeInMB;
+    }
+
+    public Observable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
+        return persistableStore.bisqEasyOfferbookMessageTypeFilter;
     }
 
 

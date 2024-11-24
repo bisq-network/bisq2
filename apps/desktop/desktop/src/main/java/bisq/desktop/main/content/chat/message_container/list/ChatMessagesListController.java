@@ -91,7 +91,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final BisqEasyService bisqEasyService;
     private final MarketPriceService marketPriceService;
     private final LeavePrivateChatManager leavePrivateChatManager;
-    private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
+    private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
 
@@ -125,7 +125,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     public void onActivate() {
         model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
 
-        offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> UIThread.run(this::applyPredicate));
+        bisqEasyOfferbookMessageTypeFilterPin = FxBindings.subscribe(settingsService.getBisqEasyOfferbookMessageTypeFilter(),
+                filter -> UIThread.run(this::applyPredicate));
 
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
@@ -154,8 +155,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     @Override
     public void onDeactivate() {
-        if (offerOnlySettingsPin != null) {
-            offerOnlySettingsPin.unbind();
+        if (bisqEasyOfferbookMessageTypeFilterPin != null) {
+            bisqEasyOfferbookMessageTypeFilterPin.unbind();
         }
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
@@ -599,7 +600,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     private void applyPredicate() {
-        boolean offerOnly = settingsService.getOffersOnly().get();
+        boolean showOnlyOffersFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == bisq.settings.ChatMessageType.OFFER;
         Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate = item -> {
             Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
             if (senderUserProfile.isEmpty()) {
@@ -612,7 +613,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
             boolean offerOnlyPredicate = true;
             if (item.getChatMessage() instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-                offerOnlyPredicate = !offerOnly || bisqEasyOfferbookMessage.hasBisqEasyOffer();
+                offerOnlyPredicate = !showOnlyOffersFilter || bisqEasyOfferbookMessage.hasBisqEasyOffer();
             }
             // We do not display the take offer message as it has no text and is used only for sending the offer
             // to the peer and signalling the take offer event.

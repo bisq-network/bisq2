@@ -65,7 +65,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<String> backupLocation = new Observable<>();
     final Observable<Boolean> showMyOffersOnly = new Observable<>();
     final Observable<Double> totalMaxBackupSizeInMB = new Observable<>();
-    final Observable<String> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
+    final Observable<ChatMessageType> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -93,7 +93,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 PlatformUtils.getHomeDirectory(),
                 false,
                 BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB,
-                "");
+                ChatMessageType.ALL);
     }
 
     public SettingsStore(Cookie cookie,
@@ -121,7 +121,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          String backupLocation,
                          boolean showMyOffersOnly,
                          double totalMaxBackupSizeInMB,
-                         String bisqEasyOfferbookMessageTypeFilter) {
+                         ChatMessageType bisqEasyOfferbookMessageTypeFilter) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -178,7 +178,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setBackupLocation(backupLocation.get())
                 .setShowMyOffersOnly(showMyOffersOnly.get())
                 .setTotalMaxBackupSizeInMB(totalMaxBackupSizeInMB.get())
-                .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get());
+                .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get().toProtoEnum());
     }
 
     @Override
@@ -225,7 +225,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getBackupLocation(),
                 proto.getShowMyOffersOnly(),
                 totalMaxBackupSizeInMB,
-                proto.getBisqEasyOfferbookMessageTypeFilter());
+                ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()));
     }
 
     @Override
