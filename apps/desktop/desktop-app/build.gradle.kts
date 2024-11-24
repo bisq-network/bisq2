@@ -55,6 +55,7 @@ dependencies {
     implementation("bisq:user")
     implementation("bisq:chat")
     implementation("bisq:support")
+    implementation("bisq:settings")
     implementation("bisq:presentation")
     implementation("bisq:bisq-easy")
     implementation("bisq:application")

@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy;
+package bisq.bisq_easy;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
-import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -39,28 +39,80 @@ import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import lombok.extern.slf4j.Slf4j;
+import bisq.user.profile.UserProfileService;
 
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j
 public class BisqEasyServiceUtil {
-    public static boolean isMaker(ServiceProvider serviceProvider, BisqEasyOffer bisqEasyOffer) {
-        return bisqEasyOffer.isMyOffer(serviceProvider.getUserService().getUserIdentityService().getMyUserProfileIds());
+
+    public static boolean authorNotBannedOrIgnored(UserProfileService userProfileService,
+                                                   BannedUserService bannedUserService,
+                                                   BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        String authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
+        Optional<UserProfile> senderUserProfile = userProfileService.findUserProfile(authorUserProfileId);
+        if (senderUserProfile.isEmpty() ||
+                !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
+            return false;
+        }
+
+        UserProfile userProfile = senderUserProfile.get();
+        boolean isSenderBanned = bannedUserService.isUserProfileBanned(authorUserProfileId)
+                || bannedUserService.isUserProfileBanned(userProfile);
+        if (isSenderBanned) {
+            return false;
+        }
+
+        if (userProfileService.getIgnoredUserProfileIds().contains(userProfile.getId())) {
+            return false;
+        }
+        return true;
     }
 
-    public static Optional<BisqEasyTrade> findTradeFromChannel(ServiceProvider serviceProvider,
+    public static String getFormattedPriceSpec(PriceSpec priceSpec) {
+        return getFormattedPriceSpec(priceSpec, false);
+    }
+
+    public static String getFormattedPriceSpec(PriceSpec priceSpec, boolean abbreviated) {
+        String priceInfo;
+        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
+            String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
+            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
+        } else if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
+            String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
+            priceInfo = Res.get(floatPriceSpec.getPercentage() >= 0
+                    ? abbreviated
+                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
+                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.above"
+                    : abbreviated
+                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus"
+                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.below"
+                    , percent);
+        } else {
+            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
+        }
+        return priceInfo;
+    }
+
+    public static boolean isMaker(UserIdentityService userIdentityService, BisqEasyOffer bisqEasyOffer) {
+        return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
+    }
+
+    public static Optional<BisqEasyTrade> findTradeFromChannel(UserIdentityService userIdentityService,
+                                                               BisqEasyTradeService bisqEasyTradeService,
                                                                BisqEasyOpenTradeChannel channel) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
-        boolean maker = isMaker(serviceProvider, bisqEasyOffer);
+        boolean maker = isMaker(userIdentityService, bisqEasyOffer);
         UserProfile peerUserProfile = channel.getPeer();
         NetworkId takerNetworkId = maker ? peerUserProfile.getNetworkId() : myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-        return serviceProvider.getTradeService().getBisqEasyTradeService().findTrade(tradeId);
+        return bisqEasyTradeService.findTrade(tradeId);
     }
 
     public static String createBasicOfferBookMessage(MarketPriceService marketPriceService,
@@ -108,31 +160,6 @@ public class BisqEasyServiceUtil {
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
         return buildOfferBookMessage(ownerNickName, direction, quoteAmountAsString, bitcoinPaymentMethodNames, fiatPaymentMethodNames, priceInfo);
-    }
-
-    public static String getFormattedPriceSpec(PriceSpec priceSpec) {
-        return getFormattedPriceSpec(priceSpec, false);
-    }
-
-    public static String getFormattedPriceSpec(PriceSpec priceSpec, boolean abbreviated) {
-        String priceInfo;
-        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
-            String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
-        } else if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
-            String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
-            priceInfo = Res.get(floatPriceSpec.getPercentage() >= 0
-                    ? abbreviated
-                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
-                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.above"
-                    : abbreviated
-                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus"
-                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.below"
-                    , percent);
-        } else {
-            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
-        }
-        return priceInfo;
     }
 
     private static String buildOfferBookMessage(String messageOwnerNickName,
