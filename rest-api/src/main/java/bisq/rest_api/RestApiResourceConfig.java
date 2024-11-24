@@ -1,6 +1,7 @@
 package bisq.rest_api;
 
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.market_price.MarketPriceRestApi;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.offerbook.OfferbookRestApi;
 import bisq.network.NetworkService;
@@ -25,11 +26,13 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         // with AbstractBinder to register resources as classes for Swagger
         register(UserIdentityRestApi.class);
         register(OfferbookRestApi.class);
+        register(MarketPriceRestApi.class);
 
         register(new AbstractBinder() {
             @Override
             protected void configure() {
                 bind(new UserIdentityRestApi(userService.getUserIdentityService())).to(UserIdentityRestApi.class);
+                bind(new MarketPriceRestApi(bondedRolesService.getMarketPriceService())).to(MarketPriceRestApi.class);
                 bind(new OfferbookRestApi(chatService.getBisqEasyOfferbookChannelService())).to(OfferbookRestApi.class);
             }
         });

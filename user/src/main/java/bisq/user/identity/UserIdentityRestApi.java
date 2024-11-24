@@ -17,6 +17,7 @@
 
 package bisq.user.identity;
 
+import bisq.common.rest_api.RestApiBase;
 import bisq.common.rest_api.error.RestApiException;
 import bisq.security.DigestUtil;
 import bisq.user.profile.UserProfile;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "User Identity API")
-public class UserIdentityRestApi {
+public class UserIdentityRestApi extends RestApiBase {
     private static final Set<String> MAIN_CURRENCIES = Set.of("usd", "eur", "gbp", "cad", "aud", "rub", "cny", "inr", "ngn");
 
     private final UserIdentityService userIdentityService;
@@ -173,10 +174,6 @@ public class UserIdentityRestApi {
             log.error("Error creating user identity", e);
             throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "An unexpected error occurred.");
         }
-    }
-
-    private Response buildResponse(Response.Status status, Object entity) {
-        return Response.status(status).entity(entity).build();
     }
 
     @Data
