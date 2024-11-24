@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
@@ -125,7 +126,7 @@ public class BisqEasyOfferbookUtil {
 
                 if (item != null && !empty) {
                     numOffers.setText(BisqEasyOfferbookUtil.getFormattedOfferNumber(item.getNumOffers().get()));
-                    String quoteCurrencyDisplayName = item.getMarket().getQuoteCurrencyDisplayName();
+                    String quoteCurrencyDisplayName = StringUtils.capitalize(item.getMarket().getQuoteCurrencyDisplayName());
                     marketDetailsTooltip.setText(BisqEasyOfferbookUtil.getFormattedTooltip(item.getNumOffers().get(), quoteCurrencyDisplayName));
                     marketName.setText(quoteCurrencyDisplayName);
                     marketCode.setText(item.getMarket().getQuoteCurrencyCode());
