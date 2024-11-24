@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.chat.ChatModel;
+import bisq.settings.ChatMessageType;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -53,6 +54,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final StringProperty marketPrice = new SimpleStringProperty();
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
     private final BooleanProperty showMarketSelectionListCollapsed = new SimpleBooleanProperty();
+    private final ObjectProperty<ChatMessageType> messageTypeFilter = new SimpleObjectProperty<>(ChatMessageType.ALL);
 
     @Setter
     private ReadOnlyBooleanProperty showOfferListExpanded;

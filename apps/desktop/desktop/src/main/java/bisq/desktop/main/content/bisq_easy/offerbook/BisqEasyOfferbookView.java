@@ -62,7 +62,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Subscription marketsTableViewSelectionPin, selectedMarketChannelItemPin, selectedMarketFilterPin,
             selectedMarketSortTypePin, marketSelectorSearchPin, favouritesTableViewHeightChangedPin,
             favouritesTableViewSelectionPin, shouldShowAppliedFiltersPin,
-            showOfferListExpandedPin, showMarketSelectionListCollapsedPin;
+            showOfferListExpandedPin, showMarketSelectionListCollapsedPin, messageTypeFilterPin;
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu, messageTypeFilterMenu;
     private SortAndFilterDropdownMenuItem<MarketSortType> sortByMostOffers, sortByNameAZ, sortByNameZA;
@@ -179,6 +179,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             }
         });
 
+        messageTypeFilterPin = EasyBind.subscribe(getModel().getMessageTypeFilter(), this::updateMessageTypeFilter);
+
         sortByMostOffers.setOnAction(e -> getController().onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> getController().onSortMarkets(MarketSortType.ASC));
         sortByNameZA.setOnAction(e -> getController().onSortMarkets(MarketSortType.DESC));
@@ -186,6 +188,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         filterWithOffers.setOnAction(e -> getModel().getSelectedMarketsFilter().set(WITH_OFFERS));
         filterShowAll.setOnAction(e -> getModel().getSelectedMarketsFilter().set(ALL));
         filterFavourites.setOnAction(e -> getModel().getSelectedMarketsFilter().set(FAVOURITES));
+
+        showAllMessages.setOnAction(e -> getController().setMessageTypeFilter(showAllMessages.getMenuItem()));
+        showOnlyOfferMessages.setOnAction(e -> getController().setMessageTypeFilter(showOnlyOfferMessages.getMenuItem()));
+        showOnlyTextMessages.setOnAction(e -> getController().setMessageTypeFilter(showOnlyTextMessages.getMenuItem()));
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
@@ -238,6 +244,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         selectedMarketFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
         favouritesTableViewHeightChangedPin.unsubscribe();
+        messageTypeFilterPin.unsubscribe();
         shouldShowAppliedFiltersPin.unsubscribe();
         showOfferListExpandedPin.unsubscribe();
         showMarketSelectionListCollapsedPin.unsubscribe();
@@ -248,6 +255,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         filterWithOffers.setOnAction(null);
         filterShowAll.setOnAction(null);
         filterFavourites.setOnAction(null);
+        showAllMessages.setOnAction(null);
+        showOnlyOfferMessages.setOnAction(null);
+        showOnlyTextMessages.setOnAction(null);
         createOfferButton.setOnAction(null);
 
         removeWithOffersFilter.setOnMouseClicked(null);
@@ -539,6 +549,27 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         appliedFiltersSection.getStyleClass().add(shouldShowAppliedFilters
                 ? "market-selection-show-applied-filters"
                 : "market-selection-no-filters");
+    }
+
+    void updateMessageTypeFilter(ChatMessageType messageType) {
+        messageTypeFilterMenu.setLabelAsContent(getMessageTypeAsString(messageType));
+
+        //noinspection unchecked
+        messageTypeFilterMenu.getMenuItems().stream()
+                .filter(menuItem -> menuItem instanceof SortAndFilterDropdownMenuItem &&
+                        ((SortAndFilterDropdownMenuItem<?>) menuItem).getMenuItem() instanceof ChatMessageType)
+                .map(menuItem -> (SortAndFilterDropdownMenuItem<ChatMessageType>) menuItem)
+                .forEach(menuItem -> menuItem.updateSelection(messageType == menuItem.getMenuItem()));
+    }
+
+    private String getMessageTypeAsString(ChatMessageType messageType) {
+        if (messageType == ChatMessageType.OFFER) {
+            return Res.get("bisqEasy.offerbook.dropdownMenu.messageTypeFilter.offers");
+        }
+        if (messageType == ChatMessageType.TEXT) {
+            return Res.get("bisqEasy.offerbook.dropdownMenu.messageTypeFilter.text");
+        }
+        return Res.get("bisqEasy.offerbook.dropdownMenu.messageTypeFilter.all");
     }
 
     @Getter
