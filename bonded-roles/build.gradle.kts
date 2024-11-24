@@ -15,5 +15,5 @@ dependencies {
 
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)
-    implementation(libs.bundles.jackson)
+    implementation(libs.bundles.rest.api.libs)
 }
