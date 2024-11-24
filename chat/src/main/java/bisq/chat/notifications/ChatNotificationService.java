@@ -414,10 +414,15 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             return;
         }*/
 
-        // If user has set "Show offers only" in settings we mark messages as consumed
+        // If user has set "only offers" or "only text messages" filter we mark messages as consumed accordingly
         if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-            if (settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == bisq.settings.ChatMessageType.OFFER
-                    && !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
+            boolean shouldConsumeOfferNotification =
+                    settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == bisq.settings.ChatMessageType.TEXT
+                            && bisqEasyOfferbookMessage.hasBisqEasyOffer();
+            boolean shouldConsumeTextMsgNotification =
+                    settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == bisq.settings.ChatMessageType.OFFER
+                            && !bisqEasyOfferbookMessage.hasBisqEasyOffer();
+            if (shouldConsumeOfferNotification || shouldConsumeTextMsgNotification) {
                 consumeNotification(chatNotification);
                 return;
             }

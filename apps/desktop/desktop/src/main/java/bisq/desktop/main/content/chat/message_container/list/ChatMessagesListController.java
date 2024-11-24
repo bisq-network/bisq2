@@ -600,7 +600,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     private void applyPredicate() {
-        boolean showOnlyOffersFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == bisq.settings.ChatMessageType.OFFER;
         Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate = item -> {
             Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
             if (senderUserProfile.isEmpty()) {
@@ -611,19 +610,25 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 return false;
             }
 
-            boolean offerOnlyPredicate = true;
+            boolean messageTypePredicate = true; // messageTypeFilter == bisq.settings.ChatMessageType.ALL
             if (item.getChatMessage() instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-                offerOnlyPredicate = !showOnlyOffersFilter || bisqEasyOfferbookMessage.hasBisqEasyOffer();
+                bisq.settings.ChatMessageType messageTypeFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get();
+                if (messageTypeFilter == bisq.settings.ChatMessageType.TEXT) {
+                    messageTypePredicate = !bisqEasyOfferbookMessage.hasBisqEasyOffer();
+                } else if (messageTypeFilter == bisq.settings.ChatMessageType.OFFER) {
+                    messageTypePredicate = bisqEasyOfferbookMessage.hasBisqEasyOffer();
+                }
             }
+
             // We do not display the take offer message as it has no text and is used only for sending the offer
             // to the peer and signalling the take offer event.
             if (item.getChatMessage().getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
                 return false;
             }
 
-            return offerOnlyPredicate &&
-                    !userProfileService.getIgnoredUserProfileIds().contains(senderUserProfile.get().getId()) &&
-                    userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
+            return messageTypePredicate
+                    && !userProfileService.getIgnoredUserProfileIds().contains(senderUserProfile.get().getId())
+                    && userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
         };
         model.getFilteredChatMessages().setPredicate(item -> model.getSearchPredicate().test(item) &&
                 predicate.test(item));
