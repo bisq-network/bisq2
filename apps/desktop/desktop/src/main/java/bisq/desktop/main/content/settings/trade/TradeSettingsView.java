@@ -46,7 +46,7 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
                     0.01, BisqEasyTradeService.MAX_TRADE_PRICE_DEVIATION);
     private static final double TEXT_FIELD_WIDTH = 500;
 
-    private final Switch offersOnlySwitch, closeMyOfferWhenTaken;
+    private final Switch closeMyOfferWhenTaken;
     private final MaterialTextField maxTradePriceDeviation;
 
     public TradeSettingsView(TradeSettingsModel model, TradeSettingsController controller) {
@@ -57,7 +57,6 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         // Trade
         Label tradeHeadline = SettingsViewUtils.getHeadline(Res.get("settings.trade.headline"));
 
-        offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
         closeMyOfferWhenTaken = new Switch(Res.get("settings.trade.closeMyOfferWhenTaken"));
 
         maxTradePriceDeviation = new MaterialTextField(Res.get("settings.trade.maxTradePriceDeviation"),
@@ -67,11 +66,7 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         maxTradePriceDeviation.setStringConverter(Converters.PERCENTAGE_STRING_CONVERTER);
 
         VBox.setMargin(maxTradePriceDeviation, new Insets(15, 0, 0, 0));
-        VBox tradeVBox = new VBox(10,
-                closeMyOfferWhenTaken,
-                offersOnlySwitch,
-                maxTradePriceDeviation
-        );
+        VBox tradeVBox = new VBox(10, closeMyOfferWhenTaken, maxTradePriceDeviation);
 
         VBox.setMargin(tradeVBox, new Insets(0, 5, 0, 5));
         VBox contentBox = new VBox(50);
@@ -83,7 +78,6 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
 
     @Override
     protected void onViewAttached() {
-        offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.bindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation(),
@@ -93,7 +87,6 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
 
     @Override
     protected void onViewDetached() {
-        offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.unbindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation());

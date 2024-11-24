@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class TradeSettingsModel implements Model {
-    private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
     private final DoubleProperty maxTradePriceDeviation = new SimpleDoubleProperty();
 
