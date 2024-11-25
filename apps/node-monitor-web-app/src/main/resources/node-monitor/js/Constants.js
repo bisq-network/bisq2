@@ -1,30 +1,11 @@
-// js/Constants.js
-
-/*
- * This file is part of Bisq.
- *
- * Bisq is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at
- * your option) any later version.
- *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
- */
-
 export const Constants = {
     MODE_DEV: 'dev',
     MODE_PROD: 'prod',
     MODE: null,
 
-    API_URL_GET_REPORT: 'http://localhost:8082/api/v1/report',
-    API_URL_GET_ADDRESSES: 'http://localhost:8082/api/v1/report/addresses',
-    API_URL_GET_ADDRESSES_DETAILS: 'http://localhost:8082/api/v1/report/addresses/details',
+    API_URL_GET_REPORT: null, // Wird dynamisch gesetzt
+    API_URL_GET_ADDRESSES: null, // Wird dynamisch gesetzt
+    API_URL_GET_ADDRESSES_DETAILS: null, // Wird dynamisch gesetzt
     QUERY_PARAM_ADDRESSES: 'addresses',
 
     STATUS_ERROR: "Failed to fetch data",
@@ -59,7 +40,6 @@ export const Constants = {
 
     DEVIATION_THRESHOLDS: {},
 
-    // Defaults
     initialize(savedConfig = {}) {
         this.MODE = savedConfig.MODE || this.MODE_PROD;
 
@@ -69,21 +49,31 @@ export const Constants = {
             HIGH: { value: savedConfig.DEVIATION_THRESHOLDS?.HIGH || this.DEFAULT_DEVIATION_THRESHOLDS.HIGH.value }
         };
 
+        const { protocol, hostname, port } = window.location;
+        const baseURL = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+
+        this.API_URL_GET_REPORT = `${baseURL}/api/v1/report`;
+        this.API_URL_GET_ADDRESSES = `${baseURL}/api/v1/report/addresses`;
+        this.API_URL_GET_ADDRESSES_DETAILS = `${baseURL}/api/v1/report/addresses/details`;
+
         console.log('Constants initialized with:', {
             MODE: this.MODE,
-            DEVIATION_THRESHOLDS: this.DEVIATION_THRESHOLDS
+            DEVIATION_THRESHOLDS: this.DEVIATION_THRESHOLDS,
+            API_URL_GET_REPORT: this.API_URL_GET_REPORT,
+            API_URL_GET_ADDRESSES: this.API_URL_GET_ADDRESSES,
+            API_URL_GET_ADDRESSES_DETAILS: this.API_URL_GET_ADDRESSES_DETAILS
         });
     }
 };
 
+// Beispielkonfiguration
 const savedConfig = {
-
     MODE: Constants.MODE_PROD,
-
     DEVIATION_THRESHOLDS: {
         LOW: 5,
         MEDIUM: 20
     }
 };
 
+// Initialisierung
 Constants.initialize(savedConfig);
