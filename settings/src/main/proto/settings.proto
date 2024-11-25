@@ -38,13 +38,20 @@ enum ChatNotificationType {
   CHATNOTIFICATIONTYPE_OFF = 3;
 }
 
+enum ChatMessageType {
+  CHATMESSAGETYPE_UNSPECIFIED = 0;
+  CHATMESSAGETYPE_ALL = 1;
+  CHATMESSAGETYPE_OFFER = 2;
+  CHATMESSAGETYPE_TEXT = 3;
+}
+
 message SettingsStore {
   Cookie cookie = 1;
   map<string, bool> dontShowAgainMap = 2;
   bool useAnimations = 3;
   common.Market selectedMarket = 4;
   sint64 minRequiredReputationScore = 5 [deprecated = true]; // Not used anymore since 2.1.1
-  bool offersOnly = 6;
+  bool offersOnly = 6 [deprecated = true]; // Not used anymore since 2.1.2
   bool tradeRulesConfirmed = 7;
   ChatNotificationType chatNotificationType = 8;
   bool isTacAccepted = 9;
@@ -64,4 +71,5 @@ message SettingsStore {
   string backupLocation = 23;
   bool showMyOffersOnly = 24;
   double totalMaxBackupSizeInMB = 25;
+  ChatMessageType bisqEasyOfferbookMessageTypeFilter = 26;
 }

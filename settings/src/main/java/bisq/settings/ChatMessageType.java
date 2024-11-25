@@ -15,19 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.settings.trade;
+package bisq.settings;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.*;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.common.proto.ProtoEnum;
+import bisq.common.proto.ProtobufUtils;
 
-@Slf4j
-@Getter
-public class TradeSettingsModel implements Model {
-    private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
-    private final DoubleProperty maxTradePriceDeviation = new SimpleDoubleProperty();
+public enum ChatMessageType implements ProtoEnum {
+    ALL,
+    OFFER,
+    TEXT;
 
-    public TradeSettingsModel() {
+    @Override
+    public bisq.settings.protobuf.ChatMessageType toProtoEnum() {
+        return bisq.settings.protobuf.ChatMessageType.valueOf(getProtobufEnumPrefix() + name());
+    }
+
+    public static ChatMessageType fromProto(bisq.settings.protobuf.ChatMessageType proto) {
+        return ProtobufUtils.enumFromProto(ChatMessageType.class, proto.name(), ALL);
     }
 }

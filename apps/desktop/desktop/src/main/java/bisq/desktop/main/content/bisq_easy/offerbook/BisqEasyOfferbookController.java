@@ -42,6 +42,7 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.settings.ChatMessageType;
 import bisq.settings.CookieKey;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
@@ -73,7 +74,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private OfferbookListController offerbookListController;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
             favouriteMarketsPin, showMarketSelectionListCollapsedSettingsPin,
-            changedNotificationPin;
+            changedNotificationPin, bisqEasyOfferbookMessageTypeFilterPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin;
     private final ListChangeListener<? super MarketChannelItem> marketChannelItemListener = c -> updateFilteredMarketChannelItems();
     private final Map<MarketChannelItem, ChangeListener<Number>> marketNumOffersListeners = new HashMap<>();
@@ -221,6 +222,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
+        bisqEasyOfferbookMessageTypeFilterPin = FxBindings.bindBiDir(model.getMessageTypeFilter())
+                .to(settingsService.getBisqEasyOfferbookMessageTypeFilter());
+
         model.getMarketChannelItems().forEach(item -> {
             ChangeListener<Number> numberChangeListener = (obs, oldValue, newValue) -> updateFilteredMarketChannelItems();
             item.getNumOffers().addListener(numberChangeListener);
@@ -241,6 +245,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedMarketSortTypePin.unsubscribe();
         favouriteMarketsPin.unbind();
         changedNotificationPin.unbind();
+        bisqEasyOfferbookMessageTypeFilterPin.unbind();
 
         model.getMarketChannelItems().removeListener(marketChannelItemListener);
         marketNumOffersListeners.forEach((item, changeListener) -> item.getNumOffers().removeListener(changeListener));
@@ -307,6 +312,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     void toggleMarketSelectionList() {
         model.getShowMarketSelectionListCollapsed().set(!model.getShowMarketSelectionListCollapsed().get());
+    }
+
+    void setMessageTypeFilter(ChatMessageType messageType) {
+        model.getMessageTypeFilter().set(messageType);
     }
 
     private void createMarketChannels() {

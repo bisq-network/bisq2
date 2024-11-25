@@ -64,6 +64,7 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -393,6 +394,17 @@ public class TradeWizardReviewController implements Controller {
 
     public void publishOffer() {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+
+        String dontShowAgainId = "sendOfferMsgTextOnlyWarn";
+        boolean hasShowOnlyTextFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == ChatMessageType.TEXT;
+        if (hasShowOnlyTextFilter) {
+            new Popup().information(Res.get("chat.message.send.textMsgOnly.warn"))
+                    .actionButtonText(Res.get("confirmation.yes"))
+                    .onAction(() -> settingsService.getBisqEasyOfferbookMessageTypeFilter().set(ChatMessageType.ALL))
+                    .closeButtonText(Res.get("confirmation.no"))
+                    .dontShowAgainId(dontShowAgainId)
+                    .show();
+        }
         bisqEasyOfferbookChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);
