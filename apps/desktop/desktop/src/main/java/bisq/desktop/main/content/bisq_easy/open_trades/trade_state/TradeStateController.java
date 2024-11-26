@@ -38,6 +38,7 @@ import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetail
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -165,10 +166,10 @@ public class TradeStateController implements Controller {
 
             model.getBuyerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
+                            PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
             model.getSellerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())));
+                            PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())));
         });
     }
 

@@ -76,13 +76,13 @@ public class MarketPriceRestApi extends RestApiBase {
                     ));
 
             if (result.isEmpty()) {
-                return buildResponse(Response.Status.NOT_FOUND, "No market price quotes found.");
+                return buildNotFoundResponse("No market price quotes found.");
             }
 
-            return buildResponse(Response.Status.OK, new MarketPriceResponse(result));
+            return buildOkResponse(new MarketPriceResponse(result));
         } catch (Exception ex) {
             log.error("Failed to retrieve market price quotes", ex);
-            return buildResponse(Response.Status.INTERNAL_SERVER_ERROR, "An error occurred while retrieving market prices.");
+            return buildErrorResponse("An error occurred while retrieving market prices.");
         }
     }
 

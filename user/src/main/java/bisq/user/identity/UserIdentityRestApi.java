@@ -18,7 +18,6 @@
 package bisq.user.identity;
 
 import bisq.common.rest_api.RestApiBase;
-import bisq.common.rest_api.error.RestApiException;
 import bisq.security.DigestUtil;
 import bisq.user.profile.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,7 +70,7 @@ public class UserIdentityRestApi extends RestApiBase {
             return buildResponse(Response.Status.CREATED, preparedData);
         } catch (Exception e) {
             log.error("Error generating prepared data", e);
-            throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "Could not generate prepared data.");
+            return buildErrorResponse("Could not generate prepared data.");
         }
     }
 
@@ -90,10 +89,9 @@ public class UserIdentityRestApi extends RestApiBase {
     public Response getUserIdentity(@PathParam("id") String id) {
         Optional<UserIdentity> userIdentity = userIdentityService.findUserIdentity(id);
         if (userIdentity.isEmpty()) {
-            throw new RestApiException(Response.Status.NOT_FOUND,
-                    "Could not find user identity for ID: " + id);
+            return buildNotFoundResponse("Could not find user identity for ID: " + id);
         }
-        return buildResponse(Response.Status.OK, userIdentity.get());
+        return buildOkResponse(userIdentity.get());
     }
 
     @GET
@@ -112,7 +110,7 @@ public class UserIdentityRestApi extends RestApiBase {
                 .stream()
                 .map(UserIdentity::getId)
                 .collect(Collectors.toList());
-        return buildResponse(Response.Status.OK, ids);
+        return buildOkResponse(ids);
     }
 
     @GET
@@ -130,10 +128,10 @@ public class UserIdentityRestApi extends RestApiBase {
     public Response getSelectedUserProfile() {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {
-            throw new RestApiException(Response.Status.NOT_FOUND, "No selected user identity found.");
+            return buildNotFoundResponse("No selected user identity found.");
         }
         UserProfile userProfile = selectedUserIdentity.getUserProfile();
-        return buildResponse(Response.Status.OK, userProfile);
+        return buildOkResponse(userProfile);
     }
 
     @POST
@@ -167,12 +165,12 @@ public class UserIdentityRestApi extends RestApiBase {
             return buildResponse(Response.Status.CREATED, new UserProfileResponse(userIdentity.getId()));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "Thread was interrupted.");
+            return buildErrorResponse("Thread was interrupted.");
         } catch (IllegalArgumentException e) {
-            throw new RestApiException(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage());
+            return buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage());
         } catch (Exception e) {
             log.error("Error creating user identity", e);
-            throw new RestApiException(Response.Status.INTERNAL_SERVER_ERROR, "An unexpected error occurred.");
+            return buildErrorResponse("An unexpected error occurred.");
         }
     }
 

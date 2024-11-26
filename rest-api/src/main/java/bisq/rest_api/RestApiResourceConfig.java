@@ -33,7 +33,10 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
             protected void configure() {
                 bind(new UserIdentityRestApi(userService.getUserIdentityService())).to(UserIdentityRestApi.class);
                 bind(new MarketPriceRestApi(bondedRolesService.getMarketPriceService())).to(MarketPriceRestApi.class);
-                bind(new OfferbookRestApi(chatService.getBisqEasyOfferbookChannelService())).to(OfferbookRestApi.class);
+                bind(new OfferbookRestApi(chatService.getBisqEasyOfferbookChannelService(),
+                        bondedRolesService.getMarketPriceService(),
+                        userService))
+                        .to(OfferbookRestApi.class);
             }
         });
     }

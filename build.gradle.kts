@@ -16,6 +16,10 @@ tasks.register("buildAll") {
             ":apps:desktop:desktop-app:build",
             ":apps:desktop:desktop-app:installDist",
             ":apps:desktop:desktop-app-launcher:generateInstallers",
+            ":apps:desktop:webcam-app:build",
+            ":apps:oracle-node-app:build",
+            ":apps:rest-api-app:build",
+            ":apps:node-monitor-web-app:build",
 //            ":REPLACEME:build",
         ).forEach {
             exec {

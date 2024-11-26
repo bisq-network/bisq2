@@ -56,6 +56,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -270,7 +271,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
             Market market = offer.getMarket();
             String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-            String priceSpecAsString = BisqEasyServiceUtil.getFormattedPriceSpec(priceSpec);
+            String priceSpecAsString = PriceSpecFormatter.getFormattedPriceSpec(priceSpec);
             return Optional.of(new Pair<>(quoteAmountAsString, priceSpecAsString));
         }
         return Optional.empty();

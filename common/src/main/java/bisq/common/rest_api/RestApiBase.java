@@ -19,8 +19,38 @@ package bisq.common.rest_api;
 
 import jakarta.ws.rs.core.Response;
 
+import java.util.Map;
+
 public abstract class RestApiBase {
     protected Response buildResponse(Response.Status status, Object entity) {
         return Response.status(status).entity(entity).build();
+    }
+
+    /**
+     * Builds a successful 200 OK response.
+     *
+     * @param entity The response entity.
+     * @return The HTTP response.
+     */
+    protected Response buildOkResponse(Object entity) {
+        return Response.status(Response.Status.OK).entity(entity).build();
+    }
+
+    protected Response buildNotFoundResponse(String message) {
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity(message)
+                .build();
+    }
+
+    /**
+     * Builds an error response with a 500 status.
+     *
+     * @param errorMessage The error message.
+     * @return The HTTP response.
+     */
+    protected Response buildErrorResponse(String errorMessage) {
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(Map.of("error", errorMessage))
+                .build();
     }
 }
