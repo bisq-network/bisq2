@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":persistence"))
     implementation(project(":security"))
     implementation(project(":identity"))
+    implementation(project(":account"))
     implementation(project(":user"))
     implementation(project(":offer"))
     implementation(project(":settings"))

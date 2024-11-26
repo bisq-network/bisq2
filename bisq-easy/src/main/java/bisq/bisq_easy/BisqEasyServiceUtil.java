@@ -32,11 +32,8 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.PriceFormatter;
+import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -74,31 +71,6 @@ public class BisqEasyServiceUtil {
         return true;
     }
 
-    public static String getFormattedPriceSpec(PriceSpec priceSpec) {
-        return getFormattedPriceSpec(priceSpec, false);
-    }
-
-    public static String getFormattedPriceSpec(PriceSpec priceSpec, boolean abbreviated) {
-        String priceInfo;
-        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
-            String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
-        } else if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
-            String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
-            priceInfo = Res.get(floatPriceSpec.getPercentage() >= 0
-                    ? abbreviated
-                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.plus"
-                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.above"
-                    : abbreviated
-                        ? "bisqEasy.tradeWizard.review.chatMessage.floatPrice.minus"
-                        : "bisqEasy.tradeWizard.review.chatMessage.floatPrice.below"
-                    , percent);
-        } else {
-            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
-        }
-        return priceInfo;
-    }
-
     public static boolean isMaker(UserIdentityService userIdentityService, BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
     }
@@ -121,7 +93,7 @@ public class BisqEasyServiceUtil {
                                                      String fiatPaymentMethodNames,
                                                      AmountSpec amountSpec,
                                                      PriceSpec priceSpec) {
-        String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), getFormattedPriceSpec(priceSpec));
+        String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), PriceSpecFormatter.getFormattedPriceSpec(priceSpec));
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
         return Res.get("bisqEasy.tradeWizard.review.chatMessage.offerDetails", quoteAmountAsString, bitcoinPaymentMethodNames, fiatPaymentMethodNames, priceInfo);
@@ -156,7 +128,7 @@ public class BisqEasyServiceUtil {
                                                                    AmountSpec amountSpec,
                                                                    PriceSpec priceSpec) {
         String ownerNickName = StringUtils.truncate(messageOwnerNickName, 28);
-        String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), getFormattedPriceSpec(priceSpec));
+        String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), PriceSpecFormatter.getFormattedPriceSpec(priceSpec));
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
         return buildOfferBookMessage(ownerNickName, direction, quoteAmountAsString, bitcoinPaymentMethodNames, fiatPaymentMethodNames, priceInfo);

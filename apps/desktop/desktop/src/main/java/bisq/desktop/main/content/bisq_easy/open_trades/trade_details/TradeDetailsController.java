@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -29,6 +28,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -96,7 +96,7 @@ public class TradeDetailsController extends NavigationController implements Init
         model.setPriceCodes(trade.getOffer().getMarket().getMarketCodes());
         model.setPriceSpec(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
                 ? ""
-                : String.format("(%s)", BisqEasyServiceUtil.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
+                : String.format("(%s)", PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
         model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
         model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
         model.setTradeId(trade.getId());
