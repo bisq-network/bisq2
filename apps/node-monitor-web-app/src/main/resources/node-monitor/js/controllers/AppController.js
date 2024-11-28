@@ -88,7 +88,7 @@ export class AppController {
     }
 
     async #getAddresses() {
-        let addresses = this.storageService.getAddressesFromCookie();
+        let addresses = this.storageService.getAddresses();
         if (addresses.length === 0) {
             addresses = await this.dataService.fetchAddressList();
             if (addresses && addresses.length > 0) {
@@ -103,8 +103,8 @@ export class AppController {
 
     async #updateAddressesAndLoadAllReports() {
         try {
-            this.addressList = this.storageService.getAddressesFromCookie();
-            this.portList = this.storageService.getPortsFromCookie();
+            this.addressList = this.storageService.getAddresses();
+            this.portList = this.storageService.getPorts();
 
             if (this.addressList.length === 0) {
                 this.addressList = await this.#getAddresses();

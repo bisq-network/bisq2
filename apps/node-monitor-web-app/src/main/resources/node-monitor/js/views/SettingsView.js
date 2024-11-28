@@ -70,8 +70,8 @@ export class SettingsView {
     }
 
     #initializeAddressesTextAndPortsText() {
-        const addressesText = this.storageService.getAddressesCookie();
-        const portsText = this.storageService.getPortsCookie();
+        const addressesText = this.storageService.getRawAddresses();
+        const portsText = this.storageService.getRawPorts();
         document.getElementById("addressListInput").value = addressesText;
         document.getElementById("portListInput").value = portsText;
     }
@@ -81,8 +81,8 @@ export class SettingsView {
         document.getElementById("addressListInput").placeholder = Constants.PLACEHOLDER_ADDRESS_LIST;
         document.getElementById("portListInput").placeholder = Constants.PLACEHOLDER_PORT_LIST;
 
-        const addressesText = this.storageService.getAddressesCookie() || '';
-        const portsText = this.storageService.getPortsCookie() || '';
+        const addressesText = this.storageService.getRawAddresses() || '';
+        const portsText = this.storageService.getRawPorts() || '';
         document.getElementById("addressListInput").value = addressesText;
         document.getElementById("portListInput").value = portsText;
 
