@@ -54,7 +54,7 @@ export const Constants = {
 
         this.API_URL_GET_REPORT = `${baseURL}/api/v1/report`;
         this.API_URL_GET_ADDRESSES = `${baseURL}/api/v1/report/addresses`;
-        this.API_URL_GET_ADDRESSES_DETAILS = `${baseURL}/api/v1/report/addresses/details`;
+        this.API_URL_POST_ADDRESSES_DETAILS = `${baseURL}/api/v1/report/addresses/details`;
 
         console.log('Constants initialized with:', {
             MODE: this.MODE,

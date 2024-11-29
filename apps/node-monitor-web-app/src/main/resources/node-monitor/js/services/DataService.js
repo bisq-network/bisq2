@@ -83,12 +83,13 @@ export class DataService {
 
     async fetchAddressDetails(addressList) {
         try {
-            const url = this.#getAddressDetailsUrl(addressList);
+            const url = Constants.API_URL_POST_ADDRESSES_DETAILS;
             const response = await fetch(url, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(addressList),
             });
 
             if (!response.ok) {
@@ -124,12 +125,5 @@ export class DataService {
         }
         const { version = null, serializedSize = null, excludedFields = null, ...filteredReport } = report;
         return filteredReport;
-    }
-
-    #getAddressDetailsUrl(addressList) {
-        const queryParams = new URLSearchParams({
-            [Constants.QUERY_PARAM_ADDRESSES]: addressList.join(",")
-        });
-        return `${Constants.API_URL_GET_ADDRESSES_DETAILS}?${queryParams.toString()}`;
     }
 }
