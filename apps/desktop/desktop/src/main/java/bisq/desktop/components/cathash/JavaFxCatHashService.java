@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.cathash;
 
-import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.CatHashImageUtil;
 import bisq.user.cathash.CatHashService;
 import javafx.scene.image.Image;
 
@@ -32,16 +32,16 @@ public class JavaFxCatHashService extends CatHashService<Image> {
 
     @Override
     protected Image composeImage(String[] paths, double size) {
-        return ImageUtil.composeImage(paths, size);
+        return CatHashImageUtil.composeImage(paths, size);
     }
 
     @Override
     protected void writeRawImage(Image image, File iconFile) throws IOException {
-        ImageUtil.writeRawImage(image, iconFile);
+        CatHashImageUtil.writeRawImage(image, iconFile);
     }
 
     @Override
     protected Image readRawImage(File iconFile) throws IOException {
-        return ImageUtil.readRawImage(iconFile);
+        return CatHashImageUtil.readRawImage(iconFile);
     }
 }
