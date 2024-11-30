@@ -18,7 +18,7 @@
  */
 
 import { Constants } from '../Constants.js';
-import { KeyUtility } from '../utils/KeyUtils.js';
+import { KeyUtils } from '../utils/KeyUtils.js';
 import { DOMUtils } from '../utils/DOMUtils.js';
 
 export class ReportView {
@@ -42,7 +42,7 @@ export class ReportView {
     }
 
     renderSingleReport(data, address) {
-        const nodeBlock = document.getElementById(KeyUtility.generateReportNodeId(address));
+        const nodeBlock = document.getElementById(KeyUtils.generateReportNodeId(address));
 
         const existingTableOrError = nodeBlock.querySelector('.table-container, .error');
         if (existingTableOrError) {
@@ -89,7 +89,7 @@ export class ReportView {
     }
 
     renderAddressDetails(dto) {
-        const nodeBlock = document.getElementById(KeyUtility.generateReportNodeId(dto.address));
+        const nodeBlock = document.getElementById(KeyUtils.generateReportNodeId(dto.address));
         if (!nodeBlock) return;
 
         const header = nodeBlock.querySelector('.node-header');
@@ -164,7 +164,7 @@ export class ReportView {
             tableTitle.classList.add('sub-structure-title');
             tableTitle.textContent = this.#formatColumnName(key);
             tableDiv.appendChild(tableTitle);
-            fullKey = KeyUtility.createFullKey(parentFullKey, key);
+            fullKey = KeyUtils.createFullKey(parentFullKey, key);
         } else {
             fullKey = Constants.REPORT_KEY_ROOT_PARENT;
         }
@@ -182,7 +182,7 @@ export class ReportView {
         const subTableList = [];
 
         sortedEntries.forEach(([entryKey, entryValue]) => {
-            const subFullKey = KeyUtility.createFullKey(fullKey, entryKey);
+            const subFullKey = KeyUtils.createFullKey(fullKey, entryKey);
 
             const th = document.createElement('th');
             th.textContent = this.#formatColumnName(entryKey);
