@@ -87,9 +87,9 @@ export class SettingsView {
         document.getElementById("portListInput").value = portsText;
 
         const thresholds = this.storageService.getDeviationThresholds() || {
-            LOW: 5,
-            MEDIUM: 20,
-            HIGH: 50
+            LOW: Constants.DEVIATION_THRESHOLDS_LOW,
+            MEDIUM: Constants.DEVIATION_THRESHOLDS_MEDIUM,
+            HIGH: Constants.DEVIATION_THRESHOLDS_HIGH
         };
         document.getElementById("lowThreshold").value = thresholds.LOW;
         document.getElementById("mediumThreshold").value = thresholds.MEDIUM;
@@ -119,20 +119,19 @@ export class SettingsView {
         const addressesInput = document.getElementById("addressListInput").value;
         const portsInput = document.getElementById("portListInput").value;
 
-        const lowThreshold = parseInt(document.getElementById("lowThreshold").value, 10);
-        const mediumThreshold = parseInt(document.getElementById("mediumThreshold").value, 10);
-        const highThreshold = parseInt(document.getElementById("highThreshold").value, 10);
+        const lowThreshold = Number(document.getElementById("lowThreshold").value) || Constants.DEVIATION_THRESHOLDS_LOW;
+        const mediumThreshold = Number(document.getElementById("mediumThreshold").value) || Constants.DEVIATION_THRESHOLDS_MEDIUM;
+        const highThreshold = Number(document.getElementById("highThreshold").value) || Constants.DEVIATION_THRESHOLDS_HIGH;
+        const newThresholds = {
+            LOW: lowThreshold,
+            MEDIUM: mediumThreshold,
+            HIGH: highThreshold
+        };
 
         try {
             this.storageService.saveAddressesAndPorts(addressesInput, portsInput);
 
-            const newThresholds = {
-                LOW: lowThreshold,
-                MEDIUM: mediumThreshold,
-                HIGH: highThreshold
-            };
             this.storageService.saveDeviationThresholds(newThresholds);
-
             Constants.initialize({ DEVIATION_THRESHOLDS: newThresholds });
 
             this.reportView.renderInfoMessage("Configuration saved successfully.", 1);

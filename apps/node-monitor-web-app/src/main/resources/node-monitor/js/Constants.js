@@ -1,53 +1,62 @@
-export const Constants = {
-    MODE_DEV: 'dev',
-    MODE_PROD: 'prod',
-    MODE: null,
+export class Constants {
 
-    API_URL_GET_REPORT: null, // Wird dynamisch gesetzt
-    API_URL_GET_ADDRESSES: null, // Wird dynamisch gesetzt
-    API_URL_GET_ADDRESSES_DETAILS: null, // Wird dynamisch gesetzt
-    QUERY_PARAM_ADDRESSES: 'addresses',
+    static MODE_DEV = 'dev';
+    static MODE_PROD = 'prod';
 
-    STATUS_ERROR: "Failed to fetch data",
+    static STATUS_ERROR = "Failed to fetch data";
+    static STATUS_ENTER_ADDRESSES = "Please enter an address list in the settings to start fetching data.";
+    static PLACEHOLDER_ADDRESS_LIST =
+        "Host:port list in host:port format, separated by commas or new lines.\n# Comments and empty lines are allowed.";
+    static PLACEHOLDER_PORT_LIST =
+        "Port list, for filtering addresses. Separated by commas or new lines.\n# Comments and empty lines are allowed.";
 
-    STATUS_ENTER_ADDRESSES: "Please enter an address list in the settings to start fetching data.",
-    PLACEHOLDER_ADDRESS_LIST: "Host:port list in host:port format, separated by commas or new lines.\n# Comments and empty lines are allowed.",
-    PLACEHOLDER_PORT_LIST: "Port list, for filtering addresses. Separated by commas or new lines.\n# Comments and empty lines are allowed.",
+    static BUTTON_EXPAND_ALL = "Expand All Details";
+    static BUTTON_COLLAPSE_ALL = "Collapse All Details";
+    static BUTTON_EXPAND_DETAILS = "Expand Details";
+    static BUTTON_COLLAPSE_DETAILS = "Collapse Details";
 
-    BUTTON_EXPAND_ALL: "Expand All Details",
-    BUTTON_COLLAPSE_ALL: "Collapse All Details",
-    BUTTON_EXPAND_DETAILS: "Expand Details",
-    BUTTON_COLLAPSE_DETAILS: "Collapse Details",
+    static SELECTOR_DATA_KEY = 'data-key';
+    static SELECTOR_DATA_FULL_KEY = 'data-fullkey';
 
-    CONFIG_KEY: {
+    static REPORT_KEY_ROOT_PARENT = '';
+    static REPORT_KEY_ROOT = "Report";
+    static HIERARCHY_DELIMITER = '.';
+
+    static DEVIATION_THRESHOLDS_LOW = 5;
+    static DEVIATION_THRESHOLDS_MEDIUM = 20;
+    static DEVIATION_THRESHOLDS_HIGH = 50;
+    static DEFAULT_DEVIATION_THRESHOLDS = Object.freeze({
+        LOW: { value: Constants.DEVIATION_THRESHOLDS_LOW },
+        MEDIUM: { value: Constants.DEVIATION_THRESHOLDS_MEDIUM },
+        HIGH: { value: Constants.DEVIATION_THRESHOLDS_HIGH }
+    });
+    static CONFIG_KEY = Object.freeze({
         ADDRESSES_COOKIE: 'addresses',
         PORTS_COOKIE: 'ports',
         DEVIATION_THRESHOLDS: 'deviation_thresholds'
-    },
+    });
+    static DEVIATION_THRESHOLDS = {};
 
-    SELECTOR_DATA_KEY: 'data-key',
-    SELECTOR_DATA_FULL_KEY: 'data-fullkey',
+    // TODO: Reorg to Configs
+    static API_URL_GET_REPORT = null;
+    static API_URL_GET_ADDRESSES = null;
+    static API_URL_GET_ADDRESSES_DETAILS = null;
+    static QUERY_PARAM_ADDRESSES = 'addresses';
 
-    REPORT_KEY_ROOT_PARENT: '',
-    REPORT_KEY_ROOT: "Report",
-    HIERARCHY_DELIMITER: '.',
+    static MODE = null;
 
-    DEFAULT_DEVIATION_THRESHOLDS: {
-        LOW: { value: 5 },
-        MEDIUM: { value: 20 },
-        HIGH: { value: 50 }
-    },
+    static initialize(savedConfig = {}) {
+        const validateThreshold = (value, defaultValue) => {
+            return typeof value === 'number' && value > 0 ? value : defaultValue;
+        };
 
-    DEVIATION_THRESHOLDS: {},
-
-    initialize(savedConfig = {}) {
         this.MODE = savedConfig.MODE || this.MODE_PROD;
 
-        this.DEVIATION_THRESHOLDS = {
-            LOW: { value: savedConfig.DEVIATION_THRESHOLDS?.LOW || this.DEFAULT_DEVIATION_THRESHOLDS.LOW.value },
-            MEDIUM: { value: savedConfig.DEVIATION_THRESHOLDS?.MEDIUM || this.DEFAULT_DEVIATION_THRESHOLDS.MEDIUM.value },
-            HIGH: { value: savedConfig.DEVIATION_THRESHOLDS?.HIGH || this.DEFAULT_DEVIATION_THRESHOLDS.HIGH.value }
-        };
+        this.DEVIATION_THRESHOLDS = Object.freeze({
+            LOW: { value: validateThreshold(savedConfig.DEVIATION_THRESHOLDS?.LOW, this.DEVIATION_THRESHOLDS_LOW) },
+            MEDIUM: { value: validateThreshold(savedConfig.DEVIATION_THRESHOLDS?.MEDIUM, this.DEVIATION_THRESHOLDS_MEDIUM) },
+            HIGH: { value: validateThreshold(savedConfig.DEVIATION_THRESHOLDS?.HIGH, this.DEVIATION_THRESHOLDS_HIGH) }
+        });
 
         const { protocol, hostname, port } = window.location;
         const baseURL = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
@@ -64,16 +73,4 @@ export const Constants = {
             API_URL_GET_ADDRESSES_DETAILS: this.API_URL_GET_ADDRESSES_DETAILS
         });
     }
-};
-
-// Beispielkonfiguration
-const savedConfig = {
-    MODE: Constants.MODE_PROD,
-    DEVIATION_THRESHOLDS: {
-        LOW: 5,
-        MEDIUM: 20
-    }
-};
-
-// Initialisierung
-Constants.initialize(savedConfig);
+}
