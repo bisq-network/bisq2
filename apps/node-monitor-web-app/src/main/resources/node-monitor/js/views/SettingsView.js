@@ -17,6 +17,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 import { Constants } from '../Constants.js';
+import { Config } from '../Config.js';
 
 export class SettingsView {
     constructor(reportView, storageService, dataService, onSettingsChangedCallback) {
@@ -86,11 +87,7 @@ export class SettingsView {
         document.getElementById("addressListInput").value = addressesText;
         document.getElementById("portListInput").value = portsText;
 
-        const thresholds = this.storageService.getDeviationThresholds() || {
-            LOW: Constants.DEVIATION_THRESHOLDS_LOW,
-            MEDIUM: Constants.DEVIATION_THRESHOLDS_MEDIUM,
-            HIGH: Constants.DEVIATION_THRESHOLDS_HIGH
-        };
+        const thresholds = this.storageService.getDeviationThresholds() || Config.DEVIATION_THRESHOLDS;
         document.getElementById("lowThreshold").value = thresholds.LOW;
         document.getElementById("mediumThreshold").value = thresholds.MEDIUM;
         document.getElementById("highThreshold").value = thresholds.HIGH;
@@ -132,7 +129,7 @@ export class SettingsView {
             this.storageService.saveAddressesAndPorts(addressesInput, portsInput);
 
             this.storageService.saveDeviationThresholds(newThresholds);
-            Constants.initialize({ DEVIATION_THRESHOLDS: newThresholds });
+            Config.initialize({ DEVIATION_THRESHOLDS: newThresholds });
 
             this.reportView.renderInfoMessage("Configuration saved successfully.", 1);
             this.toggleSettingsMenu();

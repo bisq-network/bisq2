@@ -18,6 +18,7 @@
  */
 
 import { Constants } from '../Constants.js';
+import { Config } from '../Config.js';
 import { DOMUtils } from '../utils/DOMUtils.js';
 import { KeyUtils } from '../utils/KeyUtils.js';
 import { FormatUtils } from '../utils/FormatUtils.js';
@@ -77,7 +78,7 @@ export class ReportDiffsController {
         }, 0);
     }
 
-    #updateAverageAndRelevantKeys(report, parentFullKey = Constants.REPORT_KEY_ROOT_PARENT) {
+    #updateAverageAndRelevantKeys(report, parentFullKey = Config.REPORT_KEY_ROOT_PARENT) {
         Object.entries(report).forEach(([key, value]) => {
             const fullKey = KeyUtils.createFullKey(parentFullKey, key);
 
@@ -102,7 +103,7 @@ export class ReportDiffsController {
 
         const newAverage = currentAverageData.average;
         const deviation = Math.abs((value - newAverage) / newAverage) * 100;
-        if (deviation >= Constants.DEVIATION_THRESHOLDS.LOW.value) {
+        if (deviation >= Config.DEVIATION_THRESHOLDS.LOW) {
             this.relevantKeys.add(fullKey);
         }
         return deviation;
@@ -161,11 +162,11 @@ export class ReportDiffsController {
         element.title = title;
 
         element.classList.remove('low', 'medium', 'high', 'diff');
-        if (deviation >= Constants.DEVIATION_THRESHOLDS.HIGH.value) {
+        if (deviation >= Config.DEVIATION_THRESHOLDS.HIGH) {
             element.classList.add('diff', 'high');
-        } else if (deviation >= Constants.DEVIATION_THRESHOLDS.MEDIUM.value) {
+        } else if (deviation >= Config.DEVIATION_THRESHOLDS.MEDIUM) {
             element.classList.add('diff', 'medium');
-        } else if (deviation >= Constants.DEVIATION_THRESHOLDS.LOW.value) {
+        } else if (deviation >= Config.DEVIATION_THRESHOLDS.LOW) {
             element.classList.add('diff', 'low');
         }
     }

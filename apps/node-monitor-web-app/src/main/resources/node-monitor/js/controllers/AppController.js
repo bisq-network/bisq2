@@ -18,6 +18,7 @@
  */
 
 import { Constants } from '../Constants.js';
+import { Config } from '../Config.js';
 import { ReportController } from './ReportController.js';
 import { ReportView } from '../views/ReportView.js';
 import { SettingsView } from '../views/SettingsView.js';
@@ -64,8 +65,8 @@ export class AppController {
     //////////////////////
 
     #initSettings() {
-        const savedThresholds = this.storageService.getDeviationThresholds() || Constants.DEFAULT_DEVIATION_THRESHOLDS;
-        Constants.initialize({ DEVIATION_THRESHOLDS: savedThresholds });
+        const savedThresholds = this.storageService.getDeviationThresholds() || Config.DEVIATION_THRESHOLDS;
+        Config.initialize({ DEVIATION_THRESHOLDS: savedThresholds });
     }
 
     #setInitialUIState() {

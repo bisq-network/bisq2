@@ -103,7 +103,6 @@ public class NodeMonitorRestApi {
     )
     public List<Report> getReports(@Parameter(description = "JSON array of addresses") List<String> addresses) {
         try {
-            log.info("Received request to get reports for: {}", addresses);
             return CompletableFutureUtils.allOf(addresses.stream()
                             .map(address -> networkService.requestReport(Address.fromFullAddress(address))))
                     .get();

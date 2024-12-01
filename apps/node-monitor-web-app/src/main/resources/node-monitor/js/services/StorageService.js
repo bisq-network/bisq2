@@ -21,8 +21,8 @@ import { Constants } from '../Constants.js';
 
 export class StorageService {
     constructor() {
-        this.addressesKey = Constants.CONFIG_KEY.ADDRESSES_COOKIE;
-        this.portsKey = Constants.CONFIG_KEY.PORTS_COOKIE;
+        this.addressesKey = Constants.CONFIG_KEY.ADDRESSES;
+        this.portsKey = Constants.CONFIG_KEY.PORTS;
         this.thresholdsKey = Constants.CONFIG_KEY.DEVIATION_THRESHOLDS;
     }
 
