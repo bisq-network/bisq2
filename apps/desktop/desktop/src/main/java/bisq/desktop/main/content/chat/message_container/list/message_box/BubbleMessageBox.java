@@ -267,9 +267,12 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private HBox createAndGetPaymentAndSettlementMethodsBox() {
-        return item.isBisqEasyPublicChatMessageWithOffer()
-                ? BisqEasyViewUtils.getPaymentAndSettlementMethodsBox(item.getBisqEasyOfferPaymentMethods(), item.getBisqEasyOfferSettlementMethods())
-                : new HBox();
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            HBox hBox = BisqEasyViewUtils.getPaymentAndSettlementMethodsBox(item.getBisqEasyOfferPaymentMethods(), item.getBisqEasyOfferSettlementMethods());
+            hBox.setAlignment(Pos.BOTTOM_LEFT);
+            return hBox;
+        }
+        return new HBox();
     }
 
     private VBox createAndGetQuotedMessageBox() {

@@ -81,7 +81,6 @@ public class BisqEasyViewUtils {
     public static HBox getPaymentAndSettlementMethodsBox(List<FiatPaymentMethod> paymentMethods,
                                                          List<BitcoinPaymentMethod> settlementMethods) {
         HBox hBox = new HBox(8);
-        hBox.setAlignment(Pos.BOTTOM_LEFT);
         for (FiatPaymentMethod paymentMethod : paymentMethods) {
             hBox.getChildren().add(createMethodLabel(paymentMethod));
         }

@@ -21,6 +21,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
@@ -96,6 +97,13 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .comparator(Comparator.comparing(OfferbookListItem::getPriceSpecAsPercent))
                 .setCellFactory(getPriceCellFactory())
                 .build());
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+                .title(Res.get("user.profileCard.offers.table.columns.paymentMethods"))
+                .left()
+                .isSortable(false)
+                .setCellFactory(getPaymentMethodsCellFactory())
+                .build());
     }
 
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
@@ -146,6 +154,26 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 } else {
                     percentagePriceLabel.setText("");
                     percentagePriceLabel.setTooltip(null);
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+            TableCell<OfferbookListItem, OfferbookListItem>> getPaymentMethodsCellFactory() {
+        return column -> new TableCell<>() {
+            @Override
+            protected void updateItem(OfferbookListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    HBox paymentMethodsBox = BisqEasyViewUtils.getPaymentAndSettlementMethodsBox(
+                            item.getFiatPaymentMethods(), item.getBitcoinPaymentMethods());
+                    paymentMethodsBox.setAlignment(Pos.CENTER_LEFT);
+                    paymentMethodsBox.setPadding(new Insets(0, 10, 0, 0));
+                    setGraphic(paymentMethodsBox);
+                } else {
                     setGraphic(null);
                 }
             }
