@@ -40,6 +40,12 @@ public class PercentageFormatter {
         return formatToPercent(value) + "%";
     }
 
+    public static String formatToPercentWithSignAndSymbol(double value) {
+        return value > 0
+                ? "+" + formatToPercentWithSymbol(value)
+                : formatToPercentWithSymbol(value);
+    }
+
     /**
      * @param value to be represented as percentage. 1 = 100 %. We show 2 fraction digits and use RoundingMode.HALF_UP
      * @return The formatted percentage value without the '%' sign

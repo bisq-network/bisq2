@@ -46,7 +46,8 @@ public class Res {
             "settings",
             "wallet",
             "authorized_role",
-            "payment_method"
+            "payment_method",
+            "offer"
     );
 
     private static final List<ResourceBundle> bundles = new ArrayList<>();

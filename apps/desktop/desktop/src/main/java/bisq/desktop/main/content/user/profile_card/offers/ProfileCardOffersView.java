@@ -92,14 +92,8 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.price"))
-                .left()
-                .comparator((o1, o2) -> {
-                    if (o1.getBisqEasyOffer().getDirection().isSell()) {
-                        return Double.compare(o1.getPriceSpecAsPercent(), o2.getPriceSpecAsPercent());
-                    } else {
-                        return Double.compare(o2.getPriceSpecAsPercent(), o1.getPriceSpecAsPercent());
-                    }
-                })
+                .right()
+                .comparator(Comparator.comparing(OfferbookListItem::getPriceSpecAsPercent))
                 .setCellFactory(getPriceCellFactory())
                 .build());
     }
@@ -145,9 +139,8 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    percentagePriceLabel.setText(item.getFormattedPercentagePrice());
-                    percentagePriceLabel.setStyle(item.isFixPrice() ? "-fx-text-fill: -bisq2-green-lit-20" : "");
                     tooltip.setText(item.getPriceTooltipText());
+                    percentagePriceLabel.setText(item.getFormattedPercentagePrice());
                     percentagePriceLabel.setTooltip(tooltip);
                     setGraphic(percentagePriceLabel);
                 } else {

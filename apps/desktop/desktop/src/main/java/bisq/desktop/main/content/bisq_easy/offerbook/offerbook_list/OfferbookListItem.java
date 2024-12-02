@@ -34,7 +34,7 @@ import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -117,15 +117,9 @@ public class OfferbookListItem {
 
     private void updatePriceSpecAsPercent() {
         priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
-        formattedPercentagePrice = PercentageFormatter.formatToPercentWithSymbol(priceSpecAsPercent);
-        String price = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer);
-        if (bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec) {
-            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.fixPrice", price, formattedPercentagePrice);
-        } else if (bisqEasyOffer.getPriceSpec() instanceof FloatPriceSpec) {
-            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.floatPrice", formattedPercentagePrice, price);
-        } else {
-            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.marketPrice", price);
-        }
+        formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
+        String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer);
+        priceTooltipText = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), offerPrice);
     }
 
     private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
