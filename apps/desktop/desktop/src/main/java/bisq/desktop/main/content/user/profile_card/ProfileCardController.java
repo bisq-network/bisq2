@@ -29,6 +29,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.profile_card.details.ProfileCardDetailsController;
+import bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersController;
 import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
 import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
 import bisq.desktop.overlay.OverlayController;
@@ -83,6 +84,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final ProfileCardOverviewController profileCardOverviewController;
     private final ProfileCardDetailsController profileCardDetailsController;
     private final ProfileCardReputationController profileCardReputationController;
+    private final ProfileCardOffersController profileCardOffersController;
     private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
     private Optional<Runnable> ignoreUserStateHandler, closeHandler;
     private Subscription userProfilePin;
@@ -98,6 +100,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         profileCardOverviewController = new ProfileCardOverviewController(serviceProvider);
         profileCardDetailsController = new ProfileCardDetailsController(serviceProvider);
         profileCardReputationController = new ProfileCardReputationController(serviceProvider);
+        profileCardOffersController = new ProfileCardOffersController(serviceProvider);
         view = new ProfileCardView(model, this);
     }
 
@@ -124,7 +127,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         return switch (navigationTarget) {
             case PROFILE_CARD_OVERVIEW -> Optional.of(profileCardOverviewController);
             case PROFILE_CARD_DETAILS -> Optional.of(profileCardDetailsController);
-//            case PROFILE_CARD_OFFERS -> Optional.of();
+            case PROFILE_CARD_OFFERS -> Optional.of(profileCardOffersController);
             case PROFILE_CARD_REPUTATION -> Optional.of(profileCardReputationController);
             default -> Optional.empty();
         };
