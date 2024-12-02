@@ -17,18 +17,26 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.user.profile.UserProfile;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProfileCardOffersController implements Controller {
     @Getter
     private final ProfileCardOffersView view;
     private final ProfileCardOffersModel model;
+    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
 
     public ProfileCardOffersController(ServiceProvider serviceProvider) {
         model = new ProfileCardOffersModel();
         view = new ProfileCardOffersView(model, this);
+        bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
     }
 
     @Override
@@ -37,5 +45,19 @@ public class ProfileCardOffersController implements Controller {
 
     @Override
     public void onDeactivate() {
+    }
+
+    public void updateUserProfileData(UserProfile userProfile) {
+        model.getListItems().clear();
+
+        List<ProfileCardOffersView.ListItem> userOffers = new ArrayList<>();
+        for (BisqEasyOfferbookChannel market : bisqEasyOfferbookChannelService.getChannels()) {
+            userOffers.addAll(market.getChatMessages().stream()
+                    .filter(chatMessage -> chatMessage.hasBisqEasyOffer()
+                            && chatMessage.getAuthorUserProfileId().equals(userProfile.getId()))
+                    .map(userChatMessageWithOffer -> new ProfileCardOffersView.ListItem(userProfile, userChatMessageWithOffer))
+                    .toList());
+        }
+        model.getListItems().addAll(userOffers);
     }
 }

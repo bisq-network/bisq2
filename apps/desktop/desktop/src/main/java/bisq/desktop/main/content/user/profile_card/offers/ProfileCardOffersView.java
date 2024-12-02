@@ -17,8 +17,12 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
@@ -56,14 +60,16 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
     }
 
     private void configTableView() {
-
     }
 
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     static class ListItem {
-        public ListItem() {
+        @EqualsAndHashCode.Include
+        private final BisqEasyOfferbookMessage bisqEasyOfferbookMessage;
 
+        public ListItem(UserProfile userProfile, BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+            this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
         }
     }
 }

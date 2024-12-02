@@ -111,6 +111,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
             profileCardOverviewController.updateUserProfileData(userProfile);
             profileCardDetailsController.updateUserProfileData(userProfile);
             profileCardReputationController.updateUserProfileData(userProfile);
+            profileCardOffersController.updateUserProfileData(userProfile);
             boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
             model.getShouldShowReportButton().set(!isMyProfile && selectedChannel.isPresent());
             model.getShouldShowUserActionsMenu().set(!isMyProfile);
