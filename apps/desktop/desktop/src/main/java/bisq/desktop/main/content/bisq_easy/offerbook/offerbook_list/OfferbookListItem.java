@@ -60,7 +60,7 @@ public class OfferbookListItem {
     private final ReputationService reputationService;
     private final UserProfile senderUserProfile;
     private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString,
-            fiatPaymentMethodsAsString, authorUserProfileId;
+            fiatPaymentMethodsAsString, authorUserProfileId, marketCurrencyCode, offerType;
     private final ReputationScore reputationScore;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
@@ -68,13 +68,13 @@ public class OfferbookListItem {
     private final Monetary quoteSideMinAmount;
     private final long totalScore;
     private double priceSpecAsPercent;
-    private String formattedPercentagePrice, priceTooltipText;
     private final Pin marketPriceByCurrencyMapPin;
+    private String formattedPercentagePrice, priceTooltipText;
 
-    OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
-                      UserProfile senderUserProfile,
-                      ReputationService reputationService,
-                      MarketPriceService marketPriceService) {
+    public OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
+                             UserProfile senderUserProfile,
+                             ReputationService reputationService,
+                             MarketPriceService marketPriceService) {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
 
         bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
@@ -94,6 +94,10 @@ public class OfferbookListItem {
         formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
         authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
+        marketCurrencyCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
+        offerType = bisqEasyOffer.getDirection().isBuy()
+                ? Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.buy")
+                : Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.sell");
 
         reputationScore = reputationService.getReputationScore(senderUserProfile);
         totalScore = reputationScore.getTotalScore();

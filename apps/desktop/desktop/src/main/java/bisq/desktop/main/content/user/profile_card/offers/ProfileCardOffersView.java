@@ -17,21 +17,30 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.user.profile.UserProfile;
+import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
+import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Comparator;
 
 @Slf4j
 public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, ProfileCardOffersController> {
-    private final BisqTableView<ListItem> tableView;
+    private final BisqTableView<OfferbookListItem> tableView;
 
     public ProfileCardOffersView(ProfileCardOffersModel model,
                                  ProfileCardOffersController controller) {
@@ -60,16 +69,93 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
     }
 
     private void configTableView() {
+        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+                .title(Res.get("user.profileCard.offers.table.columns.market"))
+                .left()
+                .comparator(Comparator.comparing(OfferbookListItem::getMarketCurrencyCode))
+                .setCellFactory(getMarketCellFactory())
+                .build());
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+                .title(Res.get("user.profileCard.offers.table.columns.offerType"))
+                .left()
+                .comparator(Comparator.comparing(OfferbookListItem::getOfferType))
+                .valueSupplier(OfferbookListItem::getOfferType)
+                .build());
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+                .title(Res.get("user.profileCard.offers.table.columns.amount"))
+                .left()
+                .comparator(Comparator.comparing(OfferbookListItem::getQuoteSideMinAmount))
+                .valueSupplier(OfferbookListItem::getFormattedRangeQuoteAmount)
+                .build());
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+                .title(Res.get("user.profileCard.offers.table.columns.price"))
+                .left()
+                .comparator((o1, o2) -> {
+                    if (o1.getBisqEasyOffer().getDirection().isSell()) {
+                        return Double.compare(o1.getPriceSpecAsPercent(), o2.getPriceSpecAsPercent());
+                    } else {
+                        return Double.compare(o2.getPriceSpecAsPercent(), o1.getPriceSpecAsPercent());
+                    }
+                })
+                .setCellFactory(getPriceCellFactory())
+                .build());
     }
 
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    @Getter
-    static class ListItem {
-        @EqualsAndHashCode.Include
-        private final BisqEasyOfferbookMessage bisqEasyOfferbookMessage;
+    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+            TableCell<OfferbookListItem, OfferbookListItem>> getMarketCellFactory() {
+        return column -> new TableCell<>() {
+            private final HBox marketLogoAndCodeBox = new HBox(10);
+            private final Label marketCodeLabel = new Label();
 
-        public ListItem(UserProfile userProfile, BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-            this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
-        }
+            {
+                marketLogoAndCodeBox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(OfferbookListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    Node marketLogo = MarketImageComposition.createMarketLogo(item.getMarketCurrencyCode());
+                    marketLogo.setCache(true);
+                    marketLogo.setCacheHint(CacheHint.SPEED);
+                    marketCodeLabel.setText(item.getMarketCurrencyCode());
+                    marketLogoAndCodeBox.getChildren().setAll(marketLogo, marketCodeLabel);
+                    setGraphic(marketLogoAndCodeBox);
+                } else {
+                    marketCodeLabel.setText("");
+                    marketLogoAndCodeBox.getChildren().clear();
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+            TableCell<OfferbookListItem, OfferbookListItem>> getPriceCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label percentagePriceLabel = new Label();
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            @Override
+            protected void updateItem(OfferbookListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    percentagePriceLabel.setText(item.getFormattedPercentagePrice());
+                    percentagePriceLabel.setStyle(item.isFixPrice() ? "-fx-text-fill: -bisq2-green-lit-20" : "");
+                    tooltip.setText(item.getPriceTooltipText());
+                    percentagePriceLabel.setTooltip(tooltip);
+                    setGraphic(percentagePriceLabel);
+                } else {
+                    percentagePriceLabel.setText("");
+                    percentagePriceLabel.setTooltip(null);
+                    setGraphic(null);
+                }
+            }
+        };
     }
 }

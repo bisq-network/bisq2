@@ -17,11 +17,14 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -32,11 +35,15 @@ public class ProfileCardOffersController implements Controller {
     private final ProfileCardOffersView view;
     private final ProfileCardOffersModel model;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final ReputationService reputationService;
+    private final MarketPriceService marketPriceService;
 
     public ProfileCardOffersController(ServiceProvider serviceProvider) {
         model = new ProfileCardOffersModel();
         view = new ProfileCardOffersView(model, this);
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
     }
 
     @Override
@@ -50,12 +57,13 @@ public class ProfileCardOffersController implements Controller {
     public void updateUserProfileData(UserProfile userProfile) {
         model.getListItems().clear();
 
-        List<ProfileCardOffersView.ListItem> userOffers = new ArrayList<>();
+        List<OfferbookListItem> userOffers = new ArrayList<>();
         for (BisqEasyOfferbookChannel market : bisqEasyOfferbookChannelService.getChannels()) {
             userOffers.addAll(market.getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.hasBisqEasyOffer()
                             && chatMessage.getAuthorUserProfileId().equals(userProfile.getId()))
-                    .map(userChatMessageWithOffer -> new ProfileCardOffersView.ListItem(userProfile, userChatMessageWithOffer))
+                    .map(userChatMessageWithOffer -> new OfferbookListItem(
+                            userChatMessageWithOffer, userProfile, reputationService, marketPriceService))
                     .toList());
         }
         model.getListItems().addAll(userOffers);

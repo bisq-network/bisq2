@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.profile_card.offers;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -26,5 +27,5 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class ProfileCardOffersModel implements Model {
-    private final ObservableList<ProfileCardOffersView.ListItem> listItems = FXCollections.observableArrayList();
+    private final ObservableList<OfferbookListItem> listItems = FXCollections.observableArrayList();
 }
