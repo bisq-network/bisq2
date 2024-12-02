@@ -30,9 +30,9 @@ import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 
-public final class TradePeerLefMessageBox extends PeerProtocolLogMessageBox {
-    public TradePeerLefMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                                  ChatMessagesListController controller) {
+public final class TradePeerLeftMessageBox extends PeerProtocolLogMessageBox {
+    public TradePeerLeftMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                   ChatMessagesListController controller) {
         super(item);
 
         BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = (BisqEasyOpenTradeMessage) item.getChatMessage();

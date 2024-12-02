@@ -127,7 +127,7 @@ final class ChatMessageListCellFactory
                                      ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         if (item.isLeaveChatMessage()) {
             if (item.getChatMessage() instanceof BisqEasyOpenTradeMessage) {
-                return new TradePeerLefMessageBox(item, controller);
+                return new TradePeerLeftMessageBox(item, controller);
             } else {
                 return new PeerLeftMessageBox(item, controller);
             }
