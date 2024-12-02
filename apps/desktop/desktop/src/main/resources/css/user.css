@@ -178,6 +178,11 @@
     -fx-pref-height: 25;
 }
 
+.profile-card .reputation .reputation-table.table-view .column-header-background {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-padding: 0 0 3 0;
+}
+
 .profile-card .reputation .reputation-table.table-view .table-row-cell {
     -fx-border-width: 0;
 }
