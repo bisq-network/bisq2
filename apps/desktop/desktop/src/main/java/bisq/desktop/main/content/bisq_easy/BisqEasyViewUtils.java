@@ -17,18 +17,25 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.common.data.Quadruple;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.security.DigestUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 
 import java.math.BigInteger;
+import java.util.List;
 
 public class BisqEasyViewUtils {
     private static final String[] customPaymentIconIds = {
@@ -69,5 +76,39 @@ public class BisqEasyViewUtils {
         StackPane stackPane = new StackPane(customPaymentIcon, initialLabel);
         stackPane.setAlignment(Pos.CENTER);
         return stackPane;
+    }
+
+    public static HBox getPaymentAndSettlementMethodsBox(List<FiatPaymentMethod> paymentMethods,
+                                                         List<BitcoinPaymentMethod> settlementMethods) {
+        HBox hBox = new HBox(8);
+        hBox.setAlignment(Pos.BOTTOM_LEFT);
+        for (FiatPaymentMethod paymentMethod : paymentMethods) {
+            hBox.getChildren().add(createMethodLabel(paymentMethod));
+        }
+
+        ImageView icon = ImageUtil.getImageViewById("interchangeable-grey");
+        Label interchangeableIcon = new Label();
+        interchangeableIcon.setGraphic(icon);
+        interchangeableIcon.setPadding(new Insets(0, 0, 1, 0));
+        hBox.getChildren().add(interchangeableIcon);
+
+        for (BitcoinPaymentMethod settlementMethod : settlementMethods) {
+            Label label = createMethodLabel(settlementMethod);
+            ColorAdjust colorAdjust = new ColorAdjust();
+            colorAdjust.setBrightness(-0.2);
+            label.setEffect(colorAdjust);
+            hBox.getChildren().add(label);
+        }
+        return hBox;
+    }
+
+    private static Label createMethodLabel(PaymentMethod<?> paymentMethod) {
+        Node icon = !paymentMethod.isCustomPaymentMethod()
+                ? ImageUtil.getImageViewById(paymentMethod.getName())
+                : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
+        Label label = new Label();
+        label.setGraphic(icon);
+        label.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
+        return label;
     }
 }

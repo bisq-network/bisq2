@@ -17,9 +17,6 @@
 
 package bisq.desktop.main.content.chat.message_container.list.message_box;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
@@ -47,13 +44,10 @@ import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.effect.BlurType;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -273,38 +267,9 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private HBox createAndGetPaymentAndSettlementMethodsBox() {
-        HBox hBox = new HBox(8);
-        if (item.isBisqEasyPublicChatMessageWithOffer()) {
-            for (FiatPaymentMethod fiatPaymentMethod : item.getBisqEasyOfferPaymentMethods()) {
-                hBox.getChildren().add(createMethodLabel(fiatPaymentMethod));
-            }
-
-            ImageView icon = ImageUtil.getImageViewById("interchangeable-grey");
-            Label interchangeableIcon = new Label();
-            interchangeableIcon.setGraphic(icon);
-            interchangeableIcon.setPadding(new Insets(0, 0, 1, 0));
-            hBox.getChildren().add(interchangeableIcon);
-
-            for (BitcoinPaymentMethod bitcoinPaymentMethod : item.getBisqEasyOfferSettlementMethods()) {
-                Label label = createMethodLabel(bitcoinPaymentMethod);
-                ColorAdjust colorAdjust = new ColorAdjust();
-                colorAdjust.setBrightness(-0.2);
-                label.setEffect(colorAdjust);
-                hBox.getChildren().add(label);
-            }
-        }
-        hBox.setAlignment(Pos.BOTTOM_LEFT);
-        return hBox;
-    }
-
-    private Label createMethodLabel(PaymentMethod<?> paymentMethod) {
-        Node icon = !paymentMethod.isCustomPaymentMethod()
-                ? ImageUtil.getImageViewById(paymentMethod.getName())
-                : BisqEasyViewUtils.getCustomPaymentMethodIcon(paymentMethod.getDisplayString());
-        Label label = new Label();
-        label.setGraphic(icon);
-        label.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
-        return label;
+        return item.isBisqEasyPublicChatMessageWithOffer()
+                ? BisqEasyViewUtils.getPaymentAndSettlementMethodsBox(item.getBisqEasyOfferPaymentMethods(), item.getBisqEasyOfferSettlementMethods())
+                : new HBox();
     }
 
     private VBox createAndGetQuotedMessageBox() {
