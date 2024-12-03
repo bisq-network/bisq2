@@ -29,7 +29,6 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.reputation.ReputationSource;
 import javafx.geometry.Insets;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

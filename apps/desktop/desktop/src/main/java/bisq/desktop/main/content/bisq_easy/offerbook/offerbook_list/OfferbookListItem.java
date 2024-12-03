@@ -34,7 +34,7 @@ import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -60,7 +60,7 @@ public class OfferbookListItem {
     private final ReputationService reputationService;
     private final UserProfile senderUserProfile;
     private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString,
-            fiatPaymentMethodsAsString, authorUserProfileId;
+            fiatPaymentMethodsAsString, authorUserProfileId, marketCurrencyCode, offerType;
     private final ReputationScore reputationScore;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
@@ -68,13 +68,13 @@ public class OfferbookListItem {
     private final Monetary quoteSideMinAmount;
     private final long totalScore;
     private double priceSpecAsPercent;
-    private String formattedPercentagePrice, priceTooltipText;
     private final Pin marketPriceByCurrencyMapPin;
+    private String formattedPercentagePrice, priceTooltipText;
 
-    OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
-                      UserProfile senderUserProfile,
-                      ReputationService reputationService,
-                      MarketPriceService marketPriceService) {
+    public OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
+                             UserProfile senderUserProfile,
+                             ReputationService reputationService,
+                             MarketPriceService marketPriceService) {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
 
         bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
@@ -94,6 +94,10 @@ public class OfferbookListItem {
         formattedRangeQuoteAmount = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
         isFixPrice = bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec;
         authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
+        marketCurrencyCode = bisqEasyOffer.getMarket().getQuoteCurrencyCode();
+        offerType = bisqEasyOffer.getDirection().isBuy()
+                ? Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.buy")
+                : Res.get("bisqEasy.offerbook.offerList.table.columns.offerType.sell");
 
         reputationScore = reputationService.getReputationScore(senderUserProfile);
         totalScore = reputationScore.getTotalScore();
@@ -113,15 +117,9 @@ public class OfferbookListItem {
 
     private void updatePriceSpecAsPercent() {
         priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
-        formattedPercentagePrice = PercentageFormatter.formatToPercentWithSymbol(priceSpecAsPercent);
-        String price = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer);
-        if (bisqEasyOffer.getPriceSpec() instanceof FixPriceSpec) {
-            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.fixPrice", price, formattedPercentagePrice);
-        } else if (bisqEasyOffer.getPriceSpec() instanceof FloatPriceSpec) {
-            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.floatPrice", formattedPercentagePrice, price);
-        } else {
-            priceTooltipText = Res.get("bisqEasy.offerbook.offerList.table.columns.price.tooltip.marketPrice", price);
-        }
+        formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
+        String offerPrice = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer);
+        priceTooltipText = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), offerPrice);
     }
 
     private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {
