@@ -70,12 +70,15 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
     }
 
     private void configTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        BisqTableColumn<OfferbookListItem> marketColumn = new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.market"))
                 .left()
-                .comparator(Comparator.comparing(OfferbookListItem::getMarketCurrencyCode))
+                .comparator(Comparator.comparing(OfferbookListItem::getMarketCurrencyCode)
+                        .thenComparing(OfferbookListItem::getOfferAgeInDays))
                 .setCellFactory(getMarketCellFactory())
-                .build());
+                .build();
+        tableView.getColumns().add(marketColumn);
+        tableView.getSortOrder().add(marketColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.offerAge"))
