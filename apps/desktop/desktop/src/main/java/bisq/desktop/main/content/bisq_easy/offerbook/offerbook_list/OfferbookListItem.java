@@ -106,9 +106,7 @@ public class OfferbookListItem {
         reputationScore = reputationService.getReputationScore(senderUserProfile);
         totalScore = reputationScore.getTotalScore();
         offerAgeInDays = TimeFormatter.getAgeInDays(bisqEasyOffer.getDate());
-        formattedOfferAge = offerAgeInDays == 0
-                ? Res.get("user.profileCard.offers.table.columns.offerAge.today")
-                : TimeFormatter.formatAgeInDays(bisqEasyOffer.getDate());
+        formattedOfferAge = TimeFormatter.formatAgeInDays(bisqEasyOffer.getDate());
         offerAgeTooltipText = Res.get("user.profileCard.offers.table.columns.offerAge.tooltip",
                 DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
 

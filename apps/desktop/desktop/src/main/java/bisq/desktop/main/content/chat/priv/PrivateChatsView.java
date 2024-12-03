@@ -323,7 +323,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(peersUserProfile);
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
-                    .map(TimeFormatter::formatAgeInDays)
+                    .map(TimeFormatter::formatAgeInDaysAndYears)
                     .orElse(Res.get("data.na"));
         }
 

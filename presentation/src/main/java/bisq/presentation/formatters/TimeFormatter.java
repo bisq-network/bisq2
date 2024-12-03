@@ -78,7 +78,7 @@ public class TimeFormatter {
         }
     }
 
-    public static String formatAgeInDays(long date) {
+    public static String formatAgeInDaysAndYears(long date) {
         long totalDays = getAgeInDays(date);
         long years = totalDays / 365;
         long days = totalDays - years * 365;
@@ -89,5 +89,12 @@ public class TimeFormatter {
         } else {
             return dayString;
         }
+    }
+
+    public static String formatAgeInDays(long date) {
+        long days = getAgeInDays(date);
+        return days == 0
+            ? Res.get("temporal.today")
+            : Res.getPluralization("temporal.day", days);
     }
 }

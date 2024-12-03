@@ -67,7 +67,7 @@ public class ProfileCardDetailsController implements Controller {
             model.getTotalReputationScore().set(String.valueOf(reputationScore.getTotalScore()));
         }));
         model.getProfileAge().set(reputationService.getProfileAgeService().getProfileAge(userProfile)
-                .map(TimeFormatter::formatAgeInDays)
+                .map(TimeFormatter::formatAgeInDaysAndYears)
                 .orElse(Res.get("data.na")));
         if (livenessUpdateScheduler != null) {
             livenessUpdateScheduler.stop();

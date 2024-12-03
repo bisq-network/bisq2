@@ -335,7 +335,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
             Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
-                    .map(TimeFormatter::formatAgeInDays)
+                    .map(TimeFormatter::formatAgeInDaysAndYears)
                     .orElse(Res.get("data.na"));
 
             // applyReputationScore gets called from selectedToggleChanged
@@ -402,7 +402,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
             return switch (reputationSource) {
                 case BURNED_BSQ, BSQ_BOND -> AmountFormatter.formatAmount(Coin.asBsqFromValue(value));
                 case PROFILE_AGE, BISQ1_ACCOUNT_AGE, BISQ1_SIGNED_ACCOUNT_AGE_WITNESS ->
-                        value > 0 ? TimeFormatter.formatAgeInDays(value) : "";
+                        value > 0 ? TimeFormatter.formatAgeInDaysAndYears(value) : "";
             };
         }
 
