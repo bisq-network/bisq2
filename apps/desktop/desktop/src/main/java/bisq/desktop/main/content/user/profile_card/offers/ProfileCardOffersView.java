@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.profile_card.offers;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -114,6 +115,12 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .isSortable(false)
                 .setCellFactory(getPaymentMethodsCellFactory())
                 .build());
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+                .left()
+                .isSortable(false)
+                .setCellFactory(getGotToOfferCellFactory())
+                .build());
     }
 
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
@@ -208,6 +215,26 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                     paymentMethodsBox.setPadding(new Insets(0, 10, 0, 0));
                     setGraphic(paymentMethodsBox);
                 } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+            TableCell<OfferbookListItem, OfferbookListItem>> getGotToOfferCellFactory() {
+        return column -> new TableCell<>() {
+            private final BisqMenuItem goToOfferButton = new BisqMenuItem(Res.get("user.profileCard.offers.table.columns.goToOffer.button"));
+
+            @Override
+            protected void updateItem(OfferbookListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    //goToOfferButton.setOnAction(e -> item.goToOffer());
+                    setGraphic(goToOfferButton);
+                } else {
+                    goToOfferButton.setOnAction(null);
                     setGraphic(null);
                 }
             }
