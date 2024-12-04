@@ -36,6 +36,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
@@ -121,7 +122,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         BisqEasyOfferbookMessage chatMessage = initData.getChatMessage();
         bisqEasyOfferbookChannelService.findChannel(chatMessage.getChannelId()).ifPresent(channel -> {
             maybeUpdateSelectedChannel(channel);
-            chatMessageContainerController.highlightOfferChatMessage(initData.getChatMessage());
+            UIScheduler.run(() -> chatMessageContainerController.highlightOfferChatMessage(initData.getChatMessage())).after(110);
         });
     }
 
