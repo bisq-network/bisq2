@@ -25,6 +25,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
@@ -36,6 +37,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
@@ -48,6 +50,9 @@ import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -62,7 +67,19 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public final class BisqEasyOfferbookController extends ChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
+public final class BisqEasyOfferbookController extends ChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel>
+        implements InitWithDataController<BisqEasyOfferbookController.InitData> {
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    public static final class InitData {
+        private final BisqEasyOfferbookMessage chatMessage;
+
+        public InitData(BisqEasyOfferbookMessage chatMessage) {
+            this.chatMessage = chatMessage;
+        }
+    }
+
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
@@ -97,6 +114,15 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         model.getMarketPricePredicate().test(item) &&
                         !item.getIsFavourite().get();
         favouriteMarketChannelItemsPredicate = item -> item.getIsFavourite().get();
+    }
+
+    @Override
+    public void initWithData(InitData initData) {
+        BisqEasyOfferbookMessage chatMessage = initData.getChatMessage();
+        bisqEasyOfferbookChannelService.findChannel(chatMessage.getChannelId()).ifPresent(channel -> {
+            maybeUpdateSelectedChannel(channel);
+            chatMessageContainerController.highlightOfferChatMessage(initData.getChatMessage());
+        });
     }
 
     @Override
@@ -304,9 +330,15 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     void onSelectMarketChannelItem(MarketChannelItem item) {
         if (item == null) {
             selectionService.selectChannel(null);
-        } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
-            selectionService.selectChannel(item.getChannel());
-            chatNotificationService.consume(item.getChannel());
+        } else {
+            maybeUpdateSelectedChannel(item.getChannel());
+        }
+    }
+
+    private void maybeUpdateSelectedChannel(BisqEasyOfferbookChannel channel) {
+        if (!channel.equals(selectionService.getSelectedChannel().get())) {
+            selectionService.selectChannel(channel);
+            chatNotificationService.consume(channel);
         }
     }
 

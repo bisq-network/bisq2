@@ -17,14 +17,20 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
+import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.desktop.main.content.components.ReportToModeratorWindow;
+import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -224,14 +230,20 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
             TableCell<OfferbookListItem, OfferbookListItem>> getGotToOfferCellFactory() {
         return column -> new TableCell<>() {
-            private final BisqMenuItem goToOfferButton = new BisqMenuItem(Res.get("user.profileCard.offers.table.columns.goToOffer.button"));
+            private final BisqMenuItem goToOfferButton = new BisqMenuItem(
+                    Res.get("user.profileCard.offers.table.columns.goToOffer.button"));
 
             @Override
             protected void updateItem(OfferbookListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    //goToOfferButton.setOnAction(e -> item.goToOffer());
+                    goToOfferButton.setOnAction(e -> {
+                        OverlayController.hide(() -> {
+                            Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK,
+                                    new BisqEasyOfferbookController.InitData(item.getBisqEasyOfferbookMessage()));
+                        });
+                    });
                     setGraphic(goToOfferButton);
                 } else {
                     goToOfferButton.setOnAction(null);
