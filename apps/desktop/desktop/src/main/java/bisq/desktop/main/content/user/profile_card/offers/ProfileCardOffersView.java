@@ -27,9 +27,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.components.MarketImageComposition;
-import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -56,14 +54,13 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
 
         VBox vBox = new VBox();
         vBox.setFillWidth(true);
-        vBox.getStyleClass().add("header");
+        vBox.getStyleClass().add("profile-card-table-header");
         tableView = new BisqTableView<>(model.getListItems());
-        tableView.getStyleClass().addAll("reputation-table", "rich-table-view");
+        tableView.getStyleClass().addAll("profile-card-table", "rich-table-view");
         tableView.allowVerticalScrollbar();
         configTableView();
         root.getChildren().addAll(vBox, tableView);
         root.setPadding(new Insets(20, 0, 0, 0));
-        root.getStyleClass().add("reputation");
     }
 
     @Override

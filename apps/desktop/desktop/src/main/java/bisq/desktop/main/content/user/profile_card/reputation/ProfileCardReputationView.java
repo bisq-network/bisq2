@@ -47,14 +47,13 @@ public class ProfileCardReputationView extends View<VBox, ProfileCardReputationM
 
         VBox vBox = new VBox();
         vBox.setFillWidth(true);
-        vBox.getStyleClass().add("header");
+        vBox.getStyleClass().add("profile-card-table-header");
         tableView = new BisqTableView<>(model.getListItems());
-        tableView.getStyleClass().addAll("reputation-table", "rich-table-view");
+        tableView.getStyleClass().addAll("profile-card-table", "rich-table-view");
         tableView.allowVerticalScrollbar();
         configTableView();
         root.getChildren().addAll(vBox, tableView);
         root.setPadding(new Insets(20, 0, 0, 0));
-        root.getStyleClass().add("reputation");
     }
 
     @Override
