@@ -178,6 +178,10 @@
     -fx-pref-height: 25;
 }
 
+.profile-card .profile-card-table.table-view .column-header .label {
+    -fx-alignment: center;
+}
+
 .profile-card .profile-card-table.table-view .column-header-background {
     -fx-background-color: -bisq-dark-grey-30;
     -fx-padding: 0 0 3 0;
