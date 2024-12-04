@@ -37,10 +37,13 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
@@ -229,6 +232,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         return column -> new TableCell<>() {
             private final BisqMenuItem goToOfferButton = new BisqMenuItem(
                     Res.get("user.profileCard.offers.table.columns.goToOffer.button"));
+            private Subscription selectedPin, hoverPin;
 
             {
                 goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;");
@@ -240,17 +244,29 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    goToOfferButton.setOnAction(e -> {
-                        OverlayController.hide(() -> {
+                    TableRow<OfferbookListItem> tableRow = getTableRow();
+                    if (tableRow != null) {
+                        selectedPin = EasyBind.subscribe(tableRow.selectedProperty(), isSelected ->
+                            goToOfferButton.setVisible(isSelected || tableRow.isHover()));
+                        hoverPin = EasyBind.subscribe(tableRow.hoverProperty(), isHover ->
+                            goToOfferButton.setVisible(isHover || tableRow.isSelected()));
+                    }
+                    goToOfferButton.setOnAction(e ->
+                        OverlayController.hide(() ->
                             Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK,
-                                    new BisqEasyOfferbookController.InitData(item.getBisqEasyOfferbookMessage()));
-                        });
-                    });
+                                    new BisqEasyOfferbookController.InitData(item.getBisqEasyOfferbookMessage()))));
                     goToOfferButton.setOnMouseEntered(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-light-text-color;"));
                     goToOfferButton.setOnMouseClicked(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-light-text-color;"));
                     goToOfferButton.setOnMouseExited(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;"));
                     setGraphic(goToOfferButton);
                 } else {
+                    if (selectedPin != null) {
+                        selectedPin.unsubscribe();
+                    }
+                    if (hoverPin != null) {
+                        hoverPin.unsubscribe();
+                    }
+                    goToOfferButton.setVisible(false);
                     goToOfferButton.setOnAction(null);
                     goToOfferButton.setOnMouseEntered(null);
                     goToOfferButton.setOnMouseClicked(null);
