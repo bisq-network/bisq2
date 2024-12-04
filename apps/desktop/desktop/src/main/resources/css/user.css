@@ -186,3 +186,7 @@
 .profile-card .profile-card-table.table-view .table-row-cell {
     -fx-border-width: 0;
 }
+
+.profile-card .profile-card-table.table-view .table-row-cell .go-to-offer-button {
+    -fx-underline: true;
+}

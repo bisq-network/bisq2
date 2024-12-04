@@ -230,6 +230,11 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
             private final BisqMenuItem goToOfferButton = new BisqMenuItem(
                     Res.get("user.profileCard.offers.table.columns.goToOffer.button"));
 
+            {
+                goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;");
+                goToOfferButton.getStyleClass().add("go-to-offer-button");
+            }
+
             @Override
             protected void updateItem(OfferbookListItem item, boolean empty) {
                 super.updateItem(item, empty);
@@ -241,9 +246,15 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                                     new BisqEasyOfferbookController.InitData(item.getBisqEasyOfferbookMessage()));
                         });
                     });
+                    goToOfferButton.setOnMouseEntered(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-light-text-color;"));
+                    goToOfferButton.setOnMouseClicked(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-light-text-color;"));
+                    goToOfferButton.setOnMouseExited(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;"));
                     setGraphic(goToOfferButton);
                 } else {
                     goToOfferButton.setOnAction(null);
+                    goToOfferButton.setOnMouseEntered(null);
+                    goToOfferButton.setOnMouseClicked(null);
+                    goToOfferButton.setOnMouseExited(null);
                     setGraphic(null);
                 }
             }
