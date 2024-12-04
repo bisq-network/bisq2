@@ -459,7 +459,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
                 profileAge = optionalProfileAge.orElse(0L);
                 profileAgeString = optionalProfileAge
-                        .map(TimeFormatter::formatAgeInDays)
+                        .map(TimeFormatter::formatAgeInDaysAndYears)
                         .orElse(Res.get("data.na"));
             }
         }

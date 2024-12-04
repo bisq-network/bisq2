@@ -35,7 +35,9 @@ import bisq.offer.price.OfferPriceFormatter;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -60,15 +62,17 @@ public class OfferbookListItem {
     private final ReputationService reputationService;
     private final UserProfile senderUserProfile;
     private final String userNickname, formattedRangeQuoteAmount, bitcoinPaymentMethodsAsString,
-            fiatPaymentMethodsAsString, authorUserProfileId, marketCurrencyCode, offerType;
+            fiatPaymentMethodsAsString, authorUserProfileId, marketCurrencyCode, offerType,
+            formattedOfferAge, offerAgeTooltipText;
     private final ReputationScore reputationScore;
     private final List<FiatPaymentMethod> fiatPaymentMethods;
     private final List<BitcoinPaymentMethod> bitcoinPaymentMethods;
     private final boolean isFixPrice;
     private final Monetary quoteSideMinAmount;
     private final long totalScore;
-    private double priceSpecAsPercent;
     private final Pin marketPriceByCurrencyMapPin;
+    private final long offerAgeInDays;
+    private double priceSpecAsPercent;
     private String formattedPercentagePrice, priceTooltipText;
 
     public OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
@@ -101,6 +105,10 @@ public class OfferbookListItem {
 
         reputationScore = reputationService.getReputationScore(senderUserProfile);
         totalScore = reputationScore.getTotalScore();
+        offerAgeInDays = TimeFormatter.getAgeInDays(bisqEasyOffer.getDate());
+        formattedOfferAge = TimeFormatter.formatAgeInDays(bisqEasyOffer.getDate());
+        offerAgeTooltipText = Res.get("user.profileCard.offers.table.columns.offerAge.tooltip",
+                DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                 UIThread.run(this::updatePriceSpecAsPercent));

@@ -70,15 +70,25 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
     }
 
     private void configTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        BisqTableColumn<OfferbookListItem> marketColumn = new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.market"))
                 .left()
-                .comparator(Comparator.comparing(OfferbookListItem::getMarketCurrencyCode))
+                .comparator(Comparator.comparing(OfferbookListItem::getMarketCurrencyCode)
+                        .thenComparing(OfferbookListItem::getOfferAgeInDays))
                 .setCellFactory(getMarketCellFactory())
+                .build();
+        tableView.getColumns().add(marketColumn);
+        tableView.getSortOrder().add(marketColumn);
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+                .title(Res.get("user.profileCard.offers.table.columns.offerAge"))
+                .left()
+                .comparator(Comparator.comparing(OfferbookListItem::getOfferAgeInDays))
+                .setCellFactory(getOfferAgeCellFactory())
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
-                .title(Res.get("user.profileCard.offers.table.columns.offerType"))
+                .title(Res.get("user.profileCard.offers.table.columns.offer"))
                 .left()
                 .comparator(Comparator.comparing(OfferbookListItem::getOfferType))
                 .valueSupplier(OfferbookListItem::getOfferType)
@@ -130,6 +140,30 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 } else {
                     marketCodeLabel.setText("");
                     marketLogoAndCodeBox.getChildren().clear();
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+            TableCell<OfferbookListItem, OfferbookListItem>> getOfferAgeCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label offerAgeLabel = new Label();
+            private final BisqTooltip tooltip = new BisqTooltip();
+
+            @Override
+            protected void updateItem(OfferbookListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    tooltip.setText(item.getOfferAgeTooltipText());
+                    offerAgeLabel.setText(item.getFormattedOfferAge());
+                    offerAgeLabel.setTooltip(tooltip);
+                    setGraphic(offerAgeLabel);
+                } else {
+                    offerAgeLabel.setText("");
+                    offerAgeLabel.setTooltip(null);
                     setGraphic(null);
                 }
             }

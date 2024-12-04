@@ -91,7 +91,7 @@ public class UserProfileController implements Controller {
                         model.getTerms().set(userProfile.getTerms());
 
                         model.getProfileAge().set(profileAgeService.getProfileAge(userIdentity.getUserProfile())
-                                .map(TimeFormatter::formatAgeInDays)
+                                .map(TimeFormatter::formatAgeInDaysAndYears)
                                 .orElse(Res.get("data.na")));
 
                         if (livenessUpateScheduler != null) {
