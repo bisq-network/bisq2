@@ -77,6 +77,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         BisqTableColumn<OfferbookListItem> marketColumn = new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.market"))
                 .left()
+                .minWidth(90)
                 .comparator(Comparator.comparing(OfferbookListItem::getMarketCurrencyCode)
                         .thenComparing(OfferbookListItem::getOfferAgeInDays))
                 .setCellFactory(getMarketCellFactory())
@@ -86,21 +87,22 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.offerAge"))
-                .left()
+                .minWidth(60)
                 .comparator(Comparator.comparing(OfferbookListItem::getOfferAgeInDays))
                 .setCellFactory(getOfferAgeCellFactory())
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.offer"))
-                .left()
+                .minWidth(80)
                 .comparator(Comparator.comparing(OfferbookListItem::getOfferType))
                 .valueSupplier(OfferbookListItem::getOfferType)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.amount"))
-                .left()
+                .right()
+                .minWidth(150)
                 .comparator(Comparator.comparing(OfferbookListItem::getQuoteSideMinAmount))
                 .valueSupplier(OfferbookListItem::getFormattedRangeQuoteAmount)
                 .build());
@@ -108,19 +110,21 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.price"))
                 .right()
+                .minWidth(90)
                 .comparator(Comparator.comparing(OfferbookListItem::getPriceSpecAsPercent))
                 .setCellFactory(getPriceCellFactory())
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.paymentMethods"))
-                .left()
+                .right()
+                .minWidth(210)
                 .isSortable(false)
                 .setCellFactory(getPaymentMethodsCellFactory())
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
-                .left()
+                .minWidth(100)
                 .isSortable(false)
                 .setCellFactory(getGotToOfferCellFactory())
                 .build());
@@ -214,8 +218,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 if (item != null && !empty) {
                     HBox paymentMethodsBox = BisqEasyViewUtils.getPaymentAndSettlementMethodsBox(
                             item.getFiatPaymentMethods(), item.getBitcoinPaymentMethods());
-                    paymentMethodsBox.setAlignment(Pos.CENTER_LEFT);
-                    paymentMethodsBox.setPadding(new Insets(0, 10, 0, 0));
+                    paymentMethodsBox.setAlignment(Pos.CENTER_RIGHT);
                     setGraphic(paymentMethodsBox);
                 } else {
                     setGraphic(null);
