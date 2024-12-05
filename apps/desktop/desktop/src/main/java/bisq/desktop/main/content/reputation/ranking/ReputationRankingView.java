@@ -17,15 +17,18 @@
 
 package bisq.desktop.main.content.reputation.ranking;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.TimeFormatter;
@@ -83,6 +86,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         VBox.setVgrow(contentBox, Priority.ALWAYS);
         root.getChildren().addAll(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
+        root.getStyleClass().add("reputation-ranking");
     }
 
     @Override
@@ -247,9 +251,18 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                     // Therefor we deactivate the update of the last activity.
                     userProfileIcon.setUseSecondTick(false);
                     userProfileIcon.setUserProfile(item.getUserProfile());
+                    userProfileIcon.getStyleClass().add("profile-icon");
+                    userProfileIcon.setOnMouseClicked(e ->
+                        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                                new ProfileCardController.InitData(item.getUserProfile())));
+                    userName.setOnMouseClicked(e ->
+                        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                                new ProfileCardController.InitData(item.getUserProfile())));
                     setGraphic(hBox);
                 } else {
+                    userProfileIcon.setOnMouseClicked(null);
                     userProfileIcon.dispose();
+                    userName.setOnMouseClicked(null);
                     setGraphic(null);
                 }
             }
