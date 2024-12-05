@@ -212,6 +212,10 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         settingsService.removeCookie(CookieKey.BISQ_EASY_OFFER_LIST_CUSTOM_PAYMENT_FILTER, getCookieSubKey());
     }
 
+    void refreshMessages() {
+        chatMessageContainerController.refreshMessages();
+    }
+
     private void applyCookiePaymentFilters() {
         model.getSelectedMarketPayments().clear();
         settingsService.getCookie().asString(CookieKey.BISQ_EASY_OFFER_LIST_PAYMENT_FILTERS, getCookieSubKey())

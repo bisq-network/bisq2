@@ -126,8 +126,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 new ProfileCardController.InitData(
                         userProfile,
                         model.getSelectedChannel(),
-                        chatMessageContainerController::refreshMessages,
-                        this::cleanupChannelInfo));
+                        chatMessageContainerController::refreshMessages));
     }
 
     protected void selectedChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
