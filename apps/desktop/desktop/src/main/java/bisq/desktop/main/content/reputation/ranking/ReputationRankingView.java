@@ -86,7 +86,6 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
         VBox.setVgrow(contentBox, Priority.ALWAYS);
         root.getChildren().addAll(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
-        root.getStyleClass().add("reputation-ranking");
     }
 
     @Override
@@ -251,7 +250,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                     // Therefor we deactivate the update of the last activity.
                     userProfileIcon.setUseSecondTick(false);
                     userProfileIcon.setUserProfile(item.getUserProfile());
-                    userProfileIcon.getStyleClass().add("profile-icon");
+                    userProfileIcon.getStyleClass().add("hand-cursor");
                     userProfileIcon.setOnMouseClicked(e ->
                         Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
                                 new ProfileCardController.InitData(item.getUserProfile())));

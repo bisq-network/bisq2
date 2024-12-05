@@ -323,10 +323,6 @@
     -fx-label-padding: 0 7;
 }
 
-.offers-list .profile-icon {
-    -fx-cursor: hand;
-}
-
 /* OFFER LIST FILTERS */
 .dropdown-offer-list-direction-filter-menu,
 .dropdown-offer-list-payment-filter-menu {

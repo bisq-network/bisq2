@@ -416,7 +416,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                                             controller::refreshMessages)));
                     reputationScoreDisplay.setReputationScore(item.getReputationScore());
                     userProfileIcon.setUserProfile(item.getSenderUserProfile());
-                    userProfileIcon.getStyleClass().add("profile-icon");
+                    userProfileIcon.getStyleClass().add("hand-cursor");
                     userProfileIcon.setOnMouseClicked(e ->
                             Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
                                     new ProfileCardController.InitData(
