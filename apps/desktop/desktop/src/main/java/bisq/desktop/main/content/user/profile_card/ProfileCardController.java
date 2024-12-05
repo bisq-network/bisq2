@@ -70,6 +70,10 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         public InitData(UserProfile userProfile) {
             this(userProfile, null, null);
         }
+
+        public InitData(UserProfile userProfile, @Nullable ChatChannel<? extends ChatMessage> selectedChannel) {
+            this(userProfile, selectedChannel, null);
+        }
     }
 
     @Getter
