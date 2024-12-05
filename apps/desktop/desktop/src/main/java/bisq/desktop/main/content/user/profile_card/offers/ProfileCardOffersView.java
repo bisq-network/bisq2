@@ -17,13 +17,18 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
+import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,14 +54,13 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
 
         VBox vBox = new VBox();
         vBox.setFillWidth(true);
-        vBox.getStyleClass().add("header");
+        vBox.getStyleClass().add("profile-card-table-header");
         tableView = new BisqTableView<>(model.getListItems());
-        tableView.getStyleClass().addAll("reputation-table", "rich-table-view");
+        tableView.getStyleClass().addAll("profile-card-table", "rich-table-view");
         tableView.allowVerticalScrollbar();
         configTableView();
         root.getChildren().addAll(vBox, tableView);
         root.setPadding(new Insets(20, 0, 0, 0));
-        root.getStyleClass().add("reputation");
     }
 
     @Override
@@ -113,6 +117,12 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .left()
                 .isSortable(false)
                 .setCellFactory(getPaymentMethodsCellFactory())
+                .build());
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+                .left()
+                .isSortable(false)
+                .setCellFactory(getGotToOfferCellFactory())
                 .build());
     }
 
@@ -208,6 +218,41 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                     paymentMethodsBox.setPadding(new Insets(0, 10, 0, 0));
                     setGraphic(paymentMethodsBox);
                 } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
+            TableCell<OfferbookListItem, OfferbookListItem>> getGotToOfferCellFactory() {
+        return column -> new TableCell<>() {
+            private final BisqMenuItem goToOfferButton = new BisqMenuItem(
+                    Res.get("user.profileCard.offers.table.columns.goToOffer.button"));
+
+            {
+                goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;");
+                goToOfferButton.getStyleClass().add("go-to-offer-button");
+            }
+
+            @Override
+            protected void updateItem(OfferbookListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    goToOfferButton.setOnAction(e ->
+                        OverlayController.hide(() ->
+                            Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK,
+                                    new BisqEasyOfferbookController.InitData(item.getBisqEasyOfferbookMessage()))));
+                    goToOfferButton.setOnMouseEntered(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-light-text-color;"));
+                    goToOfferButton.setOnMouseClicked(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-light-text-color;"));
+                    goToOfferButton.setOnMouseExited(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;"));
+                    setGraphic(goToOfferButton);
+                } else {
+                    goToOfferButton.setOnAction(null);
+                    goToOfferButton.setOnMouseEntered(null);
+                    goToOfferButton.setOnMouseClicked(null);
+                    goToOfferButton.setOnMouseExited(null);
                     setGraphic(null);
                 }
             }

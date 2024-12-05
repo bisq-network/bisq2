@@ -40,12 +40,13 @@ public abstract class NavigationController implements Controller {
         Optional<NavigationTarget> optionalCandidateTarget = Optional.of(navigationTarget);
         while (optionalCandidateTarget.isPresent()) {
             NavigationTarget candidateTarget = optionalCandidateTarget.get();
+            // Make sure to run InitData even if already in target location.
+            Optional<Controller> optionalChildController = findController(candidateTarget, data);
             if (model.getResolvedTarget().isPresent() && model.getResolvedTarget().get() == candidateTarget) {
                 // We as host controller have already selected the child target in question.
                 // We exit the loop here.
                 break;
             }
-            Optional<Controller> optionalChildController = findController(candidateTarget, data);
             if (optionalChildController.isPresent()) {
                 // We as host have found the controller and handle that target. 
                 Controller childController = optionalChildController.get();
