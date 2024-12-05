@@ -20,11 +20,9 @@ package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
@@ -36,7 +34,6 @@ import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookView;
 import bisq.desktop.main.content.chat.BaseChatView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
-import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import com.google.common.base.Joiner;
 import javafx.collections.ListChangeListener;
@@ -408,27 +405,12 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
                 if (item != null && !empty) {
                     userNameLabel.setText(item.getUserNickname());
-                    userNameLabel.setOnMouseClicked(e ->
-                            Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
-                                    new ProfileCardController.InitData(
-                                            item.getSenderUserProfile(),
-                                            model.getChannel().get(),
-                                            controller::refreshMessages)));
                     reputationScoreDisplay.setReputationScore(item.getReputationScore());
                     userProfileIcon.setUserProfile(item.getSenderUserProfile());
-                    userProfileIcon.getStyleClass().add("hand-cursor");
-                    userProfileIcon.setOnMouseClicked(e ->
-                            Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
-                                    new ProfileCardController.InitData(
-                                            item.getSenderUserProfile(),
-                                            model.getChannel().get(),
-                                            controller::refreshMessages)));
                     setGraphic(userProfileBox);
                 } else {
                     userNameLabel.setText("");
-                    userNameLabel.setOnMouseClicked(null);
                     reputationScoreDisplay.setReputationScore(null);
-                    userProfileIcon.setOnMouseClicked(null);
                     userProfileIcon.dispose();
                     setGraphic(null);
                 }
