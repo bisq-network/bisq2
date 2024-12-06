@@ -81,10 +81,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 this::openProfileCard);
 
         channelSidebar = new ChannelSidebar(serviceProvider,
-                () -> {
-                    doCloseSideBar();
-                    chatMessageContainerController.resetSelectedChatMessage();
-                },
+                this::doCloseSideBar,
                 this::openProfileCard);
 
         createDependencies(chatChannelDomain);
@@ -129,11 +126,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 new ProfileCardController.InitData(
                         userProfile,
                         model.getSelectedChannel(),
-                        chatMessageContainerController::refreshMessages,
-                        () -> {
-                            cleanupChannelInfo();
-                            chatMessageContainerController.resetSelectedChatMessage();
-                        }));
+                        chatMessageContainerController::refreshMessages));
     }
 
     protected void selectedChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
@@ -166,7 +159,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected void onToggleChannelInfo() {
         boolean visible = !model.getChannelSidebarVisible().get();
         doCloseSideBar();
-        chatMessageContainerController.resetSelectedChatMessage();
         model.getChannelSidebarVisible().set(visible);
         model.getSideBarVisible().set(visible);
         if (visible) {

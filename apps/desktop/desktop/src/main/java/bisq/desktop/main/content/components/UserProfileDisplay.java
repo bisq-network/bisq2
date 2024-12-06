@@ -17,6 +17,11 @@
 
 package bisq.desktop.main.content.components;
 
+import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatMessage;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import javafx.geometry.Pos;
@@ -33,6 +38,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public class UserProfileDisplay extends HBox {
     public static final double DEFAULT_ICON_SIZE = 30;
+
     private final UserProfileIcon userProfileIcon;
     private final ReputationScoreDisplay reputationScoreDisplay;
     @Getter
@@ -90,6 +96,8 @@ public class UserProfileDisplay extends HBox {
     }
 
     public void dispose() {
+        userProfileIcon.setOnMouseClicked(null);
+        userName.setOnMouseClicked(null);
         userProfileIcon.dispose();
         setReputationScore(null);
     }
@@ -116,5 +124,16 @@ public class UserProfileDisplay extends HBox {
 
     public void setReputationScoreDisplayScale(double scale) {
         reputationScoreDisplay.setScale(scale);
+    }
+
+    public void configureOpenProfileCard(UserProfile userProfile, ChatChannel<? extends ChatMessage> chatChannel) {
+        userProfileIcon.setOnMouseClicked(e ->
+                Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                        new ProfileCardController.InitData(userProfile, chatChannel)));
+        userName.setOnMouseClicked(e ->
+                Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                        new ProfileCardController.InitData(userProfile, chatChannel)));
+        userProfileIcon.getStyleClass().add("hand-cursor");
+        userName.getStyleClass().add("hand-cursor");
     }
 }

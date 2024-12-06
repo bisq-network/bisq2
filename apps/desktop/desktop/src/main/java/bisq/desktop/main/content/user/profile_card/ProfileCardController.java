@@ -57,20 +57,22 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     public static class InitData {
         private final UserProfile userProfile;
         private final Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
-        private final Optional<Runnable> ignoreUserStateHandler, closeHandler;
+        private final Optional<Runnable> ignoreUserStateHandler;
 
         public InitData(UserProfile userProfile,
                         @Nullable ChatChannel<? extends ChatMessage> selectedChannel,
-                        Runnable ignoreUserStateHandler,
-                        Runnable closeHandler) {
+                        Runnable ignoreUserStateHandler) {
             this.userProfile = userProfile;
             this.selectedChannel = Optional.ofNullable(selectedChannel);
             this.ignoreUserStateHandler = Optional.ofNullable(ignoreUserStateHandler);
-            this.closeHandler = Optional.ofNullable(closeHandler);
         }
 
         public InitData(UserProfile userProfile) {
-            this(userProfile, null, null, null);
+            this(userProfile, null, null);
+        }
+
+        public InitData(UserProfile userProfile, @Nullable ChatChannel<? extends ChatMessage> selectedChannel) {
+            this(userProfile, selectedChannel, null);
         }
     }
 
@@ -86,7 +88,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final ProfileCardReputationController profileCardReputationController;
     private final ProfileCardOffersController profileCardOffersController;
     private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
-    private Optional<Runnable> ignoreUserStateHandler, closeHandler;
+    private Optional<Runnable> ignoreUserStateHandler;
     private Subscription userProfilePin;
 
     public ProfileCardController(ServiceProvider serviceProvider) {
@@ -138,7 +140,6 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     public void initWithData(InitData initData) {
         selectedChannel = initData.selectedChannel;
         ignoreUserStateHandler = initData.ignoreUserStateHandler;
-        closeHandler = initData.closeHandler;
         model.getUserProfile().set(initData.userProfile);
     }
 
@@ -150,9 +151,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         OverlayController.hide(() -> {
             chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, model.getUserProfile().get())
                     .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
-            closeHandler.ifPresent(Runnable::run);
         });
-
     }
 
     void onToggleIgnoreUser() {
@@ -171,12 +170,11 @@ public class ProfileCardController extends TabController<ProfileCardModel>
             OverlayController.hide(() -> {
                 Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
                         new ReportToModeratorWindow.InitData(model.getUserProfile().get(), chatChannelDomain));
-                closeHandler.ifPresent(Runnable::run);
             });
         }
     }
 
     void onClose() {
-        OverlayController.hide(() -> closeHandler.ifPresent(Runnable::run));
+        OverlayController.hide();
     }
 }

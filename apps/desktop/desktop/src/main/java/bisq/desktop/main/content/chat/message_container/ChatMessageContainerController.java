@@ -100,10 +100,6 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void resetSelectedChatMessage() {
-        model.setSelectedChatMessage(null);
-    }
-
     public void refreshMessages() {
         chatMessagesListController.refreshMessages();
     }
@@ -132,7 +128,6 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     @Override
     public void onActivate() {
         model.getMentionableUsers().setAll(userProfileService.getUserProfiles());
-        Optional.ofNullable(model.getSelectedChatMessage()).ifPresent(this::showChatUserDetailsHandler);
 
         getUserIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::applyUserProfileOrChannelChange));
 
@@ -173,7 +168,6 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
     private void showChatUserDetailsHandler(ChatMessage chatMessage) {
-        model.setSelectedChatMessage(chatMessage);
         userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                 .ifPresent(openProfileCardHandler);
     }
