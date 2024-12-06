@@ -61,7 +61,7 @@ dependencies {
     implementation("bisq:application")
     implementation("bisq:evolution")
     implementation("bisq:os-specific")
-    implementation("bisq:rest-api")
+    implementation("bisq:http-api")
 
     implementation(project(":desktop"))
 

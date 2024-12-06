@@ -33,6 +33,9 @@ import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
+import bisq.http_api.HttpApiService;
+import bisq.http_api.rest_api.RestApiService;
+import bisq.http_api.web_socket.WebSocketService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -43,8 +46,6 @@ import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
-import bisq.rest_api.RestApiResourceConfig;
-import bisq.rest_api.RestApiService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
@@ -102,7 +103,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
-    private final RestApiService restApiService;
+    private final HttpApiService httpApiService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -223,8 +224,14 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 webcamAppService);
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
-        var restApiResourceConfig = new RestApiResourceConfig(restApiConfig, networkService, userService, bondedRolesService, chatService);
-        restApiService = new RestApiService(restApiConfig, restApiResourceConfig);
+        var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
+        httpApiService = new HttpApiService(restApiConfig,
+                websocketConfig,
+                securityService,
+                networkService,
+                userService,
+                bondedRolesService,
+                chatService);
     }
 
     @Override
@@ -274,7 +281,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> favouriteMarketsService.initialize())
                 .thenCompose(result -> dontShowAgainService.initialize())
                 .thenCompose(result -> webcamAppService.initialize())
-                .thenCompose(result -> restApiService.initialize())
+                .thenCompose(result -> httpApiService.initialize())
                 .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {
@@ -301,7 +308,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         // We shut down services in opposite order as they are initialized
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
-        return supplyAsync(() -> restApiService.shutdown().exceptionally(this::logError)
+        return supplyAsync(() -> httpApiService.shutdown().exceptionally(this::logError)
                 .thenCompose(result -> webcamAppService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> dontShowAgainService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> favouriteMarketsService.shutdown().exceptionally(this::logError))

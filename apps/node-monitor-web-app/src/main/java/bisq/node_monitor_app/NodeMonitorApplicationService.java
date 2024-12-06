@@ -26,18 +26,18 @@ import bisq.common.application.Service;
 import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
+import bisq.http_api.rest_api.RestApiService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
+import bisq.node_monitor.NodeMonitorService;
 import bisq.offer.OfferService;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
 import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import bisq.presentation.notifications.SystemNotificationService;
-import bisq.node_monitor.NodeMonitorService;
-import bisq.rest_api.RestApiService;
 import bisq.security.SecurityService;
 import bisq.security.keys.KeyBundleService;
 import bisq.settings.SettingsService;
@@ -79,8 +79,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
     private final SystemNotificationService systemNotificationService;
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
-    private final RestApiService restApiService;
     private final NodeMonitorService nodeMonitorService;
+    private Optional<RestApiService> restApiService = Optional.empty();
 
     public NodeMonitorApplicationService(String[] args) {
         super("node_monitor", args);
@@ -164,8 +164,10 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         nodeMonitorService = new NodeMonitorService(networkService, userService, bondedRolesService);
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
-        var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService);
-        restApiService = new RestApiService(restApiConfig, restApiResourceConfig);
+        if (restApiConfig.isEnabled()) {
+            var restApiResourceConfig = new NodeMonitorRestApiResourceConfig(restApiConfig, networkService, nodeMonitorService);
+            restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
+        }
     }
 
     @Override
@@ -210,7 +212,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
-                .thenCompose(result -> restApiService.initialize())
+                .thenCompose(result -> restApiService.map(RestApiService::initialize)
+                        .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> nodeMonitorService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -237,7 +240,8 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> nodeMonitorService.shutdown()
-                .thenCompose(result -> restApiService.shutdown())
+                .thenCompose(result -> restApiService.map(RestApiService::shutdown)
+                        .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
