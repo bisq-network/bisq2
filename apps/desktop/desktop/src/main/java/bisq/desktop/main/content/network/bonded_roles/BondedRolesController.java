@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.network.bonded_roles;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.observable.Pin;
@@ -25,8 +26,11 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.network.NetworkService;
 import bisq.user.UserService;
+import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -86,5 +90,10 @@ public abstract class BondedRolesController implements Controller {
                         item.getBondUserName().contains(string) ||
                         item.getAddress().toLowerCase().contains(string) ||
                         item.getRoleTypeString().toLowerCase().contains(string));
+    }
+
+    void openProfileCard(UserProfile userProfile) {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                new ProfileCardController.InitData(userProfile));
     }
 }
