@@ -292,7 +292,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    info.setOnAction(e -> controller.onShowDetails(item));
+                    info.setOnAction(e -> controller.onShowDetails(item.getUserProfile()));
                     setGraphic(info);
                 } else {
                     info.setOnAction(null);
