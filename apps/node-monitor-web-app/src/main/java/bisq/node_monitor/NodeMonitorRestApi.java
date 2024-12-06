@@ -18,7 +18,7 @@
 package bisq.node_monitor;
 
 import bisq.common.network.Address;
-import bisq.common.rest_api.error.RestApiException;
+import bisq.http_api.rest_api.error.RestApiException;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;

@@ -23,7 +23,7 @@ import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.application.Service;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
-import bisq.common.rest_api.error.RestApiException;
+import bisq.http_api.rest_api.error.RestApiException;
 import bisq.network.NetworkService;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;

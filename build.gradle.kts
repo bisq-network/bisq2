@@ -18,7 +18,7 @@ tasks.register("buildAll") {
             ":apps:desktop:desktop-app-launcher:generateInstallers",
             ":apps:desktop:webcam-app:build",
             ":apps:oracle-node-app:build",
-            ":apps:rest-api-app:build",
+            ":apps:http-api-app:build",
             ":apps:node-monitor-web-app:build",
 //            ":REPLACEME:build",
         ).forEach {
@@ -38,7 +38,7 @@ tasks.register("cleanAll") {
         listOf(
             ":apps:seed-node-app:clean",
             ":apps:oracle-node-app:clean",
-            ":apps:rest-api-app:clean",
+            ":apps:http-api-app:clean",
             ":apps:node-monitor-web-app:clean",
             ":apps:desktop:desktop:clean",
             ":apps:desktop:desktop-app:clean",

@@ -26,6 +26,7 @@ import bisq.chat.reactions.Reaction;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -52,12 +53,29 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     private final BisqEasyOfferbookChannelStore persistableStore = new BisqEasyOfferbookChannelStore();
     @Getter
     private final Persistence<BisqEasyOfferbookChannelStore> persistence;
+    @Getter
+    private final ObservableHashMap<String, Integer> numOffersByCurrencyCode = new ObservableHashMap<>();
 
     public BisqEasyOfferbookChannelService(PersistenceService persistenceService,
                                            NetworkService networkService,
                                            UserService userService) {
         super(networkService, userService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
+
+        getChannels().addObserver(() -> {
+            getChannels().forEach(
+                    channel -> {
+                        var code = channel.getMarket().getQuoteCurrencyCode();
+                        ObservableSet<BisqEasyOfferbookMessage> chatMessages = channel.getChatMessages();
+                        chatMessages.addObserver(()->{
+                            var numOffers = (int) chatMessages.stream()
+                                    .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                                    .count();
+                            numOffersByCurrencyCode.put(code, numOffers);
+                        });
+                    }
+            );
+        });
     }
 
 
