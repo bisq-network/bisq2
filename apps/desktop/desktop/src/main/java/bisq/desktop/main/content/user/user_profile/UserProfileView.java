@@ -85,6 +85,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         catHashImageView = new ImageView();
         catHashImageView.setFitWidth(UserProfileModel.CAT_HASH_IMAGE_SIZE);
         catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+        catHashImageView.getStyleClass().add("hand-cursor");
         contentBox.getChildren().add(catHashImageView);
 
         formVBox = new VBox(25);
@@ -184,6 +185,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             controller.onSelected(comboBox.getSelectionModel().getSelectedItem());
         });
         comboBox.validateOnNoItemSelectedWithMessage(Res.get("user.bondedRoles.userProfile.select.invalid"));
+        catHashImageView.setOnMouseClicked(e -> controller.onClickCatHashImage());
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
                 userIdentity -> comboBox.getSelectionModel().select(userIdentity));
@@ -223,6 +225,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         learnMore.setOnAction(null);
         comboBox.setOnChangeConfirmed(null);
         comboBox.getIsValidSelection().set(true);
+        catHashImageView.setOnMouseClicked(null);
 
         comboBox.resetValidation();
         statement.resetValidation();

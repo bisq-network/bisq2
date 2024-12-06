@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.user_profile;
 
 import bisq.bisq_easy.BisqEasyService;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -28,6 +29,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.presentation.formatters.TimeFormatter;
@@ -173,6 +175,11 @@ public class UserProfileController implements Controller {
                     UserIdentity value = userIdentityService.getSelectedUserIdentity();
                     model.getSelectedUserIdentity().set(value);
                 }));
+    }
+
+    void onClickCatHashImage() {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                new ProfileCardController.InitData(model.getSelectedUserIdentity().get().getUserProfile()));
     }
 
     private boolean noNewChangesToBeSaved(UserIdentity userIdentity) {
