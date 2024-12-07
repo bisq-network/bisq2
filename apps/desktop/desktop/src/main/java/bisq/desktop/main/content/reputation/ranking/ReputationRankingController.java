@@ -27,10 +27,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
-import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -41,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +56,6 @@ public class ReputationRankingController implements Controller {
             bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
             accountAgeScoreChangedFlagPin;
     private Subscription filterMenuItemTogglePin;
-    @Nullable
-    private ReputationDetailsPopup reputationDetailsPopup;
 
     public ReputationRankingController(ServiceProvider serviceProvider) {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
@@ -150,28 +145,13 @@ public class ReputationRankingController implements Controller {
         signedWitnessScoreChangedFlagPin.unbind();
 
         filterMenuItemTogglePin.unsubscribe();
-        if (reputationDetailsPopup != null) {
-            reputationDetailsPopup.dispose();
-            reputationDetailsPopup = null;
-        }
         model.getListItems().forEach(ReputationRankingView.ListItem::dispose);
         model.getListItems().clear();
     }
 
-    void onShowDetails(ReputationRankingView.ListItem item) {
-        if (reputationDetailsPopup != null) {
-            reputationDetailsPopup.dispose();
-        }
-        reputationDetailsPopup = new ReputationDetailsPopup(item.getUserProfile(), item.getReputationScore(), reputationService);
-        reputationDetailsPopup.initialize();
-        new Popup().headline(Res.get("reputation.table.columns.details.popup.headline"))
-                .content(reputationDetailsPopup)
-                .width(1000)
-                .onClose(() -> {
-                    reputationDetailsPopup.dispose();
-                    reputationDetailsPopup = null;
-                })
-                .show();
+    void onShowDetails(UserProfile userProfile) {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD_REPUTATION,
+                new ProfileCardController.InitData(userProfile));
     }
 
     void applySearchPredicate(String searchText) {
