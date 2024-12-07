@@ -18,7 +18,6 @@
 package bisq.network.tor.controller;
 
 import bisq.common.observable.Observable;
-import bisq.network.tor.TorrcClientConfigFactory;
 import bisq.network.tor.controller.events.events.BootstrapEvent;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
@@ -35,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.network.tor.common.torrc.Torrc.Keys.DISABLE_NETWORK;
+
 @Slf4j
 public class BootstrapService extends BootstrapEventListener {
     private final TorControlProtocol torControlProtocol;
@@ -44,29 +45,35 @@ public class BootstrapService extends BootstrapEventListener {
     @Getter
     private Optional<CompletableFuture<Void>> future = Optional.empty();
 
-    public BootstrapService(TorControlProtocol torControlProtocol, long timeout, Observable<BootstrapEvent> bootstrapEvent) {
+    public BootstrapService(TorControlProtocol torControlProtocol,
+                            long timeout,
+                            Observable<BootstrapEvent> bootstrapEvent) {
         super(EventType.STATUS_CLIENT);
         this.torControlProtocol = torControlProtocol;
         this.timeout = timeout;
         this.bootstrapEvent = bootstrapEvent;
     }
 
-    public CompletableFuture<Void> bootstrap() {
+    public CompletableFuture<Void> bootstrap(boolean useExternalTor) {
         future = Optional.of(CompletableFuture.runAsync(() -> {
                     torControlProtocol.takeOwnership();
                     torControlProtocol.resetConf(NativeTorProcess.ARG_OWNER_PID);
 
                     torControlProtocol.addBootstrapEventListener(this);
 
-                    torControlProtocol.setConfig(TorrcClientConfigFactory.DISABLE_NETWORK_CONFIG_KEY, "0");
+                    torControlProtocol.setConfig(DISABLE_NETWORK, "0");
 
-                    try {
-                        boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
-                        if (!isSuccess) {
-                            throw new TorBootstrapFailedException("Could not bootstrap Tor in " + timeout / 1000 + " seconds");
+                    if (useExternalTor) {
+                        onBootstrapStatusEvent(BootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
+                    } else {
+                        try {
+                            boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
+                            if (!isSuccess) {
+                                throw new TorBootstrapFailedException("Could not bootstrap Tor in " + timeout / 1000 + " seconds");
+                            }
+                        } catch (InterruptedException e) {
+                            throw new TorBootstrapFailedException(e);
                         }
-                    } catch (InterruptedException e) {
-                        throw new TorBootstrapFailedException(e);
                     }
                 }, MoreExecutors.directExecutor())
                 .whenComplete((nil, throwable) ->

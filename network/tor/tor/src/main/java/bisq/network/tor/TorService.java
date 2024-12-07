@@ -24,29 +24,30 @@ import bisq.common.observable.Observable;
 import bisq.common.platform.LinuxDistribution;
 import bisq.common.platform.OS;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
+import bisq.network.tor.common.torrc.Torrc;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
-import bisq.security.keys.TorKeyPair;
 import bisq.network.tor.controller.TorController;
 import bisq.network.tor.controller.events.events.BootstrapEvent;
 import bisq.network.tor.installer.TorInstaller;
 import bisq.network.tor.process.NativeTorProcess;
 import bisq.network.tor.process.control_port.ControlPortFilePoller;
+import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_PORT;
 
 @Slf4j
 public class TorService implements Service {
@@ -88,7 +89,7 @@ public class TorService implements Service {
             }
 
             PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
-            createTorrcConfigFile(torDataDirPath, hashedControlPassword);
+            Map<String, String> torrcConfigMap = createTorrcConfigFile(torDataDirPath, hashedControlPassword);
 
             Path torBinaryPath = getTorBinaryPath();
             if (!isTorRunning(torBinaryPath.toString())) {
@@ -98,6 +99,31 @@ public class TorService implements Service {
                     if (!isSuccess) {
                         throw new IllegalStateException("Couldn't remove tor lock file.");
                     }
+                }
+            }
+
+            if (useExternalTor()) {
+                var clonedTorrcConfigMap = new HashMap<>(torrcConfigMap);
+                Torrc.maybeApplyExternalTorDefaultTorrcValues(clonedTorrcConfigMap);
+
+                String controlPortString = clonedTorrcConfigMap.get(CONTROL_PORT); // maybeApplyExternalTorDefaultTorrcValues guarantees the value is present
+                String[] tokens = controlPortString.split(":");
+                String controlHost = tokens[0];
+                int controlPort = Integer.parseInt(tokens[1]);
+                try (Socket socket = new Socket()) {
+                    var socketAddress = new InetSocketAddress(controlHost, controlPort);
+                    socket.connect(socketAddress);
+                    log.info("Test connection to control server of external tor process successful.");
+                    socket.close();
+
+                    // If socket.connect did not fail we know that external tor is running.
+                    torController.initialize(controlPort, hashedControlPassword);
+                    torController.bootstrap(true);
+                    int port = torController.getSocksPort();
+                    torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
+                    return CompletableFuture.completedFuture(true);
+                } catch (IOException e) {
+                    log.error("Could not connect to external tor process. We try to start the embedded Tor", e);
                 }
             }
 
@@ -112,7 +138,7 @@ public class TorService implements Service {
                     .parsePort()
                     .thenAccept(controlPort -> {
                         torController.initialize(controlPort, hashedControlPassword);
-                        torController.bootstrap();
+                        torController.bootstrap(false);
 
                         int port = torController.getSocksPort();
                         torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
@@ -125,6 +151,14 @@ public class TorService implements Service {
                 return true;
             });
         }
+    }
+
+    public boolean useExternalTor() {
+        return transportConfig.isUseExternalTor();
+    }
+
+    public boolean useEmbeddedTor() {
+        return !useExternalTor();
     }
 
     @Override
@@ -203,7 +237,7 @@ public class TorService implements Service {
         torInstaller.installIfNotUpToDate();
     }
 
-    private void createTorrcConfigFile(Path dataDir, PasswordDigest hashedControlPassword) {
+    private Map<String, String> createTorrcConfigFile(Path dataDir, PasswordDigest hashedControlPassword) {
         TorrcClientConfigFactory torrcClientConfigFactory = TorrcClientConfigFactory.builder()
                 .isTestNetwork(transportConfig.isTestNetwork())
                 .dataDir(dataDir)
@@ -218,5 +252,6 @@ public class TorService implements Service {
                 torrcConfigMap,
                 transportConfig.getDirectoryAuthorities());
         torrcFileGenerator.generate();
+        return torrcConfigMap;
     }
 }

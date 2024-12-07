@@ -53,7 +53,7 @@ public class TorControlProtocol implements AutoCloseable {
 
     @Override
     public void close() {
-        if(closeInProgress){
+        if (closeInProgress) {
             return;
         }
         closeInProgress = true;
@@ -251,6 +251,7 @@ public class TorControlProtocol implements AutoCloseable {
 
     private void sendCommand(String command) {
         try {
+            log.info("Send Tor control command: {}", command);
             @SuppressWarnings("resource") OutputStream outputStream = this.outputStream.orElseThrow();
             byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
             outputStream.write(commandBytes);

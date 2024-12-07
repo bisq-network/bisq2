@@ -48,11 +48,11 @@ public class TorController {
         torControlProtocol.close();
     }
 
-    public void bootstrap() {
+    public void bootstrap(boolean useExternalTor) {
         if (isShutdownInProgress) {
             return;
         }
-        bootstrapAsync()
+        bootstrapAsync(useExternalTor)
                 .exceptionally(throwable -> {
                     if (throwable instanceof TorBootstrapFailedException) {
                         throw (TorBootstrapFailedException) throwable;
@@ -64,14 +64,14 @@ public class TorController {
                 .join();
     }
 
-    public CompletableFuture<Void> bootstrapAsync() {
+    public CompletableFuture<Void> bootstrapAsync(boolean useExternalTor) {
         if (bootstrapService.isPresent() && bootstrapService.get().getFuture().isPresent()) {
             return bootstrapService.get().getFuture().get();
         }
 
         BootstrapService service = new BootstrapService(torControlProtocol, bootstrapTimeout, bootstrapEvent);
         bootstrapService = Optional.of(service);
-        CompletableFuture<Void> future = service.bootstrap();
+        CompletableFuture<Void> future = service.bootstrap(useExternalTor);
         future.whenComplete((nil, throwable) -> bootstrapService = Optional.empty());
         return future;
     }
