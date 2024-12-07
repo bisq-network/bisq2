@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import static bisq.common.facades.FacadeProvider.getJdkFacade;
 
 @Slf4j
-public class NativeTorProcess {
+public class EmbeddedTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
 
     private final Path torDataDirPath;
@@ -38,7 +38,7 @@ public class NativeTorProcess {
     private final Path torrcPath;
     private Optional<Process> process = Optional.empty();
 
-    public NativeTorProcess(Path torBinaryPath, Path torDataDirPath) {
+    public EmbeddedTorProcess(Path torBinaryPath, Path torDataDirPath) {
         this.torBinaryPath = torBinaryPath;
         this.torDataDirPath = torDataDirPath;
         this.torrcPath = torDataDirPath.resolve("torrc");
