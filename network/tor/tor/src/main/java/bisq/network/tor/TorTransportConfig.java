@@ -18,6 +18,7 @@
 package bisq.network.tor;
 
 import bisq.common.network.TransportConfig;
+import bisq.common.util.StringUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigValue;
@@ -38,6 +39,14 @@ import java.util.concurrent.TimeUnit;
 public class TorTransportConfig implements TransportConfig {
 
     public static TorTransportConfig from(Path dataDir, com.typesafe.config.Config config) {
+        boolean skipTorLaunch;
+        // If environment variable is set we take that, otherwise the value from the config
+        String torHost = System.getenv("TOR_SKIP_LAUNCH");
+        if (StringUtils.isNotEmpty(torHost)) {
+            skipTorLaunch = torHost.equals("1") || torHost.equalsIgnoreCase("true") || torHost.equalsIgnoreCase("yes");
+        } else {
+            skipTorLaunch = config.getBoolean("skipTorLaunch");
+        }
         return new TorTransportConfig(
                 dataDir,
                 config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
@@ -49,7 +58,8 @@ public class TorTransportConfig implements TransportConfig {
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                 parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
                 config.getInt("sendMessageThrottleTime"),
-                config.getInt("receiveMessageThrottleTime")
+                config.getInt("receiveMessageThrottleTime"),
+                skipTorLaunch
         );
     }
 
@@ -97,6 +107,7 @@ public class TorTransportConfig implements TransportConfig {
     private final Map<String, String> torrcOverrides;
     private final int sendMessageThrottleTime;
     private final int receiveMessageThrottleTime;
+    private final boolean skipTorLaunch;
 
     public TorTransportConfig(Path dataDir,
                               int defaultNodePort,
@@ -108,7 +119,8 @@ public class TorTransportConfig implements TransportConfig {
                               Set<DirectoryAuthority> directoryAuthorities,
                               Map<String, String> torrcOverrides,
                               int sendMessageThrottleTime,
-                              int receiveMessageThrottleTime) {
+                              int receiveMessageThrottleTime,
+                              boolean skipTorLaunch) {
         this.dataDir = dataDir;
         this.defaultNodePort = defaultNodePort;
         this.bootstrapTimeout = bootstrapTimeout;
@@ -120,5 +132,6 @@ public class TorTransportConfig implements TransportConfig {
         this.torrcOverrides = torrcOverrides;
         this.sendMessageThrottleTime = sendMessageThrottleTime;
         this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+        this.skipTorLaunch = skipTorLaunch;
     }
 }
