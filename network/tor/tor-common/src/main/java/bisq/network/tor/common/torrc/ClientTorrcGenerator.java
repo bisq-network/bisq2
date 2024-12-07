@@ -32,7 +32,7 @@ public class ClientTorrcGenerator implements TorrcConfigGenerator {
     @Override
     public Map<String, String> generate() {
         Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
-        torConfigMap.put("SocksPort", "auto");
+        torConfigMap.put(Torrc.Keys.SOCKS_PORT,  Torrc.Values.EmbeddedTor.SOCKS_PORT_AUTO);
         return torConfigMap;
     }
 }

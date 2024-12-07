@@ -6,6 +6,7 @@ import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.tor.controller.events.events.BootstrapEvent;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
 import bisq.network.tor.TorService;
@@ -38,22 +39,33 @@ public class TorTransportService implements TransportService {
         if (torService == null) {
             torService = new TorService((TorTransportConfig) config);
             bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-            startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo))
-                    .host(this)
-                    .runnableName("updateStartBootstrapProgress")
-                    .periodically(1000);
-            bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
+            if (torService.useEmbeddedTor()) {
+                startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo))
+                        .host(this)
+                        .runnableName("updateStartBootstrapProgress")
+                        .periodically(1000);
+                bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
+            }
+
             torService.getBootstrapEvent().addObserver(bootstrapEvent -> {
                 if (bootstrapEvent != null) {
-                    int bootstrapEventProgress = bootstrapEvent.getProgress();
-                    // First 25% we attribute to the bootstrap to the Tor network. Takes usually about 3 sec.
-                    if (bootstrapInfo.getBootstrapProgress().get() < 0.25) {
-                        if (startBootstrapProgressUpdater != null) {
-                            startBootstrapProgressUpdater.stop();
-                            startBootstrapProgressUpdater = null;
+                    if (bootstrapEvent.equals(BootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED)) {
+                        bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
+                        bootstrapInfo.getBootstrapProgress().set(bootstrapEvent.getProgress() / 100d);
+                        bootstrapInfo.getBootstrapDetails().set(bootstrapEvent.getSummary());
+                    } else {
+                        int bootstrapEventProgress = bootstrapEvent.getProgress();
+                        // First 25% we attribute to the bootstrap to the Tor network. Takes usually about 3 sec.
+                        if (bootstrapInfo.getBootstrapProgress().get() < 0.25) {
+                            // If we got an event we stop the simulated periodic update per second. This was just to get
+                            // a progress > 0 displayed in case we got stuck at bootstrap.
+                            if (startBootstrapProgressUpdater != null) {
+                                startBootstrapProgressUpdater.stop();
+                                startBootstrapProgressUpdater = null;
+                            }
+                            bootstrapInfo.getBootstrapProgress().set(bootstrapEventProgress / 400d);
+                            bootstrapInfo.getBootstrapDetails().set("Tor bootstrap event: " + bootstrapEvent.getTag());
                         }
-                        bootstrapInfo.getBootstrapProgress().set(bootstrapEventProgress / 400d);
-                        bootstrapInfo.getBootstrapDetails().set("Tor bootstrap event: " + bootstrapEvent.getTag());
                     }
                 }
             });
@@ -63,6 +75,12 @@ public class TorTransportService implements TransportService {
     @Override
     public void initialize() {
         log.info("Initialize Tor");
+        if (torService.useExternalTor()) {
+            BootstrapEvent event = BootstrapEvent.CONNECT_TO_EXTERNAL_TOR;
+            bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECT_TO_EXTERNAL_TOR);
+            bootstrapInfo.getBootstrapProgress().set((double) event.getProgress());
+            bootstrapInfo.getBootstrapDetails().set(event.getSummary());
+        }
         torService.initialize().join();
     }
 
