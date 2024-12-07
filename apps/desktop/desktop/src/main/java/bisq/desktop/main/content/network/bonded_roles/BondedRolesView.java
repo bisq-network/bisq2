@@ -100,10 +100,17 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                         userName.setStyle("-fx-text-fill: -fx-light-text-color;");
                     }
 
-                    item.getUserProfile().ifPresent(userProfileIcon::setUserProfile);
+                    item.getUserProfile().ifPresent(userProfile -> {
+                        userProfileIcon.setUserProfile(userProfile);
+                        userProfileIcon.getStyleClass().add("hand-cursor");
+                        userProfileIcon.setOnMouseClicked(e -> controller.openProfileCard(userProfile));
+                        userName.setOnMouseClicked(e -> controller.openProfileCard(userProfile));
+                    });
                     setGraphic(hBox);
                 } else {
                     userName.setTooltip(null);
+                    userName.setOnMouseClicked(null);
+                    userProfileIcon.setOnMouseClicked(null);
                     userProfileIcon.dispose();
                     setGraphic(null);
                 }

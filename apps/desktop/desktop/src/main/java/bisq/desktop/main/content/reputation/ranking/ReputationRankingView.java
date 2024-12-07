@@ -17,18 +17,15 @@
 
 package bisq.desktop.main.content.reputation.ranking;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.IndexColumnUtil;
 import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
-import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.TimeFormatter;
@@ -251,12 +248,8 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                     userProfileIcon.setUseSecondTick(false);
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     userProfileIcon.getStyleClass().add("hand-cursor");
-                    userProfileIcon.setOnMouseClicked(e ->
-                        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
-                                new ProfileCardController.InitData(item.getUserProfile())));
-                    userName.setOnMouseClicked(e ->
-                        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
-                                new ProfileCardController.InitData(item.getUserProfile())));
+                    userProfileIcon.setOnMouseClicked(e -> controller.openProfileCard(item.getUserProfile()));
+                    userName.setOnMouseClicked(e -> controller.openProfileCard(item.getUserProfile()));
                     setGraphic(hBox);
                 } else {
                     userProfileIcon.setOnMouseClicked(null);

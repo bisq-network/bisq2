@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.reputation.ranking;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
@@ -24,9 +25,11 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.RichTableView;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -188,6 +191,11 @@ public class ReputationRankingController implements Controller {
                 .flatMap(selectedFilterMenuItem -> selectedFilterMenuItem.getData()
                         .filter(data -> data instanceof ReputationSource)
                         .map(data -> (ReputationSource) data));
+    }
+
+    void openProfileCard(UserProfile userProfile) {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                new ProfileCardController.InitData(userProfile));
     }
 
     private void updateScore(Pair<String, Long> userProfileIdScorePair) {

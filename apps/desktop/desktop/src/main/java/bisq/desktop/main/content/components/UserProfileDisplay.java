@@ -126,7 +126,11 @@ public class UserProfileDisplay extends HBox {
         reputationScoreDisplay.setScale(scale);
     }
 
-    public void configureOpenProfileCard(UserProfile userProfile, ChatChannel<? extends ChatMessage> chatChannel) {
+    public void configureOpenProfileCard(UserProfile userProfile) {
+        configureOpenProfileCard(userProfile, null);
+    }
+
+    public void configureOpenProfileCard(UserProfile userProfile, @Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         userProfileIcon.setOnMouseClicked(e ->
                 Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
                         new ProfileCardController.InitData(userProfile, chatChannel)));
