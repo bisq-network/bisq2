@@ -17,6 +17,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 import { Constants } from '../Constants.js';
+import { Config } from '../Config.js';
 
 export class SettingsView {
     constructor(reportView, storageService, dataService, onSettingsChangedCallback) {
@@ -70,8 +71,8 @@ export class SettingsView {
     }
 
     #initializeAddressesTextAndPortsText() {
-        const addressesText = this.storageService.getAddressesCookie();
-        const portsText = this.storageService.getPortsCookie();
+        const addressesText = this.storageService.getRawAddresses();
+        const portsText = this.storageService.getRawPorts();
         document.getElementById("addressListInput").value = addressesText;
         document.getElementById("portListInput").value = portsText;
     }
@@ -81,16 +82,12 @@ export class SettingsView {
         document.getElementById("addressListInput").placeholder = Constants.PLACEHOLDER_ADDRESS_LIST;
         document.getElementById("portListInput").placeholder = Constants.PLACEHOLDER_PORT_LIST;
 
-        const addressesText = this.storageService.getAddressesCookie() || '';
-        const portsText = this.storageService.getPortsCookie() || '';
+        const addressesText = this.storageService.getRawAddresses() || '';
+        const portsText = this.storageService.getRawPorts() || '';
         document.getElementById("addressListInput").value = addressesText;
         document.getElementById("portListInput").value = portsText;
 
-        const thresholds = this.storageService.getDeviationThresholds() || {
-            LOW: 5,
-            MEDIUM: 20,
-            HIGH: 50
-        };
+        const thresholds = this.storageService.getDeviationThresholds() || Config.DEVIATION_THRESHOLDS;
         document.getElementById("lowThreshold").value = thresholds.LOW;
         document.getElementById("mediumThreshold").value = thresholds.MEDIUM;
         document.getElementById("highThreshold").value = thresholds.HIGH;
@@ -119,21 +116,20 @@ export class SettingsView {
         const addressesInput = document.getElementById("addressListInput").value;
         const portsInput = document.getElementById("portListInput").value;
 
-        const lowThreshold = parseInt(document.getElementById("lowThreshold").value, 10);
-        const mediumThreshold = parseInt(document.getElementById("mediumThreshold").value, 10);
-        const highThreshold = parseInt(document.getElementById("highThreshold").value, 10);
+        const lowThreshold = Number(document.getElementById("lowThreshold").value) || Constants.DEVIATION_THRESHOLDS_LOW;
+        const mediumThreshold = Number(document.getElementById("mediumThreshold").value) || Constants.DEVIATION_THRESHOLDS_MEDIUM;
+        const highThreshold = Number(document.getElementById("highThreshold").value) || Constants.DEVIATION_THRESHOLDS_HIGH;
+        const newThresholds = {
+            LOW: lowThreshold,
+            MEDIUM: mediumThreshold,
+            HIGH: highThreshold
+        };
 
         try {
             this.storageService.saveAddressesAndPorts(addressesInput, portsInput);
 
-            const newThresholds = {
-                LOW: lowThreshold,
-                MEDIUM: mediumThreshold,
-                HIGH: highThreshold
-            };
             this.storageService.saveDeviationThresholds(newThresholds);
-
-            Constants.initialize({ DEVIATION_THRESHOLDS: newThresholds });
+            Config.initialize({ DEVIATION_THRESHOLDS: newThresholds });
 
             this.reportView.renderInfoMessage("Configuration saved successfully.", 1);
             this.toggleSettingsMenu();

@@ -89,22 +89,21 @@ public class NodeMonitorRestApi {
         }
     }
 
-    @Operation(description = "Get list of reports for given comma separated addresses")
-    @ApiResponse(responseCode = "200", description = "the list of reports for given comma separated addresses",
+    @POST
+    @Path("/reports")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Get list of reports for given addresses provided in JSON format")
+    @ApiResponse(responseCode = "200", description = "The list of reports for given addresses",
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
                             schema = @Schema(implementation = Report.class)
                     )}
     )
-    @GET
-    @Path("reports/{addresses}")
-    public List<Report> getReports(
-            @Parameter(description = "comma separated addresses from which we request the report")
-            @PathParam("addresses") String addresses) {
+    public List<Report> getReports(@Parameter(description = "JSON array of addresses") List<String> addresses) {
         try {
-            List<String> addressList = CollectionUtil.streamFromCsv(addresses).toList();
-            return CompletableFutureUtils.allOf(addressList.stream()
+            return CompletableFutureUtils.allOf(addresses.stream()
                             .map(address -> networkService.requestReport(Address.fromFullAddress(address))))
                     .get();
         } catch (InterruptedException e) {
@@ -115,16 +114,17 @@ public class NodeMonitorRestApi {
         }
     }
 
-    @GET
+    @POST
     @Path("/addresses/details")
-    @Operation(description = "Get address info for a set of host:port addresses")
-    @ApiResponse(responseCode = "200", description = "The set of address info (host, role type, nickname or bond name)",
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Get address info for a set of addresses provided in JSON format")
+    @ApiResponse(responseCode = "200", description = "The set of address info (host, role type, nickname, or bond name)",
             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddressDetails[].class)))
-    public List<AddressDetails> getAddressDetails(@QueryParam("addresses") String addresses) {  // Comma-separated list
+    public List<AddressDetails> getAddressDetails(@Parameter(description = "JSON array of addresses") List<String> addresses) {
         try {
             log.info("Received request to get address infos for: {}", addresses);
-            List<String> addressList = CollectionUtil.streamFromCsv(addresses).toList();
-            return nodeMonitorService.getAddressDetails(addressList);
+            return nodeMonitorService.getAddressDetails(addresses);
         } catch (Exception e) {
             throw new RestApiException(e);
         }

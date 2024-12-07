@@ -19,7 +19,7 @@
 
 import { Constants } from '../Constants.js';
 import { DOMUtils } from '../utils/DOMUtils.js';
-import { KeyUtility } from '../utils/KeyUtils.js';
+import { KeyUtils } from '../utils/KeyUtils.js';
 import { ReportDiffsController } from './ReportDiffsController.js';
 
 export class ReportController {
@@ -151,7 +151,7 @@ export class ReportController {
     #createNewPlaceholder(address) {
         const nodeBlock = document.createElement('div');
         nodeBlock.classList.add('node-block');
-        nodeBlock.id = KeyUtility.generateReportNodeId(address);
+        nodeBlock.id = KeyUtils.generateReportNodeId(address);
 
         const header = document.createElement('div');
         header.classList.add('node-header');
@@ -187,7 +187,7 @@ export class ReportController {
         const existingNodes = document.querySelectorAll('.node-block');
 
         existingNodes.forEach(node => {
-            const address = KeyUtility.extractAddressFromReportNodeId(node.id);
+            const address = KeyUtils.extractAddressFromReportNodeId(node.id);
             const port = parseInt(address.split(":")[1]);
 
             if (!addressList.includes(address) || (portList.length > 0 && !portList.includes(port))) {

@@ -18,11 +18,12 @@
  */
 
 import { Constants } from '../Constants.js';
+import { Config } from '../Config.js';
 import { NodeMonitroError, ServerError, DataValidationError, NetworkError } from '../errors.js';
 
 export class DataService {
     async fetchReportData(address) {
-        const url = `${Constants.API_URL_GET_REPORT}/${address}`;
+        const url = `${Config.API_URL_GET_REPORT}/${address}`;
         try {
             const response = await fetch(url);
             if (!response.ok) {
@@ -52,7 +53,7 @@ export class DataService {
 
     async fetchAddressList() {
         try {
-            const response = await fetch(Constants.API_URL_GET_ADDRESSES);
+            const response = await fetch(Config.API_URL_GET_ADDRESSES);
             if (!response.ok) {
                 const statusText = response.statusText || `Status code: ${response.status}`;
                 throw new ServerError(`Error fetching address list: ${statusText}`, response.status);
@@ -83,12 +84,13 @@ export class DataService {
 
     async fetchAddressDetails(addressList) {
         try {
-            const url = this.#getAddressDetailsUrl(addressList);
+            const url = Config.API_URL_POST_ADDRESSES_DETAILS;
             const response = await fetch(url, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(addressList),
             });
 
             if (!response.ok) {
@@ -124,12 +126,5 @@ export class DataService {
         }
         const { version = null, serializedSize = null, excludedFields = null, ...filteredReport } = report;
         return filteredReport;
-    }
-
-    #getAddressDetailsUrl(addressList) {
-        const queryParams = new URLSearchParams({
-            [Constants.QUERY_PARAM_ADDRESSES]: addressList.join(",")
-        });
-        return `${Constants.API_URL_GET_ADDRESSES_DETAILS}?${queryParams.toString()}`;
     }
 }
