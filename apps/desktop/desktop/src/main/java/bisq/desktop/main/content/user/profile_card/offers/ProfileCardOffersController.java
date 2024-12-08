@@ -68,4 +68,8 @@ public class ProfileCardOffersController implements Controller {
         }
         model.getListItems().addAll(userOffers);
     }
+
+    public String getNumberOffers() {
+        return String.valueOf((long) model.getListItems().size());
+    }
 }

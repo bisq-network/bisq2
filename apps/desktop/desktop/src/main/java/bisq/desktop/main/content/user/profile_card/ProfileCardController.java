@@ -33,6 +33,7 @@ import bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersContr
 import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
 import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
 import bisq.desktop.overlay.OverlayController;
+import bisq.i18n.Res;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -117,6 +118,8 @@ public class ProfileCardController extends TabController<ProfileCardModel>
             boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
             model.getShouldShowReportButton().set(!isMyProfile && selectedChannel.isPresent());
             model.getShouldShowUserActionsMenu().set(!isMyProfile);
+            model.getOffersTabButtonText().set(Res.get("user.profileCard.tab.offers",
+                    profileCardOffersController.getNumberOffers()).toUpperCase());
         });
     }
 
