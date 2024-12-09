@@ -19,6 +19,8 @@ package bisq.network.p2p.node.transport;
 
 public enum BootstrapState {
     BOOTSTRAP_TO_NETWORK,
+    CONNECT_TO_EXTERNAL_TOR,
+    CONNECTION_TO_EXTERNAL_TOR_COMPLETED,
     START_PUBLISH_SERVICE,
     SERVICE_PUBLISHED,
     CONNECTED_TO_PEERS

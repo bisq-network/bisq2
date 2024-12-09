@@ -18,12 +18,14 @@
 package bisq.network.tor;
 
 import bisq.common.network.TransportConfig;
+import bisq.common.util.StringUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigValue;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -32,12 +34,30 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public class TorTransportConfig implements TransportConfig {
+    // Environment variable to not launch the embedded Tor process
+    public static final String TOR_SKIP_LAUNCH = "TOR_SKIP_LAUNCH";
 
     public static TorTransportConfig from(Path dataDir, com.typesafe.config.Config config) {
+        boolean useExternalTor;
+        // If environment variable is set we take that, otherwise the value from the config
+        String torSkipLaunch = System.getenv(TOR_SKIP_LAUNCH);
+        if (StringUtils.isNotEmpty(torSkipLaunch)) {
+            log.info("Environment variable 'TOR_SKIP_LAUNCH' is set to '{}'", torSkipLaunch);
+            useExternalTor = torSkipLaunch.equals("1") ||
+                    torSkipLaunch.equalsIgnoreCase("true") ||
+                    torSkipLaunch.equalsIgnoreCase("yes");
+        } else {
+            useExternalTor = config.getBoolean("useExternalTor");
+            if (useExternalTor) {
+                log.info("Config entry 'application.network.configByTransportType.tor.useExternalTor' is enabled");
+            }
+        }
+
         return new TorTransportConfig(
                 dataDir,
                 config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
@@ -49,7 +69,8 @@ public class TorTransportConfig implements TransportConfig {
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                 parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
                 config.getInt("sendMessageThrottleTime"),
-                config.getInt("receiveMessageThrottleTime")
+                config.getInt("receiveMessageThrottleTime"),
+                useExternalTor
         );
     }
 
@@ -97,6 +118,7 @@ public class TorTransportConfig implements TransportConfig {
     private final Map<String, String> torrcOverrides;
     private final int sendMessageThrottleTime;
     private final int receiveMessageThrottleTime;
+    private final boolean useExternalTor;
 
     public TorTransportConfig(Path dataDir,
                               int defaultNodePort,
@@ -108,7 +130,8 @@ public class TorTransportConfig implements TransportConfig {
                               Set<DirectoryAuthority> directoryAuthorities,
                               Map<String, String> torrcOverrides,
                               int sendMessageThrottleTime,
-                              int receiveMessageThrottleTime) {
+                              int receiveMessageThrottleTime,
+                              boolean useExternalTor) {
         this.dataDir = dataDir;
         this.defaultNodePort = defaultNodePort;
         this.bootstrapTimeout = bootstrapTimeout;
@@ -120,5 +143,6 @@ public class TorTransportConfig implements TransportConfig {
         this.torrcOverrides = torrcOverrides;
         this.sendMessageThrottleTime = sendMessageThrottleTime;
         this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+        this.useExternalTor = useExternalTor;
     }
 }

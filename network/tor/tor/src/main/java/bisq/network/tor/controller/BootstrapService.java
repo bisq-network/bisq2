@@ -45,7 +45,9 @@ public class BootstrapService extends BootstrapEventListener {
     @Getter
     private Optional<CompletableFuture<Void>> future = Optional.empty();
 
-    public BootstrapService(TorControlProtocol torControlProtocol, long timeout, Observable<BootstrapEvent> bootstrapEvent) {
+    public BootstrapService(TorControlProtocol torControlProtocol,
+                            long timeout,
+                            Observable<BootstrapEvent> bootstrapEvent) {
         super(EventType.STATUS_CLIENT);
         this.torControlProtocol = torControlProtocol;
         this.timeout = timeout;
@@ -54,11 +56,10 @@ public class BootstrapService extends BootstrapEventListener {
 
     public CompletableFuture<Void> bootstrap() {
         future = Optional.of(CompletableFuture.runAsync(() -> {
-                    torControlProtocol.takeOwnership();
-                    torControlProtocol.resetConf(EmbeddedTorProcess.ARG_OWNER_PID);
-
                     torControlProtocol.addBootstrapEventListener(this);
 
+                    torControlProtocol.takeOwnership();
+                    torControlProtocol.resetConf(EmbeddedTorProcess.ARG_OWNER_PID);
                     torControlProtocol.setConfig(DISABLE_NETWORK, "0");
 
                     try {
