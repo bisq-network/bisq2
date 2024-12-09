@@ -18,7 +18,6 @@
 package bisq.network.tor.controller;
 
 import bisq.common.observable.Observable;
-import bisq.network.tor.TorrcClientConfigFactory;
 import bisq.network.tor.controller.events.events.BootstrapEvent;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
@@ -34,6 +33,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import static bisq.network.tor.common.torrc.Torrc.Keys.DISABLE_NETWORK;
 
 @Slf4j
 public class BootstrapService extends BootstrapEventListener {
@@ -58,7 +59,7 @@ public class BootstrapService extends BootstrapEventListener {
 
                     torControlProtocol.addBootstrapEventListener(this);
 
-                    torControlProtocol.setConfig(TorrcClientConfigFactory.DISABLE_NETWORK_CONFIG_KEY, "0");
+                    torControlProtocol.setConfig(DISABLE_NETWORK, "0");
 
                     try {
                         boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
