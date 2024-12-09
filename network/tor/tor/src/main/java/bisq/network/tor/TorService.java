@@ -32,6 +32,7 @@ import bisq.network.tor.installer.TorInstaller;
 import bisq.network.tor.process.EmbeddedTorProcess;
 import bisq.network.tor.process.control_port.ControlPortFilePoller;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
@@ -56,7 +57,8 @@ public class TorService implements Service {
     private final Path torDataDirPath;
     private final TorController torController;
     private final Set<String> publishedOnionServices = new CopyOnWriteArraySet<>();
-
+    @Getter
+    private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
     private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
@@ -65,7 +67,7 @@ public class TorService implements Service {
     public TorService(TorTransportConfig transportConfig) {
         this.transportConfig = transportConfig;
         this.torDataDirPath = transportConfig.getDataDir();
-        torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout());
+        torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
     }
 
     @Override
@@ -127,6 +129,14 @@ public class TorService implements Service {
         }
     }
 
+    public boolean useExternalTor() {
+        return transportConfig.isUseExternalTor();
+    }
+
+    public boolean useEmbeddedTor() {
+        return !useExternalTor();
+    }
+
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
@@ -169,10 +179,6 @@ public class TorService implements Service {
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public Observable<BootstrapEvent> getBootstrapEvent() {
-        return torController.getBootstrapEvent();
     }
 
     public Socket getSocket(String streamId) throws IOException {
