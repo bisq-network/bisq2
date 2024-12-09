@@ -18,7 +18,6 @@
 package bisq.network.tor;
 
 import bisq.common.network.TransportConfig;
-import bisq.common.util.StringUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigValue;
@@ -39,25 +38,7 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 public class TorTransportConfig implements TransportConfig {
-    // Environment variable to not launch the embedded Tor process
-    public static final String TOR_SKIP_LAUNCH = "TOR_SKIP_LAUNCH";
-
     public static TorTransportConfig from(Path dataDir, com.typesafe.config.Config config) {
-        boolean useExternalTor;
-        // If environment variable is set we take that, otherwise the value from the config
-        String torSkipLaunch = System.getenv(TOR_SKIP_LAUNCH);
-        if (StringUtils.isNotEmpty(torSkipLaunch)) {
-            log.info("Environment variable 'TOR_SKIP_LAUNCH' is set to '{}'", torSkipLaunch);
-            useExternalTor = torSkipLaunch.equals("1") ||
-                    torSkipLaunch.equalsIgnoreCase("true") ||
-                    torSkipLaunch.equalsIgnoreCase("yes");
-        } else {
-            useExternalTor = config.getBoolean("useExternalTor");
-            if (useExternalTor) {
-                log.info("Config entry 'application.network.configByTransportType.tor.useExternalTor' is enabled");
-            }
-        }
-
         return new TorTransportConfig(
                 dataDir,
                 config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
@@ -70,7 +51,7 @@ public class TorTransportConfig implements TransportConfig {
                 parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
                 config.getInt("sendMessageThrottleTime"),
                 config.getInt("receiveMessageThrottleTime"),
-                useExternalTor
+                config.getBoolean("useExternalTor")
         );
     }
 

@@ -48,8 +48,7 @@ public class TorTransportService implements TransportService {
             torService.getBootstrapEvent().addObserver(bootstrapEvent -> {
                 if (bootstrapEvent != null) {
                     if (bootstrapEvent.equals(BootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED)) {
-                        startBootstrapProgressUpdater.stop();
-                        startBootstrapProgressUpdater = null;
+                        stopScheduler();
 
                         bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
                         bootstrapInfo.getBootstrapProgress().set(bootstrapEvent.getProgress() / 100d);
@@ -60,10 +59,7 @@ public class TorTransportService implements TransportService {
                         if (bootstrapInfo.getBootstrapProgress().get() < 0.25) {
                             // If we got an event we stop the simulated periodic update per second. This was just to get
                             // a progress > 0 displayed in case we got stuck at bootstrap.
-                            if (startBootstrapProgressUpdater != null) {
-                                startBootstrapProgressUpdater.stop();
-                                startBootstrapProgressUpdater = null;
-                            }
+                            stopScheduler();
                             bootstrapInfo.getBootstrapProgress().set(bootstrapEventProgress / 400d);
                             bootstrapInfo.getBootstrapDetails().set("Tor bootstrap event: " + bootstrapEvent.getTag());
                         }
@@ -76,22 +72,13 @@ public class TorTransportService implements TransportService {
     @Override
     public void initialize() {
         log.info("Initialize Tor");
-        if (torService.useExternalTor()) {
-            BootstrapEvent event = BootstrapEvent.CONNECT_TO_EXTERNAL_TOR;
-            bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECT_TO_EXTERNAL_TOR);
-            bootstrapInfo.getBootstrapProgress().set((double) event.getProgress());
-            bootstrapInfo.getBootstrapDetails().set(event.getSummary());
-        }
         torService.initialize().join();
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (startBootstrapProgressUpdater != null) {
-            startBootstrapProgressUpdater.stop();
-            startBootstrapProgressUpdater = null;
-        }
+        stopScheduler();
         return torService.shutdown();
     }
 
@@ -150,5 +137,12 @@ public class TorTransportService implements TransportService {
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.of(torService.getSocks5Proxy(null));
+    }
+
+    private void stopScheduler() {
+        if (startBootstrapProgressUpdater != null) {
+            startBootstrapProgressUpdater.stop();
+            startBootstrapProgressUpdater = null;
+        }
     }
 }

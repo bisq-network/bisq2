@@ -24,6 +24,7 @@ import bisq.common.file.FileUtils;
 import bisq.common.observable.Observable;
 import bisq.common.platform.LinuxDistribution;
 import bisq.common.platform.OS;
+import bisq.common.util.StringUtils;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.network.tor.controller.TorControlAuthenticationFailed;
@@ -56,6 +57,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class TorService implements Service {
     private static final int RANDOM_PORT = 0;
+    // Environment variable to not launch the embedded Tor process
+    public static final String TOR_SKIP_LAUNCH = "TOR_SKIP_LAUNCH";
 
     private final TorTransportConfig transportConfig;
     private final Path torDataDirPath;
@@ -68,6 +71,7 @@ public class TorService implements Service {
 
     private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
+    private final Map<String, String> externalTorConfigMap = new HashMap<>();
 
     public TorService(TorTransportConfig transportConfig) {
         this.transportConfig = transportConfig;
@@ -80,11 +84,22 @@ public class TorService implements Service {
         if (!isNotRunning) {
             return CompletableFuture.completedFuture(true);
         }
+
         makeTorDir();
 
-        boolean useExternalTor = LinuxDistribution.isWhonix() || useExternalTor();
-        if (useExternalTor && connectedToExternalTor()) {
-            return CompletableFuture.completedFuture(true);
+        readExternalTorConfigMap();
+
+        if (useExternalTor()) {
+            bootstrapEvent.set(BootstrapEvent.CONNECT_TO_EXTERNAL_TOR);
+
+            if (connectedToExternalTor(externalTorConfigMap)) {
+                log.info("External Tor will be used");
+                return CompletableFuture.completedFuture(true);
+            } else if (LinuxDistribution.isWhonix()) {
+                // In case we failed at connectedToExternalTor, we do not start the embedded Tor as fallback if we are on Whonix.
+                throw new RuntimeException("Bisq runs on a Whonix system but it could not connect to the Whonix system Tor. " +
+                        "Please check the Bisq external_tor.config and the system Tor torrc config.");
+            }
         }
 
         if (!OS.isLinux()) {
@@ -129,13 +144,30 @@ public class TorService implements Service {
                 .thenApply(unused -> true);
     }
 
-
-    public boolean useExternalTor() {
-        return transportConfig.isUseExternalTor();
-    }
-
-    public boolean useEmbeddedTor() {
-        return !useExternalTor();
+    private boolean useExternalTor() {
+        boolean useExternalTor = false;
+        if (LinuxDistribution.isWhonix()) {
+            log.info("Bisq runs on a Whonix system and use the Whonix system Tor");
+            return true;
+        } else {
+            // If environment variable is set we take that.
+            String torSkipLaunch = System.getenv(TOR_SKIP_LAUNCH);
+            if (StringUtils.isNotEmpty(torSkipLaunch)) {
+                log.info("Environment variable 'TOR_SKIP_LAUNCH' is set to '{}'", torSkipLaunch);
+                return torSkipLaunch.equals("1") ||
+                        torSkipLaunch.equalsIgnoreCase("true") ||
+                        torSkipLaunch.equalsIgnoreCase("yes");
+            } else {
+                // We check if external_tor.config value is set. If so we use that value
+                Optional<String> externalTorFromConfigMap = Optional.ofNullable(externalTorConfigMap.get("UseExternalTor"));
+                if (externalTorFromConfigMap.isPresent()) {
+                    return externalTorFromConfigMap.get().equals("1");
+                } else {
+                    // Last we take the value form the JVM config
+                    return transportConfig.isUseExternalTor();
+                }
+            }
+        }
     }
 
     @Override
@@ -192,15 +224,7 @@ public class TorService implements Service {
         return socksProxyFactory.getSocks5Proxy(streamId);
     }
 
-    private boolean connectedToExternalTor() {
-        Map<String, String> torConfigMap;
-        try {
-            torConfigMap = readExternalTorConfigMap();
-        } catch (IOException e) {
-            log.warn("Could not read external tor config file.", e);
-            return false;
-        }
-
+    private boolean connectedToExternalTor(Map<String, String> torConfigMap) {
         Pair<String, Integer> controlHostAndPort = getControlHostAndPort(torConfigMap);
         String controlHost = controlHostAndPort.getFirst();
         int controlPort = controlHostAndPort.getSecond();
@@ -284,30 +308,32 @@ public class TorService implements Service {
         return new Pair<>(controlHost, controlPort);
     }
 
-    private Map<String, String> readExternalTorConfigMap() throws IOException {
-        String torConfigFileName = "external_tor.config";
-        File torConfigFile = transportConfig.getDataDir().resolve(torConfigFileName).toFile();
-        String torConfig;
-        if (!torConfigFile.exists()) {
-            torConfig = FileUtils.readStringFromResource("tor/" + torConfigFileName);
-            FileUtils.writeToFile(torConfig, torConfigFile);
-        } else {
-            torConfig = FileUtils.readAsString(torConfigFile);
-        }
-        Map<String, String> torConfigMap = new HashMap<>();
-        Set<String> lines = torConfig.lines().collect(Collectors.toSet());
-        for (String line : lines) {
-            line = line.trim();
-            if (!line.isEmpty() && !line.startsWith("#")) {
-                int firstSpaceIndex = line.indexOf(" ");
-                if (firstSpaceIndex != -1) {
-                    String key = line.substring(0, firstSpaceIndex);
-                    String value = line.substring(firstSpaceIndex + 1);
-                    torConfigMap.put(key, value);
+    private void readExternalTorConfigMap() {
+        try {
+            String torConfigFileName = "external_tor.config";
+            File torConfigFile = transportConfig.getDataDir().resolve(torConfigFileName).toFile();
+            String torConfig;
+            if (!torConfigFile.exists()) {
+                torConfig = FileUtils.readStringFromResource("tor/" + torConfigFileName);
+                FileUtils.writeToFile(torConfig, torConfigFile);
+            } else {
+                torConfig = FileUtils.readAsString(torConfigFile);
+            }
+            Set<String> lines = torConfig.lines().collect(Collectors.toSet());
+            for (String line : lines) {
+                line = line.trim();
+                if (!line.isEmpty() && !line.startsWith("#")) {
+                    int firstSpaceIndex = line.indexOf(" ");
+                    if (firstSpaceIndex != -1) {
+                        String key = line.substring(0, firstSpaceIndex);
+                        String value = line.substring(firstSpaceIndex + 1);
+                        externalTorConfigMap.put(key, value);
+                    }
                 }
             }
+        } catch (IOException e) {
+            log.warn("Could not read external tor config file.", e);
         }
-        return torConfigMap;
     }
 
     private boolean isTorControlAvailable(String controlHost, int controlPort) {
