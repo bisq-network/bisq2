@@ -113,7 +113,8 @@ public class TorService implements Service {
             return new ControlPortFilePoller(controlPortFilePath)
                     .parsePort()
                     .thenAccept(controlPort -> {
-                        torController.initialize(controlPort, hashedControlPassword);
+                        torController.initialize(controlPort);
+                        torController.authenticate(hashedControlPassword);
                         torController.bootstrap();
 
                         int port = torController.getSocksPort();
