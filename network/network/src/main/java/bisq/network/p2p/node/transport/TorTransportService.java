@@ -3,6 +3,7 @@ package bisq.network.p2p.node.transport;
 import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
+import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
@@ -137,6 +138,10 @@ public class TorTransportService implements TransportService {
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.of(torService.getSocks5Proxy(null));
+    }
+
+    public Observable<Boolean> getUseExternalTor() {
+        return torService.getUseExternalTor();
     }
 
     private void stopScheduler() {

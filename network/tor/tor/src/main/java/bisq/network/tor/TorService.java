@@ -67,6 +67,8 @@ public class TorService implements Service {
     private final Set<String> publishedOnionServices = new CopyOnWriteArraySet<>();
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
+    @Getter
+    private final Observable<Boolean> useExternalTor = new Observable<>();
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
     private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
@@ -89,7 +91,8 @@ public class TorService implements Service {
 
         readExternalTorConfigMap();
 
-        if (useExternalTor()) {
+        useExternalTor.set(evaluateUseExternalTor());
+        if (useExternalTor.get()) {
             bootstrapEvent.set(BootstrapEvent.CONNECT_TO_EXTERNAL_TOR);
 
             if (connectedToExternalTor(externalTorConfigMap)) {
@@ -144,7 +147,7 @@ public class TorService implements Service {
                 .thenApply(unused -> true);
     }
 
-    private boolean useExternalTor() {
+    private boolean evaluateUseExternalTor() {
         boolean useExternalTor = false;
         if (LinuxDistribution.isWhonix()) {
             log.info("Bisq runs on a Whonix system and use the Whonix system Tor");
