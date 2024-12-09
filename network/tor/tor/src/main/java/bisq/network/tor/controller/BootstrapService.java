@@ -22,7 +22,7 @@ import bisq.network.tor.controller.events.events.BootstrapEvent;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
-import bisq.network.tor.process.NativeTorProcess;
+import bisq.network.tor.process.EmbeddedTorProcess;
 import com.google.common.util.concurrent.MoreExecutors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +55,7 @@ public class BootstrapService extends BootstrapEventListener {
     public CompletableFuture<Void> bootstrap() {
         future = Optional.of(CompletableFuture.runAsync(() -> {
                     torControlProtocol.takeOwnership();
-                    torControlProtocol.resetConf(NativeTorProcess.ARG_OWNER_PID);
+                    torControlProtocol.resetConf(EmbeddedTorProcess.ARG_OWNER_PID);
 
                     torControlProtocol.addBootstrapEventListener(this);
 

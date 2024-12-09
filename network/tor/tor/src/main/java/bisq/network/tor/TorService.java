@@ -29,7 +29,7 @@ import bisq.security.keys.TorKeyPair;
 import bisq.network.tor.controller.TorController;
 import bisq.network.tor.controller.events.events.BootstrapEvent;
 import bisq.network.tor.installer.TorInstaller;
-import bisq.network.tor.process.NativeTorProcess;
+import bisq.network.tor.process.EmbeddedTorProcess;
 import bisq.network.tor.process.control_port.ControlPortFilePoller;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +59,7 @@ public class TorService implements Service {
 
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
-    private Optional<NativeTorProcess> torProcess = Optional.empty();
+    private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
 
     public TorService(TorTransportConfig transportConfig) {
@@ -101,7 +101,7 @@ public class TorService implements Service {
                 }
             }
 
-            var nativeTorProcess = new NativeTorProcess(torBinaryPath, torDataDirPath);
+            var nativeTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath);
             torProcess = Optional.of(nativeTorProcess);
             nativeTorProcess.start();
 
@@ -132,7 +132,7 @@ public class TorService implements Service {
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
             torController.shutdown();
-            torProcess.ifPresent(NativeTorProcess::waitUntilExited);
+            torProcess.ifPresent(EmbeddedTorProcess::waitUntilExited);
             return true;
         });
     }
@@ -187,7 +187,7 @@ public class TorService implements Service {
 
     private Path getTorBinaryPath() {
         if (OS.isLinux()) {
-            Optional<Path> systemTorBinaryPath = NativeTorProcess.getSystemTorPath();
+            Optional<Path> systemTorBinaryPath = EmbeddedTorProcess.getSystemTorPath();
             return systemTorBinaryPath.orElseThrow(TorNotInstalledException::new);
         }
         return torDataDirPath.resolve("tor");
