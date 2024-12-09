@@ -20,10 +20,7 @@ package bisq.java_se.facades;
 import bisq.common.facades.JdkFacade;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -35,8 +32,8 @@ public class JavaSeJdkFacade implements JdkFacade {
     }
 
     @Override
-    public Stream<String> getProcessCommandLineStream() {
-        return ProcessHandle.allProcesses().map(processHandle -> processHandle.info().commandLine().orElse(""));
+    public Stream<String> getProcessCommandStream() {
+        return ProcessHandle.allProcesses().map(processHandle -> processHandle.info().command().orElse(""));
     }
 
     @Override

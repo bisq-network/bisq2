@@ -194,7 +194,7 @@ public class TorService implements Service {
     }
 
     private boolean isTorRunning(String absoluteTorBinaryPath) {
-        return FacadeProvider.getJdkFacade().getProcessCommandLineStream().anyMatch(e -> e.startsWith(absoluteTorBinaryPath));
+        return FacadeProvider.getJdkFacade().getProcessCommandStream().anyMatch(e -> e.equals(absoluteTorBinaryPath));
     }
 
     private void installTorIfNotUpToDate() {
