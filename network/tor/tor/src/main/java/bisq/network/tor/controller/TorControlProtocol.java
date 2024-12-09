@@ -1,11 +1,11 @@
 package bisq.network.tor.controller;
 
 import bisq.common.encoding.Hex;
-import bisq.security.keys.TorKeyPair;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
 import bisq.network.tor.controller.events.listener.HsDescEventListener;
 import bisq.network.tor.controller.exceptions.CannotConnectWithTorException;
 import bisq.network.tor.controller.exceptions.CannotSendCommandToTorException;
+import bisq.security.keys.TorKeyPair;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
@@ -53,7 +53,7 @@ public class TorControlProtocol implements AutoCloseable {
 
     @Override
     public void close() {
-        if(closeInProgress){
+        if (closeInProgress) {
             return;
         }
         closeInProgress = true;
@@ -74,6 +74,21 @@ public class TorControlProtocol implements AutoCloseable {
         String secretHex = Hex.encode(secret);
         String command = "AUTHENTICATE " + secretHex + "\r\n";
 
+        sendCommand(command);
+        String reply = receiveReply().findFirst().orElseThrow();
+
+        if (reply.equals("250 OK")) {
+            return;
+        }
+
+        if (reply.startsWith("515 Authentication failed")) {
+            throw new TorControlAuthenticationFailed(reply);
+        }
+    }
+
+    public void authenticate(byte[] authCookie) {
+        String authCookieAsHex = Hex.encode(authCookie);
+        String command = "AUTHENTICATE " + authCookieAsHex + "\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
 
@@ -251,6 +266,10 @@ public class TorControlProtocol implements AutoCloseable {
 
     private void sendCommand(String command) {
         try {
+            String commandToLog = command.contains("AUTHENTICATE")
+                    ? command.split(" ")[0] + " [authentication data hidden in logs]"
+                    : command;
+            log.info("Send Tor control command: {}", commandToLog);
             @SuppressWarnings("resource") OutputStream outputStream = this.outputStream.orElseThrow();
             byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
             outputStream.write(commandBytes);
