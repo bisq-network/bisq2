@@ -24,14 +24,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
@@ -41,8 +34,6 @@ import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public abstract class AmountInput {
@@ -76,6 +67,18 @@ public abstract class AmountInput {
         return controller.view.textInput.focusedProperty();
     }
 
+    public ReadOnlyIntegerProperty lengthProperty() {
+        return controller.view.textInput.lengthProperty();
+    }
+
+    public int getTextInputLength() {
+        return controller.view.textInput.getLength();
+    }
+
+    public void setTextInputPrefWidth(int prefWidth) {
+        controller.view.textInput.setPrefWidth(prefWidth);
+    }
+
     public void reset() {
         controller.model.reset();
     }
@@ -84,10 +87,6 @@ public abstract class AmountInput {
         TextField textInput = controller.view.textInput;
         textInput.requestFocus();
         textInput.selectRange(textInput.getLength(), textInput.getLength());
-    }
-
-    public void setUseVerySmallText(boolean useVerySmallText) {
-        controller.setUseVerySmallText(useVerySmallText);
     }
 
     protected static class Controller implements bisq.desktop.common.view.Controller {
@@ -153,10 +152,6 @@ public abstract class AmountInput {
             model.isAmountValid.set(true);
         }
 
-        private void setUseVerySmallText(boolean useVerySmallText) {
-            model.useVerySmallText.set(useVerySmallText);
-        }
-
         private void updateAmountIfNotFocused(String value) {
             if (!model.hasFocus) {
                 model.amount.set(AmountParser.parse(value, model.code.get()));
@@ -179,7 +174,6 @@ public abstract class AmountInput {
         protected final boolean showCurrencyCode;
         protected final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         protected final StringProperty code = new SimpleStringProperty();
-        protected final BooleanProperty useVerySmallText = new SimpleBooleanProperty();
         protected Market selectedMarket;
         protected boolean hasFocus;
         @Setter
@@ -194,7 +188,6 @@ public abstract class AmountInput {
         void reset() {
             amount.set(null);
             code.set(null);
-            useVerySmallText.set(false);
             selectedMarket = null;
             hasFocus = false;
             isAmountValid.set(false);
@@ -206,7 +199,6 @@ public abstract class AmountInput {
         protected final ChangeListener<Monetary> amountListener;
         protected final TextField textInput;
         protected final Label codeLabel;
-        private Subscription useVerySmallTextPin;
 
         protected View(Model model, Controller controller) {
             super(new HBox(), model, controller);
@@ -248,11 +240,6 @@ public abstract class AmountInput {
         protected void applyAmount(Monetary newValue) {
             textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, model.useLowPrecision));
             textInput.selectRange(textInput.getLength(), textInput.getLength());
-            adjustTextFieldStyle();
-        }
-
-
-        protected void adjustTextFieldStyle() {
         }
 
         @Override
@@ -265,8 +252,6 @@ public abstract class AmountInput {
             applyAmount(model.amount.get());
             textInput.requestFocus();
             textInput.selectRange(textInput.getLength(), textInput.getLength());
-
-            useVerySmallTextPin = EasyBind.subscribe(model.useVerySmallText, useVerySmallText -> adjustTextFieldStyle());
         }
 
         @Override
@@ -275,8 +260,6 @@ public abstract class AmountInput {
 
             textInput.focusedProperty().removeListener(focusListener);
             model.amount.removeListener(amountListener);
-
-            useVerySmallTextPin.unsubscribe();
         }
     }
 }

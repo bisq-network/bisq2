@@ -722,112 +722,240 @@
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-wrap-text: true;
-    -fx-padding: 5 0 0 20;
 }
 
-.amount-selection {
-    -fx-padding: 0 0 20 0;
-}
-
-.range-amount .max-or-fixed-amount .big-amount-input {
-    -fx-alignment: left;
-    /*-fx-background-color: red !important;*/
-}
-
-.range-amount .max-or-fixed-amount .big-amount-input .text-input {
-    /*-fx-background-color: green !important;*/
-    -fx-padding: 0 -35 0 10;
-}
-
-.range-amount .max-or-fixed-amount .big-amount-input .currency-code {
-    /*-fx-background-color: cyan;*/
-    -fx-padding: 5 0 0 -10;
-}
-
-.range-amount .max-or-fixed-amount .big-amount-input .text-input,
-.range-amount .max-or-fixed-amount .big-amount-input .currency-code {
-    -fx-alignment: baseline-left;
-}
-
-.range-amount .min-amount {
-    -fx-padding: 23 0 0 0;
-}
-
-.range-amount .max-or-fixed-amount {
-    -fx-padding: 30 0 0 0;
-}
-
-.range-amount .big-amount-input .text-input {
-    -fx-alignment: baseline-right;
-}
-
-.range-amount .max-or-fixed-amount .small-amount-input {
-    -fx-padding: 10 25 0 0;
-}
-
-.range-amount .min-amount .small-amount-input {
-    -fx-padding: 4 0 0 0;
+.description-and-amount-box {
+    -fx-padding: 8 20 8 20;
 }
 
 .range-amount .quote-separator {
-    -fx-padding: 15 0 0 0;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    /*-fx-background-color: red !important;*/
+    -fx-pref-height: 40;
+    -fx-max-height: 40;
+    -fx-min-height: 40;
 }
 
 .range-amount .base-separator {
-    -fx-padding: 5 0 0 0;
+    -fx-alignment: center;
 }
 
-.fixed-amount .big-amount-input {
-    -fx-alignment: baseline-center;
-    /*-fx-background-color: blue;*/
+.range-amount .base-separator {
+    -fx-min-width: 10;
 }
 
-.fixed-amount .big-amount-input .text-input {
-    /*-fx-background-color: green !important;*/
-    -fx-min-width: 250;
-    -fx-padding: 0
+.range-amount .base-amount .max-or-fixed-base-amount {
+    -fx-min-width: 165;
+    -fx-max-width: 165;
 }
 
-.big-amount-input .currency-code {
+.range-amount .base-amount .max-or-fixed-base-amount,
+.range-amount .base-amount .min-base-amount {
+    -fx-alignment: baseline-left;
+}
+
+.fixed-amount .quote-amount .big-amount-input .text-input,
+.range-amount .quote-amount .min-quote-amount .text-input {
+    -fx-alignment: bottom-right;
+}
+
+.range-amount .quote-amount .max-or-fixed-quote-amount .text-input {
+    -fx-alignment: bottom-left;
+}
+
+.quote-amount .big-amount-input .text-input {
+    -fx-padding: 0;
+    -fx-min-height: 70;
+}
+
+.quote-amount .big-amount-input .currency-code {
     -fx-min-width: 30;
+    -fx-max-width: 30;
+    -fx-min-height: 70;
+    -fx-padding: 0 0 10 0;
+    -fx-alignment: bottom-left;
 }
 
-.fixed-amount .big-amount-input .text-input {
-    -fx-alignment: baseline-right;
-    -fx-padding: 0 0 0 -30;
-}
-
-.fixed-amount .big-amount-input {
-    -fx-padding: 0 30 0 0;
-    /*-fx-background-color: pink;*/
+.quote-amount {
+    -fx-alignment: center-right;
 }
 
 .fixed-amount .small-amount-input {
-    -fx-padding: 0 70 0 0;
-    /*-fx-background-color: pink;*/
+    -fx-padding: 0 60 0 0;
 }
+
+.range-amount .base-amount .max-or-fixed-base-amount .text-input {
+    -fx-padding: 0 5 0 0;
+    -fx-min-width: 105;
+    -fx-max-width: 105;
+}
+
+.quote-amount .text-input,
+.quote-separator {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+/******** ALL SIZES ********/
+.input-text-9 .text-input,
+.input-text-9 .quote-separator {
+    -fx-font-size: 4em !important;
+}
+
+.input-text-10 .text-input,
+.input-text-10 .quote-separator {
+    -fx-font-size: 3.58em !important;
+}
+
+.input-text-11 .text-input,
+.input-text-11 .quote-separator {
+    -fx-font-size: 3.20em !important;
+}
+
+.input-text-12 .text-input,
+.input-text-12 .quote-separator {
+    -fx-font-size: 2.90em !important;
+}
+
+.input-text-13 .text-input,
+.input-text-13 .quote-separator {
+    -fx-font-size: 2.65em !important;
+}
+
+.input-text-14 .text-input,
+.input-text-14 .quote-separator {
+    -fx-font-size: 2.45em !important;
+}
+
+.input-text-15 .text-input,
+.input-text-15 .quote-separator {
+    -fx-font-size: 2.30em !important;
+}
+
+.input-text-16 .text-input,
+.input-text-16 .quote-separator {
+    -fx-font-size: 2.15em !important;
+}
+
+.input-text-17 .text-input,
+.input-text-17 .quote-separator {
+    -fx-font-size: 2em !important;
+}
+
+.input-text-18 .text-input,
+.input-text-18 .quote-separator {
+    -fx-font-size: 1.90em !important;
+}
+
+.input-text-19 .text-input,
+.input-text-19 .quote-separator {
+    -fx-font-size: 1.80em !important;
+}
+/***************************/
+
+/******** PADDINGS *********/
+.input-text-9 .text-input {
+    -fx-padding: 0 0 -1 0 !important;
+}
+
+.input-text-10 .text-input {
+    -fx-padding: 0 0 1 0 !important;
+}
+
+.input-text-11 .text-input {
+    -fx-padding: 0 0 2 0 !important;
+}
+
+.input-text-12 .text-input {
+    -fx-padding: 0 0 3 0 !important;
+}
+
+.input-text-13 .text-input {
+    -fx-padding: 0 0 4 0 !important;
+}
+
+.input-text-14 .text-input {
+    -fx-padding: 0 0 5 0 !important;
+}
+
+.input-text-15 .text-input,
+.input-text-16 .text-input,
+.input-text-17 .text-input {
+    -fx-padding: 0 0 6 0 !important;
+}
+
+.input-text-18 .text-input {
+    -fx-padding: 0 0 7 0 !important;
+}
+
+.input-text-19 .text-input {
+    -fx-padding: 0 0 8 0 !important;
+}
+
+.input-text-9 .quote-separator {
+    -fx-padding: -16 0 0 0 !important;
+}
+
+.input-text-10 .quote-separator {
+    -fx-padding: -9 0 0 0 !important;
+}
+
+.input-text-11 .quote-separator {
+    -fx-padding: -5 0 0 0 !important;
+}
+
+.input-text-12 .quote-separator {
+    -fx-padding: 0 0 0 0 !important;
+}
+
+.input-text-13 .quote-separator {
+    -fx-padding: 2 0 -2 0 !important;
+}
+
+.input-text-14 .quote-separator {
+    -fx-padding: 6 0 -6 0 !important;
+}
+
+.input-text-15 .quote-separator {
+    -fx-padding: 7 0 -7 0 !important;
+}
+
+.input-text-16 .quote-separator {
+    -fx-padding: 9 0 -9 0 !important;
+}
+
+.input-text-17 .quote-separator {
+    -fx-padding: 10 0 -10 0 !important;
+}
+
+.input-text-18 .quote-separator {
+    -fx-padding: 11 0 -11 0 !important;
+}
+
+.input-text-19 .quote-separator {
+    -fx-padding: 12 0 -12 0 !important;
+}
+/***************************/
 
 .small-amount-input .text-input,
 .small-amount-input .currency-code,
-.amount-separator .base-separator {
+.base-separator {
     -fx-fill: -fx-mid-text-color !important;
     -fx-text-fill: -fx-mid-text-color !important;
     -fx-font-family: "IBM Plex Sans Light" !important;
 }
 
 .small-amount-input .text-input,
-.amount-separator .base-separator  {
+.base-separator {
     -fx-font-size: 1.25em !important;
+}
+
+.small-amount-input .text-input {
     -fx-alignment: baseline-right;
-}
-
-.amount-separator .quote-separator {
-    -fx-font-size: 2em;
-    -fx-font-family: "IBM Plex Sans Thin";
-}
-
-.amount-separator {
-    -fx-alignment: center;
 }
 
 .small-amount-input .currency-code {
