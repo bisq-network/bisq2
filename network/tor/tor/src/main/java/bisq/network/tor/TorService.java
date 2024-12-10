@@ -102,6 +102,9 @@ public class TorService implements Service {
                 // In case we failed at connectedToExternalTor, we do not start the embedded Tor as fallback if we are on Whonix.
                 throw new RuntimeException("Bisq runs on a Whonix system but it could not connect to the Whonix system Tor. " +
                         "Please check the Bisq external_tor.config and the system Tor torrc config.");
+            } else {
+                // In case connectedToExternalTor failed we try embedded Tor (if not running on Whonix)
+                useExternalTor.set(false);
             }
         }
 
