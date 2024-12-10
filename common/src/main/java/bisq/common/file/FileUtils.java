@@ -53,9 +53,18 @@ public class FileUtils {
         return Files.readAllBytes(Paths.get(fileName));
     }
 
+    public static byte[] read(File file) throws IOException {
+        return Files.readAllBytes(file.toPath());
+    }
+
     public static String readAsString(String fileName) throws IOException {
         return new String(read(fileName), Charsets.UTF_8);
     }
+
+    public static String readAsString(File file) throws IOException {
+        return new String(read(file), Charsets.UTF_8);
+    }
+
 
     /**
      * The `File.deleteOnExit` method is not suited for long-running processes as it never removes the added files,

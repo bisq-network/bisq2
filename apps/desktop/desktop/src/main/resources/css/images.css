@@ -18,6 +18,10 @@
     -fx-image: url("/images/tor.png");
 }
 
+#tor_green {
+    -fx-image: url("/images/tor_green.png");
+}
+
 #i2p {
     -fx-image: url("/images/i2p.png");
 }

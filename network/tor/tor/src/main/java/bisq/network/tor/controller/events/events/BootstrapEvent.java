@@ -18,6 +18,7 @@
 package bisq.network.tor.controller.events.events;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -26,8 +27,11 @@ import java.time.Instant;
 @Builder
 @Getter
 @ToString
+@EqualsAndHashCode
 public class BootstrapEvent {
     private static final String DONE_TAG = "done";
+    public static final BootstrapEvent CONNECT_TO_EXTERNAL_TOR = new BootstrapEvent(0, "", "Connect to external Tor");
+    public static final BootstrapEvent CONNECTION_TO_EXTERNAL_TOR_COMPLETED = new BootstrapEvent(20, "", "Connection to external Tor completed");
 
     private final int progress;
     private final String tag;
@@ -36,7 +40,7 @@ public class BootstrapEvent {
     private final Instant timestamp = Instant.now();
 
     public BootstrapEvent(int progress, String tag, String summary) {
-        if (progress < 0 || tag.isEmpty() || summary.isEmpty()) {
+        if (progress < 0 || summary.isEmpty()) {
             throw new IllegalArgumentException("Invalid bootstrap event: " + progress + " " + tag + " " + summary);
         }
 
@@ -46,7 +50,7 @@ public class BootstrapEvent {
     }
 
     public boolean isDoneEvent() {
-        return tag.equals(DONE_TAG);
+        return tag.equals(DONE_TAG) || this.equals(CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
     }
 
     public static boolean isBootstrapMessage(String type, String message) {

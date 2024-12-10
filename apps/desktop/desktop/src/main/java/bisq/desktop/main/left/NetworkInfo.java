@@ -3,6 +3,7 @@ package bisq.desktop.main.left;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -12,12 +13,12 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.network.p2p.services.data.inventory.InventoryRequestService;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import javafx.animation.Interpolator;
@@ -43,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -66,6 +68,7 @@ public class NetworkInfo {
         private final NetworkService networkService;
         private Pin numPendingRequestsPin, allDataReceivedPin;
         private UIScheduler inventoryRequestAnimation;
+        private Optional<Pin> useExternalTorPin = Optional.empty();
 
         public Controller(ServiceProvider serviceProvider,
                           Consumer<NavigationTarget> onNavigationTargetSelectedHandler) {
@@ -80,6 +83,12 @@ public class NetworkInfo {
             model.setClearNetEnabled(networkService.isTransportTypeSupported(TransportType.CLEAR));
             model.setTorEnabled(networkService.isTransportTypeSupported(TransportType.TOR));
             model.setI2pEnabled(networkService.isTransportTypeSupported(TransportType.I2P));
+
+            useExternalTorPin = networkService.getServiceNodesByTransport()
+                    .findServiceNode(TransportType.TOR)
+                    .map(serviceNode -> (TorTransportService) serviceNode.getTransportService())
+                    .map(TorTransportService::getUseExternalTor)
+                    .map(useExternalTor -> useExternalTor.addObserver(model.getUseExternalTor()::set));
 
             networkService.getSupportedTransportTypes().forEach(type ->
                     networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> serviceNode.getPeerGroupManager().ifPresent(peerGroupManager -> {
@@ -126,7 +135,7 @@ public class NetworkInfo {
                                 }
                             });
                             inventoryRequestAnimation = UIScheduler.run(() -> {
-                                        StringBuilder dots = new StringBuilder();
+                                                StringBuilder dots = new StringBuilder();
                                                 long numDots = inventoryRequestAnimation.getCounter() % 6;
                                                 for (long l = 0; l < numDots; l++) {
                                                     dots.append(".");
@@ -180,6 +189,8 @@ public class NetworkInfo {
                 inventoryRequestAnimation.stop();
             }
 
+            useExternalTorPin.ifPresent(Pin::unbind);
+            useExternalTorPin = Optional.empty();
         }
 
         private void onNavigateToNetworkInfo() {
@@ -229,6 +240,7 @@ public class NetworkInfo {
         private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
         private final BooleanProperty inventoryDataChangeFlag = new SimpleBooleanProperty();
         private final BooleanProperty allInventoryDataReceived = new SimpleBooleanProperty();
+        private final BooleanProperty useExternalTor = new SimpleBooleanProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
@@ -236,7 +248,8 @@ public class NetworkInfo {
         private final Triple<Label, Label, ImageView> clearNetTriple, torTriple, i2pTriple;
         private final Pair<Label, ImageView> inventoryRequestsPair;
         private final BisqTooltip clearNetTooltip, torTooltip, i2pTooltip, inventoryRequestsTooltip;
-        private Subscription clearNetNumConnectionsPin, torNumConnectionsPin, i2pNumConnectionsPin, allInventoryDataReceivedPin, inventoryDataChangeFlagPin;
+        private Subscription clearNetNumConnectionsPin, torNumConnectionsPin, useExternalTorPin,
+                i2pNumConnectionsPin, allInventoryDataReceivedPin, inventoryDataChangeFlagPin;
 
         public View(Model model, Controller controller) {
             super(new VBox(8), model, controller);
@@ -298,8 +311,24 @@ public class NetworkInfo {
             torNumConnectionsPin = EasyBind.subscribe(model.getTorNumConnections(), numConnections -> {
                 if (numConnections != null) {
                     torTriple.getFirst().setText(numConnections);
+                    String torInfo = Res.get("navigation.network.info.tor");
+                    String postFixInfo = model.useExternalTor.get() ? Res.get("navigation.network.info.externalTor") : "";
                     torTooltip.setText(Res.get("navigation.network.info.tooltip",
-                            Res.get("navigation.network.info.tor"), numConnections, model.getTorNumTargetConnections()));
+                            torInfo, numConnections, model.getTorNumTargetConnections(), postFixInfo));
+                }
+            });
+
+            useExternalTorPin = EasyBind.subscribe(model.getUseExternalTor(), useExternalTor -> {
+                if (useExternalTor != null) {
+                    if (useExternalTor) {
+                        torHBox.getChildren().stream()
+                                .filter(node -> node instanceof ImageView)
+                                .map(node -> (ImageView) node)
+                                .forEach(imageView -> {
+                                    imageView.setId("tor_green");
+                                    imageView.setOpacity(0.75);
+                                });
+                    }
                 }
             });
 
@@ -367,6 +396,7 @@ public class NetworkInfo {
         protected void onViewDetached() {
             clearNetNumConnectionsPin.unsubscribe();
             torNumConnectionsPin.unsubscribe();
+            useExternalTorPin.unsubscribe();
             i2pNumConnectionsPin.unsubscribe();
             inventoryDataChangeFlagPin.unsubscribe();
             allInventoryDataReceivedPin.unsubscribe();

@@ -21,6 +21,9 @@ import lombok.Builder;
 
 import java.util.Map;
 
+import static bisq.network.tor.common.torrc.Torrc.Keys.SOCKS_PORT;
+import static bisq.network.tor.common.torrc.Torrc.Values.EmbeddedTor.SOCKS_PORT_AUTO;
+
 @Builder
 public class ClientTorrcGenerator implements TorrcConfigGenerator {
     private final TorrcConfigGenerator baseTorrcConfigGenerator;
@@ -32,7 +35,7 @@ public class ClientTorrcGenerator implements TorrcConfigGenerator {
     @Override
     public Map<String, String> generate() {
         Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
-        torConfigMap.put("SocksPort", "auto");
+        torConfigMap.put(SOCKS_PORT,  SOCKS_PORT_AUTO);
         return torConfigMap;
     }
 }

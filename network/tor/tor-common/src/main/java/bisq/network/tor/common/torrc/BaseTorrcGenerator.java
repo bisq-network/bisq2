@@ -23,8 +23,10 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import static bisq.network.tor.common.torrc.Torrc.Keys.*;
+import static bisq.network.tor.common.torrc.Torrc.Values.EmbeddedTor.*;
+
 public class BaseTorrcGenerator implements TorrcConfigGenerator {
-    private static final String CONTROL_PORT_WRITE_TO_FILE_CONFIG_KEY = "ControlPortWriteToFile";
     public static final String CONTROL_DIR_NAME = "control";
 
     private final Path dataDirPath;
@@ -43,18 +45,18 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
     @Override
     public Map<String, String> generate() {
         Map<String, String> torConfigMap = new HashMap<>();
-        torConfigMap.put("DataDirectory", dataDirPath.toAbsolutePath().toString());
+        torConfigMap.put(DATA_DIRECTORY, dataDirPath.toAbsolutePath().toString());
 
-        torConfigMap.put("ControlPort", "127.0.0.1:auto");
-        torConfigMap.put(CONTROL_PORT_WRITE_TO_FILE_CONFIG_KEY, controlPortWriteFile.toAbsolutePath().toString());
-        torConfigMap.put("HashedControlPassword", hashedControlPassword);
+        torConfigMap.put(CONTROL_PORT, CONTROL_PORT_AUTO);
+        torConfigMap.put(CONTROL_PORT_WRITE_TO_FILE, controlPortWriteFile.toAbsolutePath().toString());
+        torConfigMap.put(HASHED_CONTROL_PASSWORD, hashedControlPassword);
 
         String logLevel = isTestNetwork ? "debug" : "notice";
         torConfigMap.put("Log",
                 logLevel + " file " + dataDirPath.resolve("debug.log").toAbsolutePath()
         );
 
-        torConfigMap.put("SocksPort", "0");
+        torConfigMap.put(SOCKS_PORT, SOCKS_PORT_DISABLED);
         return torConfigMap;
     }
 }

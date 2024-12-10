@@ -1,15 +1,17 @@
 package bisq.network.p2p.node.transport;
 
-import bisq.common.timer.Scheduler;
 import bisq.common.network.Address;
 import bisq.common.network.TransportConfig;
 import bisq.common.network.TransportType;
+import bisq.common.observable.Observable;
+import bisq.common.timer.Scheduler;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.security.keys.KeyBundle;
-import bisq.security.keys.TorKeyPair;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.controller.events.events.BootstrapEvent;
+import bisq.security.keys.KeyBundle;
+import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,17 +45,25 @@ public class TorTransportService implements TransportService {
                     .runnableName("updateStartBootstrapProgress")
                     .periodically(1000);
             bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
+
             torService.getBootstrapEvent().addObserver(bootstrapEvent -> {
                 if (bootstrapEvent != null) {
-                    int bootstrapEventProgress = bootstrapEvent.getProgress();
-                    // First 25% we attribute to the bootstrap to the Tor network. Takes usually about 3 sec.
-                    if (bootstrapInfo.getBootstrapProgress().get() < 0.25) {
-                        if (startBootstrapProgressUpdater != null) {
-                            startBootstrapProgressUpdater.stop();
-                            startBootstrapProgressUpdater = null;
+                    if (bootstrapEvent.equals(BootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED)) {
+                        stopScheduler();
+
+                        bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
+                        bootstrapInfo.getBootstrapProgress().set(bootstrapEvent.getProgress() / 100d);
+                        bootstrapInfo.getBootstrapDetails().set(bootstrapEvent.getSummary());
+                    } else {
+                        int bootstrapEventProgress = bootstrapEvent.getProgress();
+                        // First 25% we attribute to the bootstrap to the Tor network. Takes usually about 3 sec.
+                        if (bootstrapInfo.getBootstrapProgress().get() < 0.25) {
+                            // If we got an event we stop the simulated periodic update per second. This was just to get
+                            // a progress > 0 displayed in case we got stuck at bootstrap.
+                            stopScheduler();
+                            bootstrapInfo.getBootstrapProgress().set(bootstrapEventProgress / 400d);
+                            bootstrapInfo.getBootstrapDetails().set("Tor bootstrap event: " + bootstrapEvent.getTag());
                         }
-                        bootstrapInfo.getBootstrapProgress().set(bootstrapEventProgress / 400d);
-                        bootstrapInfo.getBootstrapDetails().set("Tor bootstrap event: " + bootstrapEvent.getTag());
                     }
                 }
             });
@@ -69,10 +79,7 @@ public class TorTransportService implements TransportService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (startBootstrapProgressUpdater != null) {
-            startBootstrapProgressUpdater.stop();
-            startBootstrapProgressUpdater = null;
-        }
+        stopScheduler();
         return torService.shutdown();
     }
 
@@ -131,5 +138,16 @@ public class TorTransportService implements TransportService {
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.of(torService.getSocks5Proxy(null));
+    }
+
+    public Observable<Boolean> getUseExternalTor() {
+        return torService.getUseExternalTor();
+    }
+
+    private void stopScheduler() {
+        if (startBootstrapProgressUpdater != null) {
+            startBootstrapProgressUpdater.stop();
+            startBootstrapProgressUpdater = null;
+        }
     }
 }

@@ -17,14 +17,12 @@
 
 package bisq.common.facades;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public interface JdkFacade {
     String getMyPid();
 
-    Stream<String> getProcessCommandLineStream();
+    Stream<String> getProcessCommandStream();
 
     void redirectError(ProcessBuilder processBuilder);
 

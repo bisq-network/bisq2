@@ -35,7 +35,7 @@ public class AndroidJdkFacade implements JdkFacade {
     }
 
     @Override
-    public Stream<String> getProcessCommandLineStream() {
+    public Stream<String> getProcessCommandStream() {
         // TODO
         throw new UnsupportedOperationException("Not supported yet.");
         // return ProcessHandle.allProcesses().map(processHandle -> processHandle.info().commandLine().orElse(""));
