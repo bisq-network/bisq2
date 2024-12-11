@@ -40,7 +40,8 @@ public class TorControlReader implements AutoCloseable {
                 String line;
                 while (!isStopped && (line = bufferedReader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
 
-                    if (isEvent(line)) {
+                    log.info("Received reply from Tor control server: {}", line);
+                    if (isEventWithCode_650(line)) {
                         String[] parts = line.split(" ");
 
                         boolean parsedEvent = false;
@@ -117,7 +118,7 @@ public class TorControlReader implements AutoCloseable {
         hsDescEventListeners.remove(listener);
     }
 
-    private boolean isEvent(String line) {
+    private boolean isEventWithCode_650(String line) {
         // 650 STATUS_CLIENT NOTICE CIRCUIT_ESTABLISHED
         return line.startsWith("650");
     }

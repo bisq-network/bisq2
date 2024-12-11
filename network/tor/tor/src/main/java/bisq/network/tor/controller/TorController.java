@@ -1,10 +1,9 @@
 package bisq.network.tor.controller;
 
 import bisq.common.observable.Observable;
-import bisq.security.keys.TorKeyPair;
 import bisq.network.tor.controller.events.events.BootstrapEvent;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
-import lombok.Getter;
+import bisq.security.keys.TorKeyPair;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
@@ -19,25 +18,35 @@ public class TorController {
     private final TorControlProtocol torControlProtocol = new TorControlProtocol();
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
+    private final Observable<BootstrapEvent> bootstrapEvent;
     private final long isOnlineTimeout = TimeUnit.SECONDS.toMillis(30); // in ms
-    @Getter
-    private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
     private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new ConcurrentHashMap<>();
     private final Map<String, OnionServiceOnlineStateService> onionServiceOnlineStateServiceMap = new ConcurrentHashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
     private volatile boolean isShutdownInProgress;
 
-    public TorController(int bootstrapTimeout, int hsUploadTimeout) {
+    public TorController(int bootstrapTimeout, int hsUploadTimeout, Observable<BootstrapEvent> bootstrapEvent) {
         this.bootstrapTimeout = bootstrapTimeout;
         this.hsUploadTimeout = hsUploadTimeout;
+        this.bootstrapEvent = bootstrapEvent;
     }
 
     public void initialize(int controlPort) {
-        initialize(controlPort, Optional.empty());
+        torControlProtocol.initialize(controlPort);
     }
 
-    public void initialize(int controlPort, PasswordDigest hashedControlPassword) {
-        initialize(controlPort, Optional.of(hashedControlPassword));
+    public void authenticate(byte[] authCookie) {
+        torControlProtocol.authenticate(authCookie);
+    }
+
+    public void authenticate() {
+        // No authentication required, but we still need to send an empty
+        // AUTHENTICATE call to be able to send control commands
+        torControlProtocol.authenticate(new byte[0]);
+    }
+
+    public void authenticate(PasswordDigest hashedControlPassword) {
+        torControlProtocol.authenticate(hashedControlPassword);
     }
 
     public void shutdown() {
@@ -127,10 +136,5 @@ public class TorController {
         socksListener = socksListener.replace("\"", "");
         String portString = socksListener.split(":")[1];
         return Integer.parseInt(portString);
-    }
-
-    private void initialize(int controlPort, Optional<PasswordDigest> hashedControlPassword) {
-        torControlProtocol.initialize(controlPort);
-        hashedControlPassword.ifPresent(torControlProtocol::authenticate);
     }
 }
