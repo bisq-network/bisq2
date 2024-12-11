@@ -34,6 +34,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +44,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountModel, TradeWizardAmountController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
-    private static final String RANGE_AMOUNT_STYLE_CLASS = "range-amount";
-    private static final String FIXED_AMOUNT_STYLE_CLASS = "fixed-amount";
+    private static final int MAX_WIDTH = 360;
 
     private final AmountSelectionController amountSelectionController;
     private final Label headlineLabel, amountLimitInfo, amountLimitInfoLeadLine, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
@@ -61,6 +61,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
 
         this.amountSelectionController = amountSelectionController;
 
+        // TODO: remove headline
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
@@ -71,19 +72,25 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountBox.getStyleClass().add("amount-box");
 
         amountLimitInfo = new Label();
-        amountLimitInfo.getStyleClass().add("trade-wizard-amount-limit-info");
+        amountLimitInfo.getStyleClass().addAll("trade-wizard-amount-limit-info", "wrap-text");
+        amountLimitInfo.setMinHeight(Label.USE_PREF_SIZE);
+        amountLimitInfo.setMaxWidth(MAX_WIDTH);
 
         amountLimitInfoAmount = new Hyperlink();
         amountLimitInfoAmount.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+        amountLimitInfoAmount.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
         learnMoreHyperLink = new Hyperlink();
         learnMoreHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+        learnMoreHyperLink.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
         amountLimitInfoHBox = new HBox(2.5, amountLimitInfo, amountLimitInfoAmount, learnMoreHyperLink);
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
 
         amountLimitInfoLeadLine = new Label();
-        amountLimitInfoLeadLine.getStyleClass().add("trade-wizard-amount-limit-info");
+        amountLimitInfoLeadLine.getStyleClass().addAll("trade-wizard-amount-limit-info", "wrap-text");
+        amountLimitInfoLeadLine.setMinHeight(Label.USE_PREF_SIZE);
+        amountLimitInfoLeadLine.setMaxWidth(MAX_WIDTH);
         VBox amountLimitInfoVBox = new VBox(-2.5, amountLimitInfoLeadLine, amountLimitInfoHBox);
 
         warningIcon = new Label();
@@ -92,6 +99,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
 
         amountLimitInfoWithWarnIcon = new HBox(10, warningIcon, amountLimitInfoVBox);
         amountLimitInfoWithWarnIcon.setAlignment(Pos.CENTER);
+        warningIcon.setMinWidth(Label.USE_PREF_SIZE);
 
         // Amount model selection
         fixedAmount = new Button(Res.get("bisqEasy.tradeWizard.amount.amountModel.fixedAmount"));
@@ -114,7 +122,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
 //        VBox.setMargin(amountLimitInfoWithWarnIcon, new Insets(15, 0, 15, 0));
         content = new VBox(20);
         content.setAlignment(Pos.TOP_CENTER);
-        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountModelsBox, amountBox, amountLimitInfoWithWarnIcon, Spacer.fillVBox());
+        content.getChildren().addAll(Spacer.fillVBox(), amountModelsBox, amountBox, amountLimitInfoWithWarnIcon, Spacer.fillVBox());
         content.getStyleClass().add("bisq-easy-trade-wizard-amount-step");
 
         amountLimitInfoOverlayInfo = new Label();

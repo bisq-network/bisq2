@@ -1002,6 +1002,12 @@
     -fx-font-size: 0.8em;
 }
 
+.bisq-easy-trade-wizard-amount-step {
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-pref-width: 340;
+}
+
 .bisq-easy-trade-wizard-price-step .price-content {
     -fx-alignment: center;
 }
@@ -1240,9 +1246,9 @@
 }
 
 .trade-wizard-amount-limit-info {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1.15em;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -1254,7 +1260,7 @@
     -fx-border-width: 1px;
     -fx-text-fill: -bisq2-green;
     -fx-underline: true;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 .trade-wizard-amount-limit-info-overlay-link.hyperlink:hover,
