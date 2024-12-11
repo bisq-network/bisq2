@@ -1,4 +1,4 @@
-// js/utils/KeyUtility.js
+// js/utils/KeyUtils.js
 /*
  * This file is part of Bisq.
  *
@@ -19,9 +19,9 @@
 import { Constants } from '../Constants.js';
 
 /**
- * KeyUtility is a helper class that provides methods for working with nested keys and object data.
+ * KeyUtils is a helper class that provides methods for working with nested keys and object data.
  */
-export class KeyUtility {
+export class KeyUtils {
 
     static generateReportNodeId(address) {
         return `report-${address.replace(/:/g, '-').replace(/\./g, '_')}`;

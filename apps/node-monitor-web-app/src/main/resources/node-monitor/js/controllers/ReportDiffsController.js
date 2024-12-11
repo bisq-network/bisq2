@@ -18,8 +18,9 @@
  */
 
 import { Constants } from '../Constants.js';
+import { Config } from '../Config.js';
 import { DOMUtils } from '../utils/DOMUtils.js';
-import { KeyUtility } from '../utils/KeyUtils.js';
+import { KeyUtils } from '../utils/KeyUtils.js';
 import { FormatUtils } from '../utils/FormatUtils.js';
 
 const VALUE_GT_REFERENCE_VALUE = '>';
@@ -77,9 +78,9 @@ export class ReportDiffsController {
         }, 0);
     }
 
-    #updateAverageAndRelevantKeys(report, parentFullKey = Constants.REPORT_KEY_ROOT_PARENT) {
+    #updateAverageAndRelevantKeys(report, parentFullKey = Config.REPORT_KEY_ROOT_PARENT) {
         Object.entries(report).forEach(([key, value]) => {
-            const fullKey = KeyUtility.createFullKey(parentFullKey, key);
+            const fullKey = KeyUtils.createFullKey(parentFullKey, key);
 
             if (typeof value === 'number') {
                 this.#updateAverageForField(value, fullKey);
@@ -90,11 +91,11 @@ export class ReportDiffsController {
     }
 
     #updateAverageForField(value, fullKey) {
-        let currentAverageData = KeyUtility.getNestedValue(this.averageReport, fullKey);
+        let currentAverageData = KeyUtils.getNestedValue(this.averageReport, fullKey);
 
         if (!currentAverageData) {
             currentAverageData = { average: 0, count: 0 };
-            KeyUtility.setNestedValue(this.averageReport, fullKey, currentAverageData);
+            KeyUtils.setNestedValue(this.averageReport, fullKey, currentAverageData);
         }
 
         currentAverageData.count += 1;
@@ -102,7 +103,7 @@ export class ReportDiffsController {
 
         const newAverage = currentAverageData.average;
         const deviation = Math.abs((value - newAverage) / newAverage) * 100;
-        if (deviation >= Constants.DEVIATION_THRESHOLDS.LOW.value) {
+        if (deviation >= Config.DEVIATION_THRESHOLDS.LOW) {
             this.relevantKeys.add(fullKey);
         }
         return deviation;
@@ -113,7 +114,7 @@ export class ReportDiffsController {
             const maxDeviationPerParent = new Map();
 
             this.relevantKeys.forEach(fullKey => {
-                const value = KeyUtility.getNestedValue(data, fullKey);
+                const value = KeyUtils.getNestedValue(data, fullKey);
                 let deviation = 0;
                 let hover = ``;
 
@@ -126,7 +127,7 @@ export class ReportDiffsController {
                     hover = `Deviation: ${FormatUtils.formatNumber(deviation)}% from reference value (${FormatUtils.formatNumber(referenceValue)})`;
                     this.#renderField(address, fullKey, deviation, hover);
                 } else {
-                    const averageData = KeyUtility.getNestedValue(this.averageReport, fullKey);
+                    const averageData = KeyUtils.getNestedValue(this.averageReport, fullKey);
                     if (!averageData || averageData.average == undefined) {
                         console.error(`Average Value not found or null: Key: ${fullKey}`);
                     } else if (value != undefined) {
@@ -134,7 +135,7 @@ export class ReportDiffsController {
                         hover = `Deviation: ${FormatUtils.formatNumber(deviation)}% from average (${FormatUtils.formatNumber(averageData.average)})`;
                         this.#renderField(address, fullKey, deviation, hover);
 
-                        const parentKey = KeyUtility.getParentKey(fullKey);
+                        const parentKey = KeyUtils.getParentKey(fullKey);
                         if (parentKey === Constants.REPORT_KEY_ROOT_PARENT) {
                             return;
                         }
@@ -161,11 +162,11 @@ export class ReportDiffsController {
         element.title = title;
 
         element.classList.remove('low', 'medium', 'high', 'diff');
-        if (deviation >= Constants.DEVIATION_THRESHOLDS.HIGH.value) {
+        if (deviation >= Config.DEVIATION_THRESHOLDS.HIGH) {
             element.classList.add('diff', 'high');
-        } else if (deviation >= Constants.DEVIATION_THRESHOLDS.MEDIUM.value) {
+        } else if (deviation >= Config.DEVIATION_THRESHOLDS.MEDIUM) {
             element.classList.add('diff', 'medium');
-        } else if (deviation >= Constants.DEVIATION_THRESHOLDS.LOW.value) {
+        } else if (deviation >= Config.DEVIATION_THRESHOLDS.LOW) {
             element.classList.add('diff', 'low');
         }
     }

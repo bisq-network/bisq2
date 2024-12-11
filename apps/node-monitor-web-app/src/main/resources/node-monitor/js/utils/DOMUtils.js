@@ -20,14 +20,14 @@
  * DOMUtils is a helper class for DOM manipulation and searching.
  */
 
-import { KeyUtility } from './KeyUtils.js'
+import { KeyUtils } from './KeyUtils.js'
 
 export class DOMUtils {
 
     static SELECTOR_DATA_FULL_KEY = 'data-fullkey';
 
     static findReportElementByAddress(address) {
-        const nodeBlock = document.getElementById(KeyUtility.generateReportNodeId(address));
+        const nodeBlock = document.getElementById(KeyUtils.generateReportNodeId(address));
         if (!nodeBlock) {
             console.warn(`Report node for address "${address}" not found.`);
             return null;
