@@ -58,7 +58,7 @@ public class UserProfileController implements Controller {
     private final ProfileAgeService profileAgeService;
     private final BisqEasyService bisqEasyService;
     private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
-    private UIScheduler livenessUpateScheduler;
+    private UIScheduler livenessUpdateScheduler;
 
     public UserProfileController(ServiceProvider serviceProvider) {
         UserService userService = serviceProvider.getUserService();
@@ -96,11 +96,11 @@ public class UserProfileController implements Controller {
                                 .map(TimeFormatter::formatAgeInDaysAndYears)
                                 .orElse(Res.get("data.na")));
 
-                        if (livenessUpateScheduler != null) {
-                            livenessUpateScheduler.stop();
-                            livenessUpateScheduler = null;
+                        if (livenessUpdateScheduler != null) {
+                            livenessUpdateScheduler.stop();
+                            livenessUpdateScheduler = null;
                         }
-                        livenessUpateScheduler = UIScheduler.run(() -> {
+                        livenessUpdateScheduler = UIScheduler.run(() -> {
                                     long publishDate = userProfile.getPublishDate();
                                     if (publishDate == 0) {
                                         model.getLivenessState().set(Res.get("data.na"));
@@ -124,9 +124,9 @@ public class UserProfileController implements Controller {
         selectedUserProfilePin.unbind();
         reputationChangedPin.unbind();
         model.getSelectedUserIdentity().set(null);
-        if (livenessUpateScheduler != null) {
-            livenessUpateScheduler.stop();
-            livenessUpateScheduler = null;
+        if (livenessUpdateScheduler != null) {
+            livenessUpdateScheduler.stop();
+            livenessUpdateScheduler = null;
         }
         model.getCatHashImage().set(null);
     }

@@ -25,6 +25,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 @Getter
@@ -34,6 +36,7 @@ public class ProfileCardModel extends TabModel {
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowReportButton = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();
+    private final StringProperty offersTabButtonText = new SimpleStringProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

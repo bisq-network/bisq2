@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -38,6 +39,7 @@ import org.fxmisc.easybind.Subscription;
 
 public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardController> {
     private final ProfileCardController controller;
+    private final TabButton offersTabButton;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
@@ -58,7 +60,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
         addTab(Res.get("user.profileCard.tab.overview"), NavigationTarget.PROFILE_CARD_OVERVIEW);
         addTab(Res.get("user.profileCard.tab.details"), NavigationTarget.PROFILE_CARD_DETAILS);
-        addTab(Res.get("user.profileCard.tab.offers"), NavigationTarget.PROFILE_CARD_OFFERS);
+        offersTabButton = addTab("", NavigationTarget.PROFILE_CARD_OFFERS);
         addTab(Res.get("user.profileCard.tab.reputation"), NavigationTarget.PROFILE_CARD_REPUTATION);
     }
 
@@ -74,6 +76,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         report.managedProperty().bind(model.getShouldShowReportButton());
         userActionsBox.visibleProperty().bind(model.getShouldShowUserActionsMenu());
         userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
+        offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
 
         userProfilePin = EasyBind.subscribe(model.getUserProfile(), this::updateUserProfile);
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
@@ -103,6 +106,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         report.managedProperty().unbind();
         userActionsBox.visibleProperty().unbind();
         userActionsBox.managedProperty().unbind();
+        offersTabButton.getLabel().textProperty().unbind();
 
         userProfilePin.unsubscribe();
         reputationScorePin.unsubscribe();
