@@ -46,9 +46,10 @@ public class AmountSelectionModel implements Model {
     private final ObjectProperty<Monetary> minQuoteSideAmount = new SimpleObjectProperty<>();
     private final StringProperty spendOrReceiveString = new SimpleStringProperty();
 
-    private final DoubleProperty maxOrFixedSliderValue = new SimpleDoubleProperty();
-    private final DoubleProperty minSliderValue = new SimpleDoubleProperty();
-    private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
+    private final DoubleProperty maxOrFixedAmountSliderValue = new SimpleDoubleProperty();
+    private final DoubleProperty minAmountSliderValue = new SimpleDoubleProperty();
+    private final BooleanProperty maxOrFixedAmountSliderFocus = new SimpleBooleanProperty();
+    private final BooleanProperty minAmountSliderFocus = new SimpleBooleanProperty();
     private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
 
     @Setter
@@ -87,9 +88,10 @@ public class AmountSelectionModel implements Model {
         minBaseSideAmount.set(null);
         minQuoteSideAmount.set(null);
         spendOrReceiveString.set(null);
-        maxOrFixedSliderValue.set(0L);
-        minSliderValue.set(0L);
-        sliderFocus.set(false);
+        maxOrFixedAmountSliderValue.set(0L);
+        minAmountSliderValue.set(0L);
+        maxOrFixedAmountSliderFocus.set(false);
+        minAmountSliderFocus.set(false);
         market = MarketRepository.getDefault();
         direction = Direction.BUY;
         leftMarkerQuoteSideValue = null;

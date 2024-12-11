@@ -963,6 +963,26 @@
     -fx-alignment: baseline-left;
 }
 
+.slider.max-or-fixed-amount-slider .thumb {
+    -fx-background-color: -bisq-white;
+    -fx-background-insets: 2.5;
+    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
+    -fx-translate-y: -8;
+}
+
+.slider.min-amount-slider .thumb {
+    -fx-background-color: -bisq-white;
+    -fx-background-insets: 2.5;
+    -fx-shape: "M 0 4 h 7 l -3.5 -4 z";
+    -fx-translate-y: -9;
+}
+
+.slider.min-amount-slider .track {
+    -fx-min-height: 0;
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+}
+
 .bisq-easy-trade-wizard-price-step .price-content {
     -fx-alignment: center;
 }

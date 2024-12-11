@@ -52,7 +52,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     public static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
-    private final Slider slider = new Slider();
+    private final Slider maxOrFixedAmountSlider, minAmountSlider;
     private final Label minRangeValue, maxRangeValue, description, quoteAmountSeparator,
             baseAmountSeparator;
     private final Region selectionLine;
@@ -60,7 +60,6 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final BigAmountInput maxOrFixedQuoteAmount, minQuoteAmount;
     private final Pane minQuoteAmountRoot;
     private final Pane minBaseAmountRoot;
-    private final VBox sliderBox;
     private final HBox quoteAmountSelectionHBox;
     private Subscription maxOrFixedBaseAmountFocusPin, maxOrFixedQuoteAmountFocusPin,
             minBaseAmountFocusPin, minQuoteAmountFocusPin, sliderTrackStylePin, isRangeAmountEnabledPin,
@@ -143,8 +142,15 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         amountPane.setMinHeight(AMOUNT_BOX_HEIGHT);
         amountPane.setMaxHeight(AMOUNT_BOX_HEIGHT);
 
-        slider.setMin(model.getSliderMin());
-        slider.setMax(model.getSliderMax());
+        maxOrFixedAmountSlider = new Slider();
+        maxOrFixedAmountSlider.setMin(model.getSliderMin());
+        maxOrFixedAmountSlider.setMax(model.getSliderMax());
+        maxOrFixedAmountSlider.getStyleClass().add("max-or-fixed-amount-slider");
+
+        minAmountSlider = new Slider();
+        minAmountSlider.setMin(model.getSliderMin());
+        minAmountSlider.setMax(model.getSliderMax());
+        minAmountSlider.getStyleClass().add("min-amount-slider");
 
         minRangeValue = new Label();
         minRangeValue.getStyleClass().add("bisq-small-light-label-dimmed");
@@ -152,7 +158,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxRangeValue = new Label();
         maxRangeValue.getStyleClass().add("bisq-small-light-label-dimmed");
 
-        sliderBox = new VBox(2, slider, new HBox(minRangeValue, Spacer.fillHBox(), maxRangeValue));
+        VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider,
+                new HBox(minRangeValue, Spacer.fillHBox(), maxRangeValue));
         sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH + 40);
 
         VBox.setMargin(sliderBox, new Insets(30, 0, 0, 0));
@@ -189,10 +196,12 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
             applyFontStyle();
             applyPrefWidth();
         });
-        sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), slider::setStyle);
+        sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), maxOrFixedAmountSlider::setStyle);
 
-        slider.valueProperty().bindBidirectional(model.getMaxOrFixedSliderValue());
-        model.getSliderFocus().bind(slider.focusedProperty());
+        maxOrFixedAmountSlider.valueProperty().bindBidirectional(model.getMaxOrFixedAmountSliderValue());
+        minAmountSlider.valueProperty().bindBidirectional(model.getMinAmountSliderValue());
+        model.getMaxOrFixedAmountSliderFocus().bind(maxOrFixedAmountSlider.focusedProperty());
+        model.getMinAmountSliderFocus().bind(minAmountSlider.focusedProperty());
         description.textProperty().bind(model.getDescription());
         minRangeValue.textProperty().bind(model.getMinRangeValueAsString());
         maxRangeValue.textProperty().bind(model.getMaxRangeValueAsString());
@@ -204,6 +213,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         minQuoteAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
         minBaseAmountRoot.visibleProperty().bind(model.getIsRangeAmountEnabled());
         minBaseAmountRoot.managedProperty().bind(model.getIsRangeAmountEnabled());
+        minAmountSlider.visibleProperty().bind(model.getIsRangeAmountEnabled());
+        minAmountSlider.managedProperty().bind(model.getIsRangeAmountEnabled());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -236,8 +247,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         }
         isRangeAmountEnabledPin.unsubscribe();
         sliderTrackStylePin.unsubscribe();
-        slider.valueProperty().unbindBidirectional(model.getMaxOrFixedSliderValue());
-        model.getSliderFocus().unbind();
+        maxOrFixedAmountSlider.valueProperty().unbindBidirectional(model.getMaxOrFixedAmountSliderValue());
+        minAmountSlider.valueProperty().unbindBidirectional(model.getMinAmountSliderValue());
+        model.getMaxOrFixedAmountSliderFocus().unbind();
+        model.getMinAmountSliderFocus().unbind();
         description.textProperty().unbind();
         minRangeValue.textProperty().unbind();
         maxRangeValue.textProperty().unbind();
@@ -249,6 +262,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         minQuoteAmountRoot.managedProperty().unbind();
         minBaseAmountRoot.visibleProperty().unbind();
         minBaseAmountRoot.managedProperty().unbind();
+        minAmountSlider.visibleProperty().unbind();
+        minAmountSlider.managedProperty().unbind();
 
         maxOrFixedBaseAmount.isAmountValidProperty().set(true);
         maxOrFixedQuoteAmount.isAmountValidProperty().set(true);
