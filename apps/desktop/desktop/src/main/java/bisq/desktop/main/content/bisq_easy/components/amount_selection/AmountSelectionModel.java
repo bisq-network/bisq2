@@ -75,7 +75,9 @@ public class AmountSelectionModel implements Model {
     private Direction direction = Direction.BUY;
     private final StringProperty description = new SimpleStringProperty();
     private final StringProperty minRangeValueAsString = new SimpleStringProperty();
+    private final StringProperty minRangeCodeAsString = new SimpleStringProperty();
     private final StringProperty maxRangeValueAsString = new SimpleStringProperty();
+    private final StringProperty maxRangeCodeAsString = new SimpleStringProperty();
     private final BooleanProperty showRangeAmountSelection = new SimpleBooleanProperty(false);
 
     public AmountSelectionModel(boolean useQuoteCurrencyForMinMaxRange) {
@@ -92,10 +94,23 @@ public class AmountSelectionModel implements Model {
         minAmountSliderValue.set(0L);
         maxOrFixedAmountSliderFocus.set(false);
         minAmountSliderFocus.set(false);
-        market = MarketRepository.getDefault();
-        direction = Direction.BUY;
+        isRangeAmountEnabled.set(false);
+        minRangeMonetary.set(BisqEasyTradeAmountLimits.DEFAULT_MIN_BTC_TRADE_AMOUNT);
+        maxRangeMonetary.set(BisqEasyTradeAmountLimits.DEFAULT_MAX_BTC_TRADE_AMOUNT);
+        minRangeBaseSideValue.set(null);
+        maxRangeBaseSideValue.set(null);
+        minRangeQuoteSideValue.set(null);
+        maxRangeQuoteSideValue.set(null);
         leftMarkerQuoteSideValue = null;
         rightMarkerQuoteSideValue = null;
+        sliderTrackStyle.set(null);
+        market = MarketRepository.getDefault();
+        direction = Direction.BUY;
+        description.set(null);
+        minRangeValueAsString.set(null);
+        minRangeCodeAsString.set(null);
+        maxRangeValueAsString.set(null);
+        maxRangeCodeAsString.set(null);
         showRangeAmountSelection.set(false);
     }
 }

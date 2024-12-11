@@ -983,6 +983,25 @@
     -fx-pref-height: 0;
 }
 
+.amount-selection .range-value,
+.amount-selection .range-code,
+.amount-selection .min-max-label {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-mid-grey-20;
+}
+
+.amount-selection .range-value {
+    -fx-font-size: 1.1em;
+}
+
+.amount-selection .range-code {
+    -fx-font-size: 0.7em;
+}
+
+.amount-selection .min-max-label {
+    -fx-font-size: 0.8em;
+}
+
 .bisq-easy-trade-wizard-price-step .price-content {
     -fx-alignment: center;
 }

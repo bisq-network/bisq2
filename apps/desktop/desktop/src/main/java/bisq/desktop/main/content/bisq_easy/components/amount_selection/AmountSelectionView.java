@@ -23,6 +23,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
+import bisq.i18n.Res;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -53,7 +54,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     public static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
     private final Slider maxOrFixedAmountSlider, minAmountSlider;
-    private final Label minRangeValue, maxRangeValue, description, quoteAmountSeparator,
+    private final Label minRangeValue, maxRangeValue, minRangeCode, maxRangeCode, description, quoteAmountSeparator,
             baseAmountSeparator;
     private final Region selectionLine;
     private final SmallAmountInput maxOrFixedBaseAmount, minBaseAmount;
@@ -142,6 +143,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         amountPane.setMinHeight(AMOUNT_BOX_HEIGHT);
         amountPane.setMaxHeight(AMOUNT_BOX_HEIGHT);
 
+        // slider
         maxOrFixedAmountSlider = new Slider();
         maxOrFixedAmountSlider.setMin(model.getSliderMin());
         maxOrFixedAmountSlider.setMax(model.getSliderMax());
@@ -153,13 +155,30 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         minAmountSlider.getStyleClass().add("min-amount-slider");
 
         minRangeValue = new Label();
-        minRangeValue.getStyleClass().add("bisq-small-light-label-dimmed");
+        minRangeValue.getStyleClass().add("range-value");
+        minRangeCode = new Label();
+        minRangeCode.getStyleClass().add("range-code");
+        HBox minRangeValueAndCodeHBox = new HBox(2, minRangeValue, minRangeCode);
+        minRangeValueAndCodeHBox.setAlignment(Pos.BASELINE_LEFT);
+        Label minLabel = new Label(Res.get("bisqEasy.component.amount.minRangeValue").toUpperCase());
+        minLabel.getStyleClass().add("min-max-label");
+        VBox minRangeVBox = new VBox(minRangeValueAndCodeHBox, minLabel);
+        minRangeVBox.setAlignment(Pos.CENTER_LEFT);
 
         maxRangeValue = new Label();
-        maxRangeValue.getStyleClass().add("bisq-small-light-label-dimmed");
+        maxRangeValue.getStyleClass().add("range-value");
+        maxRangeCode = new Label();
+        maxRangeCode.getStyleClass().add("range-code");
+        HBox maxRangeValueAndCodeHBox = new HBox(2, maxRangeValue, maxRangeCode);
+        maxRangeValueAndCodeHBox.setAlignment(Pos.BASELINE_RIGHT);
+        Label maxLabel = new Label(Res.get("bisqEasy.component.amount.maxRangeValue").toUpperCase());
+        maxLabel.getStyleClass().add("min-max-label");
+        VBox maxRangeVBox = new VBox(maxRangeValueAndCodeHBox, maxLabel);
+        maxRangeVBox.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider,
-                new HBox(minRangeValue, Spacer.fillHBox(), maxRangeValue));
+        HBox sliderIndicators = new HBox(minRangeVBox, Spacer.fillHBox(), maxRangeVBox);
+
+        VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider, sliderIndicators);
         sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH + 40);
 
         VBox.setMargin(sliderBox, new Insets(30, 0, 0, 0));
@@ -204,7 +223,9 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         model.getMinAmountSliderFocus().bind(minAmountSlider.focusedProperty());
         description.textProperty().bind(model.getDescription());
         minRangeValue.textProperty().bind(model.getMinRangeValueAsString());
+        minRangeCode.textProperty().bind(model.getMinRangeCodeAsString());
         maxRangeValue.textProperty().bind(model.getMaxRangeValueAsString());
+        maxRangeCode.textProperty().bind(model.getMaxRangeCodeAsString());
         quoteAmountSeparator.visibleProperty().bind(model.getIsRangeAmountEnabled());
         quoteAmountSeparator.managedProperty().bind(model.getIsRangeAmountEnabled());
         baseAmountSeparator.visibleProperty().bind(model.getIsRangeAmountEnabled());
@@ -253,7 +274,9 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         model.getMinAmountSliderFocus().unbind();
         description.textProperty().unbind();
         minRangeValue.textProperty().unbind();
+        minRangeCode.textProperty().unbind();
         maxRangeValue.textProperty().unbind();
+        maxRangeCode.textProperty().unbind();
         quoteAmountSeparator.visibleProperty().unbind();
         quoteAmountSeparator.managedProperty().unbind();
         baseAmountSeparator.visibleProperty().unbind();
