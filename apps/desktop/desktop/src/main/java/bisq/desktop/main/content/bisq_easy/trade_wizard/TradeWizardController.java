@@ -165,7 +165,7 @@ public class TradeWizardController extends NavigationController implements InitW
             tradeWizardAmountController.setMarket(market);
             updateNextButtonDisabledState();
         });
-        amountSpecPin = EasyBind.subscribe(tradeWizardAmountController.getQuoteSideAmountSpec(),
+        amountSpecPin = EasyBind.subscribe(tradeWizardAmountAndPriceController.getQuoteSideAmountSpec(),
                 tradeWizardSelectOfferController::setQuoteSideAmountSpec);
         priceSpecPin = EasyBind.subscribe(tradeWizardPriceController.getPriceSpec(),
                 priceSpec -> {

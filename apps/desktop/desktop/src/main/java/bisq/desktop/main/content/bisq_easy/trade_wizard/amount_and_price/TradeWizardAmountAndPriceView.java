@@ -33,12 +33,13 @@ public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAm
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,
                                          TradeWizardAmountAndPriceController controller,
                                          Pane amountSelection,
-                                         Pane infoAndWarningsSection) {
+                                         Pane infoAndWarningsSection,
+                                         Pane priceSelection) {
         super(new StackPane(), model, controller);
 
         Label headline = new Label("Headline");
         Label amountAtPriceSymbol = new Label("@");
-        HBox amountAndPriceHBox = new HBox(amountSelection);
+        HBox amountAndPriceHBox = new HBox(amountSelection, amountAtPriceSymbol, priceSelection);
         VBox contentVBox = new VBox(20, headline, amountAndPriceHBox, infoAndWarningsSection);
         contentVBox.setAlignment(Pos.TOP_CENTER);
         root.getChildren().add(contentVBox);
