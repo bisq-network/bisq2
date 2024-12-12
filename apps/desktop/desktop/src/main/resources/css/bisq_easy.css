@@ -1260,7 +1260,7 @@
     -fx-border-width: 1px;
     -fx-text-fill: -bisq2-green;
     -fx-underline: true;
-    -fx-font-size: 0.9em;
+    -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 .trade-wizard-amount-limit-info-overlay-link.hyperlink:hover,

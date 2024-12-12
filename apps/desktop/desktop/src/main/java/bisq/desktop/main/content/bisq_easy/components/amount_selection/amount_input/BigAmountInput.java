@@ -19,8 +19,6 @@ package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_i
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -40,7 +38,6 @@ public class BigAmountInput extends AmountInput {
         public void initView() {
             root.setSpacing(10);
             root.getStyleClass().add("big-amount-input");
-//            HBox.setHgrow(textInput, Priority.ALWAYS);
         }
 
         @Override

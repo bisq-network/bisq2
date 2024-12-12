@@ -18,10 +18,12 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
 import bisq.desktop.common.view.View;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -30,11 +32,16 @@ public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAm
 
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,
                                          TradeWizardAmountAndPriceController controller,
-                                         Pane amountSelection) {
+                                         Pane amountSelection,
+                                         Pane infoAndWarningsSection) {
         super(new StackPane(), model, controller);
 
-        HBox hbox = new HBox(amountSelection);
-        root.getChildren().add(hbox);
+        Label headline = new Label("Headline");
+        Label amountAtPriceSymbol = new Label("@");
+        HBox amountAndPriceHBox = new HBox(amountSelection);
+        VBox contentVBox = new VBox(20, headline, amountAndPriceHBox, infoAndWarningsSection);
+        contentVBox.setAlignment(Pos.TOP_CENTER);
+        root.getChildren().add(contentVBox);
     }
 
     @Override
