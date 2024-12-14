@@ -30,6 +30,7 @@ dependencies {
     implementation("bisq:os-specific")
 
     implementation("network:network")
+    implementation("network:network-identity")
     implementation("bitcoind:core")
     implementation("wallets:wallet")
 
