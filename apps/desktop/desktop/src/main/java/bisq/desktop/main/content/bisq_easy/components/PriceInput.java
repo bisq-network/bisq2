@@ -145,7 +145,9 @@ public class PriceInput {
 
             marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
                 // We only set it initially
-                if (model.priceQuote.get() != null) return;
+                if (model.priceQuote.get() != null) {
+                    return;
+                }
                 UIThread.run(this::setQuoteFromMarketPrice);
             });
 
@@ -196,7 +198,9 @@ public class PriceInput {
         }
 
         private void setQuoteFromMarketPrice() {
-            if (model.market == null) return;
+            if (model.market == null) {
+                return;
+            }
             marketPriceService.findMarketPrice(model.market)
                     .ifPresent(marketPrice -> model.priceQuote.set(marketPrice.getPriceQuote()));
         }
@@ -228,13 +232,13 @@ public class PriceInput {
 
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int WIDTH = 250;
-        private final MaterialTextField textInput;
+        private final PriceInputBox textInput;
         private Subscription focusedPin, doResetValidationPin;
 
         private View(Model model, Controller controller, NumberValidator validator) {
             super(new VBox(), model, controller);
 
-            textInput = new MaterialTextField(model.description.get(), Res.get("component.priceInput.prompt"));
+            textInput = new PriceInputBox(model.description.get(), Res.get("component.priceInput.prompt"));
             textInput.setPrefWidth(WIDTH);
             textInput.setValidator(validator);
 
@@ -245,6 +249,7 @@ public class PriceInput {
         protected void onViewAttached() {
             textInput.descriptionProperty().bind(model.description);
             textInput.textProperty().bindBidirectional(model.priceString);
+            textInput.initialize();
             focusedPin = EasyBind.subscribe(textInput.textInputFocusedProperty(), controller::onFocusedChanged);
             doResetValidationPin = EasyBind.subscribe(model.doResetValidation, doResetValidation -> {
                 if (doResetValidation != null && doResetValidation) {
@@ -259,6 +264,7 @@ public class PriceInput {
             textInput.descriptionProperty().unbind();
             textInput.textProperty().unbindBidirectional(model.priceString);
             textInput.resetValidation();
+            textInput.dispose();
             focusedPin.unsubscribe();
             doResetValidationPin.unsubscribe();
         }

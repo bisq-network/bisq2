@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
 
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -38,20 +36,6 @@ public class BigAmountInput extends AmountInput {
         public void initView() {
             root.setSpacing(10);
             root.getStyleClass().add("big-amount-input");
-        }
-
-        @Override
-        protected TextField createTextInput() {
-            var textInput = new TextField();
-            textInput.getStyleClass().add("text-input");
-            return textInput;
-        }
-
-        @Override
-        protected Label createCodeLabel() {
-            var codeLabel = new Label();
-            codeLabel.getStyleClass().add("currency-code");
-            return codeLabel;
         }
     }
 }

@@ -86,7 +86,6 @@ public class SmallAmountInput extends AmountInput {
         protected TextField createTextInput() {
             var textInput = new TextField();
             textInput.setId(QUOTE_AMOUNT_ID);
-            textInput.getStyleClass().add("text-input");
             textInput.setPadding(new Insets(0, 7, 3, 0));
             return textInput;
         }
@@ -95,7 +94,6 @@ public class SmallAmountInput extends AmountInput {
         protected Label createCodeLabel() {
             var codeLabel = new Label();
             codeLabel.setId(QUOTE_AMOUNT_ID);
-            codeLabel.getStyleClass().add("currency-code");
             codeLabel.setMinWidth(Label.USE_PREF_SIZE);
             return codeLabel;
         }

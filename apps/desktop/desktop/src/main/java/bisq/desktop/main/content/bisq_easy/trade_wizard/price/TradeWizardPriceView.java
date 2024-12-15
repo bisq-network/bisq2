@@ -57,17 +57,6 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headline = new Label(Res.get("bisqEasy.price.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
-        VBox.setMargin(headline, new Insets(40, 0, 0, 0));
-
-        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.price.subtitle"));
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().add("bisq-text-3");
-        subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(450);
-
         // Pricing model selection
         percentagePrice = new Button(Res.get("bisqEasy.price.percentage.title"));
         percentagePrice.getStyleClass().add("model-selection-item");
@@ -106,7 +95,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
         learnWhyOverlay = createAndGetLearnWhyOverlay();
 
-        content = new VBox(10, headline, subtitleLabel, pricingModels, fieldsBox, feedbackBox);
+        content = new VBox(10, pricingModels, fieldsBox/*, feedbackBox*/);
         content.getStyleClass().add("price-content");
         StackPane layeredContent = new StackPane(content, learnWhyOverlay);
         layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");

@@ -198,7 +198,7 @@ public abstract class AmountInput {
             code.set(null);
             selectedMarket = null;
             hasFocus = false;
-            isAmountValid.set(false);
+            isAmountValid.set(true);
         }
     }
 
@@ -213,6 +213,7 @@ public abstract class AmountInput {
 
             textInput = createTextInput();
             codeLabel = createCodeLabel();
+            codeLabel.getStyleClass().add("currency-code");
             codeLabel.setVisible(model.showCurrencyCode);
             codeLabel.setManaged(model.showCurrencyCode);
             root.getChildren().addAll(textInput, codeLabel);

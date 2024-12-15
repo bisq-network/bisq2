@@ -40,7 +40,7 @@ public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAm
         Label headline = new Label("Headline");
         Label amountAtPriceSymbol = new Label("@");
         HBox amountAndPriceHBox = new HBox(amountSelection, amountAtPriceSymbol, priceSelection);
-        VBox contentVBox = new VBox(20, headline, amountAndPriceHBox, infoAndWarningsSection);
+        VBox contentVBox = new VBox(20, /*headline,*/ amountAndPriceHBox, infoAndWarningsSection);
         contentVBox.setAlignment(Pos.TOP_CENTER);
         root.getChildren().add(contentVBox);
     }
