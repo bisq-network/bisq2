@@ -53,7 +53,7 @@ public class TradeWizardPriceController implements Controller {
     private final Region owner;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
-    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin;
+    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin, percentagePin;
 
     public TradeWizardPriceController(ServiceProvider serviceProvider, Region owner) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -122,6 +122,11 @@ public class TradeWizardPriceController implements Controller {
                 onPercentageInput(percentageInput);
             }
         });
+        percentagePin = EasyBind.subscribe(model.getPercentage(), percentage -> {
+           if (percentage != null) {
+               priceInput.setPercentage(percentage.doubleValue());
+           }
+        });
 
         String marketCodes = model.getMarket().getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.price.tradePrice.inputBoxText", marketCodes));
@@ -139,6 +144,7 @@ public class TradeWizardPriceController implements Controller {
         isPriceInvalidPin.unsubscribe();
         priceSpecPin.unsubscribe();
         percentageInputPin.unsubscribe();
+        percentagePin.unsubscribe();
         view.getRoot().setOnKeyPressed(null);
     }
 

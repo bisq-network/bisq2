@@ -36,8 +36,8 @@ public class PriceInputBox extends MaterialTextField {
     private final static String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
     private final static String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
 
-    private final Label textInputUnitsLabel, conversionPriceLabel, conversionPriceUnitsLabel;
-    private final HBox textInputAndUnitsHBox;
+    private final Label textInputSymbolLabel, conversionPriceLabel, conversionPriceLabelSymbol;
+    private final HBox textInputAndSymbolHBox;
     private final ChangeListener<Number> textInputLengthListener;
 
     public PriceInputBox(String description, String prompt) {
@@ -47,21 +47,23 @@ public class PriceInputBox extends MaterialTextField {
 
         descriptionLabel.setLayoutX(20);
         descriptionLabel.setPadding(new Insets(2, 0, 0, 0));
-        textInputUnitsLabel = new Label();
-        textInputUnitsLabel.getStyleClass().add("text-input-units");
-        textInputAndUnitsHBox = new HBox(10, textInputControl, textInputUnitsLabel);
-        textInputAndUnitsHBox.setLayoutY(27);
+        textInputSymbolLabel = new Label();
+        textInputSymbolLabel.getStyleClass().add("text-input-symbol");
+        textInputAndSymbolHBox = new HBox(10, textInputControl, textInputSymbolLabel);
+        textInputAndSymbolHBox.setLayoutY(27);
 
-        conversionPriceLabel = new Label("test");
-        conversionPriceUnitsLabel = new Label("123");
-        HBox conversionPriceBox = new HBox(10, conversionPriceLabel, conversionPriceUnitsLabel);
-        conversionPriceBox.setLayoutY(100);
+        conversionPriceLabel = new Label();
+        conversionPriceLabel.getStyleClass().add("conversion-price");
+        conversionPriceLabelSymbol = new Label();
+        conversionPriceLabelSymbol.getStyleClass().add("conversion-price-symbol");
+        HBox conversionPriceBox = new HBox(7, conversionPriceLabel, conversionPriceLabelSymbol);
+        conversionPriceBox.getStyleClass().add("conversion-price-box");
+        conversionPriceBox.setLayoutY(97);
 
-        getChildren().setAll(bg, conversionPriceBox, line, selectionLine, descriptionLabel, textInputAndUnitsHBox, iconButton, helpLabel, errorLabel);
+        getChildren().setAll(bg, conversionPriceBox, line, selectionLine, descriptionLabel, textInputAndSymbolHBox, iconButton, helpLabel, errorLabel);
         getStyleClass().add("price-input-box");
 
         textInputLengthListener = (observable, oldValue, newValue) -> applyFontStyle(newValue.intValue());
-
         initialize();
     }
 
@@ -73,21 +75,21 @@ public class PriceInputBox extends MaterialTextField {
         textInputControl.lengthProperty().removeListener(textInputLengthListener);
     }
 
-    final StringProperty textInputUnitsLabelTextProperty() {
-        return textInputUnitsLabel.textProperty();
+    final StringProperty textInputSymbolTextProperty() {
+        return textInputSymbolLabel.textProperty();
     }
 
-    void setConversionPriceLabel(String conversionPriceLabel) {
-        this.conversionPriceLabel.setText(conversionPriceLabel);
+    final StringProperty conversionPriceTextProperty() {
+        return conversionPriceLabel.textProperty();
     }
 
-    void setConversionPriceUnitsLabel(String conversionPriceUnitsLabel) {
-        this.conversionPriceUnitsLabel.setText(conversionPriceUnitsLabel.toUpperCase());
+    final StringProperty conversionPriceSymbolTextProperty() {
+        return conversionPriceLabelSymbol.textProperty();
     }
 
     private void applyFontStyle(int length) {
-        textInputAndUnitsHBox.getStyleClass().clear();
-        textInputAndUnitsHBox.getStyleClass().addAll("text-input-and-units-box",
+        textInputAndSymbolHBox.getStyleClass().clear();
+        textInputAndSymbolHBox.getStyleClass().addAll("text-input-and-units-box",
                 getFontStyleBasedOnTextLength(length));
     }
 
