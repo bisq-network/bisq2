@@ -21,7 +21,6 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.bisq_easy.components.TextInputFontUtils;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
 import bisq.i18n.Res;
@@ -31,7 +30,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -40,6 +43,17 @@ import org.fxmisc.easybind.Subscription;
 public class AmountSelectionView extends View<VBox, AmountSelectionModel, AmountSelectionController> {
     public final static int AMOUNT_BOX_WIDTH = 300;
     public final static int AMOUNT_BOX_HEIGHT = 120;
+    private final static String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
+    private final static String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
+    private final static String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
+    private final static String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
+    private final static String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
+    private final static String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
+    private final static String INPUT_TEXT_15_STYLE_CLASS = "input-text-15";
+    private final static String INPUT_TEXT_16_STYLE_CLASS = "input-text-16";
+    private final static String INPUT_TEXT_17_STYLE_CLASS = "input-text-17";
+    private final static String INPUT_TEXT_18_STYLE_CLASS = "input-text-18";
+    private final static String INPUT_TEXT_19_STYLE_CLASS = "input-text-19";
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     public static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
@@ -321,10 +335,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         int charCount = model.getIsRangeAmountEnabled().get()
                 ? minQuoteAmount.getTextInputLength() + maxOrFixedQuoteAmount.getTextInputLength() + 1 // for the dash
                 : maxOrFixedQuoteAmount.getTextInputLength();
-        quoteAmountSelectionHBox.getStyleClass().add(TextInputFontUtils.getFontStyleBasedOnTextLength(charCount));
+        quoteAmountSelectionHBox.getStyleClass().add(getFontStyleBasedOnTextLength(charCount));
     }
 
-    private int getFontCharWidth(int charCount) {
+    private static int getFontCharWidth(int charCount) {
         if (charCount < 10) {
             return 31;
         }
@@ -353,5 +367,39 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
             return 16;
         }
         return 15;
+    }
+
+    private static String getFontStyleBasedOnTextLength(int charCount) {
+        if (charCount < 10) {
+            return INPUT_TEXT_9_STYLE_CLASS;
+        }
+        if (charCount == 10) {
+            return INPUT_TEXT_10_STYLE_CLASS;
+        }
+        if (charCount == 11) {
+            return INPUT_TEXT_11_STYLE_CLASS;
+        }
+        if (charCount == 12) {
+            return INPUT_TEXT_12_STYLE_CLASS;
+        }
+        if (charCount == 13) {
+            return INPUT_TEXT_13_STYLE_CLASS;
+        }
+        if (charCount == 14) {
+            return INPUT_TEXT_14_STYLE_CLASS;
+        }
+        if (charCount == 15) {
+            return INPUT_TEXT_15_STYLE_CLASS;
+        }
+        if (charCount == 16) {
+            return INPUT_TEXT_16_STYLE_CLASS;
+        }
+        if (charCount == 17) {
+            return INPUT_TEXT_17_STYLE_CLASS;
+        }
+        if (charCount == 18) {
+            return INPUT_TEXT_18_STYLE_CLASS;
+        }
+        return INPUT_TEXT_19_STYLE_CLASS;
     }
 }

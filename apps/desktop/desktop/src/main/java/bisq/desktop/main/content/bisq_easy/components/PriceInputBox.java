@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.components;
 
 import bisq.desktop.components.controls.MaterialTextField;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -28,6 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 public class PriceInputBox extends MaterialTextField {
     public final static int AMOUNT_BOX_WIDTH = 340;
     public final static int AMOUNT_BOX_HEIGHT = 127;
+    private final static String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
+    private final static String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
+    private final static String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
+    private final static String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
+    private final static String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
+    private final static String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
 
     private final Label textInputUnitsLabel, conversionPriceLabel, conversionPriceUnitsLabel;
     private final HBox textInputAndUnitsHBox;
@@ -40,7 +47,7 @@ public class PriceInputBox extends MaterialTextField {
 
         descriptionLabel.setLayoutX(20);
         descriptionLabel.setPadding(new Insets(2, 0, 0, 0));
-        textInputUnitsLabel = new Label("tst");
+        textInputUnitsLabel = new Label();
         textInputUnitsLabel.getStyleClass().add("text-input-units");
         textInputAndUnitsHBox = new HBox(10, textInputControl, textInputUnitsLabel);
         textInputAndUnitsHBox.setLayoutY(27);
@@ -66,8 +73,8 @@ public class PriceInputBox extends MaterialTextField {
         textInputControl.lengthProperty().removeListener(textInputLengthListener);
     }
 
-    void setTextInputUnitsLabel(String textInputUnits) {
-        textInputUnitsLabel.setText(textInputUnits.toUpperCase());
+    final StringProperty textInputUnitsLabelTextProperty() {
+        return textInputUnitsLabel.textProperty();
     }
 
     void setConversionPriceLabel(String conversionPriceLabel) {
@@ -81,7 +88,7 @@ public class PriceInputBox extends MaterialTextField {
     private void applyFontStyle(int length) {
         textInputAndUnitsHBox.getStyleClass().clear();
         textInputAndUnitsHBox.getStyleClass().addAll("text-input-and-units-box",
-                TextInputFontUtils.getFontStyleBasedOnTextLength(length));
+                getFontStyleBasedOnTextLength(length));
     }
 
     @Override
@@ -95,5 +102,24 @@ public class PriceInputBox extends MaterialTextField {
 
         setMinWidth(AMOUNT_BOX_WIDTH);
         setMaxWidth(AMOUNT_BOX_WIDTH);
+    }
+
+    private static String getFontStyleBasedOnTextLength(int charCount) {
+        if (charCount < 9) {
+            return INPUT_TEXT_9_STYLE_CLASS;
+        }
+        if (charCount == 9) {
+            return INPUT_TEXT_10_STYLE_CLASS;
+        }
+        if (charCount == 10) {
+            return INPUT_TEXT_11_STYLE_CLASS;
+        }
+        if (charCount == 11) {
+            return INPUT_TEXT_12_STYLE_CLASS;
+        }
+        if (charCount == 12) {
+            return INPUT_TEXT_13_STYLE_CLASS;
+        }
+        return INPUT_TEXT_14_STYLE_CLASS;
     }
 }

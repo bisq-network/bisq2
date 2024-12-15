@@ -132,6 +132,7 @@ public class PriceInput {
         private void updateFromMarketPrice() {
             if (model.market != null && model.description.get() == null) {
                 model.description.set(Res.get("component.priceInput.description", model.market.getMarketCodes()));
+                model.textInputUnits.set(model.market.getMarketCodes());
             }
             if (model.isEditable) {
                 setQuoteFromMarketPrice();
@@ -213,6 +214,7 @@ public class PriceInput {
         private Market market;
         private boolean isFocused;
         private final StringProperty description = new SimpleStringProperty();
+        private final StringProperty textInputUnits = new SimpleStringProperty();
         private boolean isEditable = true;
         private final BooleanProperty isPriceValid = new SimpleBooleanProperty();
         private final BooleanProperty doResetValidation = new SimpleBooleanProperty();
@@ -226,6 +228,7 @@ public class PriceInput {
             market = null;
             isFocused = false;
             description.set(null);
+            textInputUnits.set(null);
             isEditable = true;
         }
     }
@@ -248,6 +251,7 @@ public class PriceInput {
         @Override
         protected void onViewAttached() {
             textInput.descriptionProperty().bind(model.description);
+            textInput.textInputUnitsLabelTextProperty().bind(model.textInputUnits);
             textInput.textProperty().bindBidirectional(model.priceString);
             textInput.initialize();
             focusedPin = EasyBind.subscribe(textInput.textInputFocusedProperty(), controller::onFocusedChanged);
@@ -262,6 +266,7 @@ public class PriceInput {
         @Override
         protected void onViewDetached() {
             textInput.descriptionProperty().unbind();
+            textInput.textInputUnitsLabelTextProperty().unbind();
             textInput.textProperty().unbindBidirectional(model.priceString);
             textInput.resetValidation();
             textInput.dispose();
