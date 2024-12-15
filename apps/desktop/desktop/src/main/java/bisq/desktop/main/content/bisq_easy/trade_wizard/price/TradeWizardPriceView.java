@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
+import bisq.desktop.main.content.bisq_easy.components.PriceInputBox;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -42,7 +43,7 @@ import org.fxmisc.easybind.Subscription;
 public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
 
-    private final MaterialTextField percentageInput;
+    private final PriceInputBox percentageInput;
     private final VBox fieldsBox, learnWhyOverlay, content;
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, showLearnWhyButton, closeLearnWhyButton;
@@ -75,8 +76,9 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         pricingModels.getStyleClass().addAll("selection-models", "bisq-text-3");
 
         // Input box
-        percentageInput = new MaterialTextField(Res.get("bisqEasy.price.percentage.inputBoxText"));
+        percentageInput = new PriceInputBox(Res.get("bisqEasy.price.percentage.inputBoxText"));
         percentageInput.setValidator(new PercentageValidator());
+        percentageInput.textInputSymbolTextProperty().set("%");
         fieldsBox = new VBox(20);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
         fieldsBox.setMinWidth(350);
@@ -105,6 +107,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     @Override
     protected void onViewAttached() {
         percentageInput.textProperty().bindBidirectional(model.getPercentageInput());
+        percentageInput.conversionPriceTextProperty().bind(model.getPriceAsString());
+        percentageInput.conversionPriceSymbolTextProperty().set(model.getMarket().getMarketCodes());
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
         feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
@@ -145,6 +149,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     @Override
     protected void onViewDetached() {
         percentageInput.textProperty().unbindBidirectional(model.getPercentageInput());
+        percentageInput.conversionPriceTextProperty().unbind();
         feedbackSentence.textProperty().unbind();
         feedbackBox.visibleProperty().unbind();
         feedbackBox.managedProperty().unbind();
@@ -170,7 +175,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentagePrice.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
         if (model.getUseFixPrice().get()) {
             fixedPrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
-            fieldsBox.getChildren().setAll(priceInput.getRoot(), percentageInput);
+            fieldsBox.getChildren().setAll(priceInput.getRoot());
             percentageInput.deselect();
             percentageInput.setEditable(false);
             percentageInput.resetValidation();
@@ -178,7 +183,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             priceInput.requestFocus();
         } else {
             percentagePrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
-            fieldsBox.getChildren().setAll(percentageInput, priceInput.getRoot());
+            fieldsBox.getChildren().setAll(percentageInput);
             priceInput.deselect();
             priceInput.setEditable(false);
             priceInput.resetValidation();

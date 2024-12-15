@@ -67,6 +67,10 @@ public class PriceInputBox extends MaterialTextField {
         initialize();
     }
 
+    public PriceInputBox(String description) {
+        this(description, null);
+    }
+
     void initialize() {
         textInputControl.lengthProperty().addListener(textInputLengthListener);
     }
@@ -75,15 +79,15 @@ public class PriceInputBox extends MaterialTextField {
         textInputControl.lengthProperty().removeListener(textInputLengthListener);
     }
 
-    final StringProperty textInputSymbolTextProperty() {
+    public final StringProperty textInputSymbolTextProperty() {
         return textInputSymbolLabel.textProperty();
     }
 
-    final StringProperty conversionPriceTextProperty() {
+    public final StringProperty conversionPriceTextProperty() {
         return conversionPriceLabel.textProperty();
     }
 
-    final StringProperty conversionPriceSymbolTextProperty() {
+    public final StringProperty conversionPriceSymbolTextProperty() {
         return conversionPriceLabelSymbol.textProperty();
     }
 

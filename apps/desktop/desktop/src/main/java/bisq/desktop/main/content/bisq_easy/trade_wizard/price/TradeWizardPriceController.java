@@ -29,6 +29,7 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.*;
+import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -53,7 +54,7 @@ public class TradeWizardPriceController implements Controller {
     private final Region owner;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
-    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin, percentagePin;
+    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin;
 
     public TradeWizardPriceController(ServiceProvider serviceProvider, Region owner) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -120,12 +121,8 @@ public class TradeWizardPriceController implements Controller {
         percentageInputPin = EasyBind.subscribe(model.getPercentageInput(), percentageInput -> {
             if (percentageInput != null) {
                 onPercentageInput(percentageInput);
+                priceInput.setPercentage(percentageInput);
             }
-        });
-        percentagePin = EasyBind.subscribe(model.getPercentage(), percentage -> {
-           if (percentage != null) {
-               priceInput.setPercentage(percentage.doubleValue());
-           }
         });
 
         String marketCodes = model.getMarket().getMarketCodes();
@@ -144,7 +141,6 @@ public class TradeWizardPriceController implements Controller {
         isPriceInvalidPin.unsubscribe();
         priceSpecPin.unsubscribe();
         percentageInputPin.unsubscribe();
-        percentagePin.unsubscribe();
         view.getRoot().setOnKeyPressed(null);
     }
 
@@ -153,7 +149,7 @@ public class TradeWizardPriceController implements Controller {
         if (!focussed) {
             try {
                 double percentage = parse(model.getPercentageInput().get());
-                String percentageAsString = formatToPercentWithSymbol(percentage);
+                String percentageAsString = PercentageFormatter.formatToPercent(percentage);
                 // Need to change the value first otherwise it does not trigger an update
                 model.getPercentageInput().set("");
                 model.getPercentageInput().set(percentageAsString);
@@ -272,7 +268,7 @@ public class TradeWizardPriceController implements Controller {
     private void applyPercentageFromQuote(PriceQuote priceQuote) {
         double percentage = getPercentage(priceQuote);
         model.getPercentage().set(percentage);
-        model.getPercentageInput().set(formatToPercentWithSymbol(percentage));
+        model.getPercentageInput().set(PercentageFormatter.formatToPercent(percentage));
     }
 
     private boolean validateQuote(PriceQuote priceQuote) {

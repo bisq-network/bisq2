@@ -25,7 +25,6 @@ import bisq.common.util.MathUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
 import javafx.beans.property.BooleanProperty;
@@ -74,7 +73,7 @@ public class PriceInput {
         controller.setQuote(priceQuote);
     }
 
-    public void setPercentage(double percentage) {
+    public void setPercentage(String percentage) {
         controller.setPercentage(percentage);
     }
 
@@ -141,8 +140,8 @@ public class PriceInput {
             model.priceQuote.set(priceQuote);
         }
 
-        public void setPercentage(double percentage) {
-            model.percentagePriceString.set(PercentageFormatter.formatToPercent(percentage));
+        public void setPercentage(String percentage) {
+            model.percentagePriceString.set(percentage);
         }
 
         private void updateFromMarketPrice() {
