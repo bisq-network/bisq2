@@ -49,8 +49,6 @@ public class TradeWizardAmountModel implements Model {
     private List<BitcoinPaymentMethod> bitcoinPaymentMethods = new ArrayList<>();
     @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
-    @Setter
-    private String headline;
     private final StringProperty amountLimitInfo = new SimpleStringProperty();
     private final StringProperty amountLimitInfoLeadLine = new SimpleStringProperty();
     private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
@@ -83,7 +81,6 @@ public class TradeWizardAmountModel implements Model {
         market = MarketRepository.getDefault();
         bitcoinPaymentMethods = new ArrayList<>();
         fiatPaymentMethods = new ArrayList<>();
-        headline = null;
         amountLimitInfo.set(null);
         amountLimitInfoAmount.set(null);
         amountLimitInfoOverlayInfo.set(null);

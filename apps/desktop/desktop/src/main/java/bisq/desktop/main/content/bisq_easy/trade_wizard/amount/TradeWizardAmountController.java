@@ -202,9 +202,6 @@ public class TradeWizardAmountController implements Controller {
         if (model.getPriceQuote().get() == null && amountSelectionController.getQuote().get() != null) {
             model.getPriceQuote().set(amountSelectionController.getQuote().get());
         }
-        model.setHeadline(model.getDirection().isBuy()
-                ? Res.get("bisqEasy.tradeWizard.amount.headline.buyer")
-                : Res.get("bisqEasy.tradeWizard.amount.headline.seller"));
 
         Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
         model.getIsRangeAmountEnabled().set(cookieValue && model.getShowRangeAmounts().get());

@@ -17,11 +17,14 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.price.TradeWizardPriceController;
+import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -29,6 +32,8 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Slf4j
 public class TradeWizardAmountAndPriceController implements Controller {
@@ -55,6 +60,7 @@ public class TradeWizardAmountAndPriceController implements Controller {
 
     @Override
     public void onActivate() {
+        model.setHeadline(getHeadline());
     }
 
     @Override
@@ -64,15 +70,19 @@ public class TradeWizardAmountAndPriceController implements Controller {
     public void reset() {
         tradeWizardAmountController.reset();
         tradeWizardPriceController.reset();
+        model.reset();
     }
 
     public void setIsCreateOfferMode(boolean isCreateOfferMode) {
         tradeWizardAmountController.setIsCreateOfferMode(isCreateOfferMode);
+        model.setCreateOfferMode(isCreateOfferMode);
+        model.setShowPriceSelection(isCreateOfferMode);
     }
 
     public void setDirection(Direction direction) {
         tradeWizardAmountController.setDirection(direction);
         tradeWizardPriceController.setDirection(direction);
+        model.setDirection(direction);
     }
 
     public void setMarket(Market market) {
@@ -88,11 +98,30 @@ public class TradeWizardAmountAndPriceController implements Controller {
         return tradeWizardAmountController.getQuoteSideAmountSpec();
     }
 
+    public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
+        tradeWizardAmountController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
+    }
+
+    public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
+        tradeWizardAmountController.setFiatPaymentMethods(fiatPaymentMethods);
+    }
+
     public boolean validate() {
-        return tradeWizardAmountController.validate();
+        return tradeWizardAmountController.validate()
+                && tradeWizardPriceController.validate();
     }
 
     public ReadOnlyObjectProperty<PriceSpec> getPriceSpec() {
         return tradeWizardPriceController.getPriceSpec();
+    }
+
+    private String getHeadline() {
+        if (model.isCreateOfferMode()) {
+            return Res.get("bisqEasy.tradeWizard.amountAtPrice.headline");
+        }
+
+        return model.getDirection().isBuy()
+                ? Res.get("bisqEasy.tradeWizard.amount.headline.buyer")
+                : Res.get("bisqEasy.tradeWizard.amount.headline.seller");
     }
 }

@@ -28,7 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAmountAndPriceModel, TradeWizardAmountAndPriceController> {
-
+    private final Label headline, amountAtPriceSymbol;
+    private final Pane priceSelection;
 
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,
                                          TradeWizardAmountAndPriceController controller,
@@ -37,21 +38,25 @@ public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAm
                                          Pane priceSelection) {
         super(new StackPane(), model, controller);
 
-        Label headline = new Label("Headline");
-        Label amountAtPriceSymbol = new Label("@");
+        this.priceSelection = priceSelection;
+        headline = new Label();
+        amountAtPriceSymbol = new Label("@");
         HBox amountAndPriceHBox = new HBox(amountSelection, amountAtPriceSymbol, priceSelection);
-        VBox contentVBox = new VBox(20, /*headline,*/ amountAndPriceHBox, infoAndWarningsSection);
+        VBox contentVBox = new VBox(20, headline, amountAndPriceHBox, infoAndWarningsSection);
         contentVBox.setAlignment(Pos.TOP_CENTER);
         root.getChildren().add(contentVBox);
     }
 
     @Override
     protected void onViewAttached() {
-
+        headline.textProperty().set(model.getHeadline());
+        amountAtPriceSymbol.visibleProperty().set(model.isShowPriceSelection());
+        amountAtPriceSymbol.managedProperty().set(model.isShowPriceSelection());
+        priceSelection.visibleProperty().set(model.isShowPriceSelection());
+        priceSelection.managedProperty().set(model.isShowPriceSelection());
     }
 
     @Override
     protected void onViewDetached() {
-
     }
 }
