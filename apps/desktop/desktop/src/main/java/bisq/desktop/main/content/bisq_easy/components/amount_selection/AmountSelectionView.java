@@ -24,7 +24,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
 import bisq.i18n.Res;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -197,20 +196,35 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         UIScheduler.run(() -> {
             maxOrFixedQuoteAmount.requestFocus();
             maxOrFixedBaseAmountFocusPin = EasyBind.subscribe(maxOrFixedBaseAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(maxOrFixedQuoteAmount.focusedProperty(), focus));
+                    focus -> onInputTextFieldFocus(
+                            maxOrFixedQuoteAmount.focusedProperty().get()
+                                    || minQuoteAmount.focusedProperty().get()
+                                    || minBaseAmount.focusedProperty().get()
+                            , focus));
             maxOrFixedQuoteAmountFocusPin = EasyBind.subscribe(maxOrFixedQuoteAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(maxOrFixedBaseAmount.focusedProperty(), focus));
+                    focus -> onInputTextFieldFocus(
+                            maxOrFixedBaseAmount.focusedProperty().get()
+                                    || minQuoteAmount.focusedProperty().get()
+                                    || minBaseAmount.focusedProperty().get()
+                            , focus));
             minBaseAmountFocusPin = EasyBind.subscribe(minBaseAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(minQuoteAmount.focusedProperty(), focus));
+                    focus -> onInputTextFieldFocus(
+                            minQuoteAmount.focusedProperty().get()
+                                    || maxOrFixedQuoteAmount.focusedProperty().get()
+                                    || maxOrFixedBaseAmount.focusedProperty().get()
+                            , focus));
             minQuoteAmountFocusPin = EasyBind.subscribe(minQuoteAmount.focusedProperty(),
-                    focus -> onInputTextFieldFocus(minBaseAmount.focusedProperty(), focus));
+                    focus -> onInputTextFieldFocus(minBaseAmount.focusedProperty().get()
+                                    || maxOrFixedQuoteAmount.focusedProperty().get()
+                                    || maxOrFixedBaseAmount.focusedProperty().get()
+                            , focus));
             maxOrFixedQuoteAmountLengthPin = EasyBind.subscribe(maxOrFixedQuoteAmount.lengthProperty(), length -> {
-                applyFontStyle();
-                applyPrefWidth();
+                applyTextInputFontStyle();
+                applyTextInputPrefWidth();
             });
             minQuoteAmountLengthPin = EasyBind.subscribe(minQuoteAmount.lengthProperty(), length -> {
-                applyFontStyle();
-                applyPrefWidth();
+                applyTextInputFontStyle();
+                applyTextInputPrefWidth();
             });
         }).after(700);
 
@@ -218,8 +232,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
             root.getStyleClass().clear();
             root.getStyleClass().add("amount-selection");
             root.getStyleClass().add(isRangeAmountEnabled ? "range-amount" : "fixed-amount");
-            applyFontStyle();
-            applyPrefWidth();
+            applyTextInputFontStyle();
+            applyTextInputPrefWidth();
         });
         sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), maxOrFixedAmountSlider::setStyle);
 
@@ -306,19 +320,19 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         }
     }
 
-    private void onInputTextFieldFocus(ReadOnlyBooleanProperty other, boolean focus) {
+    private void onInputTextFieldFocus(boolean isOtherFocused, boolean focus) {
         if (focus) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
             Transitions.animateWidth(selectionLine, AMOUNT_BOX_WIDTH + 40);
-        } else if (!other.get()) {
+        } else if (!isOtherFocused) {
             // If switching between the 2 fields we want to avoid to get the fadeout called that's why
             // we do the check with !other.get()
             Transitions.fadeOut(selectionLine, 200);
         }
     }
 
-    private void applyPrefWidth() {
+    private void applyTextInputPrefWidth() {
         int charCount = model.getIsRangeAmountEnabled().get()
                 ? minQuoteAmount.getTextInputLength() + maxOrFixedQuoteAmount.getTextInputLength() + 1 // for the dash
                 : maxOrFixedQuoteAmount.getTextInputLength();
@@ -330,7 +344,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxOrFixedQuoteAmount.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
     }
 
-    private void applyFontStyle() {
+    private void applyTextInputFontStyle() {
         quoteAmountSelectionHBox.getStyleClass().clear();
         quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
 
