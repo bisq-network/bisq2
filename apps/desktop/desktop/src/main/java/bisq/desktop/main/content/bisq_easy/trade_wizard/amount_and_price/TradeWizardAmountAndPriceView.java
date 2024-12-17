@@ -48,7 +48,7 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
         amountAtPriceSymbol = new Label("@");
         amountAtPriceSymbol.getStyleClass().add("amount-at-price-symbol");
 
-        HBox amountAndPriceHBox = new HBox(30, amountSelection, amountAtPriceSymbol, priceSelection);
+        HBox amountAndPriceHBox = new HBox(20, amountSelection, amountAtPriceSymbol, priceSelection);
         amountAndPriceHBox.getStyleClass().add("amount-and-price-box");
 
         content = new VBox(10, headline, amountAndPriceHBox, infoAndWarningsSection);

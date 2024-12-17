@@ -1114,7 +1114,7 @@
     -fx-background-color: transparent;
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1em;
+    -fx-font-size: 0.9em;
 }
 
 .bisq-easy-trade-wizard-price-step .selected-model,

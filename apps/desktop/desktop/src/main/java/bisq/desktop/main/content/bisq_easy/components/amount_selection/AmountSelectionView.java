@@ -136,9 +136,9 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
         selectionLine = new Region();
         selectionLine.getStyleClass().add("material-text-field-selection-line");
-        selectionLine.setPrefHeight(3);
+        selectionLine.setPrefHeight(2);
         selectionLine.setPrefWidth(0);
-        selectionLine.setLayoutY(AMOUNT_BOX_HEIGHT + 4);
+        selectionLine.setLayoutY(AMOUNT_BOX_HEIGHT + 5);
         selectionLine.setMouseTransparent(true);
 
         Pane amountPane = new Pane(descriptionAndAmountVBox, line, selectionLine);
