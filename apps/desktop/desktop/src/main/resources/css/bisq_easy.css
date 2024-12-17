@@ -725,7 +725,6 @@
     -fx-alignment: top-center;
 }
 
-.bisq-easy-trade-wizard-amount-step-pane,
 .bisq-easy-trade-wizard-price-step-pane {
     -fx-pref-width: 340;
     -fx-max-width: 340;
@@ -734,8 +733,6 @@
 
 .amount-and-price-step .content-box {
     -fx-padding: 20 0 0 0;
-    -fx-max-height: 340;
-    -fx-min-height: 340;
     -fx-alignment: top-center;
 }
 

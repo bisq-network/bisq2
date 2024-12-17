@@ -20,12 +20,10 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -34,7 +32,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -48,17 +45,18 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
     private final AmountSelectionController amountSelectionController;
     private final Label amountLimitInfo, amountLimitInfoLeadLine, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink amountLimitInfoAmount, learnMoreHyperLink, linkToWiki;
-    private final VBox content, amountLimitInfoOverlay;
+    @Getter
+    private final VBox amountLimitInfoOverlay;
     private final Button closeOverlayButton, fixedAmount, rangeAmount;
     private final HBox amountModelsBox;
     @Getter
     private final HBox amountLimitInfoWithWarnIcon;
-    private Subscription isAmountLimitInfoVisiblePin, amountLimitInfoLeadLinePin, isRangeAmountEnabledPin;
+    private Subscription amountLimitInfoLeadLinePin, isRangeAmountEnabledPin;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
                                  AmountSelectionController amountSelectionController) {
-        super(new VBox(), model, controller);
+        super(new VBox(10), model, controller);
 
         this.amountSelectionController = amountSelectionController;
 
@@ -70,31 +68,26 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
         amountLimitInfo = new Label();
         amountLimitInfo.getStyleClass().add("trade-wizard-amount-limit-info");
-        amountLimitInfo.setMinHeight(Label.USE_PREF_SIZE);
 
         amountLimitInfoAmount = new Hyperlink();
         amountLimitInfoAmount.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
-        amountLimitInfoAmount.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
         learnMoreHyperLink = new Hyperlink();
         learnMoreHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
-        learnMoreHyperLink.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
         HBox amountLimitInfoHBox = new HBox(2.5, amountLimitInfo, amountLimitInfoAmount, learnMoreHyperLink);
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_LEFT);
 
         amountLimitInfoLeadLine = new Label();
-        amountLimitInfoLeadLine.getStyleClass().addAll("trade-wizard-amount-limit-info");
-        amountLimitInfoLeadLine.setMinHeight(Label.USE_PREF_SIZE);
+        amountLimitInfoLeadLine.getStyleClass().add("trade-wizard-amount-limit-info");
         VBox amountLimitInfoVBox = new VBox(-2.5, amountLimitInfoLeadLine, amountLimitInfoHBox);
 
         warningIcon = new Label();
         Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.15em");
         warningIcon.getStyleClass().add("overlay-icon-warning");
-        warningIcon.setMinWidth(Label.USE_PREF_SIZE);
 
         amountLimitInfoWithWarnIcon = new HBox(10, warningIcon, amountLimitInfoVBox);
-        amountLimitInfoWithWarnIcon.setAlignment(Pos.BASELINE_LEFT);
+        amountLimitInfoWithWarnIcon.setAlignment(Pos.CENTER);
 
         // Amount model selection
         fixedAmount = new Button(Res.get("bisqEasy.tradeWizard.amount.amountModel.fixedAmount"));
@@ -113,21 +106,15 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         amountModelsBox = new HBox(30, fixedAmountBox, separator, rangeAmountBox);
         amountModelsBox.getStyleClass().addAll("selection-models", "bisq-text-3");
 
-        content = new VBox(10);
-        content.setAlignment(Pos.TOP_CENTER);
-        content.getChildren().addAll(amountModelsBox, amountBox);
-        content.getStyleClass().add("bisq-easy-trade-wizard-amount-step");
-
         amountLimitInfoOverlayInfo = new Label();
-        linkToWikiText = new Label();
         closeOverlayButton = new Button(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.close"));
+        linkToWikiText = new Label();
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
         amountLimitInfoOverlay = getAmountLimitInfoOverlay(amountLimitInfoOverlayInfo, closeOverlayButton, linkToWikiText, linkToWiki);
 
-        StackPane.setMargin(amountLimitInfoOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, amountLimitInfoOverlay);
-        root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("bisq-easy-trade-wizard-amount-step-pane");
+        root.getChildren().addAll(amountModelsBox, amountBox);
+        root.setAlignment(Pos.TOP_CENTER);
+        root.getStyleClass().add("bisq-easy-trade-wizard-amount-step");
     }
 
     @Override
@@ -156,22 +143,6 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
             double top = isEmpty ? 0 : -22.5;
             HBox.setMargin(warningIcon, new Insets(top, 0, 0, 0));
         });
-
-        isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(),
-                isAmountLimitInfoVisible -> {
-                    if (isAmountLimitInfoVisible) {
-                        amountLimitInfoOverlay.setVisible(true);
-                        amountLimitInfoOverlay.setOpacity(1);
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(amountLimitInfoOverlay, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                        if (amountLimitInfoOverlay.isVisible()) {
-                            Transitions.fadeOut(amountLimitInfoOverlay, Transitions.DEFAULT_DURATION / 2,
-                                    () -> amountLimitInfoOverlay.setVisible(false));
-                        }
-                    }
-                });
 
         isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
             fixedAmount.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
@@ -209,7 +180,6 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         amountModelsBox.managedProperty().unbind();
 
         amountLimitInfoLeadLinePin.unsubscribe();
-        isAmountLimitInfoVisiblePin.unsubscribe();
         isRangeAmountEnabledPin.unsubscribe();
 
         amountLimitInfoAmount.setOnAction(null);

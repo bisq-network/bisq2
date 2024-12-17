@@ -19,6 +19,8 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +33,13 @@ public class TradeWizardAmountAndPriceModel implements Model {
     private boolean showPriceSelection;
     private String headline;
     private Direction direction;
+    private final BooleanProperty isAmountOverlayVisible = new SimpleBooleanProperty();
 
     public void reset() {
         isCreateOfferMode = false;
         showPriceSelection = false;
         headline = "";
         direction = null;
+        isAmountOverlayVisible.set(false);
     }
 }

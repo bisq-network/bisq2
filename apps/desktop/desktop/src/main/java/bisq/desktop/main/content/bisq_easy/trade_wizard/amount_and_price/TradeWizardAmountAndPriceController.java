@@ -37,7 +37,6 @@ import java.util.List;
 
 @Slf4j
 public class TradeWizardAmountAndPriceController implements Controller {
-
     private final TradeWizardAmountAndPriceModel model;
     @Getter
     private final TradeWizardAmountAndPriceView view;
@@ -55,16 +54,19 @@ public class TradeWizardAmountAndPriceController implements Controller {
                 this,
                 tradeWizardAmountController.getView().getRoot(),
                 tradeWizardAmountController.getView().getAmountLimitInfoWithWarnIcon(),
+                tradeWizardAmountController.getView().getAmountLimitInfoOverlay(),
                 tradeWizardPriceController.getView().getRoot());
     }
 
     @Override
     public void onActivate() {
         model.setHeadline(getHeadline());
+        model.getIsAmountOverlayVisible().bind(tradeWizardAmountController.getIsAmountOverlayVisible());
     }
 
     @Override
     public void onDeactivate() {
+        model.getIsAmountOverlayVisible().unbind();
     }
 
     public void reset() {

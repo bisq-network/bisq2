@@ -17,26 +17,31 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAmountAndPriceModel, TradeWizardAmountAndPriceController> {
+public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountAndPriceModel, TradeWizardAmountAndPriceController> {
     private final Label headline, amountAtPriceSymbol;
-    private final VBox priceSelection;
+    private final VBox priceSelection, content, amountOverlay;
+    private Subscription isAmountOverlayVisiblePin;
 
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,
                                          TradeWizardAmountAndPriceController controller,
                                          VBox amountSelection,
-                                         Pane infoAndWarningsSection,
+                                         HBox infoAndWarningsSection,
+                                         VBox amountOverlay,
                                          VBox priceSelection) {
-        super(new StackPane(), model, controller);
+        super(new VBox(), model, controller);
 
+        this.amountOverlay = amountOverlay;
         this.priceSelection = priceSelection;
         headline = new Label();
         headline.getStyleClass().add("bisq-text-headline-2");
@@ -46,10 +51,11 @@ public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAm
         HBox amountAndPriceHBox = new HBox(30, amountSelection, amountAtPriceSymbol, priceSelection);
         amountAndPriceHBox.getStyleClass().add("amount-and-price-box");
 
-        VBox contentVBox = new VBox(20, headline, amountAndPriceHBox, infoAndWarningsSection);
-        contentVBox.getStyleClass().add("content-box");
+        content = new VBox(10, headline, amountAndPriceHBox, infoAndWarningsSection);
+        content.getStyleClass().add("content-box");
 
-        root.getChildren().addAll(contentVBox);
+        StackPane layeredContent = new StackPane(content, amountOverlay);
+        root.getChildren().addAll(layeredContent);
         root.getStyleClass().add("amount-and-price-step");
     }
 
@@ -60,9 +66,25 @@ public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAm
         amountAtPriceSymbol.managedProperty().set(model.isShowPriceSelection());
         priceSelection.visibleProperty().set(model.isShowPriceSelection());
         priceSelection.managedProperty().set(model.isShowPriceSelection());
+
+        isAmountOverlayVisiblePin = EasyBind.subscribe(model.getIsAmountOverlayVisible(), isAmountOverlayVisible -> {
+            if (isAmountOverlayVisible) {
+                amountOverlay.setVisible(true);
+                amountOverlay.setOpacity(1);
+                Transitions.blurStrong(content, 0);
+                Transitions.slideInTop(amountOverlay, 450);
+            } else {
+                Transitions.removeEffect(content);
+                if (amountOverlay.isVisible()) {
+                    Transitions.fadeOut(amountOverlay, Transitions.DEFAULT_DURATION / 2,
+                            () -> amountOverlay.setVisible(false));
+                }
+            }
+        });
     }
 
     @Override
     protected void onViewDetached() {
+        isAmountOverlayVisiblePin.unsubscribe();
     }
 }

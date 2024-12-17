@@ -60,6 +60,7 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -193,6 +194,10 @@ public class TradeWizardAmountController implements Controller {
 
     public ReadOnlyObjectProperty<QuoteSideAmountSpec> getQuoteSideAmountSpec() {
         return model.getQuoteSideAmountSpec();
+    }
+
+    public ReadOnlyBooleanProperty getIsAmountOverlayVisible() {
+        return model.getIsAmountLimitInfoOverlayVisible();
     }
 
     @Override
