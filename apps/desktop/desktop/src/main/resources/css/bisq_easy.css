@@ -716,6 +716,38 @@
  *                                                                             *
  ******************************************************************************/
 
+.amount-and-price-step {
+    -fx-alignment: top-center;
+    -fx-spacing: 50;
+}
+
+.amount-and-price-step .amount-and-price-box {
+    -fx-alignment: top-center;
+}
+
+.bisq-easy-trade-wizard-amount-step-pane,
+.bisq-easy-trade-wizard-price-step-pane {
+    -fx-pref-width: 340;
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+}
+
+.amount-and-price-step .content-box {
+    -fx-padding: 20 0 0 0;
+    -fx-max-height: 340;
+    -fx-min-height: 340;
+    -fx-alignment: top-center;
+}
+
+.amount-and-price-step .amount-at-price-symbol {
+    -fx-padding: 93 0 0 0;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 3.5em;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-alignment: center;
+}
+
 .amount-selection .description {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
@@ -1001,7 +1033,8 @@
     -fx-font-size: 0.8em;
 }
 
-.bisq-easy-trade-wizard-amount-step {
+.bisq-easy-trade-wizard-amount-step,
+.bisq-easy-trade-wizard-price-step {
     -fx-max-width: 340;
     -fx-min-width: 340;
     -fx-pref-width: 340;
@@ -1064,19 +1097,18 @@
 
 .bisq-easy-trade-wizard-price-step .price-content {
     -fx-alignment: center;
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-pref-width: 340;
 }
 
 .bisq-easy-trade-wizard-price-step .selection-models,
 .bisq-easy-trade-wizard-amount-step .selection-models {
     -fx-alignment: center;
     -fx-padding: 10 0 10 0;
-}
-
-.bisq-easy-trade-wizard-price-step .selection-models .model-selection-item-box,
-.bisq-easy-trade-wizard-amount-step .selection-models .model-selection-item-box {
-    -fx-max-width: 300;
-    -fx-min-width: 300;
-    -fx-pref-width: 300;
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-pref-width: 340;
 }
 
 .bisq-easy-trade-wizard-price-step .selection-models .model-selection-item-box .model-selection-item,
@@ -1085,6 +1117,7 @@
     -fx-background-color: transparent;
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1em;
 }
 
 .bisq-easy-trade-wizard-price-step .selected-model,

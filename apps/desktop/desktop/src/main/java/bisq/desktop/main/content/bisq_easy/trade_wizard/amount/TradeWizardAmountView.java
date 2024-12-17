@@ -42,7 +42,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountModel, TradeWizardAmountController> {
+public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, TradeWizardAmountController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
 
     private final AmountSelectionController amountSelectionController;
@@ -58,7 +58,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
     public TradeWizardAmountView(TradeWizardAmountModel model,
                                  TradeWizardAmountController controller,
                                  AmountSelectionController amountSelectionController) {
-        super(new StackPane(), model, controller);
+        super(new VBox(), model, controller);
 
         this.amountSelectionController = amountSelectionController;
 
@@ -84,7 +84,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_LEFT);
 
         amountLimitInfoLeadLine = new Label();
-        amountLimitInfoLeadLine.getStyleClass().addAll("trade-wizard-amount-limit-info", "wrap-text");
+        amountLimitInfoLeadLine.getStyleClass().addAll("trade-wizard-amount-limit-info");
         amountLimitInfoLeadLine.setMinHeight(Label.USE_PREF_SIZE);
         VBox amountLimitInfoVBox = new VBox(-2.5, amountLimitInfoLeadLine, amountLimitInfoHBox);
 
@@ -127,6 +127,7 @@ public class TradeWizardAmountView extends View<StackPane, TradeWizardAmountMode
         StackPane.setMargin(amountLimitInfoOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
         root.getChildren().addAll(content, amountLimitInfoOverlay);
         root.setAlignment(Pos.CENTER);
+        root.getStyleClass().add("bisq-easy-trade-wizard-amount-step-pane");
     }
 
     @Override

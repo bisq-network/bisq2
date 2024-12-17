@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
 import bisq.desktop.common.view.View;
-import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -29,22 +28,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TradeWizardAmountAndPriceView extends View<StackPane, TradeWizardAmountAndPriceModel, TradeWizardAmountAndPriceController> {
     private final Label headline, amountAtPriceSymbol;
-    private final Pane priceSelection;
+    private final VBox priceSelection;
 
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,
                                          TradeWizardAmountAndPriceController controller,
-                                         Pane amountSelection,
+                                         VBox amountSelection,
                                          Pane infoAndWarningsSection,
-                                         Pane priceSelection) {
+                                         VBox priceSelection) {
         super(new StackPane(), model, controller);
 
         this.priceSelection = priceSelection;
         headline = new Label();
+        headline.getStyleClass().add("bisq-text-headline-2");
         amountAtPriceSymbol = new Label("@");
-        HBox amountAndPriceHBox = new HBox(amountSelection, amountAtPriceSymbol, priceSelection);
+        amountAtPriceSymbol.getStyleClass().add("amount-at-price-symbol");
+
+        HBox amountAndPriceHBox = new HBox(30, amountSelection, amountAtPriceSymbol, priceSelection);
+        amountAndPriceHBox.getStyleClass().add("amount-and-price-box");
+
         VBox contentVBox = new VBox(20, headline, amountAndPriceHBox, infoAndWarningsSection);
-        contentVBox.setAlignment(Pos.TOP_CENTER);
-        root.getChildren().add(contentVBox);
+        contentVBox.getStyleClass().add("content-box");
+
+        root.getChildren().addAll(contentVBox);
+        root.getStyleClass().add("amount-and-price-step");
     }
 
     @Override

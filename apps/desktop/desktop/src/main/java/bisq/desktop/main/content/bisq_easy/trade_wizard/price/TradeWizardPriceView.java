@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
@@ -34,7 +33,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -81,9 +79,9 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageInput.textInputSymbolTextProperty().set("%");
         fieldsBox = new VBox(20);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
-        fieldsBox.setMinWidth(350);
-        fieldsBox.setPrefWidth(350);
-        fieldsBox.setMaxWidth(350);
+        fieldsBox.setMinWidth(340);
+        fieldsBox.setPrefWidth(340);
+        fieldsBox.setMaxWidth(340);
 
         // Feedback sentence
         feedbackSentence = new Label();
@@ -102,6 +100,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         StackPane layeredContent = new StackPane(content, learnWhyOverlay);
         layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");
         root.getChildren().addAll(layeredContent);
+        root.getStyleClass().add("bisq-easy-trade-wizard-price-step-pane");
     }
 
     @Override
