@@ -77,7 +77,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         amountLimitInfoHBox = new HBox(5, warningIcon, amountLimitInfo, amountLimitInfoAmount, learnMore);
         amountLimitInfoHBox.setAlignment(Pos.BASELINE_CENTER);
 
-        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(-10, 0, 40, 0));
         VBox.setMargin(amountLimitInfoHBox, new Insets(15, 0, 15, 0));
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountComponentRoot, amountLimitInfoHBox, Spacer.fillVBox());
 
