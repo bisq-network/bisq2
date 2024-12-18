@@ -23,7 +23,6 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
-import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -42,6 +41,8 @@ import org.fxmisc.easybind.Subscription;
 public class AmountSelectionView extends View<VBox, AmountSelectionModel, AmountSelectionController> {
     public final static int AMOUNT_BOX_WIDTH = 300;
     public final static int AMOUNT_BOX_HEIGHT = 120;
+    private final static Insets SLIDER_INDICATORS_RANGE_MARGIN = new Insets(-15, 0, 0, 0);
+    private final static Insets SLIDER_INDICATORS_FIXED_MARGIN = new Insets(2.5, 0, 0, 0);
     private final static String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
     private final static String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
     private final static String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
@@ -54,7 +55,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final static String INPUT_TEXT_18_STYLE_CLASS = "input-text-18";
     private final static String INPUT_TEXT_19_STYLE_CLASS = "input-text-19";
     @SuppressWarnings("UnnecessaryUnicodeEscape")
-    public static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
+    private static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
     private final Slider maxOrFixedAmountSlider, minAmountSlider;
     private final Label minRangeValue, maxRangeValue, minRangeCode, maxRangeCode, description, quoteAmountSeparator,
@@ -62,9 +63,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final Region selectionLine;
     private final SmallAmountInput maxOrFixedBaseAmount, minBaseAmount;
     private final BigAmountInput maxOrFixedQuoteAmount, minQuoteAmount;
-    private final Pane minQuoteAmountRoot;
-    private final Pane minBaseAmountRoot;
-    private final HBox quoteAmountSelectionHBox;
+    private final Pane minQuoteAmountRoot, minBaseAmountRoot;
+    private final HBox quoteAmountSelectionHBox, sliderIndicators;
     private Subscription maxOrFixedBaseAmountFocusPin, maxOrFixedQuoteAmountFocusPin,
             minBaseAmountFocusPin, minQuoteAmountFocusPin, sliderTrackStylePin, isRangeAmountEnabledPin,
             maxOrFixedQuoteAmountLengthPin, minQuoteAmountLengthPin;
@@ -171,9 +171,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         HBox maxRangeValueAndCodeHBox = new HBox(2, maxRangeValue, maxRangeCode);
         maxRangeValueAndCodeHBox.setAlignment(Pos.BASELINE_RIGHT);
 
-        HBox sliderIndicators = new HBox(minRangeValueAndCodeHBox, Spacer.fillHBox(), maxRangeValueAndCodeHBox);
-
-        HBox.setMargin(sliderIndicators, new Insets(-20, 0, 0, 0));
+        sliderIndicators = new HBox(minRangeValueAndCodeHBox, Spacer.fillHBox(), maxRangeValueAndCodeHBox);
         VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider, sliderIndicators);
         sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH + 40);
         sliderBox.getStyleClass().add("slider-box");
@@ -224,6 +222,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
             root.getStyleClass().clear();
             root.getStyleClass().add("amount-selection");
             root.getStyleClass().add(isRangeAmountEnabled ? "range-amount" : "fixed-amount");
+            VBox.setMargin(sliderIndicators, isRangeAmountEnabled ? SLIDER_INDICATORS_RANGE_MARGIN : SLIDER_INDICATORS_FIXED_MARGIN);
             applyTextInputFontStyle();
             applyTextInputPrefWidth();
         });
