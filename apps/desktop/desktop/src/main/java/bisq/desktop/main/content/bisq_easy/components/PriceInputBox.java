@@ -71,11 +71,11 @@ public class PriceInputBox extends MaterialTextField {
         this(description, null);
     }
 
-    void initialize() {
+    public void initialize() {
         textInputControl.lengthProperty().addListener(textInputLengthListener);
     }
 
-    void dispose() {
+    public void dispose() {
         textInputControl.lengthProperty().removeListener(textInputLengthListener);
     }
 
@@ -100,14 +100,6 @@ public class PriceInputBox extends MaterialTextField {
     @Override
     protected double getBgHeight() {
         return AMOUNT_BOX_HEIGHT;
-    }
-
-    @Override
-    protected void doLayout() {
-        super.doLayout();
-
-        setMinWidth(AMOUNT_BOX_WIDTH);
-        setMaxWidth(AMOUNT_BOX_WIDTH);
     }
 
     private static String getFontStyleBasedOnTextLength(int charCount) {

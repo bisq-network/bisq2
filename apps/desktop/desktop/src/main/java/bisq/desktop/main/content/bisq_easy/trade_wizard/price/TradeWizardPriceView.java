@@ -77,7 +77,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageInput = new PriceInputBox(Res.get("bisqEasy.price.percentage.inputBoxText"));
         percentageInput.setValidator(new PercentageValidator());
         percentageInput.textInputSymbolTextProperty().set("%");
-        fieldsBox = new VBox(20);
+        fieldsBox = new VBox(20, priceInput.getRoot(), percentageInput);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
         fieldsBox.setMinWidth(340);
         fieldsBox.setPrefWidth(340);
@@ -108,13 +108,13 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageInput.textProperty().bindBidirectional(model.getPercentageInput());
         percentageInput.conversionPriceTextProperty().bind(model.getPriceAsString());
         percentageInput.conversionPriceSymbolTextProperty().set(model.getMarket().getMarketCodes());
+        percentageInput.initialize();
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
         feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
 
         percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
 
-        // FIXME: The very first time this component is used when starting the app requestFocus() is not applied.
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
 
@@ -149,6 +149,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewDetached() {
         percentageInput.textProperty().unbindBidirectional(model.getPercentageInput());
         percentageInput.conversionPriceTextProperty().unbind();
+        percentageInput.dispose();
         feedbackSentence.textProperty().unbind();
         feedbackBox.visibleProperty().unbind();
         feedbackBox.managedProperty().unbind();
@@ -174,7 +175,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentagePrice.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
         if (model.getUseFixPrice().get()) {
             fixedPrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
-            fieldsBox.getChildren().setAll(priceInput.getRoot());
+            priceInput.getRoot().visibleProperty().set(true);
+            priceInput.getRoot().managedProperty().set(true);
+            percentageInput.visibleProperty().set(false);
+            percentageInput.managedProperty().set(false);
             percentageInput.deselect();
             percentageInput.setEditable(false);
             percentageInput.resetValidation();
@@ -182,7 +186,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             priceInput.requestFocus();
         } else {
             percentagePrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
-            fieldsBox.getChildren().setAll(percentageInput);
+            priceInput.getRoot().visibleProperty().set(false);
+            priceInput.getRoot().managedProperty().set(false);
+            percentageInput.visibleProperty().set(true);
+            percentageInput.managedProperty().set(true);
             priceInput.deselect();
             priceInput.setEditable(false);
             priceInput.resetValidation();
