@@ -62,7 +62,7 @@ public class MaterialTextField extends Pane {
     @Getter
     protected final Label errorLabel = new Label();
     @Getter
-    private final BisqIconButton iconButton = new BisqIconButton();
+    protected final BisqIconButton iconButton = new BisqIconButton();
     protected final ValidationControl validationControl;
     private final BooleanProperty isValid = new SimpleBooleanProperty(false);
     private Optional<StringConverter<Number>> stringConverter = Optional.empty();

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.directionAndMarket;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;

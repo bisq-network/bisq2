@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
 
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -37,9 +37,10 @@ public class SmallAmountInput extends AmountInput {
     private static final String DEFAULT_TOOLTIP = "bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice";
     private static final String QUOTE_AMOUNT_ID = "quote-amount-text-field";
 
-    public SmallAmountInput(boolean isBaseCurrency) {
-        super(isBaseCurrency);
-        this.controller.setModel(new SmallAmountInputModel(isBaseCurrency));
+    public SmallAmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
+        super(isBaseCurrency, showCurrencyCode);
+
+        this.controller.setModel(new SmallAmountInputModel(isBaseCurrency, showCurrencyCode));
         this.controller.setView(new SmallAmountInputView(controller.model, controller));
     }
 
@@ -52,11 +53,14 @@ public class SmallAmountInput extends AmountInput {
     }
 
     private static class SmallAmountInputView extends View {
-
         private BisqTooltip tooltip;
+        private Button iconButton;
 
         protected SmallAmountInputView(Model model, Controller controller) {
             super(model, controller);
+
+            iconButton.setVisible(model.showCurrencyCode);
+            iconButton.setManaged(model.showCurrencyCode);
         }
 
         private Button createIconButton() {
@@ -66,16 +70,15 @@ public class SmallAmountInput extends AmountInput {
             iconButton.setOpacity(ICON_OPACITY);
             tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
             iconButton.setTooltip(tooltip);
+            HBox.setMargin(iconButton, new Insets(0, 0, 5, 0));
             return iconButton;
         }
 
         @Override
         protected void initView() {
             root.setAlignment(Pos.CENTER);
-            root.setSpacing(3);
-            Button iconButton = createIconButton();
-            HBox.setMargin(textInput, new Insets(0, 0, 0, -35));
-            HBox.setMargin(iconButton, new Insets(-8, 0, 0, 1));
+            root.getStyleClass().add("small-amount-input");
+            iconButton = createIconButton();
             root.getChildren().add(iconButton);
         }
 
@@ -83,39 +86,38 @@ public class SmallAmountInput extends AmountInput {
         protected TextField createTextInput() {
             var textInput = new TextField();
             textInput.setId(QUOTE_AMOUNT_ID);
-            textInput.setAlignment(Pos.CENTER_RIGHT);
-            textInput.setPadding(new Insets(0, 0, 0, 0));
+            textInput.setPadding(new Insets(0, 7, 3, 0));
             return textInput;
         }
 
         @Override
         protected Label createCodeLabel() {
             var codeLabel = new Label();
-            codeLabel.setAlignment(Pos.CENTER_LEFT);
             codeLabel.setId(QUOTE_AMOUNT_ID);
-            codeLabel.setPadding(new Insets(0, 0, 0, 0));
+            codeLabel.setMinWidth(Label.USE_PREF_SIZE);
             return codeLabel;
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
+
             tooltip.textProperty().bind(((SmallAmountInputModel) model).tooltipProperty());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
+
             tooltip.textProperty().unbind();
         }
     }
 
     private static class SmallAmountInputModel extends Model {
-
         private final StringProperty tooltip = new SimpleStringProperty(Res.get(DEFAULT_TOOLTIP));
 
-        protected SmallAmountInputModel(boolean isBaseCurrency) {
-            super(isBaseCurrency);
+        protected SmallAmountInputModel(boolean isBaseCurrency, boolean showCurrencyCode) {
+            super(isBaseCurrency, showCurrencyCode);
         }
 
         public StringProperty tooltipProperty() {

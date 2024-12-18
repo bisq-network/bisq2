@@ -41,8 +41,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,14 +55,11 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     private static final double OPACITY = 0.35;
 
     private final List<Label> progressLabelList;
-    private final HBox progressItemsBox;
     private final Button nextButton, backButton, closeButton;
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private Label priceProgressItemLabel, takeOfferProgressItem;
-    private Region priceProgressItemLine;
-    private Subscription priceProgressItemVisiblePin;
+    private Label takeOfferProgressItem, amountAtPrice;
     private Region takeOfferProgressLine;
     private UIScheduler progressLabelAnimationScheduler;
     private FadeTransition progressLabelAnimation;
@@ -76,7 +71,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         root.setPrefHeight(POPUP_HEIGHT);
 
         Triple<HBox, Button, List<Label>> triple = getProgressItems();
-        progressItemsBox = triple.getFirst();
+        HBox progressItemsBox = triple.getFirst();
         closeButton = triple.getSecond();
         progressLabelList = triple.getThird();
 
@@ -121,6 +116,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
 
     @Override
     protected void onViewAttached() {
+        amountAtPrice.textProperty().set(model.getAmountAtPriceString().toUpperCase());
         takeOfferProgressItem.setVisible(!model.isCreateOfferMode());
         takeOfferProgressItem.setManaged(!model.isCreateOfferMode());
         takeOfferProgressLine.setVisible(!model.isCreateOfferMode());
@@ -142,24 +138,6 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
-
-        priceProgressItemVisiblePin = EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
-            if (isVisible) {
-                if (!progressItemsBox.getChildren().contains(priceProgressItemLine)) {
-                    progressItemsBox.getChildren().add(5, priceProgressItemLine);
-                }
-                if (!progressItemsBox.getChildren().contains(priceProgressItemLabel)) {
-                    progressItemsBox.getChildren().add(5, priceProgressItemLabel);
-                }
-                if (!progressLabelList.contains(priceProgressItemLabel)) {
-                    progressLabelList.add(2, priceProgressItemLabel);
-                }
-            } else {
-                progressItemsBox.getChildren().remove(priceProgressItemLine);
-                progressItemsBox.getChildren().remove(priceProgressItemLabel);
-                progressLabelList.remove(priceProgressItemLabel);
-            }
-        });
 
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
@@ -186,8 +164,6 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         model.getCurrentIndex().removeListener(currentIndexListener);
         model.getView().removeListener(viewChangeListener);
 
-        priceProgressItemVisiblePin.unsubscribe();
-
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
@@ -205,9 +181,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
 
     private Triple<HBox, Button, List<Label>> getProgressItems() {
         Label directionAndMarket = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.directionAndMarket"));
-        priceProgressItemLabel = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.price"));
-        priceProgressItemLine = getHLine();
-        Label amount = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.amount"));
+        amountAtPrice = createAndGetProgressLabel("");
         Label paymentMethods = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.paymentMethods"));
         takeOfferProgressItem = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.takeOffer"));
         takeOfferProgressLine = getHLine();
@@ -225,7 +199,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         hBox.getChildren().addAll(Spacer.fillHBox(),
                 directionAndMarket,
                 getHLine(),
-                amount,
+                amountAtPrice,
                 getHLine(),
                 paymentMethods,
                 takeOfferProgressLine,
@@ -235,7 +209,8 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 Spacer.fillHBox(),
                 closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(directionAndMarket, amount, paymentMethods, takeOfferProgressItem, review)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(directionAndMarket, amountAtPrice,
+                paymentMethods, takeOfferProgressItem, review)));
     }
 
     private Region getHLine() {

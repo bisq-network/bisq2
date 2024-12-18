@@ -36,12 +36,16 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.AmountSelectionController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.*;
+import bisq.offer.amount.spec.AmountSpecUtil;
+import bisq.offer.amount.spec.FixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
@@ -81,7 +85,7 @@ public class TradeWizardAmountController implements Controller {
     private final TradeWizardAmountModel model;
     @Getter
     private final TradeWizardAmountView view;
-    private final AmountComponent minAmountComponent, maxOrFixAmountComponent;
+    private final AmountSelectionController amountSelectionController;
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
@@ -90,7 +94,7 @@ public class TradeWizardAmountController implements Controller {
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyService bisqEasyService;
-    private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
+    private Subscription isRangeAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin;
 
     public TradeWizardAmountController(ServiceProvider serviceProvider, Region owner) {
@@ -104,20 +108,15 @@ public class TradeWizardAmountController implements Controller {
         this.owner = owner;
         model = new TradeWizardAmountModel();
 
-        minAmountComponent = new AmountComponent(serviceProvider, true);
-        minAmountComponent.setDescription(Res.get("bisqEasy.tradeWizard.amount.description.minAmount"));
-        maxOrFixAmountComponent = new AmountComponent(serviceProvider, true);
-
-        view = new TradeWizardAmountView(model, this,
-                minAmountComponent,
-                maxOrFixAmountComponent);
+        amountSelectionController = new AmountSelectionController(serviceProvider, true);
+        view = new TradeWizardAmountView(model, this, amountSelectionController);
     }
 
     public void setIsCreateOfferMode(boolean isCreateOfferMode) {
         model.setCreateOfferMode(isCreateOfferMode);
         model.getShowRangeAmounts().set(isCreateOfferMode);
         if (!isCreateOfferMode) {
-            model.getIsMinAmountEnabled().set(false);
+            model.getIsRangeAmountEnabled().set(false);
         }
     }
 
@@ -126,16 +125,14 @@ public class TradeWizardAmountController implements Controller {
             return;
         }
         model.setDirection(direction);
-        minAmountComponent.setDirection(direction);
-        maxOrFixAmountComponent.setDirection(direction);
+        amountSelectionController.setDirection(direction);
     }
 
     public void setMarket(Market market) {
         if (market == null) {
             return;
         }
-        minAmountComponent.setMarket(market);
-        maxOrFixAmountComponent.setMarket(market);
+        amountSelectionController.setMarket(market);
         model.setMarket(market);
         applyQuoteSideMinMaxRange();
     }
@@ -184,16 +181,14 @@ public class TradeWizardAmountController implements Controller {
             return;
         }
         model.getPriceQuote().set(priceQuote.get());
-        minAmountComponent.setQuote(priceQuote.get());
-        maxOrFixAmountComponent.setQuote(priceQuote.get());
+        amountSelectionController.setQuote(priceQuote.get());
 
         OfferAmountUtil.updateQuoteSideAmountSpecWithPriceSpec(marketPriceService, amountSpec, priceSpec, market)
                 .ifPresent(quoteSideAmountSpec -> model.getQuoteSideAmountSpec().set(quoteSideAmountSpec));
     }
 
     public void reset() {
-        minAmountComponent.reset();
-        maxOrFixAmountComponent.reset();
+        amountSelectionController.reset();
         model.reset();
     }
 
@@ -201,87 +196,75 @@ public class TradeWizardAmountController implements Controller {
         return model.getQuoteSideAmountSpec();
     }
 
-    public ReadOnlyBooleanProperty getIsMinAmountEnabled() {
-        return model.getIsMinAmountEnabled();
+    public ReadOnlyBooleanProperty getIsAmountOverlayVisible() {
+        return model.getIsAmountLimitInfoOverlayVisible();
     }
 
     @Override
     public void onActivate() {
         applyQuoteSideMinMaxRange();
 
-        if (model.getPriceQuote().get() == null && minAmountComponent.getQuote().get() != null) {
-            model.getPriceQuote().set(minAmountComponent.getQuote().get());
+        if (model.getPriceQuote().get() == null && amountSelectionController.getQuote().get() != null) {
+            model.getPriceQuote().set(amountSelectionController.getQuote().get());
         }
-        model.setHeadline(model.getDirection().isBuy() ?
-                Res.get("bisqEasy.tradeWizard.amount.headline.buyer") :
-                Res.get("bisqEasy.tradeWizard.amount.headline.seller"));
 
         Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
-        model.getIsMinAmountEnabled().set(cookieValue && model.getShowRangeAmounts().get());
+        model.getIsRangeAmountEnabled().set(cookieValue && model.getShowRangeAmounts().get());
 
-        minAmountCompBaseSideAmountPin = EasyBind.subscribe(minAmountComponent.getBaseSideAmount(),
+        minAmountCompBaseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMinBaseSideAmount(),
                 value -> {
-                    if (model.getIsMinAmountEnabled().get()) {
-                        if (value != null && maxOrFixAmountComponent.getBaseSideAmount().get() != null &&
-                                value.getValue() > maxOrFixAmountComponent.getBaseSideAmount().get().getValue()) {
-                            maxOrFixAmountComponent.setBaseSideAmount(value);
+                    if (model.getIsRangeAmountEnabled().get()) {
+                        if (value != null && amountSelectionController.getMaxOrFixedBaseSideAmount().get() != null &&
+                                value.getValue() > amountSelectionController.getMaxOrFixedBaseSideAmount().get().getValue()) {
+                            amountSelectionController.setMaxOrFixedBaseSideAmount(value);
                         }
                     }
                 });
-        maxOrFixAmountCompBaseSideAmountPin = EasyBind.subscribe(maxOrFixAmountComponent.getBaseSideAmount(),
+        maxOrFixAmountCompBaseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedBaseSideAmount(),
                 value -> {
                     if (value != null &&
-                            model.getIsMinAmountEnabled().get() &&
-                            minAmountComponent.getBaseSideAmount().get() != null &&
-                            value.getValue() < minAmountComponent.getBaseSideAmount().get().getValue()) {
-                        minAmountComponent.setBaseSideAmount(value);
+                            model.getIsRangeAmountEnabled().get() &&
+                            amountSelectionController.getMinBaseSideAmount().get() != null &&
+                            value.getValue() < amountSelectionController.getMinBaseSideAmount().get().getValue()) {
+                        amountSelectionController.setMinBaseSideAmount(value);
                     }
                 });
 
-        minAmountCompQuoteSideAmountPin = EasyBind.subscribe(minAmountComponent.getQuoteSideAmount(),
+        minAmountCompQuoteSideAmountPin = EasyBind.subscribe(amountSelectionController.getMinQuoteSideAmount(),
                 value -> {
                     if (value != null) {
-                        if (model.getIsMinAmountEnabled().get() &&
-                                maxOrFixAmountComponent.getQuoteSideAmount().get() != null &&
-                                value.getValue() > maxOrFixAmountComponent.getQuoteSideAmount().get().getValue()) {
-                            maxOrFixAmountComponent.setQuoteSideAmount(value);
+                        if (model.getIsRangeAmountEnabled().get() &&
+                                amountSelectionController.getMaxOrFixedQuoteSideAmount().get() != null &&
+                                value.getValue() > amountSelectionController.getMaxOrFixedQuoteSideAmount().get().getValue()) {
+                            amountSelectionController.setMaxOrFixedQuoteSideAmount(value);
                         }
                         applyAmountSpec();
                         quoteSideAmountsChanged(false);
                     }
                 });
-        maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(maxOrFixAmountComponent.getQuoteSideAmount(),
+        maxAmountCompQuoteSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedQuoteSideAmount(),
                 value -> {
                     if (value != null) {
-                        if (model.getIsMinAmountEnabled().get() &&
-                                minAmountComponent.getQuoteSideAmount().get() != null &&
-                                value.getValue() < minAmountComponent.getQuoteSideAmount().get().getValue()) {
-                            minAmountComponent.setQuoteSideAmount(value);
+                        if (model.getIsRangeAmountEnabled().get() &&
+                                amountSelectionController.getMinQuoteSideAmount().get() != null &&
+                                value.getValue() < amountSelectionController.getMinQuoteSideAmount().get().getValue()) {
+                            amountSelectionController.setMinQuoteSideAmount(value);
                         }
                         applyAmountSpec();
                         quoteSideAmountsChanged(true);
                     }
                 });
 
-        isMinAmountEnabledPin = EasyBind.subscribe(model.getIsMinAmountEnabled(), isMinAmountEnabled -> {
-            model.getToggleButtonText().set(isMinAmountEnabled ?
-                    Res.get("bisqEasy.tradeWizard.amount.removeMinAmountOption") :
-                    Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
-
-            maxOrFixAmountComponent.setDescription(isMinAmountEnabled ?
-                    Res.get("bisqEasy.tradeWizard.amount.description.maxAmount") :
-                    Res.get("bisqEasy.tradeWizard.amount.description.fixAmount"));
-
+        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled -> {
             applyAmountSpec();
+            amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
-
         applyAmountSpec();
 
         if (model.isCreateOfferMode()) {
             Optional<PriceQuote> marketPriceQuote = getMarketPriceQuote();
-            if (model.getPriceQuote().get() != null &&
-                    marketPriceQuote.isPresent() &&
-                    !model.getPriceQuote().get().equals(marketPriceQuote.get())) {
+            if (model.getPriceQuote().get() != null && marketPriceQuote.isPresent()
+                    && !model.getPriceQuote().get().equals(marketPriceQuote.get())) {
                 model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.selectedPrice"));
             } else {
                 model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice"));
@@ -301,15 +284,14 @@ public class TradeWizardAmountController implements Controller {
 
         priceTooltipPin = EasyBind.subscribe(model.getPriceTooltip(), priceTooltip -> {
             if (priceTooltip != null) {
-                minAmountComponent.setTooltip(priceTooltip);
-                maxOrFixAmountComponent.setTooltip(priceTooltip);
+                amountSelectionController.setTooltip(priceTooltip);
             }
         });
     }
 
     @Override
     public void onDeactivate() {
-        isMinAmountEnabledPin.unsubscribe();
+        isRangeAmountEnabledPin.unsubscribe();
         maxOrFixAmountCompBaseSideAmountPin.unsubscribe();
         maxAmountCompQuoteSideAmountPin.unsubscribe();
         minAmountCompBaseSideAmountPin.unsubscribe();
@@ -341,25 +323,32 @@ public class TradeWizardAmountController implements Controller {
         Browser.open(url);
     }
 
-    void onToggleMinAmountVisibility() {
-        boolean value = !model.getIsMinAmountEnabled().get();
-        model.getIsMinAmountEnabled().set(value);
-        quoteSideAmountsChanged(!value);
-        settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, value);
+    void useFixedAmount() {
+        updateIsRangeAmountEnabled(false);
+    }
+
+    void useRangeAmount() {
+        updateIsRangeAmountEnabled(true);
+    }
+
+    private void updateIsRangeAmountEnabled(boolean useRangeAmount) {
+        model.getIsRangeAmountEnabled().set(useRangeAmount);
+        quoteSideAmountsChanged(!useRangeAmount);
+        settingsService.setCookie(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED, useRangeAmount);
     }
 
     private void applyAmountSpec() {
-        Long maxOrFixAmount = getAmountValue(maxOrFixAmountComponent.getQuoteSideAmount());
+        Long maxOrFixAmount = getAmountValue(amountSelectionController.getMaxOrFixedQuoteSideAmount());
         if (maxOrFixAmount == null) {
             return;
         }
 
-        if (model.getIsMinAmountEnabled().get()) {
-            Long minAmount = getAmountValue(minAmountComponent.getQuoteSideAmount());
+        if (model.getIsRangeAmountEnabled().get()) {
+            Long minAmount = getAmountValue(amountSelectionController.getMinQuoteSideAmount());
             checkNotNull(minAmount);
             if (maxOrFixAmount.compareTo(minAmount) < 0) {
-                minAmountComponent.setQuoteSideAmount(maxOrFixAmountComponent.getQuoteSideAmount().get());
-                minAmount = getAmountValue(minAmountComponent.getQuoteSideAmount());
+                amountSelectionController.setMinQuoteSideAmount(amountSelectionController.getMaxOrFixedQuoteSideAmount().get());
+                minAmount = getAmountValue(amountSelectionController.getMinQuoteSideAmount());
             }
             applyRangeOrFixedAmountSpec(minAmount, maxOrFixAmount);
         } else {
@@ -416,12 +405,12 @@ public class TradeWizardAmountController implements Controller {
                 ? priceQuoteStream.min(Comparator.comparing(PriceQuote::getValue))
                 : priceQuoteStream.max(Comparator.comparing(PriceQuote::getValue));
         if (bestOffersPrice.isPresent()) {
-            maxOrFixAmountComponent.setQuote(bestOffersPrice.get());
+            amountSelectionController.setQuote(bestOffersPrice.get());
         } else {
-            getMarketPriceQuote().ifPresent(maxOrFixAmountComponent::setQuote);
+            getMarketPriceQuote().ifPresent(amountSelectionController::setQuote);
         }
         AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getQuoteSideAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
-                .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> maxOrFixAmountComponent.setQuoteSideAmount(amount)));
+                .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> amountSelectionController.setMaxOrFixedQuoteSideAmount(amount)));
 
         return bestOffersPrice;
     }
@@ -494,12 +483,12 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void quoteSideAmountsChanged(boolean maxAmountChanged) {
-        Monetary minQuoteSideAmount = minAmountComponent.getQuoteSideAmount().get();
-        Monetary maxOrFixedQuoteSideAmount = maxOrFixAmountComponent.getQuoteSideAmount().get();
+        Monetary minQuoteSideAmount = amountSelectionController.getMinQuoteSideAmount().get();
+        Monetary maxOrFixedQuoteSideAmount = amountSelectionController.getMaxOrFixedQuoteSideAmount().get();
 
         model.getIsAmountHyperLinkDisabled().set(false);
-        boolean insecureValue = maxOrFixAmountComponent.getRightMarkerQuoteSideValue() != null &&
-                maxOrFixedQuoteSideAmount.isGreaterThan(maxOrFixAmountComponent.getRightMarkerQuoteSideValue().round(0));
+        boolean insecureValue = amountSelectionController.getRightMarkerQuoteSideValue() != null &&
+                maxOrFixedQuoteSideAmount.isGreaterThan(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
         model.getIsWarningIconVisible().set(insecureValue);
 
         long highestScore = reputationService.getScoreByUserProfileId().entrySet().stream()
@@ -527,7 +516,7 @@ public class TradeWizardAmountController implements Controller {
             // Buyer
             String formattedAmountWithoutReputationNeeded = formatAmountWithCode(amountWithoutReputationNeeded);
             String formattedMaxOrFixedAmount = formatAmountWithCode(maxOrFixedQuoteSideAmount);
-            if (model.getIsMinAmountEnabled().get()) {
+            if (model.getIsRangeAmountEnabled().get()) {
                 // Amount range
                 String formattedMinAmount = formatAmountWithCode(minQuoteSideAmount);
                 boolean noReputationNeededForMinAmount = minQuoteSideAmount.isLessThanOrEqual(amountWithoutReputationNeeded);
@@ -668,21 +657,20 @@ public class TradeWizardAmountController implements Controller {
         boolean isCreateOfferMode = model.isCreateOfferMode();
         if (isCreateOfferMode) {
             model.getIsLearnMoreVisible().set(true);
-            minAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
-            maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+            amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
         } else {
             // Wizard
             applyMarkerRange();
 
             model.getIsLearnMoreVisible().set(model.getDirection().isSell());
             if (model.getDirection().isBuy()) {
-                maxOrFixAmountComponent.setMinMaxRange(minRangeValue, maxRangeValue);
+                amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
             } else {
-                maxOrFixAmountComponent.setMinMaxRange(minRangeValue, model.getReputationBasedMaxAmount().round(0));
+                amountSelectionController.setMinMaxRange(minRangeValue, model.getReputationBasedMaxAmount().round(0));
             }
 
-            if (maxOrFixAmountComponent.getQuoteSideAmount().get() == null) {
-                maxOrFixAmountComponent.setQuoteSideAmount(defaultFiatAmount);
+            if (amountSelectionController.getMaxOrFixedQuoteSideAmount().get() == null) {
+                amountSelectionController.setMaxOrFixedQuoteSideAmount(defaultFiatAmount);
             }
         }
 
@@ -698,13 +686,11 @@ public class TradeWizardAmountController implements Controller {
                     .max()
                     .orElse(0L);
             Monetary highestPossibleUsdAmount = BisqEasyTradeAmountLimits.getUsdAmountFromReputationScore(highestScore);
-
             if (isCreateOfferMode) {
-                minAmountComponent.setRightMarkerQuoteSideValue(highestPossibleUsdAmount);
-                maxOrFixAmountComponent.setRightMarkerQuoteSideValue(highestPossibleUsdAmount);
+                amountSelectionController.setRightMarkerQuoteSideValue(highestPossibleUsdAmount);
             }
-            if (maxOrFixAmountComponent.getQuoteSideAmount().get() == null) {
-                maxOrFixAmountComponent.setQuoteSideAmount(defaultFiatAmount);
+            if (amountSelectionController.getMaxOrFixedQuoteSideAmount().get() == null) {
+                amountSelectionController.setMaxOrFixedQuoteSideAmount(defaultFiatAmount);
             }
         } else {
             // Seller case
@@ -715,8 +701,7 @@ public class TradeWizardAmountController implements Controller {
                 Monetary reputationBasedQuoteSideAmount = model.getReputationBasedMaxAmount();
                 long myReputationScore = model.getMyReputationScore();
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo", myReputationScore));
-                minAmountComponent.setRightMarkerQuoteSideValue(reputationBasedQuoteSideAmount);
-                maxOrFixAmountComponent.setRightMarkerQuoteSideValue(reputationBasedQuoteSideAmount);
+                amountSelectionController.setRightMarkerQuoteSideValue(reputationBasedQuoteSideAmount);
                 String formattedAmount = formatAmountWithCode(reputationBasedQuoteSideAmount);
 
                 model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoAmount", formattedAmount));
@@ -729,7 +714,7 @@ public class TradeWizardAmountController implements Controller {
                 model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
 
                 Monetary reputationBasedQuoteSideAmount = model.getReputationBasedMaxAmount();
-                maxOrFixAmountComponent.setQuoteSideAmount(reputationBasedQuoteSideAmount);
+                amountSelectionController.setMaxOrFixedQuoteSideAmount(reputationBasedQuoteSideAmount);
                 long myReputationScore = model.getMyReputationScore();
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo", myReputationScore));
                 String formattedAmount = formatAmountWithCode(reputationBasedQuoteSideAmount);
@@ -744,13 +729,13 @@ public class TradeWizardAmountController implements Controller {
 
     private void applyMarkerRange() {
         Pair<Optional<Monetary>, Optional<Monetary>> availableOfferAmountRange = getLowestAndHighestAmountInAvailableOffers();
-        maxOrFixAmountComponent.setLeftMarkerQuoteSideValue(availableOfferAmountRange.getFirst().orElse(null));
-        maxOrFixAmountComponent.setRightMarkerQuoteSideValue(availableOfferAmountRange.getSecond().orElse(null));
+        amountSelectionController.setLeftMarkerQuoteSideValue(availableOfferAmountRange.getFirst().orElse(null));
+        amountSelectionController.setRightMarkerQuoteSideValue(availableOfferAmountRange.getSecond().orElse(null));
     }
 
     private void applyReputationBasedQuoteSideAmount() {
         if (model.isCreateOfferMode()) {
-            maxOrFixAmountComponent.setQuoteSideAmount(maxOrFixAmountComponent.getRightMarkerQuoteSideValue().round(0));
+            amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
         }
     }
 

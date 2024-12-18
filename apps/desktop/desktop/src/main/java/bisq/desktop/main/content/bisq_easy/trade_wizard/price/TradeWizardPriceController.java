@@ -29,6 +29,7 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.*;
+import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -120,6 +121,7 @@ public class TradeWizardPriceController implements Controller {
         percentageInputPin = EasyBind.subscribe(model.getPercentageInput(), percentageInput -> {
             if (percentageInput != null) {
                 onPercentageInput(percentageInput);
+                priceInput.setPercentage(percentageInput);
             }
         });
 
@@ -147,7 +149,7 @@ public class TradeWizardPriceController implements Controller {
         if (!focussed) {
             try {
                 double percentage = parse(model.getPercentageInput().get());
-                String percentageAsString = formatToPercentWithSymbol(percentage);
+                String percentageAsString = PercentageFormatter.formatToPercent(percentage);
                 // Need to change the value first otherwise it does not trigger an update
                 model.getPercentageInput().set("");
                 model.getPercentageInput().set(percentageAsString);
@@ -266,7 +268,7 @@ public class TradeWizardPriceController implements Controller {
     private void applyPercentageFromQuote(PriceQuote priceQuote) {
         double percentage = getPercentage(priceQuote);
         model.getPercentage().set(percentage);
-        model.getPercentageInput().set(formatToPercentWithSymbol(percentage));
+        model.getPercentageInput().set(PercentageFormatter.formatToPercent(percentage));
     }
 
     private boolean validateQuote(PriceQuote priceQuote) {

@@ -23,12 +23,19 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.common.util.MathUtils;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -64,6 +71,10 @@ public class PriceInput {
 
     public void setQuote(PriceQuote priceQuote) {
         controller.setQuote(priceQuote);
+    }
+
+    public void setPercentage(String percentage) {
+        controller.setPercentage(percentage);
     }
 
     public void setIsTakeOffer() {
@@ -129,9 +140,14 @@ public class PriceInput {
             model.priceQuote.set(priceQuote);
         }
 
+        public void setPercentage(String percentage) {
+            model.percentagePriceString.set(percentage);
+        }
+
         private void updateFromMarketPrice() {
             if (model.market != null && model.description.get() == null) {
                 model.description.set(Res.get("component.priceInput.description", model.market.getMarketCodes()));
+                model.textInputCurrencyCodes.set(model.market.getMarketCodes());
             }
             if (model.isEditable) {
                 setQuoteFromMarketPrice();
@@ -145,7 +161,9 @@ public class PriceInput {
 
             marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
                 // We only set it initially
-                if (model.priceQuote.get() != null) return;
+                if (model.priceQuote.get() != null) {
+                    return;
+                }
                 UIThread.run(this::setQuoteFromMarketPrice);
             });
 
@@ -196,7 +214,9 @@ public class PriceInput {
         }
 
         private void setQuoteFromMarketPrice() {
-            if (model.market == null) return;
+            if (model.market == null) {
+                return;
+            }
             marketPriceService.findMarketPrice(model.market)
                     .ifPresent(marketPrice -> model.priceQuote.set(marketPrice.getPriceQuote()));
         }
@@ -209,6 +229,8 @@ public class PriceInput {
         private Market market;
         private boolean isFocused;
         private final StringProperty description = new SimpleStringProperty();
+        private final StringProperty textInputCurrencyCodes = new SimpleStringProperty();
+        private final StringProperty percentagePriceString = new SimpleStringProperty();
         private boolean isEditable = true;
         private final BooleanProperty isPriceValid = new SimpleBooleanProperty();
         private final BooleanProperty doResetValidation = new SimpleBooleanProperty();
@@ -222,21 +244,24 @@ public class PriceInput {
             market = null;
             isFocused = false;
             description.set(null);
+            textInputCurrencyCodes.set(null);
+            percentagePriceString.set(null);
             isEditable = true;
         }
     }
 
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int WIDTH = 250;
-        private final MaterialTextField textInput;
+        private final PriceInputBox textInput;
         private Subscription focusedPin, doResetValidationPin;
 
         private View(Model model, Controller controller, NumberValidator validator) {
             super(new VBox(), model, controller);
 
-            textInput = new MaterialTextField(model.description.get(), Res.get("component.priceInput.prompt"));
+            textInput = new PriceInputBox(model.description.get(), Res.get("component.priceInput.prompt"));
             textInput.setPrefWidth(WIDTH);
             textInput.setValidator(validator);
+            textInput.conversionPriceSymbolTextProperty().set("%");
 
             root.getChildren().add(textInput);
         }
@@ -244,7 +269,10 @@ public class PriceInput {
         @Override
         protected void onViewAttached() {
             textInput.descriptionProperty().bind(model.description);
+            textInput.textInputSymbolTextProperty().bind(model.textInputCurrencyCodes);
+            textInput.conversionPriceTextProperty().bind(model.percentagePriceString);
             textInput.textProperty().bindBidirectional(model.priceString);
+            textInput.initialize();
             focusedPin = EasyBind.subscribe(textInput.textInputFocusedProperty(), controller::onFocusedChanged);
             doResetValidationPin = EasyBind.subscribe(model.doResetValidation, doResetValidation -> {
                 if (doResetValidation != null && doResetValidation) {
@@ -257,8 +285,11 @@ public class PriceInput {
         @Override
         protected void onViewDetached() {
             textInput.descriptionProperty().unbind();
+            textInput.textInputSymbolTextProperty().unbind();
+            textInput.conversionPriceTextProperty().unbind();
             textInput.textProperty().unbindBidirectional(model.priceString);
             textInput.resetValidation();
+            textInput.dispose();
             focusedPin.unsubscribe();
             doResetValidationPin.unsubscribe();
         }
