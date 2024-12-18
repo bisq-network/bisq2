@@ -163,10 +163,6 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         minRangeCode.getStyleClass().add("range-code");
         HBox minRangeValueAndCodeHBox = new HBox(2, minRangeValue, minRangeCode);
         minRangeValueAndCodeHBox.setAlignment(Pos.BASELINE_LEFT);
-        Label minLabel = new Label(Res.get("bisqEasy.component.amount.minRangeValue").toUpperCase());
-        minLabel.getStyleClass().add("min-max-label");
-        VBox minRangeVBox = new VBox(minRangeValueAndCodeHBox, minLabel);
-        minRangeVBox.setAlignment(Pos.CENTER_LEFT);
 
         maxRangeValue = new Label();
         maxRangeValue.getStyleClass().add("range-value");
@@ -174,12 +170,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         maxRangeCode.getStyleClass().add("range-code");
         HBox maxRangeValueAndCodeHBox = new HBox(2, maxRangeValue, maxRangeCode);
         maxRangeValueAndCodeHBox.setAlignment(Pos.BASELINE_RIGHT);
-        Label maxLabel = new Label(Res.get("bisqEasy.component.amount.maxRangeValue").toUpperCase());
-        maxLabel.getStyleClass().add("min-max-label");
-        VBox maxRangeVBox = new VBox(maxRangeValueAndCodeHBox, maxLabel);
-        maxRangeVBox.setAlignment(Pos.CENTER_RIGHT);
 
-        HBox sliderIndicators = new HBox(minRangeVBox, Spacer.fillHBox(), maxRangeVBox);
+        HBox sliderIndicators = new HBox(minRangeValueAndCodeHBox, Spacer.fillHBox(), maxRangeValueAndCodeHBox);
 
         HBox.setMargin(sliderIndicators, new Insets(-20, 0, 0, 0));
         VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider, sliderIndicators);

@@ -1012,8 +1012,7 @@
 }
 
 .amount-selection .range-value,
-.amount-selection .range-code,
-.amount-selection .min-max-label {
+.amount-selection .range-code {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-mid-grey-20;
 }
@@ -1024,10 +1023,6 @@
 
 .amount-selection .range-code {
     -fx-font-size: 0.7em;
-}
-
-.amount-selection .min-max-label {
-    -fx-font-size: 0.8em;
 }
 
 .bisq-easy-trade-wizard-amount-step,
