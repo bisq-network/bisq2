@@ -151,8 +151,10 @@ public class TradeWizardController extends NavigationController implements InitW
                 tradeWizardSelectOfferController::setQuoteSideAmountSpec);
         priceSpecPin = EasyBind.subscribe(tradeWizardAmountAndPriceController.getPriceSpec(),
                 priceSpec -> {
-                    tradeWizardAmountAndPriceController.updateQuoteSideAmountSpecWithPriceSpec(priceSpec);
-                    tradeWizardSelectOfferController.setPriceSpec(priceSpec);
+                    if (!model.isCreateOfferMode()) {
+                        tradeWizardAmountAndPriceController.updateQuoteSideAmountSpecWithPriceSpec(priceSpec);
+                        tradeWizardSelectOfferController.setPriceSpec(priceSpec);
+                    }
                 });
         selectedBisqEasyOfferPin = EasyBind.subscribe(tradeWizardSelectOfferController.getSelectedBisqEasyOffer(),
                 selectedBisqEasyOffer -> {
