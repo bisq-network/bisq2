@@ -716,29 +716,404 @@
  *                                                                             *
  ******************************************************************************/
 
+.amount-and-price-step {
+    -fx-alignment: top-center;
+    -fx-spacing: 50;
+}
+
+.amount-and-price-step .amount-and-price-box {
+    -fx-alignment: top-center;
+}
+
+.bisq-easy-trade-wizard-price-step-pane {
+    -fx-pref-width: 340;
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+}
+
+.amount-and-price-step .content-box {
+    -fx-padding: 40 0 0 0;
+    -fx-alignment: top-center;
+}
+
+.amount-and-price-step .amount-at-price-symbol {
+    -fx-padding: 93 0 0 0;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 3.5em;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-alignment: center;
+}
+
+.amount-selection .description {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-wrap-text: true;
+}
+
+.description-and-amount-box {
+    -fx-padding: 8 20 8 20;
+}
+
+.range-amount .quote-separator {
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-pref-height: 40;
+    -fx-max-height: 40;
+    -fx-min-height: 40;
+}
+
+.range-amount .base-separator {
+    -fx-alignment: center;
+}
+
+.range-amount .base-separator {
+    -fx-min-width: 10;
+}
+
+.range-amount .base-amount .max-or-fixed-base-amount {
+    -fx-min-width: 165;
+    -fx-max-width: 165;
+}
+
+.range-amount .base-amount .max-or-fixed-base-amount,
+.range-amount .base-amount .min-base-amount {
+    -fx-alignment: baseline-left;
+}
+
+.fixed-amount .quote-amount .big-amount-input .text-input,
+.range-amount .quote-amount .min-quote-amount .text-input {
+    -fx-alignment: bottom-right;
+}
+
+.range-amount .quote-amount .max-or-fixed-quote-amount .text-input {
+    -fx-alignment: bottom-left;
+}
+
+.quote-amount .big-amount-input .text-input {
+    -fx-padding: 0;
+    -fx-min-height: 70;
+}
+
+.quote-amount .big-amount-input .currency-code {
+    -fx-min-width: 30;
+    -fx-max-width: 30;
+    -fx-min-height: 70;
+    -fx-padding: 0 0 10 0;
+    -fx-alignment: bottom-left;
+}
+
+.quote-amount {
+    -fx-alignment: center-right;
+}
+
+.fixed-amount .small-amount-input {
+    -fx-padding: 0 60 0 0;
+}
+
+.range-amount .base-amount .max-or-fixed-base-amount .text-input {
+    -fx-padding: 0 5 0 0;
+    -fx-min-width: 105;
+    -fx-max-width: 105;
+}
+
+.quote-amount .text-input,
+.quote-separator {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+/******** ALL SIZES ********/
+.input-text-9 .text-input,
+.input-text-9 .quote-separator {
+    -fx-font-size: 4em !important;
+}
+
+.input-text-10 .text-input,
+.input-text-10 .quote-separator {
+    -fx-font-size: 3.58em !important;
+}
+
+.input-text-11 .text-input,
+.input-text-11 .quote-separator {
+    -fx-font-size: 3.20em !important;
+}
+
+.input-text-12 .text-input,
+.input-text-12 .quote-separator {
+    -fx-font-size: 2.90em !important;
+}
+
+.input-text-13 .text-input,
+.input-text-13 .quote-separator {
+    -fx-font-size: 2.65em !important;
+}
+
+.input-text-14 .text-input,
+.input-text-14 .quote-separator {
+    -fx-font-size: 2.45em !important;
+}
+
+.input-text-15 .text-input,
+.input-text-15 .quote-separator {
+    -fx-font-size: 2.30em !important;
+}
+
+.input-text-16 .text-input,
+.input-text-16 .quote-separator {
+    -fx-font-size: 2.15em !important;
+}
+
+.input-text-17 .text-input,
+.input-text-17 .quote-separator {
+    -fx-font-size: 2em !important;
+}
+
+.input-text-18 .text-input,
+.input-text-18 .quote-separator {
+    -fx-font-size: 1.90em !important;
+}
+
+.input-text-19 .text-input,
+.input-text-19 .quote-separator {
+    -fx-font-size: 1.80em !important;
+}
+/***************************/
+
+/******** PADDINGS *********/
+.input-text-9 .text-input {
+    -fx-padding: 0 0 -1 0 !important;
+}
+
+.input-text-10 .text-input {
+    -fx-padding: 0 0 1 0 !important;
+}
+
+.input-text-11 .text-input {
+    -fx-padding: 0 0 2 0 !important;
+}
+
+.input-text-12 .text-input {
+    -fx-padding: 0 0 3 0 !important;
+}
+
+.input-text-13 .text-input {
+    -fx-padding: 0 0 4 0 !important;
+}
+
+.input-text-14 .text-input {
+    -fx-padding: 0 0 5 0 !important;
+}
+
+.input-text-15 .text-input,
+.input-text-16 .text-input,
+.input-text-17 .text-input {
+    -fx-padding: 0 0 6 0 !important;
+}
+
+.input-text-18 .text-input {
+    -fx-padding: 0 0 7 0 !important;
+}
+
+.input-text-19 .text-input {
+    -fx-padding: 0 0 8 0 !important;
+}
+
+.input-text-9 .quote-separator {
+    -fx-padding: -16 0 0 0 !important;
+}
+
+.input-text-10 .quote-separator {
+    -fx-padding: -9 0 0 0 !important;
+}
+
+.input-text-11 .quote-separator {
+    -fx-padding: -5 0 0 0 !important;
+}
+
+.input-text-12 .quote-separator {
+    -fx-padding: 0 0 0 0 !important;
+}
+
+.input-text-13 .quote-separator {
+    -fx-padding: 2 0 -2 0 !important;
+}
+
+.input-text-14 .quote-separator {
+    -fx-padding: 6 0 -6 0 !important;
+}
+
+.input-text-15 .quote-separator {
+    -fx-padding: 7 0 -7 0 !important;
+}
+
+.input-text-16 .quote-separator {
+    -fx-padding: 9 0 -9 0 !important;
+}
+
+.input-text-17 .quote-separator {
+    -fx-padding: 10 0 -10 0 !important;
+}
+
+.input-text-18 .quote-separator {
+    -fx-padding: 11 0 -11 0 !important;
+}
+
+.input-text-19 .quote-separator {
+    -fx-padding: 12 0 -12 0 !important;
+}
+/***************************/
+
+.small-amount-input .text-input,
+.small-amount-input .currency-code,
+.base-separator {
+    -fx-fill: -fx-mid-text-color !important;
+    -fx-text-fill: -fx-mid-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.small-amount-input .text-input,
+.base-separator {
+    -fx-font-size: 1.25em !important;
+}
+
+.small-amount-input .text-input {
+    -fx-alignment: baseline-right;
+}
+
+.small-amount-input .currency-code {
+    -fx-font-size: 0.95em !important;
+    -fx-alignment: baseline-left;
+}
+
+.slider.max-or-fixed-amount-slider .thumb {
+    -fx-background-color: -bisq-white;
+    -fx-background-insets: 2.5;
+    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
+    -fx-translate-y: -8;
+}
+
+.slider.min-amount-slider .thumb {
+    -fx-background-color: -bisq-white;
+    -fx-background-insets: 2.5;
+    -fx-shape: "M 0 4 h 7 l -3.5 -4 z";
+    -fx-translate-y: -9;
+}
+
+.slider.min-amount-slider .track {
+    -fx-min-height: 0;
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+}
+
+.amount-selection .range-value,
+.amount-selection .range-code {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-mid-grey-20;
+}
+
+.amount-selection .range-value {
+    -fx-font-size: 1.1em;
+}
+
+.amount-selection .range-code {
+    -fx-font-size: 0.7em;
+}
+
+.bisq-easy-trade-wizard-amount-step,
+.bisq-easy-trade-wizard-price-step {
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-pref-width: 340;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box {
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-max-height: 70;
+    -fx-min-height: 70;
+    -fx-alignment: center-right;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input,
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input-symbol {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input {
+    -fx-alignment: bottom-right;
+    -fx-padding: 0;
+    -fx-min-height: 70;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input-symbol {
+    -fx-min-width: 80;
+    -fx-max-width: 80;
+    -fx-min-height: 70;
+    -fx-padding: 0 0 10 0;
+    -fx-alignment: bottom-left;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box {
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-alignment: baseline-center;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box .conversion-price,
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box .conversion-price-symbol {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box .conversion-price {
+    -fx-font-size: 1.25em !important;
+    -fx-alignment: baseline-right;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box .conversion-price-symbol {
+    -fx-font-size: 0.95em !important;
+    -fx-alignment: baseline-left;
+}
+
 .bisq-easy-trade-wizard-price-step .price-content {
     -fx-alignment: center;
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-pref-width: 340;
 }
 
-.bisq-easy-trade-wizard-price-step .pricing-models {
+.bisq-easy-trade-wizard-price-step .selection-models,
+.bisq-easy-trade-wizard-amount-step .selection-models {
     -fx-alignment: center;
     -fx-padding: 10 0 10 0;
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-pref-width: 340;
 }
 
-.bisq-easy-trade-wizard-price-step .pricing-models .price-item-box {
-    -fx-max-width: 300;
-    -fx-min-width: 300;
-    -fx-pref-width: 300;
-}
-
-.bisq-easy-trade-wizard-price-step .pricing-models .price-item-box .price-item {
+.bisq-easy-trade-wizard-price-step .selection-models .model-selection-item-box .model-selection-item,
+.bisq-easy-trade-wizard-amount-step .selection-models .model-selection-item-box .model-selection-item {
     -fx-padding: 5;
     -fx-background-color: transparent;
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 0.9em;
 }
 
-.bisq-easy-trade-wizard-price-step .selected-price-model {
+.bisq-easy-trade-wizard-price-step .selected-model,
+.bisq-easy-trade-wizard-amount-step .selected-model {
     -fx-fill: -bisq2-green !important;
     -fx-text-fill: -bisq2-green !important;
 }
@@ -950,9 +1325,9 @@
 }
 
 .trade-wizard-amount-limit-info {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1.15em;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -964,7 +1339,7 @@
     -fx-border-width: 1px;
     -fx-text-fill: -bisq2-green;
     -fx-underline: true;
-    -fx-font-size: 1.15em;
+    -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 .trade-wizard-amount-limit-info-overlay-link.hyperlink:hover,

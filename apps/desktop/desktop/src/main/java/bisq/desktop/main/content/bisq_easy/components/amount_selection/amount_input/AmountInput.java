@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -24,7 +24,15 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
@@ -37,11 +45,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AmountInput {
-
     protected final Controller controller;
 
-    public AmountInput(boolean isBaseCurrency) {
-        controller = new Controller(isBaseCurrency);
+    public AmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
+        controller = new Controller(isBaseCurrency, showCurrencyCode);
     }
 
     public ReadOnlyObjectProperty<Monetary> amountProperty() {
@@ -68,6 +75,18 @@ public abstract class AmountInput {
         return controller.view.textInput.focusedProperty();
     }
 
+    public ReadOnlyIntegerProperty lengthProperty() {
+        return controller.view.textInput.lengthProperty();
+    }
+
+    public int getTextInputLength() {
+        return controller.view.textInput.getLength();
+    }
+
+    public void setTextInputPrefWidth(int prefWidth) {
+        controller.view.textInput.setPrefWidth(prefWidth);
+    }
+
     public void reset() {
         controller.model.reset();
     }
@@ -86,8 +105,8 @@ public abstract class AmountInput {
         protected View view;
         protected final NumberValidator validator = new NumberValidator();
 
-        private Controller(boolean isBaseCurrency) {
-            model = new Model(isBaseCurrency);
+        private Controller(boolean isBaseCurrency, boolean showCurrencyCode) {
+            model = new Model(isBaseCurrency, showCurrencyCode);
             view = new View(model, this);
         }
 
@@ -156,13 +175,11 @@ public abstract class AmountInput {
                     ? model.selectedMarket.getBaseCurrencyCode()
                     : model.selectedMarket.getQuoteCurrencyCode());
         }
-
-        protected void adjustTextFieldStyle() {
-        }
     }
 
     protected static class Model implements bisq.desktop.common.view.Model {
         protected final boolean isBaseCurrency;
+        protected final boolean showCurrencyCode;
         protected final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         protected final StringProperty code = new SimpleStringProperty();
         protected Market selectedMarket;
@@ -171,8 +188,9 @@ public abstract class AmountInput {
         protected boolean useLowPrecision = true;
         private final BooleanProperty isAmountValid = new SimpleBooleanProperty(true);
 
-        protected Model(boolean isBaseCurrency) {
+        protected Model(boolean isBaseCurrency, boolean showCurrencyCode) {
             this.isBaseCurrency = isBaseCurrency;
+            this.showCurrencyCode = showCurrencyCode;
         }
 
         void reset() {
@@ -180,6 +198,7 @@ public abstract class AmountInput {
             code.set(null);
             selectedMarket = null;
             hasFocus = false;
+            isAmountValid.set(true);
         }
     }
 
@@ -191,8 +210,12 @@ public abstract class AmountInput {
 
         protected View(Model model, Controller controller) {
             super(new HBox(), model, controller);
+
             textInput = createTextInput();
             codeLabel = createCodeLabel();
+            codeLabel.getStyleClass().add("currency-code");
+            codeLabel.setVisible(model.showCurrencyCode);
+            codeLabel.setManaged(model.showCurrencyCode);
             root.getChildren().addAll(textInput, codeLabel);
             focusListener = this::onFocusChanged;
             amountListener = this::onAmountChanged;
@@ -226,18 +249,15 @@ public abstract class AmountInput {
         protected void applyAmount(Monetary newValue) {
             textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, model.useLowPrecision));
             textInput.selectRange(textInput.getLength(), textInput.getLength());
-            adjustTextFieldStyle();
-        }
-
-
-        protected void adjustTextFieldStyle() {
         }
 
         @Override
         protected void onViewAttached() {
-            textInput.focusedProperty().addListener(focusListener);
             codeLabel.textProperty().bind(model.code);
+
+            textInput.focusedProperty().addListener(focusListener);
             model.amount.addListener(amountListener);
+
             applyAmount(model.amount.get());
             textInput.requestFocus();
             textInput.selectRange(textInput.getLength(), textInput.getLength());
@@ -245,8 +265,9 @@ public abstract class AmountInput {
 
         @Override
         protected void onViewDetached() {
-            textInput.focusedProperty().removeListener(focusListener);
             codeLabel.textProperty().unbind();
+
+            textInput.focusedProperty().removeListener(focusListener);
             model.amount.removeListener(amountListener);
         }
     }

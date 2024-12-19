@@ -39,6 +39,8 @@ import java.util.List;
 public class TradeWizardModel extends NavigationModel {
     @Setter
     private boolean isCreateOfferMode;
+    @Setter
+    private String amountAtPriceString;
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
@@ -46,7 +48,6 @@ public class TradeWizardModel extends NavigationModel {
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
-    private final BooleanProperty priceProgressItemVisible = new SimpleBooleanProperty(true);
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter
@@ -62,6 +63,8 @@ public class TradeWizardModel extends NavigationModel {
     }
 
     public void reset() {
+        isCreateOfferMode = false;
+        amountAtPriceString = "";
         currentIndex.set(0);
         nextButtonText.set(null);
         backButtonText.set(null);
@@ -69,7 +72,6 @@ public class TradeWizardModel extends NavigationModel {
         nextButtonVisible.set(true);
         nextButtonDisabled.set(true);
         backButtonVisible.set(true);
-        priceProgressItemVisible.set(true);
         childTargets.clear();
         selectedChildTarget.set(null);
         animateRightOut = true;

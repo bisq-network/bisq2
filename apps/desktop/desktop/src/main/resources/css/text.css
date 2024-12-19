@@ -422,7 +422,7 @@
     -fx-border-style: none;
     -fx-text-fill: -fx-light-text-color;
     -fx-highlight-fill: -bisq2-green;
-    -fx-font-size: 5.2em;
+    -fx-font-size: 3.75em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
@@ -432,6 +432,15 @@
     -fx-text-fill: -fx-light-text-color;
     -fx-highlight-fill: -bisq2-green;
     -fx-font-size: 3em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+#base-amount-text-field-very-small {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-size: 2em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
