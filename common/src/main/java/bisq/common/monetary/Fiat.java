@@ -86,7 +86,7 @@ public final class Fiat extends Monetary {
         super(code, faceValue, code, precision, 2);
     }
 
-    private Fiat(String id, long value, String code, int precision, int lowPrecision) {
+    public Fiat(String id, long value, String code, int precision, int lowPrecision) {
         super(id, value, code, precision, lowPrecision);
     }
 

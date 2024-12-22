@@ -56,7 +56,7 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
     private final int lowPrecision;
     private final Market market;
 
-    private PriceQuote(long value, Monetary baseSideMonetary, Monetary quoteSideMonetary) {
+    public PriceQuote(long value, Monetary baseSideMonetary, Monetary quoteSideMonetary) {
         this.value = value;
         this.baseSideMonetary = baseSideMonetary;
         this.quoteSideMonetary = quoteSideMonetary;

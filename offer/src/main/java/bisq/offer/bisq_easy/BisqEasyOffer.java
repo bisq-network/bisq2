@@ -78,7 +78,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
         );
     }
 
-    private BisqEasyOffer(String id,
+    public BisqEasyOffer(String id,
                           long date,
                           NetworkId makerNetworkId,
                           Direction direction,

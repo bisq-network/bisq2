@@ -151,7 +151,7 @@ public final class Coin extends Monetary {
         super(code + " [crypto]", faceValue, code, precision, code.equals("BSQ") ? 2 : 4);
     }
 
-    private Coin(String id, long value, String code, int precision, int lowPrecision) {
+    public Coin(String id, long value, String code, int precision, int lowPrecision) {
         super(id, value, code, precision, lowPrecision);
     }
 
