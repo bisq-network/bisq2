@@ -33,5 +33,5 @@ public class CreateUserIdentityRequest {
     private String statement = "";
 
     @Schema(description = "Prepared data as JSON object", required = true)
-    private PreparedData preparedData;
+    private UserIdentityPreparation userIdentityPreparation;
 }

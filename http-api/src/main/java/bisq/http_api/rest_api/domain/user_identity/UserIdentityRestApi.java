@@ -18,6 +18,9 @@
 package bisq.http_api.rest_api.domain.user_identity;
 
 import bisq.common.encoding.Hex;
+import bisq.dto.DtoMappings;
+import bisq.dto.security.keys.KeyPairDto;
+import bisq.dto.security.pow.ProofOfWorkDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import bisq.security.DigestUtil;
 import bisq.security.SecurityService;
@@ -60,25 +63,27 @@ public class UserIdentityRestApi extends RestApiBase {
     }
 
     @GET
-    @Path("/prepared-data")
+    @Path("/preparation")
     @Operation(
             summary = "Generate Prepared Data",
             description = "Generates a key pair, public key hash, Nym, and proof of work for a new user identity.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Prepared data generated successfully",
-                            content = @Content(schema = @Schema(implementation = PreparedData.class))),
+                            content = @Content(schema = @Schema(implementation = UserIdentityPreparation.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response createPreparedData() {
+    public Response getUserIdentityPreparation() {
         try {
             KeyPair keyPair = securityService.getKeyBundleService().generateKeyPair();
             byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
             String id = Hex.encode(pubKeyHash);
             ProofOfWork proofOfWork = userIdentityService.mintNymProofOfWork(pubKeyHash);
             String nym = NymIdGenerator.generate(pubKeyHash, proofOfWork.getSolution());
-            PreparedData preparedData = PreparedData.from(keyPair, id, nym, proofOfWork);
-            return buildResponse(Response.Status.CREATED, preparedData);
+            KeyPairDto keyPairDto = DtoMappings.KeyPairDtoMapping.from(keyPair);
+            ProofOfWorkDto proofOfWorkDto = DtoMappings.ProofOfWorkDtoMapping.from(proofOfWork);
+            UserIdentityPreparation userIdentityPreparation = UserIdentityPreparation.from(keyPairDto, id, nym, proofOfWorkDto);
+            return buildResponse(Response.Status.CREATED, userIdentityPreparation);
         } catch (Exception e) {
             log.error("Error generating prepared data", e);
             return buildErrorResponse("Could not generate prepared data.");
@@ -147,7 +152,7 @@ public class UserIdentityRestApi extends RestApiBase {
 
     @POST
     @Operation(
-            summary = "Create and Publish User Identity",
+            summary = "Create User Identity and Publish User Profile",
             description = "Creates a new user identity and publishes the associated user profile.",
             requestBody = @RequestBody(
                     description = "Request payload containing user nickname, terms, statement, and prepared data.",
@@ -160,16 +165,19 @@ public class UserIdentityRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response createUserIdentityAndPublishUserProfile(CreateUserIdentityRequest request) {
+    public Response createAndPublishNewUserProfile(CreateUserIdentityRequest request) {
         try {
-            PreparedData preparedData = request.getPreparedData();
-            KeyPair keyPair = preparedData.getKeyPair();
+            UserIdentityPreparation userIdentityPreparation = request.getUserIdentityPreparation();
+            KeyPairDto keyPairDto = userIdentityPreparation.getKeyPair();
+            KeyPair keyPair = DtoMappings.KeyPairDtoMapping.toPojo(keyPairDto);
             byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
             int avatarVersion = 0;
+            ProofOfWorkDto proofOfWorkDto = userIdentityPreparation.getProofOfWork();
+            ProofOfWork proofOfWork = DtoMappings.ProofOfWorkDtoMapping.toPojo(proofOfWorkDto);
             UserIdentity userIdentity = userIdentityService.createAndPublishNewUserProfile(request.getNickName(),
                     keyPair,
                     pubKeyHash,
-                    preparedData.getProofOfWork(),
+                    proofOfWork,
                     avatarVersion,
                     request.getTerms(),
                     request.getStatement()).get();
