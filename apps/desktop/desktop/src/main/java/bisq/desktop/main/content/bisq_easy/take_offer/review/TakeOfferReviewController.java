@@ -125,14 +125,11 @@ public class TakeOfferReviewController implements Controller {
                     .ifPresent(model::setTakersQuoteSideAmount);
         }
 
-        PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
-        model.setSellersPriceSpec(priceSpec);
-
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
         priceQuote.ifPresent(priceInput::setQuote);
 
         applyPriceQuote(priceQuote);
-        applyPriceDetails(priceSpec, market);
+        applyPriceDetails(bisqEasyOffer.getPriceSpec(), market);
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {
@@ -192,7 +189,7 @@ public class TakeOfferReviewController implements Controller {
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
-        PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
+        PriceSpec sellersPriceSpec = bisqEasyOffer.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
                 bisqEasyOffer,
