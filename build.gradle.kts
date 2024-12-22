@@ -70,7 +70,6 @@ tasks.register("publishAll") {
         listOf(
             ":account:publishToMavenLocal",
             ":application:publishToMavenLocal",
-//            ":bisq-easy:publishToMavenLocal",
             ":bonded-roles:publishToMavenLocal",
             ":chat:publishToMavenLocal",
             ":common:publishToMavenLocal",
