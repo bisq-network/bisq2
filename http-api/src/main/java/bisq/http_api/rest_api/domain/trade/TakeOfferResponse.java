@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.offer;
+package bisq.http_api.rest_api.domain.trade;
 
 public record TakeOfferResponse(String tradeId) {
 }

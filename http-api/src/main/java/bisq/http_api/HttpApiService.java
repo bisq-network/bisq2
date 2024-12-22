@@ -26,6 +26,7 @@ import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offer.OfferRestApi;
 import bisq.http_api.rest_api.domain.offerbook.OfferbookRestApi;
+import bisq.http_api.rest_api.domain.trade.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.http_api.web_socket.WebSocketService;
@@ -68,6 +69,11 @@ public class HttpApiService implements Service {
                     userService,
                     supportedService,
                     tradeService);
+            TradeRestApi tradeRestApi = new TradeRestApi(chatService,
+                    bondedRolesService.getMarketPriceService(),
+                    userService,
+                    supportedService,
+                    tradeService);
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
 
@@ -75,6 +81,7 @@ public class HttpApiService implements Service {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         offerRestApi,
+                        tradeRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi);
                 this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
@@ -86,6 +93,7 @@ public class HttpApiService implements Service {
                 var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         offerRestApi,
+                        tradeRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi);
                 this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
