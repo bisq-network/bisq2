@@ -17,16 +17,22 @@
 
 package bisq.offer.payment_method;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.*;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class PaymentMethodSpecUtil {
+    public static BitcoinPaymentMethod getBitcoinPaymentMethod(String paymentMethod) {
+        return BitcoinPaymentMethodUtil.getPaymentMethod(paymentMethod);
+    }
+
+    public static FiatPaymentMethod getFiatPaymentMethod(String paymentMethod) {
+        return FiatPaymentMethodUtil.getPaymentMethod(paymentMethod);
+    }
+
+
     public static List<BitcoinPaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPaymentMethod> paymentMethods) {
         return paymentMethods.stream()
                 .map(BitcoinPaymentMethodSpec::new)
