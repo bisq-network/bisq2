@@ -191,11 +191,6 @@ public final class Coin extends Monetary {
         return new Coin(this.value / divisor, this.code, this.precision);
     }
 
-    @Override
-    public double toDouble(long value) {
-        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
-    }
-
     private static int derivePrecision(String code) {
         if (code.equals("XMR")) return 12;
         if (code.equals("BSQ")) return 2;
@@ -204,7 +199,7 @@ public final class Coin extends Monetary {
 
     public Coin round(int roundPrecision) {
         //todo (low prio) add tests
-        double rounded = MathUtils.roundDouble(toDouble(value), roundPrecision);
+        double rounded = MathUtils.roundDouble(asDouble(), roundPrecision);
         long shifted = BigDecimal.valueOf(rounded).movePointRight(precision).longValue();
         return Coin.fromValue(shifted, code, precision);
     }
