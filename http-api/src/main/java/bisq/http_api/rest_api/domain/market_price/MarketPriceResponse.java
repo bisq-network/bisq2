@@ -17,20 +17,14 @@
 
 package bisq.http_api.rest_api.domain.market_price;
 
+import bisq.dto.common.monetary.PriceQuoteDto;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
 
 import java.util.Map;
 
 /**
  * Response DTO for market price quotes.
  */
-@Getter
-public class MarketPriceResponse {
-    @Schema(description = "Map of currency codes to market price quotes")
-    private final Map<String, Long> quotes;
-
-    public MarketPriceResponse(Map<String, Long> quotes) {
-        this.quotes = quotes;
-    }
+public record MarketPriceResponse(
+        @Schema(description = "Map of currency codes to market price quotes") Map<String, PriceQuoteDto> quotes) {
 }
