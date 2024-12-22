@@ -17,18 +17,5 @@
 
 package bisq.http_api.rest_api.domain.offer;
 
-import bisq.dto.common.currency.MarketDto;
-import bisq.dto.offer.DirectionDto;
-import bisq.dto.offer.amount.spec.AmountSpecDto;
-import bisq.dto.offer.price.spec.PriceSpecDto;
-
-import java.util.Set;
-
-public record PublishOfferRequest(DirectionDto direction,
-                                  MarketDto market,
-                                  Set<String> bitcoinPaymentMethods,
-                                  Set<String> fiatPaymentMethods,
-                                  AmountSpecDto amountSpec,
-                                  PriceSpecDto priceSpec,
-                                  Set<String> supportedLanguageCodes) {
+public record CreateOfferResponse(String offerId) {
 }

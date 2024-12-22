@@ -15,16 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.market_price;
+package bisq.http_api.rest_api.domain.offer;
 
-import bisq.dto.common.monetary.PriceQuoteDto;
-import io.swagger.v3.oas.annotations.media.Schema;
+import bisq.dto.common.currency.MarketDto;
+import bisq.dto.offer.DirectionDto;
+import bisq.dto.offer.amount.spec.AmountSpecDto;
+import bisq.dto.offer.price.spec.PriceSpecDto;
 
-import java.util.Map;
+import java.util.Set;
 
-/**
- * Response DTO for market price quotes.
- */
-public record MarketPriceResponse(
-        @Schema(description = "Map of currency codes to market price quotes") Map<String, PriceQuoteDto> quotes) {
+public record CreateOfferRequest(DirectionDto direction,
+                                 MarketDto market,
+                                 Set<String> bitcoinPaymentMethods,
+                                 Set<String> fiatPaymentMethods,
+                                 AmountSpecDto amountSpec,
+                                 PriceSpecDto priceSpec,
+                                 Set<String> supportedLanguageCodes) {
 }

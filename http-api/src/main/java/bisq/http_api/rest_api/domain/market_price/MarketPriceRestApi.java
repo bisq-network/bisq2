@@ -60,7 +60,7 @@ public class MarketPriceRestApi extends RestApiBase {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Market price quotes retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = MarketPriceResponse.class))
+                            content = @Content(schema = @Schema(implementation = QuotesResponse.class))
                     ),
                     @ApiResponse(responseCode = "404", description = "Market price quotes not found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -81,7 +81,7 @@ public class MarketPriceRestApi extends RestApiBase {
                 return buildNotFoundResponse("No market price quotes found.");
             }
 
-            return buildOkResponse(new MarketPriceResponse(result));
+            return buildOkResponse(new QuotesResponse(result));
         } catch (Exception ex) {
             log.error("Failed to retrieve market price quotes", ex);
             return buildErrorResponse("An error occurred while retrieving market prices.");

@@ -36,6 +36,8 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.AsyncResponse;
+import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +46,7 @@ import java.security.KeyPair;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,17 +66,21 @@ public class UserIdentityRestApi extends RestApiBase {
     }
 
     @GET
-    @Path("/preparation")
+    @Path("/key-material")
     @Operation(
             summary = "Generate Prepared Data",
             description = "Generates a key pair, public key hash, Nym, and proof of work for a new user identity.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Prepared data generated successfully",
-                            content = @Content(schema = @Schema(implementation = UserIdentityPreparation.class))),
+                            content = @Content(schema = @Schema(implementation = KeyMaterialResponse.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response getUserIdentityPreparation() {
+    public void getKeyMaterial(@Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(5, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
         try {
             KeyPair keyPair = securityService.getKeyBundleService().generateKeyPair();
             byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
@@ -82,13 +89,64 @@ public class UserIdentityRestApi extends RestApiBase {
             String nym = NymIdGenerator.generate(pubKeyHash, proofOfWork.getSolution());
             KeyPairDto keyPairDto = DtoMappings.KeyPairDtoMapping.from(keyPair);
             ProofOfWorkDto proofOfWorkDto = DtoMappings.ProofOfWorkDtoMapping.from(proofOfWork);
-            UserIdentityPreparation userIdentityPreparation = UserIdentityPreparation.from(keyPairDto, id, nym, proofOfWorkDto);
-            return buildResponse(Response.Status.CREATED, userIdentityPreparation);
+            KeyMaterialResponse keyMaterialResponse = KeyMaterialResponse.from(keyPairDto, id, nym, proofOfWorkDto);
+            asyncResponse.resume(buildResponse(Response.Status.CREATED, keyMaterialResponse));
         } catch (Exception e) {
             log.error("Error generating prepared data", e);
-            return buildErrorResponse("Could not generate prepared data.");
+            asyncResponse.resume(buildErrorResponse("Could not generate prepared data."));
         }
     }
+
+
+    @POST
+    @Operation(
+            summary = "Create User Identity and Publish User Profile",
+            description = "Creates a new user identity and publishes the associated user profile.",
+            requestBody = @RequestBody(
+                    description = "Request payload containing user nickname, terms, statement, and prepared data.",
+                    content = @Content(schema = @Schema(implementation = CreateUserIdentityRequest.class))
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "User identity created successfully",
+                            content = @Content(schema = @Schema(example = "{ \"userProfileId\": \"d22d7b62ef442b5df03378f134bc8f54a2171cba\" }"))),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public void createUserIdentity(CreateUserIdentityRequest request,
+                                   @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+
+        try {
+            KeyMaterialResponse keyMaterialResponse = request.getKeyMaterialResponse();
+            KeyPairDto keyPairDto = keyMaterialResponse.getKeyPair();
+            KeyPair keyPair = DtoMappings.KeyPairDtoMapping.toPojo(keyPairDto);
+            byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
+            int avatarVersion = 0;
+            ProofOfWorkDto proofOfWorkDto = keyMaterialResponse.getProofOfWork();
+            ProofOfWork proofOfWork = DtoMappings.ProofOfWorkDtoMapping.toPojo(proofOfWorkDto);
+            UserIdentity userIdentity = userIdentityService.createAndPublishNewUserProfile(request.getNickName(),
+                    keyPair,
+                    pubKeyHash,
+                    proofOfWork,
+                    avatarVersion,
+                    request.getTerms(),
+                    request.getStatement()).get();
+
+            asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateUserIdentityResponse(userIdentity.getId())));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
+        } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred."));
+        }
+    }
+
 
     @GET
     @Path("/{id}")
@@ -148,49 +206,5 @@ public class UserIdentityRestApi extends RestApiBase {
         }
         UserProfile userProfile = selectedUserIdentity.getUserProfile();
         return buildOkResponse(userProfile);
-    }
-
-    // todo use AsyncResponse
-    @POST
-    @Operation(
-            summary = "Create User Identity and Publish User Profile",
-            description = "Creates a new user identity and publishes the associated user profile.",
-            requestBody = @RequestBody(
-                    description = "Request payload containing user nickname, terms, statement, and prepared data.",
-                    content = @Content(schema = @Schema(implementation = CreateUserIdentityRequest.class))
-            ),
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "User identity created successfully",
-                            content = @Content(schema = @Schema(example = "{ \"userProfileId\": \"d22d7b62ef442b5df03378f134bc8f54a2171cba\" }"))),
-                    @ApiResponse(responseCode = "400", description = "Invalid input"),
-                    @ApiResponse(responseCode = "500", description = "Internal server error")
-            }
-    )
-    public Response createAndPublishNewUserProfile(CreateUserIdentityRequest request) {
-        try {
-            UserIdentityPreparation userIdentityPreparation = request.getUserIdentityPreparation();
-            KeyPairDto keyPairDto = userIdentityPreparation.getKeyPair();
-            KeyPair keyPair = DtoMappings.KeyPairDtoMapping.toPojo(keyPairDto);
-            byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
-            int avatarVersion = 0;
-            ProofOfWorkDto proofOfWorkDto = userIdentityPreparation.getProofOfWork();
-            ProofOfWork proofOfWork = DtoMappings.ProofOfWorkDtoMapping.toPojo(proofOfWorkDto);
-            UserIdentity userIdentity = userIdentityService.createAndPublishNewUserProfile(request.getNickName(),
-                    keyPair,
-                    pubKeyHash,
-                    proofOfWork,
-                    avatarVersion,
-                    request.getTerms(),
-                    request.getStatement()).get();
-            return buildResponse(Response.Status.CREATED, new UserProfileResponse(userIdentity.getId()));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return buildErrorResponse("Thread was interrupted.");
-        } catch (IllegalArgumentException e) {
-            return buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage());
-        } catch (Exception e) {
-            log.error("Error creating user identity", e);
-            return buildErrorResponse("An unexpected error occurred.");
-        }
     }
 }

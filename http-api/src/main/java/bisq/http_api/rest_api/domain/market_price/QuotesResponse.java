@@ -15,20 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.user_identity;
+package bisq.http_api.rest_api.domain.market_price;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.dto.common.monetary.PriceQuoteDto;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
 
-@Getter
-@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile ID.")
-public class UserProfileResponse {
-    private final String userProfileId;
+import java.util.Map;
 
-    @JsonCreator
-    public UserProfileResponse(@JsonProperty("userProfileId") String userProfileId) {
-        this.userProfileId = userProfileId;
-    }
+/**
+ * Response DTO for market price quotes.
+ */
+public record QuotesResponse(
+        @Schema(description = "Map of currency codes to market price quotes") Map<String, PriceQuoteDto> quotes) {
 }

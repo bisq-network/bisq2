@@ -23,8 +23,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(name = "UserIdentityPreparation")
-public final class UserIdentityPreparation {
+@Schema(name = "KeyMaterial")
+public final class KeyMaterialResponse {
     @Schema(description = "Key pair",
             example = "{ \"privateKey\": \"MIGNAgEAMBAGByqGSM49AgEGBSuBBAAKBHYwdAIBAQQgky6PNO163DColHrGmSNMgY93amwpAO8ZA8/Pb+Xl5magBwYFK4EEAAqhRANCAARyZim9kPgZixR2+ALUs72fO2zzSkeV89w4oQpkRUct5ob4yHRIIwwrggjoCGmNUWqX/pNA18R46vNYTp8NWuSu\", \"publicKey\": \"MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEcmYpvZD4GYsUdvgC1LO9nzts80pHlfPcOKEKZEVHLeaG+Mh0SCMMK4II6AhpjVFql/6TQNfEeOrzWE6fDVrkrg==\" }")
     private KeyPairDto keyPair;
@@ -32,12 +32,10 @@ public final class UserIdentityPreparation {
     private String id;
     @Schema(description = "Nym", example = "Ravenously-Poignant-Coordinate-695")
     private String nym;
-    @Schema(description = "User statement",
-            example = "{ \"payload\": \"[-80, -19, -60, 119, -20, -106, 115, 121, -122, 122, -28, 75, 30, 3, 15, -92, -8, -26, -125, 39]\", \"counter\": 93211, \"difficulty\": 65536.0, \"solution\": [0, 0, 0, 0, 0, 1, 108, 27], \"duration\": 19 }")
     private ProofOfWorkDto proofOfWork;
 
-    public static UserIdentityPreparation from(KeyPairDto keyPair, String id, String nym, ProofOfWorkDto proofOfWork) {
-        UserIdentityPreparation dto = new UserIdentityPreparation();
+    public static KeyMaterialResponse from(KeyPairDto keyPair, String id, String nym, ProofOfWorkDto proofOfWork) {
+        KeyMaterialResponse dto = new KeyMaterialResponse();
         dto.keyPair = keyPair;
         dto.id = id;
         dto.nym = nym;

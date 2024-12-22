@@ -15,7 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.offer;
+package bisq.http_api.rest_api.domain.user_identity;
 
-public record PublishOfferResponse(String offerId) {
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+
+@Getter
+@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile ID.")
+public class CreateUserIdentityResponse {
+    private final String userProfileId;
+
+    @JsonCreator
+    public CreateUserIdentityResponse(@JsonProperty("userProfileId") String userProfileId) {
+        this.userProfileId = userProfileId;
+    }
 }

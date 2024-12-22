@@ -102,7 +102,7 @@ public class OfferRestApi extends RestApiBase {
             description = "Creates a Bisq Easy Offer and publish it to the network.",
             requestBody = @RequestBody(
                     description = "",
-                    content = @Content(schema = @Schema(implementation = PublishOfferRequest.class))
+                    content = @Content(schema = @Schema(implementation = CreateOfferRequest.class))
             ),
             responses = {
                     @ApiResponse(responseCode = "201", description = "",
@@ -111,7 +111,7 @@ public class OfferRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public void createOffer(PublishOfferRequest request, @Suspended AsyncResponse asyncResponse) {
+    public void createOffer(CreateOfferRequest request, @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
         asyncResponse.setTimeoutHandler(response -> {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
@@ -157,14 +157,13 @@ public class OfferRestApi extends RestApiBase {
                     new Date().getTime(),
                     false);
             bisqEasyOfferbookChannelService.publishChatMessage(myOfferMessage, userIdentity).get();
-            asyncResponse.resume(buildResponse(Response.Status.CREATED, new PublishOfferResponse(bisqEasyOffer.getId())));
+            asyncResponse.resume(buildResponse(Response.Status.CREATED, new CreateOfferResponse(bisqEasyOffer.getId())));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
-            log.error("Error publishing offer", e);
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred."));
         }
     }

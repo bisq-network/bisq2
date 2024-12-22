@@ -30,7 +30,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.http_api.rest_api.domain.RestApiBase;
-import bisq.http_api.rest_api.domain.offer.PublishOfferRequest;
+import bisq.http_api.rest_api.domain.offer.CreateOfferRequest;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
@@ -105,7 +105,7 @@ public class TradeRestApi extends RestApiBase {
             description = "Create a Trade by Taking a Bisq Easy Offer.",
             requestBody = @RequestBody(
                     description = "",
-                    content = @Content(schema = @Schema(implementation = PublishOfferRequest.class))
+                    content = @Content(schema = @Schema(implementation = CreateOfferRequest.class))
             ),
             responses = {
                     @ApiResponse(responseCode = "201", description = "",
@@ -193,7 +193,6 @@ public class TradeRestApi extends RestApiBase {
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
-            log.error("Error publishing offer", e);
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred."));
         }
     }
