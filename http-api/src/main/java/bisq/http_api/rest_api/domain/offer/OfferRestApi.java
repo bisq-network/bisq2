@@ -53,6 +53,8 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.container.AsyncResponse;
+import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -108,7 +111,11 @@ public class OfferRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response createOffer(PublishOfferRequest request) {
+    public void createOffer(PublishOfferRequest request, @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
         try {
             UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
             Direction direction = DtoMappings.DirectionMapping.toPojo(request.direction());
@@ -150,15 +157,15 @@ public class OfferRestApi extends RestApiBase {
                     new Date().getTime(),
                     false);
             bisqEasyOfferbookChannelService.publishChatMessage(myOfferMessage, userIdentity).get();
-            return buildResponse(Response.Status.CREATED, new PublishOfferResponse(bisqEasyOffer.getId()));
+            asyncResponse.resume(buildResponse(Response.Status.CREATED, new PublishOfferResponse(bisqEasyOffer.getId())));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return buildErrorResponse("Thread was interrupted.");
+            asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (IllegalArgumentException e) {
-            return buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage());
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
             log.error("Error publishing offer", e);
-            return buildErrorResponse("An unexpected error occurred.");
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred."));
         }
     }
 }
