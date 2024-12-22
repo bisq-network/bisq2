@@ -39,7 +39,7 @@ public class SubscriberRepository {
     public void add(SubscriptionRequest request, WebSocket webSocket) {
         Topic topic = request.getTopic();
         Optional<String> parameter = StringUtils.toOptional(request.getParameter());
-        Subscriber subscriber = new Subscriber(topic, parameter, request.getRequestId(), webSocket, request.getWebSocketEventClassName());
+        Subscriber subscriber = new Subscriber(topic, parameter, request.getRequestId(), webSocket);
         synchronized (subscribersByTopicLock) {
             Set<Subscriber> subscribers = subscribersByTopic.computeIfAbsent(topic, key -> new HashSet<>());
             subscribers.add(subscriber);

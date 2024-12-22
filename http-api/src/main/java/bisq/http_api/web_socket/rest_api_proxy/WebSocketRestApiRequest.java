@@ -17,6 +17,7 @@
 
 package bisq.http_api.web_socket.rest_api_proxy;
 
+import bisq.http_api.web_socket.WebSocketMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
@@ -29,15 +30,13 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class WebSocketRestApiRequest {
+public class WebSocketRestApiRequest implements WebSocketMessage {
     // Client side full qualified class name for response class required for polymorphism support
     private String responseClassName;
     private String requestId;
     private String path;
     private String method;
     private String body;
-    // Client side full qualified class name set by serialize to support polymorphism
-    private String className;
 
     public static boolean isExpectedJson(String message) {
         return message.contains("requestId") &&

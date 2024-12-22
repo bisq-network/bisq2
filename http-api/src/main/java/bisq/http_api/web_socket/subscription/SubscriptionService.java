@@ -87,7 +87,7 @@ public class SubscriptionService implements Service {
 
         findWebSocketService(request.getTopic())
                 .flatMap(BaseWebSocketService::getJsonPayload)
-                .flatMap(json -> new SubscriptionResponse(request.getResponseClassName(), request.getRequestId(), json, null)
+                .flatMap(json -> new SubscriptionResponse(request.getRequestId(), json, null)
                         .toJson(objectMapper))
                 .ifPresent(webSocket::send);
     }

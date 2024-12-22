@@ -17,6 +17,7 @@
 
 package bisq.http_api.web_socket.subscription;
 
+import bisq.http_api.web_socket.WebSocketMessage;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,9 +33,7 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class WebSocketEvent {
-    // Client side full qualified class name required for polymorphism support
-    private final String className;
+public class WebSocketEvent implements WebSocketMessage {
     private final Topic topic;
     private final String subscriberId;
     private final String payload;
@@ -42,13 +41,11 @@ public class WebSocketEvent {
     private final int sequenceNumber;
 
     @JsonCreator
-    public WebSocketEvent(@JsonProperty("className") String className,
-                          @JsonProperty("topic") Topic topic,
+    public WebSocketEvent(@JsonProperty("topic") Topic topic,
                           @JsonProperty("subscriberId") String subscriberId,
                           @JsonProperty("payload") String payload,
                           @JsonProperty("modificationType") ModificationType modificationType,
                           @JsonProperty("sequenceNumber") int sequenceNumber) {
-        this.className = className;
         this.topic = topic;
         this.subscriberId = subscriberId;
         this.payload = payload;
@@ -57,14 +54,13 @@ public class WebSocketEvent {
     }
 
     public static Optional<String> toJson(ObjectMapper objectMapper,
-                                          String className,
                                           Topic topic,
                                           String subscriberId,
                                           String payload,
                                           ModificationType modificationType,
                                           int sequenceNumber) {
         try {
-            var webSocketEvent = new WebSocketEvent(className, topic, subscriberId, payload, modificationType, sequenceNumber);
+            var webSocketEvent = new WebSocketEvent(topic, subscriberId, payload, modificationType, sequenceNumber);
             return Optional.of(objectMapper.writeValueAsString(webSocketEvent));
         } catch (JsonProcessingException e) {
             log.error("Json serialisation failed", e);

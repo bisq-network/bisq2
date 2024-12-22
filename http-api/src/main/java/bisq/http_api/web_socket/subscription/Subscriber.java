@@ -37,20 +37,17 @@ public class Subscriber {
     private final Optional<String> parameter;
     private final String subscriberId;
     private final WebSocket webSocket;
-    private final String webSocketEventClassName;
     private final AtomicInteger sequenceNumber = new AtomicInteger(0); // sequenceNumber start with 0 at subscribe time and gets increased at each emitted WebSocketEvent
     private final ExecutorService executorService;
 
     public Subscriber(Topic topic,
                       Optional<String> parameter,
                       String subscriberId,
-                      WebSocket webSocket,
-                      String webSocketEventClassName) {
+                      WebSocket webSocket) {
         this.topic = topic;
         this.parameter = parameter;
         this.subscriberId = subscriberId;
         this.webSocket = webSocket;
-        this.webSocketEventClassName = webSocketEventClassName;
         executorService = ExecutorFactory.newSingleThreadExecutor("Subscriber-" + topic.name() + "-" + subscriberId);
     }
 
