@@ -20,6 +20,7 @@ package bisq.http_api.web_socket.rest_api_proxy;
 import bisq.common.application.Service;
 import bisq.http_api.web_socket.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -76,7 +77,7 @@ public class WebSocketRestApiService implements Service {
         String errorMessage = RequestValidation.validateRequest(request);
         if (errorMessage != null) {
             log.error(errorMessage);
-            return new WebSocketRestApiResponse(request.getResponseClassName(), request.getRequestId(), 400, errorMessage);
+            return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.BAD_REQUEST.getStatusCode(), errorMessage);
         }
 
         String url = restApiAddress + request.getPath();
@@ -91,14 +92,13 @@ public class WebSocketRestApiService implements Service {
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Send {} httpRequest to {}. httpRequest={} ", method, url, httpRequest);
             // Blocking send
-            HttpClient httpClient1 = httpClient.orElseThrow();
-            HttpResponse<String> httpResponse = httpClient1.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> httpResponse = httpClient.orElseThrow().send(httpRequest, HttpResponse.BodyHandlers.ofString());
             log.info("httpResponse {}", httpResponse);
-            return new WebSocketRestApiResponse(request.getResponseClassName(), request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
+            return new WebSocketRestApiResponse( request.getRequestId(), httpResponse.statusCode(), httpResponse.body());
         } catch (Exception e) {
             errorMessage = String.format("Error at sending a '%s' request to '%s' with body: '%s'. Error: %s", method, url, body, e.getMessage());
             log.error(errorMessage, e);
-            return new WebSocketRestApiResponse(request.getResponseClassName(), request.getRequestId(), 500, errorMessage);
+            return new WebSocketRestApiResponse(request.getRequestId(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMessage);
         }
     }
 }

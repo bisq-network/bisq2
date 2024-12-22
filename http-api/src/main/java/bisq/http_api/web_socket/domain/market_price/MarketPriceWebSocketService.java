@@ -23,6 +23,8 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.dto.DtoMappings;
+import bisq.dto.common.monetary.PriceQuoteDto;
 import bisq.http_api.web_socket.domain.SimpleObservableWebSocketService;
 import bisq.http_api.web_socket.subscription.SubscriberRepository;
 import bisq.http_api.web_socket.subscription.Topic;
@@ -34,7 +36,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MarketPriceWebSocketService extends SimpleObservableWebSocketService<ObservableHashMap<Market, MarketPrice>, Map<String, Long>> {
+public class MarketPriceWebSocketService extends SimpleObservableWebSocketService<ObservableHashMap<Market, MarketPrice>, Map<String, PriceQuoteDto>> {
     private final MarketPriceService marketPriceService;
 
     public MarketPriceWebSocketService(ObjectMapper objectMapper,
@@ -50,16 +52,21 @@ public class MarketPriceWebSocketService extends SimpleObservableWebSocketServic
     }
 
     @Override
-    protected HashMap<String, Long> toPayload(ObservableHashMap<Market, MarketPrice> observable) {
+    protected HashMap<String, PriceQuoteDto> toPayload(ObservableHashMap<Market, MarketPrice> observable) {
         return getObservable()
                 .entrySet().stream()
-                .filter(entry -> entry.getKey().getBaseCurrencyCode().equals("BTC")) // We get altcoin quotes as well which have BTC as quote currency
+                .filter(MarketPriceWebSocketService::isBaseCurrencyBtc)
                 .collect(Collectors.toMap(
                         entry -> entry.getKey().getQuoteCurrencyCode(),
-                        entry -> entry.getValue().getPriceQuote().getValue(),
+                        entry -> DtoMappings.PriceQuoteMapping.from(entry.getValue().getPriceQuote()),
                         (existing, replacement) -> existing,
                         HashMap::new
                 ));
+    }
+
+    private static boolean isBaseCurrencyBtc(Map.Entry<Market, MarketPrice> entry) {
+        // We get altcoin quotes as well which have BTC as quote currency
+        return entry.getKey().getBaseCurrencyCode().equals("BTC");
     }
 
     @Override

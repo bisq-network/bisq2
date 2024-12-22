@@ -150,6 +150,7 @@ public class UserIdentityRestApi extends RestApiBase {
         return buildOkResponse(userProfile);
     }
 
+    // todo use AsyncResponse
     @POST
     @Operation(
             summary = "Create User Identity and Publish User Profile",

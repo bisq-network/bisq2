@@ -1,6 +1,7 @@
 package bisq.http_api.rest_api;
 
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
+import bisq.http_api.rest_api.domain.offer.OfferRestApi;
 import bisq.http_api.rest_api.domain.offerbook.OfferbookRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 public class RestApiResourceConfig extends BaseRestApiResourceConfig {
     public RestApiResourceConfig(String swaggerBaseUrl,
                                  OfferbookRestApi offerbookRestApi,
+                                 OfferRestApi offerRestApi,
                                  UserIdentityRestApi userIdentityRestApi ,
                                  MarketPriceRestApi marketPriceRestApi) {
         super(swaggerBaseUrl);
@@ -22,6 +24,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         // As we want to pass the dependencies in the constructor, so we need the hack
         // with AbstractBinder to register resources as classes for Swagger
         register(OfferbookRestApi.class);
+        register(OfferRestApi.class);
         register(UserIdentityRestApi.class);
         register(MarketPriceRestApi.class);
 
@@ -29,6 +32,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
             @Override
             protected void configure() {
                 bind(offerbookRestApi).to(OfferbookRestApi.class);
+                bind(offerRestApi).to(OfferRestApi.class);
                 bind(userIdentityRestApi).to(UserIdentityRestApi.class);
                 bind(marketPriceRestApi).to(MarketPriceRestApi.class);
             }

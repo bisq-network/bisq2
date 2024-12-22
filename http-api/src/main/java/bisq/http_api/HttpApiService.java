@@ -18,19 +18,22 @@
 package bisq.http_api;
 
 import bisq.bonded_roles.BondedRolesService;
-import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.chat.ChatService;
-import bisq.http_api.rest_api.domain.offerbook.OfferbookRestApi;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
+import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
+import bisq.http_api.rest_api.domain.offer.OfferRestApi;
+import bisq.http_api.rest_api.domain.offerbook.OfferbookRestApi;
+import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.http_api.web_socket.WebSocketService;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
+import bisq.support.SupportService;
+import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -51,18 +54,29 @@ public class HttpApiService implements Service {
                           NetworkService networkService,
                           UserService userService,
                           BondedRolesService bondedRolesService,
-                          ChatService chatService) {
+                          ChatService chatService,
+                          SupportService supportedService,
+                          TradeService tradeService) {
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
         boolean webSocketConfigEnabled = webSocketConfig.isEnabled();
         if (restApiConfigEnabled || webSocketConfigEnabled) {
             OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService.getBisqEasyOfferbookChannelService(),
                     bondedRolesService.getMarketPriceService(),
                     userService);
+            OfferRestApi offerRestApi = new OfferRestApi(chatService,
+                    bondedRolesService.getMarketPriceService(),
+                    userService,
+                    supportedService,
+                    tradeService);
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
 
             if (restApiConfigEnabled) {
-                var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(), offerbookRestApi, userIdentityRestApi, marketPriceRestApi);
+                var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
+                        offerbookRestApi,
+                        offerRestApi,
+                        userIdentityRestApi,
+                        marketPriceRestApi);
                 this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
             } else {
                 this.restApiService = Optional.empty();
@@ -71,6 +85,7 @@ public class HttpApiService implements Service {
             if (webSocketConfigEnabled) {
                 var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
+                        offerRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi);
                 this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
