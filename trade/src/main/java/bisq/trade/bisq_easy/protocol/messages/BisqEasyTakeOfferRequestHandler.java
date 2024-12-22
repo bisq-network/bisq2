@@ -150,7 +150,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         Market market = takersOffer.getMarket();
         MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(market);
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService,
-                takersContract.getAgreedPriceSpec(), market);
+                takersContract.getPriceSpec(), market);
         Optional<Monetary> amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
                 market.getQuoteCurrencyCode())));
 

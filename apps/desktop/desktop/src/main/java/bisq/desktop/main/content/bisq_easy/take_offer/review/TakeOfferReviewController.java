@@ -189,7 +189,7 @@ public class TakeOfferReviewController implements Controller {
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
-        PriceSpec sellersPriceSpec = bisqEasyOffer.getPriceSpec();
+        PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
                 bisqEasyOffer,
@@ -198,7 +198,7 @@ public class TakeOfferReviewController implements Controller {
                 bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
-                sellersPriceSpec,
+                priceSpec,
                 marketPrice);
         BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
         log.info("Selected mediator for trade {}: {}", bisqEasyTrade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));

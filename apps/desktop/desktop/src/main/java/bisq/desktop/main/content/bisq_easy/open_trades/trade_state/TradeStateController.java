@@ -169,7 +169,7 @@ public class TradeStateController implements Controller {
                             PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())));
             model.getSellerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())));
+                            PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getContract().getPriceSpec())));
         });
     }
 
@@ -526,7 +526,7 @@ public class TradeStateController implements Controller {
 
     private boolean requiresSellerPriceAcceptance() {
         PriceSpec buyerPriceSpec = model.getBisqEasyTrade().get().getOffer().getPriceSpec();
-        PriceSpec sellerPriceSpec = model.getBisqEasyTrade().get().getContract().getAgreedPriceSpec();
+        PriceSpec sellerPriceSpec = model.getBisqEasyTrade().get().getContract().getPriceSpec();
         boolean priceSpecChanged = !buyerPriceSpec.equals(sellerPriceSpec);
 
         Set<BisqEasyTradeState> validStatesToRejectPrice = Set.of(
