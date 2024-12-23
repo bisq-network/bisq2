@@ -19,11 +19,17 @@ package bisq.http_api.web_socket.domain;
 
 
 import bisq.common.application.Service;
+import bisq.dto.account.protocol_type.TradeProtocolTypeDto;
+import bisq.dto.offer.amount.spec.AmountSpecDto;
+import bisq.dto.offer.bisq_easy.OfferListItemDto;
+import bisq.dto.offer.options.OfferOptionDto;
+import bisq.dto.offer.price.spec.PriceSpecDto;
 import bisq.http_api.web_socket.subscription.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,8 +48,40 @@ public abstract class BaseWebSocketService implements Service {
 
     abstract public Optional<String> getJsonPayload();
 
+    //todo
     protected <T> Optional<String> toJson(T payload) {
         try {
+            if (payload instanceof List<?> list && list.get(0) instanceof OfferListItemDto offerListItemDto) {
+                try {
+                    PriceSpecDto value = offerListItemDto.getBisqEasyOffer().priceSpec();
+                    objectMapper.writeValueAsString(value);
+                } catch (JsonProcessingException e) {
+                    log.error("Json serialisation failed", e);
+                }
+                try {
+                    AmountSpecDto value = offerListItemDto.getBisqEasyOffer().amountSpec();
+                    objectMapper.writeValueAsString(value);
+                } catch (JsonProcessingException e) {
+                    log.error("Json serialisation failed", e);
+                }
+                try {
+                    List<OfferOptionDto> value = offerListItemDto.getBisqEasyOffer().offerOptions();
+                    objectMapper.writeValueAsString(value);
+                } catch (JsonProcessingException e) {
+                    log.error("Json serialisation failed", e);
+                }
+                try {
+                    List<TradeProtocolTypeDto> value = offerListItemDto.getBisqEasyOffer().protocolTypes();
+                    objectMapper.writeValueAsString(value);
+                } catch (JsonProcessingException e) {
+                    log.error("Json serialisation failed", e); //failed
+                }
+                try {
+                    objectMapper.writeValueAsString(offerListItemDto.getBisqEasyOffer());
+                } catch (JsonProcessingException e) {
+                    log.error("Json serialisation failed", e); //failed
+                }
+            }
             return Optional.of(objectMapper.writeValueAsString(payload));
         } catch (JsonProcessingException e) {
             log.error("Json serialisation failed", e);
@@ -73,7 +111,6 @@ public abstract class BaseWebSocketService implements Service {
                         Subscriber subscriber,
                         ModificationType modificationType) {
         WebSocketEvent.toJson(objectMapper,
-                        subscriber.getWebSocketEventClassName(),
                         subscriber.getTopic(),
                         subscriber.getSubscriberId(),
                         json,

@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@Schema(description = "Request payload for creating a new user identity.")
+@Schema(description = "Request key material for creating a new user identity.")
 public class CreateUserIdentityRequest {
     @Schema(description = "Nickname for the user", example = "Satoshi", required = true)
     private String nickName;
@@ -32,6 +32,6 @@ public class CreateUserIdentityRequest {
     @Schema(description = "User statement", example = "I am Satoshi")
     private String statement = "";
 
-    @Schema(description = "Prepared data as JSON object", required = true)
-    private PreparedData preparedData;
+    @Schema(description = "Key material for creating an user identity", required = true)
+    private KeyMaterialResponse keyMaterialResponse;
 }

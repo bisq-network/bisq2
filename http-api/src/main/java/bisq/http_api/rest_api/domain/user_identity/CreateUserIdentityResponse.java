@@ -15,24 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.offerbook;
+package bisq.http_api.rest_api.domain.user_identity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(name = "ReputationScoreDto", description = "User reputation details including total score, 5-star rating, and ranking.")
-public class ReputationScoreDto {
-    @Schema(description = "Total reputation score of the user.", example = "1500")
-    private final long totalScore;
-    @Schema(description = "5-star system equivalent score (out of 5).", example = "4.8")
-    private final double fiveSystemScore;
-    @Schema(description = "User's ranking among peers.", example = "12")
-    private final int ranking;
+@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile ID.")
+public class CreateUserIdentityResponse {
+    private final String userProfileId;
 
-    public ReputationScoreDto(long totalScore, double fiveSystemScore, int ranking) {
-        this.totalScore = totalScore;
-        this.fiveSystemScore = fiveSystemScore;
-        this.ranking = ranking;
+    @JsonCreator
+    public CreateUserIdentityResponse(@JsonProperty("userProfileId") String userProfileId) {
+        this.userProfileId = userProfileId;
     }
 }

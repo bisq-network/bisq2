@@ -115,8 +115,9 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         };
     }
 
-    public abstract double toDouble(long value);
-
+    public double toDouble(long value) {
+        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
+    }
     public double asDouble() {
         return toDouble(value);
     }

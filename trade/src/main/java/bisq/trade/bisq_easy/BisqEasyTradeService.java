@@ -229,7 +229,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                                                    BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                                    FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                                    Optional<UserProfile> mediator,
-                                                   PriceSpec agreedPriceSpec,
+                                                   PriceSpec priceSpec,
                                                    long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
@@ -244,7 +244,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
-                agreedPriceSpec,
+                priceSpec,
                 marketPrice);
         boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
         NetworkId makerNetworkId = contract.getMaker().getNetworkId();

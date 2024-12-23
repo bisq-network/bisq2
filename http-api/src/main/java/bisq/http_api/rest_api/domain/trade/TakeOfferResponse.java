@@ -15,22 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.market_price;
+package bisq.http_api.rest_api.domain.trade;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-
-import java.util.Map;
-
-/**
- * Response DTO for market price quotes.
- */
-@Getter
-public class MarketPriceResponse {
-    @Schema(description = "Map of currency codes to market price quotes")
-    private final Map<String, Long> quotes;
-
-    public MarketPriceResponse(Map<String, Long> quotes) {
-        this.quotes = quotes;
-    }
+public record TakeOfferResponse(String tradeId) {
 }

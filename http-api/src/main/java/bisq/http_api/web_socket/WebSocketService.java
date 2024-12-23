@@ -25,6 +25,7 @@ import bisq.http_api.web_socket.subscription.SubscriptionService;
 import bisq.http_api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.user.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import jakarta.ws.rs.core.UriBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -116,6 +117,8 @@ public class WebSocketService implements Service {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new Jdk8Module());
+
         //objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         subscriptionService = new SubscriptionService(objectMapper, bondedRolesService, chatService, userService);

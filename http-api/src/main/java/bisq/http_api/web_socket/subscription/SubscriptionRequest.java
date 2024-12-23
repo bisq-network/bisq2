@@ -17,6 +17,7 @@
 
 package bisq.http_api.web_socket.subscription;
 
+import bisq.http_api.web_socket.WebSocketMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.EqualsAndHashCode;
@@ -31,19 +32,11 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class SubscriptionRequest {
-    // Client side full qualified class name for response class required for polymorphism support
-    private String responseClassName;
-    // Client side full qualified class name for WebSocketEvent class required for polymorphism support
-    private String webSocketEventClassName;
+public class SubscriptionRequest implements WebSocketMessage {
     private String requestId;
     private Topic topic;
     @Nullable
     private String parameter;
-
-    // Client side full qualified class name set by serialize to support polymorphism
-    private String className;
-
 
     public static Optional<SubscriptionRequest> fromJson(ObjectMapper objectMapper, String json) {
         try {

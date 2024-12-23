@@ -86,7 +86,7 @@ public final class Fiat extends Monetary {
         super(code, faceValue, code, precision, 2);
     }
 
-    private Fiat(String id, long value, String code, int precision, int lowPrecision) {
+    public Fiat(String id, long value, String code, int precision, int lowPrecision) {
         super(id, value, code, precision, lowPrecision);
     }
 
@@ -127,13 +127,8 @@ public final class Fiat extends Monetary {
         return new Fiat(this.value / divisor, this.code, this.precision);
     }
 
-    @Override
-    public double toDouble(long value) {
-        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
-    }
-
     public Fiat round(int roundPrecision) {
-        double rounded = MathUtils.roundDouble(toDouble(value), roundPrecision);
+        double rounded = MathUtils.roundDouble(asDouble(), roundPrecision);
         long shifted = BigDecimal.valueOf(rounded).movePointRight(precision).longValue();
         return Fiat.fromValue(shifted, code, precision);
     }

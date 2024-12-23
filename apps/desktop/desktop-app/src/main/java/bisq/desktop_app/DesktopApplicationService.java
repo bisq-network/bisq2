@@ -231,7 +231,9 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 networkService,
                 userService,
                 bondedRolesService,
-                chatService);
+                chatService,
+                supportService,
+                tradeService);
     }
 
     @Override

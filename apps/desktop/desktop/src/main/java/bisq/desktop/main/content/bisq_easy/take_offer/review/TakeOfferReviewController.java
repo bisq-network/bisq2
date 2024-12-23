@@ -125,14 +125,11 @@ public class TakeOfferReviewController implements Controller {
                     .ifPresent(model::setTakersQuoteSideAmount);
         }
 
-        PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
-        model.setSellersPriceSpec(priceSpec);
-
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
         priceQuote.ifPresent(priceInput::setQuote);
 
         applyPriceQuote(priceQuote);
-        applyPriceDetails(priceSpec, market);
+        applyPriceDetails(bisqEasyOffer.getPriceSpec(), market);
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {
@@ -192,7 +189,7 @@ public class TakeOfferReviewController implements Controller {
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
-        PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
+        PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
                 bisqEasyOffer,
@@ -201,7 +198,7 @@ public class TakeOfferReviewController implements Controller {
                 bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
-                sellersPriceSpec,
+                priceSpec,
                 marketPrice);
         BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
         log.info("Selected mediator for trade {}: {}", bisqEasyTrade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
@@ -335,8 +332,7 @@ public class TakeOfferReviewController implements Controller {
         marketPrice.ifPresent(price -> model.setMarketPrice(price.getPriceQuote().getValue()));
         Optional<PriceQuote> marketPriceQuote = marketPrice.map(MarketPrice::getPriceQuote);
         String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElse(Res.get("data.na"));
-        Optional<Double> percentFromMarketPrice;
-        percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
+        Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
         double percent = percentFromMarketPrice.orElse(0d);
         if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
             model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails", marketPriceAsString));

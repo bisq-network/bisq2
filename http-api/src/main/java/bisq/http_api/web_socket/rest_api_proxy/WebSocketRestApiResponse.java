@@ -17,6 +17,7 @@
 
 package bisq.http_api.web_socket.rest_api_proxy;
 
+import bisq.http_api.web_socket.WebSocketMessage;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,19 +33,15 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class WebSocketRestApiResponse {
-    // Client side full qualified class name required for polymorphism support
-    private final String className;
+public class WebSocketRestApiResponse implements WebSocketMessage {
     private final String requestId;
     private final int statusCode;
     private final String body;
 
     @JsonCreator
-    public WebSocketRestApiResponse(@JsonProperty("className") String className,
-                                    @JsonProperty("requestId") String requestId,
+    public WebSocketRestApiResponse(@JsonProperty("requestId") String requestId,
                                     @JsonProperty("statusCode") int statusCode,
                                     @JsonProperty("body") String body) {
-        this.className = className;
         this.requestId = requestId;
         this.statusCode = statusCode;
         this.body = body;

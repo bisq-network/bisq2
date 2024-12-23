@@ -21,14 +21,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JsonUtil {
-    // We use by convention same class name. We get the className field set by the client.
+    // We use by convention same class name. We get the type field set by the client.
     public static boolean hasExpectedJsonClassName(Class<?> clazz, String json) {
-        String regex = "\"className\":\"[^\"]*\\.([^\"]+)\"";
+        String regex = "\"type\":\\s*\"([^\"]+)\""; // We use simple name
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(json);
         if (matcher.find()) {
-            String className = matcher.group(1);
-            return clazz.getSimpleName().equals(className);
+            String type = matcher.group(1);
+            String simpleName = clazz.getSimpleName();
+            return simpleName.equals(type);
         } else {
             return false;
         }

@@ -78,7 +78,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
         );
     }
 
-    private BisqEasyOffer(String id,
+    public BisqEasyOffer(String id,
                           long date,
                           NetworkId makerNetworkId,
                           Direction direction,
@@ -101,7 +101,9 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
-        this.supportedLanguageCodes = supportedLanguageCodes;
+
+        // We might get an immutable list, but we need to sort it, so wrap it into an ArrayList
+        this.supportedLanguageCodes = new ArrayList<>(supportedLanguageCodes);
         Collections.sort(this.supportedLanguageCodes);
 
         verify();

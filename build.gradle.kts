@@ -10,17 +10,18 @@ tasks.register("buildAll") {
     doLast {
         listOf(
             "build",
-            ":wallets:build",
-            ":apps:seed-node-app:build",
-            ":apps:seed-node-app:installDist",
+            //":apps:seed-node-app:installDist",
+            ":apps:desktop:desktop:build",
             ":apps:desktop:desktop-app:build",
-            ":apps:desktop:desktop-app:installDist",
-            ":apps:desktop:desktop-app-launcher:generateInstallers",
+            ":apps:desktop:desktop-app-launcher:build",
+            //":apps:desktop:desktop-app:installDist",
+           // ":apps:desktop:desktop-app-launcher:generateInstallers",
             ":apps:desktop:webcam-app:build",
-            ":apps:oracle-node-app:build",
             ":apps:http-api-app:build",
             ":apps:node-monitor-web-app:build",
-//            ":REPLACEME:build",
+            ":apps:oracle-node-app:build",
+            ":apps:seed-node-app:build",
+            ":wallets:build",
         ).forEach {
             exec {
                 println("Executing Build: $it")
@@ -69,7 +70,6 @@ tasks.register("publishAll") {
         listOf(
             ":account:publishToMavenLocal",
             ":application:publishToMavenLocal",
-//            ":bisq-easy:publishToMavenLocal",
             ":bonded-roles:publishToMavenLocal",
             ":chat:publishToMavenLocal",
             ":common:publishToMavenLocal",

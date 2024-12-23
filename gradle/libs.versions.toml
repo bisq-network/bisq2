@@ -129,6 +129,8 @@ i2p-router = { module = 'net.i2p:router', version.ref = 'i2p-lib' }
 jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref = 'jackson-lib' }
 jackson-annotations = { module = 'com.fasterxml.jackson.core:jackson-annotations', version.ref = 'jackson-lib' }
 jackson-databind = { module = 'com.fasterxml.jackson.core:jackson-databind', version.ref = 'jackson-lib' }
+jackson-datatype = { module = 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8', version.ref = 'jackson-lib' }
+
 jakarta-websocket = { module = 'jakarta.websocket:jakarta.websocket-api', version.ref = 'jakarta-lib' }
 
 javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
@@ -177,13 +179,13 @@ glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson'
 grpc = ['grpc-protobuf', 'grpc-services', 'grpc-stub']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
 i2p-v2 = ['i2p-core-v2', 'i2p-streaming-v2']
-jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind']
+jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
 springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swagger-ui']
 rest-api-libs = ['swagger-jaxrs2-jakarta', 'glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson',
-    'glassfish-jersey-inject-hk2',
-    'glassfish-jaxb-runtime', 'jackson-core', 'jackson-annotations', 'jackson-databind']
+    'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime',
+    'jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
 websocket-libs = ['glassfish-jersey-json-jackson', 'glassfish-jersey-server', 'glassfish-jersey-containers-grizzly',
-    'glassfish-grizzly-websockets-server', 'jakarta-websocket', 'jackson-databind', 'swagger-swagger-annotations']
+    'glassfish-grizzly-websockets-server', 'jakarta-websocket', 'jackson-databind', 'jackson-datatype', 'swagger-swagger-annotations']
 
 # Referenced in subproject's build.gradle > plugin block as alias: `alias(libs.plugins.protobuf)`
 # Note: plugin version constraints are not supported by the java-platform plugin, so cannot be enforced there. However,

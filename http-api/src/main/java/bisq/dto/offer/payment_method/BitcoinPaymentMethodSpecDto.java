@@ -15,20 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.user_identity;
+package bisq.dto.offer.payment_method;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
+
+import java.util.Optional;
 
 @Getter
-@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile ID.")
-public class UserProfileResponse {
-    private final String userProfileId;
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public final class BitcoinPaymentMethodSpecDto extends PaymentMethodSpecDto {
 
     @JsonCreator
-    public UserProfileResponse(@JsonProperty("userProfileId") String userProfileId) {
-        this.userProfileId = userProfileId;
+    public BitcoinPaymentMethodSpecDto(@JsonProperty("paymentMethod") String paymentMethod, @JsonProperty("saltedMakerAccountId") Optional<String> saltedMakerAccountId) {
+        super(paymentMethod, saltedMakerAccountId);
     }
 }

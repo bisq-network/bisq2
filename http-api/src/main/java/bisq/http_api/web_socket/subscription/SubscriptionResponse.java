@@ -17,6 +17,7 @@
 
 package bisq.http_api.web_socket.subscription;
 
+import bisq.http_api.web_socket.WebSocketMessage;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,9 +35,7 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class SubscriptionResponse {
-    // Client side full qualified class name required for polymorphism support
-    private final String className;
+public class SubscriptionResponse implements WebSocketMessage {
     private final String requestId;
     @Nullable
     private final String payload;
@@ -44,11 +43,9 @@ public class SubscriptionResponse {
     private final String errorMessage;
 
     @JsonCreator
-    public SubscriptionResponse(@JsonProperty("className") String className,
-                                @JsonProperty("requestId") String requestId,
+    public SubscriptionResponse(@JsonProperty("requestId") String requestId,
                                 @JsonProperty("payload") @Nullable String payload,
                                 @JsonProperty("errorMessage") @Nullable String errorMessage) {
-        this.className = className;
         this.requestId = requestId;
         this.payload = payload;
         this.errorMessage = errorMessage;

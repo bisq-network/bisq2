@@ -133,7 +133,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
                 ApplicationVersion.getVersion().getVersionAsString());
     }
 
-    private UserProfile(int version,
+    public UserProfile(int version,
                         String nickName,
                         ProofOfWork proofOfWork,
                         int avatarVersion,
