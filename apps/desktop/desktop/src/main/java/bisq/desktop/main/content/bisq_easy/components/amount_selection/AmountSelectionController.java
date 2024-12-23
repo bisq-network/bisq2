@@ -61,9 +61,7 @@ public class AmountSelectionController implements Controller {
     private Subscription maxOrFixedBaseAmountFromModelPin, maxOrFixedBaseAmountFromCompPin, maxOrFixedQuoteAmountFromCompPin,
             maxOrFixedBaseSideAmountValidPin, maxOrFixedQuoteSideAmountValidPin, minBaseAmountFromModelPin,
             minBaseAmountFromCompPin, minQuoteAmountFromCompPin, minBaseSideAmountValidPin,
-            minQuoteSideAmountValidPin,
-
-    priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin;
+            minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin;
 
     public AmountSelectionController(ServiceProvider serviceProvider,
                                      boolean useQuoteCurrencyForMinMaxRange) {
@@ -231,7 +229,6 @@ public class AmountSelectionController implements Controller {
         model.getMaxRangeBaseSideValue().set(null);
         model.getMinRangeQuoteSideValue().set(null);
         model.getMaxRangeQuoteSideValue().set(null);
-        model.getDescription().set(Res.get("bisqEasy.tradeWizard.amount.description", model.getMarket().getQuoteCurrencyCode()));
         applyInitialRangeValues();
 
         model.getMaxOrFixedBaseSideAmount().addListener(maxOrFixedBaseSideAmountFromModelListener);
@@ -360,6 +357,14 @@ public class AmountSelectionController implements Controller {
         minBaseSideAmountValidPin = subscribeToAmountValidity(minBaseSideAmountInput, this::setMinBaseFromQuote);
         maxOrFixedQuoteSideAmountValidPin = subscribeToAmountValidity(maxOrFixedQuoteSideAmountInput, this::setMaxOrFixedQuoteFromBase);
         minQuoteSideAmountValidPin = subscribeToAmountValidity(minQuoteSideAmountInput, this::setMinQuoteFromBase);
+
+        isRangeAmountEnabledPin = EasyBind.subscribe(model.getIsRangeAmountEnabled(), isRangeAmountEnabled ->
+                model.getDescription().set(
+                        Res.get(isRangeAmountEnabled
+                                        ? "bisqEasy.tradeWizard.amount.description.range"
+                                        : "bisqEasy.tradeWizard.amount.description.fixed"
+                                , model.getMarket().getQuoteCurrencyCode())));
+
         model.getMaxOrFixedAmountSliderValue().addListener(maxOrFixedSliderListener);
         model.getMinAmountSliderValue().addListener(minSliderListener);
     }
@@ -386,6 +391,7 @@ public class AmountSelectionController implements Controller {
         minBaseSideAmountValidPin.unsubscribe();
         maxOrFixedQuoteSideAmountValidPin.unsubscribe();
         minQuoteSideAmountValidPin.unsubscribe();
+        isRangeAmountEnabledPin.unsubscribe();
         model.setLeftMarkerQuoteSideValue(null);
         model.setRightMarkerQuoteSideValue(null);
     }

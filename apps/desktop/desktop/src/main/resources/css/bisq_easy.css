@@ -745,12 +745,21 @@
     -fx-alignment: center;
 }
 
-.amount-selection .description {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
+.amount-selection .description,
+.amount-selection .description-focused {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-wrap-text: true;
+}
+
+.amount-selection .description {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.amount-selection .description-focused {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
 }
 
 .description-and-amount-box {
