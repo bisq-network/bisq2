@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.dto.DtoMappings;
 import bisq.dto.security.keys.KeyPairDto;
 import bisq.dto.security.pow.ProofOfWorkDto;
+import bisq.dto.user.profile.UserProfileDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import bisq.security.DigestUtil;
 import bisq.security.SecurityService;
@@ -28,7 +29,6 @@ import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -147,8 +146,8 @@ public class UserIdentityRestApi extends RestApiBase {
         }
     }
 
-
-    @GET
+// Create UserIdentityDto
+   /* @GET
     @Path("/{id}")
     @Operation(
             summary = "Get User Identity",
@@ -166,7 +165,7 @@ public class UserIdentityRestApi extends RestApiBase {
             return buildNotFoundResponse("Could not find user identity for ID: " + id);
         }
         return buildOkResponse(userIdentity.get());
-    }
+    }*/
 
     @GET
     @Path("/ids")
@@ -188,13 +187,13 @@ public class UserIdentityRestApi extends RestApiBase {
     }
 
     @GET
-    @Path("/selected")
+    @Path("/selected/user-profile")
     @Operation(
             summary = "Get Selected User Profile",
             description = "Retrieves the selected user profile.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Selected user profile retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = UserProfile.class))),
+                            content = @Content(schema = @Schema(implementation = UserProfileDto.class))),
                     @ApiResponse(responseCode = "404", description = "No selected user identity found"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
@@ -204,7 +203,7 @@ public class UserIdentityRestApi extends RestApiBase {
         if (selectedUserIdentity == null) {
             return buildNotFoundResponse("No selected user identity found.");
         }
-        UserProfile userProfile = selectedUserIdentity.getUserProfile();
-        return buildOkResponse(userProfile);
+        UserProfileDto userProfileDto = DtoMappings.UserProfileDtoMapping.from(selectedUserIdentity.getUserProfile());
+        return buildOkResponse(userProfileDto);
     }
 }
