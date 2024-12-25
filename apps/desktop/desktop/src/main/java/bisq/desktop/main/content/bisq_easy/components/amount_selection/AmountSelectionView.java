@@ -116,7 +116,6 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
         // rest of the component
         description = new Label();
-        description.getStyleClass().add("description");
         description.setMouseTransparent(true);
 
         Pane amountInputVBox = new Pane(quoteAmountSelectionHBox, baseAmountSelectionHBox);
@@ -312,14 +311,19 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     }
 
     private void onInputTextFieldFocus(boolean isOtherFocused, boolean focus) {
+        description.getStyleClass().clear();
         if (focus) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
             Transitions.animateWidth(selectionLine, AMOUNT_BOX_WIDTH + 40);
+            description.getStyleClass().add("description-focused");
         } else if (!isOtherFocused) {
             // If switching between the 2 fields we want to avoid to get the fadeout called that's why
             // we do the check with !other.get()
             Transitions.fadeOut(selectionLine, 200);
+            description.getStyleClass().add("description");
+        } else {
+            description.getStyleClass().add("description-focused");
         }
     }
 
