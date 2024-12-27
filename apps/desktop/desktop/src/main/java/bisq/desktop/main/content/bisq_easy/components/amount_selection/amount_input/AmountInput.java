@@ -43,6 +43,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 public abstract class AmountInput {
     protected final Controller controller;
@@ -95,6 +97,10 @@ public abstract class AmountInput {
         TextField textInput = controller.view.textInput;
         textInput.requestFocus();
         textInput.selectRange(textInput.getLength(), textInput.getLength());
+    }
+
+    public void setTextInputMaxCharCount(int maxCharCount) {
+        controller.model.textInputMaxCharCount = Optional.of(maxCharCount);
     }
 
     protected static class Controller implements bisq.desktop.common.view.Controller {
@@ -178,15 +184,16 @@ public abstract class AmountInput {
     }
 
     protected static class Model implements bisq.desktop.common.view.Model {
+        private final BooleanProperty isAmountValid = new SimpleBooleanProperty(true);
         protected final boolean isBaseCurrency;
         protected final boolean showCurrencyCode;
         protected final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         protected final StringProperty code = new SimpleStringProperty();
+        private Optional<Integer> textInputMaxCharCount = Optional.empty();
         protected Market selectedMarket;
         protected boolean hasFocus;
         @Setter
         protected boolean useLowPrecision = true;
-        private final BooleanProperty isAmountValid = new SimpleBooleanProperty(true);
 
         protected Model(boolean isBaseCurrency, boolean showCurrencyCode) {
             this.isBaseCurrency = isBaseCurrency;
@@ -194,15 +201,18 @@ public abstract class AmountInput {
         }
 
         void reset() {
+            isAmountValid.set(true);
             amount.set(null);
             code.set(null);
+            textInputMaxCharCount = Optional.empty();
             selectedMarket = null;
             hasFocus = false;
-            isAmountValid.set(true);
+            useLowPrecision = true;
         }
     }
 
     protected static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
+        private final ChangeListener<String> textListener;
         protected final ChangeListener<Boolean> focusListener;
         protected final ChangeListener<Monetary> amountListener;
         protected final TextField textInput;
@@ -217,6 +227,7 @@ public abstract class AmountInput {
             codeLabel.setVisible(model.showCurrencyCode);
             codeLabel.setManaged(model.showCurrencyCode);
             root.getChildren().addAll(textInput, codeLabel);
+            textListener = this::onTextChanged;
             focusListener = this::onFocusChanged;
             amountListener = this::onAmountChanged;
             initView();
@@ -231,6 +242,14 @@ public abstract class AmountInput {
         }
 
         protected void initView() {
+        }
+
+        private void onTextChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+            if (model.textInputMaxCharCount.isPresent()) {
+                if (newValue.length() > model.textInputMaxCharCount.get()) {
+                    textInput.setText(oldValue);
+                }
+            }
         }
 
         private void onFocusChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
@@ -255,6 +274,7 @@ public abstract class AmountInput {
         protected void onViewAttached() {
             codeLabel.textProperty().bind(model.code);
 
+            textInput.textProperty().addListener(textListener);
             textInput.focusedProperty().addListener(focusListener);
             model.amount.addListener(amountListener);
 
@@ -267,6 +287,7 @@ public abstract class AmountInput {
         protected void onViewDetached() {
             codeLabel.textProperty().unbind();
 
+            textInput.textProperty().removeListener(textListener);
             textInput.focusedProperty().removeListener(focusListener);
             model.amount.removeListener(amountListener);
         }
