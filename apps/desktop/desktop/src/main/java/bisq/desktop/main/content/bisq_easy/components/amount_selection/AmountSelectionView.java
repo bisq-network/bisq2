@@ -39,21 +39,23 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class AmountSelectionView extends View<VBox, AmountSelectionModel, AmountSelectionController> {
-    public final static int AMOUNT_BOX_WIDTH = 300;
-    public final static int AMOUNT_BOX_HEIGHT = 120;
-    private final static Insets SLIDER_INDICATORS_RANGE_MARGIN = new Insets(-15, 0, 0, 0);
-    private final static Insets SLIDER_INDICATORS_FIXED_MARGIN = new Insets(2.5, 0, 0, 0);
-    private final static String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
-    private final static String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
-    private final static String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
-    private final static String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
-    private final static String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
-    private final static String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
-    private final static String INPUT_TEXT_15_STYLE_CLASS = "input-text-15";
-    private final static String INPUT_TEXT_16_STYLE_CLASS = "input-text-16";
-    private final static String INPUT_TEXT_17_STYLE_CLASS = "input-text-17";
-    private final static String INPUT_TEXT_18_STYLE_CLASS = "input-text-18";
-    private final static String INPUT_TEXT_19_STYLE_CLASS = "input-text-19";
+    public static final int AMOUNT_BOX_WIDTH = 300;
+    public static final int AMOUNT_BOX_HEIGHT = 120;
+    private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 9;
+    private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 19;
+    private static final Insets SLIDER_INDICATORS_RANGE_MARGIN = new Insets(-15, 0, 0, 0);
+    private static final Insets SLIDER_INDICATORS_FIXED_MARGIN = new Insets(2.5, 0, 0, 0);
+    private static final String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
+    private static final String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
+    private static final String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
+    private static final String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
+    private static final String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
+    private static final String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
+    private static final String INPUT_TEXT_15_STYLE_CLASS = "input-text-15";
+    private static final String INPUT_TEXT_16_STYLE_CLASS = "input-text-16";
+    private static final String INPUT_TEXT_17_STYLE_CLASS = "input-text-17";
+    private static final String INPUT_TEXT_18_STYLE_CLASS = "input-text-18";
+    private static final String INPUT_TEXT_19_STYLE_CLASS = "input-text-19";
     @SuppressWarnings("UnnecessaryUnicodeEscape")
     private static final String EN_DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
@@ -222,6 +224,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
             root.getStyleClass().add("amount-selection");
             root.getStyleClass().add(isRangeAmountEnabled ? "range-amount" : "fixed-amount");
             VBox.setMargin(sliderIndicators, isRangeAmountEnabled ? SLIDER_INDICATORS_RANGE_MARGIN : SLIDER_INDICATORS_FIXED_MARGIN);
+            maxOrFixedQuoteAmount.setTextInputMaxCharCount(isRangeAmountEnabled ? RANGE_INPUT_TEXT_MAX_LENGTH : FIXED_INPUT_TEXT_MAX_LENGTH);
+            minQuoteAmount.setTextInputMaxCharCount(RANGE_INPUT_TEXT_MAX_LENGTH);
             applyTextInputFontStyle();
             applyTextInputPrefWidth();
         });
