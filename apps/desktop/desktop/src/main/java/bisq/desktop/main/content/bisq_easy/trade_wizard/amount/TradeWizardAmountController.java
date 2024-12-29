@@ -502,11 +502,11 @@ public class TradeWizardAmountController implements Controller {
         long requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, usdBitcoinMarket, minQuoteSideAmount).orElse(0L);
         long numPotentialTakersForMaxOrFixedAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                .filter(e -> e.getValue() >= requiredReputationScoreForMaxOrFixedAmount || requiredReputationScoreForMaxOrFixedAmount <= MIN_REPUTAION_SCORE)
+                .filter(e -> e.getValue() >= requiredReputationScoreForMaxOrFixedAmount || requiredReputationScoreForMaxOrFixedAmount <= MIN_REPUTATION_SCORE)
                 .count();
         long numPotentialTakersForMinAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                .filter(e -> e.getValue() >= requiredReputationScoreForMinAmount || requiredReputationScoreForMinAmount <= MIN_REPUTAION_SCORE)
+                .filter(e -> e.getValue() >= requiredReputationScoreForMinAmount || requiredReputationScoreForMinAmount <= MIN_REPUTATION_SCORE)
                 .count();
         model.getAmountLimitInfoLeadLine().set(null);
         Monetary amountWithoutReputationNeeded = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, model.getMarket(), MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION)
@@ -597,7 +597,7 @@ public class TradeWizardAmountController implements Controller {
                 long myReputationScore = model.getMyReputationScore();
                 String formattedReputationBasedMaxAmount = formatAmountWithCode(reputationBasedMaxAmount);
                 String formattedAmountWithoutReputationNeeded = formatAmountWithCode(amountWithoutReputationNeeded);
-                boolean isToleratedLowAmount = myReputationScore <= MIN_REPUTAION_SCORE;
+                boolean isToleratedLowAmount = myReputationScore <= MIN_REPUTATION_SCORE;
                 if (isToleratedLowAmount) {
                     if (noReputationNeededForMaxOrFixedAmount) {
                         model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.noReputationNeededForMaxOrFixedAmount", formattedAmountWithoutReputationNeeded));
@@ -644,14 +644,8 @@ public class TradeWizardAmountController implements Controller {
         Monetary minRangeValue = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, model.getMarket(), DEFAULT_MIN_USD_TRADE_AMOUNT)
                 .orElseThrow().round(0);
 
-        if (model.getReputationBasedMaxAmount() == null) {
-            String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
-            long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
-            model.setMyReputationScore(myReputationScore);
-            model.setReputationBasedMaxAmount(BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, model.getMarket(), myReputationScore)
-                    .orElse(Fiat.fromValue(0, model.getMarket().getQuoteCurrencyCode()))
-            );
-        }
+        applyMaxAmountBasedOnReputation();
+
         Fiat defaultUsdAmount = MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.multiply(2);
         Monetary defaultFiatAmount = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, model.getMarket(), defaultUsdAmount)
                 .orElseThrow().round(0);
@@ -726,6 +720,15 @@ public class TradeWizardAmountController implements Controller {
                 applyReputationBasedQuoteSideAmount();
             }
         }
+    }
+
+    private void applyMaxAmountBasedOnReputation() {
+        String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
+        long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
+        model.setMyReputationScore(myReputationScore);
+        model.setReputationBasedMaxAmount(BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, model.getMarket(), myReputationScore)
+                .orElse(Fiat.fromValue(0, model.getMarket().getQuoteCurrencyCode()))
+        );
     }
 
     private void applyMarkerRange() {
