@@ -207,7 +207,6 @@ public abstract class AmountInput {
             textInputMaxCharCount = Optional.empty();
             selectedMarket = null;
             hasFocus = false;
-            useLowPrecision = true;
         }
     }
 
