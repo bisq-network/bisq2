@@ -120,6 +120,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
         slider.valueProperty().bindBidirectional(model.getPriceSliderValue());
+        model.getSliderFocus().bind(slider.focusedProperty());
 
         percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
 
@@ -162,6 +163,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackBox.visibleProperty().unbind();
         feedbackBox.managedProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getPriceSliderValue());
+        model.getSliderFocus().unbind();
 
         percentageFocussedPin.unsubscribe();
         useFixPricePin.unsubscribe();

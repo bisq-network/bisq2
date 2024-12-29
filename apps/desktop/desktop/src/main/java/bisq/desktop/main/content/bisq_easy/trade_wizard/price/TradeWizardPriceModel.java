@@ -52,6 +52,7 @@ public class TradeWizardPriceModel implements Model {
     @Setter
     private boolean isFocused;
     private final DoubleProperty priceSliderValue = new SimpleDoubleProperty();
+    private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
 
     public void reset() {
         market = null;
@@ -68,5 +69,6 @@ public class TradeWizardPriceModel implements Model {
         shouldShowFeedback.set(false);
         isFocused = false;
         priceSliderValue.set(0d);
+        sliderFocus.set(false);
     }
 }

@@ -289,9 +289,11 @@ public class TradeWizardPriceController implements Controller {
     }
 
     private void applyPriceSliderValue(double percentage) {
-        // TODO: check slider does not have focus
-        double sliderValue = (percentage - MIN_PERCENTAGE) / (MAX_PERCENTAGE - MIN_PERCENTAGE);
-        model.getPriceSliderValue().set(sliderValue);
+        // Only apply value from component to slider if we have no focus on slider (not used)
+        if (!model.getSliderFocus().get()) {
+            double sliderValue = (percentage - MIN_PERCENTAGE) / (MAX_PERCENTAGE - MIN_PERCENTAGE);
+            model.getPriceSliderValue().set(sliderValue);
+        }
     }
 
     private boolean validateQuote(PriceQuote priceQuote) {
