@@ -31,6 +31,8 @@ import javax.annotation.Nullable;
 
 @Getter
 public class TradeWizardPriceModel implements Model {
+    private final double sliderMin = 0;
+    private final double sliderMax = 1;
     @Setter
     private Market market = null;
     @Setter
@@ -49,6 +51,7 @@ public class TradeWizardPriceModel implements Model {
     private final BooleanProperty shouldShowFeedback = new SimpleBooleanProperty();
     @Setter
     private boolean isFocused;
+    private final DoubleProperty priceSliderValue = new SimpleDoubleProperty();
 
     public void reset() {
         market = null;
@@ -64,5 +67,6 @@ public class TradeWizardPriceModel implements Model {
         shouldShowLearnWhyOverlay.set(false);
         shouldShowFeedback.set(false);
         isFocused = false;
+        priceSliderValue.set(0d);
     }
 }

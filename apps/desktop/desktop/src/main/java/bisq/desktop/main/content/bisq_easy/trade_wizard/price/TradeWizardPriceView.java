@@ -30,6 +30,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -42,11 +43,12 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
 
     private final PriceInputBox percentageInput;
-    private final VBox fieldsBox, learnWhyOverlay, content;
+    private final VBox learnWhyOverlay, content;
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, showLearnWhyButton, closeLearnWhyButton;
     private final Label feedbackSentence;
     private final HBox feedbackBox;
+    private final Slider slider;
     private Subscription percentageFocussedPin, useFixPricePin, shouldShowLearnWhyOverlayPin;
 
     public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
@@ -77,11 +79,16 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageInput = new PriceInputBox(Res.get("bisqEasy.price.percentage.inputBoxText"));
         percentageInput.setValidator(new PercentageValidator());
         percentageInput.textInputSymbolTextProperty().set("%");
-        fieldsBox = new VBox(20, priceInput.getRoot(), percentageInput);
+        VBox fieldsBox = new VBox(20, priceInput.getRoot(), percentageInput);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
         fieldsBox.setMinWidth(340);
         fieldsBox.setPrefWidth(340);
         fieldsBox.setMaxWidth(340);
+
+        // Slider
+        slider = new Slider();
+        slider.setMin(model.getSliderMin());
+        slider.setMax(model.getSliderMax());
 
         // Feedback sentence
         feedbackSentence = new Label();
@@ -95,7 +102,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
         learnWhyOverlay = createAndGetLearnWhyOverlay();
 
-        content = new VBox(10, pricingModels, fieldsBox/*, feedbackBox*/);
+        content = new VBox(10, pricingModels, fieldsBox, slider/*, feedbackBox*/);
         content.getStyleClass().add("price-content");
         StackPane layeredContent = new StackPane(content, learnWhyOverlay);
         layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");
@@ -112,6 +119,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
         feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
+        slider.valueProperty().bindBidirectional(model.getPriceSliderValue());
 
         percentageFocussedPin = EasyBind.subscribe(percentageInput.textInputFocusedProperty(), controller::onPercentageFocussed);
 
@@ -153,6 +161,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackSentence.textProperty().unbind();
         feedbackBox.visibleProperty().unbind();
         feedbackBox.managedProperty().unbind();
+        slider.valueProperty().unbindBidirectional(model.getPriceSliderValue());
 
         percentageFocussedPin.unsubscribe();
         useFixPricePin.unsubscribe();
