@@ -1000,6 +1000,7 @@
     -fx-alignment: baseline-left;
 }
 
+.slider.price-slider .thumb,
 .slider.max-or-fixed-amount-slider .thumb {
     -fx-background-color: -bisq-white;
     -fx-background-insets: 2.5;
@@ -1020,13 +1021,19 @@
     -fx-pref-height: 0;
 }
 
+.slider.price-slider {
+    -track-color: -bisq-dark-grey-50;
+}
+
 .amount-selection .range-value,
-.amount-selection .range-code {
+.amount-selection .range-code,
+.price-content .range-value {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-mid-grey-20;
 }
 
-.amount-selection .range-value {
+.amount-selection .range-value,
+.price-content .range-value {
     -fx-font-size: 1.1em;
 }
 

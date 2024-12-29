@@ -46,9 +46,6 @@ import static bisq.presentation.parser.PercentageParser.parse;
 
 @Slf4j
 public class TradeWizardPriceController implements Controller {
-    private static final double MAX_PERCENTAGE = 0.5;
-    private static final double MIN_PERCENTAGE = -0.1;
-
     private final TradeWizardPriceModel model;
     @Getter
     private final TradeWizardPriceView view;
@@ -127,7 +124,7 @@ public class TradeWizardPriceController implements Controller {
         });
         priceSliderValuePin = EasyBind.subscribe(model.getPriceSliderValue(), priceSliderValue -> {
             if (priceSliderValue != null) {
-                double value = priceSliderValue.doubleValue() * (MAX_PERCENTAGE - MIN_PERCENTAGE) + MIN_PERCENTAGE;
+                double value = priceSliderValue.doubleValue() * (model.getMaxPercentage() - model.getMinPercentage()) + model.getMinPercentage();
                 String percentageAsString = PercentageFormatter.formatToPercent(value);
                 onPercentageInput(percentageAsString);
                 priceInput.setPercentage(percentageAsString);
@@ -291,7 +288,7 @@ public class TradeWizardPriceController implements Controller {
     private void applyPriceSliderValue(double percentage) {
         // Only apply value from component to slider if we have no focus on slider (not used)
         if (!model.getSliderFocus().get()) {
-            double sliderValue = (percentage - MIN_PERCENTAGE) / (MAX_PERCENTAGE - MIN_PERCENTAGE);
+            double sliderValue = (percentage - model.getMinPercentage()) / (model.getMaxPercentage() - model.getMinPercentage());
             model.getPriceSliderValue().set(sliderValue);
         }
     }
@@ -301,7 +298,7 @@ public class TradeWizardPriceController implements Controller {
     }
 
     private boolean validatePercentage(double percentage) {
-        if (percentage >= MIN_PERCENTAGE && percentage <= MAX_PERCENTAGE) {
+        if (percentage >= model.getMinPercentage() && percentage <= model.getMaxPercentage()) {
             model.getErrorMessage().set(null);
             return true;
         } else {

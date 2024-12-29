@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.controls.validator.PercentageValidator;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
@@ -38,15 +39,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.text.DecimalFormat;
+
 @Slf4j
 public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-model";
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("00");
 
     private final PriceInputBox percentageInput;
     private final VBox learnWhyOverlay, content;
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, showLearnWhyButton, closeLearnWhyButton;
-    private final Label feedbackSentence;
+    private final Label feedbackSentence, minSliderValue, maxSliderValue;
     private final HBox feedbackBox;
     private final Slider slider;
     private Subscription percentageFocussedPin, useFixPricePin, shouldShowLearnWhyOverlayPin;
@@ -89,6 +93,18 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         slider = new Slider();
         slider.setMin(model.getSliderMin());
         slider.setMax(model.getSliderMax());
+        slider.getStyleClass().add("price-slider");
+
+        minSliderValue = new Label();
+        minSliderValue.getStyleClass().add("range-value");
+        minSliderValue.setAlignment(Pos.BASELINE_LEFT);
+
+        maxSliderValue = new Label();
+        maxSliderValue.getStyleClass().add("range-value");
+        maxSliderValue.setAlignment(Pos.BASELINE_RIGHT);
+        HBox sliderIndicators = new HBox(minSliderValue, Spacer.fillHBox(), maxSliderValue);
+        VBox.setMargin(sliderIndicators, new Insets(2.5, 0, 0, 0));
+        VBox sliderBox = new VBox(2, slider, sliderIndicators);
 
         // Feedback sentence
         feedbackSentence = new Label();
@@ -102,7 +118,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
         learnWhyOverlay = createAndGetLearnWhyOverlay();
 
-        content = new VBox(10, pricingModels, fieldsBox, slider/*, feedbackBox*/);
+        VBox.setMargin(sliderBox, new Insets(22.5, 0, 0, 0));
+        content = new VBox(10, pricingModels, fieldsBox, sliderBox/*, feedbackBox*/);
         content.getStyleClass().add("price-content");
         StackPane layeredContent = new StackPane(content, learnWhyOverlay);
         layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");
@@ -112,6 +129,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
     @Override
     protected void onViewAttached() {
+        minSliderValue.setText(DECIMAL_FORMAT.format(model.getMinPercentage() * 100) + "%");
+        maxSliderValue.setText(DECIMAL_FORMAT.format(model.getMaxPercentage() * 100) + "%");
         percentageInput.textProperty().bindBidirectional(model.getPercentageInput());
         percentageInput.conversionPriceTextProperty().bind(model.getPriceAsString());
         percentageInput.conversionPriceSymbolTextProperty().set(model.getMarket().getMarketCodes());

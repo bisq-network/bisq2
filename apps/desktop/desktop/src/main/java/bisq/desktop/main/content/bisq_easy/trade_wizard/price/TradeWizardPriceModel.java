@@ -31,6 +31,8 @@ import javax.annotation.Nullable;
 
 @Getter
 public class TradeWizardPriceModel implements Model {
+    private final double maxPercentage = 0.5;
+    private final double minPercentage = -0.1;
     private final double sliderMin = 0;
     private final double sliderMax = 1;
     @Setter
