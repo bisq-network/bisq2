@@ -32,6 +32,7 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -46,6 +47,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.PopupWindow;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -99,7 +101,9 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline"));
         headlineLabel.setPadding(new Insets(0, 5, 0, 0));
-        HBox headlineHBox = new HBox(headlineLabel, marketSelectionMenu, new Label("?"));
+        Label questionMark = new Label("?");
+        questionMark.setPadding(new Insets(0, 0, 0, 5));
+        HBox headlineHBox = new HBox(headlineLabel, marketSelectionMenu, questionMark);
         headlineHBox.setAlignment(Pos.CENTER);
         headlineHBox.getStyleClass().add("bisq-text-headline-2");
 
@@ -140,6 +144,16 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         gainReputationButton.setOnAction(evt -> controller.onBuildReputation());
         withoutReputationButton.setOnAction(evt -> controller.onTradeWithoutReputation());
         backToBuyButton.setOnAction(evt -> controller.onCloseReputationInfo());
+        marketSelectionMenu.setOnMouseClicked(e -> {
+            if (!marketSelectionMenu.getContextMenu().isShowing()) {
+                Bounds rootBounds = root.localToScreen(root.getBoundsInLocal());
+                Bounds labelBounds = marketSelectionMenu.localToScreen(marketSelectionMenu.getBoundsInLocal());
+                marketSelectionMenu.getContextMenu().setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
+                marketSelectionMenu.getContextMenu().show(marketSelectionMenu, rootBounds.getMaxX() - 160, labelBounds.getMaxY() + 10);
+            } else {
+                marketSelectionMenu.getContextMenu().hide();
+            }
+        });
 
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
@@ -187,6 +201,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         gainReputationButton.setOnAction(null);
         withoutReputationButton.setOnAction(null);
         backToBuyButton.setOnAction(null);
+        marketSelectionMenu.setOnMouseClicked(null);
 
         directionSubscription.unsubscribe();
         showReputationInfoPin.unsubscribe();

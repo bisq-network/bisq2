@@ -1460,7 +1460,6 @@
 
 .bisq-easy-trade-wizard-direction-step .bisq-easy-trade-wizard-market.table-view {
     -fx-font-size: 0.7em;
-    /*-fx-background-color: pink;*/
 }
 
 .bisq-easy-trade-wizard-direction-step .bisq-easy-trade-wizard-market .market-name,
@@ -1470,7 +1469,6 @@
 
 .bisq-easy-trade-wizard-direction-step .bisq-easy-trade-wizard-market.table-view .column-header {
     -fx-pref-height: 30px;
-    /*-fx-background-color: orange;*/
 }
 
 .bisq-easy-trade-wizard-direction-step .bisq-easy-trade-wizard-market.table-view .column-header .label {
@@ -1507,36 +1505,13 @@
     -fx-background-color: none;
 }
 
-/*.bisq-easy-trade-wizard-market-selection-menu:hover {*/
-/*    -fx-background-color: -bisq-dark-grey-20;*/
-/*}*/
-
-/*.bisq-easy-trade-wizard-market-selection-menu .dropdown-menu-popup .menu-item .dropdown-menu-item-content {*/
-/*    -fx-padding: 0;*/
-/*}*/
-
-/*.bisq-easy-trade-wizard-market-selection-menu .dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content {*/
-/*    -fx-background-color: none;*/
-/*}*/
-
-.bisq-easy-trade-wizard-market-selection-menu .dropdown-menu-popup {
+.bisq-easy-trade-wizard-direction-step .bisq-easy-trade-wizard-market-selection-menu .dropdown-menu-popup {
     -fx-background-color: -bisq-dark-grey-20;
-    /*-fx-background-radius: 6;*/
-    /*-fx-padding: 8;*/
-    /*-fx-border-color: -bisq-dark-grey-20;*/
-    /*-fx-border-width: 1;*/
-    /*-fx-border-radius: 6;*/
-    /*-fx-effect: none;*/
 }
 
 .bisq-easy-trade-wizard-direction-step .dropdown-menu .dropdown-menu-content-hbox .label {
     -fx-text-fill: -bisq2-green;
 }
-
-/*.dropdown-menu:hover,*/
-/*.dropdown-menu-active {*/
-/*    -fx-background-color: -bisq-dark-grey-40;*/
-/*}*/
 
 .bisq-easy-trade-wizard-direction-step .dropdown-menu:hover .dropdown-menu-content-hbox .label,
 .bisq-easy-trade-wizard-direction-step .dropdown-menu-active .dropdown-menu-content-hbox .label {
@@ -1553,6 +1528,10 @@
 .bisq-easy-trade-wizard-direction-step .dropdown-menu:hover:hover,
 .bisq-easy-trade-wizard-direction-step .dropdown-menu-active {
     -fx-padding: 0 0 -1 0;
+}
+
+.bisq-easy-trade-wizard-direction-step .dropdown-menu {
+    -fx-spacing: 2.5;
 }
 
 
