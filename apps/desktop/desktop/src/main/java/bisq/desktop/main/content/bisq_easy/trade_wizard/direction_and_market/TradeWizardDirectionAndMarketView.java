@@ -93,11 +93,12 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         tableViewWithSearchBox.setMaxWidth(tableWidth);
         tableViewWithSearchBox.setMaxHeight(tableHeight);
 
-        marketSelectionMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        marketSelectionMenu = new DropdownMenu("chevron-drop-menu-green", "chevron-drop-menu-green", false);
         marketSelectionMenu.getStyleClass().add("bisq-easy-trade-wizard-market-selection-menu");
         marketSelectionMenu.addMenuItems(new DropdownMenuItem(tableViewWithSearchBox));
 
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.headline"));
+        headlineLabel.setPadding(new Insets(0, 5, 0, 0));
         HBox headlineHBox = new HBox(headlineLabel, marketSelectionMenu, new Label("?"));
         headlineHBox.setAlignment(Pos.CENTER);
         headlineHBox.getStyleClass().add("bisq-text-headline-2");

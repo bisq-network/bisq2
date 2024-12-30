@@ -1529,6 +1529,32 @@
     /*-fx-effect: none;*/
 }
 
+.bisq-easy-trade-wizard-direction-step .dropdown-menu .dropdown-menu-content-hbox .label {
+    -fx-text-fill: -bisq2-green;
+}
+
+/*.dropdown-menu:hover,*/
+/*.dropdown-menu-active {*/
+/*    -fx-background-color: -bisq-dark-grey-40;*/
+/*}*/
+
+.bisq-easy-trade-wizard-direction-step .dropdown-menu:hover .dropdown-menu-content-hbox .label,
+.bisq-easy-trade-wizard-direction-step .dropdown-menu-active .dropdown-menu-content-hbox .label {
+    -fx-text-fill: -bisq2-green;
+}
+
+.bisq-easy-trade-wizard-direction-step .dropdown-menu:hover,
+.bisq-easy-trade-wizard-direction-step .dropdown-menu-active {
+    -fx-border-width: 0 0 1px 0;
+    -fx-border-color: -bisq2-green;
+}
+
+.bisq-easy-trade-wizard-direction-step .dropdown-menu,
+.bisq-easy-trade-wizard-direction-step .dropdown-menu:hover:hover,
+.bisq-easy-trade-wizard-direction-step .dropdown-menu-active {
+    -fx-padding: 0 0 -1 0;
+}
+
 
 /*******************************************************************************
  * TradeWizardTakeOfferView.tableView                                          *
