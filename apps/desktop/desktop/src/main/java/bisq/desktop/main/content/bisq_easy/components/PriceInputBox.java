@@ -40,7 +40,6 @@ public class PriceInputBox extends MaterialTextField {
 
     private final Label textInputSymbolLabel, conversionPriceLabel, conversionPriceLabelSymbol;
     private final HBox textInputAndSymbolHBox;
-    private final ChangeListener<Number> textInputLengthListener;
     private final ChangeListener<String> textInputTextListener;
 
     public PriceInputBox(String description, String prompt) {
@@ -66,11 +65,11 @@ public class PriceInputBox extends MaterialTextField {
         getChildren().setAll(bg, conversionPriceBox, line, selectionLine, descriptionLabel, textInputAndSymbolHBox, iconButton, helpLabel, errorLabel);
         getStyleClass().add("price-input-box");
 
-        textInputLengthListener = (observable, oldValue, newValue) -> applyFontStyle(newValue.intValue());
         textInputTextListener = (observable, oldValue, newValue) -> {
             if (newValue.length() > INPUT_TEXT_MAX_LENGTH) {
                 textInputControl.setText(oldValue);
             }
+            applyFontStyle(textInputControl.getLength());
         };
         initialize();
     }
@@ -80,12 +79,10 @@ public class PriceInputBox extends MaterialTextField {
     }
 
     public void initialize() {
-        textInputControl.lengthProperty().addListener(textInputLengthListener);
         textInputControl.textProperty().addListener(textInputTextListener);
     }
 
     public void dispose() {
-        textInputControl.lengthProperty().removeListener(textInputLengthListener);
         textInputControl.textProperty().removeListener(textInputTextListener);
     }
 
