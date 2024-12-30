@@ -177,7 +177,7 @@ public class DropdownMenu extends HBox {
             updateIcon(activeIcon);
             isMenuShowing.setValue(true);
             if (prefWidth != null && !contextMenu.getItems().isEmpty()
-                    && contextMenu.getItems().get(0) instanceof DropdownMenuItem) {
+                    && contextMenu.getItems().getFirst() instanceof DropdownMenuItem) {
                 updateMenuItemWidth();
             }
         });
