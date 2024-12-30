@@ -1054,6 +1054,7 @@
     -fx-max-height: 70;
     -fx-min-height: 70;
     -fx-alignment: center-right;
+    -fx-padding: 0 0 0 10;
 }
 
 .bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input,

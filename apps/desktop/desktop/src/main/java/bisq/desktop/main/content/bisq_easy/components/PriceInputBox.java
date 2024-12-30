@@ -27,19 +27,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PriceInputBox extends MaterialTextField {
-    public final static int AMOUNT_BOX_HEIGHT = 127;
-    private final static String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
-    private final static String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
-    private final static String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
-    private final static String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
-    private final static String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
-    private final static String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
+    public static final int AMOUNT_BOX_HEIGHT = 127;
+    private static final int INPUT_TEXT_MAX_LENGTH = 15;
+    private static final String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
+    private static final String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
+    private static final String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
+    private static final String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
+    private static final String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
+    private static final String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
     private static final String INPUT_TEXT_15_STYLE_CLASS = "input-text-15";
     private static final String INPUT_TEXT_16_STYLE_CLASS = "input-text-16";
 
     private final Label textInputSymbolLabel, conversionPriceLabel, conversionPriceLabelSymbol;
     private final HBox textInputAndSymbolHBox;
     private final ChangeListener<Number> textInputLengthListener;
+    private final ChangeListener<String> textInputTextListener;
 
     public PriceInputBox(String description, String prompt) {
         super(description, prompt);
@@ -65,6 +67,11 @@ public class PriceInputBox extends MaterialTextField {
         getStyleClass().add("price-input-box");
 
         textInputLengthListener = (observable, oldValue, newValue) -> applyFontStyle(newValue.intValue());
+        textInputTextListener = (observable, oldValue, newValue) -> {
+            if (newValue.length() > INPUT_TEXT_MAX_LENGTH) {
+                textInputControl.setText(oldValue);
+            }
+        };
         initialize();
     }
 
@@ -74,10 +81,12 @@ public class PriceInputBox extends MaterialTextField {
 
     public void initialize() {
         textInputControl.lengthProperty().addListener(textInputLengthListener);
+        textInputControl.textProperty().addListener(textInputTextListener);
     }
 
     public void dispose() {
         textInputControl.lengthProperty().removeListener(textInputLengthListener);
+        textInputControl.textProperty().removeListener(textInputTextListener);
     }
 
     public final StringProperty textInputSymbolTextProperty() {
