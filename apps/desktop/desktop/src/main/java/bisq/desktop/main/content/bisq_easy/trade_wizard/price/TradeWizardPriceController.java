@@ -42,7 +42,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
-import static bisq.presentation.formatters.PercentageFormatter.formatToPercentWithSymbol;
 import static bisq.presentation.parser.PercentageParser.parse;
 
 @Slf4j
@@ -54,7 +53,7 @@ public class TradeWizardPriceController implements Controller {
     private final Region owner;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
-    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin;
+    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin, priceSliderValuePin, percentagePin;
 
     public TradeWizardPriceController(ServiceProvider serviceProvider, Region owner) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -117,11 +116,23 @@ public class TradeWizardPriceController implements Controller {
             }
         });
         priceSpecPin = EasyBind.subscribe(model.getPriceSpec(), this::updateFeedback);
-
         percentageInputPin = EasyBind.subscribe(model.getPercentageInput(), percentageInput -> {
             if (percentageInput != null) {
                 onPercentageInput(percentageInput);
                 priceInput.setPercentage(percentageInput);
+            }
+        });
+        priceSliderValuePin = EasyBind.subscribe(model.getPriceSliderValue(), priceSliderValue -> {
+            if (priceSliderValue != null) {
+                double value = priceSliderValue.doubleValue() * (model.getMaxPercentage() - model.getMinPercentage()) + model.getMinPercentage();
+                String percentageAsString = PercentageFormatter.formatToPercent(value);
+                onPercentageInput(percentageAsString);
+                priceInput.setPercentage(percentageAsString);
+            }
+        });
+        percentagePin = EasyBind.subscribe(model.getPercentage(), percentage -> {
+            if (percentage != null) {
+                applyPriceSliderValue(percentage.doubleValue());
             }
         });
 
@@ -141,6 +152,9 @@ public class TradeWizardPriceController implements Controller {
         isPriceInvalidPin.unsubscribe();
         priceSpecPin.unsubscribe();
         percentageInputPin.unsubscribe();
+        priceSliderValuePin.unsubscribe();
+        percentagePin.unsubscribe();
+
         view.getRoot().setOnKeyPressed(null);
     }
 
@@ -266,17 +280,25 @@ public class TradeWizardPriceController implements Controller {
     }
 
     private void applyPercentageFromQuote(PriceQuote priceQuote) {
-        double percentage = getPercentage(priceQuote);
+        double percentage = getPercentageFromPriceQuote(priceQuote);
         model.getPercentage().set(percentage);
         model.getPercentageInput().set(PercentageFormatter.formatToPercent(percentage));
     }
 
+    private void applyPriceSliderValue(double percentage) {
+        // Only apply value from component to slider if we have no focus on slider (not used)
+        if (!model.getSliderFocus().get()) {
+            double sliderValue = (percentage - model.getMinPercentage()) / (model.getMaxPercentage() - model.getMinPercentage());
+            model.getPriceSliderValue().set(sliderValue);
+        }
+    }
+
     private boolean validateQuote(PriceQuote priceQuote) {
-        return validatePercentage(getPercentage(priceQuote));
+        return validatePercentage(getPercentageFromPriceQuote(priceQuote));
     }
 
     private boolean validatePercentage(double percentage) {
-        if (percentage >= -0.1 && percentage <= 0.5) {
+        if (percentage >= model.getMinPercentage() && percentage <= model.getMaxPercentage()) {
             model.getErrorMessage().set(null);
             return true;
         } else {
@@ -285,7 +307,7 @@ public class TradeWizardPriceController implements Controller {
         }
     }
 
-    private double getPercentage(PriceQuote priceQuote) {
+    private double getPercentageFromPriceQuote(PriceQuote priceQuote) {
         try {
             Optional<Double> optionalPercentage = PriceSpecUtil.createFloatPriceAsPercentage(marketPriceService, priceQuote);
             if (optionalPercentage.isEmpty()) {

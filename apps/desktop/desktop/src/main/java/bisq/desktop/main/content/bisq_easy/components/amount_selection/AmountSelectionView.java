@@ -175,7 +175,6 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         sliderIndicators = new HBox(minRangeValueAndCodeHBox, Spacer.fillHBox(), maxRangeValueAndCodeHBox);
         VBox sliderBox = new VBox(2, maxOrFixedAmountSlider, minAmountSlider, sliderIndicators);
         sliderBox.setMaxWidth(AMOUNT_BOX_WIDTH + 40);
-        sliderBox.getStyleClass().add("slider-box");
 
         VBox.setMargin(sliderBox, new Insets(30, 0, 0, 0));
         root.getChildren().addAll(amountPane, sliderBox);
