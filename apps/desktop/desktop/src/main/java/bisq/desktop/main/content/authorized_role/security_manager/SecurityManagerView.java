@@ -413,7 +413,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             minVersion = this.authorizedAlertData.getMinVersion().orElse("");
             haltTrading = BooleanFormatter.toYesNo(this.authorizedAlertData.isHaltTrading());
             requireVersionForTrading = BooleanFormatter.toYesNo(this.authorizedAlertData.isRequireVersionForTrading());
-            bondedRoleDisplayString = authorizedAlertData.getBannedRole().map(controller::getBannedBondedRoleDisplaySString).orElse("");
+            bondedRoleDisplayString = authorizedAlertData.getBannedRole().map(controller::getBannedBondedRoleDisplayString).orElse("");
         }
     }
 

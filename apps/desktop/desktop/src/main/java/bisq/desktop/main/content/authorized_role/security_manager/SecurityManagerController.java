@@ -192,7 +192,7 @@ public class SecurityManagerController implements Controller {
         }
     }
 
-    String getBannedBondedRoleDisplaySString(AuthorizedBondedRole authorizedBondedRole) {
+    String getBannedBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
         String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
         String profileId = authorizedBondedRole.getProfileId();
         String nickNameOrBondName = userProfileService.findUserProfile(profileId)
