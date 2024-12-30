@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PriceInputBox extends MaterialTextField {
-    public final static int AMOUNT_BOX_WIDTH = 340;
     public final static int AMOUNT_BOX_HEIGHT = 127;
     private final static String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
     private final static String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
@@ -35,6 +34,8 @@ public class PriceInputBox extends MaterialTextField {
     private final static String INPUT_TEXT_12_STYLE_CLASS = "input-text-12";
     private final static String INPUT_TEXT_13_STYLE_CLASS = "input-text-13";
     private final static String INPUT_TEXT_14_STYLE_CLASS = "input-text-14";
+    private static final String INPUT_TEXT_15_STYLE_CLASS = "input-text-15";
+    private static final String INPUT_TEXT_16_STYLE_CLASS = "input-text-16";
 
     private final Label textInputSymbolLabel, conversionPriceLabel, conversionPriceLabelSymbol;
     private final HBox textInputAndSymbolHBox;
@@ -118,6 +119,12 @@ public class PriceInputBox extends MaterialTextField {
         if (charCount == 12) {
             return INPUT_TEXT_13_STYLE_CLASS;
         }
-        return INPUT_TEXT_14_STYLE_CLASS;
+        if (charCount == 13) {
+            return INPUT_TEXT_14_STYLE_CLASS;
+        }
+        if (charCount == 14) {
+            return INPUT_TEXT_15_STYLE_CLASS;
+        }
+        return INPUT_TEXT_16_STYLE_CLASS;
     }
 }
