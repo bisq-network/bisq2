@@ -114,7 +114,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
     }
 
     // From proto
-    private BisqEasyOpenTradeChannel(String channelId,
+    public BisqEasyOpenTradeChannel(String channelId,
                                      String tradeId,
                                      BisqEasyOffer bisqEasyOffer,
                                      UserIdentity myUserIdentity,

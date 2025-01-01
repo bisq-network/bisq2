@@ -103,7 +103,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                 reactions);
     }
 
-    private BisqEasyOpenTradeMessage(String tradeId,
+    public BisqEasyOpenTradeMessage(String tradeId,
                                      String messageId,
                                      ChatChannelDomain chatChannelDomain,
                                      String channelId,

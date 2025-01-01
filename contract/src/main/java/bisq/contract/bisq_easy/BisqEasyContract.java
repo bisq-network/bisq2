@@ -70,7 +70,7 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
                 marketPrice);
     }
 
-    private BisqEasyContract(long takeOfferDate,
+    public BisqEasyContract(long takeOfferDate,
                              BisqEasyOffer offer,
                              TradeProtocolType protocolType,
                              Party taker,
