@@ -24,6 +24,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
 import bisq.dto.offer.bisq_easy.OfferListItemDto;
+import bisq.dto.offer.bisq_easy.UserProfileItemDto;
 import bisq.dto.user.reputation.ReputationScoreDto;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -107,11 +108,10 @@ public class OfferListItemDtoFactory {
                 .stream()
                 .map(PaymentMethod::getName)
                 .collect(Collectors.toList());
+        UserProfileItemDto userProfileItem = new UserProfileItemDto(userName, nym, reputationScore);
         return new OfferListItemDto(bisqEasyOfferDto,
                 isMyOffer,
-                nym,
-                userName,
-                reputationScore,
+                userProfileItem,
                 formattedDate,
                 formattedQuoteAmount,
                 formattedBaseAmount,

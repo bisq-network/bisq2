@@ -17,7 +17,6 @@
 
 package bisq.dto.offer.bisq_easy;
 
-import bisq.dto.user.reputation.ReputationScoreDto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
@@ -33,9 +32,7 @@ public class OfferListItemDto {
     private final BisqEasyOfferDto bisqEasyOffer;
     @JsonProperty("isMyOffer")
     private final boolean isMyOffer;
-    private final String nym;
-    private final String userName;
-    private final ReputationScoreDto reputationScore;
+    private final UserProfileItemDto userProfileItem;
     private final String formattedDate;
     private final String formattedQuoteAmount;
     private final String formattedBaseAmount;
@@ -47,9 +44,7 @@ public class OfferListItemDto {
     @JsonCreator
     public OfferListItemDto(BisqEasyOfferDto bisqEasyOffer,
                             boolean isMyOffer,
-                            String nym,
-                            String userName,
-                            ReputationScoreDto reputationScore,
+                            UserProfileItemDto userProfileItem,
                             String formattedDate,
                             String formattedQuoteAmount,
                             String formattedBaseAmount,
@@ -59,9 +54,7 @@ public class OfferListItemDto {
                             List<String> baseSidePaymentMethods) {
         this.bisqEasyOffer = bisqEasyOffer;
         this.isMyOffer = isMyOffer;
-        this.nym = nym;
-        this.userName = userName;
-        this.reputationScore = reputationScore;
+        this.userProfileItem = userProfileItem;
         this.formattedDate = formattedDate;
         this.formattedQuoteAmount = formattedQuoteAmount;
         this.formattedBaseAmount = formattedBaseAmount;
