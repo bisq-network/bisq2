@@ -151,7 +151,7 @@ public class MediationCaseHeader {
 
         private final Triple<Text, Text, VBox> tradeId;
         private final UserProfileDisplay makerProfileDisplay, takerProfileDisplay;
-        private final Label direction;
+        private final Label directionalTitle;
         private final Button openCloseButton, leaveButton;
         private Subscription mediationCaseListItemPin, showClosedCasesPin;
 
@@ -172,9 +172,9 @@ public class MediationCaseHeader {
             Triple<Text, UserProfileDisplay, VBox> taker = getUserProfileElements(Res.get("authorizedRole.mediator.table.taker"));
             takerProfileDisplay = taker.getSecond();
 
-            direction = new Label();
-            direction.setAlignment(Pos.CENTER);
-            direction.setMinWidth(80);
+            directionalTitle = new Label();
+            directionalTitle.setAlignment(Pos.CENTER);
+            directionalTitle.setMinWidth(80);
             tradeId.getThird().setMinWidth(80);
 
             openCloseButton = new Button();
@@ -183,9 +183,9 @@ public class MediationCaseHeader {
             leaveButton = new Button(Res.get("authorizedRole.mediator.leave"));
             leaveButton.getStyleClass().add("outlined-button");
 
-            HBox.setMargin(direction, new Insets(10, -20, 0, -20));
+            HBox.setMargin(directionalTitle, new Insets(10, -20, 0, -20));
             HBox.setMargin(leaveButton, new Insets(0, -20, 0, 0));
-            root.getChildren().addAll(maker.getThird(), direction, taker.getThird(), tradeId.getThird(), Spacer.fillHBox(), leaveButton, openCloseButton);
+            root.getChildren().addAll(maker.getThird(), directionalTitle, taker.getThird(), tradeId.getThird(), Spacer.fillHBox(), leaveButton, openCloseButton);
         }
 
         @Override
@@ -203,7 +203,7 @@ public class MediationCaseHeader {
                             isMakerRequester ? Res.get("confirmation.yes") : Res.get("confirmation.no")
                     ));
 
-                    direction.setText(item.getDirection());
+                    directionalTitle.setText(item.getDirectionalTitle());
 
                     takerProfileDisplay.setUserProfile(item.getTaker().getUserProfile());
                     takerProfileDisplay.setReputationScore(item.getTaker().getReputationScore());
@@ -220,7 +220,7 @@ public class MediationCaseHeader {
                 } else {
                     makerProfileDisplay.dispose();
                     takerProfileDisplay.dispose();
-                    direction.setText(null);
+                    directionalTitle.setText(null);
                     tradeId.getSecond().setText(null);
                 }
             });

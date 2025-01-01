@@ -52,9 +52,9 @@ public class BisqEasyTradeFormatter {
         return PriceFormatter.formatWithCode(BisqEasyTradeUtils.getPriceQuote(contract));
     }
 
-    public static String getDirection(BisqEasyTrade trade) {
+    public static String getDirectionalTitle(BisqEasyTrade trade) {
         Direction direction = getDirectionObject(trade);
-        return getDirection(direction);
+        return getDirectionalTitle(direction);
     }
 
     public static Direction getDirectionObject(BisqEasyTrade trade) {
@@ -64,8 +64,8 @@ public class BisqEasyTradeFormatter {
         };
     }
 
-    public static String getDirection(Direction direction) {
-        return direction.getDisplayStringForTraderPair();
+    public static String getDirectionalTitle(Direction direction) {
+        return direction.getDirectionalTitle();
     }
 
     public static String getMakerTakerRole(BisqEasyTrade trade) {
