@@ -52,20 +52,15 @@ public class BisqEasyTradeFormatter {
         return PriceFormatter.formatWithCode(BisqEasyTradeUtils.getPriceQuote(contract));
     }
 
-    public static String getDirection(BisqEasyTrade trade) {
-        Direction direction = getDirectionObject(trade);
-        return getDirection(direction);
+    public static String getDirectionalTitle(BisqEasyTrade trade) {
+        return getDirection(trade).getDirectionalTitle();
     }
 
-    public static Direction getDirectionObject(BisqEasyTrade trade) {
+    public static Direction getDirection(BisqEasyTrade trade) {
         return switch (trade.getTradeRole()) {
             case BUYER_AS_TAKER, BUYER_AS_MAKER -> Direction.BUY;
             case SELLER_AS_TAKER, SELLER_AS_MAKER -> Direction.SELL;
         };
-    }
-
-    public static String getDirection(Direction direction) {
-        return direction.getDisplayStringForTraderPair();
     }
 
     public static String getMakerTakerRole(BisqEasyTrade trade) {

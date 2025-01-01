@@ -20,7 +20,7 @@ package bisq.dto;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
 import bisq.dto.offer.bisq_easy.OfferListItemDto;
@@ -62,10 +62,10 @@ public class OfferListItemDtoFactory {
         String offerId = bisqEasyOffer.getId();
         BisqEasyOfferDto bisqEasyOfferDto = DtoMappings.BisqEasyOfferMapping.from(bisqEasyOffer);
         String authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
-        Optional<UserProfile> senderUserProfile = userProfileService.findUserProfile(authorUserProfileId);
-        String nym = senderUserProfile.map(UserProfile::getNym).orElse("");
-        String userName = senderUserProfile.map(UserProfile::getUserName).orElse("");
-        ReputationScoreDto reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore)
+        Optional<UserProfile> authorUserProfile = userProfileService.findUserProfile(authorUserProfileId);
+        String nym = authorUserProfile.map(UserProfile::getNym).orElse("");
+        String userName = authorUserProfile.map(UserProfile::getUserName).orElse("");
+        ReputationScoreDto reputationScore = authorUserProfile.flatMap(reputationService::findReputationScore)
                 .map(DtoMappings.ReputationScoreMapping::from)
                 .orElse(DtoMappings.ReputationScoreMapping.from(ReputationScore.NONE));
 

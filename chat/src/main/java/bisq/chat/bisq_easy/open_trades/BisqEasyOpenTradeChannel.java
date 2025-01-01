@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.bisqeasy.open_trades;
+package bisq.chat.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
@@ -114,7 +114,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
     }
 
     // From proto
-    private BisqEasyOpenTradeChannel(String channelId,
+    public BisqEasyOpenTradeChannel(String channelId,
                                      String tradeId,
                                      BisqEasyOffer bisqEasyOffer,
                                      UserIdentity myUserIdentity,

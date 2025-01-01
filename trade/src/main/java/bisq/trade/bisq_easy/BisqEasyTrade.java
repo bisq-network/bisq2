@@ -71,7 +71,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
 
-    private BisqEasyTrade(BisqEasyTradeState state,
+    public BisqEasyTrade(BisqEasyTradeState state,
                           String id,
                           TradeRole tradeRole,
                           Identity myIdentity,

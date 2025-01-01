@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.data.Quadruple;
 import bisq.common.observable.Pin;
@@ -203,7 +203,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .minWidth(95)
-                .comparator(Comparator.comparing(ListItem::getDirection))
+                .comparator(Comparator.comparing(ListItem::getDirectionalTitle))
                 .setCellFactory(getDirectionCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
@@ -261,7 +261,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    label.setText(item.getDirection());
+                    label.setText(item.getDirectionalTitle());
                     label.setPadding(new Insets(-9, -20, 0, -20));
                     setGraphic(label);
                 } else {
@@ -355,7 +355,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
         private final Trader maker, taker;
         private final long date, price, baseAmount, quoteAmount;
-        private final String dateString, timeString, tradeId, shortTradeId, offerId, direction, market,
+        private final String dateString, timeString, tradeId, shortTradeId, offerId, directionalTitle, market,
                 priceString, baseAmountString, quoteAmountString, paymentMethod;
         private final boolean isMakerRequester;
         private final Badge makersBadge = new Badge();
@@ -390,7 +390,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             tradeId = channel.getTradeId();
             shortTradeId = tradeId.substring(0, 8);
             offerId = offer.getId();
-            direction = BisqEasyTradeFormatter.getDirection(offer.getDirection());
+            directionalTitle = offer.getDirection().getDirectionalTitle();
             date = contract.getTakeOfferDate();
             dateString = DateFormatter.formatDate(date);
             timeString = DateFormatter.formatTime(date);

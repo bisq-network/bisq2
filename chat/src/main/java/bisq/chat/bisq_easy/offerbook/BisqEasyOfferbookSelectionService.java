@@ -15,14 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.bisqeasy.open_trades;
+package bisq.chat.bisq_easy.offerbook;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
 import bisq.persistence.PersistenceService;
-import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,16 +30,13 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class BisqEasyOpenTradeSelectionService extends ChatChannelSelectionService {
-    private final BisqEasyOpenTradeChannelService channelService;
-    private final UserIdentityService userIdentityService;
+public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionService {
+    private final BisqEasyOfferbookChannelService channelService;
 
-    public BisqEasyOpenTradeSelectionService(PersistenceService persistenceService,
-                                             BisqEasyOpenTradeChannelService channelService,
-                                             UserIdentityService userIdentityService) {
-        super(persistenceService, ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
+    public BisqEasyOfferbookSelectionService(PersistenceService persistenceService,
+                                             BisqEasyOfferbookChannelService channelService) {
+        super(persistenceService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         this.channelService = channelService;
-        this.userIdentityService = userIdentityService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -53,17 +49,15 @@ public class BisqEasyOpenTradeSelectionService extends ChatChannelSelectionServi
 
     @Override
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel != null) {
-            BisqEasyOpenTradeChannel openTradeChannel = (BisqEasyOpenTradeChannel) chatChannel;
-            userIdentityService.selectChatUserIdentity(openTradeChannel.getMyUserIdentity());
+        if (chatChannel instanceof BisqEasyOfferbookChannel) {
+            channelService.removeExpiredMessages(chatChannel);
+            super.selectChannel(chatChannel);
         }
-
-        super.selectChannel(chatChannel);
     }
 
     @Override
     protected Stream<ChatChannel<?>> getAllChatChannels() {
-        // fixme(low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
+        // fixme (low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
         return Stream.concat(channelService.getChannels().stream(), Stream.empty());
     }
 }

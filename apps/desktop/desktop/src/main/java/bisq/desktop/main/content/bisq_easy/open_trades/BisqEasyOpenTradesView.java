@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.data.Quadruple;
 import bisq.common.observable.Pin;
@@ -328,8 +328,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .minWidth(95)
                 .left()
-                .comparator(Comparator.comparing(ListItem::getDirection))
-                .valueSupplier(ListItem::getDirection)
+                .comparator(Comparator.comparing(ListItem::getDirectionalTitle))
+                .valueSupplier(ListItem::getDirectionalTitle)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
@@ -565,7 +565,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         private final BisqEasyTrade trade;
 
         private final UserProfile myUserProfile, peersUserProfile;
-        private final String offerId, tradeId, shortTradeId, myUserName, direction, peersUserName, dateString, timeString,
+        private final String offerId, tradeId, shortTradeId, myUserName, directionalTitle, peersUserName, dateString, timeString,
                 market, priceString, baseAmountString, quoteAmountString, myRole, bitcoinSettlementMethod,
                 fiatPaymentMethod;
         private final long date, price, baseAmount, quoteAmount;
@@ -595,7 +595,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             this.chatNotificationService = chatNotificationService;
             peersUserName = peersUserProfile.getUserName();
             myUserName = channel.getMyUserIdentity().getUserName();
-            direction = BisqEasyTradeFormatter.getDirection(trade);
+            directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(trade);
             offerId = channel.getBisqEasyOffer().getId();
             this.tradeId = trade.getId();
             shortTradeId = trade.getShortId();

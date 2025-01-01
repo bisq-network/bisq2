@@ -43,7 +43,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
     private final HBox phaseAndInfoHBox, cancelledHBox, interruptedHBox, errorHBox, isInMediationHBox;
-    private final Button cancelButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
+    private final Button interruptTradeButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
             rejectPriceButton;
     private final Button tradeDetailsButton;
     private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay, sellerPriceDescriptionApprovalOverlay;
@@ -58,14 +58,14 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         super(new VBox(0), model, controller);
 
         this.tradePhaseBox = tradePhaseBox;
-        cancelButton = new Button();
-        cancelButton.setMinWidth(160);
-        cancelButton.getStyleClass().add("outlined-button");
+        interruptTradeButton = new Button();
+        interruptTradeButton.setMinWidth(160);
+        interruptTradeButton.getStyleClass().add("outlined-button");
 
         ImageView greenInfoIcon = ImageUtil.getImageViewById("icon-info-green");
         tradeDetailsButton = BisqIconButton.createIconButton(greenInfoIcon, Res.get("bisqEasy.openTrades.tradeDetails.open"));
 
-        tradeDataHeader.getChildren().addAll(tradeDetailsButton, Spacer.fillHBox(), cancelButton);
+        tradeDataHeader.getChildren().addAll(tradeDetailsButton, Spacer.fillHBox(), interruptTradeButton);
         tradeDataHeaderBox = new VBox(tradeDataHeader, Layout.hLine());
 
 
@@ -148,10 +148,10 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         reportToMediatorButton.managedProperty().bind(model.getShowReportToMediatorButton());
         isInMediationHBox.visibleProperty().bind(model.getIsInMediation());
         isInMediationHBox.managedProperty().bind(model.getIsInMediation());
-        cancelledHBox.visibleProperty().bind(model.getCancelled());
-        cancelledHBox.managedProperty().bind(model.getCancelled());
-        interruptedHBox.visibleProperty().bind(model.getCancelled().or(model.getError()));
-        interruptedHBox.managedProperty().bind(model.getCancelled().or(model.getError()));
+        cancelledHBox.visibleProperty().bind(model.getInterruptedTradeInfo());
+        cancelledHBox.managedProperty().bind(model.getInterruptedTradeInfo());
+        interruptedHBox.visibleProperty().bind(model.getInterruptedTradeInfo().or(model.getError()));
+        interruptedHBox.managedProperty().bind(model.getInterruptedTradeInfo().or(model.getError()));
         errorHBox.visibleProperty().bind(model.getError());
         errorHBox.managedProperty().bind(model.getError());
         phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoVisible());
@@ -160,9 +160,9 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelledInfo.textProperty().bind(model.getTradeInterruptedInfo());
         errorMessage.textProperty().bind(model.getErrorMessage());
 
-        cancelButton.textProperty().bind(model.getInterruptTradeButtonText());
-        cancelButton.visibleProperty().bind(model.getCancelButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
-        cancelButton.managedProperty().bind(model.getCancelButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
+        interruptTradeButton.textProperty().bind(model.getInterruptTradeButtonText());
+        interruptTradeButton.visibleProperty().bind(model.getInterruptTradeButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
+        interruptTradeButton.managedProperty().bind(model.getInterruptTradeButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
 
         rejectPriceButton.textProperty().bind(model.getInterruptTradeButtonText());
         buyerPriceDescriptionApprovalOverlay.textProperty().bind(model.getBuyerPriceDescriptionApprovalOverlay());
@@ -192,7 +192,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
             }
         });
 
-        cancelButton.setOnAction(e -> controller.onInterruptTrade());
+        interruptTradeButton.setOnAction(e -> controller.onInterruptTrade());
         tradeDetailsButton.setOnAction(e -> controller.onViewTradeDetails());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
@@ -223,9 +223,9 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelledInfo.textProperty().unbind();
         errorMessage.textProperty().unbind();
 
-        cancelButton.textProperty().unbind();
-        cancelButton.visibleProperty().unbind();
-        cancelButton.managedProperty().unbind();
+        interruptTradeButton.textProperty().unbind();
+        interruptTradeButton.visibleProperty().unbind();
+        interruptTradeButton.managedProperty().unbind();
 
         rejectPriceButton.textProperty().unbind();
         buyerPriceDescriptionApprovalOverlay.textProperty().unbind();
@@ -234,7 +234,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         stateInfoVBoxPin.unsubscribe();
         showSellersPriceApprovalOverlayPin.unsubscribe();
 
-        cancelButton.setOnAction(null);
+        interruptTradeButton.setOnAction(null);
         tradeDetailsButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
         exportButton.setOnAction(null);

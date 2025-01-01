@@ -17,8 +17,8 @@
 
 package bisq.chat;
 
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;

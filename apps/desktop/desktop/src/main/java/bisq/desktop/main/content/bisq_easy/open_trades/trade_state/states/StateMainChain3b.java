@@ -20,7 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.explorer.dto.Output;
 import bisq.bonded_roles.explorer.dto.Tx;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
