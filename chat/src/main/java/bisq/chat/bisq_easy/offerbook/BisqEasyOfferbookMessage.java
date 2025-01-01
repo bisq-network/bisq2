@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.bisqeasy.offerbook;
+package bisq.chat.bisq_easy.offerbook;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
-import bisq.chat.bisqeasy.BisqEasyOfferMessage;
+import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;

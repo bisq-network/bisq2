@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.bisqeasy.open_trades;
+package bisq.chat.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
-import bisq.chat.bisqeasy.BisqEasyOfferMessage;
+import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.chat.reactions.ChatMessageReaction;

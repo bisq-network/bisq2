@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.components;
 
 import bisq.bisq_easy.BisqEasyServiceUtil;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Triple;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;

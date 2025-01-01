@@ -20,7 +20,7 @@ package bisq.dto;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
 import bisq.dto.offer.bisq_easy.OfferListItemDto;

@@ -18,7 +18,7 @@
 package bisq.http_api.web_socket.domain.offerbook;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.http_api.web_socket.domain.SimpleObservableWebSocketService;

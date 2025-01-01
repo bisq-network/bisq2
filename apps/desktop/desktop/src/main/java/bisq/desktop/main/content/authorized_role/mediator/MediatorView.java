@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.data.Quadruple;
 import bisq.common.observable.Pin;

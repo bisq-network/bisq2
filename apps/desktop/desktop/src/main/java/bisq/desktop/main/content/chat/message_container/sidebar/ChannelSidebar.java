@@ -20,7 +20,7 @@ package bisq.desktop.main.content.chat.message_container.sidebar;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
