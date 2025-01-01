@@ -304,8 +304,8 @@ public class TradeStateController implements Controller {
 
         model.getPhaseAndInfoVisible().set(true);
         model.getError().set(false);
-        model.getCancelled().set(false);
-        model.getCancelButtonVisible().set(true);
+        model.getInterruptedTradeInfo().set(false);
+        model.getInterruptTradeButtonVisible().set(true);
         model.getIsTradeCompleted().set(false);
 
         switch (state) {
@@ -383,7 +383,7 @@ public class TradeStateController implements Controller {
                 break;
 
             case BTC_CONFIRMED:
-                model.getCancelButtonVisible().set(false);
+                model.getInterruptTradeButtonVisible().set(false);
                 model.getIsTradeCompleted().set(true);
                 if (isSeller) {
                     model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
@@ -395,30 +395,30 @@ public class TradeStateController implements Controller {
             case REJECTED:
             case PEER_REJECTED:
                 model.getPhaseAndInfoVisible().set(false);
-                model.getCancelled().set(true);
-                model.getCancelButtonVisible().set(false);
+                model.getInterruptedTradeInfo().set(true);
+                model.getInterruptTradeButtonVisible().set(false);
                 applyTradeInterruptedInfo(trade, false);
                 break;
 
             case CANCELLED:
             case PEER_CANCELLED:
                 model.getPhaseAndInfoVisible().set(false);
-                model.getCancelled().set(true);
-                model.getCancelButtonVisible().set(false);
+                model.getInterruptedTradeInfo().set(true);
+                model.getInterruptTradeButtonVisible().set(false);
                 applyTradeInterruptedInfo(trade, true);
                 break;
 
             case FAILED:
                 model.getPhaseAndInfoVisible().set(false);
                 model.getError().set(true);
-                model.getCancelButtonVisible().set(false);
+                model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
                 model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed",
                         model.getBisqEasyTrade().get().getErrorMessage()));
                 break;
             case FAILED_AT_PEER:
                 model.getPhaseAndInfoVisible().set(false);
-                model.getCancelButtonVisible().set(false);
+                model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
                 model.getError().set(true);
                 model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer",
@@ -467,7 +467,7 @@ public class TradeStateController implements Controller {
             case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.REJECT);
                 model.getInterruptTradeButtonText().set(Res.get("bisqEasy.openTrades.rejectTrade"));
-                model.getCancelButtonVisible().set(true);
+                model.getInterruptTradeButtonVisible().set(true);
                 break;
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
@@ -493,11 +493,11 @@ public class TradeStateController implements Controller {
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.CANCEL);
                 model.getInterruptTradeButtonText().set(Res.get("bisqEasy.openTrades.cancelTrade"));
-                model.getCancelButtonVisible().set(true);
+                model.getInterruptTradeButtonVisible().set(true);
                 break;
             case BTC_CONFIRMED:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.COMPLETED);
-                model.getCancelButtonVisible().set(false);
+                model.getInterruptTradeButtonVisible().set(false);
                 break;
             case REJECTED:
             case PEER_REJECTED:
@@ -505,7 +505,7 @@ public class TradeStateController implements Controller {
             case PEER_CANCELLED:
             case FAILED:
             case FAILED_AT_PEER:
-                model.getCancelButtonVisible().set(false);
+                model.getInterruptTradeButtonVisible().set(false);
                 break;
 
             default:
