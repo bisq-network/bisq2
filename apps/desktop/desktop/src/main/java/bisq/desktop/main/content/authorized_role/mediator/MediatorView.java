@@ -390,7 +390,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             tradeId = channel.getTradeId();
             shortTradeId = tradeId.substring(0, 8);
             offerId = offer.getId();
-            directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(offer.getDirection());
+            directionalTitle = offer.getDirection().getDirectionalTitle();
             date = contract.getTakeOfferDate();
             dateString = DateFormatter.formatDate(date);
             timeString = DateFormatter.formatTime(date);

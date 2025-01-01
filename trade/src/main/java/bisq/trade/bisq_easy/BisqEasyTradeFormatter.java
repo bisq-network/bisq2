@@ -53,19 +53,14 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String getDirectionalTitle(BisqEasyTrade trade) {
-        Direction direction = getDirectionObject(trade);
-        return getDirectionalTitle(direction);
+        return getDirection(trade).getDirectionalTitle();
     }
 
-    public static Direction getDirectionObject(BisqEasyTrade trade) {
+    public static Direction getDirection(BisqEasyTrade trade) {
         return switch (trade.getTradeRole()) {
             case BUYER_AS_TAKER, BUYER_AS_MAKER -> Direction.BUY;
             case SELLER_AS_TAKER, SELLER_AS_MAKER -> Direction.SELL;
         };
-    }
-
-    public static String getDirectionalTitle(Direction direction) {
-        return direction.getDirectionalTitle();
     }
 
     public static String getMakerTakerRole(BisqEasyTrade trade) {
