@@ -45,7 +45,6 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     private final Optional<UserProfile> mediator;
     private final PriceSpec priceSpec;
     private final long marketPrice;
-    private final long takeOfferDate;
 
     public BisqEasyContract(long takeOfferDate,
                             BisqEasyOffer offer,
@@ -89,7 +88,6 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
         this.mediator = mediator;
         this.priceSpec = priceSpec;
         this.marketPrice = marketPrice;
-        this.takeOfferDate = takeOfferDate;
 
         verify();
     }
