@@ -76,13 +76,17 @@ public class OffersWebSocketService extends BaseWebSocketService {
             pins.add(channel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(BisqEasyOfferbookMessage message) {
-                    send(quoteCurrencyCode, message, ModificationType.ADDED);
+                    if (message.hasBisqEasyOffer()) {
+                        send(quoteCurrencyCode, message, ModificationType.ADDED);
+                    }
                 }
 
                 @Override
                 public void remove(Object element) {
                     if (element instanceof BisqEasyOfferbookMessage message) {
-                        send(quoteCurrencyCode, message, ModificationType.REMOVED);
+                        if (message.hasBisqEasyOffer()) {
+                            send(quoteCurrencyCode, message, ModificationType.REMOVED);
+                        }
                     }
                 }
 
@@ -111,7 +115,16 @@ public class OffersWebSocketService extends BaseWebSocketService {
         ArrayList<OfferListItemDto> payload = channels
                 .flatMap(channel ->
                         channel.getChatMessages().stream()
-                                .map(this::createOfferListItemDto))
+                                .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                                .map(message -> {
+                                    try {
+                                        return createOfferListItemDto(message);
+                                    } catch (Exception e) {
+                                        log.error("Failed to create OfferListItemDto", e);
+                                        return null;
+                                    }
+                                })
+                                .filter(Objects::nonNull))
                 .collect(Collectors.toCollection(ArrayList::new));
         return toJson(payload);
     }
