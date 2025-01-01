@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.offer;
+package bisq.http_api.rest_api.domain.offerbook;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodUtil;
@@ -61,11 +61,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Path("/offers")
+@Path("/offerbook")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Bisq Easy Offer API")
-public class OfferRestApi extends RestApiBase {
+public class OfferbookRestApi extends RestApiBase {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
@@ -73,9 +73,9 @@ public class OfferRestApi extends RestApiBase {
     private final ReputationService reputationService;
 
 
-    public OfferRestApi(ChatService chatService,
-                        MarketPriceService marketPriceService,
-                        UserService userService
+    public OfferbookRestApi(ChatService chatService,
+                            MarketPriceService marketPriceService,
+                            UserService userService
     ) {
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         this.marketPriceService = marketPriceService;
@@ -99,6 +99,7 @@ public class OfferRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
+    @Path("/offers")
     public void createOffer(CreateOfferRequest request, @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
         asyncResponse.setTimeoutHandler(response -> {
