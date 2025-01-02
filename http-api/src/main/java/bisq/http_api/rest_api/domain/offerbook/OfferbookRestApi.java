@@ -57,6 +57,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -82,6 +83,51 @@ public class OfferbookRestApi extends RestApiBase {
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
         reputationService = userService.getReputationService();
+    }
+
+    @DELETE
+    @Operation(
+            summary = "Delete Bisq Easy Offer",
+            description = "Delete a Bisq Easy Offer from the network.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Offer successfully deleted"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "404", description = "Offer or user identity not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error"),
+                    @ApiResponse(responseCode = "503", description = "Request timed out")
+            }
+    )
+    @Path("/offers/{offerId}")
+    public void deleteOffer(@PathParam("offerId") String offerId, @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+        try {
+            Optional<BisqEasyOfferbookMessage> optionalOfferbookMessage = bisqEasyOfferbookChannelService.findMessageByOfferId(offerId);
+            if (optionalOfferbookMessage.isEmpty()) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Offer not found"));
+                return;
+            }
+
+            BisqEasyOfferbookMessage offerbookMessage = optionalOfferbookMessage.get();
+            Optional<UserIdentity> optionalUserIdentity = userIdentityService.findUserIdentity(offerbookMessage.getAuthorUserProfileId());
+            if (optionalUserIdentity.isEmpty()) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "User identity for offer not found"));
+                return;
+            }
+
+            UserIdentity userIdentity = optionalUserIdentity.get();
+            bisqEasyOfferbookChannelService.deleteChatMessage(offerbookMessage, userIdentity.getNetworkIdWithKeyPair()).get();
+            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
+        } catch (ExecutionException e) {
+            asyncResponse.resume(buildErrorResponse("Failed to delete the offer: " + e.getCause().getMessage()));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
     }
 
     @POST
@@ -153,7 +199,7 @@ public class OfferbookRestApi extends RestApiBase {
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
-            asyncResponse.resume(buildErrorResponse("An unexpected error occurred."));
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
     }
 

@@ -193,7 +193,7 @@ public class TradeRestApi extends RestApiBase {
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
-            asyncResponse.resume(buildErrorResponse("An unexpected error occurred."));
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
     }
 }

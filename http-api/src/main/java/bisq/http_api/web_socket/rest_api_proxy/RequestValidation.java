@@ -19,18 +19,19 @@ package bisq.http_api.web_socket.rest_api_proxy;
 
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class RequestValidation {
-    private static final Set<String> METHOD_WHITELIST = Set.of("GET", "POST");
+    private static final Set<String> METHOD_WHITELIST = Set.of("GET", "POST", "DELETE");
 
     static String validateRequest(WebSocketRestApiRequest request) {
         String path = request.getPath();
         if (!isValidPath(path)) {
             return String.format("Invalid path: '%s'", path);
         }
-        checkArgument(METHOD_WHITELIST.contains(request.getMethod()),
-                "Method not supported. Supported methods are: " + METHOD_WHITELIST + ".");
+
+        if (!METHOD_WHITELIST.contains(request.getMethod())) {
+            return String.format("Method not supported. Supported methods are: %s.", METHOD_WHITELIST);
+
+        }
 
         return null;
     }
