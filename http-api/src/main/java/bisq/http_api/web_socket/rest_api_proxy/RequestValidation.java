@@ -20,7 +20,7 @@ package bisq.http_api.web_socket.rest_api_proxy;
 import java.util.Set;
 
 public class RequestValidation {
-    private static final Set<String> METHOD_WHITELIST = Set.of("GET", "POST", "DELETE");
+    private static final Set<String> METHOD_WHITELIST = Set.of("GET", "POST", "DELETE", "PUT", "PATCH");
 
     static String validateRequest(WebSocketRestApiRequest request) {
         String path = request.getPath();

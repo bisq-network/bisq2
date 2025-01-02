@@ -171,7 +171,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 bondedRolesService,
                 chatService,
                 supportService,
-                tradeService);
+                tradeService,
+                settingsService);
     }
 
     @Override

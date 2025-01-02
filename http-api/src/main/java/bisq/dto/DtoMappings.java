@@ -57,6 +57,7 @@ import bisq.dto.security.keys.PrivateKeyDto;
 import bisq.dto.security.keys.PubKeyDto;
 import bisq.dto.security.keys.PublicKeyDto;
 import bisq.dto.security.pow.ProofOfWorkDto;
+import bisq.dto.settings.SettingsDto;
 import bisq.dto.user.profile.UserProfileDto;
 import bisq.dto.user.reputation.ReputationScoreDto;
 import bisq.network.identity.NetworkId;
@@ -78,6 +79,7 @@ import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import bisq.security.pow.ProofOfWork;
+import bisq.settings.SettingsService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 
@@ -632,6 +634,22 @@ public class DtoMappings {
                     Base64.getEncoder().encodeToString(value.getSolution()),
                     value.getDuration()
             );
+        }
+    }
+
+
+    // settings
+    public static class SettingsDtoMapping {
+        // toPojo method not implemented as we do not have a settings value object in the domain
+
+        public static SettingsDto from(SettingsService settingsService) {
+            return new SettingsDto(settingsService.getIsTacAccepted().get(),
+                    settingsService.getTradeRulesConfirmed().get(),
+                    settingsService.getCloseMyOfferWhenTaken().get(),
+                    settingsService.getLanguageCode().get(),
+                    settingsService.getSupportedLanguageCodes(),
+                    settingsService.getMaxTradePriceDeviation().get(),
+                    MarketMapping.from(settingsService.getSelectedMarket().get()));
         }
     }
 
