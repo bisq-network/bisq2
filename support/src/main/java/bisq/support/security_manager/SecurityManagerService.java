@@ -65,7 +65,6 @@ public class SecurityManagerService implements Service {
                                   BondedRolesService bondedRolesService) {
         userIdentityService = userService.getUserIdentityService();
         this.networkService = networkService;
-        AuthorizedBondedRolesService authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         staticPublicKeysProvided = config.isStaticPublicKeysProvided();
     }
 

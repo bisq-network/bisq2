@@ -91,8 +91,7 @@ public class BondedRoleRegistrationService implements Service {
                 addressByTransportTypeMap,
                 networkId,
                 isCancellationRequest);
-        authorizedOracleNodes.forEach(oracleNode ->
-        {
+        authorizedOracleNodes.forEach(oracleNode -> {
             NetworkId oracleNodeNetworkId = oracleNode.getNetworkId();
             log.info("Send BondedRoleRegistrationRequest to oracleNode {}.\nBondedRoleRegistrationRequest={}", oracleNodeNetworkId, request);
             networkService.confidentialSend(request, oracleNodeNetworkId, senderNetworkIdWithKeyPair);
