@@ -103,6 +103,10 @@ public abstract class AmountInput {
         controller.model.textInputMaxCharCount = Optional.of(maxCharCount);
     }
 
+    public void deselect() {
+        controller.view.textInput.deselect();
+    }
+
     protected static class Controller implements bisq.desktop.common.view.Controller {
         @Setter
         protected Model model;
