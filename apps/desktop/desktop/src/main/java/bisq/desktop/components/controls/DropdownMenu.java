@@ -48,7 +48,6 @@ public class DropdownMenu extends HBox {
     private final ImageView defaultIcon, activeIcon;
     @Getter
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
-    @Getter
     private final ContextMenu contextMenu = new ContextMenu();
     @Getter
     private final HBox hBox = new HBox();
