@@ -29,7 +29,11 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.Switch;
-import bisq.desktop.components.table.*;
+import bisq.desktop.components.table.ActivatableTableItem;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.DateColumnUtil;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
@@ -40,7 +44,6 @@ import bisq.support.mediation.MediationCase;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.InvalidationListener;
@@ -323,6 +326,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                                                              ListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
         userProfileDisplay.setUserProfile(trader.getUserProfile());
+        userProfileDisplay.configureOpenProfileCard(trader.getUserProfile());
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");
         }
@@ -369,15 +373,14 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             this.channel = channel;
 
             reputationService = serviceProvider.getUserService().getReputationService();
-            UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
             chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
             BisqEasyContract contract = mediationCase.getMediationRequest().getContract();
             BisqEasyOffer offer = contract.getOffer();
             List<UserProfile> traders = new ArrayList<>(channel.getTraders());
             offer.getMakerNetworkId().getId();
 
-            Trader trader1 = new Trader(traders.get(0), reputationService, userProfileService);
-            Trader trader2 = new Trader(traders.get(1), reputationService, userProfileService);
+            Trader trader1 = new Trader(traders.get(0), reputationService);
+            Trader trader2 = new Trader(traders.get(1), reputationService);
             if (offer.getMakerNetworkId().getId().equals(trader1.getUserProfile().getId())) {
                 maker = trader1;
                 taker = trader2;
@@ -447,8 +450,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             private final long totalReputationScore, profileAge;
 
             Trader(UserProfile userProfile,
-                   ReputationService reputationService,
-                   UserProfileService userProfileService) {
+                   ReputationService reputationService) {
                 this.userProfile = userProfile;
                 userName = userProfile.getUserName();
 
