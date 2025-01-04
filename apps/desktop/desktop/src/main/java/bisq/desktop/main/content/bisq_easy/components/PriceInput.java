@@ -97,8 +97,8 @@ public class PriceInput {
         controller.model.reset();
     }
 
-    public void requestFocus() {
-        controller.view.textInput.requestFocus();
+    public void requestFocusWithCursor() {
+        controller.view.textInput.requestFocusWithCursor();
     }
 
     public void deselect() {

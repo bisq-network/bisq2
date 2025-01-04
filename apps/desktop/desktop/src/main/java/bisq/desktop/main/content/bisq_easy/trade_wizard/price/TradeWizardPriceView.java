@@ -213,7 +213,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             percentageInput.setEditable(false);
             percentageInput.resetValidation();
             priceInput.setEditable(true);
-            priceInput.requestFocus();
+            priceInput.requestFocusWithCursor();
         } else {
             percentagePrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
             priceInput.getRoot().visibleProperty().set(false);
@@ -224,7 +224,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             priceInput.setEditable(false);
             priceInput.resetValidation();
             percentageInput.setEditable(true);
-            percentageInput.requestFocus();
+            percentageInput.requestFocusWithCursor();
         }
     }
 

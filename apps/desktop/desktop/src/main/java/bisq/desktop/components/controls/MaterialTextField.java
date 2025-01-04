@@ -385,6 +385,11 @@ public class MaterialTextField extends Pane {
         textInputControl.selectHome();
     }
 
+    public void requestFocusWithCursor() {
+        requestFocus();
+        textInputControl.selectRange(textInputControl.getLength(), textInputControl.getLength());
+    }
+
     public void deselect() {
         textInputControl.deselect();
     }
