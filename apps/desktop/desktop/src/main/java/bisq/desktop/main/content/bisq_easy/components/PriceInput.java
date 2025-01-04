@@ -61,6 +61,10 @@ public class PriceInput {
         return controller.model.priceQuote;
     }
 
+    public ReadOnlyStringProperty getPriceString() {
+        return controller.model.priceString;
+    }
+
     public ReadOnlyStringProperty descriptionProperty() {
         return controller.model.description;
     }
@@ -71,6 +75,10 @@ public class PriceInput {
 
     public void setQuote(PriceQuote priceQuote) {
         controller.setQuote(priceQuote);
+    }
+
+    public void setPriceString(String priceString) {
+        controller.model.priceString.set(priceString);
     }
 
     public void setPercentage(String percentage) {
