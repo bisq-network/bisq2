@@ -227,6 +227,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
             minQuoteAmount.setTextInputMaxCharCount(RANGE_INPUT_TEXT_MAX_LENGTH);
             applyTextInputFontStyle();
             applyTextInputPrefWidth();
+            deselectAll();
+            UIScheduler.run(maxOrFixedQuoteAmount::requestFocus).after(100);
         });
         sliderTrackStylePin = EasyBind.subscribe(model.getSliderTrackStyle(), maxOrFixedAmountSlider::setStyle);
 
@@ -315,18 +317,14 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
     private void onInputTextFieldFocus(boolean isOtherFocused, boolean focus) {
         description.getStyleClass().clear();
-        if (focus) {
+        if (focus || isOtherFocused) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
             Transitions.animateWidth(selectionLine, AMOUNT_BOX_WIDTH + 40);
             description.getStyleClass().add("description-focused");
-        } else if (!isOtherFocused) {
-            // If switching between the 2 fields we want to avoid to get the fadeout called that's why
-            // we do the check with !other.get()
+        } else {
             Transitions.fadeOut(selectionLine, 200);
             description.getStyleClass().add("description");
-        } else {
-            description.getStyleClass().add("description-focused");
         }
     }
 
@@ -350,6 +348,13 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
                 ? minQuoteAmount.getTextInputLength() + maxOrFixedQuoteAmount.getTextInputLength() + 1 // for the dash
                 : maxOrFixedQuoteAmount.getTextInputLength();
         quoteAmountSelectionHBox.getStyleClass().add(getFontStyleBasedOnTextLength(charCount));
+    }
+
+    private void deselectAll() {
+        minQuoteAmount.deselect();
+        minBaseAmount.deselect();
+        maxOrFixedQuoteAmount.deselect();
+        maxOrFixedBaseAmount.deselect();
     }
 
     private static int getFontCharWidth(int charCount) {
