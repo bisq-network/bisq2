@@ -25,7 +25,9 @@ import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -54,10 +56,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
@@ -76,13 +75,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Tag(name = "Bisq Easy Trade API")
 public class TradeRestApi extends RestApiBase {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
-    private final ChatService chatService;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BannedUserService bannedUserService;
     private final MediationRequestService mediationRequestService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+    private final ChatChannelSelectionService openTradesChannelSelectionService;
+    private final LeavePrivateChatManager leavePrivateChatManager;
+    private final ChatChannelSelectionService offerbookChannelSelectionService;
 
     public TradeRestApi(ChatService chatService,
                         MarketPriceService marketPriceService,
@@ -90,13 +91,15 @@ public class TradeRestApi extends RestApiBase {
                         SupportService supportedService,
                         TradeService tradeService) {
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
-        this.chatService = chatService;
+        offerbookChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
+        bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
+        openTradesChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
+        leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         this.marketPriceService = marketPriceService;
         userIdentityService = userService.getUserIdentityService();
         bannedUserService = userService.getBannedUserService();
         mediationRequestService = supportedService.getMediationRequestService();
         bisqEasyTradeService = tradeService.getBisqEasyTradeService();
-        bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
     }
 
     @POST
@@ -162,16 +165,14 @@ public class TradeRestApi extends RestApiBase {
                     .thenAccept(result ->
                             {
                                 // In case the user has switched to another market we want to select that market in the offer book
-                                ChatChannelSelectionService chatChannelSelectionService =
-                                        chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
                                 bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
-                                        .ifPresent(chatChannelSelectionService::selectChannel);
+                                        .ifPresent(offerbookChannelSelectionService::selectChannel);
                                 bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId)
                                         .ifPresent(channel -> {
                                             String taker = userIdentityService.getSelectedUserIdentity().getUserProfile().getUserName();
                                             String maker = channel.getPeer().getUserName();
                                             String encoded = Res.encode("bisqEasy.takeOffer.tradeLogMessage", taker, maker);
-                                            chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(encoded, channel);
+                                            bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
                                         });
                             }
                     )
@@ -192,6 +193,97 @@ public class TradeRestApi extends RestApiBase {
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @PUT
+    @Path("/selected/{tradeId}")
+    @Operation(
+            summary = "Select an open trade",
+            description = "Selects the open trade channel for that trade ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Trade selected successfully"),
+                    @ApiResponse(responseCode = "404", description = "Trade not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public void selectOpenTrade(@PathParam("tradeId") String tradeId, @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+        try {
+            Optional<BisqEasyOpenTradeChannel> optionalChannel = bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId);
+            if (optionalChannel.isEmpty()) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Open trade channel not found for trade with ID " + tradeId));
+                return;
+            }
+
+            openTradesChannelSelectionService.selectChannel(optionalChannel.get());
+            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+
+    @PATCH
+    @Path("/{tradeId}/event")
+    @Operation(
+            summary = "Cancel a Trade",
+            description = "Send a log message to the peer and set the state of a trade to 'canceled'.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Trade successfully canceled"),
+                    @ApiResponse(responseCode = "404", description = "Trade not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public void processTradeEvent(@PathParam("tradeId") String tradeId,
+                         TradeEventDto tradeEvent,
+                         @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+
+        try {
+            Optional<BisqEasyOpenTradeChannel> optionalChannel = bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId);
+            if (optionalChannel.isEmpty()) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Open trade channel not found for trade with ID " + tradeId));
+                return;
+            }
+
+            Optional<BisqEasyTrade> optionalTrade = bisqEasyTradeService.findTrade(tradeId);
+            if (optionalTrade.isEmpty()) {
+                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Trade not found for ID " + tradeId));
+                return;
+            }
+
+            BisqEasyOpenTradeChannel channel = optionalChannel.get();
+            BisqEasyTrade trade = optionalTrade.get();
+            switch (tradeEvent) {
+                case REJECTED -> {
+                    String userName = channel.getMyUserIdentity().getUserName();
+                    String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
+                    bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
+                    bisqEasyTradeService.rejectTrade(trade);
+                }
+                case CANCELLED -> {
+                    String userName = channel.getMyUserIdentity().getUserName();
+                    String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
+                    bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
+                    bisqEasyTradeService.cancelTrade(trade);
+                    leavePrivateChatManager.leaveChannel(channel);
+                }
+                case CLOSED -> {
+                    bisqEasyTradeService.removeTrade(trade);
+                    leavePrivateChatManager.leaveChannel(channel);
+                }
+            }
+
+            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
