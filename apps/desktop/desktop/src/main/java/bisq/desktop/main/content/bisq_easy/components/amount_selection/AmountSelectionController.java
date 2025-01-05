@@ -59,8 +59,7 @@ public class AmountSelectionController implements Controller {
     private final PriceInput price;
     private final ChangeListener<Number> maxOrFixedSliderListener, minSliderListener;
     private Subscription maxOrFixedBaseAmountFromModelPin, maxOrFixedBaseAmountFromCompPin, maxOrFixedQuoteAmountFromCompPin,
-            maxOrFixedBaseSideAmountValidPin, maxOrFixedQuoteSideAmountValidPin, minBaseAmountFromModelPin,
-            minBaseAmountFromCompPin, minQuoteAmountFromCompPin, minBaseSideAmountValidPin,
+            maxOrFixedQuoteSideAmountValidPin, minBaseAmountFromModelPin, minBaseAmountFromCompPin, minQuoteAmountFromCompPin,
             minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin;
 
     public AmountSelectionController(ServiceProvider serviceProvider,
@@ -353,8 +352,6 @@ public class AmountSelectionController implements Controller {
         maxRangeCustomValuePin = EasyBind.subscribe(model.getMaxRangeMonetary(),
                 value -> applyInitialRangeValues());
 
-        maxOrFixedBaseSideAmountValidPin = subscribeToAmountValidity(maxOrFixedBaseSideAmountInput, this::setMaxOrFixedBaseFromQuote);
-        minBaseSideAmountValidPin = subscribeToAmountValidity(minBaseSideAmountInput, this::setMinBaseFromQuote);
         maxOrFixedQuoteSideAmountValidPin = subscribeToAmountValidity(maxOrFixedQuoteSideAmountInput, this::setMaxOrFixedQuoteFromBase);
         minQuoteSideAmountValidPin = subscribeToAmountValidity(minQuoteSideAmountInput, this::setMinQuoteFromBase);
 
@@ -387,8 +384,6 @@ public class AmountSelectionController implements Controller {
         priceFromCompPin.unsubscribe();
         minRangeCustomValuePin.unsubscribe();
         maxRangeCustomValuePin.unsubscribe();
-        maxOrFixedBaseSideAmountValidPin.unsubscribe();
-        minBaseSideAmountValidPin.unsubscribe();
         maxOrFixedQuoteSideAmountValidPin.unsubscribe();
         minQuoteSideAmountValidPin.unsubscribe();
         isRangeAmountEnabledPin.unsubscribe();
