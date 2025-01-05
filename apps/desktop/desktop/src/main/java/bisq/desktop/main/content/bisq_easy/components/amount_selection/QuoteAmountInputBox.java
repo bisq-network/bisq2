@@ -21,7 +21,6 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
-import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.BooleanProperty;
@@ -47,7 +46,7 @@ import java.util.Optional;
 
 @Slf4j
 public class QuoteAmountInputBox {
-    protected final Controller controller;
+    private final Controller controller;
 
     public QuoteAmountInputBox(boolean isBaseCurrency, boolean showCurrencyCode) {
         controller = new Controller(isBaseCurrency, showCurrencyCode);
@@ -107,13 +106,10 @@ public class QuoteAmountInputBox {
         controller.view.textInput.deselect();
     }
 
-    protected static class Controller implements bisq.desktop.common.view.Controller {
-        @Setter
-        protected Model model;
+    private static class Controller implements bisq.desktop.common.view.Controller {
+        private final Model model;
         @Getter
-        @Setter
-        protected View view;
-        protected final NumberValidator validator = new NumberValidator();
+        private final View view;
 
         private Controller(boolean isBaseCurrency, boolean showCurrencyCode) {
             model = new Model(isBaseCurrency, showCurrencyCode);
@@ -187,19 +183,19 @@ public class QuoteAmountInputBox {
         }
     }
 
-    protected static class Model implements bisq.desktop.common.view.Model {
+    private static class Model implements bisq.desktop.common.view.Model {
         private final BooleanProperty isAmountValid = new SimpleBooleanProperty(true);
-        protected final boolean isBaseCurrency;
-        protected final boolean showCurrencyCode;
-        protected final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
-        protected final StringProperty code = new SimpleStringProperty();
+        private final boolean isBaseCurrency;
+        private final boolean showCurrencyCode;
+        private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
+        private final StringProperty code = new SimpleStringProperty();
         private Optional<Integer> textInputMaxCharCount = Optional.empty();
-        protected Market selectedMarket;
-        protected boolean hasFocus;
+        private Market selectedMarket;
+        private boolean hasFocus;
         @Setter
-        protected boolean useLowPrecision = true;
+        private boolean useLowPrecision = true;
 
-        protected Model(boolean isBaseCurrency, boolean showCurrencyCode) {
+        private Model(boolean isBaseCurrency, boolean showCurrencyCode) {
             this.isBaseCurrency = isBaseCurrency;
             this.showCurrencyCode = showCurrencyCode;
         }
@@ -214,14 +210,14 @@ public class QuoteAmountInputBox {
         }
     }
 
-    protected static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
+    private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final ChangeListener<String> textListener;
-        protected final ChangeListener<Boolean> focusListener;
-        protected final ChangeListener<Monetary> amountListener;
-        protected final TextField textInput;
-        protected final Label codeLabel;
+        private final ChangeListener<Boolean> focusListener;
+        private final ChangeListener<Monetary> amountListener;
+        private final TextField textInput;
+        private final Label codeLabel;
 
-        protected View(Model model, Controller controller) {
+        private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
 
             textInput = new TextField();
@@ -236,6 +232,28 @@ public class QuoteAmountInputBox {
             textListener = this::onTextChanged;
             focusListener = this::onFocusChanged;
             amountListener = this::onAmountChanged;
+        }
+
+        @Override
+        protected void onViewAttached() {
+            codeLabel.textProperty().bind(model.code);
+
+            textInput.textProperty().addListener(textListener);
+            textInput.focusedProperty().addListener(focusListener);
+            model.amount.addListener(amountListener);
+
+            applyAmount(model.amount.get());
+            textInput.requestFocus();
+            textInput.selectRange(textInput.getLength(), textInput.getLength());
+        }
+
+        @Override
+        protected void onViewDetached() {
+            codeLabel.textProperty().unbind();
+
+            textInput.textProperty().removeListener(textListener);
+            textInput.focusedProperty().removeListener(focusListener);
+            model.amount.removeListener(amountListener);
         }
 
         private void onTextChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -259,31 +277,9 @@ public class QuoteAmountInputBox {
             applyAmount(newValue);
         }
 
-        protected void applyAmount(Monetary newValue) {
+        private void applyAmount(Monetary newValue) {
             textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, model.useLowPrecision));
             textInput.selectRange(textInput.getLength(), textInput.getLength());
-        }
-
-        @Override
-        protected void onViewAttached() {
-            codeLabel.textProperty().bind(model.code);
-
-            textInput.textProperty().addListener(textListener);
-            textInput.focusedProperty().addListener(focusListener);
-            model.amount.addListener(amountListener);
-
-            applyAmount(model.amount.get());
-            textInput.requestFocus();
-            textInput.selectRange(textInput.getLength(), textInput.getLength());
-        }
-
-        @Override
-        protected void onViewDetached() {
-            codeLabel.textProperty().unbind();
-
-            textInput.textProperty().removeListener(textListener);
-            textInput.focusedProperty().removeListener(focusListener);
-            model.amount.removeListener(amountListener);
         }
     }
 }
