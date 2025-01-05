@@ -21,8 +21,8 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.QuoteAmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BaseAmount;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -63,8 +63,8 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final Label minRangeValue, maxRangeValue, minRangeCode, maxRangeCode, description, quoteAmountSeparator,
             baseAmountSeparator;
     private final Region selectionLine;
-    private final SmallAmountInput maxOrFixedBaseAmount, minBaseAmount;
-    private final BigAmountInput maxOrFixedQuoteAmount, minQuoteAmount;
+    private final BaseAmount maxOrFixedBaseAmount, minBaseAmount;
+    private final QuoteAmountInput maxOrFixedQuoteAmount, minQuoteAmount;
     private final Pane minQuoteAmountRoot, minBaseAmountRoot;
     private final HBox quoteAmountSelectionHBox, sliderIndicators;
     private Subscription maxOrFixedBaseAmountFocusPin, maxOrFixedQuoteAmountFocusPin,
@@ -73,10 +73,10 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
 
     AmountSelectionView(AmountSelectionModel model,
                         AmountSelectionController controller,
-                        SmallAmountInput maxOrFixedBaseAmount,
-                        BigAmountInput maxOrFixedQuoteAmount,
-                        SmallAmountInput minBaseAmount,
-                        BigAmountInput minQuoteAmount) {
+                        BaseAmount maxOrFixedBaseAmount,
+                        QuoteAmountInput maxOrFixedQuoteAmount,
+                        BaseAmount minBaseAmount,
+                        QuoteAmountInput minQuoteAmount) {
         super(new VBox(10), model, controller);
 
         // max or fixed component

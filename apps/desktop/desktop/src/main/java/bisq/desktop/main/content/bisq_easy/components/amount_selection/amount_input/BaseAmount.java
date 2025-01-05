@@ -31,13 +31,13 @@ import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SmallAmountInput extends AmountInput {
+public class BaseAmount extends AmountInput {
     private static final double ICON_SCALE = 0.8;
     private static final double ICON_OPACITY = 0.5;
     private static final String DEFAULT_TOOLTIP = "bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice";
     private static final String QUOTE_AMOUNT_ID = "quote-amount-text-field";
 
-    public SmallAmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
+    public BaseAmount(boolean isBaseCurrency, boolean showCurrencyCode) {
         super(isBaseCurrency, showCurrencyCode);
 
         this.controller.setModel(new SmallAmountInputModel(isBaseCurrency, showCurrencyCode));

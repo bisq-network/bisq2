@@ -26,9 +26,9 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.AmountInput;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.QuoteAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BaseAmount;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
@@ -51,8 +51,8 @@ public class AmountSelectionController implements Controller {
     final AmountSelectionModel model;
     @Getter
     private final AmountSelectionView view;
-    private final BigAmountInput maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput;
-    private final SmallAmountInput maxOrFixedBaseSideAmountInput, minBaseSideAmountInput;
+    private final QuoteAmountInput maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput;
+    private final BaseAmount maxOrFixedBaseSideAmountInput, minBaseSideAmountInput;
     private final ChangeListener<Monetary> maxOrFixedBaseSideAmountFromModelListener, maxOrFixedQuoteSideAmountFromModelListener,
             minBaseSideAmountFromModelListener, minQuoteSideAmountFromModelListener;
     private final ChangeListener<PriceQuote> quoteListener;
@@ -66,13 +66,13 @@ public class AmountSelectionController implements Controller {
     public AmountSelectionController(ServiceProvider serviceProvider,
                                      boolean useQuoteCurrencyForMinMaxRange) {
         // max or fixed amount
-        maxOrFixedQuoteSideAmountInput = new BigAmountInput(false, true);
-        maxOrFixedBaseSideAmountInput = new SmallAmountInput(true, true);
+        maxOrFixedQuoteSideAmountInput = new QuoteAmountInput(false, true);
+        maxOrFixedBaseSideAmountInput = new BaseAmount(true, true);
         maxOrFixedBaseSideAmountInput.setUseLowPrecision(false);
 
         // min amount (only applies when selecting a range)
-        minQuoteSideAmountInput = new BigAmountInput(false, false);
-        minBaseSideAmountInput = new SmallAmountInput(true, false);
+        minQuoteSideAmountInput = new QuoteAmountInput(false, false);
+        minBaseSideAmountInput = new BaseAmount(true, false);
         minBaseSideAmountInput.setUseLowPrecision(false);
 
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
@@ -396,7 +396,7 @@ public class AmountSelectionController implements Controller {
         model.setRightMarkerQuoteSideValue(null);
     }
 
-    private void initializeQuoteSideAmount(BigAmountInput quoteSideAmountInput) {
+    private void initializeQuoteSideAmount(QuoteAmountInput quoteSideAmountInput) {
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote != null) {
             Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
@@ -498,7 +498,7 @@ public class AmountSelectionController implements Controller {
         model.getSliderTrackStyle().set(style);
     }
 
-    private void applySliderValue(double sliderValue, BigAmountInput bigAmountInput, SmallAmountInput smallAmountInput) {
+    private void applySliderValue(double sliderValue, QuoteAmountInput bigAmountInput, BaseAmount smallAmountInput) {
         if (model.getMinRangeQuoteSideValue().get() != null && model.getMinRangeBaseSideValue().get() != null) {
             long min = model.isUseQuoteCurrencyForMinMaxRange() ?
                     model.getMinRangeQuoteSideValue().get().getValue() :

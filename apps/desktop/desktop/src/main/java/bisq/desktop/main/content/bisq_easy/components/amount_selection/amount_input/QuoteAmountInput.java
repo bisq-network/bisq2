@@ -20,8 +20,8 @@ package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_i
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BigAmountInput extends AmountInput {
-    public BigAmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
+public class QuoteAmountInput extends AmountInput {
+    public QuoteAmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
         super(isBaseCurrency, showCurrencyCode);
 
         controller.setView(new BigAmountInputView(controller.model, controller));
