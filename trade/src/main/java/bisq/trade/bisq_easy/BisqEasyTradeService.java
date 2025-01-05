@@ -221,7 +221,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
         checkArgument(findProtocol(bisqEasyTrade.getId()).isEmpty(),
                 "We received the BisqEasyTakeOfferRequest for an already existing protocol");
-
         checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
 
