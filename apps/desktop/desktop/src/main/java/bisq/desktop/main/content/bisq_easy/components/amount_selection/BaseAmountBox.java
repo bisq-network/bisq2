@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -38,7 +39,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-
 @Slf4j
 public class BaseAmountBox {
     private static final double ICON_SCALE = 0.8;
@@ -50,6 +50,10 @@ public class BaseAmountBox {
 
     public BaseAmountBox(boolean showCurrencyCode) {
         controller = new Controller(showCurrencyCode);
+    }
+
+    public ReadOnlyObjectProperty<Monetary> amountProperty() {
+        return controller.model.amount;
     }
 
     public void setSelectedMarket(Market selectedMarket) {
