@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -72,6 +71,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static bisq.bisq_easy.BisqEasyTradeAmountLimits.*;
@@ -93,19 +93,21 @@ public class TradeWizardAmountController implements Controller {
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
-    private final BisqEasyService bisqEasyService;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private Subscription isRangeAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin;
 
-    public TradeWizardAmountController(ServiceProvider serviceProvider, Region owner) {
+    public TradeWizardAmountController(ServiceProvider serviceProvider,
+                                       Region owner,
+                                       Consumer<Boolean> navigationButtonsVisibleHandler) {
         settingsService = serviceProvider.getSettingsService();
-        bisqEasyService = serviceProvider.getBisqEasyService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
         this.owner = owner;
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new TradeWizardAmountModel();
 
         amountSelectionController = new AmountSelectionController(serviceProvider, true);
@@ -299,6 +301,7 @@ public class TradeWizardAmountController implements Controller {
         minAmountCompQuoteSideAmountPin.unsubscribe();
         priceTooltipPin.unsubscribe();
         view.getRoot().setOnKeyPressed(null);
+        navigationButtonsVisibleHandler.accept(true);
         model.getIsAmountLimitInfoOverlayVisible().set(false);
     }
 
@@ -307,6 +310,7 @@ public class TradeWizardAmountController implements Controller {
     }
 
     void onShowAmountLimitInfoOverlay() {
+        navigationButtonsVisibleHandler.accept(false);
         model.getIsAmountLimitInfoOverlayVisible().set(true);
         view.getRoot().setOnKeyPressed(keyEvent -> {
             KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
@@ -317,6 +321,7 @@ public class TradeWizardAmountController implements Controller {
 
     void onCloseAmountLimitInfoOverlay() {
         view.getRoot().setOnKeyPressed(null);
+        navigationButtonsVisibleHandler.accept(true);
         model.getIsAmountLimitInfoOverlayVisible().set(false);
     }
 

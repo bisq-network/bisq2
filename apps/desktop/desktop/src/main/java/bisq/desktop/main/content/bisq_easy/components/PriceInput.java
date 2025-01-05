@@ -61,6 +61,10 @@ public class PriceInput {
         return controller.model.priceQuote;
     }
 
+    public ReadOnlyStringProperty getPriceString() {
+        return controller.model.priceString;
+    }
+
     public ReadOnlyStringProperty descriptionProperty() {
         return controller.model.description;
     }
@@ -71,6 +75,10 @@ public class PriceInput {
 
     public void setQuote(PriceQuote priceQuote) {
         controller.setQuote(priceQuote);
+    }
+
+    public void setPriceString(String priceString) {
+        controller.model.priceString.set(priceString);
     }
 
     public void setPercentage(String percentage) {
@@ -89,8 +97,8 @@ public class PriceInput {
         controller.model.reset();
     }
 
-    public void requestFocus() {
-        controller.view.textInput.requestFocus();
+    public void requestFocusWithCursor() {
+        controller.view.textInput.requestFocusWithCursor();
     }
 
     public void deselect() {

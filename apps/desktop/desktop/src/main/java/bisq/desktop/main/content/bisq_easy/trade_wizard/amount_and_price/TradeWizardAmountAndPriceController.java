@@ -34,6 +34,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @Slf4j
 public class TradeWizardAmountAndPriceController implements Controller {
@@ -44,9 +45,11 @@ public class TradeWizardAmountAndPriceController implements Controller {
     private final TradeWizardAmountController tradeWizardAmountController;
     private final TradeWizardPriceController tradeWizardPriceController;
 
-    public TradeWizardAmountAndPriceController(ServiceProvider serviceProvider, Region owner) {
+    public TradeWizardAmountAndPriceController(ServiceProvider serviceProvider,
+                                               Region owner,
+                                               Consumer<Boolean> navigationButtonsVisibleHandler) {
         this.owner = owner;
-        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, owner);
+        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, owner, navigationButtonsVisibleHandler);
         tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, owner);
 
         model = new TradeWizardAmountAndPriceModel();

@@ -102,6 +102,11 @@ public class TradeWizardPriceController implements Controller {
     public void onActivate() {
         settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
                 .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
+        settingsService.getCookie().asString(CookieKey.CREATE_OFFER_PRICE)
+                .ifPresentOrElse(
+                        this::applyPriceFromCookie,
+                        () -> applyPriceSliderValue(0d)
+                );
         if (model.getPriceSpec().get() == null) {
             model.getPriceSpec().set(new MarketPriceSpec());
         }
@@ -255,6 +260,7 @@ public class TradeWizardPriceController implements Controller {
     private void applyPriceSpec() {
         if (model.getUseFixPrice().get()) {
             model.getPriceSpec().set(new FixPriceSpec(priceInput.getQuote().get()));
+            settingsService.setCookie(CookieKey.CREATE_OFFER_PRICE, priceInput.getPriceString().get());
         } else {
             double percentage = model.getPercentage().get();
             if (percentage == 0) {
@@ -262,6 +268,7 @@ public class TradeWizardPriceController implements Controller {
             } else {
                 model.getPriceSpec().set(new FloatPriceSpec(percentage));
             }
+            settingsService.setCookie(CookieKey.CREATE_OFFER_PRICE, model.getPercentageInput().get());
         }
     }
 
@@ -370,5 +377,23 @@ public class TradeWizardPriceController implements Controller {
 
     private String getFeedbackSentence(String adjective) {
         return Res.get("bisqEasy.price.feedback.sentence", adjective);
+    }
+
+    private void applyPriceFromCookie(String price) {
+        if (model.getUseFixPrice().get()) {
+            priceInput.setPriceString(price);
+            applyPercentageFromQuote(priceInput.getQuote().get());
+            applyPriceSliderValue(model.getPercentage().get());
+        } else {
+            try {
+                double percentage = parse(price);
+                if (!validatePercentage(percentage)) {
+                    return;
+                }
+                applyPriceSliderValue(percentage);
+            } catch (Exception e) {
+                log.error("Unable to apply price in cookie.", e);
+            }
+        }
     }
 }
