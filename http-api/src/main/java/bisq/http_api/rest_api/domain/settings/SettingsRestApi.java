@@ -57,7 +57,7 @@ public class SettingsRestApi extends RestApiBase {
     )
     public Response getSettings() {
         try {
-            SettingsDto settingsDto = DtoMappings.SettingsDtoMapping.from(settingsService);
+            SettingsDto settingsDto = DtoMappings.SettingsMapping.fromBisq2Model(settingsService);
             return buildOkResponse(settingsDto);
         } catch (Exception e) {
             log.error("Failed to retrieve user settings", e);

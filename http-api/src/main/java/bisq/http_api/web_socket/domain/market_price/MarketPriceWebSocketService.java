@@ -58,7 +58,7 @@ public class MarketPriceWebSocketService extends SimpleObservableWebSocketServic
                 .filter(MarketPriceWebSocketService::isBaseCurrencyBtc)
                 .collect(Collectors.toMap(
                         entry -> entry.getKey().getQuoteCurrencyCode(),
-                        entry -> DtoMappings.PriceQuoteMapping.from(entry.getValue().getPriceQuote()),
+                        entry -> DtoMappings.PriceQuoteMapping.fromBisq2Model(entry.getValue().getPriceQuote()),
                         (existing, replacement) -> existing,
                         HashMap::new
                 ));

@@ -61,14 +61,14 @@ public class OfferListItemDtoFactory {
         Direction direction = bisqEasyOffer.getDirection();
         String messageId = bisqEasyOfferbookMessage.getId();
         String offerId = bisqEasyOffer.getId();
-        BisqEasyOfferDto bisqEasyOfferDto = DtoMappings.BisqEasyOfferMapping.from(bisqEasyOffer);
+        BisqEasyOfferDto bisqEasyOfferDto = DtoMappings.BisqEasyOfferMapping.fromBisq2Model(bisqEasyOffer);
         String authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
         Optional<UserProfile> authorUserProfile = userProfileService.findUserProfile(authorUserProfileId);
         String nym = authorUserProfile.map(UserProfile::getNym).orElse("");
         String userName = authorUserProfile.map(UserProfile::getUserName).orElse("");
         ReputationScoreDto reputationScore = authorUserProfile.flatMap(reputationService::findReputationScore)
-                .map(DtoMappings.ReputationScoreMapping::from)
-                .orElse(DtoMappings.ReputationScoreMapping.from(ReputationScore.NONE));
+                .map(DtoMappings.ReputationScoreMapping::fromBisq2Model)
+                .orElse(DtoMappings.ReputationScoreMapping.fromBisq2Model(ReputationScore.NONE));
 
         // For now, we send also the formatted values as we have not the complex formatters in mobile impl. yet.
         // We might need to replicate the formatters anyway later and then those fields could be removed

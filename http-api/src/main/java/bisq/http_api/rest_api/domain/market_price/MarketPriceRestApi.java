@@ -74,7 +74,7 @@ public class MarketPriceRestApi extends RestApiBase {
                     .filter(entry->entry.getKey().getBaseCurrencyCode().equals("BTC")) // We get altcoin quotes as well
                     .collect(Collectors.toMap(
                             entry -> entry.getKey().getQuoteCurrencyCode(),
-                            entry -> DtoMappings.PriceQuoteMapping.from(entry.getValue().getPriceQuote())
+                            entry -> DtoMappings.PriceQuoteMapping.fromBisq2Model(entry.getValue().getPriceQuote())
                     ));
 
             if (result.isEmpty()) {

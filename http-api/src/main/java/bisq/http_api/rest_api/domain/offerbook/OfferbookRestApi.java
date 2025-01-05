@@ -153,16 +153,16 @@ public class OfferbookRestApi extends RestApiBase {
         });
         try {
             UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-            Direction direction = DtoMappings.DirectionMapping.toPojo(request.direction());
-            Market market = DtoMappings.MarketMapping.toPojo(request.market());
+            Direction direction = DtoMappings.DirectionMapping.toBisq2Model(request.direction());
+            Market market = DtoMappings.MarketMapping.toBisq2Model(request.market());
             List<BitcoinPaymentMethod> bitcoinPaymentMethods = request.bitcoinPaymentMethods().stream()
                     .map(BitcoinPaymentMethodUtil::getPaymentMethod)
                     .collect(Collectors.toList());
             List<FiatPaymentMethod> fiatPaymentMethods = request.fiatPaymentMethods().stream()
                     .map(FiatPaymentMethodUtil::getPaymentMethod)
                     .collect(Collectors.toList());
-            AmountSpec amountSpec = DtoMappings.AmountSpecMapping.toPojo(request.amountSpec());
-            PriceSpec priceSpec = DtoMappings.PriceSpecMapping.toPojo(request.priceSpec());
+            AmountSpec amountSpec = DtoMappings.AmountSpecMapping.toBisq2Model(request.amountSpec());
+            PriceSpec priceSpec = DtoMappings.PriceSpecMapping.toBisq2Model(request.priceSpec());
             List<String> supportedLanguageCodes = new ArrayList<>(request.supportedLanguageCodes());
             String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageFromPeerPerspective(userIdentity.getNickName(),
                     marketPriceService,

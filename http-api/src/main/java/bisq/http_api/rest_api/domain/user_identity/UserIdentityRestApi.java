@@ -86,8 +86,8 @@ public class UserIdentityRestApi extends RestApiBase {
             String id = Hex.encode(pubKeyHash);
             ProofOfWork proofOfWork = userIdentityService.mintNymProofOfWork(pubKeyHash);
             String nym = NymIdGenerator.generate(pubKeyHash, proofOfWork.getSolution());
-            KeyPairDto keyPairDto = DtoMappings.KeyPairDtoMapping.from(keyPair);
-            ProofOfWorkDto proofOfWorkDto = DtoMappings.ProofOfWorkDtoMapping.from(proofOfWork);
+            KeyPairDto keyPairDto = DtoMappings.KeyPairMapping.fromBisq2Model(keyPair);
+            ProofOfWorkDto proofOfWorkDto = DtoMappings.ProofOfWorkMapping.fromBisq2Model(proofOfWork);
             KeyMaterialResponse keyMaterialResponse = KeyMaterialResponse.from(keyPairDto, id, nym, proofOfWorkDto);
             asyncResponse.resume(buildResponse(Response.Status.CREATED, keyMaterialResponse));
         } catch (Exception e) {
@@ -122,11 +122,11 @@ public class UserIdentityRestApi extends RestApiBase {
         try {
             KeyMaterialResponse keyMaterialResponse = request.getKeyMaterialResponse();
             KeyPairDto keyPairDto = keyMaterialResponse.getKeyPair();
-            KeyPair keyPair = DtoMappings.KeyPairDtoMapping.toPojo(keyPairDto);
+            KeyPair keyPair = DtoMappings.KeyPairMapping.toBisq2Model(keyPairDto);
             byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
             int avatarVersion = 0;
             ProofOfWorkDto proofOfWorkDto = keyMaterialResponse.getProofOfWork();
-            ProofOfWork proofOfWork = DtoMappings.ProofOfWorkDtoMapping.toPojo(proofOfWorkDto);
+            ProofOfWork proofOfWork = DtoMappings.ProofOfWorkMapping.toBisq2Model(proofOfWorkDto);
             UserIdentity userIdentity = userIdentityService.createAndPublishNewUserProfile(request.getNickName(),
                     keyPair,
                     pubKeyHash,
@@ -203,7 +203,7 @@ public class UserIdentityRestApi extends RestApiBase {
         if (selectedUserIdentity == null) {
             return buildNotFoundResponse("No selected user identity found.");
         }
-        UserProfileDto userProfileDto = DtoMappings.UserProfileDtoMapping.from(selectedUserIdentity.getUserProfile());
+        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(selectedUserIdentity.getUserProfile());
         return buildOkResponse(userProfileDto);
     }
 }

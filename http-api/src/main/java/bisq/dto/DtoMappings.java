@@ -94,8 +94,8 @@ public class DtoMappings {
     // account.protocol_type
 
     public static class TradeProtocolTypeMapping {
-        public static TradeProtocolType toPojo(TradeProtocolTypeDto dto) {
-            return switch (dto) {
+            public static TradeProtocolType toBisq2Model(TradeProtocolTypeDto value) {
+            return switch (value) {
                 case BISQ_EASY -> TradeProtocolType.BISQ_EASY;
                 case BISQ_MU_SIG -> TradeProtocolType.BISQ_MU_SIG;
                 case SUBMARINE -> TradeProtocolType.SUBMARINE;
@@ -108,7 +108,7 @@ public class DtoMappings {
             };
         }
 
-        public static TradeProtocolTypeDto from(TradeProtocolType value) {
+        public static TradeProtocolTypeDto fromBisq2Model(TradeProtocolType value) {
             return switch (value) {
                 case BISQ_EASY -> TradeProtocolTypeDto.BISQ_EASY;
                 case BISQ_MU_SIG -> TradeProtocolTypeDto.BISQ_MU_SIG;
@@ -127,11 +127,11 @@ public class DtoMappings {
     // common.currency
 
     public static class MarketMapping {
-        public static Market toPojo(MarketDto dto) {
-            return new Market(dto.baseCurrencyCode(), dto.quoteCurrencyCode(), dto.baseCurrencyName(), dto.quoteCurrencyName());
+        public static Market toBisq2Model(MarketDto value) {
+            return new Market(value.baseCurrencyCode(), value.quoteCurrencyCode(), value.baseCurrencyName(), value.quoteCurrencyName());
         }
 
-        public static MarketDto from(Market value) {
+        public static MarketDto fromBisq2Model(Market value) {
             return new MarketDto(value.getBaseCurrencyCode(), value.getQuoteCurrencyCode(), value.getBaseCurrencyName(), value.getQuoteCurrencyName());
         }
     }
@@ -140,36 +140,36 @@ public class DtoMappings {
     // common.monetary
 
     public static class CoinMapping {
-        public static Coin toPojo(CoinDto dto) {
-            return new Coin(dto.getId(), dto.getValue(), dto.getCode(), dto.getPrecision(), dto.getLowPrecision());
+        public static Coin toBisq2Model(CoinDto value) {
+            return new Coin(value.getId(), value.getValue(), value.getCode(), value.getPrecision(), value.getLowPrecision());
         }
 
-        public static CoinDto from(Coin value) {
+        public static CoinDto fromBisq2Model(Coin value) {
             return new CoinDto(value.getId(), value.getValue(), value.getCode(), value.getPrecision(), value.getLowPrecision());
         }
     }
 
     public static class FiatMapping {
-        public static Fiat toPojo(FiatDto dto) {
-            return new Fiat(dto.getId(), dto.getValue(), dto.getCode(), dto.getPrecision(), dto.getLowPrecision());
+        public static Fiat toBisq2Model(FiatDto value) {
+            return new Fiat(value.getId(), value.getValue(), value.getCode(), value.getPrecision(), value.getLowPrecision());
         }
 
-        public static FiatDto from(Fiat value) {
+        public static FiatDto fromBisq2Model(Fiat value) {
             return new FiatDto(value.getId(), value.getValue(), value.getCode(), value.getPrecision(), value.getLowPrecision());
         }
     }
 
 
     public static class MonetaryMapping {
-        public static Monetary toPojo(MonetaryDto dto) {
-            if (dto instanceof FiatDto) {
-                return FiatMapping.toPojo((FiatDto) dto);
+        public static Monetary toBisq2Model(MonetaryDto value) {
+            if (value instanceof FiatDto) {
+                return FiatMapping.toBisq2Model((FiatDto) value);
             } else {
-                return CoinMapping.toPojo((CoinDto) dto);
+                return CoinMapping.toBisq2Model((CoinDto) value);
             }
         }
 
-        public static MonetaryDto from(Monetary value) {
+        public static MonetaryDto fromBisq2Model(Monetary value) {
             if (value instanceof Fiat) {
                 return new FiatDto(value.getId(), value.getValue(), value.getCode(), value.getPrecision(), value.getLowPrecision());
             } else {
@@ -179,20 +179,20 @@ public class DtoMappings {
     }
 
     public static class PriceQuoteMapping {
-        public static PriceQuote toPojo(PriceQuoteDto dto) {
-            String baseCurrencyCode = dto.market().baseCurrencyCode();
-            String quoteCurrencyCode = dto.market().quoteCurrencyCode();
+        public static PriceQuote toBisq2Model(PriceQuoteDto value) {
+            String baseCurrencyCode = value.market().baseCurrencyCode();
+            String quoteCurrencyCode = value.market().quoteCurrencyCode();
             if (baseCurrencyCode.equals("BTC")) {
                 Monetary baseSideMonetary = Coin.asBtcFromFaceValue(1);
-                Monetary quoteSideMonetary = Fiat.from(dto.value(), quoteCurrencyCode);
-                return new PriceQuote(dto.value(), baseSideMonetary, quoteSideMonetary);
+                Monetary quoteSideMonetary = Fiat.from(value.value(), quoteCurrencyCode);
+                return new PriceQuote(value.value(), baseSideMonetary, quoteSideMonetary);
             } else {
                 throw new UnsupportedOperationException("Altcoin price quote mapping is not supported yet");
             }
         }
 
-        public static PriceQuoteDto from(PriceQuote value) {
-            return new PriceQuoteDto(value.getValue(), MarketMapping.from(value.getMarket()));
+        public static PriceQuoteDto fromBisq2Model(PriceQuote value) {
+            return new PriceQuoteDto(value.getValue(), MarketMapping.fromBisq2Model(value.getMarket()));
         }
     }
 
@@ -200,39 +200,43 @@ public class DtoMappings {
     // common.network
 
     public static class AddressByTransportTypeMapMapping {
-        public static AddressByTransportTypeMap toPojo(AddressByTransportTypeMapDto dto) {
-            return new AddressByTransportTypeMap(dto.map().entrySet().stream().collect(Collectors.toMap(entry -> TransportTypeMapping.toPojo(entry.getKey()), entry -> AddressMapping.toPojo(entry.getValue()))));
+        public static AddressByTransportTypeMap toBisq2Model(AddressByTransportTypeMapDto value) {
+            return new AddressByTransportTypeMap(value.map().entrySet().stream()
+                    .collect(Collectors.toMap(entry -> TransportTypeMapping.toBisq2Model(entry.getKey()),
+                            entry -> AddressMapping.toBisq2Model(entry.getValue()))));
         }
 
-        public static AddressByTransportTypeMapDto from(AddressByTransportTypeMap map) {
-            return new AddressByTransportTypeMapDto(map.getMap().entrySet().stream().collect(Collectors.toMap(entry -> TransportTypeMapping.from(entry.getKey()), entry -> AddressMapping.from(entry.getValue()))));
+        public static AddressByTransportTypeMapDto fromBisq2Model(AddressByTransportTypeMap map) {
+            return new AddressByTransportTypeMapDto(map.getMap().entrySet().stream()
+                    .collect(Collectors.toMap(entry -> TransportTypeMapping.fromBisq2Model(entry.getKey()),
+                            entry -> AddressMapping.fromBisq2Model(entry.getValue()))));
         }
     }
 
     public static class AddressMapping {
-        public static Address toPojo(AddressDto dto) {
-            return new Address(dto.host(), dto.port());
+        public static Address toBisq2Model(AddressDto value) {
+            return new Address(value.host(), value.port());
         }
 
-        public static AddressDto from(Address value) {
+        public static AddressDto fromBisq2Model(Address value) {
             return new AddressDto(value.getHost(), value.getPort());
         }
     }
 
     public static class TransportTypeMapping {
-        public static TransportType toPojo(TransportTypeDto dto) {
-            if (dto == TransportTypeDto.CLEAR) {
+        public static TransportType toBisq2Model(TransportTypeDto value) {
+            if (value == TransportTypeDto.CLEAR) {
                 return TransportType.CLEAR;
-            } else if (dto == TransportTypeDto.TOR) {
+            } else if (value == TransportTypeDto.TOR) {
                 return TransportType.TOR;
-            } else if (dto == TransportTypeDto.I2P) {
+            } else if (value == TransportTypeDto.I2P) {
                 return TransportType.I2P;
             } else {
-                throw new IllegalArgumentException("Unsupported enum " + dto);
+                throw new IllegalArgumentException("Unsupported enum " + value);
             }
         }
 
-        public static TransportTypeDto from(TransportType value) {
+        public static TransportTypeDto fromBisq2Model(TransportType value) {
             if (value == TransportType.CLEAR) {
                 return TransportTypeDto.CLEAR;
             } else if (value == TransportType.TOR) {
@@ -249,12 +253,14 @@ public class DtoMappings {
     // network.identity
 
     public static class NetworkIdMapping {
-        public static NetworkId toPojo(NetworkIdDto dto) {
-            return new NetworkId(AddressByTransportTypeMapMapping.toPojo(dto.addressByTransportTypeMap()), PubKeyMapping.toPojo(dto.pubKey()));
+        public static NetworkId toBisq2Model(NetworkIdDto value) {
+            return new NetworkId(AddressByTransportTypeMapMapping.toBisq2Model(value.addressByTransportTypeMap()),
+                    PubKeyMapping.toBisq2Model(value.pubKey()));
         }
 
-        public static NetworkIdDto from(NetworkId value) {
-            return new NetworkIdDto(AddressByTransportTypeMapMapping.from(value.getAddressByTransportTypeMap()), PubKeyMapping.from(value.getPubKey()));
+        public static NetworkIdDto fromBisq2Model(NetworkId value) {
+            return new NetworkIdDto(AddressByTransportTypeMapMapping.fromBisq2Model(value.getAddressByTransportTypeMap()),
+                    PubKeyMapping.fromBisq2Model(value.getPubKey()));
         }
     }
 
@@ -262,15 +268,15 @@ public class DtoMappings {
     // offer
 
     public static class DirectionMapping {
-        public static Direction toPojo(DirectionDto dto) {
-            if (dto == DirectionDto.BUY) {
+        public static Direction toBisq2Model(DirectionDto value) {
+            if (value == DirectionDto.BUY) {
                 return Direction.BUY;
             } else {
                 return Direction.SELL;
             }
         }
 
-        public static DirectionDto from(Direction value) {
+        public static DirectionDto fromBisq2Model(Direction value) {
             if (value == Direction.BUY) {
                 return DirectionDto.BUY;
             } else {
@@ -283,59 +289,59 @@ public class DtoMappings {
     // offer.amount.spec
 
     public static class AmountSpecMapping {
-        public static AmountSpec toPojo(AmountSpecDto dto) {
-            if (dto instanceof RangeAmountSpecDto) {
-                return RangeAmountSpecMapping.toPojo((RangeAmountSpecDto) dto);
+        public static AmountSpec toBisq2Model(AmountSpecDto value) {
+            if (value instanceof RangeAmountSpecDto) {
+                return RangeAmountSpecMapping.toBisq2Model((RangeAmountSpecDto) value);
             } else {
-                return FixedAmountSpecMapping.toPojo((FixedAmountSpecDto) dto);
+                return FixedAmountSpecMapping.toBisq2Model((FixedAmountSpecDto) value);
             }
         }
 
-        public static AmountSpecDto from(AmountSpec value) {
+        public static AmountSpecDto fromBisq2Model(AmountSpec value) {
             if (value instanceof RangeAmountSpec) {
-                return RangeAmountSpecMapping.from((RangeAmountSpec) value);
+                return RangeAmountSpecMapping.fromBisq2Model((RangeAmountSpec) value);
             } else {
-                return FixedAmountSpecMapping.from((FixedAmountSpec) value);
+                return FixedAmountSpecMapping.fromBisq2Model((FixedAmountSpec) value);
             }
         }
     }
 
     public static class BaseSideFixedAmountSpecMapping {
-        public static BaseSideFixedAmountSpec toPojo(BaseSideFixedAmountSpecDto dto) {
-            return new BaseSideFixedAmountSpec(dto.getAmount());
+        public static BaseSideFixedAmountSpec toBisq2Model(BaseSideFixedAmountSpecDto value) {
+            return new BaseSideFixedAmountSpec(value.getAmount());
         }
 
-        public static BaseSideFixedAmountSpecDto from(BaseSideFixedAmountSpec value) {
+        public static BaseSideFixedAmountSpecDto fromBisq2Model(BaseSideFixedAmountSpec value) {
             return new BaseSideFixedAmountSpecDto(value.getAmount());
         }
     }
 
     public static class BaseSideRangeAmountSpecMapping {
-        public static BaseSideRangeAmountSpec toPojo(BaseSideRangeAmountSpecDto dto) {
-            return new BaseSideRangeAmountSpec(dto.getMinAmount(), dto.getMaxAmount());
+        public static BaseSideRangeAmountSpec toBisq2Model(BaseSideRangeAmountSpecDto value) {
+            return new BaseSideRangeAmountSpec(value.getMinAmount(), value.getMaxAmount());
         }
 
-        public static BaseSideRangeAmountSpecDto from(BaseSideRangeAmountSpec value) {
+        public static BaseSideRangeAmountSpecDto fromBisq2Model(BaseSideRangeAmountSpec value) {
             return new BaseSideRangeAmountSpecDto(value.getMinAmount(), value.getMaxAmount());
         }
     }
 
     public static class FixedAmountSpecMapping {
-        public static FixedAmountSpec toPojo(FixedAmountSpecDto dto) {
-            if (dto instanceof BaseSideFixedAmountSpecDto) {
-                return BaseSideFixedAmountSpecMapping.toPojo((BaseSideFixedAmountSpecDto) dto);
-            } else if (dto instanceof QuoteSideFixedAmountSpecDto) {
-                return QuoteSideFixedAmountSpecMapping.toPojo((QuoteSideFixedAmountSpecDto) dto);
+        public static FixedAmountSpec toBisq2Model(FixedAmountSpecDto value) {
+            if (value instanceof BaseSideFixedAmountSpecDto) {
+                return BaseSideFixedAmountSpecMapping.toBisq2Model((BaseSideFixedAmountSpecDto) value);
+            } else if (value instanceof QuoteSideFixedAmountSpecDto) {
+                return QuoteSideFixedAmountSpecMapping.toBisq2Model((QuoteSideFixedAmountSpecDto) value);
             } else {
-                throw new IllegalArgumentException("Unsupported FixedAmountSpecDto " + dto);
+                throw new IllegalArgumentException("Unsupported FixedAmountSpecDto " + value);
             }
         }
 
-        public static FixedAmountSpecDto from(FixedAmountSpec value) {
+        public static FixedAmountSpecDto fromBisq2Model(FixedAmountSpec value) {
             if (value instanceof BaseSideFixedAmountSpec) {
-                return BaseSideFixedAmountSpecMapping.from((BaseSideFixedAmountSpec) value);
+                return BaseSideFixedAmountSpecMapping.fromBisq2Model((BaseSideFixedAmountSpec) value);
             } else if (value instanceof QuoteSideFixedAmountSpec) {
-                return QuoteSideFixedAmountSpecMapping.from((QuoteSideFixedAmountSpec) value);
+                return QuoteSideFixedAmountSpecMapping.fromBisq2Model((QuoteSideFixedAmountSpec) value);
             } else {
                 throw new IllegalArgumentException("Unsupported FixedAmountSpec " + value);
             }
@@ -343,41 +349,41 @@ public class DtoMappings {
     }
 
     public static class QuoteSideFixedAmountSpecMapping {
-        public static QuoteSideFixedAmountSpec toPojo(QuoteSideFixedAmountSpecDto dto) {
-            return new QuoteSideFixedAmountSpec(dto.getAmount());
+        public static QuoteSideFixedAmountSpec toBisq2Model(QuoteSideFixedAmountSpecDto value) {
+            return new QuoteSideFixedAmountSpec(value.getAmount());
         }
 
-        public static QuoteSideFixedAmountSpecDto from(QuoteSideFixedAmountSpec value) {
+        public static QuoteSideFixedAmountSpecDto fromBisq2Model(QuoteSideFixedAmountSpec value) {
             return new QuoteSideFixedAmountSpecDto(value.getAmount());
         }
     }
 
     public static class QuoteSideRangeAmountSpecMapping {
-        public static QuoteSideRangeAmountSpec toPojo(QuoteSideRangeAmountSpecDto dto) {
-            return new QuoteSideRangeAmountSpec(dto.getMinAmount(), dto.getMaxAmount());
+        public static QuoteSideRangeAmountSpec toBisq2Model(QuoteSideRangeAmountSpecDto value) {
+            return new QuoteSideRangeAmountSpec(value.getMinAmount(), value.getMaxAmount());
         }
 
-        public static QuoteSideRangeAmountSpecDto from(QuoteSideRangeAmountSpec value) {
+        public static QuoteSideRangeAmountSpecDto fromBisq2Model(QuoteSideRangeAmountSpec value) {
             return new QuoteSideRangeAmountSpecDto(value.getMinAmount(), value.getMaxAmount());
         }
     }
 
     public static class RangeAmountSpecMapping {
-        public static RangeAmountSpec toPojo(RangeAmountSpecDto dto) {
-            if (dto instanceof BaseSideRangeAmountSpecDto) {
-                return BaseSideRangeAmountSpecMapping.toPojo((BaseSideRangeAmountSpecDto) dto);
-            } else if (dto instanceof QuoteSideRangeAmountSpecDto) {
-                return QuoteSideRangeAmountSpecMapping.toPojo((QuoteSideRangeAmountSpecDto) dto);
+        public static RangeAmountSpec toBisq2Model(RangeAmountSpecDto value) {
+            if (value instanceof BaseSideRangeAmountSpecDto) {
+                return BaseSideRangeAmountSpecMapping.toBisq2Model((BaseSideRangeAmountSpecDto) value);
+            } else if (value instanceof QuoteSideRangeAmountSpecDto) {
+                return QuoteSideRangeAmountSpecMapping.toBisq2Model((QuoteSideRangeAmountSpecDto) value);
             } else {
-                throw new IllegalArgumentException("Unsupported RangeAmountSpecDto " + dto);
+                throw new IllegalArgumentException("Unsupported RangeAmountSpecDto " + value);
             }
         }
 
-        public static RangeAmountSpecDto from(RangeAmountSpec value) {
+        public static RangeAmountSpecDto fromBisq2Model(RangeAmountSpec value) {
             if (value instanceof BaseSideRangeAmountSpec) {
-                return BaseSideRangeAmountSpecMapping.from((BaseSideRangeAmountSpec) value);
+                return BaseSideRangeAmountSpecMapping.fromBisq2Model((BaseSideRangeAmountSpec) value);
             } else if (value instanceof QuoteSideRangeAmountSpec) {
-                return QuoteSideRangeAmountSpecMapping.from((QuoteSideRangeAmountSpec) value);
+                return QuoteSideRangeAmountSpecMapping.fromBisq2Model((QuoteSideRangeAmountSpec) value);
             } else {
                 throw new IllegalArgumentException("Unsupported RangeAmountSpec " + value);
             }
@@ -388,12 +394,34 @@ public class DtoMappings {
     // offer.bisq_easy
 
     public static class BisqEasyOfferMapping {
-        public static BisqEasyOffer toPojo(BisqEasyOfferDto dto) {
-            return new BisqEasyOffer(dto.id(), dto.date(), NetworkIdMapping.toPojo(dto.makerNetworkId()), DirectionMapping.toPojo(dto.direction()), MarketMapping.toPojo(dto.market()), AmountSpecMapping.toPojo(dto.amountSpec()), PriceSpecMapping.toPojo(dto.priceSpec()), dto.protocolTypes().stream().map(TradeProtocolTypeMapping::toPojo).collect(Collectors.toList()), dto.baseSidePaymentMethodSpecs().stream().map(BitcoinPaymentMethodSpecMapping::toPojo).collect(Collectors.toList()), dto.quoteSidePaymentMethodSpecs().stream().map(FiatPaymentMethodSpecMapping::toPojo).collect(Collectors.toList()), dto.offerOptions().stream().map(OfferOptionMapping::toPojo).collect(Collectors.toList()), dto.supportedLanguageCodes());
+        public static BisqEasyOffer toBisq2Model(BisqEasyOfferDto value) {
+            return new BisqEasyOffer(value.id(),
+                    value.date(),
+                    NetworkIdMapping.toBisq2Model(value.makerNetworkId()),
+                    DirectionMapping.toBisq2Model(value.direction()),
+                    MarketMapping.toBisq2Model(value.market()),
+                    AmountSpecMapping.toBisq2Model(value.amountSpec()),
+                    PriceSpecMapping.toBisq2Model(value.priceSpec()),
+                    value.protocolTypes().stream().map(TradeProtocolTypeMapping::toBisq2Model).collect(Collectors.toList()),
+                    value.baseSidePaymentMethodSpecs().stream().map(BitcoinPaymentMethodSpecMapping::toBisq2Model).collect(Collectors.toList()),
+                    value.quoteSidePaymentMethodSpecs().stream().map(FiatPaymentMethodSpecMapping::toBisq2Model).collect(Collectors.toList()),
+                    value.offerOptions().stream().map(OfferOptionMapping::toBisq2Model).collect(Collectors.toList()),
+                    value.supportedLanguageCodes());
         }
 
-        public static BisqEasyOfferDto from(BisqEasyOffer value) {
-            return new BisqEasyOfferDto(value.getId(), value.getDate(), NetworkIdMapping.from(value.getMakerNetworkId()), DirectionMapping.from(value.getDirection()), MarketMapping.from(value.getMarket()), AmountSpecMapping.from(value.getAmountSpec()), PriceSpecMapping.from(value.getPriceSpec()), value.getProtocolTypes().stream().map(TradeProtocolTypeMapping::from).collect(Collectors.toList()), value.getBaseSidePaymentMethodSpecs().stream().map(BitcoinPaymentMethodSpecMapping::from).collect(Collectors.toList()), value.getQuoteSidePaymentMethodSpecs().stream().map(FiatPaymentMethodSpecMapping::from).collect(Collectors.toList()), value.getOfferOptions().stream().map(OfferOptionMapping::from).collect(Collectors.toList()), value.getSupportedLanguageCodes());
+        public static BisqEasyOfferDto fromBisq2Model(BisqEasyOffer value) {
+            return new BisqEasyOfferDto(value.getId(),
+                    value.getDate(),
+                    NetworkIdMapping.fromBisq2Model(value.getMakerNetworkId()),
+                    DirectionMapping.fromBisq2Model(value.getDirection()),
+                    MarketMapping.fromBisq2Model(value.getMarket()),
+                    AmountSpecMapping.fromBisq2Model(value.getAmountSpec()),
+                    PriceSpecMapping.fromBisq2Model(value.getPriceSpec()),
+                    value.getProtocolTypes().stream().map(TradeProtocolTypeMapping::fromBisq2Model).collect(Collectors.toList()),
+                    value.getBaseSidePaymentMethodSpecs().stream().map(BitcoinPaymentMethodSpecMapping::fromBisq2Model).collect(Collectors.toList()),
+                    value.getQuoteSidePaymentMethodSpecs().stream().map(FiatPaymentMethodSpecMapping::fromBisq2Model).collect(Collectors.toList()),
+                    value.getOfferOptions().stream().map(OfferOptionMapping::fromBisq2Model).collect(Collectors.toList()),
+                    value.getSupportedLanguageCodes());
         }
     }
 
@@ -401,17 +429,17 @@ public class DtoMappings {
     // offer.options
 
     public static class OfferOptionMapping {
-        public static OfferOption toPojo(OfferOptionDto dto) {
-            if (dto instanceof ReputationOptionDto) {
-                return ReputationOptionMapping.toPojo((ReputationOptionDto) dto);
-            } else if (dto instanceof TradeTermsOptionDto) {
-                return TradeTermsOptionMapping.toPojo((TradeTermsOptionDto) dto);
+        public static OfferOption toBisq2Model(OfferOptionDto value) {
+            if (value instanceof ReputationOptionDto) {
+                return ReputationOptionMapping.toBisq2Model((ReputationOptionDto) value);
+            } else if (value instanceof TradeTermsOptionDto) {
+                return TradeTermsOptionMapping.toBisq2Model((TradeTermsOptionDto) value);
             } else {
-                throw new IllegalArgumentException("Unsupported OfferOptionDto " + dto);
+                throw new IllegalArgumentException("Unsupported OfferOptionDto " + value);
             }
         }
 
-        public static OfferOptionDto from(OfferOption value) {
+        public static OfferOptionDto fromBisq2Model(OfferOption value) {
             if (value instanceof ReputationOption) {
                 //noinspection deprecation
                 return new ReputationOptionDto(((ReputationOption) value).getRequiredTotalReputationScore());
@@ -424,23 +452,23 @@ public class DtoMappings {
     }
 
     public static class ReputationOptionMapping {
-        public static ReputationOption toPojo(ReputationOptionDto dto) {
+        public static ReputationOption toBisq2Model(ReputationOptionDto value) {
             //noinspection deprecation
-            return new ReputationOption(dto.getRequiredTotalReputationScore());
+            return new ReputationOption(value.getRequiredTotalReputationScore());
         }
 
-        public static ReputationOptionDto from(ReputationOption value) {
+        public static ReputationOptionDto fromBisq2Model(ReputationOption value) {
             //noinspection deprecation
             return new ReputationOptionDto(value.getRequiredTotalReputationScore());
         }
     }
 
     public static class TradeTermsOptionMapping {
-        public static TradeTermsOption toPojo(TradeTermsOptionDto dto) {
-            return new TradeTermsOption(dto.getMakersTradeTerms());
+        public static TradeTermsOption toBisq2Model(TradeTermsOptionDto value) {
+            return new TradeTermsOption(value.getMakersTradeTerms());
         }
 
-        public static TradeTermsOptionDto from(TradeTermsOption value) {
+        public static TradeTermsOptionDto fromBisq2Model(TradeTermsOption value) {
             return new TradeTermsOptionDto(value.getMakersTradeTerms());
         }
     }
@@ -449,45 +477,45 @@ public class DtoMappings {
     // offer.payment_method
 
     public static class BitcoinPaymentMethodSpecMapping {
-        public static BitcoinPaymentMethodSpec toPojo(BitcoinPaymentMethodSpecDto dto) {
-            String paymentMethod = dto.getPaymentMethod();
+        public static BitcoinPaymentMethodSpec toBisq2Model(BitcoinPaymentMethodSpecDto value) {
+            String paymentMethod = value.getPaymentMethod();
             BitcoinPaymentMethod method = PaymentMethodSpecUtil.getBitcoinPaymentMethod(paymentMethod);
-            return new BitcoinPaymentMethodSpec(method, dto.getSaltedMakerAccountId());
+            return new BitcoinPaymentMethodSpec(method, value.getSaltedMakerAccountId());
         }
 
-        public static BitcoinPaymentMethodSpecDto from(BitcoinPaymentMethodSpec value) {
+        public static BitcoinPaymentMethodSpecDto fromBisq2Model(BitcoinPaymentMethodSpec value) {
             return new BitcoinPaymentMethodSpecDto(value.getPaymentMethod().getName(), value.getSaltedMakerAccountId());
         }
     }
 
     public static class FiatPaymentMethodSpecMapping {
-        public static FiatPaymentMethodSpec toPojo(FiatPaymentMethodSpecDto dto) {
-            String paymentMethod = dto.getPaymentMethod();
+        public static FiatPaymentMethodSpec toBisq2Model(FiatPaymentMethodSpecDto value) {
+            String paymentMethod = value.getPaymentMethod();
             FiatPaymentMethod method = PaymentMethodSpecUtil.getFiatPaymentMethod(paymentMethod);
-            return new FiatPaymentMethodSpec(method, dto.getSaltedMakerAccountId());
+            return new FiatPaymentMethodSpec(method, value.getSaltedMakerAccountId());
         }
 
-        public static FiatPaymentMethodSpecDto from(FiatPaymentMethodSpec value) {
+        public static FiatPaymentMethodSpecDto fromBisq2Model(FiatPaymentMethodSpec value) {
             return new FiatPaymentMethodSpecDto(value.getPaymentMethod().getName(), value.getSaltedMakerAccountId());
         }
     }
 
     public static class PaymentMethodSpecMapping {
-        public static PaymentMethodSpec<?> toPojo(PaymentMethodSpecDto dto) {
-            if (dto instanceof FiatPaymentMethodSpecDto) {
-                return FiatPaymentMethodSpecMapping.toPojo((FiatPaymentMethodSpecDto) dto);
-            } else if (dto instanceof BitcoinPaymentMethodSpecDto) {
-                return BitcoinPaymentMethodSpecMapping.toPojo((BitcoinPaymentMethodSpecDto) dto);
+        public static PaymentMethodSpec<?> toBisq2Model(PaymentMethodSpecDto value) {
+            if (value instanceof FiatPaymentMethodSpecDto) {
+                return FiatPaymentMethodSpecMapping.toBisq2Model((FiatPaymentMethodSpecDto) value);
+            } else if (value instanceof BitcoinPaymentMethodSpecDto) {
+                return BitcoinPaymentMethodSpecMapping.toBisq2Model((BitcoinPaymentMethodSpecDto) value);
             } else {
-                throw new IllegalArgumentException("Unsupported PaymentMethodSpecDto " + dto);
+                throw new IllegalArgumentException("Unsupported PaymentMethodSpecDto " + value);
             }
         }
 
-        public static PaymentMethodSpecDto from(PaymentMethodSpec<?> value) {
+        public static PaymentMethodSpecDto fromBisq2Model(PaymentMethodSpec<?> value) {
             if (value instanceof FiatPaymentMethodSpec) {
-                return FiatPaymentMethodSpecMapping.from((FiatPaymentMethodSpec) value);
+                return FiatPaymentMethodSpecMapping.fromBisq2Model((FiatPaymentMethodSpec) value);
             } else if (value instanceof BitcoinPaymentMethodSpec) {
-                return BitcoinPaymentMethodSpecMapping.from((BitcoinPaymentMethodSpec) value);
+                return BitcoinPaymentMethodSpecMapping.fromBisq2Model((BitcoinPaymentMethodSpec) value);
             } else {
                 throw new IllegalArgumentException("Unsupported PaymentMethodSpec " + value);
             }
@@ -498,50 +526,50 @@ public class DtoMappings {
     // offer.price.spec
 
     public static class MarketPriceSpecMapping {
-        public static MarketPriceSpec toPojo(MarketPriceSpecDto dto) {
+        public static MarketPriceSpec toBisq2Model(MarketPriceSpecDto value) {
             return new MarketPriceSpec();
         }
 
-        public static MarketPriceSpecDto from(MarketPriceSpec value) {
+        public static MarketPriceSpecDto fromBisq2Model(MarketPriceSpec value) {
             return new MarketPriceSpecDto();
         }
     }
 
     public static class FloatPriceSpecMapping {
-        public static FloatPriceSpec toPojo(FloatPriceSpecDto dto) {
-            return new FloatPriceSpec(dto.getPercentage());
+        public static FloatPriceSpec toBisq2Model(FloatPriceSpecDto value) {
+            return new FloatPriceSpec(value.getPercentage());
         }
 
-        public static FloatPriceSpecDto from(FloatPriceSpec value) {
+        public static FloatPriceSpecDto fromBisq2Model(FloatPriceSpec value) {
             return new FloatPriceSpecDto(value.getPercentage());
         }
     }
 
     public static class FixPriceSpecMapping {
-        public static FixPriceSpec toPojo(FixPriceSpecDto dto) {
-            return new FixPriceSpec(PriceQuoteMapping.toPojo(dto.getPriceQuote()));
+        public static FixPriceSpec toBisq2Model(FixPriceSpecDto value) {
+            return new FixPriceSpec(PriceQuoteMapping.toBisq2Model(value.getPriceQuote()));
         }
 
-        public static FixPriceSpecDto from(FixPriceSpec value) {
-            return new FixPriceSpecDto(PriceQuoteMapping.from(value.getPriceQuote()));
+        public static FixPriceSpecDto fromBisq2Model(FixPriceSpec value) {
+            return new FixPriceSpecDto(PriceQuoteMapping.fromBisq2Model(value.getPriceQuote()));
         }
     }
 
     public static class PriceSpecMapping {
-        public static PriceSpec toPojo(PriceSpecDto dto) {
-            return switch (dto) {
-                case MarketPriceSpecDto marketPriceSpecDto -> MarketPriceSpecMapping.toPojo(marketPriceSpecDto);
-                case FixPriceSpecDto fixPriceSpecDto -> FixPriceSpecMapping.toPojo(fixPriceSpecDto);
-                case FloatPriceSpecDto floatPriceSpecDto -> FloatPriceSpecMapping.toPojo(floatPriceSpecDto);
-                case null, default -> throw new IllegalArgumentException("Unsupported PriceSpecDto " + dto);
+        public static PriceSpec toBisq2Model(PriceSpecDto value) {
+            return switch (value) {
+                case MarketPriceSpecDto marketPriceSpecDto -> MarketPriceSpecMapping.toBisq2Model(marketPriceSpecDto);
+                case FixPriceSpecDto fixPriceSpecDto -> FixPriceSpecMapping.toBisq2Model(fixPriceSpecDto);
+                case FloatPriceSpecDto floatPriceSpecDto -> FloatPriceSpecMapping.toBisq2Model(floatPriceSpecDto);
+                case null, default -> throw new IllegalArgumentException("Unsupported PriceSpecDto " + value);
             };
         }
 
-        public static PriceSpecDto from(PriceSpec value) {
+        public static PriceSpecDto fromBisq2Model(PriceSpec value) {
             return switch (value) {
-                case MarketPriceSpec marketPriceSpec -> MarketPriceSpecMapping.from(marketPriceSpec);
-                case FixPriceSpec fixPriceSpec -> FixPriceSpecMapping.from(fixPriceSpec);
-                case FloatPriceSpec floatPriceSpec -> FloatPriceSpecMapping.from(floatPriceSpec);
+                case MarketPriceSpec marketPriceSpec -> MarketPriceSpecMapping.fromBisq2Model(marketPriceSpec);
+                case FixPriceSpec fixPriceSpec -> FixPriceSpecMapping.fromBisq2Model(fixPriceSpec);
+                case FloatPriceSpec floatPriceSpec -> FloatPriceSpecMapping.fromBisq2Model(floatPriceSpec);
                 case null, default -> throw new IllegalArgumentException("Unsupported PriceSpec " + value);
             };
         }
@@ -550,43 +578,43 @@ public class DtoMappings {
 
     // security.keys
 
-    public static class KeyPairDtoMapping {
-        public static KeyPair toPojo(KeyPairDto dto) {
-            PublicKey publicKey = PublicKeyMapping.toPojo(dto.publicKey());
-            PrivateKey privateKey = PrivateKeyMapping.toPojo(dto.privateKey());
+    public static class KeyPairMapping {
+        public static KeyPair toBisq2Model(KeyPairDto value) {
+            PublicKey publicKey = PublicKeyMapping.toBisq2Model(value.publicKey());
+            PrivateKey privateKey = PrivateKeyMapping.toBisq2Model(value.privateKey());
             return new KeyPair(publicKey, privateKey);
         }
 
-        public static KeyPairDto from(KeyPair value) {
-            PrivateKeyDto privateKeyDto = PrivateKeyMapping.from(value.getPrivate());
-            PublicKeyDto publicKeyDto = PublicKeyMapping.from(value.getPublic());
+        public static KeyPairDto fromBisq2Model(KeyPair value) {
+            PrivateKeyDto privateKeyDto = PrivateKeyMapping.fromBisq2Model(value.getPrivate());
+            PublicKeyDto publicKeyDto = PublicKeyMapping.fromBisq2Model(value.getPublic());
             return new KeyPairDto(publicKeyDto, privateKeyDto);
         }
     }
 
     public static class PrivateKeyMapping {
-        public static PrivateKey toPojo(PrivateKeyDto dto) {
+        public static PrivateKey toBisq2Model(PrivateKeyDto value) {
             try {
-                byte[] decoded = Base64.getDecoder().decode(dto.encoded());
+                byte[] decoded = Base64.getDecoder().decode(value.encoded());
                 return KeyGeneration.generatePrivate(decoded);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to generate privateKey", e);
             }
         }
 
-        public static PrivateKeyDto from(PrivateKey value) {
+        public static PrivateKeyDto fromBisq2Model(PrivateKey value) {
             return new PrivateKeyDto(Base64.getEncoder().encodeToString(value.getEncoded()));
         }
     }
 
     public static class PubKeyMapping {
-        public static PubKey toPojo(PubKeyDto dto) {
-            return new PubKey(PublicKeyMapping.toPojo(dto.publicKey()), dto.keyId());
+        public static PubKey toBisq2Model(PubKeyDto value) {
+            return new PubKey(PublicKeyMapping.toBisq2Model(value.publicKey()), value.keyId());
         }
 
-        public static PubKeyDto from(PubKey value) {
+        public static PubKeyDto fromBisq2Model(PubKey value) {
             PublicKey publicKey = value.getPublicKey();
-            PublicKeyDto publicKeyDto = PublicKeyMapping.from(publicKey);
+            PublicKeyDto publicKeyDto = PublicKeyMapping.fromBisq2Model(publicKey);
             String keyId = value.getKeyId();
             byte[] hashAsBytes = DigestUtil.hash(publicKey.getEncoded());
             String hash = Base64.getEncoder().encodeToString(hashAsBytes);
@@ -596,16 +624,16 @@ public class DtoMappings {
     }
 
     public static class PublicKeyMapping {
-        public static PublicKey toPojo(PublicKeyDto dto) {
+        public static PublicKey toBisq2Model(PublicKeyDto value) {
             try {
-                byte[] decoded = Base64.getDecoder().decode(dto.encoded());
+                byte[] decoded = Base64.getDecoder().decode(value.encoded());
                 return KeyGeneration.generatePublic(decoded);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to generate publicKey", e);
             }
         }
 
-        public static PublicKeyDto from(PublicKey value) {
+        public static PublicKeyDto fromBisq2Model(PublicKey value) {
             return new PublicKeyDto(Base64.getEncoder().encodeToString(value.getEncoded()));
         }
     }
@@ -613,19 +641,19 @@ public class DtoMappings {
 
     // security.pow
 
-    public static class ProofOfWorkDtoMapping {
-        public static ProofOfWork toPojo(ProofOfWorkDto dto) {
+    public static class ProofOfWorkMapping {
+        public static ProofOfWork toBisq2Model(ProofOfWorkDto value) {
             return new ProofOfWork(
-                    Base64.getDecoder().decode(dto.payload()),
-                    dto.counter(),
-                    dto.challenge() != null ? Base64.getDecoder().decode(dto.challenge()) : null,
-                    dto.difficulty(),
-                    Base64.getDecoder().decode(dto.solution()),
-                    dto.duration()
+                    Base64.getDecoder().decode(value.payload()),
+                    value.counter(),
+                    value.challenge() != null ? Base64.getDecoder().decode(value.challenge()) : null,
+                    value.difficulty(),
+                    Base64.getDecoder().decode(value.solution()),
+                    value.duration()
             );
         }
 
-        public static ProofOfWorkDto from(ProofOfWork value) {
+        public static ProofOfWorkDto fromBisq2Model(ProofOfWork value) {
             return new ProofOfWorkDto(
                     Base64.getEncoder().encodeToString(value.getPayload()),
                     value.getCounter(),
@@ -639,43 +667,43 @@ public class DtoMappings {
 
 
     // settings
-    public static class SettingsDtoMapping {
-        // toPojo method not implemented as we do not have a settings value object in the domain
+    public static class SettingsMapping {
+        // toBisq2Model method not implemented as we do not have a settings value object in the domain
 
-        public static SettingsDto from(SettingsService settingsService) {
+        public static SettingsDto fromBisq2Model(SettingsService settingsService) {
             return new SettingsDto(settingsService.getIsTacAccepted().get(),
                     settingsService.getTradeRulesConfirmed().get(),
                     settingsService.getCloseMyOfferWhenTaken().get(),
                     settingsService.getLanguageCode().get(),
                     settingsService.getSupportedLanguageCodes(),
                     settingsService.getMaxTradePriceDeviation().get(),
-                    MarketMapping.from(settingsService.getSelectedMarket().get()));
+                    MarketMapping.fromBisq2Model(settingsService.getSelectedMarket().get()));
         }
     }
 
 
     // user.profile
 
-    public static class UserProfileDtoMapping {
-        public static UserProfile toPojo(UserProfileDto dto) {
-            return new UserProfile(dto.version(),
-                    dto.nickName(),
-                    ProofOfWorkDtoMapping.toPojo(dto.proofOfWork()),
-                    dto.avatarVersion(),
-                    NetworkIdMapping.toPojo(dto.networkId()),
-                    dto.terms(),
-                    dto.statement(),
-                    dto.applicationVersion()
+    public static class UserProfileMapping {
+        public static UserProfile toBisq2Model(UserProfileDto value) {
+            return new UserProfile(value.version(),
+                    value.nickName(),
+                    ProofOfWorkMapping.toBisq2Model(value.proofOfWork()),
+                    value.avatarVersion(),
+                    NetworkIdMapping.toBisq2Model(value.networkId()),
+                    value.terms(),
+                    value.statement(),
+                    value.applicationVersion()
             );
         }
 
-        public static UserProfileDto from(UserProfile value) {
+        public static UserProfileDto fromBisq2Model(UserProfile value) {
             return new UserProfileDto(
                     value.getVersion(),
                     value.getNickName(),
-                    ProofOfWorkDtoMapping.from(value.getProofOfWork()),
+                    ProofOfWorkMapping.fromBisq2Model(value.getProofOfWork()),
                     value.getAvatarVersion(),
-                    NetworkIdMapping.from(value.getNetworkId()),
+                    NetworkIdMapping.fromBisq2Model(value.getNetworkId()),
                     value.getTerms(),
                     value.getStatement(),
                     value.getApplicationVersion(),
@@ -690,11 +718,11 @@ public class DtoMappings {
     // user.reputation
 
     public static class ReputationScoreMapping {
-        public static ReputationScore toPojo(ReputationScoreDto dto) {
-            return new ReputationScore(dto.totalScore(), dto.fiveSystemScore(), dto.ranking());
+        public static ReputationScore toBisq2Model(ReputationScoreDto value) {
+            return new ReputationScore(value.totalScore(), value.fiveSystemScore(), value.ranking());
         }
 
-        public static ReputationScoreDto from(ReputationScore value) {
+        public static ReputationScoreDto fromBisq2Model(ReputationScore value) {
             return new ReputationScoreDto(value.getTotalScore(), value.getFiveSystemScore(), value.getRanking());
         }
     }
