@@ -38,6 +38,7 @@ import bisq.dto.common.monetary.PriceQuoteDto;
 import bisq.dto.common.network.AddressByTransportTypeMapDto;
 import bisq.dto.common.network.AddressDto;
 import bisq.dto.common.network.TransportTypeDto;
+import bisq.dto.identity.IdentityDto;
 import bisq.dto.network.identity.NetworkIdDto;
 import bisq.dto.offer.DirectionDto;
 import bisq.dto.offer.amount.spec.*;
@@ -52,14 +53,16 @@ import bisq.dto.offer.price.spec.FixPriceSpecDto;
 import bisq.dto.offer.price.spec.FloatPriceSpecDto;
 import bisq.dto.offer.price.spec.MarketPriceSpecDto;
 import bisq.dto.offer.price.spec.PriceSpecDto;
-import bisq.dto.security.keys.KeyPairDto;
-import bisq.dto.security.keys.PrivateKeyDto;
-import bisq.dto.security.keys.PubKeyDto;
-import bisq.dto.security.keys.PublicKeyDto;
+import bisq.dto.security.keys.*;
 import bisq.dto.security.pow.ProofOfWorkDto;
 import bisq.dto.settings.SettingsDto;
+import bisq.dto.trade.TradeRoleDto;
+import bisq.dto.trade.bisq_easy.BisqEasyTradeDto;
+import bisq.dto.trade.bisq_easy.BisqEasyTradePartyDto;
+import bisq.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
 import bisq.dto.user.profile.UserProfileDto;
 import bisq.dto.user.reputation.ReputationScoreDto;
+import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.*;
@@ -76,10 +79,16 @@ import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.security.DigestUtil;
+import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
+import bisq.security.keys.TorKeyPair;
 import bisq.security.pow.ProofOfWork;
 import bisq.settings.SettingsService;
+import bisq.trade.TradeRole;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeParty;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 
@@ -94,7 +103,7 @@ public class DtoMappings {
     // account.protocol_type
 
     public static class TradeProtocolTypeMapping {
-            public static TradeProtocolType toBisq2Model(TradeProtocolTypeDto value) {
+        public static TradeProtocolType toBisq2Model(TradeProtocolTypeDto value) {
             return switch (value) {
                 case BISQ_EASY -> TradeProtocolType.BISQ_EASY;
                 case BISQ_MU_SIG -> TradeProtocolType.BISQ_MU_SIG;
@@ -246,6 +255,27 @@ public class DtoMappings {
             } else {
                 throw new IllegalArgumentException("Unsupported enum " + value);
             }
+        }
+    }
+
+
+    // identity
+
+    public static class IdentityMapping {
+        public static Identity toBisq2Model(IdentityDto value) {
+            return new Identity(
+                    value.tag(),
+                    NetworkIdMapping.toBisq2Model(value.networkId()),
+                    KeyBundleMapping.toBisq2Model(value.keyBundle())
+            );
+        }
+
+        public static IdentityDto fromBisq2Model(Identity value) {
+            return new IdentityDto(
+                    value.getTag(),
+                    NetworkIdMapping.fromBisq2Model(value.getNetworkId()),
+                    KeyBundleMapping.fromBisq2Model(value.getKeyBundle())
+            );
         }
     }
 
@@ -639,6 +669,44 @@ public class DtoMappings {
     }
 
 
+    public static class TorKeyPairMapping {
+        public static TorKeyPair toBisq2Model(TorKeyPairDto value) {
+            return new TorKeyPair(
+                    Base64.getDecoder().decode(value.privateKey()),
+                    Base64.getDecoder().decode(value.publicKey()),
+                    value.onionAddress()
+            );
+        }
+
+        public static TorKeyPairDto fromBisq2Model(TorKeyPair model) {
+            return new TorKeyPairDto(
+                    Base64.getEncoder().encodeToString(model.getPrivateKey()),
+                    Base64.getEncoder().encodeToString(model.getPublicKey()),
+                    model.getOnionAddress()
+            );
+        }
+    }
+
+
+    public static class KeyBundleMapping {
+        public static KeyBundle toBisq2Model(KeyBundleDto value) {
+            return new KeyBundle(
+                    value.keyId(),
+                    KeyPairMapping.toBisq2Model(value.keyPair()),
+                    TorKeyPairMapping.toBisq2Model(value.torKeyPair())
+            );
+        }
+
+        public static KeyBundleDto fromBisq2Model(KeyBundle value) {
+            return new KeyBundleDto(
+                    value.getKeyId(),
+                    KeyPairMapping.fromBisq2Model(value.getKeyPair()),
+                    TorKeyPairMapping.fromBisq2Model(value.getTorKeyPair())
+            );
+        }
+    }
+
+
     // security.pow
 
     public static class ProofOfWorkMapping {
@@ -678,6 +746,222 @@ public class DtoMappings {
                     settingsService.getSupportedLanguageCodes(),
                     settingsService.getMaxTradePriceDeviation().get(),
                     MarketMapping.fromBisq2Model(settingsService.getSelectedMarket().get()));
+        }
+    }
+
+
+    // trade
+
+    public static class TradeRoleMapping {
+        public static TradeRole toBisq2Model(TradeRoleDto value) {
+            return switch (value) {
+                case BUYER_AS_TAKER -> TradeRole.BUYER_AS_TAKER;
+                case BUYER_AS_MAKER -> TradeRole.BUYER_AS_MAKER;
+                case SELLER_AS_TAKER -> TradeRole.SELLER_AS_TAKER;
+                case SELLER_AS_MAKER -> TradeRole.SELLER_AS_MAKER;
+            };
+        }
+
+        public static TradeRoleDto fromBisq2Model(TradeRole value) {
+            return switch (value) {
+                case BUYER_AS_TAKER -> TradeRoleDto.BUYER_AS_TAKER;
+                case BUYER_AS_MAKER -> TradeRoleDto.BUYER_AS_MAKER;
+                case SELLER_AS_TAKER -> TradeRoleDto.SELLER_AS_TAKER;
+                case SELLER_AS_MAKER -> TradeRoleDto.SELLER_AS_MAKER;
+            };
+        }
+    }
+
+
+    // trade.bisq_easy
+
+    public static class BisqEasyTradePartyMapping {
+        public static BisqEasyTradeParty toBisq2Model(BisqEasyTradePartyDto value) {
+            return new BisqEasyTradeParty(
+                    NetworkIdMapping.toBisq2Model(value.networkId())
+            );
+        }
+
+        public static BisqEasyTradePartyDto fromBisq2Model(BisqEasyTradeParty model) {
+            return new BisqEasyTradePartyDto(
+                    NetworkIdMapping.fromBisq2Model(model.getNetworkId())
+            );
+        }
+    }
+
+    public static class BisqEasyTradeMapping {
+       /* public static BisqEasyTrade toBisq2Model(BisqEasyTradeDto value) {
+            return new BisqEasyTrade(
+                    BisqEasyTradeState.INIT,
+                    value.id(),
+                    TradeRoleMapping.toBisq2Model(value.tradeRole()),
+                    IdentityMapping.toBisq2Model(value.myIdentity()),
+                    BisqEasyTradePartyMapping.toBisq2Model(value.taker()),
+                    BisqEasyTradePartyMapping.toBisq2Model(value.maker())
+            );
+        }*/
+
+        public static BisqEasyTradeDto fromBisq2Model(BisqEasyTrade model) {
+            return new BisqEasyTradeDto(
+                    model.getId(),
+                    TradeRoleMapping.fromBisq2Model(model.getTradeRole()),
+                    IdentityMapping.fromBisq2Model(model.getMyIdentity()),
+                    BisqEasyTradePartyMapping.fromBisq2Model(model.getTaker()),
+                    BisqEasyTradePartyMapping.fromBisq2Model(model.getMaker())
+            );
+        }
+    }
+
+
+    // trade.bisq_easy.protocol
+
+    public static class BisqEasyTradeStateMapping {
+        public static BisqEasyTradeState toBisq2Model(BisqEasyTradeStateDto value) {
+            if (value == null) {
+                throw new IllegalArgumentException("Value cannot be null");
+            }
+
+            return switch (value) {
+                case INIT -> BisqEasyTradeState.INIT;
+                case TAKER_SENT_TAKE_OFFER_REQUEST -> BisqEasyTradeState.TAKER_SENT_TAKE_OFFER_REQUEST;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_ ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_ ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_ ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeState.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_ ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case BUYER_SENT_FIAT_SENT_CONFIRMATION -> BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION;
+                case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION ->
+                        BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
+                case SELLER_CONFIRMED_FIAT_RECEIPT -> BisqEasyTradeState.SELLER_CONFIRMED_FIAT_RECEIPT;
+                case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION ->
+                        BisqEasyTradeState.BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION;
+                case SELLER_SENT_BTC_SENT_CONFIRMATION -> BisqEasyTradeState.SELLER_SENT_BTC_SENT_CONFIRMATION;
+                case BUYER_RECEIVED_BTC_SENT_CONFIRMATION -> BisqEasyTradeState.BUYER_RECEIVED_BTC_SENT_CONFIRMATION;
+                case BTC_CONFIRMED -> BisqEasyTradeState.BTC_CONFIRMED;
+                case REJECTED -> BisqEasyTradeState.REJECTED;
+                case PEER_REJECTED -> BisqEasyTradeState.PEER_REJECTED;
+                case CANCELLED -> BisqEasyTradeState.CANCELLED;
+                case PEER_CANCELLED -> BisqEasyTradeState.PEER_CANCELLED;
+                case FAILED -> BisqEasyTradeState.FAILED;
+                case FAILED_AT_PEER -> BisqEasyTradeState.FAILED_AT_PEER;
+            };
+        }
+
+        public static BisqEasyTradeStateDto fromBisq2Model(BisqEasyTradeState value) {
+            if (value == null) {
+                throw new IllegalArgumentException("Value cannot be null");
+            }
+
+            return switch (value) {
+                case INIT -> BisqEasyTradeStateDto.INIT;
+                case TAKER_SENT_TAKE_OFFER_REQUEST -> BisqEasyTradeStateDto.TAKER_SENT_TAKE_OFFER_REQUEST;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_ ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_ ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_ ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_;
+                case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS ->
+                        BisqEasyTradeStateDto.TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_ ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_;
+                case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA ->
+                        BisqEasyTradeStateDto.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA;
+                case BUYER_SENT_FIAT_SENT_CONFIRMATION -> BisqEasyTradeStateDto.BUYER_SENT_FIAT_SENT_CONFIRMATION;
+                case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION ->
+                        BisqEasyTradeStateDto.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
+                case SELLER_CONFIRMED_FIAT_RECEIPT -> BisqEasyTradeStateDto.SELLER_CONFIRMED_FIAT_RECEIPT;
+                case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION ->
+                        BisqEasyTradeStateDto.BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION;
+                case SELLER_SENT_BTC_SENT_CONFIRMATION -> BisqEasyTradeStateDto.SELLER_SENT_BTC_SENT_CONFIRMATION;
+                case BUYER_RECEIVED_BTC_SENT_CONFIRMATION -> BisqEasyTradeStateDto.BUYER_RECEIVED_BTC_SENT_CONFIRMATION;
+                case BTC_CONFIRMED -> BisqEasyTradeStateDto.BTC_CONFIRMED;
+                case REJECTED -> BisqEasyTradeStateDto.REJECTED;
+                case PEER_REJECTED -> BisqEasyTradeStateDto.PEER_REJECTED;
+                case CANCELLED -> BisqEasyTradeStateDto.CANCELLED;
+                case PEER_CANCELLED -> BisqEasyTradeStateDto.PEER_CANCELLED;
+                case FAILED -> BisqEasyTradeStateDto.FAILED;
+                case FAILED_AT_PEER -> BisqEasyTradeStateDto.FAILED_AT_PEER;
+            };
         }
     }
 
