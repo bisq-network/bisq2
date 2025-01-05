@@ -21,8 +21,6 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.QuoteAmountInput;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BaseAmountBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -63,8 +61,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     private final Label minRangeValue, maxRangeValue, minRangeCode, maxRangeCode, description, quoteAmountSeparator,
             baseAmountSeparator;
     private final Region selectionLine;
-    private final BaseAmountBox maxOrFixedBaseAmount, minBaseAmount;
-    private final QuoteAmountInput maxOrFixedQuoteAmount, minQuoteAmount;
+    private final QuoteAmountInputBox maxOrFixedQuoteAmount, minQuoteAmount;
     private final Pane minQuoteAmountRoot, minBaseAmountRoot;
     private final HBox quoteAmountSelectionHBox, sliderIndicators;
     private Subscription maxOrFixedQuoteAmountFocusPin,minQuoteAmountFocusPin, sliderTrackStylePin, isRangeAmountEnabledPin,
@@ -73,20 +70,18 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     AmountSelectionView(AmountSelectionModel model,
                         AmountSelectionController controller,
                         BaseAmountBox maxOrFixedBaseAmount,
-                        QuoteAmountInput maxOrFixedQuoteAmount,
+                        QuoteAmountInputBox maxOrFixedQuoteAmount,
                         BaseAmountBox minBaseAmount,
-                        QuoteAmountInput minQuoteAmount) {
+                        QuoteAmountInputBox minQuoteAmount) {
         super(new VBox(10), model, controller);
 
         // max or fixed component
         Pane maxOrFixedBaseAmountRoot = maxOrFixedBaseAmount.getRoot();
-        this.maxOrFixedBaseAmount = maxOrFixedBaseAmount;
         Pane maxOrFixedQuoteAmountRoot = maxOrFixedQuoteAmount.getRoot();
         this.maxOrFixedQuoteAmount = maxOrFixedQuoteAmount;
 
         // min component (only shown when using a range)
         minBaseAmountRoot = minBaseAmount.getRoot();
-        this.minBaseAmount = minBaseAmount;
         minQuoteAmountRoot = minQuoteAmount.getRoot();
         this.minQuoteAmount = minQuoteAmount;
 

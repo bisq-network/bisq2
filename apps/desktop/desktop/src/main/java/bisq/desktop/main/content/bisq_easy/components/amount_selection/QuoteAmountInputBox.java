@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
+package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -46,10 +46,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public abstract class AmountInput {
+public class QuoteAmountInputBox {
     protected final Controller controller;
 
-    public AmountInput(boolean isBaseCurrency, boolean showCurrencyCode) {
+    public QuoteAmountInputBox(boolean isBaseCurrency, boolean showCurrencyCode) {
         controller = new Controller(isBaseCurrency, showCurrencyCode);
     }
 
@@ -224,27 +224,18 @@ public abstract class AmountInput {
         protected View(Model model, Controller controller) {
             super(new HBox(), model, controller);
 
-            textInput = createTextInput();
-            codeLabel = createCodeLabel();
+            textInput = new TextField();
+            codeLabel = new Label();
             codeLabel.getStyleClass().add("currency-code");
             codeLabel.setVisible(model.showCurrencyCode);
             codeLabel.setManaged(model.showCurrencyCode);
             root.getChildren().addAll(textInput, codeLabel);
+            root.setSpacing(10);
+            root.getStyleClass().add("big-amount-input");
+
             textListener = this::onTextChanged;
             focusListener = this::onFocusChanged;
             amountListener = this::onAmountChanged;
-            initView();
-        }
-
-        protected TextField createTextInput() {
-            return new TextField();
-        }
-
-        protected Label createCodeLabel() {
-            return new Label();
-        }
-
-        protected void initView() {
         }
 
         private void onTextChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {

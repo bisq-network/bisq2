@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input;
+package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
