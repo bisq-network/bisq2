@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.web_socket.domain.offerbook;
+package bisq.http_api.web_socket.domain.offers;
 
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;

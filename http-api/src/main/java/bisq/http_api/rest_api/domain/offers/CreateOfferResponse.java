@@ -15,10 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.trade;
+package bisq.http_api.rest_api.domain.offers;
 
-public enum TradeEventDto {
-    REJECTED,
-    CANCELLED,
-    CLOSED
+public record CreateOfferResponse(String offerId) {
 }

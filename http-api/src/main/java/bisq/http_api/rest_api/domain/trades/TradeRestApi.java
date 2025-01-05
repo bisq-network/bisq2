@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.trade;
+package bisq.http_api.rest_api.domain.trades;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
@@ -32,7 +32,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.http_api.rest_api.domain.RestApiBase;
-import bisq.http_api.rest_api.domain.offerbook.CreateOfferRequest;
+import bisq.http_api.rest_api.domain.offers.CreateOfferRequest;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;

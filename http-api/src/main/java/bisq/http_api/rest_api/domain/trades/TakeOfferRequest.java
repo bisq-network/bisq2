@@ -15,7 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.offerbook;
+package bisq.http_api.rest_api.domain.trades;
 
-public record CreateOfferResponse(String offerId) {
+public record TakeOfferRequest(String offerId,
+                               long baseSideAmount,
+                               long quoteSideAmount,
+                               String bitcoinPaymentMethod,
+                               String fiatPaymentMethod) {
 }
