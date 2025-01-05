@@ -28,7 +28,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.AmountInput;
 import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.QuoteAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BaseAmount;
+import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BaseAmountBox;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
@@ -52,26 +52,26 @@ public class AmountSelectionController implements Controller {
     @Getter
     private final AmountSelectionView view;
     private final QuoteAmountInput maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput;
-    private final BaseAmount maxOrFixedBaseSideAmountInput, minBaseSideAmountInput;
+    private final BaseAmountBox maxOrFixedBaseSideAmountInput, minBaseSideAmountInput;
     private final ChangeListener<Monetary> maxOrFixedBaseSideAmountFromModelListener, maxOrFixedQuoteSideAmountFromModelListener,
             minBaseSideAmountFromModelListener, minQuoteSideAmountFromModelListener;
     private final ChangeListener<PriceQuote> quoteListener;
     private final PriceInput price;
     private final ChangeListener<Number> maxOrFixedSliderListener, minSliderListener;
-    private Subscription maxOrFixedBaseAmountFromModelPin, maxOrFixedBaseAmountFromCompPin, maxOrFixedQuoteAmountFromCompPin,
-            maxOrFixedQuoteSideAmountValidPin, minBaseAmountFromModelPin, minBaseAmountFromCompPin, minQuoteAmountFromCompPin,
+    private Subscription maxOrFixedBaseAmountFromModelPin, maxOrFixedQuoteAmountFromCompPin,
+            maxOrFixedQuoteSideAmountValidPin, minBaseAmountFromModelPin, minQuoteAmountFromCompPin,
             minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin;
 
     public AmountSelectionController(ServiceProvider serviceProvider,
                                      boolean useQuoteCurrencyForMinMaxRange) {
         // max or fixed amount
         maxOrFixedQuoteSideAmountInput = new QuoteAmountInput(false, true);
-        maxOrFixedBaseSideAmountInput = new BaseAmount(true, true);
+        maxOrFixedBaseSideAmountInput = new BaseAmountBox(true);
         maxOrFixedBaseSideAmountInput.setUseLowPrecision(false);
 
         // min amount (only applies when selecting a range)
         minQuoteSideAmountInput = new QuoteAmountInput(false, false);
-        minBaseSideAmountInput = new BaseAmount(true, false);
+        minBaseSideAmountInput = new BaseAmountBox(false);
         minBaseSideAmountInput.setUseLowPrecision(false);
 
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
@@ -276,40 +276,6 @@ public class AmountSelectionController implements Controller {
             }
         });
 
-        maxOrFixedBaseAmountFromCompPin = EasyBind.subscribe(maxOrFixedBaseSideAmountInput.amountProperty(),
-                amount -> {
-                    Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
-                    if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
-                        model.getMaxOrFixedBaseSideAmount().set(maxRangeValue);
-                        setMaxOrFixedQuoteFromBase();
-                        maxOrFixedBaseSideAmountInput.setAmount(maxRangeValue);
-                    } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
-                        model.getMaxOrFixedBaseSideAmount().set(minRangeValue);
-                        setMaxOrFixedQuoteFromBase();
-                        maxOrFixedBaseSideAmountInput.setAmount(minRangeValue);
-                    } else {
-                        model.getMaxOrFixedBaseSideAmount().set(amount);
-                    }
-                });
-
-        minBaseAmountFromCompPin = EasyBind.subscribe(minBaseSideAmountInput.amountProperty(),
-                amount -> {
-                    Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
-                    if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
-                        model.getMinBaseSideAmount().set(maxRangeValue);
-                        setMinQuoteFromBase();
-                        minBaseSideAmountInput.setAmount(maxRangeValue);
-                    } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
-                        model.getMinBaseSideAmount().set(minRangeValue);
-                        setMinQuoteFromBase();
-                        minBaseSideAmountInput.setAmount(minRangeValue);
-                    } else {
-                        model.getMinBaseSideAmount().set(amount);
-                    }
-                });
-
         maxOrFixedQuoteAmountFromCompPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.amountProperty(),
                 amount -> {
                     Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
@@ -377,8 +343,6 @@ public class AmountSelectionController implements Controller {
         model.getMinAmountSliderValue().removeListener(minSliderListener);
         maxOrFixedBaseAmountFromModelPin.unsubscribe();
         minBaseAmountFromModelPin.unsubscribe();
-        maxOrFixedBaseAmountFromCompPin.unsubscribe();
-        minBaseAmountFromCompPin.unsubscribe();
         maxOrFixedQuoteAmountFromCompPin.unsubscribe();
         minQuoteAmountFromCompPin.unsubscribe();
         priceFromCompPin.unsubscribe();
@@ -493,7 +457,7 @@ public class AmountSelectionController implements Controller {
         model.getSliderTrackStyle().set(style);
     }
 
-    private void applySliderValue(double sliderValue, QuoteAmountInput bigAmountInput, BaseAmount smallAmountInput) {
+    private void applySliderValue(double sliderValue, QuoteAmountInput bigAmountInput, BaseAmountBox smallAmountInput) {
         if (model.getMinRangeQuoteSideValue().get() != null && model.getMinRangeBaseSideValue().get() != null) {
             long min = model.isUseQuoteCurrencyForMinMaxRange() ?
                     model.getMinRangeQuoteSideValue().get().getValue() :
