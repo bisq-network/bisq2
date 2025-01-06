@@ -172,7 +172,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyContract bisqEasyContract = checkNotNull(message.getBisqEasyContract());
-        BisqEasyProtocol protocol = createTradeProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
+        BisqEasyProtocol protocol = createProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
         handleEvent(protocol, message);
     }
 
@@ -184,20 +184,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
         BisqEasyProtocol protocol = getProtocol(message.getTradeId());
         handleEvent(protocol, message);
-    }
-
-    private BisqEasyProtocol createTradeProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
-        // We only create the data required for the protocol creation.
-        // Verification will happen in the BisqEasyTakeOfferRequestHandler
-        BisqEasyOffer bisqEasyOffer = contract.getOffer();
-        boolean isBuyer = bisqEasyOffer.getMakersDirection().isBuy();
-        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNetworkId(bisqEasyOffer.getMakerNetworkId()).orElseThrow();
-        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, bisqEasyOffer, sender, receiver);
-        String tradeId = bisqEasyTrade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
-        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
-        persistableStore.addTrade(bisqEasyTrade);
-        return createAndAddTradeProtocol(bisqEasyTrade);
     }
 
 
@@ -299,6 +285,20 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Misc API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private BisqEasyProtocol createProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
+        // We only create the data required for the protocol creation.
+        // Verification will happen in the BisqEasyTakeOfferRequestHandler
+        BisqEasyOffer offer = contract.getOffer();
+        boolean isBuyer = offer.getMakersDirection().isBuy();
+        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
+        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
+        String tradeId = bisqEasyTrade.getId();
+        checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
+        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
+        persistableStore.addTrade(bisqEasyTrade);
+        return createAndAddTradeProtocol(bisqEasyTrade);
+    }
 
     public Optional<BisqEasyProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
