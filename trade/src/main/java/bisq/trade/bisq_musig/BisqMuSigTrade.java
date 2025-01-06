@@ -38,12 +38,13 @@ import lombok.extern.slf4j.Slf4j;
 public final class BisqMuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContract, BisqMuSigTradeParty> {
     private final Observable<BisqMuSigTradeState> tradeState = new Observable<>();
 
-    public BisqMuSigTrade(boolean isBuyer,
+    public BisqMuSigTrade(BisqMuSigContract contract,
+                          boolean isBuyer,
                           boolean isTaker,
                           Identity myIdentity,
-                          BisqMuSigContract contract,
                           NetworkId takerNetworkId) {
-        super(BisqMuSigTradeState.INIT,
+        super(contract,
+                BisqMuSigTradeState.INIT,
                 isBuyer,
                 isTaker,
                 myIdentity,
@@ -51,17 +52,17 @@ public final class BisqMuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContrac
                 new BisqMuSigTradeParty(takerNetworkId),
                 new BisqMuSigTradeParty(contract.getMaker().getNetworkId()));
 
-        setContract(contract);
         stateObservable().addObserver(s -> tradeState.set((BisqMuSigTradeState) s));
     }
 
-    private BisqMuSigTrade(BisqMuSigTradeState state,
+    private BisqMuSigTrade(BisqMuSigContract contract,
+                           BisqMuSigTradeState state,
                            String id,
                            TradeRole tradeRole,
                            Identity myIdentity,
                            BisqMuSigTradeParty taker,
                            BisqMuSigTradeParty maker) {
-        super(state, id, tradeRole, myIdentity, taker, maker);
+        super(contract, state, id, tradeRole, myIdentity, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((BisqMuSigTradeState) s));
     }
@@ -77,13 +78,13 @@ public final class BisqMuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContrac
     }
 
     public static BisqMuSigTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        BisqMuSigTrade trade = new BisqMuSigTrade(ProtobufUtils.enumFromProto(BisqMuSigTradeState.class, proto.getState()),
+        BisqMuSigTrade trade = new BisqMuSigTrade(BisqMuSigContract.fromProto(proto.getContract()),
+                ProtobufUtils.enumFromProto(BisqMuSigTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToBisqMuSigTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqMuSigTradeParty(proto.getMaker()));
-        trade.setContract(BisqMuSigContract.fromProto(proto.getContract()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

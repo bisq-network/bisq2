@@ -38,30 +38,30 @@ import lombok.extern.slf4j.Slf4j;
 public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContract, SubmarineTradeParty> {
     private final Observable<SubmarineTradeState> tradeState = new Observable<>();
 
-    public SubmarineTrade(boolean isBuyer,
+    public SubmarineTrade(SubmarineContract contract,
+                          boolean isBuyer,
                           boolean isTaker,
                           Identity myIdentity,
-                          SubmarineContract contract,
                           NetworkId takerNetworkId) {
-        super(SubmarineTradeState.INIT,
+        super(contract,
+                SubmarineTradeState.INIT,
                 isBuyer,
                 isTaker,
                 myIdentity,
                 contract.getOffer(),
                 new SubmarineTradeParty(takerNetworkId),
                 new SubmarineTradeParty(contract.getMaker().getNetworkId()));
-
-        setContract(contract);
         stateObservable().addObserver(s -> tradeState.set((SubmarineTradeState) s));
     }
 
-    private SubmarineTrade(SubmarineTradeState state,
+    private SubmarineTrade(SubmarineContract contract,
+                           SubmarineTradeState state,
                            String id,
                            TradeRole tradeRole,
                            Identity myIdentity,
                            SubmarineTradeParty taker,
                            SubmarineTradeParty maker) {
-        super(state, id, tradeRole, myIdentity, taker, maker);
+        super(contract, state, id, tradeRole, myIdentity, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((SubmarineTradeState) s));
     }
@@ -77,13 +77,13 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
     }
 
     public static SubmarineTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        SubmarineTrade trade = new SubmarineTrade(ProtobufUtils.enumFromProto(SubmarineTradeState.class, proto.getState()),
+        SubmarineTrade trade = new SubmarineTrade(SubmarineContract.fromProto(proto.getContract()),
+                ProtobufUtils.enumFromProto(SubmarineTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToSubmarineTradeParty(proto.getTaker()),
                 TradeParty.protoToSubmarineTradeParty(proto.getMaker()));
-        trade.setContract(SubmarineContract.fromProto(proto.getContract()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

@@ -100,7 +100,7 @@ public class BisqMuSigTradeService implements PersistenceClient<BisqMuSigTradeSt
                 bisqMuSigOffer,
                 takerNetworkId);
         boolean isBuyer = bisqMuSigOffer.getTakersDirection().isBuy();
-        BisqMuSigTrade tradeModel = new BisqMuSigTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
+        BisqMuSigTrade tradeModel = new BisqMuSigTrade(contract, isBuyer, true, takerIdentity, takerNetworkId);
         checkArgument(findProtocol(tradeModel.getId()).isPresent(),
                 "We received the TakeOfferRequest for an already existing protocol");
 

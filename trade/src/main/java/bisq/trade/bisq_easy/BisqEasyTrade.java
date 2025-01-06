@@ -54,13 +54,15 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
     private final transient Observable<BisqEasyTradeState> tradeState = new Observable<>();
 
-    public BisqEasyTrade(boolean isBuyer,
+    public BisqEasyTrade(BisqEasyContract contract,
+                         boolean isBuyer,
                          boolean isTaker,
                          Identity myIdentity,
                          BisqEasyOffer offer,
                          NetworkId takerNetworkId,
                          NetworkId makerNetworkId) {
-        super(BisqEasyTradeState.INIT,
+        super(contract,
+                BisqEasyTradeState.INIT,
                 isBuyer,
                 isTaker,
                 myIdentity,
@@ -71,13 +73,14 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
 
-    public BisqEasyTrade(BisqEasyTradeState state,
+    public BisqEasyTrade(BisqEasyContract contract,
+                         BisqEasyTradeState state,
                          String id,
                          TradeRole tradeRole,
                          Identity myIdentity,
                          BisqEasyTradeParty taker,
                          BisqEasyTradeParty maker) {
-        super(state, id, tradeRole, myIdentity, taker, maker);
+        super(contract, state, id, tradeRole, myIdentity, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -106,13 +109,13 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     }
 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        BisqEasyTrade trade = new BisqEasyTrade(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
+        BisqEasyTrade trade = new BisqEasyTrade(BisqEasyContract.fromProto(proto.getContract()),
+                ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
-        trade.setContract(BisqEasyContract.fromProto(proto.getContract()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }
