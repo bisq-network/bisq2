@@ -102,13 +102,13 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder(boolean serializeForHash) {
         bisq.trade.protobuf.Trade.Builder builder = bisq.trade.protobuf.Trade.newBuilder()
+                .setContract(contract.get().toProto(serializeForHash))
                 .setId(id)
                 .setTradeRole(tradeRole.toProtoEnum())
                 .setMyIdentity(myIdentity.toProto(serializeForHash))
                 .setTaker(taker.toProto(serializeForHash))
                 .setMaker(maker.toProto(serializeForHash))
                 .setState(getState().name());
-        Optional.ofNullable(contract.get()).ifPresent(contract -> builder.setContract(contract.toProto(serializeForHash)));
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);

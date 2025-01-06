@@ -83,9 +83,7 @@ public final class BisqMuSigTrade extends Trade<BisqMuSigOffer, BisqMuSigContrac
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToBisqMuSigTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqMuSigTradeParty(proto.getMaker()));
-        if (proto.hasContract()) {
-            trade.setContract(BisqMuSigContract.fromProto(proto.getContract()));
-        }
+        trade.setContract(BisqMuSigContract.fromProto(proto.getContract()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

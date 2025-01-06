@@ -83,9 +83,7 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToSubmarineTradeParty(proto.getTaker()),
                 TradeParty.protoToSubmarineTradeParty(proto.getMaker()));
-        if (proto.hasContract()) {
-            trade.setContract(SubmarineContract.fromProto(proto.getContract()));
-        }
+        trade.setContract(SubmarineContract.fromProto(proto.getContract()));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }
