@@ -100,7 +100,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
                 submarineOffer,
                 takerNetworkId);
         boolean isBuyer = submarineOffer.getTakersDirection().isBuy();
-        SubmarineTrade tradeModel = new SubmarineTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
+        SubmarineTrade tradeModel = new SubmarineTrade(contract, isBuyer, true, takerIdentity, takerNetworkId);
         checkArgument(findProtocol(tradeModel.getId()).isPresent(),
                 "We received the BisqEasyTakeOfferRequest for an already existing protocol");
 
