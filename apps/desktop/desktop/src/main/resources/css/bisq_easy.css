@@ -776,20 +776,19 @@
 
 .range-amount .base-separator {
     -fx-alignment: center;
+    -fx-min-width: 10;
+    -fx-padding: 0 0 3 0;
 }
 
-.range-amount .base-separator {
-    -fx-min-width: 10;
+.range-amount .base-amount {
+    -fx-alignment: center-right;
+    -fx-padding: 0 20 0 0;
 }
 
 .range-amount .base-amount .max-or-fixed-base-amount {
-    -fx-min-width: 165;
-    -fx-max-width: 165;
-}
-
-.range-amount .base-amount .max-or-fixed-base-amount,
-.range-amount .base-amount .min-base-amount {
-    -fx-alignment: baseline-left;
+    -fx-max-width: 145;
+    -fx-min-width: 145;
+    -fx-padding: 0 0 0 4;
 }
 
 .fixed-amount .quote-amount .big-amount-input .text-input,
@@ -816,16 +815,6 @@
 
 .quote-amount {
     -fx-alignment: center-right;
-}
-
-.fixed-amount .small-amount-input {
-    -fx-padding: 0 60 0 0;
-}
-
-.range-amount .base-amount .max-or-fixed-base-amount .text-input {
-    -fx-padding: 0 5 0 0;
-    -fx-min-width: 105;
-    -fx-max-width: 105;
 }
 
 .quote-amount .text-input,
@@ -978,26 +967,30 @@
 }
 /***************************/
 
-.small-amount-input .text-input,
-.small-amount-input .currency-code,
+.base-amount-box .base-amount-label,
+.base-amount-box .currency-code,
 .base-separator {
     -fx-fill: -fx-mid-text-color !important;
     -fx-text-fill: -fx-mid-text-color !important;
     -fx-font-family: "IBM Plex Sans Light" !important;
 }
 
-.small-amount-input .text-input,
+.base-amount-box .base-amount-label,
 .base-separator {
     -fx-font-size: 1.25em !important;
 }
 
-.small-amount-input .text-input {
+.base-amount-box .base-amount-label {
     -fx-alignment: baseline-right;
 }
 
-.small-amount-input .currency-code {
+.base-amount-box .currency-code {
     -fx-font-size: 0.95em !important;
     -fx-alignment: baseline-left;
+}
+
+.base-amount-box .base-amount-info-icon {
+    -fx-padding: 0 0 5 0;
 }
 
 .slider.price-slider .thumb,

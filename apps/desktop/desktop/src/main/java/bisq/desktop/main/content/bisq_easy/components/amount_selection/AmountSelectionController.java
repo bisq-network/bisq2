@@ -25,10 +25,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.AmountInput;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.BigAmountInput;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
-import bisq.desktop.main.content.bisq_easy.components.amount_selection.amount_input.SmallAmountInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
@@ -51,28 +48,26 @@ public class AmountSelectionController implements Controller {
     final AmountSelectionModel model;
     @Getter
     private final AmountSelectionView view;
-    private final BigAmountInput maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput;
-    private final SmallAmountInput maxOrFixedBaseSideAmountInput, minBaseSideAmountInput;
-    private final ChangeListener<Monetary> maxOrFixedBaseSideAmountFromModelListener, maxOrFixedQuoteSideAmountFromModelListener,
-            minBaseSideAmountFromModelListener, minQuoteSideAmountFromModelListener;
+    private final QuoteAmountInputBox maxOrFixedQuoteSideAmountInput, minQuoteSideAmountInput;
+    private final BaseAmountBox maxOrFixedBaseSideAmountInput, minBaseSideAmountInput;
+    private final ChangeListener<Monetary> maxOrFixedQuoteSideAmountFromModelListener, minQuoteSideAmountFromModelListener;
     private final ChangeListener<PriceQuote> quoteListener;
     private final PriceInput price;
     private final ChangeListener<Number> maxOrFixedSliderListener, minSliderListener;
     private Subscription maxOrFixedBaseAmountFromModelPin, maxOrFixedBaseAmountFromCompPin, maxOrFixedQuoteAmountFromCompPin,
-            maxOrFixedBaseSideAmountValidPin, maxOrFixedQuoteSideAmountValidPin, minBaseAmountFromModelPin,
-            minBaseAmountFromCompPin, minQuoteAmountFromCompPin, minBaseSideAmountValidPin,
+            maxOrFixedQuoteSideAmountValidPin, minBaseAmountFromModelPin, minBaseAmountFromCompPin, minQuoteAmountFromCompPin,
             minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin;
 
     public AmountSelectionController(ServiceProvider serviceProvider,
                                      boolean useQuoteCurrencyForMinMaxRange) {
         // max or fixed amount
-        maxOrFixedQuoteSideAmountInput = new BigAmountInput(false, true);
-        maxOrFixedBaseSideAmountInput = new SmallAmountInput(true, true);
+        maxOrFixedQuoteSideAmountInput = new QuoteAmountInputBox(false, true);
+        maxOrFixedBaseSideAmountInput = new BaseAmountBox(true);
         maxOrFixedBaseSideAmountInput.setUseLowPrecision(false);
 
         // min amount (only applies when selecting a range)
-        minQuoteSideAmountInput = new BigAmountInput(false, false);
-        minBaseSideAmountInput = new SmallAmountInput(true, false);
+        minQuoteSideAmountInput = new QuoteAmountInputBox(false, false);
+        minBaseSideAmountInput = new BaseAmountBox(false);
         minBaseSideAmountInput.setUseLowPrecision(false);
 
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
@@ -87,9 +82,7 @@ public class AmountSelectionController implements Controller {
         // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
         // apply the conversion before the other component has processed the market change event.
         // The order of the event notification is not deterministic.
-        maxOrFixedBaseSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMaxOrFixedQuoteFromBase);
         maxOrFixedQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMaxOrFixedBaseFromQuote);
-        minBaseSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMinQuoteFromBase);
         minQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMinBaseFromQuote);
         quoteListener = (observable, oldValue, newValue) -> {
             model.getMinRangeBaseSideValue().set(null);
@@ -231,9 +224,7 @@ public class AmountSelectionController implements Controller {
         model.getMaxRangeQuoteSideValue().set(null);
         applyInitialRangeValues();
 
-        model.getMaxOrFixedBaseSideAmount().addListener(maxOrFixedBaseSideAmountFromModelListener);
         model.getMaxOrFixedQuoteSideAmount().addListener(maxOrFixedQuoteSideAmountFromModelListener);
-        model.getMinBaseSideAmount().addListener(minBaseSideAmountFromModelListener);
         model.getMinQuoteSideAmount().addListener(minQuoteSideAmountFromModelListener);
         price.getQuote().addListener(quoteListener);
 
@@ -345,16 +336,11 @@ public class AmountSelectionController implements Controller {
                     }
                 });
 
-        priceFromCompPin = EasyBind.subscribe(price.getQuote(),
-                quote -> applyInitialRangeValues());
+        priceFromCompPin = EasyBind.subscribe(price.getQuote(), quote -> applyInitialRangeValues());
 
-        minRangeCustomValuePin = EasyBind.subscribe(model.getMinRangeMonetary(),
-                value -> applyInitialRangeValues());
-        maxRangeCustomValuePin = EasyBind.subscribe(model.getMaxRangeMonetary(),
-                value -> applyInitialRangeValues());
+        minRangeCustomValuePin = EasyBind.subscribe(model.getMinRangeMonetary(), value -> applyInitialRangeValues());
+        maxRangeCustomValuePin = EasyBind.subscribe(model.getMaxRangeMonetary(), value -> applyInitialRangeValues());
 
-        maxOrFixedBaseSideAmountValidPin = subscribeToAmountValidity(maxOrFixedBaseSideAmountInput, this::setMaxOrFixedBaseFromQuote);
-        minBaseSideAmountValidPin = subscribeToAmountValidity(minBaseSideAmountInput, this::setMinBaseFromQuote);
         maxOrFixedQuoteSideAmountValidPin = subscribeToAmountValidity(maxOrFixedQuoteSideAmountInput, this::setMaxOrFixedQuoteFromBase);
         minQuoteSideAmountValidPin = subscribeToAmountValidity(minQuoteSideAmountInput, this::setMinQuoteFromBase);
 
@@ -371,13 +357,12 @@ public class AmountSelectionController implements Controller {
 
     @Override
     public void onDeactivate() {
-        model.getMaxOrFixedBaseSideAmount().removeListener(maxOrFixedBaseSideAmountFromModelListener);
         model.getMaxOrFixedQuoteSideAmount().removeListener(maxOrFixedQuoteSideAmountFromModelListener);
-        model.getMinBaseSideAmount().removeListener(minBaseSideAmountFromModelListener);
         model.getMinQuoteSideAmount().removeListener(minQuoteSideAmountFromModelListener);
         price.getQuote().removeListener(quoteListener);
         model.getMaxOrFixedAmountSliderValue().removeListener(maxOrFixedSliderListener);
         model.getMinAmountSliderValue().removeListener(minSliderListener);
+
         maxOrFixedBaseAmountFromModelPin.unsubscribe();
         minBaseAmountFromModelPin.unsubscribe();
         maxOrFixedBaseAmountFromCompPin.unsubscribe();
@@ -387,16 +372,15 @@ public class AmountSelectionController implements Controller {
         priceFromCompPin.unsubscribe();
         minRangeCustomValuePin.unsubscribe();
         maxRangeCustomValuePin.unsubscribe();
-        maxOrFixedBaseSideAmountValidPin.unsubscribe();
-        minBaseSideAmountValidPin.unsubscribe();
         maxOrFixedQuoteSideAmountValidPin.unsubscribe();
         minQuoteSideAmountValidPin.unsubscribe();
         isRangeAmountEnabledPin.unsubscribe();
+
         model.setLeftMarkerQuoteSideValue(null);
         model.setRightMarkerQuoteSideValue(null);
     }
 
-    private void initializeQuoteSideAmount(BigAmountInput quoteSideAmountInput) {
+    private void initializeQuoteSideAmount(QuoteAmountInputBox quoteSideAmountInput) {
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote != null) {
             Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
@@ -411,7 +395,7 @@ public class AmountSelectionController implements Controller {
         }
     }
 
-    private Subscription subscribeToAmountValidity(AmountInput amountInput, Runnable autocorrect) {
+    private Subscription subscribeToAmountValidity(QuoteAmountInputBox amountInput, Runnable autocorrect) {
         return EasyBind.subscribe(amountInput.isAmountValidProperty(), isAmountValid -> {
             if (!amountInput.isAmountValidProperty().get()) {
                 autocorrect.run();
@@ -498,7 +482,7 @@ public class AmountSelectionController implements Controller {
         model.getSliderTrackStyle().set(style);
     }
 
-    private void applySliderValue(double sliderValue, BigAmountInput bigAmountInput, SmallAmountInput smallAmountInput) {
+    private void applySliderValue(double sliderValue, QuoteAmountInputBox bigAmountInput, BaseAmountBox smallAmountInput) {
         if (model.getMinRangeQuoteSideValue().get() != null && model.getMinRangeBaseSideValue().get() != null) {
             long min = model.isUseQuoteCurrencyForMinMaxRange() ?
                     model.getMinRangeQuoteSideValue().get().getValue() :
@@ -517,33 +501,49 @@ public class AmountSelectionController implements Controller {
 
     private void setMaxOrFixedQuoteFromBase() {
         PriceQuote priceQuote = price.getQuote().get();
-        if (priceQuote == null) return;
+        if (priceQuote == null) {
+            return;
+        }
         Monetary baseSideAmount = model.getMaxOrFixedBaseSideAmount().get();
-        if (baseSideAmount == null) return;
+        if (baseSideAmount == null) {
+            return;
+        }
         maxOrFixedQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
     }
 
     private void setMinQuoteFromBase() {
         PriceQuote priceQuote = price.getQuote().get();
-        if (priceQuote == null) return;
+        if (priceQuote == null) {
+            return;
+        }
         Monetary baseSideAmount = model.getMinBaseSideAmount().get();
-        if (baseSideAmount == null) return;
+        if (baseSideAmount == null) {
+            return;
+        }
         minQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
     }
 
     private void setMaxOrFixedBaseFromQuote() {
         PriceQuote priceQuote = price.getQuote().get();
-        if (priceQuote == null) return;
+        if (priceQuote == null) {
+            return;
+        }
         Monetary quoteSideAmount = model.getMaxOrFixedQuoteSideAmount().get();
-        if (quoteSideAmount == null) return;
+        if (quoteSideAmount == null) {
+            return;
+        }
         maxOrFixedBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
     }
 
     private void setMinBaseFromQuote() {
         PriceQuote priceQuote = price.getQuote().get();
-        if (priceQuote == null) return;
+        if (priceQuote == null) {
+            return;
+        }
         Monetary quoteSideAmount = model.getMinQuoteSideAmount().get();
-        if (quoteSideAmount == null) return;
+        if (quoteSideAmount == null) {
+            return;
+        }
         minBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
     }
 
