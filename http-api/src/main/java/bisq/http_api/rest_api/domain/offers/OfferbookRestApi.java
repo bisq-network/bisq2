@@ -30,7 +30,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.dto.DtoMappings;
-import bisq.dto.OfferListItemDtoFactory;
+import bisq.dto.offer.bisq_easy.OfferListItemDtoFactory;
 import bisq.dto.offer.bisq_easy.OfferListItemDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import bisq.offer.Direction;
@@ -317,7 +317,7 @@ public class OfferbookRestApi extends RestApiBase {
     }
 
     private OfferListItemDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        return OfferListItemDtoFactory.createOfferListItemDto(userProfileService,
+        return OfferListItemDtoFactory.create(userProfileService,
                 userIdentityService,
                 reputationService,
                 marketPriceService,

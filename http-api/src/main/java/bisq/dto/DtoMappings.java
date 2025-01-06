@@ -20,6 +20,7 @@ package bisq.dto;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
@@ -30,6 +31,7 @@ import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.dto.account.protocol_type.TradeProtocolTypeDto;
+import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelDto;
 import bisq.dto.common.currency.MarketDto;
 import bisq.dto.common.monetary.CoinDto;
 import bisq.dto.common.monetary.FiatDto;
@@ -60,6 +62,7 @@ import bisq.dto.trade.TradeRoleDto;
 import bisq.dto.trade.bisq_easy.BisqEasyTradeDto;
 import bisq.dto.trade.bisq_easy.BisqEasyTradePartyDto;
 import bisq.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
+import bisq.dto.user.identity.UserIdentityDto;
 import bisq.dto.user.profile.UserProfileDto;
 import bisq.dto.user.reputation.ReputationScoreDto;
 import bisq.identity.Identity;
@@ -89,6 +92,7 @@ import bisq.trade.TradeRole;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeParty;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 
@@ -129,6 +133,40 @@ public class DtoMappings {
                 case LIGHTNING_ESCROW -> TradeProtocolTypeDto.LIGHTNING_ESCROW;
                 case MONERO_SWAP -> TradeProtocolTypeDto.MONERO_SWAP;
             };
+        }
+    }
+
+    // chat.bisq_easy.open_trades
+
+    public static class BisqEasyOpenTradeChannelMapping {
+        //todo we dont have the mutable data in the dto
+        /*public static BisqEasyOpenTradeChannel toBisq2Model(BisqEasyOpenTradeChannelDto value) {
+            return new BisqEasyOpenTradeChannel(
+                    value.id(),
+                    value.tradeId(),
+                    BisqEasyOfferMapping.toBisq2Model(value.bisqEasyOffer()),
+                    UserIdentityMapping.toBisq2Model(value.myUserIdentity()),
+                    value.traders().stream()
+                            .map(UserProfileMapping::toBisq2Model)
+                            .collect(Collectors.toSet()),
+                    value.mediator().map(UserProfileMapping::toBisq2Model),
+                    new HashSet<>(),
+                    false,
+                    ChatChannelNotificationType.GLOBAL_DEFAULT
+            );
+        }*/
+
+        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel value) {
+            return new BisqEasyOpenTradeChannelDto(
+                    value.getId(),
+                    value.getTradeId(),
+                    BisqEasyOfferMapping.fromBisq2Model(value.getBisqEasyOffer()),
+                    UserIdentityMapping.fromBisq2Model(value.getMyUserIdentity()),
+                    value.getTraders().stream()
+                            .map(UserProfileMapping::fromBisq2Model)
+                            .collect(Collectors.toSet()),
+                    value.getMediator().map(UserProfileMapping::fromBisq2Model)
+            );
         }
     }
 
@@ -790,6 +828,7 @@ public class DtoMappings {
     }
 
     public static class BisqEasyTradeMapping {
+        //todo we dont have the mutable data in the dto
        /* public static BisqEasyTrade toBisq2Model(BisqEasyTradeDto value) {
             return new BisqEasyTrade(
                     BisqEasyTradeState.INIT,
@@ -801,13 +840,14 @@ public class DtoMappings {
             );
         }*/
 
-        public static BisqEasyTradeDto fromBisq2Model(BisqEasyTrade model) {
+        public static BisqEasyTradeDto fromBisq2Model(BisqEasyTrade value) {
             return new BisqEasyTradeDto(
-                    model.getId(),
-                    TradeRoleMapping.fromBisq2Model(model.getTradeRole()),
-                    IdentityMapping.fromBisq2Model(model.getMyIdentity()),
-                    BisqEasyTradePartyMapping.fromBisq2Model(model.getTaker()),
-                    BisqEasyTradePartyMapping.fromBisq2Model(model.getMaker())
+                    value.getId(),
+                    TradeRoleMapping.fromBisq2Model(value.getTradeRole()),
+                    IdentityMapping.fromBisq2Model(value.getMyIdentity()),
+                    BisqEasyTradePartyMapping.fromBisq2Model(value.getTaker()),
+                    BisqEasyTradePartyMapping.fromBisq2Model(value.getMaker()),
+                    value.getContract().getTakeOfferDate()
             );
         }
     }
@@ -962,6 +1002,24 @@ public class DtoMappings {
                 case FAILED -> BisqEasyTradeStateDto.FAILED;
                 case FAILED_AT_PEER -> BisqEasyTradeStateDto.FAILED_AT_PEER;
             };
+        }
+    }
+
+    // user.identity
+
+    public static class UserIdentityMapping {
+        public static UserIdentity toBisq2Model(UserIdentityDto value) {
+            return new UserIdentity(
+                    IdentityMapping.toBisq2Model(value.identity()),
+                    UserProfileMapping.toBisq2Model(value.userProfile())
+            );
+        }
+
+        public static UserIdentityDto fromBisq2Model(UserIdentity value) {
+            return new UserIdentityDto(
+                    IdentityMapping.fromBisq2Model(value.getIdentity()),
+                    UserProfileMapping.fromBisq2Model(value.getUserProfile())
+            );
         }
     }
 

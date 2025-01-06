@@ -25,6 +25,7 @@ public record BisqEasyTradeDto(
         TradeRoleDto tradeRole,
         IdentityDto myIdentity,
         BisqEasyTradePartyDto taker,
-        BisqEasyTradePartyDto maker
+        BisqEasyTradePartyDto maker,
+        long takeOfferDate
 ) {
 }

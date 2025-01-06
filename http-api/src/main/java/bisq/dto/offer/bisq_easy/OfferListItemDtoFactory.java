@@ -15,16 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.dto;
+package bisq.dto.offer.bisq_easy;
 
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
-import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
-import bisq.dto.offer.bisq_easy.OfferListItemDto;
-import bisq.dto.offer.bisq_easy.UserProfileItemDto;
+import bisq.dto.DtoMappings;
+import bisq.dto.user.profile.UserProfileItemDto;
 import bisq.dto.user.reputation.ReputationScoreDto;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -51,11 +50,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class OfferListItemDtoFactory {
-    public static OfferListItemDto createOfferListItemDto(UserProfileService userProfileService,
-                                                          UserIdentityService userIdentityService,
-                                                          ReputationService reputationService,
-                                                          MarketPriceService marketPriceService,
-                                                          BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+    public static OfferListItemDto create(UserProfileService userProfileService,
+                                          UserIdentityService userIdentityService,
+                                          ReputationService reputationService,
+                                          MarketPriceService marketPriceService,
+                                          BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         boolean isMyOffer = bisqEasyOfferbookMessage.isMyMessage(userIdentityService);
         Direction direction = bisqEasyOffer.getDirection();
@@ -108,6 +107,8 @@ public class OfferListItemDtoFactory {
                 .stream()
                 .map(PaymentMethod::getName)
                 .collect(Collectors.toList());
+
+        //todo use UserProfile and handle reputation separately
         UserProfileItemDto userProfileItem = new UserProfileItemDto(userName, nym, reputationScore);
         return new OfferListItemDto(bisqEasyOfferDto,
                 isMyOffer,

@@ -25,7 +25,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.OfferListItemDtoFactory;
+import bisq.dto.offer.bisq_easy.OfferListItemDtoFactory;
 import bisq.dto.offer.bisq_easy.OfferListItemDto;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.subscription.ModificationType;
@@ -111,7 +111,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
         return getJsonPayload(bisqEasyOfferbookChannelService.getChannels().stream());
     }
 
-    public Optional<String> getJsonPayload(Stream<BisqEasyOfferbookChannel> channels) {
+    private Optional<String> getJsonPayload(Stream<BisqEasyOfferbookChannel> channels) {
         ArrayList<OfferListItemDto> payload = channels
                 .flatMap(channel ->
                         channel.getChatMessages().stream()
@@ -143,7 +143,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
     }
 
     private OfferListItemDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        return OfferListItemDtoFactory.createOfferListItemDto(userProfileService,
+        return OfferListItemDtoFactory.create(userProfileService,
                 userIdentityService,
                 reputationService,
                 marketPriceService,

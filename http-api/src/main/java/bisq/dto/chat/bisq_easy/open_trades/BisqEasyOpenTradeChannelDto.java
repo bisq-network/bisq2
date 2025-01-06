@@ -15,11 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.web_socket.subscription;
+package bisq.dto.chat.bisq_easy.open_trades;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES
-}
+import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
+import bisq.dto.user.identity.UserIdentityDto;
+import bisq.dto.user.profile.UserProfileDto;
+
+import java.util.Optional;
+import java.util.Set;
+
+public record BisqEasyOpenTradeChannelDto(
+        String id,
+        String tradeId,
+        BisqEasyOfferDto bisqEasyOffer,
+        UserIdentityDto myUserIdentity,
+        Set<UserProfileDto> traders,
+        Optional<UserProfileDto> mediator
+) {}

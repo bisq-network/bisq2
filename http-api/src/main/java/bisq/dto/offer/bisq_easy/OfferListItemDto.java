@@ -17,6 +17,7 @@
 
 package bisq.dto.offer.bisq_easy;
 
+import bisq.dto.user.profile.UserProfileItemDto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;

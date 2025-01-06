@@ -21,11 +21,14 @@ package bisq.http_api.web_socket.subscription;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.http_api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.http_api.web_socket.domain.offers.OffersWebSocketService;
+import bisq.http_api.web_socket.domain.trades.TradesWebSocketService;
 import bisq.http_api.web_socket.util.JsonUtil;
+import bisq.trade.TradeService;
 import bisq.user.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -41,31 +44,37 @@ public class SubscriptionService implements Service {
     private final MarketPriceWebSocketService marketPriceWebSocketService;
     private final NumOffersWebSocketService numOffersWebSocketService;
     private final OffersWebSocketService offersWebSocketService;
+    private final TradesWebSocketService tradesWebSocketService;
 
     public SubscriptionService(ObjectMapper objectMapper,
                                BondedRolesService bondedRolesService,
                                ChatService chatService,
-                               UserService userService) {
+                               TradeService tradeService,
+                               UserService userService,
+                               OpenTradeItemsService openTradeItemsService) {
         this.objectMapper = objectMapper;
         subscriberRepository = new SubscriberRepository();
 
         marketPriceWebSocketService = new MarketPriceWebSocketService(objectMapper, subscriberRepository, bondedRolesService);
         numOffersWebSocketService = new NumOffersWebSocketService(objectMapper, subscriberRepository, chatService, userService);
         offersWebSocketService = new OffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bondedRolesService);
+        tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         return marketPriceWebSocketService.initialize()
                 .thenCompose(e -> numOffersWebSocketService.initialize())
-                .thenCompose(e -> offersWebSocketService.initialize());
+                .thenCompose(e -> offersWebSocketService.initialize())
+                .thenCompose(e -> tradesWebSocketService.initialize());
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return marketPriceWebSocketService.shutdown()
                 .thenCompose(e -> numOffersWebSocketService.shutdown())
-                .thenCompose(e -> offersWebSocketService.shutdown());
+                .thenCompose(e -> offersWebSocketService.shutdown())
+                .thenCompose(e -> tradesWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -106,6 +115,9 @@ public class SubscriptionService implements Service {
             }
             case OFFERS -> {
                 return Optional.of(offersWebSocketService);
+            }
+            case TRADES -> {
+                return Optional.of(tradesWebSocketService);
             }
         }
         return Optional.empty();

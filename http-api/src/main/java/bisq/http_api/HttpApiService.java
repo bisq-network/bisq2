@@ -30,6 +30,7 @@ import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.http_api.web_socket.WebSocketService;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
@@ -59,7 +60,8 @@ public class HttpApiService implements Service {
                           ChatService chatService,
                           SupportService supportedService,
                           TradeService tradeService,
-                          SettingsService settingsService) {
+                          SettingsService settingsService,
+                          OpenTradeItemsService openTradeItemsService) {
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
         boolean webSocketConfigEnabled = webSocketConfig.isEnabled();
         if (restApiConfigEnabled || webSocketConfigEnabled) {
@@ -98,7 +100,9 @@ public class HttpApiService implements Service {
                         webSocketResourceConfig,
                         bondedRolesService,
                         chatService,
-                        userService));
+                        tradeService,
+                        userService,
+                        openTradeItemsService));
             } else {
                 this.webSocketService = Optional.empty();
             }

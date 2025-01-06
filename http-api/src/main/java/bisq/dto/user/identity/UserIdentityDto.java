@@ -15,26 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.dto.offer.bisq_easy;
+package bisq.dto.user.identity;
 
-import bisq.dto.user.reputation.ReputationScoreDto;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 
-@Getter
-@ToString
-@EqualsAndHashCode
-public class UserProfileItemDto {
-    private final String userName;
-    private final String nym;
-    private final ReputationScoreDto reputationScore;
+import bisq.dto.identity.IdentityDto;
+import bisq.dto.user.profile.UserProfileDto;
 
-    @JsonCreator
-    public UserProfileItemDto(String userName, String nym, ReputationScoreDto reputationScore) {
-        this.userName = userName;
-        this.nym = nym;
-        this.reputationScore = reputationScore;
-    }
-}
+public record UserIdentityDto(
+        IdentityDto identity,
+        UserProfileDto userProfile
+) {}
