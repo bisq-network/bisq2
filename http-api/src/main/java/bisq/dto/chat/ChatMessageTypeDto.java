@@ -15,15 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.dto.security.pow;
+package bisq.dto.chat;
 
-import javax.annotation.Nullable;
-
-public record ProofOfWorkDto(
-        String payloadEncoded,
-        long counter,
-        @Nullable String challengeEncoded,
-        double difficulty,
-        String solutionEncoded,
-        long duration) {
+public enum ChatMessageTypeDto {
+    TEXT,
+    LEAVE,
+    TAKE_BISQ_EASY_OFFER,
+    PROTOCOL_LOG_MESSAGE
 }

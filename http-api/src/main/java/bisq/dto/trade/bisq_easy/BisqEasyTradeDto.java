@@ -17,15 +17,16 @@
 
 package bisq.dto.trade.bisq_easy;
 
+import bisq.dto.contract.bisq_easy.BisqEasyContractDto;
 import bisq.dto.identity.IdentityDto;
 import bisq.dto.trade.TradeRoleDto;
 
 public record BisqEasyTradeDto(
+        BisqEasyContractDto contract,
         String id,
         TradeRoleDto tradeRole,
         IdentityDto myIdentity,
         BisqEasyTradePartyDto taker,
-        BisqEasyTradePartyDto maker,
-        long takeOfferDate
+        BisqEasyTradePartyDto maker
 ) {
 }

@@ -15,15 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.dto.security.pow;
+package bisq.dto.contract;
 
-import javax.annotation.Nullable;
+import bisq.dto.network.identity.NetworkIdDto;
 
-public record ProofOfWorkDto(
-        String payloadEncoded,
-        long counter,
-        @Nullable String challengeEncoded,
-        double difficulty,
-        String solutionEncoded,
-        long duration) {
+public record PartyDto(RoleDto role, NetworkIdDto networkId) {
 }

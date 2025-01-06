@@ -102,7 +102,7 @@ public class UserIdentityRestApi extends RestApiBase {
             summary = "Create User Identity and Publish User Profile",
             description = "Creates a new user identity and publishes the associated user profile.",
             requestBody = @RequestBody(
-                    description = "Request payload containing user nickname, terms, statement, and prepared data.",
+                    description = "Request payloadEncoded containing user nickname, terms, statement, and prepared data.",
                     content = @Content(schema = @Schema(implementation = CreateUserIdentityRequest.class))
             ),
             responses = {

@@ -19,7 +19,7 @@ package bisq.http_api.web_socket.domain.trades;
 
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.trade.bisq_easy.OpenTradeItemDto;
+import bisq.dto.presentation.open_trades.TradeItemPresentationDto;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.subscription.ModificationType;
@@ -53,13 +53,13 @@ public class TradesWebSocketService extends BaseWebSocketService {
     public CompletableFuture<Boolean> initialize() {
         tradesPin = openTradeItemsService.getItems().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(OpenTradeItemDto item) {
+            public void add(TradeItemPresentationDto item) {
                 send(item, ModificationType.ADDED);
             }
 
             @Override
             public void remove(Object element) {
-                if (element instanceof OpenTradeItemDto item) {
+                if (element instanceof TradeItemPresentationDto item) {
                     send(item, ModificationType.REMOVED);
                 }
             }
@@ -84,12 +84,12 @@ public class TradesWebSocketService extends BaseWebSocketService {
         return toJson(openTradeItemsService.getItems().getList());
     }
 
-    private void send(OpenTradeItemDto item, ModificationType modificationType) {
+    private void send(TradeItemPresentationDto item, ModificationType modificationType) {
         send(Collections.singletonList(item), modificationType);
     }
 
-    private void send(List<OpenTradeItemDto> items, ModificationType modificationType) {
-        // The payload is defined as a list to support batch data delivery at subscribe.
+    private void send(List<TradeItemPresentationDto> items, ModificationType modificationType) {
+        // The payloadEncoded is defined as a list to support batch data delivery at subscribe.
         toJson(items).ifPresent(json -> {
             subscriberRepository.findSubscribers(topic)
                     .ifPresent(subscribers -> subscribers

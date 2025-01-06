@@ -20,6 +20,10 @@ package bisq.dto;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessageType;
+import bisq.chat.Citation;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.encoding.Hex;
@@ -30,7 +34,14 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
+import bisq.contract.ContractSignatureData;
+import bisq.contract.Party;
+import bisq.contract.Role;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.dto.account.protocol_type.TradeProtocolTypeDto;
+import bisq.dto.chat.ChatMessageTypeDto;
+import bisq.dto.chat.CitationDto;
+import bisq.dto.chat.bisq_easy.offerbook.BisqEasyOfferbookMessageDto;
 import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelDto;
 import bisq.dto.common.currency.MarketDto;
 import bisq.dto.common.monetary.CoinDto;
@@ -40,6 +51,10 @@ import bisq.dto.common.monetary.PriceQuoteDto;
 import bisq.dto.common.network.AddressByTransportTypeMapDto;
 import bisq.dto.common.network.AddressDto;
 import bisq.dto.common.network.TransportTypeDto;
+import bisq.dto.contract.ContractSignatureDataDto;
+import bisq.dto.contract.PartyDto;
+import bisq.dto.contract.RoleDto;
+import bisq.dto.contract.bisq_easy.BisqEasyContractDto;
 import bisq.dto.identity.IdentityDto;
 import bisq.dto.network.identity.NetworkIdDto;
 import bisq.dto.offer.DirectionDto;
@@ -136,6 +151,69 @@ public class DtoMappings {
         }
     }
 
+
+    // chat
+
+    public static class CitationMapping {
+        public static Citation toBisq2Model(CitationDto value) {
+            return new Citation(
+                    value.authorUserProfileId(),
+                    value.text()
+            );
+        }
+
+        public static CitationDto fromBisq2Model(Citation value) {
+            return new CitationDto(
+                    value.getAuthorUserProfileId(),
+                    value.getText()
+            );
+        }
+    }
+
+    public static class ChatMessageTypeMapping {
+        public static ChatMessageType toBisq2Model(ChatMessageTypeDto value) {
+            return ChatMessageType.valueOf(value.name());
+        }
+
+        public static ChatMessageTypeDto fromBisq2Model(ChatMessageType value) {
+            return ChatMessageTypeDto.valueOf(value.name());
+        }
+    }
+
+    // chat.bisq_easy.open_trades
+
+    public static class BisqEasyOfferbookMessageMapping {
+        public BisqEasyOfferbookMessage toBisq2Model(BisqEasyOfferbookMessageDto value) {
+            return new BisqEasyOfferbookMessage(
+                    value.id(),
+                    ChatChannelDomain.BISQ_EASY_OFFERBOOK,
+                    value.channelId(),
+                    value.authorUserProfileId(),
+                    value.bisqEasyOffer().map(BisqEasyOfferMapping::toBisq2Model),
+                    value.text(),
+                    value.citation().map(CitationMapping::toBisq2Model),
+                    value.date(),
+                    value.wasEdited(),
+                    ChatMessageTypeMapping.toBisq2Model(value.chatMessageType())
+            );
+        }
+
+        public BisqEasyOfferbookMessageDto fromBisq2Model(BisqEasyOfferbookMessage value) {
+            return new BisqEasyOfferbookMessageDto(
+                    value.getId(),
+                    value.getChannelId(),
+                    value.getAuthorUserProfileId(),
+                    value.getBisqEasyOffer().map(BisqEasyOfferMapping::fromBisq2Model),
+                    value.getText(),
+                    value.getCitation().map(CitationMapping::fromBisq2Model),
+                    value.getDate(),
+                    value.isWasEdited(),
+                    ChatMessageTypeMapping.fromBisq2Model(value.getChatMessageType())
+            );
+        }
+    }
+
+
     // chat.bisq_easy.open_trades
 
     public static class BisqEasyOpenTradeChannelMapping {
@@ -166,6 +244,95 @@ public class DtoMappings {
                             .map(UserProfileMapping::fromBisq2Model)
                             .collect(Collectors.toSet()),
                     value.getMediator().map(UserProfileMapping::fromBisq2Model)
+            );
+        }
+    }
+
+
+    // contract
+
+    public static class RoleMapping {
+        public static Role toBisq2Model(RoleDto value) {
+            return switch (value) {
+                case MAKER -> Role.MAKER;
+                case TAKER -> Role.TAKER;
+                case ESCROW_AGENT -> Role.ESCROW_AGENT;
+            };
+        }
+
+        public static RoleDto fromBisq2Model(Role value) {
+            return switch (value) {
+                case MAKER -> RoleDto.MAKER;
+                case TAKER -> RoleDto.TAKER;
+                case ESCROW_AGENT -> RoleDto.ESCROW_AGENT;
+            };
+        }
+    }
+
+
+    public static class ContractSignatureDataMapping {
+        public static ContractSignatureData toBisq2Model(ContractSignatureDataDto value) {
+            return new ContractSignatureData(Base64.getDecoder().decode(value.contractHashEncoded()),
+                    Base64.getDecoder().decode(value.signatureEncoded()),
+                    PublicKeyMapping.toBisq2Model(value.publicKey()));
+        }
+
+        public static ContractSignatureDataDto fromBisq2Model(ContractSignatureData value) {
+            return new ContractSignatureDataDto(Base64.getEncoder().encodeToString(value.getContractHash()),
+                    Base64.getEncoder().encodeToString(value.getSignature()),
+                    PublicKeyMapping.fromBisq2Model(value.getPublicKey()));
+        }
+    }
+
+    public static class PartyMapping {
+        public static Party toBisq2Model(PartyDto value) {
+            return new Party(
+                    RoleMapping.toBisq2Model(value.role()),
+                    NetworkIdMapping.toBisq2Model(value.networkId())
+            );
+        }
+
+        public static PartyDto fromBisq2Model(Party value) {
+            return new PartyDto(
+                    RoleMapping.fromBisq2Model(value.getRole()),
+                    NetworkIdMapping.fromBisq2Model(value.getNetworkId())
+            );
+        }
+    }
+
+    // contract.bisq_easy
+
+    public static class BisqEasyContractMapping {
+        public static BisqEasyContract toBisq2Model(BisqEasyContractDto value) {
+            // Maker is created from the offer in base class
+            return new BisqEasyContract(
+                    value.takeOfferDate(),
+                    BisqEasyOfferMapping.toBisq2Model(value.offer()),
+                    TradeProtocolType.BISQ_EASY,
+                    PartyMapping.toBisq2Model(value.taker()),
+                    value.baseSideAmount(),
+                    value.quoteSideAmount(),
+                    BitcoinPaymentMethodSpecMapping.toBisq2Model(value.baseSidePaymentMethodSpec()),
+                    FiatPaymentMethodSpecMapping.toBisq2Model(value.quoteSidePaymentMethodSpec()),
+                    value.mediator().map(UserProfileMapping::toBisq2Model),
+                    PriceSpecMapping.toBisq2Model(value.priceSpec()),
+                    value.marketPrice()
+            );
+        }
+
+        public static BisqEasyContractDto fromBisq2Model(BisqEasyContract value) {
+            return new BisqEasyContractDto(
+                    value.getTakeOfferDate(),
+                    BisqEasyOfferMapping.fromBisq2Model(value.getOffer()),
+                    PartyMapping.fromBisq2Model(value.getMaker()),
+                    PartyMapping.fromBisq2Model(value.getTaker()),
+                    value.getBaseSideAmount(),
+                    value.getQuoteSideAmount(),
+                    BitcoinPaymentMethodSpecMapping.fromBisq2Model(value.getBaseSidePaymentMethodSpec()),
+                    FiatPaymentMethodSpecMapping.fromBisq2Model(value.getQuoteSidePaymentMethodSpec()),
+                    value.getMediator().map(UserProfileMapping::fromBisq2Model),
+                    PriceSpecMapping.fromBisq2Model(value.getPriceSpec()),
+                    value.getMarketPrice()
             );
         }
     }
@@ -666,7 +833,7 @@ public class DtoMappings {
                 byte[] decoded = Base64.getDecoder().decode(value.encoded());
                 return KeyGeneration.generatePrivate(decoded);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to generate privateKey", e);
+                throw new RuntimeException("Failed to generate privateKeyEncoded", e);
             }
         }
 
@@ -697,7 +864,7 @@ public class DtoMappings {
                 byte[] decoded = Base64.getDecoder().decode(value.encoded());
                 return KeyGeneration.generatePublic(decoded);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to generate publicKey", e);
+                throw new RuntimeException("Failed to generate publicKeyEncoded", e);
             }
         }
 
@@ -710,8 +877,8 @@ public class DtoMappings {
     public static class TorKeyPairMapping {
         public static TorKeyPair toBisq2Model(TorKeyPairDto value) {
             return new TorKeyPair(
-                    Base64.getDecoder().decode(value.privateKey()),
-                    Base64.getDecoder().decode(value.publicKey()),
+                    Base64.getDecoder().decode(value.privateKeyEncoded()),
+                    Base64.getDecoder().decode(value.publicKeyEncoded()),
                     value.onionAddress()
             );
         }
@@ -750,11 +917,11 @@ public class DtoMappings {
     public static class ProofOfWorkMapping {
         public static ProofOfWork toBisq2Model(ProofOfWorkDto value) {
             return new ProofOfWork(
-                    Base64.getDecoder().decode(value.payload()),
+                    Base64.getDecoder().decode(value.payloadEncoded()),
                     value.counter(),
-                    value.challenge() != null ? Base64.getDecoder().decode(value.challenge()) : null,
+                    value.challengeEncoded() != null ? Base64.getDecoder().decode(value.challengeEncoded()) : null,
                     value.difficulty(),
-                    Base64.getDecoder().decode(value.solution()),
+                    Base64.getDecoder().decode(value.solutionEncoded()),
                     value.duration()
             );
         }
@@ -842,12 +1009,12 @@ public class DtoMappings {
 
         public static BisqEasyTradeDto fromBisq2Model(BisqEasyTrade value) {
             return new BisqEasyTradeDto(
+                    BisqEasyContractMapping.fromBisq2Model(value.getContract()),
                     value.getId(),
                     TradeRoleMapping.fromBisq2Model(value.getTradeRole()),
                     IdentityMapping.fromBisq2Model(value.getMyIdentity()),
                     BisqEasyTradePartyMapping.fromBisq2Model(value.getTaker()),
-                    BisqEasyTradePartyMapping.fromBisq2Model(value.getMaker()),
-                    value.getContract().getTakeOfferDate()
+                    BisqEasyTradePartyMapping.fromBisq2Model(value.getMaker())
             );
         }
     }

@@ -15,15 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.dto.security.pow;
+package bisq.dto.contract;
 
-import javax.annotation.Nullable;
-
-public record ProofOfWorkDto(
-        String payloadEncoded,
-        long counter,
-        @Nullable String challengeEncoded,
-        double difficulty,
-        String solutionEncoded,
-        long duration) {
+public enum RoleDto {
+    MAKER,
+    TAKER,
+    ESCROW_AGENT
 }

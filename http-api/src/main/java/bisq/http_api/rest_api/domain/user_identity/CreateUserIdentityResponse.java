@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile ID.")
+@Schema(name = "UserProfileResponse", description = "Response payloadEncoded containing the user profile ID.")
 public class CreateUserIdentityResponse {
     private final String userProfileId;
 

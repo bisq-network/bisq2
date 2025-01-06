@@ -15,16 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.dto.trade.bisq_easy;
+package bisq.dto.presentation.open_trades;
 
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.dto.DtoMappings;
 import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelDto;
+import bisq.dto.trade.bisq_easy.BisqEasyTradeDto;
 import bisq.dto.user.profile.UserProfileDto;
-import bisq.dto.user.profile.UserProfileItemDto;
-import bisq.dto.user.profile.UserProfileItemDtoFactory;
 import bisq.dto.user.reputation.ReputationScoreDto;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -32,15 +31,16 @@ import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 
 import java.util.Optional;
 
-public class OpenTradeListItemDtoFactory {
-    public static OpenTradeItemDto create(BisqEasyTrade trade,
-                                          BisqEasyOpenTradeChannel channel,
-                                          UserProfileService userProfileService,
-                                          ReputationService reputationService) {
+public class TradeItemPresentationDtoFactory {
+    public static TradeItemPresentationDto create(BisqEasyTrade trade,
+                                                  BisqEasyOpenTradeChannel channel,
+                                                  UserProfileService userProfileService,
+                                                  ReputationService reputationService) {
         if (trade.getContract() == null) {
             throw new IllegalArgumentException("Contract must not be null. Trade: " + trade);
         }
@@ -73,41 +73,35 @@ public class OpenTradeListItemDtoFactory {
         boolean isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
 
         String myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
-        ReputationScoreDto reputationScore = DtoMappings.ReputationScoreMapping.fromBisq2Model(reputationService.getReputationScore(peersUserProfile));
         String mediatorUserName = channel.getMediator().map(UserProfile::getUserName).orElse("");
 
         BisqEasyOpenTradeChannelDto channelDto = DtoMappings.BisqEasyOpenTradeChannelMapping.fromBisq2Model(channel);
         BisqEasyTradeDto tradeDto = DtoMappings.BisqEasyTradeMapping.fromBisq2Model(trade);
 
-        //BisqEasyTradeDto tradeDto = DtoMappings.BisqEasyTradeMapping.fromBisq2Model(trade);
-
-        // BisqEasyContract contract = trade.getContract();
         UserProfileDto myUserProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(myUserProfile);
         UserProfileDto peersUserProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(peersUserProfile);
 
-        UserProfileDto makerProfile;
-        UserProfileDto takerProfile;
+        UserProfileDto makerUserProfile;
+        UserProfileDto takerUserProfile;
         if (trade.isMaker()) {
-            makerProfile = myUserProfileDto;
-            takerProfile = peersUserProfileDto;
+            makerUserProfile = myUserProfileDto;
+            takerUserProfile = peersUserProfileDto;
         } else {
-            makerProfile = peersUserProfileDto;
-            takerProfile = myUserProfileDto;
+            makerUserProfile = peersUserProfileDto;
+            takerUserProfile = myUserProfileDto;
         }
 
-        //todo use UserProfile and handle reputation separately
-        UserProfileItemDto makerUserProfileItem = UserProfileItemDtoFactory.create(makerProfile, reputationService);
-        UserProfileItemDto takerUserProfileItem =  UserProfileItemDtoFactory.create(takerProfile, reputationService);
+        Optional<UserProfileDto> mediatorUserProfile = contract.getMediator()
+                .map(DtoMappings.UserProfileMapping::fromBisq2Model);
 
-        Optional<UserProfileItemDto> mediatorUserProfileItem = contract.getMediator()
-                .map(userProfile ->  UserProfileItemDtoFactory.create(DtoMappings.UserProfileMapping.fromBisq2Model(userProfile), reputationService));
-
-        return new OpenTradeItemDto(
+        ReputationScore peersReputationScore = reputationService.getReputationScore(peersUserProfile.getId());
+        ReputationScoreDto peersRReputationScoreDto = DtoMappings.ReputationScoreMapping.fromBisq2Model(peersReputationScore);
+        return new TradeItemPresentationDto(
                 channelDto,
                 tradeDto,
-                makerUserProfileItem,
-                takerUserProfileItem,
-                mediatorUserProfileItem,
+                makerUserProfile,
+                takerUserProfile,
+                mediatorUserProfile,
                 peersUserName,
                 myUserName,
                 directionalTitle,
@@ -129,8 +123,8 @@ public class OpenTradeListItemDtoFactory {
                 fiatPaymentMethodDisplayString,
                 isFiatPaymentMethodCustom,
                 myRole,
-                reputationScore,
-                mediatorUserName
+                mediatorUserName,
+                peersRReputationScoreDto
         );
     }
 }

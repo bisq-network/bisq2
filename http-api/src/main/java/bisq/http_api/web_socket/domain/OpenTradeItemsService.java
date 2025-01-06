@@ -25,8 +25,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
-import bisq.dto.trade.bisq_easy.OpenTradeItemDto;
-import bisq.dto.trade.bisq_easy.OpenTradeListItemDtoFactory;
+import bisq.dto.presentation.open_trades.TradeItemPresentationDto;
+import bisq.dto.presentation.open_trades.TradeItemPresentationDtoFactory;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -49,7 +49,7 @@ public class OpenTradeItemsService implements Service {
     private final ReputationService reputationService;
 
     @Getter
-    private final ObservableArray<OpenTradeItemDto> items = new ObservableArray<>();
+    private final ObservableArray<TradeItemPresentationDto> items = new ObservableArray<>();
     @Getter  private final Observable<Boolean> isAnyTradeInMediation = new Observable<>();
 
     private Pin channelsPin, tradesPin;
@@ -158,7 +158,7 @@ public class OpenTradeItemsService implements Service {
         bisqEasyTradeService.findTrade(tradeId)
                 .ifPresentOrElse(this::handleTradeAndChannelRemoved,
                         () -> {
-                            Optional<OpenTradeItemDto> listItem = findListItem(tradeId);
+                            Optional<TradeItemPresentationDto> listItem = findListItem(tradeId);
                             if (listItem.isEmpty()) {
                                 log.debug("Channel with tradeId {} was removed but associated trade and the listItem is not found. " +
                                         "This is expected as we first remove the trade and then the channel.", tradeId);
@@ -193,7 +193,7 @@ public class OpenTradeItemsService implements Service {
             return;
         }
 
-        OpenTradeItemDto item = OpenTradeListItemDtoFactory.create(trade, channel, userProfileService, reputationService);
+        TradeItemPresentationDto item = TradeItemPresentationDtoFactory.create(trade, channel, userProfileService, reputationService);
         items.add(item);
 
         String tradeId = trade.getId();
@@ -216,7 +216,7 @@ public class OpenTradeItemsService implements Service {
             return;
         }
 
-        OpenTradeItemDto item = findListItem(trade).get();
+        TradeItemPresentationDto item = findListItem(trade).get();
         items.remove(item);
 
         if (isInMediationPinMap.containsKey(tradeId)) {
@@ -234,11 +234,11 @@ public class OpenTradeItemsService implements Service {
         updateIsAnyTradeInMediation();
     }
 
-    private Optional<OpenTradeItemDto> findListItem(BisqEasyTrade trade) {
+    private Optional<TradeItemPresentationDto> findListItem(BisqEasyTrade trade) {
         return findListItem(trade.getId());
     }
 
-    private Optional<OpenTradeItemDto> findListItem(String tradeId) {
+    private Optional<TradeItemPresentationDto> findListItem(String tradeId) {
         return items.stream()
                 .filter(item -> item.tradeId().equals(tradeId))
                 .findAny();

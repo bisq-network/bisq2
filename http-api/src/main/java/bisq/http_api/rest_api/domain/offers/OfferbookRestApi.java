@@ -30,8 +30,8 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.dto.DtoMappings;
-import bisq.dto.offer.bisq_easy.OfferListItemDtoFactory;
-import bisq.dto.offer.bisq_easy.OfferListItemDto;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
@@ -274,7 +274,7 @@ public class OfferbookRestApi extends RestApiBase {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Offers retrieved successfully.",
-                            content = @Content(schema = @Schema(implementation = OfferListItemDto.class))
+                            content = @Content(schema = @Schema(implementation = OfferItemPresentationDto.class))
                     ),
                     @ApiResponse(
                             responseCode = "404",
@@ -304,7 +304,7 @@ public class OfferbookRestApi extends RestApiBase {
         }
     }
 
-    private Optional<List<OfferListItemDto>> findOffer(String marketCodes) {
+    private Optional<List<OfferItemPresentationDto>> findOffer(String marketCodes) {
         return MarketRepository.findAnyFiatMarketByMarketCodes(marketCodes)
                 .flatMap(market -> bisqEasyOfferbookChannelService.findChannel(market)
                         .map(channel -> channel.getChatMessages()
@@ -316,8 +316,8 @@ public class OfferbookRestApi extends RestApiBase {
                 );
     }
 
-    private OfferListItemDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        return OfferListItemDtoFactory.create(userProfileService,
+    private OfferItemPresentationDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        return OfferItemPresentationDtoFactory.create(userProfileService,
                 userIdentityService,
                 reputationService,
                 marketPriceService,

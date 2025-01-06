@@ -43,7 +43,7 @@ public class WebSocketEvent implements WebSocketMessage {
     @JsonCreator
     public WebSocketEvent(@JsonProperty("topic") Topic topic,
                           @JsonProperty("subscriberId") String subscriberId,
-                          @JsonProperty("payload") String payload,
+                          @JsonProperty("payloadEncoded") String payload,
                           @JsonProperty("modificationType") ModificationType modificationType,
                           @JsonProperty("sequenceNumber") int sequenceNumber) {
         this.topic = topic;

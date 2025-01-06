@@ -25,8 +25,8 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.offer.bisq_easy.OfferListItemDtoFactory;
-import bisq.dto.offer.bisq_easy.OfferListItemDto;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDto;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.subscription.ModificationType;
 import bisq.http_api.web_socket.subscription.SubscriberRepository;
@@ -112,7 +112,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
     }
 
     private Optional<String> getJsonPayload(Stream<BisqEasyOfferbookChannel> channels) {
-        ArrayList<OfferListItemDto> payload = channels
+        ArrayList<OfferItemPresentationDto> payload = channels
                 .flatMap(channel ->
                         channel.getChatMessages().stream()
                                 .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
@@ -132,9 +132,9 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private void send(String quoteCurrencyCode,
                       BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                       ModificationType modificationType) {
-        OfferListItemDto item = createOfferListItemDto(bisqEasyOfferbookMessage);
-        // The payload is defined as a list to support batch data delivery at subscribe.
-        ArrayList<OfferListItemDto> payload = new ArrayList<>(List.of(item));
+        OfferItemPresentationDto item = createOfferListItemDto(bisqEasyOfferbookMessage);
+        // The payloadEncoded is defined as a list to support batch data delivery at subscribe.
+        ArrayList<OfferItemPresentationDto> payload = new ArrayList<>(List.of(item));
         toJson(payload).ifPresent(json -> {
             subscriberRepository.findSubscribers(topic, quoteCurrencyCode)
                     .ifPresent(subscribers -> subscribers
@@ -142,8 +142,8 @@ public class OffersWebSocketService extends BaseWebSocketService {
         });
     }
 
-    private OfferListItemDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        return OfferListItemDtoFactory.create(userProfileService,
+    private OfferItemPresentationDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        return OfferItemPresentationDtoFactory.create(userProfileService,
                 userIdentityService,
                 reputationService,
                 marketPriceService,

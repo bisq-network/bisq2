@@ -15,22 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.dto.trade.bisq_easy;
-
+package bisq.dto.presentation.open_trades;
 
 import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelDto;
-import bisq.dto.user.profile.UserProfileItemDto;
+import bisq.dto.trade.bisq_easy.BisqEasyTradeDto;
+import bisq.dto.user.profile.UserProfileDto;
 import bisq.dto.user.reputation.ReputationScoreDto;
 
 import java.util.Optional;
-
-public record OpenTradeItemDto(
+// Presentation DTO
+// Similar to bisq.desktop.main.content.bisq_easy.open_trades.OpenTradeListItem
+public record TradeItemPresentationDto(
         BisqEasyOpenTradeChannelDto channel,
-        BisqEasyTradeDto tradeDto,
-        UserProfileItemDto makerUserProfileItem,
-        UserProfileItemDto takerUserProfileItem,
-        Optional<UserProfileItemDto> mediatorUserProfileItem,
-
+        BisqEasyTradeDto trade,
+        UserProfileDto makerUserProfile,
+        UserProfileDto takerUserProfile,
+        Optional<UserProfileDto> mediatorUserProfile,
         String peersUserName,
         String myUserName,
         String directionalTitle,
@@ -52,7 +52,6 @@ public record OpenTradeItemDto(
         String fiatPaymentMethodDisplayString,
         boolean isFiatPaymentMethodCustom,
         String myRole,
-        ReputationScoreDto reputationScore,
-        String mediatorUserName
-) {
+        String mediatorUserName,
+        ReputationScoreDto peersReputationScore) {
 }

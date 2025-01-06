@@ -1,4 +1,4 @@
 package bisq.dto.security.keys;
 
-public record TorKeyPairDto (String privateKey, String publicKey, String onionAddress) {
+public record TorKeyPairDto (String privateKeyEncoded, String publicKeyEncoded, String onionAddress) {
 }
