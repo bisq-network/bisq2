@@ -34,7 +34,6 @@ public class ProfileCardModel extends TabModel {
     private final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
-    private final BooleanProperty shouldShowReportButton = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();
     private final StringProperty offersTabButtonText = new SimpleStringProperty();
 

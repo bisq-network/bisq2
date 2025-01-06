@@ -72,8 +72,6 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         ignore.managedProperty().bind(model.getIgnoreUserSelected().not().and(model.getShouldShowUserActionsMenu()));
         undoIgnore.visibleProperty().bind(model.getIgnoreUserSelected().and(model.getShouldShowUserActionsMenu()));
         undoIgnore.managedProperty().bind(model.getIgnoreUserSelected().and(model.getShouldShowUserActionsMenu()));
-        report.visibleProperty().bind(model.getShouldShowReportButton());
-        report.managedProperty().bind(model.getShouldShowReportButton());
         userActionsBox.visibleProperty().bind(model.getShouldShowUserActionsMenu());
         userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
         offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
@@ -102,8 +100,6 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         ignore.managedProperty().unbind();
         undoIgnore.visibleProperty().unbind();
         undoIgnore.managedProperty().unbind();
-        report.visibleProperty().unbind();
-        report.managedProperty().unbind();
         userActionsBox.visibleProperty().unbind();
         userActionsBox.managedProperty().unbind();
         offersTabButton.getLabel().textProperty().unbind();
