@@ -198,36 +198,6 @@ public class TradeRestApi extends RestApiBase {
         }
     }
 
-    @PUT
-    @Path("/selected/{tradeId}")
-    @Operation(
-            summary = "Select an open trade",
-            description = "Selects the open trade channel for that trade ID.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Trade selected successfully"),
-                    @ApiResponse(responseCode = "404", description = "Trade not found"),
-                    @ApiResponse(responseCode = "500", description = "Internal server error")
-            }
-    )
-    public void selectOpenTrade(@PathParam("tradeId") String tradeId, @Suspended AsyncResponse asyncResponse) {
-        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
-        asyncResponse.setTimeoutHandler(response -> {
-            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
-        });
-        try {
-            Optional<BisqEasyOpenTradeChannel> optionalChannel = bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId);
-            if (optionalChannel.isEmpty()) {
-                asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Open trade channel not found for trade with ID " + tradeId));
-                return;
-            }
-
-            openTradesChannelSelectionService.selectChannel(optionalChannel.get());
-            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
-        } catch (Exception e) {
-            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
-        }
-    }
-
 
     @PATCH
     @Path("/{tradeId}/event")
