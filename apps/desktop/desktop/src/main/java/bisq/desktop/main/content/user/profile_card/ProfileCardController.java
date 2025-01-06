@@ -116,7 +116,6 @@ public class ProfileCardController extends TabController<ProfileCardModel>
             profileCardReputationController.updateUserProfileData(userProfile);
             profileCardOffersController.updateUserProfileData(userProfile);
             boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
-            model.getShouldShowReportButton().set(!isMyProfile && selectedChannel.isPresent());
             model.getShouldShowUserActionsMenu().set(!isMyProfile);
             model.getOffersTabButtonText().set(Res.get("user.profileCard.tab.offers",
                     profileCardOffersController.getNumberOffers()).toUpperCase());
@@ -168,13 +167,19 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     }
 
     void onReportUser() {
+        // Chat channel domain is a required field in the protobuf ReportToModeratorMessage.
+        ChatChannelDomain chatChannelDomain;
         if (selectedChannel.isPresent()) {
-            ChatChannelDomain chatChannelDomain = selectedChannel.get().getChatChannelDomain();
-            OverlayController.hide(() -> {
-                Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
-                        new ReportToModeratorWindow.InitData(model.getUserProfile().get(), chatChannelDomain));
-            });
+            // If the user profile is reported from a chat, then we use the domain of that chat.
+            chatChannelDomain = selectedChannel.get().getChatChannelDomain();
+        } else {
+            // Otherwise we use Support as the default domain to ensure backwards compatibility.
+            chatChannelDomain = ChatChannelDomain.SUPPORT;
         }
+
+        OverlayController.hide(() ->
+            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
+                    new ReportToModeratorWindow.InitData(model.getUserProfile().get(), chatChannelDomain)));
     }
 
     void onClose() {
