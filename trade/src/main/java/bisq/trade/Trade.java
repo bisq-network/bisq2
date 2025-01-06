@@ -120,10 +120,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return contract.get();
     }
 
-    public ReadOnlyObservable<C> contractObservable() {
-        return contract;
-    }
-
     public void setContract(C contract) {
         this.contract.set(contract);
     }
