@@ -138,6 +138,14 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                 .findAny();
     }
 
+    public Optional<BisqEasyOfferbookMessage> findMessageByOfferId(String offerId) {
+        return getChannels().stream()
+                .flatMap(channel -> channel.getChatMessages().stream())
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent() &&
+                        chatMessage.getBisqEasyOffer().get().getId().equals(offerId))
+                .findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected 
