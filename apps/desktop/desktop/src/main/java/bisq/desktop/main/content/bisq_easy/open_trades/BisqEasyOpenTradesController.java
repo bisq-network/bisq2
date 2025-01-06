@@ -396,14 +396,12 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
     }
 
     private Optional<BisqEasyOpenTradesView.ListItem> findListItem(BisqEasyTrade trade) {
-        return model.getListItems().stream()
-                .filter(e -> e.getTrade().equals(trade))
-                .findAny();
+        return findListItem(trade.getId());
     }
 
     private Optional<BisqEasyOpenTradesView.ListItem> findListItem(String tradeId) {
         return model.getListItems().stream()
-                .filter(e -> e.getTrade().getId().equals(tradeId))
+                .filter(item -> item.getTrade().getId().equals(tradeId))
                 .findAny();
     }
 
