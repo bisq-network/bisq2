@@ -21,5 +21,6 @@ public enum Topic {
     MARKET_PRICE,
     NUM_OFFERS,
     OFFERS,
-    TRADES
+    TRADES,
+    TRADE_STATE_BY_TRADE_ID
 }

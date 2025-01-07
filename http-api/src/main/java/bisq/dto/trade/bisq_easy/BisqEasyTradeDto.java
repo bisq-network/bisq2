@@ -20,6 +20,7 @@ package bisq.dto.trade.bisq_easy;
 import bisq.dto.contract.bisq_easy.BisqEasyContractDto;
 import bisq.dto.identity.IdentityDto;
 import bisq.dto.trade.TradeRoleDto;
+import bisq.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
 
 public record BisqEasyTradeDto(
         BisqEasyContractDto contract,
@@ -27,6 +28,7 @@ public record BisqEasyTradeDto(
         TradeRoleDto tradeRole,
         IdentityDto myIdentity,
         BisqEasyTradePartyDto taker,
-        BisqEasyTradePartyDto maker
+        BisqEasyTradePartyDto maker,
+        BisqEasyTradeStateDto tradeState
 ) {
 }

@@ -50,7 +50,8 @@ public class OpenTradeItemsService implements Service {
 
     @Getter
     private final ObservableArray<TradeItemPresentationDto> items = new ObservableArray<>();
-    @Getter  private final Observable<Boolean> isAnyTradeInMediation = new Observable<>();
+    @Getter
+    private final Observable<Boolean> isAnyTradeInMediation = new Observable<>();
 
     private Pin channelsPin, tradesPin;
     private final Map<String, Pin> isInMediationPinMap = new HashMap<>();
@@ -112,8 +113,12 @@ public class OpenTradeItemsService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        channelsPin.unbind();
-        tradesPin.unbind();
+        if (channelsPin != null) {
+            channelsPin.unbind();
+        }
+        if (tradesPin != null) {
+            tradesPin.unbind();
+        }
         isInMediationPinMap.values().forEach(Pin::unbind);
         isInMediationPinMap.clear();
         return CompletableFuture.completedFuture(true);

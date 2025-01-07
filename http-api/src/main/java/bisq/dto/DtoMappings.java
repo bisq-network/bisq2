@@ -1014,7 +1014,8 @@ public class DtoMappings {
                     TradeRoleMapping.fromBisq2Model(value.getTradeRole()),
                     IdentityMapping.fromBisq2Model(value.getMyIdentity()),
                     BisqEasyTradePartyMapping.fromBisq2Model(value.getTaker()),
-                    BisqEasyTradePartyMapping.fromBisq2Model(value.getMaker())
+                    BisqEasyTradePartyMapping.fromBisq2Model(value.getMaker()),
+                    BisqEasyTradeStateMapping.fromBisq2Model(value.getTradeState())
             );
         }
     }
