@@ -71,18 +71,6 @@ public abstract class BaseWebSocketService implements Service {
     }
 
     protected void send(String json,
-                        Subscriber subscriber,
-                        ModificationType modificationType) {
-        WebSocketEvent.toJson(objectMapper,
-                        subscriber.getTopic(),
-                        subscriber.getSubscriberId(),
-                        json,
-                        modificationType,
-                        subscriber.incrementAndGetSequenceNumber())
-                .ifPresent(subscriber::send);
-    }
-
-    protected void send(String json,
                         Set<Subscriber> subscribers,
                         Topic topic,
                         ModificationType modificationType) {
@@ -90,5 +78,18 @@ public abstract class BaseWebSocketService implements Service {
                 send(json,
                         subscriber,
                         modificationType));
+    }
+
+    protected void send(String json,
+                        Subscriber subscriber,
+                        ModificationType modificationType) {
+        log.info("Sending json with modificationType {} to subscriber: {}. json={}", subscriber, modificationType, json);
+        WebSocketEvent.toJson(objectMapper,
+                        subscriber.getTopic(),
+                        subscriber.getSubscriberId(),
+                        json,
+                        modificationType,
+                        subscriber.incrementAndGetSequenceNumber())
+                .ifPresent(subscriber::send);
     }
 }

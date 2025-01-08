@@ -40,7 +40,8 @@ public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSock
     protected Pin pin;
 
     public SimpleObservableWebSocketService(ObjectMapper objectMapper,
-                                            SubscriberRepository subscriberRepository, Topic topic) {
+                                            SubscriberRepository subscriberRepository,
+                                            Topic topic) {
         super(objectMapper, subscriberRepository, topic);
     }
 

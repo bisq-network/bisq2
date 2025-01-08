@@ -123,6 +123,9 @@ public class DtoMappings {
 
     public static class TradeProtocolTypeMapping {
         public static TradeProtocolType toBisq2Model(TradeProtocolTypeDto value) {
+            if (value == null) {
+                return null;
+            }
             return switch (value) {
                 case BISQ_EASY -> TradeProtocolType.BISQ_EASY;
                 case BISQ_MU_SIG -> TradeProtocolType.BISQ_MU_SIG;
@@ -137,6 +140,9 @@ public class DtoMappings {
         }
 
         public static TradeProtocolTypeDto fromBisq2Model(TradeProtocolType value) {
+            if (value == null) {
+                return null;
+            }
             return switch (value) {
                 case BISQ_EASY -> TradeProtocolTypeDto.BISQ_EASY;
                 case BISQ_MU_SIG -> TradeProtocolTypeDto.BISQ_MU_SIG;
@@ -253,6 +259,9 @@ public class DtoMappings {
 
     public static class RoleMapping {
         public static Role toBisq2Model(RoleDto value) {
+            if (value == null) {
+                return null;
+            }
             return switch (value) {
                 case MAKER -> Role.MAKER;
                 case TAKER -> Role.TAKER;
@@ -261,6 +270,9 @@ public class DtoMappings {
         }
 
         public static RoleDto fromBisq2Model(Role value) {
+            if (value == null) {
+                return null;
+            }
             return switch (value) {
                 case MAKER -> RoleDto.MAKER;
                 case TAKER -> RoleDto.TAKER;
@@ -792,6 +804,9 @@ public class DtoMappings {
 
     public static class PriceSpecMapping {
         public static PriceSpec toBisq2Model(PriceSpecDto value) {
+            if (value == null) {
+                return null;
+            }
             return switch (value) {
                 case MarketPriceSpecDto marketPriceSpecDto -> MarketPriceSpecMapping.toBisq2Model(marketPriceSpecDto);
                 case FixPriceSpecDto fixPriceSpecDto -> FixPriceSpecMapping.toBisq2Model(fixPriceSpecDto);
@@ -801,6 +816,9 @@ public class DtoMappings {
         }
 
         public static PriceSpecDto fromBisq2Model(PriceSpec value) {
+            if (value == null) {
+                return null;
+            }
             return switch (value) {
                 case MarketPriceSpec marketPriceSpec -> MarketPriceSpecMapping.fromBisq2Model(marketPriceSpec);
                 case FixPriceSpec fixPriceSpec -> FixPriceSpecMapping.fromBisq2Model(fixPriceSpec);
@@ -959,6 +977,9 @@ public class DtoMappings {
 
     public static class TradeRoleMapping {
         public static TradeRole toBisq2Model(TradeRoleDto value) {
+            if (value == null) {
+                return null;
+            }
             return switch (value) {
                 case BUYER_AS_TAKER -> TradeRole.BUYER_AS_TAKER;
                 case BUYER_AS_MAKER -> TradeRole.BUYER_AS_MAKER;
@@ -968,6 +989,9 @@ public class DtoMappings {
         }
 
         public static TradeRoleDto fromBisq2Model(TradeRole value) {
+            if (value == null) {
+                return null;
+            }
             return switch (value) {
                 case BUYER_AS_TAKER -> TradeRoleDto.BUYER_AS_TAKER;
                 case BUYER_AS_MAKER -> TradeRoleDto.BUYER_AS_MAKER;
@@ -1015,7 +1039,15 @@ public class DtoMappings {
                     IdentityMapping.fromBisq2Model(value.getMyIdentity()),
                     BisqEasyTradePartyMapping.fromBisq2Model(value.getTaker()),
                     BisqEasyTradePartyMapping.fromBisq2Model(value.getMaker()),
-                    BisqEasyTradeStateMapping.fromBisq2Model(value.getTradeState())
+                    BisqEasyTradeStateMapping.fromBisq2Model(value.getTradeState()),
+                    value.getPaymentAccountData().get(),
+                    value.getBitcoinPaymentData().get(),
+                    value.getPaymentProof().get(),
+                    RoleMapping.fromBisq2Model(value.getInterruptTradeInitiator().get()),
+                    value.getErrorMessage(),
+                    value.getErrorStackTrace(),
+                    value.getPeersErrorMessage(),
+                    value.getPeersErrorStackTrace()
             );
         }
     }
@@ -1026,7 +1058,7 @@ public class DtoMappings {
     public static class BisqEasyTradeStateMapping {
         public static BisqEasyTradeState toBisq2Model(BisqEasyTradeStateDto value) {
             if (value == null) {
-                throw new IllegalArgumentException("Value cannot be null");
+                return null;
             }
 
             return switch (value) {
@@ -1100,7 +1132,7 @@ public class DtoMappings {
 
         public static BisqEasyTradeStateDto fromBisq2Model(BisqEasyTradeState value) {
             if (value == null) {
-                throw new IllegalArgumentException("Value cannot be null");
+                return null;
             }
 
             return switch (value) {

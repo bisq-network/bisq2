@@ -17,10 +17,13 @@
 
 package bisq.dto.trade.bisq_easy;
 
+import bisq.dto.contract.RoleDto;
 import bisq.dto.contract.bisq_easy.BisqEasyContractDto;
 import bisq.dto.identity.IdentityDto;
 import bisq.dto.trade.TradeRoleDto;
 import bisq.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
+
+import javax.annotation.Nullable;
 
 public record BisqEasyTradeDto(
         BisqEasyContractDto contract,
@@ -29,6 +32,15 @@ public record BisqEasyTradeDto(
         IdentityDto myIdentity,
         BisqEasyTradePartyDto taker,
         BisqEasyTradePartyDto maker,
-        BisqEasyTradeStateDto tradeState
+        // Below are mutual data which will be handled via websocket updates but are set with their initial state here
+        BisqEasyTradeStateDto tradeState, // tradeState is never null
+        @Nullable String paymentAccountData,
+        @Nullable String bitcoinPaymentData,
+        @Nullable String paymentProof,
+        @Nullable RoleDto interruptTradeInitiator,
+        @Nullable String errorMessage,
+        @Nullable String errorStackTrace,
+        @Nullable String peersErrorMessage,
+        @Nullable String peersErrorStackTrace
 ) {
 }
