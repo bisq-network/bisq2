@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PriceInputBox extends MaterialTextField {
     public static final int AMOUNT_BOX_HEIGHT = 127;
-    private static final int INPUT_TEXT_MAX_LENGTH = 15;
+    private static final int INPUT_TEXT_MAX_LENGTH = 14;
     private static final String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
     private static final String INPUT_TEXT_10_STYLE_CLASS = "input-text-10";
     private static final String INPUT_TEXT_11_STYLE_CLASS = "input-text-11";
@@ -69,7 +69,11 @@ public class PriceInputBox extends MaterialTextField {
             if (newValue.length() > INPUT_TEXT_MAX_LENGTH || !newValue.matches(numericRegex)) {
                 textInputControl.setText(oldValue);
             }
-            applyFontStyle(textInputControl.getLength());
+            // If using an integer we need to count one more char since a dot occupies much less space.
+            int calculatedLength = !textInputControl.getText().contains(".")
+                    ? textInputControl.getLength() + 1
+                    : textInputControl.getLength();
+            applyFontStyle(calculatedLength);
         };
         initialize();
     }
