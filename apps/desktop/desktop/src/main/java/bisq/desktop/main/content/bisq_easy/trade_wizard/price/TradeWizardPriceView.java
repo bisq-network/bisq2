@@ -23,6 +23,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.controls.validator.PercentageValidator;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.desktop.main.content.bisq_easy.components.PriceInputBox;
 import bisq.i18n.Res;
@@ -80,7 +81,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         pricingModels.getStyleClass().addAll("selection-models", "bisq-text-3");
 
         // Input box
-        percentageInput = new PriceInputBox(Res.get("bisqEasy.price.percentage.inputBoxText"));
+        percentageInput = new PriceInputBox(Res.get("bisqEasy.price.percentage.inputBoxText"),
+                BisqEasyViewUtils.NUMERIC_WITH_DECIMAL_REGEX);
         percentageInput.setValidator(new PercentageValidator());
         percentageInput.textInputSymbolTextProperty().set("%");
         VBox fieldsBox = new VBox(20, priceInput.getRoot(), percentageInput);

@@ -260,7 +260,7 @@ public class QuoteAmountInputBox {
         private void onTextChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {
             if (model.textInputMaxCharCount.isPresent()) {
                 if (newValue.length() > model.textInputMaxCharCount.get()
-                        || !newValue.matches(BisqEasyViewUtils.NUMERIC_WITH_DECIMAL_REGEX)) {
+                        || !newValue.matches(BisqEasyViewUtils.POSITIVE_NUMERIC_WITH_DECIMAL_REGEX)) {
                     textInput.setText(oldValue);
                 }
             }
