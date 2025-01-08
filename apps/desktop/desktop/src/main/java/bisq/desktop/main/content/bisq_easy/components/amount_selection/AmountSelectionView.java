@@ -40,7 +40,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     public static final int AMOUNT_BOX_WIDTH = 300;
     public static final int AMOUNT_BOX_HEIGHT = 120;
     private static final int RANGE_INPUT_TEXT_MAX_LENGTH = 9;
-    private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 19;
+    private static final int FIXED_INPUT_TEXT_MAX_LENGTH = 18;
     private static final Insets SLIDER_INDICATORS_RANGE_MARGIN = new Insets(-15, 0, 0, 0);
     private static final Insets SLIDER_INDICATORS_FIXED_MARGIN = new Insets(2.5, 0, 0, 0);
     private static final String INPUT_TEXT_9_STYLE_CLASS = "input-text-9";
@@ -296,14 +296,12 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
     }
 
     private void applyTextInputPrefWidth() {
-        int charCount = model.getIsRangeAmountEnabled().get()
-                ? minQuoteAmount.getTextInputLength() + maxOrFixedQuoteAmount.getTextInputLength() + 1 // for the dash
-                : maxOrFixedQuoteAmount.getTextInputLength();
+        int charCount = getCalculatedTotalCharCount();
 
-        int length = minQuoteAmount.getTextInputLength();
+        int length = getCalculatedTextInputLength(minQuoteAmount);
         minQuoteAmount.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
 
-        length = maxOrFixedQuoteAmount.getTextInputLength();
+        length = getCalculatedTextInputLength(maxOrFixedQuoteAmount);
         maxOrFixedQuoteAmount.setTextInputPrefWidth(length == 0 ? 1 : length * getFontCharWidth(charCount));
     }
 
@@ -311,10 +309,27 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         quoteAmountSelectionHBox.getStyleClass().clear();
         quoteAmountSelectionHBox.getStyleClass().add("quote-amount");
 
-        int charCount = model.getIsRangeAmountEnabled().get()
-                ? minQuoteAmount.getTextInputLength() + maxOrFixedQuoteAmount.getTextInputLength() + 1 // for the dash
-                : maxOrFixedQuoteAmount.getTextInputLength();
+        int charCount = getCalculatedTotalCharCount();
         quoteAmountSelectionHBox.getStyleClass().add(getFontStyleBasedOnTextLength(charCount));
+    }
+
+    private int getCalculatedTotalCharCount() {
+        int count = model.getIsRangeAmountEnabled().get()
+                ? minQuoteAmount.getTextInputLength() + maxOrFixedQuoteAmount.getTextInputLength() + 1 // 1 for the dash
+                : maxOrFixedQuoteAmount.getTextInputLength();
+
+        if (!minQuoteAmount.getTextInput().contains(".") || !maxOrFixedQuoteAmount.getTextInput().contains(".")) {
+            // If using an integer we need to count one more char since a dot occupies much less space.
+            ++count;
+        }
+        return count;
+    }
+
+    private int getCalculatedTextInputLength(QuoteAmountInputBox quoteAmountInputBox) {
+        // If using an integer we need to count one more char since a dot occupies much less space.
+        return !quoteAmountInputBox.getTextInput().contains(".")
+                ? quoteAmountInputBox.getTextInputLength() + 1
+                : quoteAmountInputBox.getTextInputLength();
     }
 
     private void deselectAll() {

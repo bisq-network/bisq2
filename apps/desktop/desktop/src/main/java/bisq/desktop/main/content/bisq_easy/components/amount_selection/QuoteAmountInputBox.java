@@ -85,6 +85,10 @@ public class QuoteAmountInputBox {
         return controller.view.textInput.getLength();
     }
 
+    public String getTextInput() {
+        return controller.view.textInput.getText();
+    }
+
     public void setTextInputPrefWidth(int prefWidth) {
         controller.view.textInput.setPrefWidth(prefWidth);
     }
