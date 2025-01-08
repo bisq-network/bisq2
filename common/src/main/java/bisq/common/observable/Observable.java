@@ -18,11 +18,13 @@
 package bisq.common.observable;
 
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
+@Slf4j
 @EqualsAndHashCode
 public class Observable<S> implements ReadOnlyObservable<S> {
     private S value;
@@ -39,7 +41,11 @@ public class Observable<S> implements ReadOnlyObservable<S> {
 
     public Pin addObserver(Consumer<S> observer) {
         observers.add(observer);
-        observer.accept(value);
+        try {
+            observer.accept(value);
+        } catch (Exception e) {
+            log.error("Observer {} caused an exception at handling update.", observer, e);
+        }
         return () -> observers.remove(observer);
     }
 
@@ -53,7 +59,13 @@ public class Observable<S> implements ReadOnlyObservable<S> {
             return;
         }
         this.value = value;
-        observers.forEach(observer -> observer.accept(value));
+        observers.forEach(observer -> {
+            try {
+                observer.accept(value);
+            } catch (Exception e) {
+                log.error("Observer {} caused an exception at handling update.", observer, e);
+            }
+        });
     }
 
     public S get() {
