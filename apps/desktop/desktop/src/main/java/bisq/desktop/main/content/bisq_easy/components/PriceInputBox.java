@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.components;
 
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -66,7 +67,8 @@ public class PriceInputBox extends MaterialTextField {
         getStyleClass().add("price-input-box");
 
         textInputTextListener = (observable, oldValue, newValue) -> {
-            if (newValue.length() > INPUT_TEXT_MAX_LENGTH) {
+            if (newValue.length() > INPUT_TEXT_MAX_LENGTH
+                    || !newValue.matches(BisqEasyViewUtils.NUMERIC_WITH_DECIMAL_REGEX)) {
                 textInputControl.setText(oldValue);
             }
             applyFontStyle(textInputControl.getLength());

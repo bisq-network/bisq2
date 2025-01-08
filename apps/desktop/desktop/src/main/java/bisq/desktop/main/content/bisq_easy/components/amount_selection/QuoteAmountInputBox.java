@@ -21,6 +21,7 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.BooleanProperty;
@@ -211,8 +212,6 @@ public class QuoteAmountInputBox {
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private static final String NUMERIC_WITH_DECIMAL_REGEX = "\\d*([.,]\\d*)?";
-
         private final ChangeListener<String> textListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
@@ -260,7 +259,8 @@ public class QuoteAmountInputBox {
 
         private void onTextChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {
             if (model.textInputMaxCharCount.isPresent()) {
-                if (newValue.length() > model.textInputMaxCharCount.get() || !newValue.matches(NUMERIC_WITH_DECIMAL_REGEX)) {
+                if (newValue.length() > model.textInputMaxCharCount.get()
+                        || !newValue.matches(BisqEasyViewUtils.NUMERIC_WITH_DECIMAL_REGEX)) {
                     textInput.setText(oldValue);
                 }
             }
