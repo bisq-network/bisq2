@@ -829,12 +829,12 @@
 /******** ALL SIZES ********/
 .input-text-9 .text-input,
 .input-text-9 .quote-separator {
-    -fx-font-size: 4em !important;
+    -fx-font-size: 3.99em !important;
 }
 
 .input-text-10 .text-input,
 .input-text-10 .quote-separator {
-    -fx-font-size: 3.58em !important;
+    -fx-font-size: 3.55em !important;
 }
 
 .input-text-11 .text-input,

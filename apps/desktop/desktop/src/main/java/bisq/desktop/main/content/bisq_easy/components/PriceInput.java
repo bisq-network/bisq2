@@ -24,6 +24,7 @@ import bisq.common.observable.Pin;
 import bisq.common.util.MathUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.validator.NumberValidator;
+import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
@@ -266,7 +267,8 @@ public class PriceInput {
         private View(Model model, Controller controller, NumberValidator validator) {
             super(new VBox(), model, controller);
 
-            textInput = new PriceInputBox(model.description.get(), Res.get("component.priceInput.prompt"));
+            textInput = new PriceInputBox(model.description.get(), Res.get("component.priceInput.prompt"),
+                    BisqEasyViewUtils.POSITIVE_NUMERIC_WITH_DECIMAL_REGEX);
             textInput.setPrefWidth(WIDTH);
             textInput.setValidator(validator);
             textInput.conversionPriceSymbolTextProperty().set("%");

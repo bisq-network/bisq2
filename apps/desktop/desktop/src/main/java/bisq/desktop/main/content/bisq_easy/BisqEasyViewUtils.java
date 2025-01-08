@@ -38,6 +38,8 @@ import java.math.BigInteger;
 import java.util.List;
 
 public class BisqEasyViewUtils {
+    public static final String POSITIVE_NUMERIC_WITH_DECIMAL_REGEX = "\\d*([.,]\\d*)?";
+    public static final String NUMERIC_WITH_DECIMAL_REGEX = "-?\\d*([.,]\\d*)?";
     private static final String[] customPaymentIconIds = {
             "CUSTOM_PAYMENT_1", "CUSTOM_PAYMENT_2", "CUSTOM_PAYMENT_3",
             "CUSTOM_PAYMENT_4", "CUSTOM_PAYMENT_5", "CUSTOM_PAYMENT_6"};
