@@ -33,7 +33,7 @@ import java.util.Optional;
 @EqualsAndHashCode
 @ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class TradeProperties {
+public class TradePropertiesDto {
     public Optional<BisqEasyTradeStateDto> tradeState = Optional.empty();
     public Optional<RoleDto> interruptTradeInitiator = Optional.empty();
     public Optional<String> paymentAccountData = Optional.empty();

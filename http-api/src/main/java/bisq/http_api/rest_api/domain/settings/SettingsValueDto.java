@@ -17,7 +17,7 @@
 
 package bisq.http_api.rest_api.domain.settings;
 
-public enum SettingsKey {
-    TRADE_RULES_CONFIRMED,
-    IS_TAC_ACCEPTED
+import javax.annotation.Nullable;
+
+public record SettingsValueDto(@Nullable String stringValue, @Nullable Boolean booleanValue) {
 }

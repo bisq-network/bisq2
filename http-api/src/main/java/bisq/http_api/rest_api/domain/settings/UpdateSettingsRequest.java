@@ -17,5 +17,5 @@
 
 package bisq.http_api.rest_api.domain.settings;
 
-public record UpdateSettingsRequest(SettingsKey key, SettingsValue value) {
+public record UpdateSettingsRequest(SettingsKeyDto key, SettingsValueDto value) {
 }

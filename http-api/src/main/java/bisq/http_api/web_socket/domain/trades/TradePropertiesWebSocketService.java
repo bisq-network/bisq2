@@ -91,7 +91,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observeTradeState(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.tradeStateObservable().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.tradeState = Optional.of(DtoMappings.BisqEasyTradeStateMapping.fromBisq2Model(value));
                 send(Map.of(tradeId, data));
             }
@@ -101,7 +101,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observeInterruptTradeInitiator(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.getInterruptTradeInitiator().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.interruptTradeInitiator = Optional.of(DtoMappings.RoleMapping.fromBisq2Model(value));
                 send(Map.of(tradeId, data));
             }
@@ -111,7 +111,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observePaymentAccountData(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.getPaymentAccountData().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.paymentAccountData = Optional.of(value);
                 send(Map.of(tradeId, data));
             }
@@ -121,7 +121,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observeBitcoinPaymentData(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.getBitcoinPaymentData().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.bitcoinPaymentData = Optional.of(value);
                 send(Map.of(tradeId, data));
             }
@@ -131,7 +131,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observePaymentProof(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.getPaymentProof().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.paymentProof = Optional.of(value);
                 send(Map.of(tradeId, data));
             }
@@ -141,7 +141,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observeErrorMessage(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.errorMessageObservable().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.errorMessage = Optional.of(value);
                 send(Map.of(tradeId, data));
             }
@@ -151,7 +151,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observeErrorStackTrace(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.errorStackTraceObservable().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.errorStackTrace = Optional.of(value);
                 send(Map.of(tradeId, data));
             }
@@ -161,7 +161,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observePeersErrorMessage(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.peersErrorMessageObservable().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.peersErrorMessage = Optional.of(value);
                 send(Map.of(tradeId, data));
             }
@@ -171,7 +171,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     private Pin observePeersErrorStackTrace(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.peersErrorStackTraceObservable().addObserver(value -> {
             if (value != null) {
-                var data = new TradeProperties();
+                var data = new TradePropertiesDto();
                 data.peersErrorStackTrace = Optional.of(value);
                 send(Map.of(tradeId, data));
             }
@@ -188,9 +188,9 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
     @Override
     public Optional<String> getJsonPayload() {
-        List<Map<String, TradeProperties>> maps = bisqEasyTradeService.getTrades().stream()
+        List<Map<String, TradePropertiesDto>> maps = bisqEasyTradeService.getTrades().stream()
                 .map(bisqEasyTrade -> {
-                    var data = new TradeProperties();
+                    var data = new TradePropertiesDto();
                     data.tradeState = Optional.of(DtoMappings.BisqEasyTradeStateMapping.fromBisq2Model(bisqEasyTrade.getTradeState()));
                     data.interruptTradeInitiator = Optional.of(DtoMappings.RoleMapping.fromBisq2Model(bisqEasyTrade.getInterruptTradeInitiator().get()));
                     return Map.of(bisqEasyTrade.getId(), data);
@@ -199,11 +199,11 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
         return toJson(maps);
     }
 
-    private void send(Map<String, TradeProperties> map) {
+    private void send(Map<String, TradePropertiesDto> map) {
         send(Collections.singletonList(map));
     }
 
-    private void send(List<Map<String, TradeProperties>> maps) {
+    private void send(List<Map<String, TradePropertiesDto>> maps) {
         log.error("Sending trades to websocket maps "+maps);
         log.error("Sending trades to websocket json "+toJson(maps));
         // The payloadEncoded is defined as a list to support batch data delivery at subscribe.
