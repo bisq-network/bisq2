@@ -18,6 +18,7 @@
 package bisq.common.observable.collection;
 
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@Slf4j
 @EqualsAndHashCode(callSuper = true)
 public class ObservableArray<S> extends ObservableCollection<S> implements List<S> {
     public ObservableArray() {
@@ -48,13 +50,20 @@ public class ObservableArray<S> extends ObservableCollection<S> implements List<
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // List implementation
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean addAll(int index, @NotNull Collection<? extends S> c) {
-        boolean result = getList().addAll(index, c);
+    public boolean addAll(int index, @NotNull Collection<? extends S> values) {
+        boolean result = getList().addAll(index, values);
         if (result) {
-            observers.forEach(observer -> observer.addAll(c));
+            observers.forEach(observer -> {
+                try {
+                    observer.addAll(values);
+                } catch (Exception e) {
+                    log.error("Observer {} caused an exception at handling update.", observer, e);
+                }
+            });
         }
         return result;
     }
@@ -62,20 +71,38 @@ public class ObservableArray<S> extends ObservableCollection<S> implements List<
     @Override
     public S set(int index, S element) {
         S previous = getList().set(index, element);
-        observers.forEach(observer -> observer.add(element));
+        observers.forEach(observer -> {
+            try {
+                observer.add(element);
+            } catch (Exception e) {
+                log.error("Observer {} caused an exception at handling update.", observer, e);
+            }
+        });
         return previous;
     }
 
     @Override
     public void add(int index, S element) {
         getList().add(index, element);
-        observers.forEach(observer -> observer.add(element));
+        observers.forEach(observer -> {
+            try {
+                observer.add(element);
+            } catch (Exception e) {
+                log.error("Observer {} caused an exception at handling update.", observer, e);
+            }
+        });
     }
 
     @Override
     public S remove(int index) {
         S removedElement = getList().remove(index);
-        observers.forEach(observer -> observer.remove(removedElement));
+        observers.forEach(observer -> {
+            try {
+                observer.remove(removedElement);
+            } catch (Exception e) {
+                log.error("Observer {} caused an exception at handling update.", observer, e);
+            }
+        });
         return removedElement;
     }
 

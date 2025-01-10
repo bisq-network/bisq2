@@ -19,6 +19,7 @@ package bisq.common.observable.collection;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 
@@ -27,6 +28,7 @@ import java.util.Collection;
  *
  * @param <S> The type of the source collection element.
  */
+@Slf4j
 @EqualsAndHashCode
 @ToString
 final class SimpleCollectionObserver<S> implements CollectionObserver<S> {
@@ -37,7 +39,12 @@ final class SimpleCollectionObserver<S> implements CollectionObserver<S> {
     }
 
     void onChange() {
-        observer.run();
+        try {
+            observer.run();
+        } catch (Exception e) {
+            log.error("Observer {} caused an exception at handling update.", observer, e);
+        }
+
     }
 
     @Override
