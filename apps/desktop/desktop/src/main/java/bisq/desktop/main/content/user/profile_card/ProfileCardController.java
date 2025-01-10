@@ -29,6 +29,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.profile_card.details.ProfileCardDetailsController;
+import bisq.desktop.main.content.user.profile_card.messages.ProfileCardMessagesController;
 import bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersController;
 import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
 import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
@@ -88,6 +89,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final ProfileCardDetailsController profileCardDetailsController;
     private final ProfileCardReputationController profileCardReputationController;
     private final ProfileCardOffersController profileCardOffersController;
+    private final ProfileCardMessagesController profileCardMessagesController;
     private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
     private Optional<Runnable> ignoreUserStateHandler;
     private Subscription userProfilePin;
@@ -104,6 +106,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         profileCardDetailsController = new ProfileCardDetailsController(serviceProvider);
         profileCardReputationController = new ProfileCardReputationController(serviceProvider);
         profileCardOffersController = new ProfileCardOffersController(serviceProvider);
+        profileCardMessagesController = new ProfileCardMessagesController(serviceProvider);
         view = new ProfileCardView(model, this);
     }
 
@@ -115,6 +118,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
             profileCardDetailsController.updateUserProfileData(userProfile);
             profileCardReputationController.updateUserProfileData(userProfile);
             profileCardOffersController.updateUserProfileData(userProfile);
+            profileCardMessagesController.updateUserProfileData(userProfile);
             boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
             model.getShouldShowUserActionsMenu().set(!isMyProfile);
             model.getOffersTabButtonText().set(Res.get("user.profileCard.tab.offers",
@@ -134,6 +138,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
             case PROFILE_CARD_DETAILS -> Optional.of(profileCardDetailsController);
             case PROFILE_CARD_OFFERS -> Optional.of(profileCardOffersController);
             case PROFILE_CARD_REPUTATION -> Optional.of(profileCardReputationController);
+            case PROFILE_CARD_MESSAGES -> Optional.of(profileCardMessagesController);
             default -> Optional.empty();
         };
     }
