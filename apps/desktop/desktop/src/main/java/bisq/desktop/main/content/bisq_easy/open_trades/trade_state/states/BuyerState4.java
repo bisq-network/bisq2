@@ -100,7 +100,7 @@ public class BuyerState4 extends BaseState {
             super.onDeactivate();
         }
 
-        private void onLeaveChannel() {
+        private void onCloseCompletedTrade() {
             new Popup().feedback(Res.get("bisqEasy.openTrades.closeTrade.warning.completed"))
                     .actionButtonText(Res.get("bisqEasy.openTrades.confirmCloseTrade"))
                     .onAction(() -> {
@@ -189,7 +189,7 @@ public class BuyerState4 extends BaseState {
                 tradeCompletedTable.getOpenTxExplorerButton().setOnAction(e -> controller.openExplorer());
                 tradeCompletedTable.getCopyTxExplorerLinkButton().setOnAction(e -> controller.copyExplorerLink());
             }
-            leaveButton.setOnAction(e -> controller.onLeaveChannel());
+            leaveButton.setOnAction(e -> controller.onCloseCompletedTrade());
             exportButton.setOnAction(e -> controller.onExportTrade());
         }
 
