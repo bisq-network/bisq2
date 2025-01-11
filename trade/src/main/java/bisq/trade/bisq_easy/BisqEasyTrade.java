@@ -52,6 +52,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     @Getter
     private final Observable<Role> interruptTradeInitiator = new Observable<>();
 
+    // Wrapper for stateObservable which is not handled as generic in Fsm
     private final transient Observable<BisqEasyTradeState> tradeState = new Observable<>();
 
     public BisqEasyTrade(BisqEasyContract contract,

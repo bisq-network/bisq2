@@ -66,6 +66,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final Observable<String> errorStackTrace = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();
     private final Observable<String> peersErrorStackTrace = new Observable<>();
+
+    // Set at protocol creation and not updated later, thus no need to be observable
     private final Observable<String> protocolVersion = new Observable<>();
 
     public Trade(C contract,
@@ -122,13 +124,14 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.errorMessage.set(errorMessage);
     }
 
+    public String getErrorMessage() {
+        return errorMessage.get();
+    }
+
     public ReadOnlyObservable<String> errorMessageObservable() {
         return errorMessage;
     }
 
-    public String getErrorMessage() {
-        return errorMessage.get();
-    }
 
     public void setErrorStackTrace(String peersErrorStacktrace) {
         this.errorStackTrace.set(peersErrorStacktrace);
@@ -138,16 +141,21 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return errorStackTrace.get();
     }
 
+    public ReadOnlyObservable<String> errorStackTraceObservable() {
+        return errorStackTrace;
+    }
+
+
     public void setPeersErrorMessage(String errorMessage) {
         this.peersErrorMessage.set(errorMessage);
     }
 
-    public ReadOnlyObservable<String> peersErrorMessageObservable() {
-        return peersErrorMessage;
-    }
-
     public String getPeersErrorMessage() {
         return peersErrorMessage.get();
+    }
+
+    public ReadOnlyObservable<String> peersErrorMessageObservable() {
+        return peersErrorMessage;
     }
 
     public void setPeersErrorStackTrace(String peersErrorStackTrace) {
@@ -158,6 +166,11 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return peersErrorStackTrace.get();
     }
 
+    public ReadOnlyObservable<String> peersErrorStackTraceObservable() {
+        return peersErrorStackTrace;
+    }
+
+
     public void setProtocolVersion(String protocolVersion) {
         this.protocolVersion.set(protocolVersion);
     }
@@ -165,6 +178,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     public String getProtocolVersion() {
         return this.protocolVersion.get();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Delegates

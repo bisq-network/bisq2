@@ -195,7 +195,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         });
     }
 
-    void onSelectItem(BisqEasyOpenTradesView.ListItem item) {
+    void onSelectItem(OpenTradeListItem item) {
         if (item == null || !hasTradeForChannel(item.getChannel())) {
             selectionService.selectChannel(null);
         } else {
@@ -273,7 +273,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         bisqEasyTradeService.findTrade(tradeId)
                 .ifPresentOrElse(this::handleTradeAndChannelRemoved,
                         () -> {
-                            Optional<BisqEasyOpenTradesView.ListItem> listItem = findListItem(tradeId);
+                            Optional<OpenTradeListItem> listItem = findListItem(tradeId);
                             if (listItem.isEmpty()) {
                                 log.debug("Channel with tradeId {} was removed but associated trade and the listItem is not found. " +
                                         "This is expected as we first remove the trade and then the channel.", tradeId);
@@ -303,7 +303,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
                 return;
             }
 
-            model.getListItems().add(new BisqEasyOpenTradesView.ListItem(channel,
+            model.getListItems().add(new OpenTradeListItem(channel,
                     trade,
                     reputationService,
                     chatNotificationService,
@@ -334,7 +334,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
                 return;
             }
 
-            BisqEasyOpenTradesView.ListItem item = findListItem(trade).get();
+            OpenTradeListItem item = findListItem(trade).get();
             item.dispose();
             model.getListItems().remove(item);
 
@@ -352,7 +352,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
 
     private void handleClearTradesAndChannels() {
         UIThread.run(() -> {
-            model.getListItems().forEach(BisqEasyOpenTradesView.ListItem::dispose);
+            model.getListItems().forEach(OpenTradeListItem::dispose);
             model.getListItems().clear();
 
             isInMediationPinMap.values().forEach(Pin::unbind);
@@ -395,11 +395,11 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         });
     }
 
-    private Optional<BisqEasyOpenTradesView.ListItem> findListItem(BisqEasyTrade trade) {
+    private Optional<OpenTradeListItem> findListItem(BisqEasyTrade trade) {
         return findListItem(trade.getId());
     }
 
-    private Optional<BisqEasyOpenTradesView.ListItem> findListItem(String tradeId) {
+    private Optional<OpenTradeListItem> findListItem(String tradeId) {
         return model.getListItems().stream()
                 .filter(item -> item.getTrade().getId().equals(tradeId))
                 .findAny();

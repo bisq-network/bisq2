@@ -20,6 +20,7 @@ package bisq.settings;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
 
+//todo rename to not conflict with chat.ChatMessageType
 public enum ChatMessageType implements ProtoEnum {
     ALL,
     OFFER,

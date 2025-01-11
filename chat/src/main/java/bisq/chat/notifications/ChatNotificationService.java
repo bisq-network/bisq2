@@ -471,7 +471,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             String userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
             String channelInfo = ChatUtil.getChannelNavigationPath(chatChannel);
             title = StringUtils.truncate(userName, 20) + " (" + channelInfo + ")";
-            String text = chatMessage.getText();
+            String text = chatMessage.getTextOrNA();
             if (chatMessage instanceof BisqEasyOpenTradeMessage &&
                     chatMessage.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE) {
                 // We have encoded the i18n key so that we can show log messages in the users language.

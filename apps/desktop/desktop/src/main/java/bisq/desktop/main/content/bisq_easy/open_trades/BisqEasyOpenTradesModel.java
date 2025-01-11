@@ -39,10 +39,10 @@ public final class BisqEasyOpenTradesModel extends ChatModel {
     private final BooleanProperty isAnyTradeInMediation = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
-    private final ObjectProperty<BisqEasyOpenTradesView.ListItem> selectedItem = new SimpleObjectProperty<>();
-    private final ObservableList<BisqEasyOpenTradesView.ListItem> listItems = FXCollections.observableArrayList();
-    private final FilteredList<BisqEasyOpenTradesView.ListItem> filteredList = new FilteredList<>(listItems);
-    private final SortedList<BisqEasyOpenTradesView.ListItem> sortedList = new SortedList<>(filteredList);
+    private final ObjectProperty<OpenTradeListItem> selectedItem = new SimpleObjectProperty<>();
+    private final ObservableList<OpenTradeListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<OpenTradeListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<OpenTradeListItem> sortedList = new SortedList<>(filteredList);
 
     public BisqEasyOpenTradesModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
@@ -58,7 +58,7 @@ public final class BisqEasyOpenTradesModel extends ChatModel {
         chatWindowTitle.set(null);
         chatWindow.set(null);
         selectedItem.set(null);
-        listItems.forEach(BisqEasyOpenTradesView.ListItem::dispose);
+        listItems.forEach(OpenTradeListItem::dispose);
         listItems.clear();
     }
 }

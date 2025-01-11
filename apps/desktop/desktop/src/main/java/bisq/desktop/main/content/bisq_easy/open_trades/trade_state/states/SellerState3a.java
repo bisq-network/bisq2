@@ -165,24 +165,24 @@ public class SellerState3a extends BaseState {
             }
 
             String userName = model.getChannel().getMyUserIdentity().getUserName();
-            String name = paymentRail.name();
-            String proof = Res.get("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.paymentProof." + name);
+            String btcRailName = paymentRail.name();
+            String proofType = Res.get("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.paymentProof." + btcRailName);
             if (isValid) {
-                confirmedBtcSent(paymentProof, userName, proof);
+                confirmedBtcSent(paymentProof, userName, proofType);
             } else {
-                new Popup().warning(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.warning." + name))
+                new Popup().warning(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.warning." + btcRailName))
                         .actionButtonText(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.warning.proceed"))
-                        .onAction(() -> confirmedBtcSent(paymentProof, userName, proof))
+                        .onAction(() -> confirmedBtcSent(paymentProof, userName, proofType))
                         .show();
             }
         }
 
-        private void confirmedBtcSent(String paymentProof, String userName, String proof) {
+        private void confirmedBtcSent(String paymentProof, String userName, String proofType) {
             if (paymentProof == null) {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.noProofProvided", userName));
             } else {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
-                        userName, proof, paymentProof));
+                        userName, proofType, paymentProof));
             }
             bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), Optional.ofNullable(paymentProof));
         }

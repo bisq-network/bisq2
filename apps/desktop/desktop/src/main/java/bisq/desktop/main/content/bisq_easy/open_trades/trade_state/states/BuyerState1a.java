@@ -107,8 +107,8 @@ public class BuyerState1a extends BaseState {
             model.setBitcoinPaymentHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.headline." + name));
             model.setBitcoinPaymentDescription(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.description." + name));
             model.setBitcoinPaymentPrompt(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.prompt." + name));
+            model.setBitcoinPaymentHelp(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.walletHelp"));
             if (paymentRail == BitcoinPaymentRail.MAIN_CHAIN) {
-                model.setBitcoinPaymentHelp(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.walletHelp"));
                 model.setBitcoinPaymentValidator(new BitcoinAddressValidator());
             } else {
                 model.setBitcoinPaymentValidator(new LightningInvoiceValidator());
@@ -161,14 +161,14 @@ public class BuyerState1a extends BaseState {
         }
 
         private void doSend() {
-            String name = getPaymentRail().name();
-            String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + name;
+            String btcRailName = getPaymentRail().name();
+            String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + btcRailName;
             String bitcoinPaymentData = model.getBitcoinPaymentData().get();
             sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), bitcoinPaymentData));
             bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), bitcoinPaymentData);
         }
 
-        void onOpenWalletHelp() {
+        void onOpenWalletGuide() {
             Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
 
@@ -418,7 +418,7 @@ public class BuyerState1a extends BaseState {
             });
 
             sendButton.setOnAction(e -> controller.onSend());
-            walletInfoButton.setOnAction(e -> controller.onOpenWalletHelp());
+            walletInfoButton.setOnAction(e -> controller.onOpenWalletGuide());
             scanQrCodeButton.setOnAction(e -> controller.onScanQrCode());
         }
 

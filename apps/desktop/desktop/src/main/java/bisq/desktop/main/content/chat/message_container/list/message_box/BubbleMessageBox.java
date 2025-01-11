@@ -336,7 +336,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     protected static void onCopyMessage(ChatMessage chatMessage) {
-        ClipboardUtil.copyToClipboard(chatMessage.getText());
+        ClipboardUtil.copyToClipboard(chatMessage.getTextOrNA());
     }
 
     protected static void onCopyMessage(String chatMessageText) {

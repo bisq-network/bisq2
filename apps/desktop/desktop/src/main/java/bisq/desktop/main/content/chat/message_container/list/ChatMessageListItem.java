@@ -172,7 +172,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         } else {
             // Normal chat message or BisqEasyOfferbookMessage without offer
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
-            message = chatMessage.getText() + editPostFix;
+            message = chatMessage.getTextOrNA() + editPostFix;
             offerAlreadyTaken = false;
         }
 

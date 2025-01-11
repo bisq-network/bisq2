@@ -283,12 +283,17 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         protected View(M model, C controller) {
             super(model, controller);
 
+            String role = model.getRole();
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.headline.MAIN_CHAIN"));
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.info.MAIN_CHAIN"));
+            waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
+            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
+
             paymentProof = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase3b.txId"), "", false);
             paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
             paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase3b.txId.tooltip"));
             paymentProof.setValidator(new BitcoinTransactionValidator());
 
-            String role = model.getRole();
             btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.balance"), "", false);
             btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
             btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.balance.prompt"));
@@ -297,11 +302,6 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
 
             button = new Button();
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
-
-            waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.headline.MAIN_CHAIN"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info." + role + ".phase3b.info.MAIN_CHAIN"));
-            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
             root.getChildren().addAll(waitingInfo, paymentProof, btcBalance, button);
         }
