@@ -41,10 +41,6 @@ public class TradeItemPresentationDtoFactory {
                                                   BisqEasyOpenTradeChannel channel,
                                                   UserProfileService userProfileService,
                                                   ReputationService reputationService) {
-        if (trade.getContract() == null) {
-            throw new IllegalArgumentException("Contract must not be null. Trade: " + trade);
-        }
-
         UserProfile myUserProfile = userProfileService.getManagedUserProfile(channel.getMyUserIdentity().getUserProfile());
         UserProfile peersUserProfile = userProfileService.getManagedUserProfile(channel.getPeer());
         BisqEasyContract contract = trade.getContract();
