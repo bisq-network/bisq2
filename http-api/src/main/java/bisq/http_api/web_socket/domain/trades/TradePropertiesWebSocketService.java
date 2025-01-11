@@ -211,7 +211,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     }
 
     private void send(List<Map<String, TradePropertiesDto>> maps) {
-        // The payloadEncoded is defined as a list to support batch data delivery at subscribe.
+        // The payload is defined as a list to support batch data delivery at subscribe.
         toJson(maps).ifPresent(json -> {
             subscriberRepository.findSubscribers(topic)
                     .ifPresent(subscribers -> subscribers

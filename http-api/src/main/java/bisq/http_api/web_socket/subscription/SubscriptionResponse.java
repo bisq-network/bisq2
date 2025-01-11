@@ -44,7 +44,7 @@ public class SubscriptionResponse implements WebSocketMessage {
 
     @JsonCreator
     public SubscriptionResponse(@JsonProperty("requestId") String requestId,
-                                @JsonProperty("payloadEncoded") @Nullable String payload,
+                                @JsonProperty("payload") @Nullable String payload,
                                 @JsonProperty("errorMessage") @Nullable String errorMessage) {
         this.requestId = requestId;
         this.payload = payload;

@@ -133,7 +133,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
                       BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                       ModificationType modificationType) {
         OfferItemPresentationDto item = createOfferListItemDto(bisqEasyOfferbookMessage);
-        // The payloadEncoded is defined as a list to support batch data delivery at subscribe.
+        // The payload is defined as a list to support batch data delivery at subscribe.
         ArrayList<OfferItemPresentationDto> payload = new ArrayList<>(List.of(item));
         toJson(payload).ifPresent(json -> {
             subscriberRepository.findSubscribers(topic, quoteCurrencyCode)

@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
  * It uses the `ModificationType.REPLACE`, so we deliver the full data source at any change.
  *
  * @param <T> The type fo the observable.
- * @param <R> The type of the payloadEncoded to be sent to the client.
+ * @param <R> The type of the payload to be sent to the client.
  */
 @Slf4j
 public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSocketService {

@@ -89,7 +89,7 @@ public class TradesWebSocketService extends BaseWebSocketService {
     }
 
     private void send(List<TradeItemPresentationDto> items, ModificationType modificationType) {
-        // The payloadEncoded is defined as a list to support batch data delivery at subscribe.
+        // The payload is defined as a list to support batch data delivery at subscribe.
         toJson(items).ifPresent(json -> {
             subscriberRepository.findSubscribers(topic)
                     .ifPresent(subscribers -> subscribers
