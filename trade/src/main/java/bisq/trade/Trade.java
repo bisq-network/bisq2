@@ -66,6 +66,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final Observable<String> errorStackTrace = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();
     private final Observable<String> peersErrorStackTrace = new Observable<>();
+
+    // Set at protocol creation and not updated later, thus no need to be observable
     private final Observable<String> protocolVersion = new Observable<>();
 
     public Trade(C contract,
