@@ -46,12 +46,9 @@ public class TradeItemPresentationDtoFactory {
         BisqEasyContract contract = trade.getContract();
         long date = contract.getTakeOfferDate();
 
-        String peersUserName = peersUserProfile.getUserName();
-        String myUserName = channel.getMyUserIdentity().getUserName();
         String directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(trade);
         String offerId = channel.getBisqEasyOffer().getId();
         String tradeId = trade.getId();
-        String shortTradeId = trade.getShortId();
         String dateString = DateFormatter.formatDate(date);
         String timeString = DateFormatter.formatTime(date);
         String market = trade.getOffer().getMarket().toString();
@@ -68,8 +65,7 @@ public class TradeItemPresentationDtoFactory {
         String fiatPaymentMethodDisplayString = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
         boolean isFiatPaymentMethodCustom = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod().isCustomPaymentMethod();
 
-        String myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
-        String mediatorUserName = channel.getMediator().map(UserProfile::getUserName).orElse("");
+        String formattedMyRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
 
         BisqEasyOpenTradeChannelDto channelDto = DtoMappings.BisqEasyOpenTradeChannelMapping.fromBisq2Model(channel);
         BisqEasyTradeDto tradeDto = DtoMappings.BisqEasyTradeMapping.fromBisq2Model(trade);
@@ -98,12 +94,7 @@ public class TradeItemPresentationDtoFactory {
                 makerUserProfile,
                 takerUserProfile,
                 mediatorUserProfile,
-                peersUserName,
-                myUserName,
                 directionalTitle,
-                offerId,
-                tradeId,
-                shortTradeId,
                 dateString,
                 timeString,
                 market,
@@ -118,8 +109,7 @@ public class TradeItemPresentationDtoFactory {
                 fiatPaymentMethod,
                 fiatPaymentMethodDisplayString,
                 isFiatPaymentMethodCustom,
-                myRole,
-                mediatorUserName,
+                formattedMyRole,
                 peersRReputationScoreDto
         );
     }

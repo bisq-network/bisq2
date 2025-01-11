@@ -74,10 +74,7 @@ public abstract class BaseWebSocketService implements Service {
                         Set<Subscriber> subscribers,
                         Topic topic,
                         ModificationType modificationType) {
-        subscribers.forEach(subscriber ->
-                send(json,
-                        subscriber,
-                        modificationType));
+        subscribers.forEach(subscriber -> send(json, subscriber, modificationType));
     }
 
     protected void send(String json,

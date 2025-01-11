@@ -26,15 +26,17 @@ import java.util.List;
 
 // As some of the data are non-trivial to create, we pass the presentation data to the client.
 // Similar to bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferListItem;
+// We provide initial values for data which are mutable. Those data need to be provided by websocket events.
 public record OfferItemPresentationDto(BisqEasyOfferDto bisqEasyOffer,
                                        @JsonProperty("isMyOffer") boolean isMyOffer,
-                                       UserProfileDto makersUserProfile,
+                                       UserProfileDto userProfile, // The userName inside userProfile can change when multiple nicknames are in the network
                                        String formattedDate,
                                        String formattedQuoteAmount,
-                                       String formattedBaseAmount,
-                                       String formattedPrice,
+                                       String formattedBaseAmount, // Can change by market price changes if float or market price is used
+                                       String formattedPrice, // Can change by market price changes if float or market price is used
                                        String formattedPriceSpec,
                                        List<String> quoteSidePaymentMethods,
                                        List<String> baseSidePaymentMethods,
-                                       ReputationScoreDto makersReputationScore) {
+                                       ReputationScoreDto reputationScore // Can change by reputation changes
+) {
 }

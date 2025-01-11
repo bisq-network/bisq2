@@ -244,7 +244,7 @@ public class OpenTradeItemsService implements Service {
 
     private Optional<TradeItemPresentationDto> findListItem(String tradeId) {
         return items.stream()
-                .filter(item -> item.tradeId().equals(tradeId))
+                .filter(item -> item.trade().id().equals(tradeId))
                 .findAny();
     }
 

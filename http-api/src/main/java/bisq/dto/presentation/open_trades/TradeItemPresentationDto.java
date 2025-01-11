@@ -23,6 +23,7 @@ import bisq.dto.user.profile.UserProfileDto;
 import bisq.dto.user.reputation.ReputationScoreDto;
 
 import java.util.Optional;
+
 // Presentation DTO
 // Similar to bisq.desktop.main.content.bisq_easy.open_trades.OpenTradeListItem
 public record TradeItemPresentationDto(
@@ -31,12 +32,7 @@ public record TradeItemPresentationDto(
         UserProfileDto makerUserProfile,
         UserProfileDto takerUserProfile,
         Optional<UserProfileDto> mediatorUserProfile,
-        String peersUserName,
-        String myUserName,
         String directionalTitle,
-        String offerId,
-        String tradeId,
-        String shortTradeId,
         String dateString,
         String timeString,
         String market,
@@ -51,7 +47,6 @@ public record TradeItemPresentationDto(
         String fiatPaymentMethod,
         String fiatPaymentMethodDisplayString,
         boolean isFiatPaymentMethodCustom,
-        String myRole,
-        String mediatorUserName,
+        String formattedMyRole,
         ReputationScoreDto peersReputationScore) {
 }

@@ -163,7 +163,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                     addNymToNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
                     userProfileById.put(userProfile.getId(), userProfile);
                 }
-                numUserProfiles.set(userProfileById.values().size());
+                numUserProfiles.set(userProfileById.size());
                 persist();
             }
         } else {
