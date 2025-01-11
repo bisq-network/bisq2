@@ -92,7 +92,7 @@ public class CitationBlock {
                 model.author = author;
                 model.userName.set(author.getUserName());
                 model.catHashImage.set(CatHash.getImage(author, Model.CAT_HASH_IMAGE_SIZE));
-                model.citation.set(chatMessage.getText());
+                model.citation.set(chatMessage.getTextOrNA());
                 model.visible.set(true);
             });
         }

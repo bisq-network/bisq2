@@ -149,12 +149,12 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getText() {
+    public String getTextOrNA() {
         return text.orElse(Res.get("data.na"));
     }
 
     public boolean wasMentioned(UserIdentity userIdentity) {
-        return getText().contains("@" + userIdentity.getUserName());
+        return getTextOrNA().contains("@" + userIdentity.getUserName());
     }
 
     public boolean wasCited(UserIdentity userIdentity) {

@@ -126,7 +126,7 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
         StringBuilder sb = new StringBuilder();
         List<BisqEasyOpenTradeMessage> result = chatMessages.stream()
                 .filter(message -> {
-                    sb.append(message.getText());
+                    sb.append(message.getTextOrNA());
                     return sb.toString().length() < 10_000;
                 })
                 .collect(Collectors.toList());

@@ -483,7 +483,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     public void onCopyMessage(ChatMessage chatMessage) {
-        ClipboardUtil.copyToClipboard(chatMessage.getText());
+        ClipboardUtil.copyToClipboard(chatMessage.getTextOrNA());
     }
 
     public void onLeaveChannel() {
