@@ -18,6 +18,7 @@
 package bisq.http_api.rest_api.domain.trades;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
@@ -28,6 +29,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -39,6 +41,7 @@ import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.SupportService;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.TradeService;
@@ -66,7 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.*;
 
 @Slf4j
 @Path("/trades")
@@ -211,8 +214,8 @@ public class TradeRestApi extends RestApiBase {
             }
     )
     public void processTradeEvent(@PathParam("tradeId") String tradeId,
-                         TradeEventDto tradeEvent,
-                         @Suspended AsyncResponse asyncResponse) {
+                                  TradeEventDto tradeEvent,
+                                  @Suspended AsyncResponse asyncResponse) {
         asyncResponse.setTimeout(10, TimeUnit.SECONDS);
         asyncResponse.setTimeoutHandler(response -> {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
@@ -233,23 +236,75 @@ public class TradeRestApi extends RestApiBase {
 
             BisqEasyOpenTradeChannel channel = optionalChannel.get();
             BisqEasyTrade trade = optionalTrade.get();
-            switch (tradeEvent) {
-                case REJECTED -> {
-                    String userName = channel.getMyUserIdentity().getUserName();
+            String userName = channel.getMyUserIdentity().getUserName();
+            final BitcoinPaymentRail paymentRail = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            switch (tradeEvent.tradeEventType()) {
+                case REJECT_TRADE -> {
                     String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
                     bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
                     bisqEasyTradeService.rejectTrade(trade);
                 }
-                case CANCELLED -> {
-                    String userName = channel.getMyUserIdentity().getUserName();
+                case CANCEL_TRADE -> {
                     String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
                     bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
                     bisqEasyTradeService.cancelTrade(trade);
                     leavePrivateChatManager.leaveChannel(channel);
                 }
-                case CLOSED -> {
+                case CLOSE_TRADE -> {
                     bisqEasyTradeService.removeTrade(trade);
                     leavePrivateChatManager.leaveChannel(channel);
+                }
+                case SELLER_SENDS_PAYMENT_ACCOUNT -> {
+                    String paymentAccountData = checkNotNull(tradeEvent.data(), "paymentAccountData must not be null");
+                    String encoded = Res.encode("bisqEasy.tradeState.info.seller.phase1.tradeLogMessage", userName, paymentAccountData);
+                    bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
+                    bisqEasyTradeService.sellerSendsPaymentAccount(trade, paymentAccountData);
+                }
+                case BUYER_SEND_BITCOIN_PAYMENT_DATA -> {
+                    String btcRailName = paymentRail.name();
+                    String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + btcRailName;
+                    String bitcoinPaymentData = checkNotNull(tradeEvent.data(), "bitcoinPaymentData must not be null");
+                    String encoded = Res.encode(key, userName, bitcoinPaymentData);
+                    bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
+                    bisqEasyTradeService.buyerSendBitcoinPaymentData(trade, bitcoinPaymentData);
+                }
+                case SELLER_CONFIRM_FIAT_RECEIPT -> {
+                    long quoteSideAmount = trade.getContract().getQuoteSideAmount();
+                    String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
+                    String formattedQuoteAmount = AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
+                    String encoded = Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage", userName, formattedQuoteAmount);
+                    bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
+                    bisqEasyTradeService.sellerConfirmFiatReceipt(trade);
+                }
+                case BUYER_CONFIRM_FIAT_SENT -> {
+                    String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
+                    String encoded = Res.encode("bisqEasy.tradeState.info.buyer.phase2a.tradeLogMessage", userName, quoteCurrencyCode);
+                    bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
+                    bisqEasyTradeService.buyerConfirmFiatSent(trade);
+                }
+                case SELLER_CONFIRM_BTC_SENT -> {
+                    Optional<String> paymentProof = Optional.ofNullable(tradeEvent.data());
+                    boolean isMainChain = paymentRail == BitcoinPaymentRail.MAIN_CHAIN;
+                    if (isMainChain) {
+                        checkArgument(paymentProof.isPresent(), "Transaction ID is required for Bitcoin settlement");
+                    }
+                    String encoded;
+                    if (paymentProof.isEmpty()) {
+                        encoded = Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.noProofProvided", userName);
+                    } else {
+                        String btcRailName = paymentRail.name();
+                        String proofType = Res.get("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.paymentProof." + btcRailName);
+                        encoded = Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage", userName, proofType, paymentProof.get());
+                    }
+                    bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
+                    bisqEasyTradeService.sellerConfirmBtcSent(trade, paymentProof);
+                }
+                case BTC_CONFIRMED -> {
+                    if (paymentRail == BitcoinPaymentRail.LN && trade.isBuyer()) {
+                        String encoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", userName);
+                        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
+                    }
+                    bisqEasyTradeService.btcConfirmed(trade);
                 }
             }
 

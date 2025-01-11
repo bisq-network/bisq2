@@ -97,13 +97,16 @@ public class SubscriptionService implements Service {
     }
 
     private void subscribe(SubscriptionRequest request, WebSocket webSocket) {
+        log.info("Received subscription request: {}", request);
         subscriberRepository.add(request, webSocket);
-
         findWebSocketService(request.getTopic())
                 .flatMap(BaseWebSocketService::getJsonPayload)
                 .flatMap(json -> new SubscriptionResponse(request.getRequestId(), json, null)
                         .toJson(objectMapper))
-                .ifPresent(webSocket::send);
+                .ifPresent(json -> {
+                    log.info("Send SubscriptionResponse json: {}", json);
+                    webSocket.send(json);
+                });
     }
 
     public void unSubscribe(Topic topic, String subscriberId) {
@@ -128,6 +131,7 @@ public class SubscriptionService implements Service {
                 return Optional.of(tradePropertiesWebSocketService);
             }
         }
+        log.warn("No WebSocketService for topic {} found", topic);
         return Optional.empty();
     }
 }

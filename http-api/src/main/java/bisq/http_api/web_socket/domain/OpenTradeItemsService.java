@@ -67,7 +67,6 @@ public class OpenTradeItemsService implements Service {
         reputationService = userService.getReputationService();
     }
 
-
     @Override
     public CompletableFuture<Boolean> initialize() {
         tradesPin = bisqEasyTradeService.getTrades().addObserver(new CollectionObserver<>() {

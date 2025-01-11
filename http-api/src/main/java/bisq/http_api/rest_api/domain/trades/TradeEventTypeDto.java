@@ -17,7 +17,14 @@
 
 package bisq.http_api.rest_api.domain.trades;
 
-import javax.annotation.Nullable;
-
-public record TradeEventDto(TradeEventTypeDto tradeEventType, @Nullable String data) {
+public enum TradeEventTypeDto {
+    REJECT_TRADE,
+    CANCEL_TRADE,
+    CLOSE_TRADE,
+    SELLER_SENDS_PAYMENT_ACCOUNT,
+    BUYER_SEND_BITCOIN_PAYMENT_DATA,
+    SELLER_CONFIRM_FIAT_RECEIPT,
+    BUYER_CONFIRM_FIAT_SENT,
+    SELLER_CONFIRM_BTC_SENT,
+    BTC_CONFIRMED,
 }

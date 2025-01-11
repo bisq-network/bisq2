@@ -191,8 +191,15 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
         List<Map<String, TradePropertiesDto>> maps = bisqEasyTradeService.getTrades().stream()
                 .map(bisqEasyTrade -> {
                     var data = new TradePropertiesDto();
-                    data.tradeState = Optional.of(DtoMappings.BisqEasyTradeStateMapping.fromBisq2Model(bisqEasyTrade.getTradeState()));
-                    data.interruptTradeInitiator = Optional.of(DtoMappings.RoleMapping.fromBisq2Model(bisqEasyTrade.getInterruptTradeInitiator().get()));
+                    data.tradeState = Optional.ofNullable(DtoMappings.BisqEasyTradeStateMapping.fromBisq2Model(bisqEasyTrade.getTradeState()));
+                    data.interruptTradeInitiator = Optional.ofNullable(DtoMappings.RoleMapping.fromBisq2Model(bisqEasyTrade.getInterruptTradeInitiator().get()));
+                    data.paymentAccountData = Optional.ofNullable(bisqEasyTrade.getPaymentAccountData().get());
+                    data.bitcoinPaymentData = Optional.ofNullable(bisqEasyTrade.getBitcoinPaymentData().get());
+                    data.paymentProof = Optional.ofNullable(bisqEasyTrade.getPaymentProof().get());
+                    data.errorMessage = Optional.ofNullable(bisqEasyTrade.getErrorMessage());
+                    data.errorStackTrace = Optional.ofNullable(bisqEasyTrade.getErrorStackTrace());
+                    data.peersErrorMessage = Optional.ofNullable(bisqEasyTrade.getPeersErrorMessage());
+                    data.peersErrorStackTrace = Optional.ofNullable(bisqEasyTrade.getPeersErrorStackTrace());
                     return Map.of(bisqEasyTrade.getId(), data);
                 })
                 .collect(Collectors.toList());
@@ -204,8 +211,6 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     }
 
     private void send(List<Map<String, TradePropertiesDto>> maps) {
-        log.error("Sending trades to websocket maps "+maps);
-        log.error("Sending trades to websocket json "+toJson(maps));
         // The payloadEncoded is defined as a list to support batch data delivery at subscribe.
         toJson(maps).ifPresent(json -> {
             subscriberRepository.findSubscribers(topic)
