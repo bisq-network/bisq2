@@ -152,7 +152,7 @@ public class BuyerState4 extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final Button leaveButton, exportButton;
+        private final Button closeTradeButton, exportButton;
         private final TradeCompletedTable tradeCompletedTable;
 
         private View(Model model, Controller controller) {
@@ -161,9 +161,9 @@ public class BuyerState4 extends BaseState {
             tradeCompletedTable = new TradeCompletedTable();
 
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.exportTrade"));
-            leaveButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.leaveChannel"));
-            leaveButton.setDefaultButton(true);
-            HBox buttons = new HBox(20, exportButton, leaveButton);
+            closeTradeButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.leaveChannel"));
+            closeTradeButton.setDefaultButton(true);
+            HBox buttons = new HBox(20, exportButton, closeTradeButton);
             buttons.setAlignment(Pos.BOTTOM_RIGHT);
             VBox.setMargin(buttons, new Insets(0, 0, 20, 0));
 
@@ -189,7 +189,7 @@ public class BuyerState4 extends BaseState {
                 tradeCompletedTable.getOpenTxExplorerButton().setOnAction(e -> controller.openExplorer());
                 tradeCompletedTable.getCopyTxExplorerLinkButton().setOnAction(e -> controller.copyExplorerLink());
             }
-            leaveButton.setOnAction(e -> controller.onCloseCompletedTrade());
+            closeTradeButton.setOnAction(e -> controller.onCloseCompletedTrade());
             exportButton.setOnAction(e -> controller.onExportTrade());
         }
 
@@ -198,7 +198,7 @@ public class BuyerState4 extends BaseState {
             super.onViewDetached();
 
             tradeCompletedTable.dispose();
-            leaveButton.setOnAction(null);
+            closeTradeButton.setOnAction(null);
             exportButton.setOnAction(null);
         }
     }
