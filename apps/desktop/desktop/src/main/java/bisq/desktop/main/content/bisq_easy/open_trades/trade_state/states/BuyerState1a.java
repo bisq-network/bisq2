@@ -161,14 +161,14 @@ public class BuyerState1a extends BaseState {
         }
 
         private void doSend() {
-            String name = getPaymentRail().name();
-            String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + name;
+            String btcRailName = getPaymentRail().name();
+            String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + btcRailName;
             String bitcoinPaymentData = model.getBitcoinPaymentData().get();
             sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), bitcoinPaymentData));
             bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), bitcoinPaymentData);
         }
 
-        void onOpenWalletHelp() {
+        void onOpenWalletGuide() {
             Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
 
@@ -418,7 +418,7 @@ public class BuyerState1a extends BaseState {
             });
 
             sendButton.setOnAction(e -> controller.onSend());
-            walletInfoButton.setOnAction(e -> controller.onOpenWalletHelp());
+            walletInfoButton.setOnAction(e -> controller.onOpenWalletGuide());
             scanQrCodeButton.setOnAction(e -> controller.onScanQrCode());
         }
 
