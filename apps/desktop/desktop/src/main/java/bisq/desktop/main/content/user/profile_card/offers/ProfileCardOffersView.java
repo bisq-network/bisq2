@@ -17,18 +17,14 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
-import bisq.bisq_easy.NavigationTarget;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
-import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
-import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -244,10 +240,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    goToOfferButton.setOnAction(e ->
-                        OverlayController.hide(() ->
-                            Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK,
-                                    new BisqEasyOfferbookController.InitData(item.getBisqEasyOfferbookMessage()))));
+                    goToOfferButton.setOnAction(e -> controller.onGoToOfferbookMessage(item.getBisqEasyOfferbookMessage()));
                     goToOfferButton.setOnMouseEntered(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-light-text-color;"));
                     goToOfferButton.setOnMouseClicked(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-light-text-color;"));
                     goToOfferButton.setOnMouseExited(e -> goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;"));

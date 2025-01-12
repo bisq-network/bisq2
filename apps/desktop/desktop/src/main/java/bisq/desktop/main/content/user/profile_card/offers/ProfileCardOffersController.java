@@ -17,12 +17,17 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
+import bisq.desktop.overlay.OverlayController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
@@ -71,5 +76,11 @@ public class ProfileCardOffersController implements Controller {
 
     public String getNumberOffers() {
         return String.valueOf((long) model.getListItems().size());
+    }
+
+    void onGoToOfferbookMessage(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        OverlayController.hide(() ->
+                Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK,
+                        new BisqEasyOfferbookController.InitData(bisqEasyOfferbookMessage)));
     }
 }
