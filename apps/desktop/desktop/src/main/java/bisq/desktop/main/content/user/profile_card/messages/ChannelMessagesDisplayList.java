@@ -45,6 +45,8 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 
@@ -86,6 +88,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         public void onActivate() {
             model.getChannelName().set(publicChatChannel.getDisplayString());
             if (publicChatChannel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
+                model.getChannelName().set(bisqEasyOfferbookChannel.getMarket().getFiatCurrencyName());
                 model.getMarket().set(bisqEasyOfferbookChannel.getMarket());
             }
 
@@ -171,11 +174,17 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             super(new VBox(20), model, controller);
 
             headline = new Label();
+            Region line = getLine();
+            HBox headlineHBox = new HBox(10, headline, line);
+            HBox.setHgrow(line, Priority.ALWAYS);
+            headlineHBox.setPadding(new Insets(0, 20, 0, 20));
+            headlineHBox.setAlignment(Pos.CENTER);
             messageListVBox = new VBox(30);
 
             listChangeListener = change -> updateMessageListVBox();
 
-            root.getChildren().addAll(headline, messageListVBox);
+            root.getChildren().addAll(headlineHBox, messageListVBox);
+            root.setPadding(new Insets(20, 0, 20, 0));
         }
 
         @Override
@@ -214,6 +223,14 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                 }
             });
             messageListVBox.getChildren().clear();
+        }
+
+        private Region getLine() {
+            Region line = new Region();
+            line.setMinHeight(1);
+            line.setMaxHeight(1);
+            line.setStyle("-fx-background-color: -bisq-border-color-grey");
+            return line;
         }
     }
 
@@ -260,7 +277,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
             setAlignment(Pos.CENTER_LEFT);
             setFillHeight(true);
-            setPadding(new Insets(0, 0, 0, 50));
+            setPadding(new Insets(0, 50, 0, 50));
             // TODO: Add goToMessage button
             getChildren().add(messageBg);
         }

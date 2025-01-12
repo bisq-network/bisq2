@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.profile_card.messages;
 
 import bisq.chat.Citation;
 import bisq.chat.pub.PublicChatMessage;
-import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.user.profile.UserProfile;
