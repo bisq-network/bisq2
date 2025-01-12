@@ -17,5 +17,18 @@
 
 package bisq.http_api.rest_api.domain.settings;
 
-public record UpdateSettingsRequest(SettingsKeyDto key, SettingsValueDto value) {
+import bisq.dto.common.currency.MarketDto;
+
+import javax.annotation.Nullable;
+import java.util.Set;
+
+public record SettingsChangeRequest(
+        @Nullable Boolean isTacAccepted,
+        @Nullable Boolean tradeRulesConfirmed,
+        @Nullable Boolean closeMyOfferWhenTaken,
+        @Nullable String languageCode,
+        @Nullable Set<String> supportedLanguageCodes,
+        @Nullable Double maxTradePriceDeviation,
+        @Nullable MarketDto selectedMarket
+) {
 }

@@ -17,6 +17,7 @@
 
 package bisq.http_api.rest_api.domain.settings;
 
+import bisq.common.observable.collection.ObservableSet;
 import bisq.dto.DtoMappings;
 import bisq.dto.settings.SettingsDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
@@ -72,7 +73,7 @@ public class SettingsRestApi extends RestApiBase {
             requestBody = @RequestBody(
                     description = "The setting key and value to be updated",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = UpdateSettingsRequest.class))
+                    content = @Content(schema = @Schema(implementation = SettingsChangeRequest.class))
             ),
             responses = {
                     @ApiResponse(responseCode = "204", description = "Setting updated successfully"),
@@ -80,19 +81,29 @@ public class SettingsRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response updateSetting(@Valid UpdateSettingsRequest request) {
+    public Response updateSetting(@Valid SettingsChangeRequest request) {
         try {
-            switch (request.key()) {
-                case TRADE_RULES_CONFIRMED:
-                    settingsService.getTradeRulesConfirmed().set(request.value().booleanValue());
-                    break;
-                case IS_TAC_ACCEPTED:
-                    settingsService.getIsTacAccepted().set(request.value().booleanValue());
-                    break;
-                default:
-                    return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid setting key: " + request.key());
+            if (request.isTacAccepted() != null) {
+                settingsService.getIsTacAccepted().set(request.isTacAccepted());
+            } else if (request.tradeRulesConfirmed() != null) {
+                settingsService.getTradeRulesConfirmed().set(request.tradeRulesConfirmed());
+            } else if (request.closeMyOfferWhenTaken() != null) {
+                settingsService.getCloseMyOfferWhenTaken().set(request.closeMyOfferWhenTaken());
+            } else if (request.languageCode() != null) {
+                settingsService.getLanguageCode().set(request.languageCode());
+            } else if (request.supportedLanguageCodes() != null) {
+                ObservableSet<String> supportedLanguageCodes = settingsService.getSupportedLanguageCodes();
+                supportedLanguageCodes.clear();
+                supportedLanguageCodes.addAll(request.supportedLanguageCodes());
+            } else if (request.maxTradePriceDeviation() != null) {
+                settingsService.getMaxTradePriceDeviation().set(request.maxTradePriceDeviation());
+            } else if (request.selectedMarket() != null) {
+                settingsService.getSelectedMarket().set(DtoMappings.MarketMapping.toBisq2Model(request.selectedMarket()));
+            } else {
+                return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid request: " + request);
             }
-            log.info("Updated setting: {} to {}", request.key(), request.value());
+
+            log.info("Updated setting from request: {}", request);
             return Response.noContent().build();
         } catch (Exception e) {
             log.error("Error updating setting", e);
