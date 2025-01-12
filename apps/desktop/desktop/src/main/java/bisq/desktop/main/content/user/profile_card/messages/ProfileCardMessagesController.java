@@ -17,10 +17,9 @@
 
 package bisq.desktop.main.content.user.profile_card.messages;
 
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.ChatService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 
@@ -31,10 +30,16 @@ public class ProfileCardMessagesController implements Controller {
     @Getter
     private final ProfileCardMessagesView view;
     private final ProfileCardMessagesModel model;
+    private final List<ChannelMessagesDisplayList<?>> channelMessagesDisplayList = new ArrayList<>();
 
     public ProfileCardMessagesController(ServiceProvider serviceProvider) {
         model = new ProfileCardMessagesModel();
         view = new ProfileCardMessagesView(model, this);
+
+        ChatService chatService = serviceProvider.getChatService();
+        chatService.getBisqEasyOfferbookChannelService().getChannels().forEach(channel -> {
+            channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel));
+        });
     }
 
     @Override
