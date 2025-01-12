@@ -40,8 +40,8 @@ public class MarketPriceWebSocketService extends SimpleObservableWebSocketServic
     private final MarketPriceService marketPriceService;
 
     public MarketPriceWebSocketService(ObjectMapper objectMapper,
-                                          SubscriberRepository subscriberRepository,
-                                          BondedRolesService bondedRolesService) {
+                                       SubscriberRepository subscriberRepository,
+                                       BondedRolesService bondedRolesService) {
         super(objectMapper, subscriberRepository, Topic.MARKET_PRICE);
         marketPriceService = bondedRolesService.getMarketPriceService();
     }
@@ -58,19 +58,19 @@ public class MarketPriceWebSocketService extends SimpleObservableWebSocketServic
                 .filter(MarketPriceWebSocketService::isBaseCurrencyBtc)
                 .collect(Collectors.toMap(
                         entry -> entry.getKey().getQuoteCurrencyCode(),
-                        entry -> DtoMappings.PriceQuoteMapping.from(entry.getValue().getPriceQuote()),
+                        entry -> DtoMappings.PriceQuoteMapping.fromBisq2Model(entry.getValue().getPriceQuote()),
                         (existing, replacement) -> existing,
                         HashMap::new
                 ));
     }
 
-    private static boolean isBaseCurrencyBtc(Map.Entry<Market, MarketPrice> entry) {
-        // We get altcoin quotes as well which have BTC as quote currency
-        return entry.getKey().getBaseCurrencyCode().equals("BTC");
-    }
-
     @Override
     protected Pin setupObserver() {
         return getObservable().addObserver(this::onChange);
+    }
+
+    private static boolean isBaseCurrencyBtc(Map.Entry<Market, MarketPrice> entry) {
+        // We get altcoin quotes as well which have BTC as quote currency
+        return entry.getKey().getBaseCurrencyCode().equals("BTC");
     }
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.web_socket.domain.offerbook;
+package bisq.http_api.web_socket.domain.offers;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -25,8 +25,8 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.dto.OfferListItemDtoFactory;
-import bisq.dto.offer.bisq_easy.OfferListItemDto;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
+import bisq.dto.presentation.offerbook.OfferItemPresentationDto;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.subscription.ModificationType;
 import bisq.http_api.web_socket.subscription.SubscriberRepository;
@@ -76,13 +76,17 @@ public class OffersWebSocketService extends BaseWebSocketService {
             pins.add(channel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(BisqEasyOfferbookMessage message) {
-                    send(quoteCurrencyCode, message, ModificationType.ADDED);
+                    if (message.hasBisqEasyOffer()) {
+                        send(quoteCurrencyCode, message, ModificationType.ADDED);
+                    }
                 }
 
                 @Override
                 public void remove(Object element) {
                     if (element instanceof BisqEasyOfferbookMessage message) {
-                        send(quoteCurrencyCode, message, ModificationType.REMOVED);
+                        if (message.hasBisqEasyOffer()) {
+                            send(quoteCurrencyCode, message, ModificationType.REMOVED);
+                        }
                     }
                 }
 
@@ -107,11 +111,20 @@ public class OffersWebSocketService extends BaseWebSocketService {
         return getJsonPayload(bisqEasyOfferbookChannelService.getChannels().stream());
     }
 
-    public Optional<String> getJsonPayload(Stream<BisqEasyOfferbookChannel> channels) {
-        ArrayList<OfferListItemDto> payload = channels
+    private Optional<String> getJsonPayload(Stream<BisqEasyOfferbookChannel> channels) {
+        ArrayList<OfferItemPresentationDto> payload = channels
                 .flatMap(channel ->
                         channel.getChatMessages().stream()
-                                .map(this::createOfferListItemDto))
+                                .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                                .map(message -> {
+                                    try {
+                                        return createOfferListItemDto(message);
+                                    } catch (Exception e) {
+                                        log.error("Failed to create OfferListItemDto", e);
+                                        return null;
+                                    }
+                                })
+                                .filter(Objects::nonNull))
                 .collect(Collectors.toCollection(ArrayList::new));
         return toJson(payload);
     }
@@ -119,9 +132,9 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private void send(String quoteCurrencyCode,
                       BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                       ModificationType modificationType) {
-        OfferListItemDto item = createOfferListItemDto(bisqEasyOfferbookMessage);
+        OfferItemPresentationDto item = createOfferListItemDto(bisqEasyOfferbookMessage);
         // The payload is defined as a list to support batch data delivery at subscribe.
-        ArrayList<OfferListItemDto> payload = new ArrayList<>(List.of(item));
+        ArrayList<OfferItemPresentationDto> payload = new ArrayList<>(List.of(item));
         toJson(payload).ifPresent(json -> {
             subscriberRepository.findSubscribers(topic, quoteCurrencyCode)
                     .ifPresent(subscribers -> subscribers
@@ -129,8 +142,8 @@ public class OffersWebSocketService extends BaseWebSocketService {
         });
     }
 
-    private OfferListItemDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        return OfferListItemDtoFactory.createOfferListItemDto(userProfileService,
+    private OfferItemPresentationDto createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        return OfferItemPresentationDtoFactory.create(userProfileService,
                 userIdentityService,
                 reputationService,
                 marketPriceService,

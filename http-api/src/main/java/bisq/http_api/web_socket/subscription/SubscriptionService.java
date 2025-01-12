@@ -22,10 +22,14 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.domain.market_price.MarketPriceWebSocketService;
-import bisq.http_api.web_socket.domain.offerbook.NumOffersWebSocketService;
-import bisq.http_api.web_socket.domain.offerbook.OffersWebSocketService;
+import bisq.http_api.web_socket.domain.offers.NumOffersWebSocketService;
+import bisq.http_api.web_socket.domain.offers.OffersWebSocketService;
+import bisq.http_api.web_socket.domain.trades.TradePropertiesWebSocketService;
+import bisq.http_api.web_socket.domain.trades.TradesWebSocketService;
 import bisq.http_api.web_socket.util.JsonUtil;
+import bisq.trade.TradeService;
 import bisq.user.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -41,31 +45,41 @@ public class SubscriptionService implements Service {
     private final MarketPriceWebSocketService marketPriceWebSocketService;
     private final NumOffersWebSocketService numOffersWebSocketService;
     private final OffersWebSocketService offersWebSocketService;
+    private final TradesWebSocketService tradesWebSocketService;
+    private final TradePropertiesWebSocketService tradePropertiesWebSocketService;
 
     public SubscriptionService(ObjectMapper objectMapper,
                                BondedRolesService bondedRolesService,
                                ChatService chatService,
-                               UserService userService) {
+                               TradeService tradeService,
+                               UserService userService,
+                               OpenTradeItemsService openTradeItemsService) {
         this.objectMapper = objectMapper;
         subscriberRepository = new SubscriberRepository();
 
         marketPriceWebSocketService = new MarketPriceWebSocketService(objectMapper, subscriberRepository, bondedRolesService);
         numOffersWebSocketService = new NumOffersWebSocketService(objectMapper, subscriberRepository, chatService, userService);
         offersWebSocketService = new OffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bondedRolesService);
+        tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService);
+        tradePropertiesWebSocketService = new TradePropertiesWebSocketService(objectMapper, subscriberRepository, tradeService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         return marketPriceWebSocketService.initialize()
                 .thenCompose(e -> numOffersWebSocketService.initialize())
-                .thenCompose(e -> offersWebSocketService.initialize());
+                .thenCompose(e -> offersWebSocketService.initialize())
+                .thenCompose(e -> tradesWebSocketService.initialize())
+                .thenCompose(e -> tradePropertiesWebSocketService.initialize());
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return marketPriceWebSocketService.shutdown()
                 .thenCompose(e -> numOffersWebSocketService.shutdown())
-                .thenCompose(e -> offersWebSocketService.shutdown());
+                .thenCompose(e -> offersWebSocketService.shutdown())
+                .thenCompose(e -> tradesWebSocketService.shutdown())
+                .thenCompose(e -> tradePropertiesWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -83,13 +97,16 @@ public class SubscriptionService implements Service {
     }
 
     private void subscribe(SubscriptionRequest request, WebSocket webSocket) {
+        log.info("Received subscription request: {}", request);
         subscriberRepository.add(request, webSocket);
-
         findWebSocketService(request.getTopic())
                 .flatMap(BaseWebSocketService::getJsonPayload)
                 .flatMap(json -> new SubscriptionResponse(request.getRequestId(), json, null)
                         .toJson(objectMapper))
-                .ifPresent(webSocket::send);
+                .ifPresent(json -> {
+                    log.info("Send SubscriptionResponse json: {}", json);
+                    webSocket.send(json);
+                });
     }
 
     public void unSubscribe(Topic topic, String subscriberId) {
@@ -107,7 +124,14 @@ public class SubscriptionService implements Service {
             case OFFERS -> {
                 return Optional.of(offersWebSocketService);
             }
+            case TRADES -> {
+                return Optional.of(tradesWebSocketService);
+            }
+            case TRADE_PROPERTIES -> {
+                return Optional.of(tradePropertiesWebSocketService);
+            }
         }
+        log.warn("No WebSocketService for topic {} found", topic);
         return Optional.empty();
     }
 }

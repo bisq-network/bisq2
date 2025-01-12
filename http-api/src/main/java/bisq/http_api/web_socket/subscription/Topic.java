@@ -20,5 +20,7 @@ package bisq.http_api.web_socket.subscription;
 public enum Topic {
     MARKET_PRICE,
     NUM_OFFERS,
-    OFFERS
+    OFFERS,
+    TRADES,
+    TRADE_PROPERTIES
 }

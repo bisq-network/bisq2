@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.trade;
+package bisq.dto.trade.bisq_easy;
 
-public record TakeOfferResponse(String tradeId) {
+import bisq.dto.network.identity.NetworkIdDto;
+
+public record BisqEasyTradePartyDto(NetworkIdDto networkId) {
 }

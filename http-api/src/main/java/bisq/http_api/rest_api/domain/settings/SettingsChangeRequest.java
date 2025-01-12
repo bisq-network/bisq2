@@ -15,20 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.offer;
+package bisq.http_api.rest_api.domain.settings;
 
 import bisq.dto.common.currency.MarketDto;
-import bisq.dto.offer.DirectionDto;
-import bisq.dto.offer.amount.spec.AmountSpecDto;
-import bisq.dto.offer.price.spec.PriceSpecDto;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 
-public record CreateOfferRequest(DirectionDto direction,
-                                 MarketDto market,
-                                 Set<String> bitcoinPaymentMethods,
-                                 Set<String> fiatPaymentMethods,
-                                 AmountSpecDto amountSpec,
-                                 PriceSpecDto priceSpec,
-                                 Set<String> supportedLanguageCodes) {
+public record SettingsChangeRequest(
+        @Nullable Boolean isTacAccepted,
+        @Nullable Boolean tradeRulesConfirmed,
+        @Nullable Boolean closeMyOfferWhenTaken,
+        @Nullable String languageCode,
+        @Nullable Set<String> supportedLanguageCodes,
+        @Nullable Double maxTradePriceDeviation,
+        @Nullable MarketDto selectedMarket
+) {
 }

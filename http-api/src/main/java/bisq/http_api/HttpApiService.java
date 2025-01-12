@@ -23,15 +23,18 @@ import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
+import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
-import bisq.http_api.rest_api.domain.offer.OfferRestApi;
-import bisq.http_api.rest_api.domain.offerbook.OfferbookRestApi;
-import bisq.http_api.rest_api.domain.trade.TradeRestApi;
+import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
+import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
+import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
 import bisq.http_api.web_socket.WebSocketRestApiResourceConfig;
 import bisq.http_api.web_socket.WebSocketService;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.network.NetworkService;
 import bisq.security.SecurityService;
+import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
@@ -57,18 +60,15 @@ public class HttpApiService implements Service {
                           BondedRolesService bondedRolesService,
                           ChatService chatService,
                           SupportService supportedService,
-                          TradeService tradeService) {
+                          TradeService tradeService,
+                          SettingsService settingsService,
+                          OpenTradeItemsService openTradeItemsService) {
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
         boolean webSocketConfigEnabled = webSocketConfig.isEnabled();
         if (restApiConfigEnabled || webSocketConfigEnabled) {
-            OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService.getBisqEasyOfferbookChannelService(),
+            OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                     bondedRolesService.getMarketPriceService(),
                     userService);
-            OfferRestApi offerRestApi = new OfferRestApi(chatService,
-                    bondedRolesService.getMarketPriceService(),
-                    userService,
-                    supportedService,
-                    tradeService);
             TradeRestApi tradeRestApi = new TradeRestApi(chatService,
                     bondedRolesService.getMarketPriceService(),
                     userService,
@@ -76,14 +76,16 @@ public class HttpApiService implements Service {
                     tradeService);
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
-
+            SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
+            ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
-                        offerRestApi,
                         tradeRestApi,
                         userIdentityRestApi,
-                        marketPriceRestApi);
+                        marketPriceRestApi,
+                        settingsRestApi,
+                        explorerRestApi);
                 this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
             } else {
                 this.restApiService = Optional.empty();
@@ -92,16 +94,19 @@ public class HttpApiService implements Service {
             if (webSocketConfigEnabled) {
                 var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
-                        offerRestApi,
                         tradeRestApi,
                         userIdentityRestApi,
-                        marketPriceRestApi);
+                        marketPriceRestApi,
+                        settingsRestApi,
+                        explorerRestApi);
                 this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
                         bondedRolesService,
                         chatService,
-                        userService));
+                        tradeService,
+                        userService,
+                        openTradeItemsService));
             } else {
                 this.webSocketService = Optional.empty();
             }

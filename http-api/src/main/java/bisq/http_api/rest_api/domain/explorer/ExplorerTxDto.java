@@ -15,11 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.trade;
+package bisq.http_api.rest_api.domain.explorer;
 
-public record TakeOfferRequest(String offerId,
-                               long baseSideAmount,
-                               long quoteSideAmount,
-                               String bitcoinPaymentMethod,
-                               String fiatPaymentMethod) {
+import java.util.List;
+
+public record ExplorerTxDto(String txId, boolean isConfirmed, List<ExplorerOutputDto> outputs) {
 }

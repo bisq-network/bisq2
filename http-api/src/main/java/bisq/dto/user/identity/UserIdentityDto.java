@@ -15,7 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.offer;
+package bisq.dto.user.identity;
 
-public record CreateOfferResponse(String offerId) {
-}
+
+import bisq.dto.identity.IdentityDto;
+import bisq.dto.user.profile.UserProfileDto;
+
+public record UserIdentityDto(
+        IdentityDto identity,
+        UserProfileDto userProfile
+) {}

@@ -15,15 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.dto;
+package bisq.dto.presentation.offerbook;
 
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
+import bisq.dto.DtoMappings;
 import bisq.dto.offer.bisq_easy.BisqEasyOfferDto;
-import bisq.dto.offer.bisq_easy.OfferListItemDto;
+import bisq.dto.user.profile.UserProfileDto;
 import bisq.dto.user.reputation.ReputationScoreDto;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -46,28 +47,21 @@ import bisq.user.reputation.ReputationService;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class OfferListItemDtoFactory {
-    public static OfferListItemDto createOfferListItemDto(UserProfileService userProfileService,
-                                                          UserIdentityService userIdentityService,
-                                                          ReputationService reputationService,
-                                                          MarketPriceService marketPriceService,
-                                                          BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+public class OfferItemPresentationDtoFactory {
+    public static OfferItemPresentationDto create(UserProfileService userProfileService,
+                                                  UserIdentityService userIdentityService,
+                                                  ReputationService reputationService,
+                                                  MarketPriceService marketPriceService,
+                                                  BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         boolean isMyOffer = bisqEasyOfferbookMessage.isMyMessage(userIdentityService);
         Direction direction = bisqEasyOffer.getDirection();
         String messageId = bisqEasyOfferbookMessage.getId();
         String offerId = bisqEasyOffer.getId();
-        BisqEasyOfferDto bisqEasyOfferDto = DtoMappings.BisqEasyOfferMapping.from(bisqEasyOffer);
+        BisqEasyOfferDto bisqEasyOfferDto = DtoMappings.BisqEasyOfferMapping.fromBisq2Model(bisqEasyOffer);
         String authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
-        Optional<UserProfile> authorUserProfile = userProfileService.findUserProfile(authorUserProfileId);
-        String nym = authorUserProfile.map(UserProfile::getNym).orElse("");
-        String userName = authorUserProfile.map(UserProfile::getUserName).orElse("");
-        ReputationScoreDto reputationScore = authorUserProfile.flatMap(reputationService::findReputationScore)
-                .map(DtoMappings.ReputationScoreMapping::from)
-                .orElse(DtoMappings.ReputationScoreMapping.from(ReputationScore.NONE));
 
         // For now, we send also the formatted values as we have not the complex formatters in mobile impl. yet.
         // We might need to replicate the formatters anyway later and then those fields could be removed
@@ -107,17 +101,21 @@ public class OfferListItemDtoFactory {
                 .stream()
                 .map(PaymentMethod::getName)
                 .collect(Collectors.toList());
-        return new OfferListItemDto(bisqEasyOfferDto,
+
+        UserProfile userProfile = userProfileService.findUserProfile(authorUserProfileId).orElseThrow();
+        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
+        ReputationScore reputationScore = reputationService.getReputationScore(authorUserProfileId);
+        ReputationScoreDto reputationScoreDto = DtoMappings.ReputationScoreMapping.fromBisq2Model(reputationScore);
+        return new OfferItemPresentationDto(bisqEasyOfferDto,
                 isMyOffer,
-                nym,
-                userName,
-                reputationScore,
+                userProfileDto,
                 formattedDate,
                 formattedQuoteAmount,
                 formattedBaseAmount,
                 formattedPrice,
                 formattedPriceSpec,
                 quoteSidePaymentMethods,
-                baseSidePaymentMethods);
+                baseSidePaymentMethods,
+                reputationScoreDto);
     }
 }

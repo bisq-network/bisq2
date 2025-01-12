@@ -20,10 +20,10 @@ package bisq.dto.security.pow;
 import javax.annotation.Nullable;
 
 public record ProofOfWorkDto(
-        String payload,
+        String payloadEncoded,
         long counter,
-        @Nullable String challenge,
+        @Nullable String challengeEncoded,
         double difficulty,
-        String solution,
+        String solutionEncoded,
         long duration) {
 }

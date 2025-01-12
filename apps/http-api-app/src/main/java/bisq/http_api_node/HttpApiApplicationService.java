@@ -27,6 +27,7 @@ import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.http_api.HttpApiService;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.web_socket.WebSocketService;
 import bisq.identity.IdentityService;
@@ -81,6 +82,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
     private final HttpApiService httpApiService;
+    private final OpenTradeItemsService openTradeItemsService;
 
     public HttpApiApplicationService(String[] args) {
         super("http_api_app", args);
@@ -161,6 +163,8 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
+         openTradeItemsService = new OpenTradeItemsService( chatService, tradeService, userService);
+
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
         httpApiService = new HttpApiService(restApiConfig,
@@ -171,7 +175,9 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 bondedRolesService,
                 chatService,
                 supportService,
-                tradeService);
+                tradeService,
+                settingsService,
+                openTradeItemsService);
     }
 
     @Override
@@ -216,6 +222,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
+                .thenCompose(result -> openTradeItemsService.initialize())
                 .thenCompose(result -> httpApiService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -242,6 +249,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> httpApiService.shutdown()
+                .thenCompose(result -> openTradeItemsService.shutdown())
                 .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())

@@ -44,8 +44,6 @@ public class SubscriberRepository {
             Set<Subscriber> subscribers = subscribersByTopic.computeIfAbsent(topic, key -> new HashSet<>());
             subscribers.add(subscriber);
         }
-
-        findSubscribers(webSocket);
     }
 
     public void remove(Subscriber subscriber) {

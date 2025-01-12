@@ -14,19 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package bisq.http_api.rest_api.error;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-
-@Getter
-@ToString
-@EqualsAndHashCode
-public final class ErrorMessage {
-    private final String error;
-
-    public ErrorMessage(String error) {
-        this.error = error;
-    }
+public record ErrorMessage(String error) {
 }

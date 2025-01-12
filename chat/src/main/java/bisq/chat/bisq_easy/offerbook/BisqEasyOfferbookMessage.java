@@ -63,7 +63,7 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 ChatMessageType.TEXT);
     }
 
-    private BisqEasyOfferbookMessage(String messageId,
+    public BisqEasyOfferbookMessage(String messageId,
                                      ChatChannelDomain chatChannelDomain,
                                      String channelId,
                                      String authorUserProfileId,

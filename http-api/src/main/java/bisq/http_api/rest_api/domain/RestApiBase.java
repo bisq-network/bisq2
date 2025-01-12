@@ -49,7 +49,11 @@ public abstract class RestApiBase {
      * @return The HTTP response.
      */
     protected Response buildErrorResponse(String errorMessage) {
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        return buildErrorResponse(Response.Status.INTERNAL_SERVER_ERROR, errorMessage);
+    }
+
+    protected Response buildErrorResponse(Response.Status status, String errorMessage) {
+        return Response.status(status)
                 .entity(Map.of("error", errorMessage))
                 .build();
     }

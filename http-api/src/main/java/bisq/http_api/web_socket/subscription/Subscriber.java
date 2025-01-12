@@ -56,6 +56,7 @@ public class Subscriber {
     }
 
     public CompletableFuture<Boolean> send(String json) {
+        log.info("Send json: {}", json);
         return CompletableFuture.supplyAsync(() -> {
             try {
                 DataFrame dataFrame = webSocket.send(json).get();

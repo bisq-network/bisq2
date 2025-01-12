@@ -20,9 +20,11 @@ package bisq.http_api.web_socket;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.http_api.web_socket.subscription.SubscriptionService;
 import bisq.http_api.web_socket.util.GrizzlySwaggerHttpHandler;
+import bisq.trade.TradeService;
 import bisq.user.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -113,7 +115,9 @@ public class WebSocketService implements Service {
                             WebSocketRestApiResourceConfig restApiResourceConfig,
                             BondedRolesService bondedRolesService,
                             ChatService chatService,
-                            UserService userService) {
+                            TradeService tradeService,
+                            UserService userService,
+                            OpenTradeItemsService openTradeItemsService) {
         this.config = config;
         this.restApiResourceConfig = restApiResourceConfig;
         ObjectMapper objectMapper = new ObjectMapper();
@@ -121,7 +125,12 @@ public class WebSocketService implements Service {
 
         //objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        subscriptionService = new SubscriptionService(objectMapper, bondedRolesService, chatService, userService);
+        subscriptionService = new SubscriptionService(objectMapper,
+                bondedRolesService,
+                chatService,
+                tradeService,
+                userService,
+                openTradeItemsService);
         webSocketRestApiService = new WebSocketRestApiService(objectMapper, restApiBaseAddress);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
 
