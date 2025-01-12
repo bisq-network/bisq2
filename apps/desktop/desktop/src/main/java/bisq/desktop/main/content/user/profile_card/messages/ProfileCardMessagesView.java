@@ -18,7 +18,9 @@
 package bisq.desktop.main.content.user.profile_card.messages;
 
 import bisq.desktop.common.view.View;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
@@ -30,7 +32,15 @@ public class ProfileCardMessagesView extends View<VBox, ProfileCardMessagesModel
                                    ProfileCardMessagesController controller) {
         super(new VBox(), model, controller);
 
-        root.getChildren().add(channelMessagesVBox);
+        ScrollPane scrollPane = new ScrollPane(channelMessagesVBox);
+        scrollPane.getStyleClass().add("message-list-bg");
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+
+        root.setPadding(new Insets(20, 0, 0, 0));
+        root.setMaxHeight(327);
+        root.setMinHeight(327);
+        root.getChildren().add(scrollPane);
     }
 
     @Override

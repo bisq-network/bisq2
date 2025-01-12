@@ -38,16 +38,14 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -166,16 +164,18 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
     private class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Label headline;
-        private final ListView<ChannelMessageItem> listView;
+        private final VBox messageListVBox;
+        private final ListChangeListener<ChannelMessageItem> listChangeListener;
 
         private View(Model model, Controller controller) {
             super(new VBox(20), model, controller);
 
             headline = new Label();
-            listView = new ListView<>(model.getChannelMessageItems());
-            listView.setCellFactory(getCellFactory(controller));
+            messageListVBox = new VBox(30);
 
-            root.getChildren().addAll(headline, listView);
+            listChangeListener = change -> updateMessageListVBox();
+
+            root.getChildren().addAll(headline, messageListVBox);
         }
 
         @Override
@@ -183,55 +183,41 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             headline.setText(model.getChannelName().get());
             root.visibleProperty().bind(model.getShouldShow());
             root.managedProperty().bind(model.getShouldShow());
+            model.getChannelMessageItems().addListener(listChangeListener);
+            updateMessageListVBox();
         }
 
         @Override
         protected void onViewDetached() {
             root.visibleProperty().unbind();
             root.managedProperty().unbind();
+            model.getChannelMessageItems().removeListener(listChangeListener);
         }
 
-        private Callback<ListView<ChannelMessageItem>, ListCell<ChannelMessageItem>> getCellFactory(
-                Controller controller) {
-            return new Callback<>() {
-                @Override
-                public ListCell<ChannelMessageItem> call(ListView<ChannelMessageItem> list) {
-                    return new ListCell<>() {
-//                        private final Hyperlink goToMessageButton = new Hyperlink(Res.get("user.profileCard.userActions.undoIgnore"));
-                        private final ChannelMessageBox channelMessageBox = new ChannelMessageBox();
-                        private final HBox hBox = new HBox(channelMessageBox);
-
-                        {
-                            hBox.setAlignment(Pos.CENTER_LEFT);
-                            hBox.setFillHeight(true);
-                            hBox.setPadding(new Insets(0, 0, 0, 50));
-                        }
-
-                        @Override
-                        protected void updateItem(ChannelMessageItem item, boolean empty) {
-                            super.updateItem(item, empty);
-
-                            if (item != null && !empty) {
-//                                goToMessageButton.setOnAction(e -> controller.onGoToMessage());
-                                String citationAuthorId = "";
-                                if (item.getCitation().isPresent()) {
-                                    citationAuthorId = item.getCitation().get().getAuthorUserProfileId();
-                                }
-                                channelMessageBox.setChannelMessageItem(item, controller.getUserName(citationAuthorId));
-                                setGraphic(hBox);
-                            } else {
-//                                goToMessageButton.setOnAction(null);
-                                channelMessageBox.dispose();
-                                setGraphic(null);
-                            }
-                        }
-                    };
+        private void updateMessageListVBox() {
+            clearMessageListVBox();
+            model.getChannelMessageItems().forEach(item -> {
+                ChannelMessageBox channelMessageBox = new ChannelMessageBox();
+                String citationAuthorId = "";
+                if (item.getCitation().isPresent()) {
+                    citationAuthorId = item.getCitation().get().getAuthorUserProfileId();
                 }
-            };
+                channelMessageBox.setChannelMessageItem(item, controller.getUserName(citationAuthorId));
+                messageListVBox.getChildren().add(channelMessageBox);
+            });
+        }
+
+        private void clearMessageListVBox() {
+            messageListVBox.getChildren().forEach(item -> {
+                if (item instanceof ChannelMessageBox channelMessageBox) {
+                    channelMessageBox.dispose();
+                }
+            });
+            messageListVBox.getChildren().clear();
         }
     }
 
-    private static class ChannelMessageBox extends VBox {
+    private static class ChannelMessageBox extends HBox {
         private final Label dateTimeLabel, textMessageLabel, citationMessage, citationAuthor;
         private final VBox citationMessageVBox;
         private final ImageView catHashImageView;
@@ -241,9 +227,12 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             dateTimeLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
 
             textMessageLabel = new Label();
-            textMessageLabel.getStyleClass().addAll("text-fill-white", "medium-text", "font-default");
+            textMessageLabel.setPadding(new Insets(10));
+            textMessageLabel.getStyleClass().addAll("wrap-text", "text-fill-white", "medium-text", "font-default");
+            textMessageLabel.setMinHeight(Label.USE_PREF_SIZE);
 
             citationMessage = new Label();
+            citationMessage.setMinHeight(Label.USE_PREF_SIZE);
             citationMessage.setWrapText(true);
             citationMessage.setStyle("-fx-fill: -fx-mid-text-color");
             citationAuthor = new Label();
@@ -255,15 +244,25 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             citationMessageVBox.setManaged(false);
 
             VBox textMessageVBox = new VBox(10, citationMessageVBox, textMessageLabel);
+            HBox.setMargin(textMessageVBox, new Insets(0, 0, 0, -10));
 
             catHashImageView = new ImageView();
-            catHashImageView.setFitWidth(37.5);
+            catHashImageView.setFitWidth(30);
             catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+            HBox.setMargin(catHashImageView, new Insets(5, 0, 0, 5));
 
-            HBox messageBubbleHBox = new HBox(catHashImageView, textMessageVBox);
-            messageBubbleHBox.getStyleClass().add("chat-message-bg-peer-message");
+            HBox messageBubbleHBox = new HBox(15, catHashImageView, textMessageVBox);
+            messageBubbleHBox.setAlignment(Pos.TOP_LEFT);
+            messageBubbleHBox.getStyleClass().add("message-bg");
+            messageBubbleHBox.setPadding(new Insets(5, 15, 5, 15));
 
-            getChildren().addAll(dateTimeLabel, messageBubbleHBox);
+            VBox messageBg = new VBox(dateTimeLabel, messageBubbleHBox);
+
+            setAlignment(Pos.CENTER_LEFT);
+            setFillHeight(true);
+            setPadding(new Insets(0, 0, 0, 50));
+            // TODO: Add goToMessage button
+            getChildren().add(messageBg);
         }
 
         private void setChannelMessageItem(ChannelMessageItem channelMessageItem, String citationAuthorName) {
