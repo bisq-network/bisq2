@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.profile_card.messages;
 
 import bisq.chat.Citation;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.user.profile.UserProfile;
@@ -39,16 +40,17 @@ public class ChannelMessageItem {
 
     private final UserProfile senderUserProfile;
     private final String message;
-    private final String date;
+    private final String dateTime;
     private final Optional<Citation> citation;
 
-    public ChannelMessageItem(PublicChatMessage publicChatMessage, UserProfile senderUserProfile) {
+    public ChannelMessageItem(PublicChatMessage publicChatMessage,
+                              UserProfile senderUserProfile) {
         this.publicChatMessage = publicChatMessage;
         this.senderUserProfile = senderUserProfile;
 
         String editPostFix = publicChatMessage.isWasEdited() ? EDITED_POST_FIX : "";
-        message = publicChatMessage.getText() + editPostFix;
-        date = DateFormatter.formatDateTime(new Date(publicChatMessage.getDate()),
+        message = publicChatMessage.getText().orElse(Res.get("data.na")) + editPostFix;
+        dateTime = DateFormatter.formatDateTime(new Date(publicChatMessage.getDate()),
                 DateFormat.MEDIUM, DateFormat.SHORT, true, " " + Res.get("temporal.at") + " ");
         citation = publicChatMessage.getCitation();
 

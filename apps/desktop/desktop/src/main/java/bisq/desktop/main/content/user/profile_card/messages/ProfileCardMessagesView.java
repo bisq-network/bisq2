@@ -30,7 +30,7 @@ public class ProfileCardMessagesView extends View<VBox, ProfileCardMessagesModel
                                    ProfileCardMessagesController controller) {
         super(new VBox(), model, controller);
 
-        root.getChildren().add(new Label("Profile Card Messages"));
+        root.getChildren().add(channelMessagesVBox);
     }
 
     @Override
