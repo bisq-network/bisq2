@@ -50,17 +50,17 @@ public class PriceSpecFormatter {
     public static String getFormattedPriceSpecWithOfferPrice(PriceSpec priceSpec, String offerPrice) {
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
             String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-            return Res.get("offer.priceSpecFormatter.fixPrice", price);
+            return Res.get("priceSpecFormatter.fixPrice", price);
         }
         if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
             return Res.get(floatPriceSpec.getPercentage() >= 0
-                    ? "offer.priceSpecFormatter.floatPrice.above"
-                    : "offer.priceSpecFormatter.floatPrice.below",
+                    ? "priceSpecFormatter.floatPrice.above"
+                    : "priceSpecFormatter.floatPrice.below",
                     percent,
                     offerPrice);
         }
         // market price
-        return Res.get("offer.priceSpecFormatter.marketPrice", offerPrice);
+        return Res.get("priceSpecFormatter.marketPrice", offerPrice);
     }
 }
