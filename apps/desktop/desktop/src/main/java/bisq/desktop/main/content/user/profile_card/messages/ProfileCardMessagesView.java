@@ -21,7 +21,11 @@ import bisq.desktop.common.view.View;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
+import java.util.List;
+
 public class ProfileCardMessagesView extends View<VBox, ProfileCardMessagesModel, ProfileCardMessagesController> {
+    private final VBox channelMessagesVBox = new VBox();
+
     public ProfileCardMessagesView(ProfileCardMessagesModel model,
                                    ProfileCardMessagesController controller) {
         super(new VBox(), model, controller);
@@ -35,5 +39,9 @@ public class ProfileCardMessagesView extends View<VBox, ProfileCardMessagesModel
 
     @Override
     protected void onViewDetached() {
+    }
+
+    void updateProfileCardMessages(List<VBox> channelMessages) {
+        channelMessagesVBox.getChildren().setAll(channelMessages);
     }
 }

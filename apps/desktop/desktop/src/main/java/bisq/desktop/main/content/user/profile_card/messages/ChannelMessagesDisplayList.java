@@ -18,39 +18,39 @@
 package bisq.desktop.main.content.user.profile_card.messages;
 
 import bisq.chat.ChatMessageType;
-import bisq.chat.Citation;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
-import bisq.i18n.Res;
-import bisq.presentation.formatters.DateFormatter;
+import bisq.desktop.components.table.BisqTableView;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.layout.Pane;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.Optional;
-
-import static bisq.desktop.main.content.chat.message_container.ChatMessageContainerView.EDITED_POST_FIX;
 
 public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
     private final Controller controller;
 
     public ChannelMessagesDisplayList(ServiceProvider serviceProvider,
-                                      PublicChatChannel<M> publicChatChannel) {
-        controller = new Controller(serviceProvider, publicChatChannel);
+                                      PublicChatChannel<M> publicChatChannel,
+                                      UserProfile userProfile) {
+        controller = new Controller(serviceProvider, publicChatChannel, userProfile);
     }
 
-    public Pane getRoot() {
+    public VBox getRoot() {
         return controller.view.getRoot();
     }
 
@@ -59,29 +59,35 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private final View view;
         private final Model model;
         private final PublicChatChannel<M> publicChatChannel;
-        private final UserProfileService userProfileService;
+        private final UserProfile userProfile;
         private Pin publicMessagesPin;
 
         private Controller(ServiceProvider serviceProvider,
-                           PublicChatChannel<M> publicChatChannel) {
+                           PublicChatChannel<M> publicChatChannel,
+                           UserProfile userProfile) {
             model = new Model();
             view = new View(model, this);
             this.publicChatChannel = publicChatChannel;
-            userProfileService = serviceProvider.getUserService().getUserProfileService();
+            this.userProfile = userProfile;
         }
 
         @Override
         public void onActivate() {
+            model.getChannelName().set(publicChatChannel.getDisplayString());
+            if (publicChatChannel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
+                model.getMarket().set(bisqEasyOfferbookChannel.getMarket());
+            }
+
             publicMessagesPin = publicChatChannel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(M element) {
                     if (element.getChatMessageType() == ChatMessageType.TEXT) {
                         UIThread.runOnNextRenderFrame(() -> {
                             boolean shouldAddMessage = model.getChannelMessageItems().stream()
-                                    .noneMatch(item -> item.getPublicChatMessage().equals(element));
+                                    .noneMatch(item -> item.getPublicChatMessage().equals(element))
+                                    && element.getAuthorUserProfileId().equals(userProfile.getId());
                             if (shouldAddMessage) {
-                                ChannelMessageItem chatMessageItem = new ChannelMessageItem(element,
-                                        userProfileService.findUserProfile(element.getAuthorUserProfileId()).orElseThrow());
+                                ChannelMessageItem chatMessageItem = new ChannelMessageItem(element, userProfile);
                                 model.getChannelMessageItems().add(chatMessageItem);
                             }
                         });
@@ -122,55 +128,37 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
+        private final StringProperty channelName = new SimpleStringProperty();
+        private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
         private final ObservableList<ChannelMessageItem> channelMessageItems = FXCollections.observableArrayList();
     }
 
     private class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private final Label headline;
+        private final BisqTableView<ChannelMessageItem> messagesList;
 
         private View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
+            super(new VBox(20), model, controller);
 
+            headline = new Label();
+            messagesList = new BisqTableView<>(model.getChannelMessageItems());
+            configTableView();
 
+            root.getChildren().addAll(headline, messagesList);
         }
 
         @Override
         protected void onViewAttached() {
-
+            headline.setText(model.getChannelName().get());
+            messagesList.initialize();
         }
 
         @Override
         protected void onViewDetached() {
 
         }
-    }
 
-    @Getter
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    private static class ChannelMessageItem {
-        @EqualsAndHashCode.Include
-        private final PublicChatMessage publicChatMessage;
-
-        private final UserProfile senderUserProfile;
-        private final String message;
-        private final String date;
-        private final Optional<Citation> citation;
-
-        public ChannelMessageItem(PublicChatMessage publicChatMessage, UserProfile senderUserProfile) {
-            this.publicChatMessage = publicChatMessage;
-            this.senderUserProfile = senderUserProfile;
-
-            String editPostFix = publicChatMessage.isWasEdited() ? EDITED_POST_FIX : "";
-            message = publicChatMessage.getText() + editPostFix;
-            date = DateFormatter.formatDateTime(new Date(publicChatMessage.getDate()),
-                    DateFormat.MEDIUM, DateFormat.SHORT, true, " " + Res.get("temporal.at") + " ");
-            citation = publicChatMessage.getCitation();
-        }
-
-        private void initialize() {
-
-        }
-
-        public void dispose() {
+        private void configTableView() {
 
         }
     }

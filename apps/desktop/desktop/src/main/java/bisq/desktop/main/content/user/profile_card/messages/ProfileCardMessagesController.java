@@ -31,15 +31,14 @@ public class ProfileCardMessagesController implements Controller {
     private final ProfileCardMessagesView view;
     private final ProfileCardMessagesModel model;
     private final List<ChannelMessagesDisplayList<?>> channelMessagesDisplayList = new ArrayList<>();
+    private final ServiceProvider serviceProvider;
+    private final ChatService chatService;
 
     public ProfileCardMessagesController(ServiceProvider serviceProvider) {
         model = new ProfileCardMessagesModel();
         view = new ProfileCardMessagesView(model, this);
-
-        ChatService chatService = serviceProvider.getChatService();
-        chatService.getBisqEasyOfferbookChannelService().getChannels().forEach(channel -> {
-            channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel));
-        });
+        this.serviceProvider = serviceProvider;
+        chatService = serviceProvider.getChatService();
     }
 
     @Override
@@ -51,5 +50,12 @@ public class ProfileCardMessagesController implements Controller {
     }
 
     public void updateUserProfileData(UserProfile userProfile) {
+        channelMessagesDisplayList.clear();
+
+        chatService.getBisqEasyOfferbookChannelService().getChannels().forEach(channel ->
+            channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
+
+        view.updateProfileCardMessages(channelMessagesDisplayList.stream()
+                .map(ChannelMessagesDisplayList::getRoot).toList());
     }
 }
