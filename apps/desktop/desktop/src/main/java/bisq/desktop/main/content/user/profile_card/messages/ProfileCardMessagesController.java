@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.profile_card.messages;
 
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -53,7 +54,13 @@ public class ProfileCardMessagesController implements Controller {
         channelMessagesDisplayList.clear();
 
         chatService.getBisqEasyOfferbookChannelService().getChannels().forEach(channel ->
-            channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
+                channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
+
+        chatService.getCommonPublicChatChannelServices().get(ChatChannelDomain.DISCUSSION).getChannels().forEach(channel ->
+                channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
+
+        chatService.getCommonPublicChatChannelServices().get(ChatChannelDomain.SUPPORT).getChannels().forEach(channel ->
+                channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
 
         view.updateProfileCardMessages(channelMessagesDisplayList.stream()
                 .map(ChannelMessagesDisplayList::getRoot).toList());
