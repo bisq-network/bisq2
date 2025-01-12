@@ -1,6 +1,7 @@
 package bisq.http_api.web_socket;
 
 import bisq.http_api.rest_api.RestApiResourceConfig;
+import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
@@ -17,7 +18,8 @@ public class WebSocketRestApiResourceConfig extends RestApiResourceConfig {
                                           TradeRestApi tradeRestApi,
                                           UserIdentityRestApi userIdentityRestApi,
                                           MarketPriceRestApi marketPriceRestApi,
-                                          SettingsRestApi settingsRestApi) {
-        super(swaggerBaseUrl, offerbookRestApi, tradeRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi);
+                                          SettingsRestApi settingsRestApi,
+                                          ExplorerRestApi explorerRestApi) {
+        super(swaggerBaseUrl, offerbookRestApi, tradeRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi);
     }
 }

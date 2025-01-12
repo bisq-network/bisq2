@@ -23,6 +23,7 @@ import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
+import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
@@ -76,13 +77,15 @@ public class HttpApiService implements Service {
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
+            ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         tradeRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi,
-                        settingsRestApi);
+                        settingsRestApi,
+                        explorerRestApi);
                 this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
             } else {
                 this.restApiService = Optional.empty();
@@ -94,7 +97,8 @@ public class HttpApiService implements Service {
                         tradeRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi,
-                        settingsRestApi);
+                        settingsRestApi,
+                        explorerRestApi);
                 this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
