@@ -26,24 +26,26 @@ import java.util.List;
 
 public class ProfileCardMessagesView extends View<VBox, ProfileCardMessagesModel, ProfileCardMessagesController> {
     private final VBox channelMessagesVBox = new VBox();
+    private final ScrollPane scrollPane;
 
     public ProfileCardMessagesView(ProfileCardMessagesModel model,
                                    ProfileCardMessagesController controller) {
         super(new VBox(), model, controller);
 
-        ScrollPane scrollPane = new ScrollPane(channelMessagesVBox);
+        scrollPane = new ScrollPane(channelMessagesVBox);
         scrollPane.getStyleClass().add("message-list-bg");
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
+        scrollPane.setMaxHeight(307);
+        scrollPane.setMinHeight(307);
 
         root.setPadding(new Insets(20, 0, 0, 0));
-        root.setMaxHeight(327);
-        root.setMinHeight(327);
         root.getChildren().add(scrollPane);
     }
 
     @Override
     protected void onViewAttached() {
+        scrollPane.setVvalue(0);
     }
 
     @Override
