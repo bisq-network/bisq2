@@ -51,6 +51,7 @@ public class ProfileCardReputationView extends View<VBox, ProfileCardReputationM
         tableView = new BisqTableView<>(model.getListItems());
         tableView.getStyleClass().addAll("profile-card-table", "rich-table-view");
         tableView.allowVerticalScrollbar();
+        tableView.setPlaceholderText(Res.get("user.profileCard.reputation.table.placeholderText"));
         configTableView();
         root.getChildren().addAll(vBox, tableView);
         root.setPadding(new Insets(20, 0, 0, 0));
