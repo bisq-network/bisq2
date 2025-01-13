@@ -22,20 +22,20 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
-import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.main.content.chat.ChatUtil;
+import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -43,6 +43,8 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -92,9 +94,10 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         @Override
         public void onActivate() {
             model.getChannelName().set(publicChatChannel.getDisplayString());
+            model.getChannelIconId().set(ChatUtil.getChannelIconId(publicChatChannel.getId()));
             if (publicChatChannel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
                 model.getChannelName().set(bisqEasyOfferbookChannel.getMarket().getFiatCurrencyName());
-                model.getMarket().set(bisqEasyOfferbookChannel.getMarket());
+                model.getMarketCurrencyCode().set(bisqEasyOfferbookChannel.getMarket().getQuoteCurrencyCode());
             }
 
             publicMessagesPin = publicChatChannel.getChatMessages().addObserver(new CollectionObserver<>() {
@@ -165,7 +168,8 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         private final StringProperty channelName = new SimpleStringProperty();
-        private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
+        private final StringProperty channelIconId = new SimpleStringProperty();
+        private final StringProperty marketCurrencyCode = new SimpleStringProperty();
         private final ObservableList<ChannelMessageItem> channelMessageItems = FXCollections.observableArrayList();
         private final BooleanProperty shouldShow = new SimpleBooleanProperty();
     }
@@ -195,6 +199,23 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         @Override
         protected void onViewAttached() {
             headline.setText(model.getChannelName().get());
+            if (model.getMarketCurrencyCode().get() != null) {
+                // Bisq Easy market logo
+                Node marketLogo = MarketImageComposition.createMarketLogo(model.getMarketCurrencyCode().get());
+                marketLogo.setCache(true);
+                marketLogo.setCacheHint(CacheHint.SPEED);
+                headline.setGraphic(marketLogo);
+                headline.setGraphicTextGap(10);
+            } else {
+                // Discussions and support
+                ImageView image = ImageUtil.getImageViewById(model.getChannelIconId().get());
+                image.setScaleX(1.9);
+                image.setScaleY(1.9);
+                headline.setGraphic(image);
+                headline.setGraphicTextGap(17);
+                headline.setPadding(new Insets(0, 0, 0, 5));
+            }
+
             root.visibleProperty().bind(model.getShouldShow());
             root.managedProperty().bind(model.getShouldShow());
             model.getChannelMessageItems().addListener(listChangeListener);
