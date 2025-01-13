@@ -62,7 +62,7 @@ public class ProfileCardMessagesController implements Controller {
         channelMessagesDisplayList.clear();
 
         chatService.getBisqEasyOfferbookChannelService().getChannels().forEach(channel ->
-            channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
+                channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
 
         chatService.getCommonPublicChatChannelServices().get(ChatChannelDomain.DISCUSSION).getChannels().forEach(channel ->
                 channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
@@ -75,8 +75,6 @@ public class ProfileCardMessagesController implements Controller {
 
         view.updateProfileCardMessages(channelMessagesDisplayList.stream()
                 .map(ChannelMessagesDisplayList::getRoot).toList());
-
-        updateShouldShowMessages();
     }
 
     private void updateShouldShowMessages() {
