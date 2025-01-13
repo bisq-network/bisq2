@@ -194,3 +194,13 @@
 .profile-card .profile-card-table.table-view .table-row-cell .go-to-offer-button {
     -fx-underline: true;
 }
+
+.profile-card .message-list-bg {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8;
+}
+
+.profile-card .message-bg {
+    -fx-background-color: -bisq-dark-grey-50;
+    -fx-background-radius: 8;
+}
