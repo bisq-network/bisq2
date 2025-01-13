@@ -204,3 +204,11 @@
     -fx-background-color: -bisq-dark-grey-50;
     -fx-background-radius: 8;
 }
+
+.profile-card .no-messages-placeholder-label {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.3em;
+    -fx-padding: 130 0 0 0;
+}

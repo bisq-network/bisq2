@@ -20,12 +20,17 @@ package bisq.desktop.main.content.user.profile_card.messages;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ProfileCardMessagesController implements Controller {
     @Getter
@@ -34,6 +39,7 @@ public class ProfileCardMessagesController implements Controller {
     private final List<ChannelMessagesDisplayList<?>> channelMessagesDisplayList = new ArrayList<>();
     private final ServiceProvider serviceProvider;
     private final ChatService chatService;
+    private final Set<Subscription> channelMessagesPins = new HashSet<>();
 
     public ProfileCardMessagesController(ServiceProvider serviceProvider) {
         model = new ProfileCardMessagesModel();
@@ -48,13 +54,15 @@ public class ProfileCardMessagesController implements Controller {
 
     @Override
     public void onDeactivate() {
+        channelMessagesPins.forEach(Subscription::unsubscribe);
+        channelMessagesPins.clear();
     }
 
     public void updateUserProfileData(UserProfile userProfile) {
         channelMessagesDisplayList.clear();
 
         chatService.getBisqEasyOfferbookChannelService().getChannels().forEach(channel ->
-                channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
+            channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
 
         chatService.getCommonPublicChatChannelServices().get(ChatChannelDomain.DISCUSSION).getChannels().forEach(channel ->
                 channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
@@ -62,7 +70,18 @@ public class ProfileCardMessagesController implements Controller {
         chatService.getCommonPublicChatChannelServices().get(ChatChannelDomain.SUPPORT).getChannels().forEach(channel ->
                 channelMessagesDisplayList.add(new ChannelMessagesDisplayList<>(serviceProvider, channel, userProfile)));
 
+        channelMessagesDisplayList.forEach(messageDisplayList -> UIThread.runOnNextRenderFrame(() ->
+                channelMessagesPins.add(EasyBind.subscribe(messageDisplayList.shouldShowMessageDisplayList(), shouldShow -> updateShouldShowMessages()))));
+
         view.updateProfileCardMessages(channelMessagesDisplayList.stream()
                 .map(ChannelMessagesDisplayList::getRoot).toList());
+
+        updateShouldShowMessages();
+    }
+
+    private void updateShouldShowMessages() {
+        boolean shouldShowMessages = channelMessagesDisplayList.stream()
+                .anyMatch(displayList -> displayList.shouldShowMessageDisplayList().get());
+        model.getShouldShowMessages().set(shouldShowMessages);
     }
 }

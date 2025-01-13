@@ -33,6 +33,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -63,6 +64,10 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
     public VBox getRoot() {
         return controller.view.getRoot();
+    }
+
+    public ReadOnlyBooleanProperty shouldShowMessageDisplayList() {
+        return controller.model.getShouldShow();
     }
 
     private class Controller implements bisq.desktop.common.view.Controller {
@@ -146,7 +151,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             publicMessagesPin.unbind();
         }
 
-        String getUserName(String userProfileId) {
+        private String getUserName(String userProfileId) {
             return userProfileService.findUserProfile(userProfileId)
                     .map(UserProfile::getUserName)
                     .orElse(Res.get("data.na"));

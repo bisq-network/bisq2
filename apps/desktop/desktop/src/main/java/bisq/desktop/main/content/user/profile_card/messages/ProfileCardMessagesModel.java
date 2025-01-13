@@ -18,10 +18,13 @@
 package bisq.desktop.main.content.user.profile_card.messages;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class ProfileCardMessagesModel implements Model {
+    private final BooleanProperty shouldShowMessages = new SimpleBooleanProperty();
 }
