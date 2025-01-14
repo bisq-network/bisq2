@@ -56,3 +56,5 @@ seed2-i2p-destination
 
 # Docker Compose data directories
 docker/data_dirs
+/tx
+/.java-version
