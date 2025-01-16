@@ -18,12 +18,7 @@
 package bisq.desktop.main.content.chat.message_container;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelSelectionService;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
-import bisq.chat.Citation;
+import bisq.chat.*;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
@@ -47,7 +42,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 
-import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -114,10 +108,6 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
     public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
         chatMessagesListController.setSearchPredicate(predicate);
-    }
-
-    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
-        chatMessagesListController.highlightOfferChatMessage(message);
     }
 
 

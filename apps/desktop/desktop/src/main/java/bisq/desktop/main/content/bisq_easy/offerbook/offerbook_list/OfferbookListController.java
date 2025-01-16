@@ -174,7 +174,9 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     }
 
     void onSelectOfferMessageItem(OfferbookListItem item) {
-        chatMessageContainerController.highlightOfferChatMessage(item == null ? null : item.getBisqEasyOfferbookMessage());
+        if (item != null) {
+            model.getChannel().get().getHighlightedMessage().set(item.getBisqEasyOfferbookMessage());
+        }
     }
 
     void onSelectBuyFromFilter() {
@@ -251,7 +253,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         boolean paymentFiltersApplied = model.getActiveMarketPaymentsCount().get() != 0;
         boolean matchesPaymentFilters = paymentFiltersApplied && item.getFiatPaymentMethods().stream()
                 .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
-                                || model.getSelectedMarketPayments().contains(payment));
+                        || model.getSelectedMarketPayments().contains(payment));
         boolean myOffersOnly = model.getShowMyOffersOnly().get();
         UserProfile mySelectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
         boolean isMyOffer = item.getSenderUserProfile().equals(mySelectedUserProfile);

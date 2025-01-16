@@ -22,10 +22,10 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookSelectionService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.profile.UserProfile;
@@ -42,11 +42,13 @@ public class ProfileCardOffersController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
+    private final BisqEasyOfferbookSelectionService bisqEasyOfferbookChannelSelectionService;
 
     public ProfileCardOffersController(ServiceProvider serviceProvider) {
         model = new ProfileCardOffersModel();
         view = new ProfileCardOffersView(model, this);
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
+        bisqEasyOfferbookChannelSelectionService= serviceProvider.getChatService().getBisqEasyOfferbookChannelSelectionService();
         reputationService = serviceProvider.getUserService().getReputationService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
     }
@@ -79,8 +81,12 @@ public class ProfileCardOffersController implements Controller {
     }
 
     void onGoToOfferbookMessage(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        OverlayController.hide(() ->
-                Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK,
-                        new BisqEasyOfferbookController.InitData(bisqEasyOfferbookMessage)));
+        bisqEasyOfferbookChannelService.findChannel(bisqEasyOfferbookMessage.getChannelId())
+                        .ifPresent(channel -> {
+                            bisqEasyOfferbookChannelSelectionService.selectChannel(channel);
+                            channel.getHighlightedMessage().set(bisqEasyOfferbookMessage);
+                        });
+
+        OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFERBOOK));
     }
 }

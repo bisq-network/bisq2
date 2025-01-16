@@ -1,6 +1,5 @@
 package bisq.desktop.main.content.chat.message_container.list;
 
-import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -58,7 +57,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -88,10 +86,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final BannedUserService bannedUserService;
     private final NetworkService networkService;
     private final Optional<ResendMessageService> resendMessageService;
-    private final BisqEasyService bisqEasyService;
     private final MarketPriceService marketPriceService;
     private final LeavePrivateChatManager leavePrivateChatManager;
-    private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin;
+    private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
 
@@ -107,7 +104,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         reputationService = serviceProvider.getUserService().getReputationService();
         settingsService = serviceProvider.getSettingsService();
-        bisqEasyService = serviceProvider.getBisqEasyService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         networkService = serviceProvider.getNetworkService();
@@ -166,6 +162,11 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             chatMessagesPin.unbind();
             chatMessagesPin = null;
         }
+        if (highlightedMessagePin != null) {
+            highlightedMessagePin.unbind();
+            highlightedMessagePin = null;
+        }
+
         if (focusSubscription != null) {
             focusSubscription.unsubscribe();
         }
@@ -232,6 +233,26 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         });
             }
         });
+
+        if (channel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
+            if (highlightedMessagePin != null) {
+                highlightedMessagePin.unbind();
+            }
+            highlightedMessagePin = bisqEasyOfferbookChannel.getHighlightedMessage().addObserver(highlightedMessage -> {
+                if (highlightedMessage != null) {
+                    model.getChatMessages().stream()
+                            .filter(ChatMessageListItem::isBisqEasyPublicChatMessageWithOffer)
+                            .forEach(item -> {
+                                boolean shouldHighlightMessage = item.getChatMessage().getId().equals(highlightedMessage.getId());
+                                item.getShowHighlighted().set(shouldHighlightMessage);
+                                if (shouldHighlightMessage) {
+                                    view.scrollToChatMessage(item);
+                                }
+                            });
+                }
+
+            });
+        }
     }
 
 
@@ -522,18 +543,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     messageReaction -> deleteChatMessageReaction(messageReaction, userIdentity),
                     () -> publishChatMessageReaction(chatMessage, reaction, userIdentity));
         }
-    }
-
-    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
-        model.getChatMessages().stream()
-                .filter(ChatMessageListItem::isBisqEasyPublicChatMessageWithOffer)
-                .forEach(item -> {
-                    boolean shouldHighlightMessage = message != null && Objects.equals(item.getChatMessage(), message);
-                    item.getShowHighlighted().set(shouldHighlightMessage);
-                    if (shouldHighlightMessage) {
-                        view.scrollToChatMessage(item);
-                    }
-                });
     }
 
     public String getUserName(String userProfileId) {
