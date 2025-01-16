@@ -61,7 +61,7 @@ public class ProfileCardOffersController implements Controller {
     public void onDeactivate() {
     }
 
-    public void updateUserProfileData(UserProfile userProfile) {
+    public void setUserProfile(UserProfile userProfile) {
         model.getListItems().clear();
 
         List<OfferbookListItem> userOffers = new ArrayList<>();

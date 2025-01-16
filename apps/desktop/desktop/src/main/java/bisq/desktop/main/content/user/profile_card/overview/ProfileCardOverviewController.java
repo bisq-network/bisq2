@@ -40,7 +40,7 @@ public class ProfileCardOverviewController implements Controller {
     public void onDeactivate() {
     }
 
-    public void updateUserProfileData(UserProfile userProfile) {
+    public void setUserProfile(UserProfile userProfile) {
         model.getStatement().set(userProfile.getStatement().isBlank() ? "-" : userProfile.getStatement());
         model.getTradeTerms().set(userProfile.getTerms().isBlank() ? "-" : userProfile.getTerms());
     }

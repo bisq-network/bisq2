@@ -21,17 +21,14 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class ProfileCardModel extends TabModel {
-    private final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
+    @Setter
+    private UserProfile userProfile;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();

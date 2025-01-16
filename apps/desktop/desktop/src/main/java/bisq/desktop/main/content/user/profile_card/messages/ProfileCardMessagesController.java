@@ -58,7 +58,7 @@ public class ProfileCardMessagesController implements Controller {
         channelMessagesPins.clear();
     }
 
-    public void updateUserProfileData(UserProfile userProfile) {
+    public void setUserProfile(UserProfile userProfile) {
         channelMessagesDisplayList.clear();
 
         chatService.getBisqEasyOfferbookChannelService().getChannels().forEach(channel ->

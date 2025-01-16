@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.profile_card.details;
 
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -41,37 +42,33 @@ public class ProfileCardDetailsController implements Controller {
 
     public ProfileCardDetailsController(ServiceProvider serviceProvider) {
         model = new ProfileCardDetailsModel();
+
         view = new ProfileCardDetailsView(model, this);
         reputationService = serviceProvider.getUserService().getReputationService();
     }
 
+    public void setUserProfile(UserProfile userProfile) {
+        model.setUserProfile(userProfile);
+        model.setNickName(userProfile.getNickName());
+        model.setBotId(userProfile.getNym());
+        model.setUserId(userProfile.getId());
+        model.setTransportAddress(userProfile.getAddressByTransportDisplayString());
+        model.setProfileAge(reputationService.getProfileAgeService().getProfileAge(userProfile)
+                .map(TimeFormatter::formatAgeInDaysAndYears)
+                .orElse(Res.get("data.na")));
+        model.setStatement(StringUtils.toOptional(userProfile.getStatement()));
+    }
+
     @Override
     public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-        reputationChangedPin.unbind();
-        if (livenessUpdateScheduler != null) {
-            livenessUpdateScheduler.stop();
-            livenessUpdateScheduler = null;
-        }
-    }
-
-    public void updateUserProfileData(UserProfile userProfile) {
-        model.getBotId().set(userProfile.getNym());
-        model.getUserId().set(userProfile.getId());
-        model.getTransportAddress().set(userProfile.getAddressByTransportDisplayString());
+        UserProfile userProfile = model.getUserProfile();
         reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(() -> {
             ReputationScore reputationScore = reputationService.getReputationScore(userProfile);
             model.getTotalReputationScore().set(String.valueOf(reputationScore.getTotalScore()));
         }));
-        model.getProfileAge().set(reputationService.getProfileAgeService().getProfileAge(userProfile)
-                .map(TimeFormatter::formatAgeInDaysAndYears)
-                .orElse(Res.get("data.na")));
+
         if (livenessUpdateScheduler != null) {
             livenessUpdateScheduler.stop();
-            livenessUpdateScheduler = null;
         }
         livenessUpdateScheduler = UIScheduler.run(() -> {
                     long publishDate = userProfile.getPublishDate();
@@ -84,7 +81,15 @@ public class ProfileCardDetailsController implements Controller {
                     }
                 })
                 .periodically(0, 1, TimeUnit.SECONDS);
-        String version = userProfile.getApplicationVersion();
-        model.getVersion().set(version.isEmpty() ? Res.get("data.na") : version);
+
+    }
+
+    @Override
+    public void onDeactivate() {
+        reputationChangedPin.unbind();
+        if (livenessUpdateScheduler != null) {
+            livenessUpdateScheduler.stop();
+            livenessUpdateScheduler = null;
+        }
     }
 }
