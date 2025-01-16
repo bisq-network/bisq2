@@ -57,6 +57,7 @@ enum AlertType {
   ALERTTYPE_WARN = 2;
   ALERTTYPE_EMERGENCY = 3;
   ALERTTYPE_BAN = 4;
+  ALERTTYPE_BANNED_ACCOUNT_DATA = 5;
 }
 
 message AuthorizedAlertData {
@@ -72,6 +73,7 @@ message AuthorizedAlertData {
   bool staticPublicKeysProvided = 10;
   optional string headline = 11;
   sint32 version = 12;
+  optional string bannedAccountData = 13;
 }
 
 message ReleaseNotification {

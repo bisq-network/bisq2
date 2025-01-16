@@ -48,6 +48,10 @@ public class SecurityManagerModel implements Model {
     private final StringProperty minVersion = new SimpleStringProperty();
     private final BooleanProperty haltTrading = new SimpleBooleanProperty();
     private final BooleanProperty requireVersionForTrading = new SimpleBooleanProperty();
+    private final BooleanProperty alertsVisible = new SimpleBooleanProperty();
+    private final BooleanProperty bondedRoleSelectionVisible = new SimpleBooleanProperty();
+    private final BooleanProperty bannedAccountDataVisible = new SimpleBooleanProperty();
+    private final StringProperty bannedAccountData = new SimpleStringProperty();
 
     private final ObservableList<AlertListItem> alertListItems = FXCollections.observableArrayList();
     private final SortedList<AlertListItem> sortedAlertListItems = new SortedList<>(alertListItems);

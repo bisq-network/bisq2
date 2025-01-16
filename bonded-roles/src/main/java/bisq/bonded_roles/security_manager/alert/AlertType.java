@@ -24,7 +24,8 @@ public enum AlertType implements ProtoEnum {
     INFO,
     WARN,
     EMERGENCY,
-    BAN;
+    BAN,
+    BANNED_ACCOUNT_DATA;
 
     @Override
     public bisq.bonded_roles.protobuf.AlertType toProtoEnum() {

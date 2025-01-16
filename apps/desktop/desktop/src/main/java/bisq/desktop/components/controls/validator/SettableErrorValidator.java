@@ -35,6 +35,12 @@ public class SettableErrorValidator extends ValidatorBase {
         isInvalid.addListener(new WeakChangeListener<>(isInvalidListener));
     }
 
+    public SettableErrorValidator(String message) {
+        super(message);
+
+        isInvalid.addListener(new WeakChangeListener<>(isInvalidListener));
+    }
+
     @Override
     protected void eval() {
         hasErrors.set(getIsInvalid());
@@ -49,7 +55,6 @@ public class SettableErrorValidator extends ValidatorBase {
     }
 
     public void setIsInvalid(boolean isInvalid) {
-        log.error("setInvalid {}", isInvalid);
         this.isInvalid.set(isInvalid);
         eval();
     }

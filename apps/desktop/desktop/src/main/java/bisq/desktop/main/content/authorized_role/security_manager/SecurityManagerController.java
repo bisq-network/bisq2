@@ -62,7 +62,7 @@ public class SecurityManagerController implements Controller {
     private final DifficultyAdjustmentService difficultyAdjustmentService;
     private Pin userIdentityPin, alertsPin, bondedRoleSetPin, difficultyAdjustmentListItemsPin;
     private Subscription messagePin, requireVersionForTradingPin, minVersionPin, selectedBondedRolePin,
-            difficultyAdjustmentPin;
+            difficultyAdjustmentPin, bannedAccountDataPin;
 
     public SecurityManagerController(ServiceProvider serviceProvider) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
@@ -106,6 +106,7 @@ public class SecurityManagerController implements Controller {
         difficultyAdjustmentPin = EasyBind.subscribe(model.getDifficultyAdjustmentFactor(), difficultyAdjustmentFactor ->
                 model.getDifficultyAdjustmentFactorButtonDisabled().set(difficultyAdjustmentFactor == null ||
                         !isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor.doubleValue())));
+        bannedAccountDataPin = EasyBind.subscribe(model.getBannedAccountData(), e -> updateSendButtonDisabled());
     }
 
     @Override
@@ -119,6 +120,7 @@ public class SecurityManagerController implements Controller {
         minVersionPin.unsubscribe();
         selectedBondedRolePin.unsubscribe();
         difficultyAdjustmentPin.unsubscribe();
+        bannedAccountDataPin.unsubscribe();
     }
 
     void onSelectAlertType(AlertType alertType) {
@@ -140,6 +142,12 @@ public class SecurityManagerController implements Controller {
             new Popup().warning(Res.get("authorizedRole.securityManager.alert.message.tooLong")).show();
             return;
         }
+        String bannedAccountData = model.getBannedAccountData().get();
+        if (bannedAccountData != null && bannedAccountData.length() > AuthorizedAlertData.MAX_BANNED_ACCOUNT_DATA_LENGTH) {
+            new Popup().warning(Res.get("authorizedRole.securityManager.bannedAccounts.data.tooLong")).show();
+            return;
+        }
+
         SecurityManagerView.BondedRoleListItem bondedRoleListItem = model.getSelectedBondedRoleListItem().get();
         Optional<AuthorizedBondedRole> bannedRole = bondedRoleListItem == null ? Optional.empty() :
                 Optional.ofNullable(bondedRoleListItem.getBondedRole().getAuthorizedBondedRole());
@@ -149,19 +157,21 @@ public class SecurityManagerController implements Controller {
                         model.getHaltTrading().get(),
                         model.getRequireVersionForTrading().get(),
                         StringUtils.toOptional(model.getMinVersion().get()),
-                        bannedRole)
+                        bannedRole,
+                        StringUtils.toOptional(bannedAccountData))
                 .whenComplete((result, throwable) -> UIThread.run(() -> {
                     if (throwable != null) {
                         new Popup().error(throwable).show();
-                    } else {
-                        model.getSelectedAlertType().set(null);
-                        model.getHeadline().set(null);
-                        model.getMessage().set(null);
-                        model.getHaltTrading().set(false);
-                        model.getRequireVersionForTrading().set(false);
-                        model.getMinVersion().set(null);
-                        model.getSelectedBondedRoleListItem().set(null);
                     }
+
+                    model.getSelectedAlertType().set(null);
+                    model.getHeadline().set(null);
+                    model.getMessage().set(null);
+                    model.getHaltTrading().set(false);
+                    model.getRequireVersionForTrading().set(false);
+                    model.getMinVersion().set(null);
+                    model.getSelectedBondedRoleListItem().set(null);
+                    model.getBannedAccountData().set(null);
                 }));
     }
 
@@ -230,6 +240,10 @@ public class SecurityManagerController implements Controller {
     }
 
     private void applySelectAlertType(AlertType alertType) {
+        model.getAlertsVisible().set(false);
+        model.getBondedRoleSelectionVisible().set(false);
+        model.getBannedAccountDataVisible().set(false);
+
         model.getSelectedAlertType().set(alertType);
         switch (alertType) {
             case INFO:
@@ -238,9 +252,13 @@ public class SecurityManagerController implements Controller {
                 model.getRequireVersionForTrading().set(false);
                 model.getMinVersion().set(null);
                 model.getSelectedBondedRoleListItem().set(null);
+                model.getAlertsVisible().set(true);
+                model.getBannedAccountData().set(null);
                 break;
             case EMERGENCY:
                 model.getSelectedBondedRoleListItem().set(null);
+                model.getAlertsVisible().set(true);
+                model.getBannedAccountData().set(null);
                 break;
             case BAN:
                 model.getHaltTrading().set(false);
@@ -248,6 +266,11 @@ public class SecurityManagerController implements Controller {
                 model.getMinVersion().set(null);
                 model.getHeadline().set(null);
                 model.getMessage().set(null);
+                model.getBondedRoleSelectionVisible().set(true);
+                model.getBannedAccountData().set(null);
+                break;
+            case BANNED_ACCOUNT_DATA:
+                model.getBannedAccountDataVisible().set(true);
                 break;
         }
         model.getActionButtonText().set(Res.get("authorizedRole.securityManager.actionButton." + alertType.name()));
@@ -272,6 +295,10 @@ public class SecurityManagerController implements Controller {
                 break;
             case BAN:
                 model.getActionButtonDisabled().set(model.getSelectedBondedRoleListItem().get() == null);
+                break;
+            case BANNED_ACCOUNT_DATA:
+                boolean isBannedAccountDataEmpty = StringUtils.isEmpty(model.getBannedAccountData().get());
+                model.getActionButtonDisabled().set(isBannedAccountDataEmpty);
                 break;
         }
     }

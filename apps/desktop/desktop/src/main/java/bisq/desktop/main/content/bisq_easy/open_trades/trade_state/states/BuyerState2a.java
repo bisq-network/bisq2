@@ -17,25 +17,37 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
+import bisq.bisq_easy.BisqEasyService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.validator.SettableErrorValidator;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.support.mediation.MediationRequestService;
+import bisq.support.moderator.ModeratorService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.user.profile.UserProfile;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.chat.ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
+
 @Slf4j
 public class BuyerState2a extends BaseState {
     private final Controller controller;
 
-    public BuyerState2a(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+    public BuyerState2a(ServiceProvider serviceProvider,
+                        BisqEasyTrade bisqEasyTrade,
+                        BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -44,8 +56,18 @@ public class BuyerState2a extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        private final BisqEasyService bisqEasyService;
+        private final MediationRequestService mediationRequestService;
+        private final ModeratorService moderatorService;
+
+        private Controller(ServiceProvider serviceProvider,
+                           BisqEasyTrade bisqEasyTrade,
+                           BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
+
+            bisqEasyService = serviceProvider.getBisqEasyService();
+            mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
+            moderatorService = serviceProvider.getSupportService().getModeratorService();
         }
 
         @Override
@@ -61,6 +83,27 @@ public class BuyerState2a extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
+            BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
+            String sellersAccountData = bisqEasyTrade.getPaymentAccountData().get();
+            if (bisqEasyService.isAccountDataBanned(sellersAccountData)) {
+                model.getConfirmFiatSentButtonDisabled().set(true);
+                model.getAccountDataBannedValidator().setIsInvalid(true);
+
+                UserProfile peer = model.getChannel().getPeer();
+                String peerUserName = peer.getUserName();
+
+                // Report to moderator
+                String message = "Account data of " + peerUserName + " is banned: " + sellersAccountData;
+                moderatorService.reportUserProfile(peer, message, BISQ_EASY_OPEN_TRADES);
+
+                // We reject the trade to avoid the banned user can continue
+                bisqEasyTradeService.cancelTrade(bisqEasyTrade);
+
+                new Popup().warning(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBanned.popup.warning")).show();
+            } else {
+                model.getConfirmFiatSentButtonDisabled().set(false);
+                model.getAccountDataBannedValidator().setIsInvalid(false);
+            }
         }
 
         @Override
@@ -77,6 +120,9 @@ public class BuyerState2a extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
+        private final BooleanProperty confirmFiatSentButtonDisabled = new SimpleBooleanProperty();
+        private final SettableErrorValidator accountDataBannedValidator = new SettableErrorValidator(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBannedError"));
+
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
@@ -96,6 +142,7 @@ public class BuyerState2a extends BaseState {
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.quoteAmount"), "", false);
             account = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2a.sellersAccount"), "", false);
             account.setHelpText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.reasonForPaymentInfo"));
+            account.setValidator(model.getAccountDataBannedValidator());
 
             confirmFiatSentButton = new Button();
             confirmFiatSentButton.setDefaultButton(true);
@@ -119,12 +166,14 @@ public class BuyerState2a extends BaseState {
             account.validate();
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
+            confirmFiatSentButton.disableProperty().bind(model.getConfirmFiatSentButtonDisabled());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
 
+            confirmFiatSentButton.disableProperty().unbind();
             confirmFiatSentButton.setOnAction(null);
             quoteAmount.getIconButton().setOnAction(null);
         }

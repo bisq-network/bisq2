@@ -20,10 +20,14 @@ package bisq.bisq_easy;
 import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.alert.AlertType;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
@@ -41,10 +45,12 @@ import bisq.trade.TradeService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -70,8 +76,11 @@ public class BisqEasyService implements Service {
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final MarketPriceService marketPriceService;
+    private final AlertService alertService;
+
+    private final Set<String> bannedAccountDataSet = new HashSet<>();
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
-            mostRecentDiffAdjustmentValueOrDefaultPin, selectedMarketPin;
+            mostRecentDiffAdjustmentValueOrDefaultPin, selectedMarketPin, authorizedAlertDataSetPin;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -103,6 +112,7 @@ public class BisqEasyService implements Service {
         this.systemNotificationService = systemNotificationService;
         this.tradeService = tradeService;
         userIdentityService = userService.getUserIdentityService();
+        alertService = bondedRolesService.getAlertService();
 
         bisqEasyNotificationsService = new BisqEasyNotificationsService(chatService.getChatNotificationService(),
                 supportService.getMediatorService(),
@@ -132,6 +142,29 @@ public class BisqEasyService implements Service {
             }
         });
 
+        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(AuthorizedAlertData authorizedAlertData) {
+                if (authorizedAlertData.getAlertType() == AlertType.BANNED_ACCOUNT_DATA) {
+                    authorizedAlertData.getBannedAccountData().ifPresent(BisqEasyService.this.bannedAccountDataSet::add);
+                }
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof AuthorizedAlertData authorizedAlertData) {
+                    if (authorizedAlertData.getAlertType() == AlertType.BANNED_ACCOUNT_DATA) {
+                        authorizedAlertData.getBannedAccountData().ifPresent(BisqEasyService.this.bannedAccountDataSet::remove);
+                    }
+                }
+            }
+
+            @Override
+            public void clear() {
+                BisqEasyService.this.bannedAccountDataSet.clear();
+            }
+        });
+
         return bisqEasyNotificationsService.initialize();
     }
 
@@ -142,6 +175,7 @@ public class BisqEasyService implements Service {
             ignoreDiffAdjustmentFromSecManagerPin.unbind();
             mostRecentDiffAdjustmentValueOrDefaultPin.unbind();
             selectedMarketPin.unbind();
+            authorizedAlertDataSetPin.unbind();
         }
 
         return getStorePendingMessagesInMailboxFuture()
@@ -205,5 +239,21 @@ public class BisqEasyService implements Service {
                 networkLoadService.setDifficultyAdjustmentFactor(bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().get());
             }
         });
+    }
+
+    public boolean isAccountDataBanned(String sellersAccountData) {
+        return isAccountDataBanned(bannedAccountDataSet, sellersAccountData);
+    }
+
+    @VisibleForTesting
+    static boolean isAccountDataBanned(Set<String> bannedAccountDataSet, String sellersAccountData) {
+        // Format is account data of a user separated with |, and then comma separated attributes like name and account number
+        return bannedAccountDataSet.stream()
+                .flatMap(data -> Stream.of(data.split("\\|")))
+                .flatMap(account -> Stream.of(account.split(",")))
+                .anyMatch(attribute -> {
+                    String trimmed = attribute.trim();
+                    return !trimmed.isEmpty() && sellersAccountData.contains(trimmed);
+                });
     }
 }
