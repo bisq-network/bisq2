@@ -246,7 +246,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                                 boolean shouldHighlightMessage = item.getChatMessage().getId().equals(highlightedMessage.getId());
                                 item.getShowHighlighted().set(shouldHighlightMessage);
                                 if (shouldHighlightMessage) {
-                                    view.scrollToChatMessage(item);
+                                    // Need to delay this action otherwise the scroll to bottom functionality cancels this out
+                                    UIScheduler.run(() -> view.scrollToChatMessage(item)).after(110);
                                 }
                             });
                 }
