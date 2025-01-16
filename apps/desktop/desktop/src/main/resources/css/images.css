@@ -6,6 +6,15 @@
     -fx-image: url("/images/bisq-easy.png");
 }
 
+#bisq-31 {
+    -fx-image: url("/images/bisq-31.png");
+}
+
+#support-31 {
+    -fx-image: url("/images/support-31.png");
+}
+
+
 #bullet-point {
     -fx-image: url("/images/bullet-point.png");
 }
