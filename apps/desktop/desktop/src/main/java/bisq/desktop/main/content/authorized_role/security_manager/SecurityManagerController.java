@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.security.KeyPair;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -107,6 +108,11 @@ public class SecurityManagerController implements Controller {
                 model.getDifficultyAdjustmentFactorButtonDisabled().set(difficultyAdjustmentFactor == null ||
                         !isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor.doubleValue())));
         bannedAccountDataPin = EasyBind.subscribe(model.getBannedAccountData(), e -> updateSendButtonDisabled());
+
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        alertService.getAuthorizedAlertDataSet().forEach(authorizedAlert ->
+                securityManagerService.rePublishAlert(authorizedAlert, keyPair));
     }
 
     @Override

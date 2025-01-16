@@ -70,6 +70,7 @@ public class SecurityManagerService implements Service {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -85,6 +86,7 @@ public class SecurityManagerService implements Service {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> publishAlert(AlertType alertType,
@@ -95,7 +97,7 @@ public class SecurityManagerService implements Service {
                                                    Optional<String> minVersion,
                                                    Optional<AuthorizedBondedRole> bannedRole,
                                                    Optional<String> bannedAccountData
-                                                   ) {
+    ) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
@@ -132,6 +134,11 @@ public class SecurityManagerService implements Service {
                 .thenApply(broadCastDataResult -> true);
     }
 
+    public CompletableFuture<Boolean> rePublishAlert(AuthorizedAlertData authorizedAlertData, KeyPair ownerKeyPair) {
+        return networkService.publishAuthorizedData(authorizedAlertData, ownerKeyPair)
+                .thenApply(broadCastDataResult -> true);
+    }
+
     public CompletableFuture<Boolean> removeAlert(AuthorizedAlertData authorizedAlertData, KeyPair ownerKeyPair) {
         return networkService.removeAuthorizedData(authorizedAlertData, ownerKeyPair, ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);
@@ -158,7 +165,8 @@ public class SecurityManagerService implements Service {
                 .thenApply(broadCastDataResult -> true);
     }
 
-    public CompletableFuture<Boolean> removeDifficultyAdjustment(AuthorizedDifficultyAdjustmentData data, KeyPair ownerKeyPair) {
+    public CompletableFuture<Boolean> removeDifficultyAdjustment(AuthorizedDifficultyAdjustmentData data,
+                                                                 KeyPair ownerKeyPair) {
         return networkService.removeAuthorizedData(data, ownerKeyPair, ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);
     }
