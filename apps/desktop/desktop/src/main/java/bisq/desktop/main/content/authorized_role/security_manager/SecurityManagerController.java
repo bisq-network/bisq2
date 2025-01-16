@@ -109,8 +109,7 @@ public class SecurityManagerController implements Controller {
                         !isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor.doubleValue())));
         bannedAccountDataPin = EasyBind.subscribe(model.getBannedAccountData(), e -> updateSendButtonDisabled());
 
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        KeyPair keyPair = userIdentityService.getSelectedUserIdentity().getIdentity().getKeyBundle().getKeyPair();
         alertService.getAuthorizedAlertDataSet().forEach(authorizedAlert ->
                 securityManagerService.rePublishAlert(authorizedAlert, keyPair));
     }

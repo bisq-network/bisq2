@@ -35,6 +35,8 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
+
 @Slf4j
 public class ReleaseManagerController implements Controller {
     @Getter
@@ -63,6 +65,11 @@ public class ReleaseManagerController implements Controller {
                 .to(releaseNotificationsService.getReleaseNotifications());
 
         model.getActionButtonDisabled().bind(model.getReleaseNotes().isEmpty().or(model.getVersion().isEmpty()));
+
+
+        KeyPair keyPair = userIdentityService.getSelectedUserIdentity().getIdentity().getKeyBundle().getKeyPair();
+        releaseNotificationsService.getReleaseNotifications().forEach(releaseNotification ->
+                releaseManagerService.republishReleaseNotification(releaseNotification, keyPair));
     }
 
     @Override

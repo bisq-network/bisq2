@@ -64,6 +64,10 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         isPreReleaseCheckBox = new CheckBox(Res.get("authorizedRole.releaseManager.isPreRelease"));
         isLauncherUpdateCheckBox = new CheckBox(Res.get("authorizedRole.releaseManager.isLauncherUpdate"));
 
+        // For now there is no support for jar based updates so we hide that checkbox
+        isLauncherUpdateCheckBox.setManaged(false);
+        isLauncherUpdateCheckBox.setVisible(false);
+
         sendButton = new Button(Res.get("authorizedRole.releaseManager.send"));
         sendButton.setDefaultButton(true);
         sendButton.setAlignment(Pos.BOTTOM_RIGHT);
@@ -77,7 +81,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
         VBox.setMargin(sendButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(isPreReleaseCheckBox, new Insets(10, 0, 0, 0));
         VBox.setMargin(roleInfo, new Insets(20, 0, 0, 0));
-        this.root.getChildren().addAll(headline,
+        root.getChildren().addAll(headline,
                 releaseNotes,
                 version,
                 isPreReleaseCheckBox,
