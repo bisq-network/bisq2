@@ -103,15 +103,20 @@ public class SecurityManagerController implements Controller {
                 .map(SecurityManagerView.DifficultyAdjustmentListItem::new)
                 .to(difficultyAdjustmentService.getAuthorizedDifficultyAdjustmentDataSet());
 
-        model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
-        difficultyAdjustmentPin = EasyBind.subscribe(model.getDifficultyAdjustmentFactor(), difficultyAdjustmentFactor ->
-                model.getDifficultyAdjustmentFactorButtonDisabled().set(difficultyAdjustmentFactor == null ||
-                        !isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor.doubleValue())));
+        double difficultyAdjustmentFactor = difficultyAdjustmentService.getMostRecentValueOrDefault().get();
+        model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentFactor);
+        difficultyAdjustmentPin = EasyBind.subscribe(model.getDifficultyAdjustmentFactor(), factor ->
+                model.getDifficultyAdjustmentFactorButtonDisabled().set(factor == null ||
+                        !isValidDifficultyAdjustmentFactor(factor.doubleValue())));
         bannedAccountDataPin = EasyBind.subscribe(model.getBannedAccountData(), e -> updateSendButtonDisabled());
 
         KeyPair keyPair = userIdentityService.getSelectedUserIdentity().getIdentity().getKeyBundle().getKeyPair();
         alertService.getAuthorizedAlertDataSet().forEach(authorizedAlert ->
                 securityManagerService.rePublishAlert(authorizedAlert, keyPair));
+
+        if (difficultyAdjustmentFactor != NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT) {
+            securityManagerService.publishDifficultyAdjustment(difficultyAdjustmentFactor);
+        }
     }
 
     @Override
@@ -180,40 +185,9 @@ public class SecurityManagerController implements Controller {
                 }));
     }
 
-    boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedAlertData authorizedAlertData) {
-        return userIdentityService.getSelectedUserIdentity().getId().equals(authorizedAlertData.getSecurityManagerProfileId());
-    }
-
     void onRemoveAlert(AuthorizedAlertData authorizedAlertData) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         securityManagerService.removeAlert(authorizedAlertData, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
-    }
-
-    String getBondedRoleDisplayString(BondedRole bondedRole) {
-        AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
-        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString().toUpperCase();
-        String profileId = authorizedBondedRole.getProfileId();
-        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
-                .map(UserProfile::getNickName)
-                .orElse(authorizedBondedRole.getBondUserName());
-        Optional<String> addresses = authorizedBondedRole.getAddressByTransportTypeMap()
-                .map(e -> e.values().stream()
-                        .map(Address::getFullAddress)
-                        .collect(Collectors.joining(", ")));
-        if (addresses.isPresent()) {
-            return Res.get("authorizedRole.securityManager.selectedBondedNode", roleType, nickNameOrBondName, profileId, addresses.get());
-        } else {
-            return Res.get("authorizedRole.securityManager.selectedBondedRole", roleType, nickNameOrBondName, profileId);
-        }
-    }
-
-    String getBannedBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
-        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
-        String profileId = authorizedBondedRole.getProfileId();
-        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
-                .map(UserProfile::getNickName)
-                .orElse(authorizedBondedRole.getBondUserName());
-        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickNameOrBondName, profileId);
     }
 
     void onPublishDifficultyAdjustmentFactor() {
@@ -230,18 +204,43 @@ public class SecurityManagerController implements Controller {
         }
     }
 
-    private static boolean isValidDifficultyAdjustmentFactor(double difficultyAdjustmentFactor) {
-        return difficultyAdjustmentFactor >= 0 && difficultyAdjustmentFactor <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT;
+    void onRemoveDifficultyAdjustmentListItem(SecurityManagerView.DifficultyAdjustmentListItem item) {
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        securityManagerService.removeDifficultyAdjustment(item.getData(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
+        model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
     }
+
 
     boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedDifficultyAdjustmentData data) {
         return userIdentityService.getSelectedUserIdentity().getId().equals(data.getSecurityManagerProfileId());
     }
 
-    void onRemoveDifficultyAdjustmentListItem(SecurityManagerView.DifficultyAdjustmentListItem item) {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        securityManagerService.removeDifficultyAdjustment(item.getData(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
-        model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
+    boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedAlertData authorizedAlertData) {
+        return userIdentityService.getSelectedUserIdentity().getId().equals(authorizedAlertData.getSecurityManagerProfileId());
+    }
+
+    String getBondedRoleDisplayString(BondedRole bondedRole) {
+        AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
+        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString().toUpperCase();
+        String profileId = authorizedBondedRole.getProfileId();
+        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
+                .map(UserProfile::getNickName)
+                .orElse(authorizedBondedRole.getBondUserName());
+        Optional<String> addresses = authorizedBondedRole.getAddressByTransportTypeMap()
+                .map(e -> e.values().stream()
+                        .map(Address::getFullAddress)
+                        .collect(Collectors.joining(", ")));
+        return addresses.map(address -> Res.get("authorizedRole.securityManager.selectedBondedNode", roleType, nickNameOrBondName, profileId, address))
+                .orElseGet(() -> Res.get("authorizedRole.securityManager.selectedBondedRole", roleType, nickNameOrBondName, profileId));
+    }
+
+    String getBannedBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
+        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
+        String profileId = authorizedBondedRole.getProfileId();
+        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
+                .map(UserProfile::getNickName)
+                .orElse(authorizedBondedRole.getBondUserName());
+        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickNameOrBondName, profileId);
     }
 
     private void applySelectAlertType(AlertType alertType) {
@@ -307,4 +306,9 @@ public class SecurityManagerController implements Controller {
                 break;
         }
     }
+
+    private static boolean isValidDifficultyAdjustmentFactor(double difficultyAdjustmentFactor) {
+        return difficultyAdjustmentFactor >= 0 && difficultyAdjustmentFactor <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT;
+    }
+
 }
