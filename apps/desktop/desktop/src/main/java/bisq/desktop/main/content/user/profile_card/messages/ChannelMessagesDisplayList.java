@@ -208,9 +208,6 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                 // Discussions and support
                 image = ImageUtil.getImageViewById(model.getChannelIconId().get());
             }
-            double scale = 0.7;
-            image.setScaleX(scale);
-            image.setScaleY(scale);
             headline.setGraphic(image);
             headline.setGraphicTextGap(5);
             root.visibleProperty().bind(model.getShouldShow());
