@@ -43,6 +43,7 @@ import bisq.support.moderator.ModeratorService;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -296,7 +297,7 @@ public class ReportToModeratorTable {
         private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMessageCellFactory() {
             return column -> new TableCell<>() {
                 private final Label message = new Label();
-                private final Button icon = BisqIconButton.createCopyIconButton();
+                private final Button icon = BisqIconButton.createIconButton(AwesomeIcon.EXTERNAL_LINK);
                 private final HBox hBox = new HBox(message, icon);
                 private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
 
@@ -317,7 +318,13 @@ public class ReportToModeratorTable {
                         tooltip.setText(item.getMessage());
                         message.setTooltip(tooltip);
 
-                        icon.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getMessage()));
+                       // icon.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getMessage()));
+                        icon.setOnAction(e -> new Popup()
+                                .headline(Res.get("authorizedRole.moderator.table.message.popup.headline"))
+                                .information(item.getMessage())
+                                .actionButtonText(Res.get("action.copyToClipboard"))
+                                .onAction(()-> ClipboardUtil.copyToClipboard(item.getMessage()))
+                                .show());
                         setGraphic(hBox);
                     } else {
                         icon.setOnAction(null);
