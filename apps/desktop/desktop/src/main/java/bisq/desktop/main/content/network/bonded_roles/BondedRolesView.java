@@ -103,8 +103,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                     item.getUserProfile().ifPresent(userProfile -> {
                         userProfileIcon.setUserProfile(userProfile);
                         userProfileIcon.getStyleClass().add("hand-cursor");
-                        userProfileIcon.setOnMouseClicked(e -> controller.openProfileCard(userProfile));
-                        userName.setOnMouseClicked(e -> controller.openProfileCard(userProfile));
+                        userName.setOnMouseClicked(e -> controller.onOpenProfileCard(userProfile));
                     });
                     setGraphic(hBox);
                 } else {

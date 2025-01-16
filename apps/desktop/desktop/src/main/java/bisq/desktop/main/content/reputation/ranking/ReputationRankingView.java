@@ -248,11 +248,9 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                     userProfileIcon.setUseSecondTick(false);
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     userProfileIcon.getStyleClass().add("hand-cursor");
-                    userProfileIcon.setOnMouseClicked(e -> controller.openProfileCard(item.getUserProfile()));
                     userName.setOnMouseClicked(e -> controller.openProfileCard(item.getUserProfile()));
                     setGraphic(hBox);
                 } else {
-                    userProfileIcon.setOnMouseClicked(null);
                     userProfileIcon.dispose();
                     userName.setOnMouseClicked(null);
                     setGraphic(null);
@@ -292,7 +290,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    info.setOnAction(e -> controller.onShowDetails(item.getUserProfile()));
+                    info.setOnAction(e -> controller.onOpenProfileCard(item.getUserProfile()));
                     setGraphic(info);
                 } else {
                     info.setOnAction(null);

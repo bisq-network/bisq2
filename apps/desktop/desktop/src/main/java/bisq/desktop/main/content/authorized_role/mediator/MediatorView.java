@@ -326,7 +326,6 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                                                              ListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
         userProfileDisplay.setUserProfile(trader.getUserProfile());
-        userProfileDisplay.configureOpenProfileCard(trader.getUserProfile());
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");
         }

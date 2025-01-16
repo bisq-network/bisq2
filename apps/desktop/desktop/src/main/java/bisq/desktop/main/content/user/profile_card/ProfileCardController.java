@@ -18,9 +18,7 @@
 package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -47,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Slf4j
@@ -58,23 +55,15 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     @ToString
     public static class InitData {
         private final UserProfile userProfile;
-        private final Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
         private final Optional<Runnable> ignoreUserStateHandler;
 
-        public InitData(UserProfile userProfile,
-                        @Nullable ChatChannel<? extends ChatMessage> selectedChannel,
-                        Runnable ignoreUserStateHandler) {
-            this.userProfile = userProfile;
-            this.selectedChannel = Optional.ofNullable(selectedChannel);
-            this.ignoreUserStateHandler = Optional.ofNullable(ignoreUserStateHandler);
-        }
-
         public InitData(UserProfile userProfile) {
-            this(userProfile, null, null);
+            this(userProfile, null);
         }
 
-        public InitData(UserProfile userProfile, @Nullable ChatChannel<? extends ChatMessage> selectedChannel) {
-            this(userProfile, selectedChannel, null);
+        public InitData(UserProfile userProfile, Runnable ignoreUserStateHandler) {
+            this.userProfile = userProfile;
+            this.ignoreUserStateHandler = Optional.ofNullable(ignoreUserStateHandler);
         }
     }
 
@@ -90,7 +79,6 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final ProfileCardReputationController profileCardReputationController;
     private final ProfileCardOffersController profileCardOffersController;
     private final ProfileCardMessagesController profileCardMessagesController;
-    private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
     private Optional<Runnable> ignoreUserStateHandler;
     private Subscription userProfilePin;
 
@@ -145,7 +133,6 @@ public class ProfileCardController extends TabController<ProfileCardModel>
 
     @Override
     public void initWithData(InitData initData) {
-        selectedChannel = initData.selectedChannel;
         ignoreUserStateHandler = initData.ignoreUserStateHandler;
         model.getUserProfile().set(initData.userProfile);
     }
@@ -172,19 +159,9 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     }
 
     void onReportUser() {
-        // Chat channel domain is a required field in the protobuf ReportToModeratorMessage.
-        ChatChannelDomain chatChannelDomain;
-        if (selectedChannel.isPresent()) {
-            // If the user profile is reported from a chat, then we use the domain of that chat.
-            chatChannelDomain = selectedChannel.get().getChatChannelDomain();
-        } else {
-            // Otherwise we use Support as the default domain to ensure backwards compatibility.
-            chatChannelDomain = ChatChannelDomain.SUPPORT;
-        }
-
         OverlayController.hide(() ->
-            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
-                    new ReportToModeratorWindow.InitData(model.getUserProfile().get(), chatChannelDomain)));
+                Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
+                        new ReportToModeratorWindow.InitData(model.getUserProfile().get())));
     }
 
     void onClose() {

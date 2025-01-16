@@ -112,7 +112,6 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             if (userProfile != null) {
                 chatPeerUserProfileDisplay.setUserProfile(userProfile);
                 chatPeerUserProfileDisplay.setReputationScore(model.getPeersReputationScore());
-                chatPeerUserProfileDisplay.configureOpenProfileCard(userProfile, model.getSelectedChannel());
             }
         });
 
@@ -120,7 +119,6 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             if (userProfile != null) {
                 chatMyUserProfileDisplay.setUserProfile(userProfile);
                 chatMyUserProfileDisplay.setReputationScore(model.getMyUserReputationScore());
-                chatMyUserProfileDisplay.configureOpenProfileCard(userProfile, model.getSelectedChannel());
             }
         });
 

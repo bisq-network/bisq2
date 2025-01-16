@@ -480,14 +480,13 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     public void onReportUser(ChatMessage chatMessage) {
-        ChatChannelDomain chatChannelDomain = model.getSelectedChannel().get().getChatChannelDomain();
         if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
             Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
-                    new ReportToModeratorWindow.InitData(privateChatMessage.getSenderUserProfile(), chatChannelDomain));
+                    new ReportToModeratorWindow.InitData(privateChatMessage.getSenderUserProfile()));
         } else {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                     .ifPresent(accusedUserProfile -> Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
-                            new ReportToModeratorWindow.InitData(accusedUserProfile, chatChannelDomain)));
+                            new ReportToModeratorWindow.InitData(accusedUserProfile)));
         }
     }
 
