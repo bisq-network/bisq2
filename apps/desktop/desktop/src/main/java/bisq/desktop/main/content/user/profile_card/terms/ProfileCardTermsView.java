@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.profile_card.overview;
+package bisq.desktop.main.content.user.profile_card.terms;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.user.profile_card.ProfileCardView;
-import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -27,22 +26,19 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel, ProfileCardOverviewController> {
-    private final Label statementLabel, tradeTermsLabel;
+public class ProfileCardTermsView extends View<VBox, ProfileCardTermsModel, ProfileCardTermsController> {
+    private final Label tradeTermsLabel;
 
-    public ProfileCardOverviewView(ProfileCardOverviewModel model,
-                                   ProfileCardOverviewController controller) {
+    public ProfileCardTermsView(ProfileCardTermsModel model,
+                                ProfileCardTermsController controller) {
         super(new VBox(), model, controller);
 
-        // Statement
-        statementLabel = new Label();
-        VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 30);
-
-        // Trade terms
         tradeTermsLabel = new Label();
-        VBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.tradeTerms", tradeTermsLabel, 100);
+        tradeTermsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        tradeTermsLabel.setWrapText(true);
+        tradeTermsLabel.setAlignment(Pos.TOP_LEFT);
 
-        VBox contentBox = new VBox(20, statementBox, tradeTermsBox);
+        VBox contentBox = new VBox(20, tradeTermsLabel);
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.TOP_LEFT);
         contentBox.setMinHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
@@ -56,25 +52,11 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
 
     @Override
     protected void onViewAttached() {
-        statementLabel.textProperty().bind(model.getStatement());
         tradeTermsLabel.textProperty().bind(model.getTradeTerms());
     }
 
     @Override
     protected void onViewDetached() {
-        statementLabel.textProperty().unbind();
         tradeTermsLabel.textProperty().unbind();
-    }
-
-    private VBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, double height) {
-        Label titleLabel = new Label(Res.get(title));
-        titleLabel.getStyleClass().addAll("text-fill-white", "title");
-        detailsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        detailsLabel.setWrapText(true);
-        detailsLabel.setMinHeight(height);
-        detailsLabel.setPrefHeight(height);
-        detailsLabel.setMaxHeight(height);
-        detailsLabel.setAlignment(Pos.TOP_LEFT);
-        return new VBox(7, titleLabel, detailsLabel);
     }
 }

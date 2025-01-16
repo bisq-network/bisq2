@@ -102,7 +102,7 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
         // Statement
         model.getStatement().ifPresent(statement -> {
             statementLabel = new Label(statement);
-            statementBox = createAndGetTitleAndDetailsBox("user.profileCard.details.statement", statementLabel);
+            statementBox = createAndGetTitleAndDetailsBox("user.userProfile.statement", statementLabel);
             contentBox.getChildren().add(statementBox);
         });
         root.heightProperty().addListener((observable, oldValue, newValue) -> {log.error(newValue.toString());});

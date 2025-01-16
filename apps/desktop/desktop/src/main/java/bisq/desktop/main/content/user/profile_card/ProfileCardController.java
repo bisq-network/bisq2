@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.profile_card;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
@@ -29,7 +30,7 @@ import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.user.profile_card.details.ProfileCardDetailsController;
 import bisq.desktop.main.content.user.profile_card.messages.ProfileCardMessagesController;
 import bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersController;
-import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewController;
+import bisq.desktop.main.content.user.profile_card.terms.ProfileCardTermsController;
 import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
@@ -73,8 +74,8 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final UserProfileService userProfileService;
     protected final UserIdentityService userIdentityService;
     private final ChatService chatService;
-    private final ProfileCardOverviewController profileCardOverviewController;
     private final ProfileCardDetailsController profileCardDetailsController;
+    private final ProfileCardTermsController profileCardTermsController;
     private final ProfileCardReputationController profileCardReputationController;
     private final ProfileCardOffersController profileCardOffersController;
     private final ProfileCardMessagesController profileCardMessagesController;
@@ -90,7 +91,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         userIdentityService = userService.getUserIdentityService();
         chatService = serviceProvider.getChatService();
 
-        profileCardOverviewController = new ProfileCardOverviewController(serviceProvider);
+        profileCardTermsController = new ProfileCardTermsController(serviceProvider);
         profileCardDetailsController = new ProfileCardDetailsController(serviceProvider);
         profileCardReputationController = new ProfileCardReputationController(serviceProvider);
         profileCardOffersController = new ProfileCardOffersController(serviceProvider);
@@ -102,7 +103,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return switch (navigationTarget) {
-            case PROFILE_CARD_OVERVIEW -> Optional.of(profileCardOverviewController);
+            case PROFILE_CARD_TERMS -> Optional.of(profileCardTermsController);
             case PROFILE_CARD_DETAILS -> Optional.of(profileCardDetailsController);
             case PROFILE_CARD_OFFERS -> Optional.of(profileCardOffersController);
             case PROFILE_CARD_REPUTATION -> Optional.of(profileCardReputationController);
@@ -116,8 +117,9 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         ignoreUserStateHandler = initData.ignoreUserStateHandler;
         UserProfile userProfile = initData.userProfile;
         model.setUserProfile(userProfile);
+        model.setTermsVisible(StringUtils.toOptional(userProfile.getTerms()).isPresent());
 
-        profileCardOverviewController.setUserProfile(userProfile);
+        profileCardTermsController.setUserProfile(userProfile);
         profileCardDetailsController.setUserProfile(userProfile);
         profileCardReputationController.setUserProfile(userProfile);
         profileCardOffersController.setUserProfile(userProfile);
