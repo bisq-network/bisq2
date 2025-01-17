@@ -68,6 +68,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         releaseNotesHeadline.getStyleClass().add("updater-sub-headline");
 
         releaseNotes = new TextArea();
+        releaseNotes.setContextMenu(new ContextMenu());
         releaseNotes.setWrapText(true);
         releaseNotes.getStyleClass().add("updater-release-notes");
         releaseNotes.setEditable(false);

@@ -25,6 +25,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.text.Text;
@@ -70,6 +71,7 @@ public class BisqTextArea extends TextArea {
     }
 
     public BisqTextArea() {
+        setContextMenu(new ContextMenu());
         setWrapText(true);
         sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
     }
