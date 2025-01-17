@@ -34,8 +34,8 @@ import java.util.Optional;
 
 @Slf4j
 public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, ProfileCardDetailsController> {
-    private final Label nickNameLabel, botIdLabel, userIdLabel, transportAddressLabel, totalReputationScoreLabel, profileAgeLabel,
-            lastUserActivityLabel, versionLabel;
+    private final Label nickNameLabel, botIdLabel, userIdLabel, transportAddressLabel, totalReputationScoreLabel,
+            profileAgeLabel, versionLabel;
     private final BisqMenuItem nickNameCopyButton, botIdCopyButton, userIdCopyButton, transportAddressCopyButton;
     private HBox statementBox;
 
@@ -75,17 +75,12 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
         profileAgeLabel = new Label();
         HBox profileAgeBox = createAndGetTitleAndDetailsBox("user.profileCard.details.profileAge", profileAgeLabel);
 
-        // Last user activity
-        lastUserActivityLabel = new Label();
-        HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.profileCard.details.lastUserActivity", lastUserActivityLabel);
-
         // Version
         versionLabel = new Label();
         HBox versionBox = createAndGetTitleAndDetailsBox("user.profileCard.details.version", versionLabel);
 
         VBox contentBox = new VBox(16, nickNameIdBox, botIdBox, userIdBox, transportAddressBox,
-                totalReputationScoreBox, profileAgeBox, lastUserActivityBox, versionBox);
-
+                totalReputationScoreBox, profileAgeBox, versionBox);
 
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.CENTER);
@@ -106,7 +101,6 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
         profileAgeLabel.setText(model.getProfileAge());
         versionLabel.setText(model.getVersion());
 
-        lastUserActivityLabel.textProperty().bind(model.getLastUserActivity());
         totalReputationScoreLabel.textProperty().bind(model.getTotalReputationScore());
 
         nickNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getNickName()));
@@ -117,7 +111,6 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
 
     @Override
     protected void onViewDetached() {
-        lastUserActivityLabel.textProperty().unbind();
         totalReputationScoreLabel.textProperty().unbind();
         nickNameCopyButton.setOnAction(null);
         botIdCopyButton.setOnAction(null);

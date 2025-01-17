@@ -18,30 +18,47 @@
 package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel, ProfileCardOverviewController> {
-    private final Label statementLabel, tradeTermsLabel;
+    private final Label numOffersAndMessagesLabel, totalBaseOfferAmountToBuyAndSellLabel,
+            profileAgeLabel, lastUserActivityLabel, statementLabel,tradeTermsTextArea;
 
     public ProfileCardOverviewView(ProfileCardOverviewModel model,
                                    ProfileCardOverviewController controller) {
         super(new VBox(), model, controller);
 
-        // Statement
+        lastUserActivityLabel = new Label();
+        HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.profileCard.details.lastUserActivity", lastUserActivityLabel);
+
+        profileAgeLabel = new Label();
+        HBox profileAgeBox = createAndGetTitleAndDetailsBox("user.profileCard.details.profileAge", profileAgeLabel);
+
+        numOffersAndMessagesLabel = new Label();
+        HBox numOffersAndMessagesBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.numOffersAndMessages", numOffersAndMessagesLabel);
+
+        totalBaseOfferAmountToBuyAndSellLabel = new Label();
+        HBox totalBaseOfferAmountToBuyAndSellBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.totalBaseOfferAmountToBuyAndSell", totalBaseOfferAmountToBuyAndSellLabel);
+
         statementLabel = new Label();
-        VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 30);
+        HBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel);
 
-        // Trade terms
-        tradeTermsLabel = new Label();
-        VBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.tradeTerms", tradeTermsLabel, 100);
+        tradeTermsTextArea = new Label();
+        HBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.tradeTerms", tradeTermsTextArea, Optional.empty());
 
-        VBox contentBox = new VBox(20, statementBox, tradeTermsBox);
+        VBox contentBox = new VBox(20, lastUserActivityBox, profileAgeBox, numOffersAndMessagesBox,
+                totalBaseOfferAmountToBuyAndSellBox, statementBox, tradeTermsBox);
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.TOP_LEFT);
         contentBox.setMinHeight(307);
@@ -55,25 +72,45 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
 
     @Override
     protected void onViewAttached() {
-        statementLabel.textProperty().bind(model.getStatement());
-        tradeTermsLabel.textProperty().bind(model.getTradeTerms());
+        profileAgeLabel.setText(model.getProfileAge());
+        numOffersAndMessagesLabel.setText(model.getNumOffers() + " / " + model.getNumPublicTextMessages());
+        totalBaseOfferAmountToBuyAndSellLabel.setText(model.getTotalBaseOfferAmountToBuy() + " / " + model.getTotalBaseOfferAmountToSell());
+        statementLabel.setText(model.getStatement());
+        tradeTermsTextArea.setText(model.getTradeTerms());
+
+        lastUserActivityLabel.textProperty().bind(model.getLastUserActivity());
+
+        root.requestFocus();
+
     }
 
     @Override
     protected void onViewDetached() {
-        statementLabel.textProperty().unbind();
-        tradeTermsLabel.textProperty().unbind();
+        lastUserActivityLabel.textProperty().unbind();
     }
 
-    private VBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, double height) {
+    private HBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel) {
+        return createAndGetTitleAndDetailsBox(title, detailsLabel, Optional.empty());
+    }
+
+    private HBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, Optional<BisqMenuItem> button) {
         Label titleLabel = new Label(Res.get(title));
-        titleLabel.getStyleClass().addAll("text-fill-white", "title");
-        detailsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        detailsLabel.setWrapText(true);
-        detailsLabel.setMinHeight(height);
-        detailsLabel.setPrefHeight(height);
-        detailsLabel.setMaxHeight(height);
-        detailsLabel.setAlignment(Pos.TOP_LEFT);
-        return new VBox(7, titleLabel, detailsLabel);
+        double width = 200;
+        titleLabel.setMaxWidth(width);
+        titleLabel.setMinWidth(width);
+        titleLabel.setPrefWidth(width);
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
+
+        detailsLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+
+        HBox hBox = new HBox(titleLabel, detailsLabel);
+        hBox.setAlignment(Pos.BASELINE_LEFT);
+
+        if (button.isPresent()) {
+            button.get().useIconOnly(17);
+            HBox.setMargin(button.get(), new Insets(0, 0, 0, 40));
+            hBox.getChildren().addAll(Spacer.fillHBox(), button.get());
+        }
+        return hBox;
     }
 }

@@ -36,6 +36,6 @@ public class ProfileCardModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.PROFILE_CARD_DETAILS;
+        return NavigationTarget.PROFILE_CARD_OVERVIEW;
     }
 }

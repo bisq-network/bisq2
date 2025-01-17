@@ -47,5 +47,4 @@ public class ProfileCardDetailsModel implements Model {
     @Setter
     private Optional<String> statement = Optional.empty();
     private final StringProperty totalReputationScore = new SimpleStringProperty();
-    private final StringProperty lastUserActivity = new SimpleStringProperty();
 }
