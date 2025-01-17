@@ -42,13 +42,7 @@ public abstract class NavigationController implements Controller {
             NavigationTarget candidateTarget = optionalCandidateTarget.get();
             if (model.getResolvedTarget().isPresent() && model.getResolvedTarget().get() == candidateTarget) {
                 // We as host controller have already selected the child target in question.
-                // Run the newly InitData passed.
-                if (controllerCache.containsKey(navigationTarget)) {
-                    Controller controller = controllerCache.get(navigationTarget);
-                    if (controller instanceof InitWithDataController<?> initWithDataController) {
-                        data.ifPresent(initWithDataController::initWithObject);
-                    }
-                }
+                // We exit the loop here.
                 break;
             }
             Optional<Controller> optionalChildController = findController(candidateTarget, data);

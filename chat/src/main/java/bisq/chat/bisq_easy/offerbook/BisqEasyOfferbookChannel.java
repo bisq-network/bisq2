@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.common.currency.Market;
+import bisq.common.observable.Observable;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,6 +38,7 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
     }
 
     private final Market market;
+    private final Observable<BisqEasyOfferbookMessage> highlightedMessage = new Observable<>();
 
     public BisqEasyOfferbookChannel(Market market) {
         this(createId(market), ChatChannelNotificationType.ALL, market);
