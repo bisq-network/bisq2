@@ -96,8 +96,8 @@ public class BannedUserProfileTable {
         }
 
         void onContactUser(BannedUserProfileData data) {
-            ChatChannelDomain chatChannelDomain = ChatChannelDomain.SUPPORT;
-            moderatorService.contactUser(chatChannelDomain, data.getUserProfile(), Optional.empty(), false)
+            ChatChannelDomain chatChannelDomain = ChatChannelDomain.DISCUSSION;
+            moderatorService.contactUser(data.getUserProfile(), Optional.empty(), false)
                     .whenComplete((result, throwable) -> UIThread.run(() -> {
                         if (throwable == null) {
                             SendMessageResult.findAnyErrorMsg(result)

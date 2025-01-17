@@ -149,7 +149,7 @@ public class ReputationRankingController implements Controller {
         model.getListItems().clear();
     }
 
-    void onShowDetails(UserProfile userProfile) {
+    void onOpenProfileCard(UserProfile userProfile) {
         Navigation.navigateTo(NavigationTarget.PROFILE_CARD_REPUTATION,
                 new ProfileCardController.InitData(userProfile));
     }

@@ -220,7 +220,6 @@ public class TradeDataHeader {
 
             userProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), userProfile -> {
                 peersUserProfileDisplay.setUserProfile(userProfile);
-                peersUserProfileDisplay.configureOpenProfileCard(userProfile, model.getChannel().get());
             });
             reputationScorePin = EasyBind.subscribe(model.getReputationScore(), peersUserProfileDisplay::setReputationScore);
         }

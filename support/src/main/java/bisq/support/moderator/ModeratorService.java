@@ -138,7 +138,8 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         return persistableStore.getReportToModeratorMessages();
     }
 
-    public void reportUserProfile(UserProfile accusedUserProfile, String message, ChatChannelDomain chatChannelDomain) {
+    public void reportUserProfile(UserProfile accusedUserProfile, String message) {
+        ChatChannelDomain chatChannelDomain= ChatChannelDomain.DISCUSSION;
         UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
@@ -184,10 +185,10 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         return networkService.removeAuthorizedData(data, keyPair);
     }
 
-    public CompletableFuture<SendMessageResult> contactUser(ChatChannelDomain chatChannelDomain,
-                                                            UserProfile userProfile,
+    public CompletableFuture<SendMessageResult> contactUser(UserProfile userProfile,
                                                             Optional<String> citationMessage,
                                                             boolean isReportingUser) {
+        ChatChannelDomain chatChannelDomain = ChatChannelDomain.DISCUSSION;
         ChatChannelSelectionService selectionServices = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
         return twoPartyPrivateChatChannelService.findOrCreateChannel(chatChannelDomain, userProfile)
                 .map(channel -> {

@@ -25,6 +25,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -56,6 +57,8 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         tableView.allowVerticalScrollbar();
         tableView.setPlaceholderText(Res.get("user.profileCard.offers.table.placeholderText"));
         configTableView();
+        tableView.setFixHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
+
         root.getChildren().addAll(vBox, tableView);
         root.setPadding(new Insets(20, 0, 0, 0));
     }

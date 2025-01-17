@@ -215,7 +215,6 @@ public class MediationCaseHeader {
                             !isMakerRequester ? Res.get("confirmation.yes") : Res.get("confirmation.no")
                     ));
 
-
                     tradeId.getSecond().setText(item.getShortTradeId());
                 } else {
                     makerProfileDisplay.dispose();

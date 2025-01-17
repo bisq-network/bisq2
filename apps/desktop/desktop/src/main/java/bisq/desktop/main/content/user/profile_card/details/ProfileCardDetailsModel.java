@@ -18,19 +18,33 @@
 package bisq.desktop.main.content.user.profile_card.details;
 
 import bisq.desktop.common.view.Model;
+import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 @Getter
 public class ProfileCardDetailsModel implements Model {
-    private final StringProperty botId = new SimpleStringProperty();
-    private final StringProperty userId = new SimpleStringProperty();
-    private final StringProperty transportAddress = new SimpleStringProperty();
+    @Setter
+    private UserProfile userProfile;
+    @Setter
+    private String nickName;
+    @Setter
+    private String botId;
+    @Setter
+    private String userId;
+    @Setter
+    private String transportAddress;
+    @Setter
+    private String profileAge;
+    @Setter
+    private String version;
+    @Setter
+    private Optional<String> statement = Optional.empty();
     private final StringProperty totalReputationScore = new SimpleStringProperty();
-    private final StringProperty profileAge = new SimpleStringProperty();
-    private final StringProperty lastUserActivity = new SimpleStringProperty();
-    private final StringProperty version = new SimpleStringProperty();
 }

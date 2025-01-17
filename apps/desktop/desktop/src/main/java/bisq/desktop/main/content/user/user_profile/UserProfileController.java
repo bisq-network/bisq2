@@ -177,7 +177,7 @@ public class UserProfileController implements Controller {
                 }));
     }
 
-    void onClickCatHashImage() {
+    void onOpenProfileCard() {
         Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
                 new ProfileCardController.InitData(model.getSelectedUserIdentity().get().getUserProfile()));
     }

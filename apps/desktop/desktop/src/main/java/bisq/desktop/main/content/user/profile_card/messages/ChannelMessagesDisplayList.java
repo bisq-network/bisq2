@@ -28,16 +28,11 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.cathash.CatHash;
-import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -54,6 +49,8 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 
 import java.util.Optional;
+
+import static bisq.chat.ChatChannelDomain.DISCUSSION;
 
 public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
     private final Controller controller;
@@ -94,7 +91,8 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         @Override
         public void onActivate() {
             model.getChannelName().set(publicChatChannel.getDisplayString());
-            model.getChannelIconId().set(ChatUtil.getChannelIconId(publicChatChannel.getId()));
+            String iconId = publicChatChannel.getChatChannelDomain() == DISCUSSION ? "bisq-31" : "support-31";
+            model.getChannelIconId().set(iconId);
             if (publicChatChannel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
                 model.getChannelName().set(bisqEasyOfferbookChannel.getMarket().getFiatCurrencyName());
                 model.getMarketCurrencyCode().set(bisqEasyOfferbookChannel.getMarket().getQuoteCurrencyCode());
@@ -199,23 +197,19 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         @Override
         protected void onViewAttached() {
             headline.setText(model.getChannelName().get());
+            Node image;
             if (model.getMarketCurrencyCode().get() != null) {
                 // Bisq Easy market logo
-                Node marketLogo = MarketImageComposition.createMarketLogo(model.getMarketCurrencyCode().get());
-                marketLogo.setCache(true);
-                marketLogo.setCacheHint(CacheHint.SPEED);
-                headline.setGraphic(marketLogo);
-                headline.setGraphicTextGap(10);
+                image = MarketImageComposition.createMarketLogo(model.getMarketCurrencyCode().get());
+                image.setCache(true);
+                image.setCacheHint(CacheHint.SPEED);
+
             } else {
                 // Discussions and support
-                ImageView image = ImageUtil.getImageViewById(model.getChannelIconId().get());
-                image.setScaleX(1.9);
-                image.setScaleY(1.9);
-                headline.setGraphic(image);
-                headline.setGraphicTextGap(17);
-                headline.setPadding(new Insets(0, 0, 0, 5));
+                image = ImageUtil.getImageViewById(model.getChannelIconId().get());
             }
-
+            headline.setGraphic(image);
+            headline.setGraphicTextGap(10);
             root.visibleProperty().bind(model.getShouldShow());
             root.managedProperty().bind(model.getShouldShow());
             model.getChannelMessageItems().addListener(listChangeListener);

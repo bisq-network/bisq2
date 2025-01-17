@@ -23,6 +23,7 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.components.table.DateTableItem;
+import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -53,6 +54,8 @@ public class ProfileCardReputationView extends View<VBox, ProfileCardReputationM
         tableView.allowVerticalScrollbar();
         tableView.setPlaceholderText(Res.get("user.profileCard.reputation.table.placeholderText"));
         configTableView();
+        tableView.setFixHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
+
         root.getChildren().addAll(vBox, tableView);
         root.setPadding(new Insets(20, 0, 0, 0));
     }

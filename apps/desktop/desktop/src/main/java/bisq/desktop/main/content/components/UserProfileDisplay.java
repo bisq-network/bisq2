@@ -18,8 +18,6 @@
 package bisq.desktop.main.content.components;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatMessage;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.user.profile.UserProfile;
@@ -93,10 +91,10 @@ public class UserProfileDisplay extends HBox {
         if (userProfile != null) {
             userName.setText(userProfile.getUserName());
         }
+        configureOpenProfileCard(userProfile);
     }
 
     public void dispose() {
-        userProfileIcon.setOnMouseClicked(null);
         userName.setOnMouseClicked(null);
         userProfileIcon.dispose();
         setReputationScore(null);
@@ -127,17 +125,8 @@ public class UserProfileDisplay extends HBox {
     }
 
     public void configureOpenProfileCard(UserProfile userProfile) {
-        configureOpenProfileCard(userProfile, null);
-    }
-
-    public void configureOpenProfileCard(UserProfile userProfile, @Nullable ChatChannel<? extends ChatMessage> chatChannel) {
-        userProfileIcon.setOnMouseClicked(e ->
-                Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
-                        new ProfileCardController.InitData(userProfile, chatChannel)));
         userName.setOnMouseClicked(e ->
-                Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
-                        new ProfileCardController.InitData(userProfile, chatChannel)));
-        userProfileIcon.getStyleClass().add("hand-cursor");
+                Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile)));
         userName.getStyleClass().add("hand-cursor");
     }
 }

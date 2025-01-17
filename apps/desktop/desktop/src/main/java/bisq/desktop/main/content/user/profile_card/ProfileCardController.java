@@ -18,9 +18,7 @@
 package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -35,6 +33,7 @@ import bisq.desktop.main.content.user.profile_card.overview.ProfileCardOverviewC
 import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputationController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -44,10 +43,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Slf4j
@@ -58,23 +54,15 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     @ToString
     public static class InitData {
         private final UserProfile userProfile;
-        private final Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
         private final Optional<Runnable> ignoreUserStateHandler;
 
-        public InitData(UserProfile userProfile,
-                        @Nullable ChatChannel<? extends ChatMessage> selectedChannel,
-                        Runnable ignoreUserStateHandler) {
-            this.userProfile = userProfile;
-            this.selectedChannel = Optional.ofNullable(selectedChannel);
-            this.ignoreUserStateHandler = Optional.ofNullable(ignoreUserStateHandler);
-        }
-
         public InitData(UserProfile userProfile) {
-            this(userProfile, null, null);
+            this(userProfile, null);
         }
 
-        public InitData(UserProfile userProfile, @Nullable ChatChannel<? extends ChatMessage> selectedChannel) {
-            this(userProfile, selectedChannel, null);
+        public InitData(UserProfile userProfile, Runnable ignoreUserStateHandler) {
+            this.userProfile = userProfile;
+            this.ignoreUserStateHandler = Optional.ofNullable(ignoreUserStateHandler);
         }
     }
 
@@ -83,52 +71,32 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final ReputationService reputationService;
     private final BannedUserService bannedUserService;
     private final UserProfileService userProfileService;
-    private final ChatService chatService;
     protected final UserIdentityService userIdentityService;
-    private final ProfileCardOverviewController profileCardOverviewController;
+    private final ChatService chatService;
     private final ProfileCardDetailsController profileCardDetailsController;
+    private final ProfileCardOverviewController profileCardOverviewController;
     private final ProfileCardReputationController profileCardReputationController;
     private final ProfileCardOffersController profileCardOffersController;
     private final ProfileCardMessagesController profileCardMessagesController;
-    private Optional<ChatChannel<? extends ChatMessage>> selectedChannel;
     private Optional<Runnable> ignoreUserStateHandler;
-    private Subscription userProfilePin;
 
     public ProfileCardController(ServiceProvider serviceProvider) {
         super(new ProfileCardModel(), NavigationTarget.PROFILE_CARD);
 
-        reputationService = serviceProvider.getUserService().getReputationService();
-        bannedUserService = serviceProvider.getUserService().getBannedUserService();
-        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        UserService userService = serviceProvider.getUserService();
+        reputationService = userService.getReputationService();
+        bannedUserService = userService.getBannedUserService();
+        userProfileService = userService.getUserProfileService();
+        userIdentityService = userService.getUserIdentityService();
         chatService = serviceProvider.getChatService();
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+
         profileCardOverviewController = new ProfileCardOverviewController(serviceProvider);
         profileCardDetailsController = new ProfileCardDetailsController(serviceProvider);
         profileCardReputationController = new ProfileCardReputationController(serviceProvider);
         profileCardOffersController = new ProfileCardOffersController(serviceProvider);
         profileCardMessagesController = new ProfileCardMessagesController(serviceProvider);
+
         view = new ProfileCardView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-        userProfilePin = EasyBind.subscribe(model.getUserProfile(), userProfile -> {
-            model.getReputationScore().set(reputationService.getReputationScore(userProfile));
-            profileCardOverviewController.updateUserProfileData(userProfile);
-            profileCardDetailsController.updateUserProfileData(userProfile);
-            profileCardReputationController.updateUserProfileData(userProfile);
-            profileCardOffersController.updateUserProfileData(userProfile);
-            profileCardMessagesController.updateUserProfileData(userProfile);
-            boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
-            model.getShouldShowUserActionsMenu().set(!isMyProfile);
-            model.getOffersTabButtonText().set(Res.get("user.profileCard.tab.offers",
-                    profileCardOffersController.getNumberOffers()).toUpperCase());
-        });
-    }
-
-    @Override
-    public void onDeactivate() {
-        userProfilePin.unsubscribe();
     }
 
     @Override
@@ -145,18 +113,39 @@ public class ProfileCardController extends TabController<ProfileCardModel>
 
     @Override
     public void initWithData(InitData initData) {
-        selectedChannel = initData.selectedChannel;
         ignoreUserStateHandler = initData.ignoreUserStateHandler;
-        model.getUserProfile().set(initData.userProfile);
+        UserProfile userProfile = initData.userProfile;
+        model.setUserProfile(userProfile);
+
+        profileCardOverviewController.setUserProfile(userProfile);
+        profileCardDetailsController.setUserProfile(userProfile);
+        profileCardReputationController.setUserProfile(userProfile);
+        profileCardOffersController.setUserProfile(userProfile);
+        profileCardMessagesController.setUserProfile(userProfile);
+
+        model.getReputationScore().set(reputationService.getReputationScore(userProfile));
+
+        boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
+        model.getShouldShowUserActionsMenu().set(!isMyProfile);
+        model.getOffersTabButtonText().set(Res.get("user.profileCard.tab.offers",
+                profileCardOffersController.getNumberOffers()).toUpperCase());
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 
     boolean isUserProfileBanned() {
-        return bannedUserService.isUserProfileBanned(model.getUserProfile().get());
+        return bannedUserService.isUserProfileBanned(model.getUserProfile());
     }
 
     void onSendPrivateMessage() {
         OverlayController.hide(() -> {
-            chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, model.getUserProfile().get())
+            chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, model.getUserProfile())
                     .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
         });
     }
@@ -164,27 +153,17 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     void onToggleIgnoreUser() {
         model.getIgnoreUserSelected().set(!model.getIgnoreUserSelected().get());
         if (model.getIgnoreUserSelected().get()) {
-            userProfileService.ignoreUserProfile(model.getUserProfile().get());
+            userProfileService.ignoreUserProfile(model.getUserProfile());
         } else {
-            userProfileService.undoIgnoreUserProfile(model.getUserProfile().get());
+            userProfileService.undoIgnoreUserProfile(model.getUserProfile());
         }
         ignoreUserStateHandler.ifPresent(Runnable::run);
     }
 
     void onReportUser() {
-        // Chat channel domain is a required field in the protobuf ReportToModeratorMessage.
-        ChatChannelDomain chatChannelDomain;
-        if (selectedChannel.isPresent()) {
-            // If the user profile is reported from a chat, then we use the domain of that chat.
-            chatChannelDomain = selectedChannel.get().getChatChannelDomain();
-        } else {
-            // Otherwise we use Support as the default domain to ensure backwards compatibility.
-            chatChannelDomain = ChatChannelDomain.SUPPORT;
-        }
-
         OverlayController.hide(() ->
-            Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
-                    new ReportToModeratorWindow.InitData(model.getUserProfile().get(), chatChannelDomain)));
+                Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
+                        new ReportToModeratorWindow.InitData(model.getUserProfile())));
     }
 
     void onClose() {

@@ -125,7 +125,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
                 new ProfileCardController.InitData(
                         userProfile,
-                        model.getSelectedChannel(),
                         chatMessageContainerController::refreshMessages));
     }
 

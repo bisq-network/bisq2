@@ -185,7 +185,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             controller.onSelected(comboBox.getSelectionModel().getSelectedItem());
         });
         comboBox.validateOnNoItemSelectedWithMessage(Res.get("user.bondedRoles.userProfile.select.invalid"));
-        catHashImageView.setOnMouseClicked(e -> controller.onClickCatHashImage());
+        catHashImageView.setOnMouseClicked(e -> controller.onOpenProfileCard());
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
                 userIdentity -> comboBox.getSelectionModel().select(userIdentity));

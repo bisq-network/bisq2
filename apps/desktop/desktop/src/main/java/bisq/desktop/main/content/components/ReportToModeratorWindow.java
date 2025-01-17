@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -49,12 +48,10 @@ public class ReportToModeratorWindow {
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final ChatChannelDomain chatChannelDomain;
         private final UserProfile accusedUserProfile;
 
-        public InitData(UserProfile accusedUserProfile, ChatChannelDomain chatChannelDomain) {
+        public InitData(UserProfile accusedUserProfile) {
             this.accusedUserProfile = accusedUserProfile;
-            this.chatChannelDomain = chatChannelDomain;
         }
     }
 
@@ -83,7 +80,6 @@ public class ReportToModeratorWindow {
         @Override
         public void initWithData(ReportToModeratorWindow.InitData initData) {
             model.setAccusedUserProfile(initData.getAccusedUserProfile());
-            model.setChatChannelDomain(initData.getChatChannelDomain());
         }
 
         @Override
@@ -105,7 +101,7 @@ public class ReportToModeratorWindow {
                 return;
             }
 
-            moderatorService.reportUserProfile(model.getAccusedUserProfile(), message, model.getChatChannelDomain());
+            moderatorService.reportUserProfile(model.getAccusedUserProfile(), message);
             onCancel();
         }
 
@@ -123,8 +119,6 @@ public class ReportToModeratorWindow {
     private static class Model implements bisq.desktop.common.view.Model {
         public final StringProperty message = new SimpleStringProperty("");
         public final BooleanProperty reportButtonDisabled = new SimpleBooleanProperty();
-        @Setter
-        private ChatChannelDomain chatChannelDomain;
         @Setter
         private UserProfile accusedUserProfile;
     }

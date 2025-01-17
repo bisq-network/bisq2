@@ -38,6 +38,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardController> {
+    public final static double SUB_VIEWS_CONTENT_HEIGHT = 307;
     private final ProfileCardController controller;
     private final TabButton offersTabButton;
     private UserProfileIcon userProfileIcon;
@@ -46,7 +47,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report;
     private Button closeButton;
     private HBox userActionsBox;
-    private Subscription userProfilePin, reputationScorePin;
+    private Subscription reputationScorePin;
 
     public ProfileCardView(ProfileCardModel model, ProfileCardController controller) {
         super(model, controller);
@@ -60,8 +61,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
         addTab(Res.get("user.profileCard.tab.overview"), NavigationTarget.PROFILE_CARD_OVERVIEW);
         addTab(Res.get("user.profileCard.tab.details"), NavigationTarget.PROFILE_CARD_DETAILS);
-        offersTabButton = addTab("", NavigationTarget.PROFILE_CARD_OFFERS);
         addTab(Res.get("user.profileCard.tab.reputation"), NavigationTarget.PROFILE_CARD_REPUTATION);
+        offersTabButton = addTab("", NavigationTarget.PROFILE_CARD_OFFERS);
         addTab(Res.get("user.profileCard.tab.messages"), NavigationTarget.PROFILE_CARD_MESSAGES);
     }
 
@@ -77,7 +78,18 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
         offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
 
-        userProfilePin = EasyBind.subscribe(model.getUserProfile(), this::updateUserProfile);
+        UserProfile userProfile = model.getUserProfile();
+        userProfileIcon.setUserProfile(userProfile);
+        String nickname = userProfile.getNickName();
+        userNickNameLabel.setText(controller.isUserProfileBanned()
+                ? Res.get("user.profileCard.userNickname.banned", nickname)
+                : nickname);
+        userNymLabel.setText(String.format("[%s]", userProfile.getNym()));
+        if (controller.isUserProfileBanned()) {
+            userNickNameLabel.getStyleClass().add("error");
+            userNymLabel.getStyleClass().add("error");
+        }
+
         reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
             if (reputationScore != null) {
                 reputationScoreDisplay.setReputationScore(reputationScore);
@@ -105,7 +117,6 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.managedProperty().unbind();
         offersTabButton.getLabel().textProperty().unbind();
 
-        userProfilePin.unsubscribe();
         reputationScorePin.unsubscribe();
 
         sendPrivateMsg.setOnAction(null);
@@ -119,7 +130,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     protected void setupTopBox() {
         closeButton = BisqIconButton.createIconButton("close");
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
-        closeButtonRow.setPadding(new Insets(15, 15-SIDE_PADDING, 0, 0));
+        closeButtonRow.setPadding(new Insets(15, 15 - SIDE_PADDING, 0, 0));
 
         userProfileIcon = new UserProfileIcon(100);
         reputationScoreDisplay = new ReputationScoreDisplay();
@@ -176,18 +187,5 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         super.setupLineAndMarker();
 
         lineSidePadding = SIDE_PADDING;
-    }
-
-    private void updateUserProfile(UserProfile userProfile) {
-        userProfileIcon.setUserProfile(userProfile);
-        String nickname = userProfile.getNickName();
-        userNickNameLabel.setText(controller.isUserProfileBanned()
-                ? Res.get("user.profileCard.userNickname.banned", nickname)
-                : nickname);
-        userNymLabel.setText(String.format("[%s]", userProfile.getNym()));
-        if (controller.isUserProfileBanned()) {
-            userNickNameLabel.getStyleClass().add("error");
-            userNymLabel.getStyleClass().add("error");
-        }
     }
 }

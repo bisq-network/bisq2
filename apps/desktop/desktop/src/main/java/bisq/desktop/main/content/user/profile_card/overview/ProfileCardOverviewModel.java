@@ -18,14 +18,32 @@
 package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.common.view.Model;
+import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class ProfileCardOverviewModel implements Model {
-    private final StringProperty statement = new SimpleStringProperty();
-    private final StringProperty tradeTerms = new SimpleStringProperty();
+    @Setter
+    private UserProfile userProfile;
+    @Setter
+    private String numOffers;
+    @Setter
+    private String numPublicTextMessages;
+    @Setter
+    private String totalBaseOfferAmountToBuy;
+    @Setter
+    private String totalBaseOfferAmountToSell;
+    @Setter
+    private String profileAge;
+    @Setter
+    private String statement;
+    @Setter
+    private String tradeTerms;
+
+    private final StringProperty lastUserActivity = new SimpleStringProperty();
 }

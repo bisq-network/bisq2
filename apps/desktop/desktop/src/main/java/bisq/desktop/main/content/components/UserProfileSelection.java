@@ -283,7 +283,6 @@ public class UserProfileSelection {
                 userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
                 userProfileDisplay.setReputationScore(model.getUserReputationScore());
                 singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
-                singleUserProfileDisplay.configureOpenProfileCard(selectedUserIdentity.getUserProfile());
                 singleUserProfileDisplay.setReputationScore(model.getUserReputationScore());
                 model.getUserProfiles().forEach(userProfileMenuItem ->
                         userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity())));

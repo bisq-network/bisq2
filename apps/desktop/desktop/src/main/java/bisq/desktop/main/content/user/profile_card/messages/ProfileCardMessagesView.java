@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.profile_card.messages;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,8 +50,8 @@ public class ProfileCardMessagesView extends View<VBox, ProfileCardMessagesModel
         scrollPane.getStyleClass().add("message-list-bg");
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
-        scrollPane.setMaxHeight(307);
-        scrollPane.setMinHeight(307);
+        scrollPane.setMaxHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
+        scrollPane.setMinHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
 
         root.setPadding(new Insets(20, 0, 0, 0));
         root.getChildren().add(scrollPane);

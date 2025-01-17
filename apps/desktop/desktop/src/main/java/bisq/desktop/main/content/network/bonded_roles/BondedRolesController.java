@@ -92,8 +92,7 @@ public abstract class BondedRolesController implements Controller {
                         item.getRoleTypeString().toLowerCase().contains(string));
     }
 
-    void openProfileCard(UserProfile userProfile) {
-        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
-                new ProfileCardController.InitData(userProfile));
+    void onOpenProfileCard(UserProfile userProfile) {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile));
     }
 }

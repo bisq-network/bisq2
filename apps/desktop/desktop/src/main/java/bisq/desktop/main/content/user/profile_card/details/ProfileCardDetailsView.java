@@ -21,6 +21,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -33,13 +34,20 @@ import java.util.Optional;
 
 @Slf4j
 public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, ProfileCardDetailsController> {
-    private final Label botIdLabel, userIdLabel, transportAddressLabel, totalReputationScoreLabel, profileAgeLabel,
-            lastUserActivityLabel, versionLabel;
-    private final BisqMenuItem botIdCopyButton, userIdCopyButton, transportAddressCopyButton;
+    private final Label nickNameLabel, botIdLabel, userIdLabel, transportAddressLabel, totalReputationScoreLabel,
+            profileAgeLabel, versionLabel;
+    private final BisqMenuItem nickNameCopyButton, botIdCopyButton, userIdCopyButton, transportAddressCopyButton;
+    private HBox statementBox;
 
     public ProfileCardDetailsView(ProfileCardDetailsModel model,
                                   ProfileCardDetailsController controller) {
         super(new VBox(), model, controller);
+
+        // Bot ID
+        nickNameLabel = new Label();
+        nickNameCopyButton = new BisqMenuItem("copy-grey", "copy-white");
+        HBox nickNameIdBox = createAndGetTitleAndDetailsBox("onboarding.createProfile.nickName",
+                nickNameLabel, Optional.of(nickNameCopyButton));
 
         // Bot ID
         botIdLabel = new Label();
@@ -67,18 +75,18 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
         profileAgeLabel = new Label();
         HBox profileAgeBox = createAndGetTitleAndDetailsBox("user.profileCard.details.profileAge", profileAgeLabel);
 
-        // Last user activity
-        lastUserActivityLabel = new Label();
-        HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.profileCard.details.lastUserActivity", lastUserActivityLabel);
-
         // Version
         versionLabel = new Label();
         HBox versionBox = createAndGetTitleAndDetailsBox("user.profileCard.details.version", versionLabel);
 
-        VBox contentBox = new VBox(16, botIdBox, userIdBox, transportAddressBox, totalReputationScoreBox, profileAgeBox,
-                lastUserActivityBox, versionBox);
+        VBox contentBox = new VBox(16, nickNameIdBox, botIdBox, userIdBox, transportAddressBox,
+                totalReputationScoreBox, profileAgeBox, versionBox);
+
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.CENTER);
+        contentBox.setMaxHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
+        contentBox.setMinHeight(ProfileCardView.SUB_VIEWS_CONTENT_HEIGHT);
+
 
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(20, 0, 20, 0));
@@ -86,29 +94,25 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
 
     @Override
     protected void onViewAttached() {
-        botIdLabel.textProperty().bind(model.getBotId());
-        userIdLabel.textProperty().bind(model.getUserId());
-        transportAddressLabel.textProperty().bind(model.getTransportAddress());
-        totalReputationScoreLabel.textProperty().bind(model.getTotalReputationScore());
-        profileAgeLabel.textProperty().bind(model.getProfileAge());
-        lastUserActivityLabel.textProperty().bind(model.getLastUserActivity());
-        versionLabel.textProperty().bind(model.getVersion());
+        nickNameLabel.setText(model.getNickName());
+        botIdLabel.setText(model.getBotId());
+        userIdLabel.setText(model.getUserId());
+        transportAddressLabel.setText(model.getTransportAddress());
+        profileAgeLabel.setText(model.getProfileAge());
+        versionLabel.setText(model.getVersion());
 
-        botIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBotId().get()));
-        userIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getUserId().get()));
-        transportAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTransportAddress().get()));
+        totalReputationScoreLabel.textProperty().bind(model.getTotalReputationScore());
+
+        nickNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getNickName()));
+        botIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBotId()));
+        userIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getUserId()));
+        transportAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTransportAddress()));
     }
 
     @Override
     protected void onViewDetached() {
-        botIdLabel.textProperty().unbind();
-        userIdLabel.textProperty().unbind();
-        transportAddressLabel.textProperty().unbind();
         totalReputationScoreLabel.textProperty().unbind();
-        profileAgeLabel.textProperty().unbind();
-        lastUserActivityLabel.textProperty().unbind();
-        versionLabel.textProperty().unbind();
-
+        nickNameCopyButton.setOnAction(null);
         botIdCopyButton.setOnAction(null);
         userIdCopyButton.setOnAction(null);
         transportAddressCopyButton.setOnAction(null);

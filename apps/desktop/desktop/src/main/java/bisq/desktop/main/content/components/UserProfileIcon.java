@@ -17,10 +17,13 @@
 
 package bisq.desktop.main.content.components;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleStringProperty;
@@ -69,6 +72,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         setAlignment(Pos.CENTER);
         getChildren().addAll(catHashImageView, livenessIndicator);
         sceneChangeListener = (ov, oldValue, newScene) -> handleSceneChange(oldValue, newScene);
+        this.getStyleClass().add("hand-cursor");
     }
 
     private void handleSceneChange(Scene oldValue, Scene newScene) {
@@ -110,11 +114,15 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         } else {
             livenessScheduler.start(userProfile);
         }
+
+        setOnMouseClicked(e ->
+                Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile)));
     }
 
     public void dispose() {
         livenessScheduler.dispose();
         catHashImageView.setImage(null);
+        setOnMouseClicked(null);
         userProfile = null;
         Tooltip.uninstall(this, tooltip);
     }
