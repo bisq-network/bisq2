@@ -23,7 +23,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
-import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
@@ -43,7 +42,7 @@ import java.util.Comparator;
 
 @Slf4j
 public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, ProfileCardOffersController> {
-    private final BisqTableView<OfferbookListItem> tableView;
+    private final BisqTableView<ProfileCardOfferListItem> tableView;
 
     public ProfileCardOffersView(ProfileCardOffersModel model,
                                  ProfileCardOffersController controller) {
@@ -74,48 +73,48 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
     }
 
     private void configTableView() {
-        BisqTableColumn<OfferbookListItem> marketColumn = new BisqTableColumn.Builder<OfferbookListItem>()
+        BisqTableColumn<ProfileCardOfferListItem> marketColumn = new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.market"))
                 .left()
                 .minWidth(90)
-                .comparator(Comparator.comparing(OfferbookListItem::getMarketCurrencyCode)
-                        .thenComparing(OfferbookListItem::getOfferAgeInDays))
+                .comparator(Comparator.comparing(ProfileCardOfferListItem::getMarketCurrencyCode)
+                        .thenComparing(ProfileCardOfferListItem::getOfferAgeInDays))
                 .setCellFactory(getMarketCellFactory())
                 .build();
         tableView.getColumns().add(marketColumn);
         tableView.getSortOrder().add(marketColumn);
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.offerAge"))
                 .minWidth(60)
-                .comparator(Comparator.comparing(OfferbookListItem::getOfferAgeInDays))
+                .comparator(Comparator.comparing(ProfileCardOfferListItem::getOfferAgeInDays))
                 .setCellFactory(getOfferAgeCellFactory())
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.offer"))
                 .minWidth(80)
-                .comparator(Comparator.comparing(OfferbookListItem::getOfferType))
-                .valueSupplier(OfferbookListItem::getOfferType)
+                .comparator(Comparator.comparing(ProfileCardOfferListItem::getOfferType))
+                .valueSupplier(ProfileCardOfferListItem::getOfferType)
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.amount"))
                 .right()
                 .minWidth(150)
-                .comparator(Comparator.comparing(OfferbookListItem::getQuoteSideMinAmount))
-                .valueSupplier(OfferbookListItem::getFormattedRangeQuoteAmount)
+                .comparator(Comparator.comparing(ProfileCardOfferListItem::getQuoteSideMinAmount))
+                .valueSupplier(ProfileCardOfferListItem::getFormattedRangeQuoteAmount)
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.price"))
                 .right()
                 .minWidth(90)
-                .comparator(Comparator.comparing(OfferbookListItem::getPriceSpecAsPercent))
+                .comparator(Comparator.comparing(ProfileCardOfferListItem::getPriceSpecAsPercent))
                 .setCellFactory(getPriceCellFactory())
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.paymentMethods"))
                 .right()
                 .minWidth(210)
@@ -123,15 +122,15 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .setCellFactory(getPaymentMethodsCellFactory())
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<OfferbookListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .minWidth(100)
                 .isSortable(false)
                 .setCellFactory(getGotToOfferCellFactory())
                 .build());
     }
 
-    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
-            TableCell<OfferbookListItem, OfferbookListItem>> getMarketCellFactory() {
+    private Callback<TableColumn<ProfileCardOfferListItem, ProfileCardOfferListItem>,
+            TableCell<ProfileCardOfferListItem, ProfileCardOfferListItem>> getMarketCellFactory() {
         return column -> new TableCell<>() {
             private final HBox marketLogoAndCodeBox = new HBox(10);
             private final Label marketCodeLabel = new Label();
@@ -141,7 +140,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
             }
 
             @Override
-            protected void updateItem(OfferbookListItem item, boolean empty) {
+            protected void updateItem(ProfileCardOfferListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -160,14 +159,14 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         };
     }
 
-    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
-            TableCell<OfferbookListItem, OfferbookListItem>> getOfferAgeCellFactory() {
+    private Callback<TableColumn<ProfileCardOfferListItem, ProfileCardOfferListItem>,
+            TableCell<ProfileCardOfferListItem, ProfileCardOfferListItem>> getOfferAgeCellFactory() {
         return column -> new TableCell<>() {
             private final Label offerAgeLabel = new Label();
             private final BisqTooltip tooltip = new BisqTooltip();
 
             @Override
-            protected void updateItem(OfferbookListItem item, boolean empty) {
+            protected void updateItem(ProfileCardOfferListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -184,14 +183,14 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         };
     }
 
-    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
-            TableCell<OfferbookListItem, OfferbookListItem>> getPriceCellFactory() {
+    private Callback<TableColumn<ProfileCardOfferListItem, ProfileCardOfferListItem>,
+            TableCell<ProfileCardOfferListItem, ProfileCardOfferListItem>> getPriceCellFactory() {
         return column -> new TableCell<>() {
             private final Label percentagePriceLabel = new Label();
             private final BisqTooltip tooltip = new BisqTooltip();
 
             @Override
-            protected void updateItem(OfferbookListItem item, boolean empty) {
+            protected void updateItem(ProfileCardOfferListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -208,11 +207,11 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         };
     }
 
-    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
-            TableCell<OfferbookListItem, OfferbookListItem>> getPaymentMethodsCellFactory() {
+    private Callback<TableColumn<ProfileCardOfferListItem, ProfileCardOfferListItem>,
+            TableCell<ProfileCardOfferListItem, ProfileCardOfferListItem>> getPaymentMethodsCellFactory() {
         return column -> new TableCell<>() {
             @Override
-            protected void updateItem(OfferbookListItem item, boolean empty) {
+            protected void updateItem(ProfileCardOfferListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -227,8 +226,8 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         };
     }
 
-    private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
-            TableCell<OfferbookListItem, OfferbookListItem>> getGotToOfferCellFactory() {
+    private Callback<TableColumn<ProfileCardOfferListItem, ProfileCardOfferListItem>,
+            TableCell<ProfileCardOfferListItem, ProfileCardOfferListItem>> getGotToOfferCellFactory() {
         return column -> new TableCell<>() {
             private final BisqMenuItem goToOfferButton = new BisqMenuItem(
                     Res.get("user.profileCard.offers.table.columns.goToOffer.button"));
@@ -239,7 +238,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
             }
 
             @Override
-            protected void updateItem(OfferbookListItem item, boolean empty) {
+            protected void updateItem(ProfileCardOfferListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
