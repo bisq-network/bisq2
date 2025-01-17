@@ -23,6 +23,7 @@ message MediationCase {
   MediationRequest mediationRequest = 1;
   sint64 requestDate = 2;
   bool isClosed = 3;
+  optional sint64 closeCaseDate = 4;
 }
 message MediatorStore {
   repeated MediationCase mediationCases = 1;
