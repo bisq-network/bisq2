@@ -30,16 +30,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Slf4j
 public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, ProfileCardDetailsController> {
     private final Label nickNameLabel, botIdLabel, userIdLabel, transportAddressLabel, totalReputationScoreLabel, profileAgeLabel,
-            lastUserActivityLabel;
-    private final VBox contentBox;
-    @Nullable
-    private Label statementLabel;
+            lastUserActivityLabel, versionLabel;
     private final BisqMenuItem nickNameCopyButton, botIdCopyButton, userIdCopyButton, transportAddressCopyButton;
     private HBox statementBox;
 
@@ -50,7 +46,7 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
         // Bot ID
         nickNameLabel = new Label();
         nickNameCopyButton = new BisqMenuItem("copy-grey", "copy-white");
-        HBox nickNameIdBox = createAndGetTitleAndDetailsBox("user.profileCard.details.nickName",
+        HBox nickNameIdBox = createAndGetTitleAndDetailsBox("onboarding.createProfile.nickName",
                 nickNameLabel, Optional.of(nickNameCopyButton));
 
         // Bot ID
@@ -83,8 +79,12 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
         lastUserActivityLabel = new Label();
         HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.profileCard.details.lastUserActivity", lastUserActivityLabel);
 
-        contentBox = new VBox(16, nickNameIdBox, botIdBox, userIdBox, transportAddressBox,
-                totalReputationScoreBox, profileAgeBox, lastUserActivityBox);
+        // Version
+        versionLabel = new Label();
+        HBox versionBox = createAndGetTitleAndDetailsBox("user.profileCard.details.version", versionLabel);
+
+        VBox contentBox = new VBox(16, nickNameIdBox, botIdBox, userIdBox, transportAddressBox,
+                totalReputationScoreBox, profileAgeBox, lastUserActivityBox, versionBox);
 
 
         contentBox.getStyleClass().add("bisq-common-bg");
@@ -99,19 +99,12 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
 
     @Override
     protected void onViewAttached() {
-        // Statement
-        model.getStatement().ifPresent(statement -> {
-            statementLabel = new Label(statement);
-            statementBox = createAndGetTitleAndDetailsBox("user.userProfile.statement", statementLabel);
-            contentBox.getChildren().add(statementBox);
-        });
-        root.heightProperty().addListener((observable, oldValue, newValue) -> {log.error(newValue.toString());});
-
         nickNameLabel.setText(model.getNickName());
         botIdLabel.setText(model.getBotId());
         userIdLabel.setText(model.getUserId());
         transportAddressLabel.setText(model.getTransportAddress());
         profileAgeLabel.setText(model.getProfileAge());
+        versionLabel.setText(model.getVersion());
 
         lastUserActivityLabel.textProperty().bind(model.getLastUserActivity());
         totalReputationScoreLabel.textProperty().bind(model.getTotalReputationScore());
@@ -130,12 +123,6 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
         botIdCopyButton.setOnAction(null);
         userIdCopyButton.setOnAction(null);
         transportAddressCopyButton.setOnAction(null);
-
-        if (statementBox != null) {
-            contentBox.getChildren().remove(statementBox);
-            statementBox = null;
-            statementLabel = null;
-        }
     }
 
     private HBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel) {

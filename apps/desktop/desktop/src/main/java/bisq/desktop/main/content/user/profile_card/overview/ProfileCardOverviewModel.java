@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.profile_card.terms;
+package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.SimpleStringProperty;
@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class ProfileCardTermsModel implements Model {
+public class ProfileCardOverviewModel implements Model {
+    private final StringProperty statement = new SimpleStringProperty();
     private final StringProperty tradeTerms = new SimpleStringProperty();
 }

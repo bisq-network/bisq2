@@ -57,6 +57,8 @@ public class ProfileCardDetailsController implements Controller {
                 .map(TimeFormatter::formatAgeInDaysAndYears)
                 .orElse(Res.get("data.na")));
         model.setStatement(StringUtils.toOptional(userProfile.getStatement()));
+        String version = userProfile.getApplicationVersion();
+        model.setVersion(version.isEmpty() ? Res.get("data.na") : version);
     }
 
     @Override

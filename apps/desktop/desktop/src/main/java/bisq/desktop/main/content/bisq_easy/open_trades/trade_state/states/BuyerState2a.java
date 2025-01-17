@@ -39,8 +39,6 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.chat.ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
-
 @Slf4j
 public class BuyerState2a extends BaseState {
     private final Controller controller;
@@ -94,7 +92,7 @@ public class BuyerState2a extends BaseState {
 
                 // Report to moderator
                 String message = "Account data of " + peerUserName + " is banned: " + sellersAccountData;
-                moderatorService.reportUserProfile(peer, message, BISQ_EASY_OPEN_TRADES);
+                moderatorService.reportUserProfile(peer, message);
 
                 // We reject the trade to avoid the banned user can continue
                 bisqEasyTradeService.cancelTrade(bisqEasyTrade);

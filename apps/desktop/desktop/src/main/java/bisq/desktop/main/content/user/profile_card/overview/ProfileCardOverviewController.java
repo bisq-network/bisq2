@@ -15,21 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.profile_card.terms;
+package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 
-public class ProfileCardTermsController implements Controller {
+public class ProfileCardOverviewController implements Controller {
     @Getter
-    private final ProfileCardTermsView view;
-    private final ProfileCardTermsModel model;
+    private final ProfileCardOverviewView view;
+    private final ProfileCardOverviewModel model;
 
-    public ProfileCardTermsController(ServiceProvider serviceProvider) {
-        model = new ProfileCardTermsModel();
-        view = new ProfileCardTermsView(model, this);
+    public ProfileCardOverviewController(ServiceProvider serviceProvider) {
+        model = new ProfileCardOverviewModel();
+        view = new ProfileCardOverviewView(model, this);
+    }
+
+    public void setUserProfile(UserProfile userProfile) {
+        model.getStatement().set(userProfile.getStatement().isBlank() ? "-" : userProfile.getStatement());
+        model.getTradeTerms().set(userProfile.getTerms().isBlank() ? "-" : userProfile.getTerms());
     }
 
     @Override
@@ -40,7 +45,4 @@ public class ProfileCardTermsController implements Controller {
     public void onDeactivate() {
     }
 
-    public void setUserProfile(UserProfile userProfile) {
-        model.getTradeTerms().set(userProfile.getTerms().isBlank() ? "-" : userProfile.getTerms());
-    }
 }

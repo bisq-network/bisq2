@@ -29,9 +29,6 @@ import lombok.Setter;
 public class ProfileCardModel extends TabModel {
     @Setter
     private UserProfile userProfile;
-    @Setter
-    private  boolean termsVisible;
-
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();

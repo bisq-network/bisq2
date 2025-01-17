@@ -209,7 +209,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                 image = ImageUtil.getImageViewById(model.getChannelIconId().get());
             }
             headline.setGraphic(image);
-            headline.setGraphicTextGap(5);
+            headline.setGraphicTextGap(10);
             root.visibleProperty().bind(model.getShouldShow());
             root.managedProperty().bind(model.getShouldShow());
             model.getChannelMessageItems().addListener(listChangeListener);

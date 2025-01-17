@@ -38,10 +38,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardController> {
-    public final static double SUB_VIEWS_CONTENT_HEIGHT = 343;
+    public final static double SUB_VIEWS_CONTENT_HEIGHT = 307;
     private final ProfileCardController controller;
     private final TabButton offersTabButton;
-    private final TabButton terms;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
@@ -56,12 +55,12 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         this.controller = controller;
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT + 36);
+        root.setPrefHeight(OverlayModel.HEIGHT);
         root.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
         root.getStyleClass().add("profile-card");
 
+        addTab(Res.get("user.profileCard.tab.overview"), NavigationTarget.PROFILE_CARD_OVERVIEW);
         addTab(Res.get("user.profileCard.tab.details"), NavigationTarget.PROFILE_CARD_DETAILS);
-        terms = addTab(Res.get("user.userProfile.terms"), NavigationTarget.PROFILE_CARD_TERMS);
         addTab(Res.get("user.profileCard.tab.reputation"), NavigationTarget.PROFILE_CARD_REPUTATION);
         offersTabButton = addTab("", NavigationTarget.PROFILE_CARD_OFFERS);
         addTab(Res.get("user.profileCard.tab.messages"), NavigationTarget.PROFILE_CARD_MESSAGES);
@@ -69,9 +68,6 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
     @Override
     protected void onViewAttached() {
-        terms.setVisible(model.isTermsVisible());
-        terms.setManaged(model.isTermsVisible());
-
         sendPrivateMsg.visibleProperty().bind(model.getShouldShowUserActionsMenu());
         sendPrivateMsg.managedProperty().bind(model.getShouldShowUserActionsMenu());
         ignore.visibleProperty().bind(model.getIgnoreUserSelected().not().and(model.getShouldShowUserActionsMenu()));
