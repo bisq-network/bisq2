@@ -406,7 +406,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 if (item != null && !empty) {
                     userNameLabel.setText(item.getUserNickname());
                     reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    userProfileIcon.setUserProfile(item.getSenderUserProfile());
+                    userProfileIcon.setUserProfile(item.getSenderUserProfile(), false);
                     setGraphic(userProfileBox);
                 } else {
                     userNameLabel.setText("");

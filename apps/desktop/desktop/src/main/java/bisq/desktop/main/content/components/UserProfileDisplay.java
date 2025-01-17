@@ -43,22 +43,39 @@ public class UserProfileDisplay extends HBox {
     private final Label userName;
 
     public UserProfileDisplay() {
-        this(null, DEFAULT_ICON_SIZE, null);
+        this(null, DEFAULT_ICON_SIZE, null, true);
     }
 
     public UserProfileDisplay(double size) {
-        this(null, size, null);
+        this(size, true);
+    }
+
+    public UserProfileDisplay(double size, boolean openProfileCardOnClick) {
+        this(null, size, null, openProfileCardOnClick);
     }
 
     public UserProfileDisplay(@Nullable UserProfile userProfile) {
-        this(userProfile, DEFAULT_ICON_SIZE, null);
+        this(userProfile, true);
+    }
+
+    public UserProfileDisplay(@Nullable UserProfile userProfile, boolean openProfileCardOnClick) {
+        this(userProfile, DEFAULT_ICON_SIZE, null, openProfileCardOnClick);
     }
 
     public UserProfileDisplay(@Nullable UserProfile userProfile, @Nullable ReputationScore reputationScore) {
-        this(userProfile, DEFAULT_ICON_SIZE, reputationScore);
+        this(userProfile, reputationScore, true);
     }
 
-    public UserProfileDisplay(@Nullable UserProfile userProfile, double size, @Nullable ReputationScore reputationScore) {
+    public UserProfileDisplay(@Nullable UserProfile userProfile,
+                              @Nullable ReputationScore reputationScore,
+                              boolean openProfileCardOnClick) {
+        this(userProfile, DEFAULT_ICON_SIZE, reputationScore, openProfileCardOnClick);
+    }
+
+    public UserProfileDisplay(@Nullable UserProfile userProfile,
+                              double size,
+                              @Nullable ReputationScore reputationScore,
+                              boolean openProfileCardOnClick) {
         super(10);
 
         getStyleClass().add("user-profile-display");
@@ -77,7 +94,7 @@ public class UserProfileDisplay extends HBox {
         getChildren().addAll(userProfileIcon, vBox);
 
         if (userProfile != null) {
-            setUserProfile(userProfile);
+            setUserProfile(userProfile, openProfileCardOnClick);
         }
 
         if (reputationScore != null) {
@@ -86,12 +103,20 @@ public class UserProfileDisplay extends HBox {
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile) {
-        userProfileIcon.setUserProfile(userProfile);
+        setUserProfile(userProfile, true);
+    }
+
+    public void setUserProfile(@Nullable UserProfile userProfile, boolean openProfileCardOnClick) {
+        userProfileIcon.setUserProfile(userProfile, openProfileCardOnClick);
         applyTooltip();
         if (userProfile != null) {
             userName.setText(userProfile.getUserName());
         }
-        configureOpenProfileCard(userProfile);
+        if (openProfileCardOnClick) {
+            userName.setOnMouseClicked(e ->
+                    Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile)));
+            userName.getStyleClass().add("hand-cursor");
+        }
     }
 
     public void dispose() {
@@ -122,11 +147,5 @@ public class UserProfileDisplay extends HBox {
 
     public void setReputationScoreDisplayScale(double scale) {
         reputationScoreDisplay.setScale(scale);
-    }
-
-    public void configureOpenProfileCard(UserProfile userProfile) {
-        userName.setOnMouseClicked(e ->
-                Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile)));
-        userName.getStyleClass().add("hand-cursor");
     }
 }
