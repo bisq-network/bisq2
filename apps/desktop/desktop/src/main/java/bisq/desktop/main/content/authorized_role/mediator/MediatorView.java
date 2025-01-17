@@ -78,6 +78,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     private final BisqTableView<ListItem> tableView;
     private final Button toggleChatWindowButton;
     private final AnchorPane tableViewAnchorPane;
+    private BisqTableColumn<ListItem> closeCaseDateColumn;
 
     private final InvalidationListener listItemListener;
     private Subscription noOpenCasesPin, tableViewSelectionPin, selectedModelItemPin, showClosedCasesPin, chatWindowPin;
@@ -169,6 +170,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             tableView.setPlaceholderText(showClosedCases ?
                     Res.get("authorizedRole.mediator.noClosedCases") :
                     Res.get("authorizedRole.mediator.noOpenCases"));
+            closeCaseDateColumn.setVisible(showClosedCases);
         });
 
         chatWindowPin = EasyBind.subscribe(model.getChatWindow(), this::chatWindowChanged);
@@ -327,6 +329,42 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 .valueSupplier(ListItem::getPaymentMethod)
                 .tooltipSupplier(ListItem::getPaymentMethod)
                 .build());
+        closeCaseDateColumn = new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("authorizedRole.mediator.table.header.closeCaseDate"))
+                .minWidth(130)
+                .right()
+                .comparator(Comparator.comparing(ListItem::getCloseCaseDate))
+                .sortType(TableColumn.SortType.DESCENDING)
+                .setCellFactory(getCloseDateCellFactory())
+                .build();
+        tableView.getColumns().add(closeCaseDateColumn);
+    }
+
+
+    private Callback<TableColumn<ListItem, ListItem>,
+            TableCell<ListItem, ListItem>> getCloseDateCellFactory() {
+        return column -> new TableCell<>() {
+
+            private final Label label = new Label();
+
+            @Override
+            protected void updateItem(ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    Label date = new Label(item.getCloseCaseDateString());
+                    date.getStyleClass().add("table-view-date-column-date");
+                    Label time = new Label(item.getCloseCaseTimeString());
+                    time.getStyleClass().add("table-view-date-column-time");
+                    VBox vBox = new VBox(3, date, time);
+                    vBox.setAlignment(Pos.CENTER);
+                    setAlignment(Pos.CENTER);
+                    setGraphic(vBox);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
     }
 
     private Callback<TableColumn<ListItem, ListItem>,
@@ -440,6 +478,8 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         private final Badge makersBadge = new Badge();
         private final Badge takersBadge = new Badge();
         private Pin changedChatNotificationPin;
+        private Long closeCaseDate;
+        private String closeCaseDateString, closeCaseTimeString;
 
         ListItem(ServiceProvider serviceProvider,
                  MediationCase mediationCase,
@@ -484,6 +524,11 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
         @Override
         public void onActivate() {
+            Optional<Long> optionalCloseCaseDate = mediationCase.getCloseCaseDate();
+            closeCaseDate = optionalCloseCaseDate.orElse(0L);
+            closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
+            closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");
+
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
                 if (notification == null) {
                     return;
