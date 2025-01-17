@@ -200,7 +200,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             return;
         }
         // Allow table to use full height if chat is detached
-        int maxNumItems = model.getChatWindow().get() == null ? 4 : Integer.MAX_VALUE;
+        int maxNumItems = model.getChatWindow().get() == null ? 3 : Integer.MAX_VALUE;
         double height = tableView.calculateTableHeight(maxNumItems);
         tableViewAnchorPane.setMinHeight(height + 1);
         tableViewAnchorPane.setMaxHeight(height + 1);
@@ -478,8 +478,9 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         private final Badge makersBadge = new Badge();
         private final Badge takersBadge = new Badge();
         private Pin changedChatNotificationPin;
-        private Long closeCaseDate;
-        private String closeCaseDateString, closeCaseTimeString;
+        private Long closeCaseDate = 0L;
+        private String closeCaseDateString = "";
+        private String closeCaseTimeString = "";
 
         ListItem(ServiceProvider serviceProvider,
                  MediationCase mediationCase,
