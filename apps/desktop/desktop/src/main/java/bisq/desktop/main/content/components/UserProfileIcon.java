@@ -72,7 +72,6 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         setAlignment(Pos.CENTER);
         getChildren().addAll(catHashImageView, livenessIndicator);
         sceneChangeListener = (ov, oldValue, newScene) -> handleSceneChange(oldValue, newScene);
-        this.getStyleClass().add("hand-cursor");
     }
 
     private void handleSceneChange(Scene oldValue, Scene newScene) {
@@ -89,6 +88,10 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile) {
+        setUserProfile(userProfile, true);
+    }
+
+    public void setUserProfile(@Nullable UserProfile userProfile, boolean openProfileCardOnClick) {
         this.userProfile = userProfile;
 
         if (userProfile == null) {
@@ -115,8 +118,11 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
             livenessScheduler.start(userProfile);
         }
 
-        setOnMouseClicked(e ->
-                Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile)));
+        if (openProfileCardOnClick) {
+            this.getStyleClass().add("hand-cursor");
+            setOnMouseClicked(e ->
+                    Navigation.navigateTo(NavigationTarget.PROFILE_CARD, new ProfileCardController.InitData(userProfile)));
+        }
     }
 
     public void dispose() {

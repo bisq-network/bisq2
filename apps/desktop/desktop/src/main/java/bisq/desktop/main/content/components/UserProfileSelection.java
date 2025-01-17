@@ -252,12 +252,12 @@ public class UserProfileSelection {
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
             super(new Pane(), model, controller);
 
-            userProfileDisplay = new UserProfileDisplay(iconSize);
+            userProfileDisplay = new UserProfileDisplay(iconSize, false);
             dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
             dropdownMenu.setContent(userProfileDisplay);
             dropdownMenu.useSpaceBetweenContentAndIcon();
 
-            singleUserProfileDisplay = new UserProfileDisplay(iconSize);
+            singleUserProfileDisplay = new UserProfileDisplay(iconSize, false);
             singleUserProfileHBox = new HBox(singleUserProfileDisplay);
             singleUserProfileHBox.getStyleClass().add("single-user-profile");
             singleUserProfileHBox.setFillHeight(true);
@@ -280,9 +280,9 @@ public class UserProfileSelection {
             singleUserProfileHBox.managedProperty().bind(model.getShouldShowMenu().not());
 
             selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserIdentity(), selectedUserIdentity -> {
-                userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
+                userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile(), false);
                 userProfileDisplay.setReputationScore(model.getUserReputationScore());
-                singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile());
+                singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile(), false);
                 singleUserProfileDisplay.setReputationScore(model.getUserReputationScore());
                 model.getUserProfiles().forEach(userProfileMenuItem ->
                         userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity())));
@@ -334,7 +334,7 @@ public class UserProfileSelection {
         private final UserIdentity userIdentity;
 
         private UserProfileMenuItem(UserIdentity userIdentity, ReputationScore reputationScore) {
-            super("check-white", "check-white", new UserProfileDisplay(userIdentity.getUserProfile(), reputationScore));
+            super("check-white", "check-white", new UserProfileDisplay(userIdentity.getUserProfile(), reputationScore, false));
 
             this.userIdentity = userIdentity;
             getStyleClass().add("dropdown-menu-item");

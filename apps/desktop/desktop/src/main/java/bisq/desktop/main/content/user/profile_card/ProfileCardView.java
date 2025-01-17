@@ -79,7 +79,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
 
         UserProfile userProfile = model.getUserProfile();
-        userProfileIcon.setUserProfile(userProfile);
+        userProfileIcon.setUserProfile(userProfile, false);
         String nickname = userProfile.getNickName();
         userNickNameLabel.setText(controller.isUserProfileBanned()
                 ? Res.get("user.profileCard.userNickname.banned", nickname)
