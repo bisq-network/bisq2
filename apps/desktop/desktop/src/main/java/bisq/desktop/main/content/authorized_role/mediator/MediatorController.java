@@ -38,6 +38,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
 import javafx.collections.transformation.SortedList;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -153,8 +154,11 @@ public class MediatorController implements Controller {
 
     @Override
     public void onDeactivate() {
+        doCloseChatWindow();
+
         model.getListItems().removeListener(itemListener);
         model.getListItems().onDeactivate();
+        model.getChatWindow().set(null);
         mediationCaseListItemPin.unbind();
         selectedChannelPin.unbind();
     }
@@ -170,6 +174,26 @@ public class MediatorController implements Controller {
     void onToggleClosedCases() {
         model.getShowClosedCases().set(!model.getShowClosedCases().get());
         applyShowClosedCasesChange();
+    }
+
+
+    void onToggleChatWindow() {
+        if (model.getChatWindow().get() == null) {
+            model.getChatWindow().set(new Stage());
+        } else {
+            doCloseChatWindow();
+        }
+    }
+
+    void onCloseChatWindow() {
+        doCloseChatWindow();
+    }
+
+    private void doCloseChatWindow() {
+        if (model.getChatWindow().get() != null) {
+            model.getChatWindow().get().hide();
+        }
+        model.getChatWindow().set(null);
     }
 
     private void closeCaseHandler() {

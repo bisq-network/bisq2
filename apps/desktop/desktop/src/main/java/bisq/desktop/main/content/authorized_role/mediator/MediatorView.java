@@ -22,12 +22,15 @@ import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.data.Quadruple;
 import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.desktop.CssConfig;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.components.table.*;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
@@ -44,12 +47,17 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.InvalidationListener;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.layout.*;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -66,15 +74,17 @@ import java.util.Optional;
 @Slf4j
 public class MediatorView extends View<ScrollPane, MediatorModel, MediatorController> {
     private final Switch showClosedCasesSwitch;
-    private final VBox chatVBox;
+    private final VBox centerVBox, chatVBox;
     private final BisqTableView<ListItem> tableView;
+    private final Button toggleChatWindowButton;
     private final AnchorPane tableViewAnchorPane;
+
     private final InvalidationListener listItemListener;
-    private Subscription noOpenCasesPin, tableViewSelectionPin, selectedModelItemPin, showClosedCasesPin;
+    private Subscription noOpenCasesPin, tableViewSelectionPin, selectedModelItemPin, showClosedCasesPin, chatWindowPin;
 
     public MediatorView(MediatorModel model,
                         MediatorController controller,
-                        Pane mediationCaseHeader,
+                        HBox mediationCaseHeader,
                         VBox chatMessagesComponent) {
 
         super(new ScrollPane(), model, controller);
@@ -86,16 +96,18 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         Quadruple<Label, HBox, AnchorPane, VBox> quadruple = BisqEasyViewUtils.getTableViewContainer(Res.get("authorizedRole.mediator.table.headline"), tableView);
         HBox header = quadruple.getSecond();
         tableViewAnchorPane = quadruple.getThird();
-        VBox container = quadruple.getForth();
-
+        VBox tableVBox = quadruple.getForth();
         VBox.setMargin(tableViewAnchorPane, new Insets(10, 0, 0, 0));
+
+        toggleChatWindowButton = new Button();
+        toggleChatWindowButton.setGraphicTextGap(10);
+        toggleChatWindowButton.getStyleClass().add("outlined-button");
+        toggleChatWindowButton.setMinWidth(120);
+        toggleChatWindowButton.setStyle("-fx-padding: 5 16 5 16");
+        mediationCaseHeader.getChildren().add(toggleChatWindowButton);
 
         showClosedCasesSwitch = new Switch(Res.get("authorizedRole.mediator.showClosedCases"));
         header.getChildren().addAll(Spacer.fillHBox(), showClosedCasesSwitch);
-
-        VBox.setMargin(container, new Insets(0, 0, 10, 0));
-        VBox centerVBox = new VBox();
-        centerVBox.getChildren().add(container);
 
         chatMessagesComponent.setMinHeight(200);
         chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
@@ -104,10 +116,10 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatVBox = new VBox(mediationCaseHeader, Layout.hLine(), chatMessagesComponent);
         chatVBox.getStyleClass().add("bisq-easy-container");
-
-        VBox.setVgrow(chatVBox, Priority.ALWAYS);
-        centerVBox.getChildren().add(chatVBox);
-
+        centerVBox = new VBox();
+        VBox.setVgrow(tableVBox, Priority.ALWAYS);
+        VBox.setMargin(tableVBox, new Insets(0, 0, 10, 0));
+        centerVBox.getChildren().addAll(tableVBox, chatVBox);
         centerVBox.setPadding(new Insets(0, 40, 0, 40));
 
         VBox.setVgrow(centerVBox, Priority.ALWAYS);
@@ -158,7 +170,11 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                     Res.get("authorizedRole.mediator.noClosedCases") :
                     Res.get("authorizedRole.mediator.noOpenCases"));
         });
+
+        chatWindowPin = EasyBind.subscribe(model.getChatWindow(), this::chatWindowChanged);
+
         showClosedCasesSwitch.setOnAction(e -> controller.onToggleClosedCases());
+        toggleChatWindowButton.setOnAction(e -> controller.onToggleChatWindow());
 
         numListItemsChanged();
     }
@@ -172,14 +188,18 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         tableViewSelectionPin.unsubscribe();
         noOpenCasesPin.unsubscribe();
         showClosedCasesPin.unsubscribe();
+        chatWindowPin.unsubscribe();
         showClosedCasesSwitch.setOnAction(null);
+        toggleChatWindowButton.setOnAction(null);
     }
 
     private void numListItemsChanged() {
         if (tableView.getItems().isEmpty()) {
             return;
         }
-        double height = tableView.calculateTableHeight(5);
+        // Allow table to use full height if chat is detached
+        int maxNumItems = model.getChatWindow().get() == null ? 4 : Integer.MAX_VALUE;
+        double height = tableView.calculateTableHeight(maxNumItems);
         tableViewAnchorPane.setMinHeight(height + 1);
         tableViewAnchorPane.setMaxHeight(height + 1);
         UIThread.runOnNextRenderFrame(() -> {
@@ -188,6 +208,65 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             // Delay call as otherwise the width does not take the scrollbar width correctly into account
             UIThread.runOnNextRenderFrame(tableView::adjustMinWidth);
         });
+    }
+
+    private void chatWindowChanged(Stage chatWindow) {
+        numListItemsChanged();
+        if (chatWindow == null) {
+            ImageView icon = ImageUtil.getImageViewById("detach");
+            toggleChatWindowButton.setText(Res.get("bisqEasy.openTrades.chat.detach"));
+            toggleChatWindowButton.setTooltip(new BisqTooltip(Res.get("bisqEasy.openTrades.chat.detach.tooltip")));
+            toggleChatWindowButton.setGraphic(icon);
+            if (!centerVBox.getChildren().contains(chatVBox)) {
+                centerVBox.getChildren().add(chatVBox);
+            }
+        } else {
+            ImageView icon = ImageUtil.getImageViewById("attach");
+            toggleChatWindowButton.setText(Res.get("bisqEasy.openTrades.chat.attach"));
+            toggleChatWindowButton.setTooltip(new BisqTooltip(Res.get("bisqEasy.openTrades.chat.attach.tooltip")));
+            toggleChatWindowButton.setGraphic(icon);
+
+            chatWindow.titleProperty().bind(model.getChatWindowTitle());
+            ImageUtil.addAppIcons(chatWindow);
+            chatWindow.initModality(Modality.NONE);
+
+            // We open the window at the button position (need to be done before we remove the chatVBox
+            // TODO we could persist the position and size of the window and use it for next time opening...
+            Point2D windowPoint = new Point2D(root.getScene().getWindow().getX(), root.getScene().getWindow().getY());
+            Point2D scenePoint = new Point2D(root.getScene().getX(), root.getScene().getY());
+            Point2D buttonPoint = toggleChatWindowButton.localToScene(0.0, 0.0);
+            double x = Math.round(windowPoint.getX() + scenePoint.getX() + buttonPoint.getX());
+            double y = Math.round(windowPoint.getY() + scenePoint.getY() + buttonPoint.getY());
+            chatWindow.setX(x);
+            chatWindow.setY(y);
+            chatWindow.setMinWidth(600);
+            chatWindow.setMinHeight(400);
+            chatWindow.setWidth(1000);
+            chatWindow.setHeight(700);
+
+            chatWindow.setOnCloseRequest(event -> {
+                event.consume();
+                chatWindow.titleProperty().unbind();
+                controller.onCloseChatWindow();
+                chatWindow.hide();
+            });
+
+            chatWindow.show();
+
+            centerVBox.getChildren().remove(chatVBox);
+
+            Layout.pinToAnchorPane(chatVBox, 0, 0, 0, 0);
+            AnchorPane windowRoot = new AnchorPane(chatVBox);
+            windowRoot.getStyleClass().add("bisq-popup");
+
+            Scene scene = new Scene(windowRoot);
+            CssConfig.addAllCss(scene);
+            chatWindow.setScene(scene);
+
+            // Avoid flicker
+            chatWindow.setOpacity(0);
+            UIThread.runOnNextRenderFrame(() -> chatWindow.setOpacity(1));
+        }
     }
 
     private void configTableView() {
