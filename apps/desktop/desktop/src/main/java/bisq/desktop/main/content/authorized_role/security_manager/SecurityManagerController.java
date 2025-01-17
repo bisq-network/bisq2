@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.security.KeyPair;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -62,7 +63,7 @@ public class SecurityManagerController implements Controller {
     private final DifficultyAdjustmentService difficultyAdjustmentService;
     private Pin userIdentityPin, alertsPin, bondedRoleSetPin, difficultyAdjustmentListItemsPin;
     private Subscription messagePin, requireVersionForTradingPin, minVersionPin, selectedBondedRolePin,
-            difficultyAdjustmentPin;
+            difficultyAdjustmentPin, bannedAccountDataPin;
 
     public SecurityManagerController(ServiceProvider serviceProvider) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
@@ -102,10 +103,20 @@ public class SecurityManagerController implements Controller {
                 .map(SecurityManagerView.DifficultyAdjustmentListItem::new)
                 .to(difficultyAdjustmentService.getAuthorizedDifficultyAdjustmentDataSet());
 
-        model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
-        difficultyAdjustmentPin = EasyBind.subscribe(model.getDifficultyAdjustmentFactor(), difficultyAdjustmentFactor ->
-                model.getDifficultyAdjustmentFactorButtonDisabled().set(difficultyAdjustmentFactor == null ||
-                        !isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor.doubleValue())));
+        double difficultyAdjustmentFactor = difficultyAdjustmentService.getMostRecentValueOrDefault().get();
+        model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentFactor);
+        difficultyAdjustmentPin = EasyBind.subscribe(model.getDifficultyAdjustmentFactor(), factor ->
+                model.getDifficultyAdjustmentFactorButtonDisabled().set(factor == null ||
+                        !isValidDifficultyAdjustmentFactor(factor.doubleValue())));
+        bannedAccountDataPin = EasyBind.subscribe(model.getBannedAccountData(), e -> updateSendButtonDisabled());
+
+        KeyPair keyPair = userIdentityService.getSelectedUserIdentity().getIdentity().getKeyBundle().getKeyPair();
+        alertService.getAuthorizedAlertDataSet().forEach(authorizedAlert ->
+                securityManagerService.rePublishAlert(authorizedAlert, keyPair));
+
+        if (difficultyAdjustmentFactor != NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT) {
+            securityManagerService.publishDifficultyAdjustment(difficultyAdjustmentFactor);
+        }
     }
 
     @Override
@@ -119,6 +130,7 @@ public class SecurityManagerController implements Controller {
         minVersionPin.unsubscribe();
         selectedBondedRolePin.unsubscribe();
         difficultyAdjustmentPin.unsubscribe();
+        bannedAccountDataPin.unsubscribe();
     }
 
     void onSelectAlertType(AlertType alertType) {
@@ -140,6 +152,12 @@ public class SecurityManagerController implements Controller {
             new Popup().warning(Res.get("authorizedRole.securityManager.alert.message.tooLong")).show();
             return;
         }
+        String bannedAccountData = model.getBannedAccountData().get();
+        if (bannedAccountData != null && bannedAccountData.length() > AuthorizedAlertData.MAX_BANNED_ACCOUNT_DATA_LENGTH) {
+            new Popup().warning(Res.get("authorizedRole.securityManager.bannedAccounts.data.tooLong")).show();
+            return;
+        }
+
         SecurityManagerView.BondedRoleListItem bondedRoleListItem = model.getSelectedBondedRoleListItem().get();
         Optional<AuthorizedBondedRole> bannedRole = bondedRoleListItem == null ? Optional.empty() :
                 Optional.ofNullable(bondedRoleListItem.getBondedRole().getAuthorizedBondedRole());
@@ -149,56 +167,27 @@ public class SecurityManagerController implements Controller {
                         model.getHaltTrading().get(),
                         model.getRequireVersionForTrading().get(),
                         StringUtils.toOptional(model.getMinVersion().get()),
-                        bannedRole)
+                        bannedRole,
+                        StringUtils.toOptional(bannedAccountData))
                 .whenComplete((result, throwable) -> UIThread.run(() -> {
                     if (throwable != null) {
                         new Popup().error(throwable).show();
-                    } else {
-                        model.getSelectedAlertType().set(null);
-                        model.getHeadline().set(null);
-                        model.getMessage().set(null);
-                        model.getHaltTrading().set(false);
-                        model.getRequireVersionForTrading().set(false);
-                        model.getMinVersion().set(null);
-                        model.getSelectedBondedRoleListItem().set(null);
                     }
-                }));
-    }
 
-    boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedAlertData authorizedAlertData) {
-        return userIdentityService.getSelectedUserIdentity().getId().equals(authorizedAlertData.getSecurityManagerProfileId());
+                    model.getSelectedAlertType().set(null);
+                    model.getHeadline().set(null);
+                    model.getMessage().set(null);
+                    model.getHaltTrading().set(false);
+                    model.getRequireVersionForTrading().set(false);
+                    model.getMinVersion().set(null);
+                    model.getSelectedBondedRoleListItem().set(null);
+                    model.getBannedAccountData().set(null);
+                }));
     }
 
     void onRemoveAlert(AuthorizedAlertData authorizedAlertData) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         securityManagerService.removeAlert(authorizedAlertData, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
-    }
-
-    String getBondedRoleDisplayString(BondedRole bondedRole) {
-        AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
-        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString().toUpperCase();
-        String profileId = authorizedBondedRole.getProfileId();
-        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
-                .map(UserProfile::getNickName)
-                .orElse(authorizedBondedRole.getBondUserName());
-        Optional<String> addresses = authorizedBondedRole.getAddressByTransportTypeMap()
-                .map(e -> e.values().stream()
-                        .map(Address::getFullAddress)
-                        .collect(Collectors.joining(", ")));
-        if (addresses.isPresent()) {
-            return Res.get("authorizedRole.securityManager.selectedBondedNode", roleType, nickNameOrBondName, profileId, addresses.get());
-        } else {
-            return Res.get("authorizedRole.securityManager.selectedBondedRole", roleType, nickNameOrBondName, profileId);
-        }
-    }
-
-    String getBannedBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
-        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
-        String profileId = authorizedBondedRole.getProfileId();
-        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
-                .map(UserProfile::getNickName)
-                .orElse(authorizedBondedRole.getBondUserName());
-        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickNameOrBondName, profileId);
     }
 
     void onPublishDifficultyAdjustmentFactor() {
@@ -215,21 +204,50 @@ public class SecurityManagerController implements Controller {
         }
     }
 
-    private static boolean isValidDifficultyAdjustmentFactor(double difficultyAdjustmentFactor) {
-        return difficultyAdjustmentFactor >= 0 && difficultyAdjustmentFactor <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT;
-    }
-
-    boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedDifficultyAdjustmentData data) {
-        return userIdentityService.getSelectedUserIdentity().getId().equals(data.getSecurityManagerProfileId());
-    }
-
     void onRemoveDifficultyAdjustmentListItem(SecurityManagerView.DifficultyAdjustmentListItem item) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         securityManagerService.removeDifficultyAdjustment(item.getData(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
         model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
     }
 
+
+    boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedDifficultyAdjustmentData data) {
+        return userIdentityService.getSelectedUserIdentity().getId().equals(data.getSecurityManagerProfileId());
+    }
+
+    boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedAlertData authorizedAlertData) {
+        return userIdentityService.getSelectedUserIdentity().getId().equals(authorizedAlertData.getSecurityManagerProfileId());
+    }
+
+    String getBondedRoleDisplayString(BondedRole bondedRole) {
+        AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
+        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString().toUpperCase();
+        String profileId = authorizedBondedRole.getProfileId();
+        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
+                .map(UserProfile::getNickName)
+                .orElse(authorizedBondedRole.getBondUserName());
+        Optional<String> addresses = authorizedBondedRole.getAddressByTransportTypeMap()
+                .map(e -> e.values().stream()
+                        .map(Address::getFullAddress)
+                        .collect(Collectors.joining(", ")));
+        return addresses.map(address -> Res.get("authorizedRole.securityManager.selectedBondedNode", roleType, nickNameOrBondName, profileId, address))
+                .orElseGet(() -> Res.get("authorizedRole.securityManager.selectedBondedRole", roleType, nickNameOrBondName, profileId));
+    }
+
+    String getBannedBondedRoleDisplayString(AuthorizedBondedRole authorizedBondedRole) {
+        String roleType = authorizedBondedRole.getBondedRoleType().getDisplayString();
+        String profileId = authorizedBondedRole.getProfileId();
+        String nickNameOrBondName = userProfileService.findUserProfile(profileId)
+                .map(UserProfile::getNickName)
+                .orElse(authorizedBondedRole.getBondUserName());
+        return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickNameOrBondName, profileId);
+    }
+
     private void applySelectAlertType(AlertType alertType) {
+        model.getAlertsVisible().set(false);
+        model.getBondedRoleSelectionVisible().set(false);
+        model.getBannedAccountDataVisible().set(false);
+
         model.getSelectedAlertType().set(alertType);
         switch (alertType) {
             case INFO:
@@ -238,9 +256,13 @@ public class SecurityManagerController implements Controller {
                 model.getRequireVersionForTrading().set(false);
                 model.getMinVersion().set(null);
                 model.getSelectedBondedRoleListItem().set(null);
+                model.getAlertsVisible().set(true);
+                model.getBannedAccountData().set(null);
                 break;
             case EMERGENCY:
                 model.getSelectedBondedRoleListItem().set(null);
+                model.getAlertsVisible().set(true);
+                model.getBannedAccountData().set(null);
                 break;
             case BAN:
                 model.getHaltTrading().set(false);
@@ -248,6 +270,11 @@ public class SecurityManagerController implements Controller {
                 model.getMinVersion().set(null);
                 model.getHeadline().set(null);
                 model.getMessage().set(null);
+                model.getBondedRoleSelectionVisible().set(true);
+                model.getBannedAccountData().set(null);
+                break;
+            case BANNED_ACCOUNT_DATA:
+                model.getBannedAccountDataVisible().set(true);
                 break;
         }
         model.getActionButtonText().set(Res.get("authorizedRole.securityManager.actionButton." + alertType.name()));
@@ -273,6 +300,15 @@ public class SecurityManagerController implements Controller {
             case BAN:
                 model.getActionButtonDisabled().set(model.getSelectedBondedRoleListItem().get() == null);
                 break;
+            case BANNED_ACCOUNT_DATA:
+                boolean isBannedAccountDataEmpty = StringUtils.isEmpty(model.getBannedAccountData().get());
+                model.getActionButtonDisabled().set(isBannedAccountDataEmpty);
+                break;
         }
     }
+
+    private static boolean isValidDifficultyAdjustmentFactor(double difficultyAdjustmentFactor) {
+        return difficultyAdjustmentFactor >= 0 && difficultyAdjustmentFactor <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT;
+    }
+
 }

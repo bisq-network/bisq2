@@ -68,6 +68,7 @@ public class ReleaseManagerService implements Service {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -83,6 +84,7 @@ public class ReleaseManagerService implements Service {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> publishReleaseNotification(boolean isPreRelease,
@@ -117,7 +119,14 @@ public class ReleaseManagerService implements Service {
                 .thenApply(broadCastDataResult -> true);
     }
 
-    public CompletableFuture<Boolean> removeReleaseNotification(ReleaseNotification releaseNotification, KeyPair ownerKeyPair) {
+    public CompletableFuture<Boolean> republishReleaseNotification(ReleaseNotification releaseNotification,
+                                                                   KeyPair ownerKeyPair) {
+        return networkService.publishAuthorizedData(releaseNotification, ownerKeyPair)
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    public CompletableFuture<Boolean> removeReleaseNotification(ReleaseNotification releaseNotification,
+                                                                KeyPair ownerKeyPair) {
         return networkService.removeAuthorizedData(releaseNotification,
                         ownerKeyPair,
                         ownerKeyPair.getPublic())

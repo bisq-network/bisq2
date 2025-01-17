@@ -21,9 +21,13 @@ import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.converters.Converters;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.NumberValidator;
@@ -36,6 +40,7 @@ import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.DateFormatter;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -62,7 +67,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                     0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT, false);
 
     private final Button difficultyAdjustmentButton, sendAlertButton;
-    private final MaterialTextArea message;
+    private final MaterialTextArea message, bannedAccountData;
     private final MaterialTextField headline, minVersion, difficultyAdjustmentFactor;
     private final AutoCompleteComboBox<AlertType> alertTypeSelection;
     private final AutoCompleteComboBox<BondedRoleListItem> bondedRoleSelection;
@@ -124,6 +129,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         requireVersionForTradingHBox = new HBox(20, requireVersionForTradingCheckBox, minVersion);
         requireVersionForTradingHBox.setAlignment(Pos.CENTER_LEFT);
 
+        bannedAccountData = new MaterialTextArea(Res.get("authorizedRole.securityManager.bannedAccounts.data"),
+                Res.get("authorizedRole.securityManager.bannedAccounts.data.prompt"));
+
         sendAlertButton = new Button();
         sendAlertButton.setDefaultButton(true);
         sendAlertButton.setAlignment(Pos.BOTTOM_RIGHT);
@@ -164,6 +172,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 alertTypeSelection, headline, message,
                 haltTradingCheckBox, requireVersionForTradingHBox,
                 bondedRoleSelection,
+                bannedAccountData,
                 sendAlertButton,
                 alertTableView,
                 difficultyAdjustmentHeadline, difficultyAdjustmentFactor, difficultyAdjustmentButton,
@@ -186,16 +195,21 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         minVersion.textProperty().bindBidirectional(model.getMinVersion());
         minVersion.disableProperty().bind(requireVersionForTradingCheckBox.selectedProperty().not());
         difficultyAdjustmentButton.disableProperty().bind(model.getDifficultyAdjustmentFactorButtonDisabled());
-        bondedRoleSelection.visibleProperty().bind(model.getSelectedAlertType().isEqualTo(AlertType.BAN));
-        bondedRoleSelection.managedProperty().bind(bondedRoleSelection.visibleProperty());
+        bondedRoleSelection.visibleProperty().bind(model.getBondedRoleSelectionVisible());
+        bondedRoleSelection.managedProperty().bind(model.getBondedRoleSelectionVisible());
 
         headline.textProperty().bindBidirectional(model.getHeadline());
-        headline.visibleProperty().bind(bondedRoleSelection.visibleProperty().not());
-        headline.managedProperty().bind(headline.visibleProperty());
+        headline.visibleProperty().bind(model.getAlertsVisible());
+        headline.managedProperty().bind(model.getAlertsVisible());
 
         message.textProperty().bindBidirectional(model.getMessage());
-        message.visibleProperty().bind(bondedRoleSelection.visibleProperty().not());
-        message.managedProperty().bind(message.visibleProperty());
+        message.visibleProperty().bind(model.getAlertsVisible());
+        message.managedProperty().bind(model.getAlertsVisible());
+
+        bannedAccountData.textProperty().bindBidirectional(model.getBannedAccountData());
+        bannedAccountData.visibleProperty().bind(model.getBannedAccountDataVisible());
+        bannedAccountData.managedProperty().bind(model.getBannedAccountDataVisible());
+
 
         sendAlertButton.textProperty().bind(model.getActionButtonText());
         sendAlertButton.disableProperty().bind(model.getActionButtonDisabled());
@@ -251,6 +265,10 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         message.textProperty().unbindBidirectional(model.getMessage());
         message.visibleProperty().unbind();
         message.managedProperty().unbind();
+
+        bannedAccountData.textProperty().unbindBidirectional(model.getBannedAccountData());
+        bannedAccountData.visibleProperty().unbind();
+        bannedAccountData.managedProperty().unbind();
 
         sendAlertButton.textProperty().unbind();
         sendAlertButton.disableProperty().unbind();
@@ -324,12 +342,47 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
                 .tooltipSupplier(AlertListItem::getBondedRoleDisplayString)
                 .build());
         alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
+                .title(Res.get("authorizedRole.securityManager.alert.table.bannedAccountData"))
+                .minWidth(200)
+                .comparator(Comparator.comparing(AlertListItem::getBannedAccountData))
+                .setCellFactory(getBannedAccountDataCellFactory())
+                .build());
+        alertTableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .isSortable(false)
                 .minWidth(200)
                 .right()
                 .setCellFactory(getRemoveAlertCellFactory())
                 .includeForCsv(false)
                 .build());
+    }
+
+    private Callback<TableColumn<AlertListItem, AlertListItem>, TableCell<AlertListItem, AlertListItem>> getBannedAccountDataCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label label = new Label();
+            private final BisqIconButton copyButton = new BisqIconButton();
+            private final HBox hBox = new HBox(5, label, Spacer.fillHBox(), copyButton);
+
+            {
+                copyButton.setIcon(AwesomeIcon.COPY);
+                copyButton.setAlignment(Pos.TOP_RIGHT);
+                label.setAlignment(Pos.CENTER_LEFT);
+                hBox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(AlertListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    label.setText(StringUtils.truncate(item.getBannedAccountData(), 25));
+                    copyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getBannedAccountData()));
+                    setGraphic(hBox);
+                } else {
+                    copyButton.setOnAction(null);
+                    setGraphic(null);
+                }
+            }
+        };
     }
 
     private Callback<TableColumn<AlertListItem, AlertListItem>, TableCell<AlertListItem, AlertListItem>> getRemoveAlertCellFactory() {
@@ -401,7 +454,8 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         private final AuthorizedAlertData authorizedAlertData;
 
         private final long date;
-        private final String dateString, timeString, alertType, message, haltTrading, requireVersionForTrading, minVersion, bondedRoleDisplayString;
+        private final String dateString, timeString, alertType, message, haltTrading, requireVersionForTrading,
+                minVersion, bondedRoleDisplayString, bannedAccountData;
 
         public AlertListItem(AuthorizedAlertData authorizedAlertData, SecurityManagerController controller) {
             this.authorizedAlertData = authorizedAlertData;
@@ -414,6 +468,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             haltTrading = BooleanFormatter.toYesNo(this.authorizedAlertData.isHaltTrading());
             requireVersionForTrading = BooleanFormatter.toYesNo(this.authorizedAlertData.isRequireVersionForTrading());
             bondedRoleDisplayString = authorizedAlertData.getBannedRole().map(controller::getBannedBondedRoleDisplayString).orElse("");
+            bannedAccountData = this.authorizedAlertData.getBannedAccountData().orElse("");
         }
     }
 

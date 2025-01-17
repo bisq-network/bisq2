@@ -37,8 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @ToString
@@ -47,6 +46,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 public final class AuthorizedAlertData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
     public final static int MAX_MESSAGE_LENGTH = 1000;
+    public final static int MAX_BANNED_ACCOUNT_DATA_LENGTH = 10_000;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
@@ -72,6 +72,9 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
+    // Added in version 2.1.3
+    private final Optional<String> bannedAccountData;
+
     public AuthorizedAlertData(String id,
                                long date,
                                AlertType alertType,
@@ -82,7 +85,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                                Optional<String> minVersion,
                                Optional<AuthorizedBondedRole> bannedRole,
                                String securityManagerProfileId,
-                               boolean staticPublicKeysProvided) {
+                               boolean staticPublicKeysProvided,
+                               Optional<String> bannedAccountData) {
         this(VERSION,
                 id,
                 date,
@@ -94,7 +98,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 minVersion,
                 bannedRole,
                 securityManagerProfileId,
-                staticPublicKeysProvided);
+                staticPublicKeysProvided,
+                bannedAccountData);
     }
 
     public AuthorizedAlertData(int version,
@@ -108,7 +113,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                                 Optional<String> minVersion,
                                 Optional<AuthorizedBondedRole> bannedRole,
                                 String securityManagerProfileId,
-                                boolean staticPublicKeysProvided) {
+                                boolean staticPublicKeysProvided,
+                               Optional<String> bannedAccountData) {
         this.version = version;
         this.id = id;
         this.date = date;
@@ -121,6 +127,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.bannedRole = bannedRole;
         this.securityManagerProfileId = securityManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+        this.bannedAccountData = bannedAccountData;
 
         verify();
     }
@@ -132,6 +139,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         NetworkDataValidation.validateText(message, MAX_MESSAGE_LENGTH);
         minVersion.ifPresent(NetworkDataValidation::validateVersion);
         NetworkDataValidation.validateProfileId(securityManagerProfileId);
+        NetworkDataValidation.validateText(bannedAccountData, MAX_BANNED_ACCOUNT_DATA_LENGTH);
     }
 
     @Override
@@ -158,6 +166,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         });
         minVersion.ifPresent(builder::setMinVersion);
         bannedRole.ifPresent(authorizedBondedRole -> builder.setBannedRole(authorizedBondedRole.toProto(serializeForHash)));
+        bannedAccountData.ifPresent(builder::setBannedAccountData);
         return builder;
     }
 
@@ -180,8 +189,9 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
                 proto.hasBannedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getBannedRole())) : Optional.empty(),
                 proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided()
-        );
+                proto.getStaticPublicKeysProvided(),
+                proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty()
+                );
     }
 
     private static Optional<String> getDefaultHeadline(AlertType alertType) {

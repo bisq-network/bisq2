@@ -19,7 +19,6 @@ package bisq.support.security_manager;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
@@ -71,6 +70,7 @@ public class SecurityManagerService implements Service {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -86,6 +86,7 @@ public class SecurityManagerService implements Service {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> publishAlert(AlertType alertType,
@@ -94,7 +95,9 @@ public class SecurityManagerService implements Service {
                                                    boolean haltTrading,
                                                    boolean requireVersionForTrading,
                                                    Optional<String> minVersion,
-                                                   Optional<AuthorizedBondedRole> bannedRole) {
+                                                   Optional<AuthorizedBondedRole> bannedRole,
+                                                   Optional<String> bannedAccountData
+    ) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
@@ -108,7 +111,8 @@ public class SecurityManagerService implements Service {
                 minVersion,
                 bannedRole,
                 securityManagerProfileId,
-                staticPublicKeysProvided);
+                staticPublicKeysProvided,
+                bannedAccountData);
 
         // Can be removed once there are no pre 2.1.0 versions out there anymore
         AuthorizedAlertData oldVersion = new AuthorizedAlertData(0,
@@ -122,10 +126,16 @@ public class SecurityManagerService implements Service {
                 authorizedAlertData.getMinVersion(),
                 authorizedAlertData.getBannedRole(),
                 authorizedAlertData.getSecurityManagerProfileId(),
-                authorizedAlertData.isStaticPublicKeysProvided());
+                authorizedAlertData.isStaticPublicKeysProvided(),
+                authorizedAlertData.getBannedAccountData());
         networkService.publishAuthorizedData(oldVersion, keyPair);
 
         return networkService.publishAuthorizedData(authorizedAlertData, keyPair)
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    public CompletableFuture<Boolean> rePublishAlert(AuthorizedAlertData authorizedAlertData, KeyPair ownerKeyPair) {
+        return networkService.publishAuthorizedData(authorizedAlertData, ownerKeyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -155,7 +165,8 @@ public class SecurityManagerService implements Service {
                 .thenApply(broadCastDataResult -> true);
     }
 
-    public CompletableFuture<Boolean> removeDifficultyAdjustment(AuthorizedDifficultyAdjustmentData data, KeyPair ownerKeyPair) {
+    public CompletableFuture<Boolean> removeDifficultyAdjustment(AuthorizedDifficultyAdjustmentData data,
+                                                                 KeyPair ownerKeyPair) {
         return networkService.removeAuthorizedData(data, ownerKeyPair, ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);
     }
