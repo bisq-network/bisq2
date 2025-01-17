@@ -29,11 +29,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.Switch;
-import bisq.desktop.components.table.ActivatableTableItem;
-import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.DateColumnUtil;
-import bisq.desktop.components.table.DateTableItem;
+import bisq.desktop.components.table.*;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
@@ -228,7 +224,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
-                .fixWidth(95)
+                .fixWidth(120)
                 .comparator(Comparator.comparing(ListItem::getQuoteAmount))
                 .valueSupplier(ListItem::getQuoteAmountString)
                 .build());
@@ -240,7 +236,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
-                .fixWidth(135)
+                .fixWidth(170)
                 .comparator(Comparator.comparing(ListItem::getPrice))
                 .valueSupplier(ListItem::getPriceString)
                 .build());
@@ -250,6 +246,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 .right()
                 .comparator(Comparator.comparing(ListItem::getPaymentMethod))
                 .valueSupplier(ListItem::getPaymentMethod)
+                .tooltipSupplier(ListItem::getPaymentMethod)
                 .build());
     }
 
