@@ -85,6 +85,8 @@ public class DateFormatter {
         if (!useLocalTimezone) {
             timeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
-        return timeFormatter.format(date);
+        // Java time formatter returns a U+202F (narrow no-break space) before the AM/PM.
+        // We replace it with a normal space as it's not printed by our font.
+        return timeFormatter.format(date).replace("\u202F"," ");
     }
 }
