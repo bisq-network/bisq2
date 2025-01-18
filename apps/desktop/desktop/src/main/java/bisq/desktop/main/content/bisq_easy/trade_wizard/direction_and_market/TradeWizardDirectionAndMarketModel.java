@@ -35,6 +35,9 @@ import lombok.Setter;
 
 @Getter
 public class TradeWizardDirectionAndMarketModel implements Model {
+    @Setter
+    private boolean isAllowedToCreateSellOffer;
+
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>(Direction.BUY);
     private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
     private final BooleanProperty buyButtonDisabled = new SimpleBooleanProperty();
@@ -48,6 +51,7 @@ public class TradeWizardDirectionAndMarketModel implements Model {
     private String formattedAmountWithoutReputationNeeded;
 
     void reset() {
+        isAllowedToCreateSellOffer = false;
         direction.set(Direction.BUY);
         showReputationInfo.set(false);
         buyButtonDisabled.set(false);

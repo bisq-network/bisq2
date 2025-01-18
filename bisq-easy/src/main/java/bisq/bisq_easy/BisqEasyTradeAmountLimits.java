@@ -46,6 +46,7 @@ public class BisqEasyTradeAmountLimits {
     private static final double REQUIRED_REPUTATION_SCORE_PER_USD = 200d;
     public static final long MIN_REPUTATION_SCORE = 5000;
     public static final double TOLERANCE = 0.05;
+    private static final long MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER = 1200;
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
@@ -126,6 +127,12 @@ public class BisqEasyTradeAmountLimits {
                 ? userProfileService.findUserProfile(peersOffer.getMakersUserProfileId()).orElseThrow()
                 : userIdentityService.getSelectedUserIdentity().getUserProfile();
         return reputationService.getReputationScore(sellersUserProfile).getTotalScore();
+    }
+
+    public static boolean isAllowedToCreateSellOffer(ReputationService reputationService,
+                                                     UserProfile userProfile) {
+        long reputationScore = reputationService.getReputationScore(userProfile).getTotalScore();
+        return reputationScore >= MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER;
     }
 
     private static Result getResult(long sellersReputationScore,

@@ -137,6 +137,7 @@ public class TradeWizardController extends NavigationController implements InitW
                 NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
                 NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
         ));
+        model.getSelectedChildTarget().set(NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET);
 
         directionPin = EasyBind.subscribe(tradeWizardDirectionAndMarketController.getDirection(), direction -> {
             tradeWizardSelectOfferController.setDirection(direction);
@@ -292,9 +293,13 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private boolean validate(boolean calledFromNext) {
+        if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET) {
+            return tradeWizardDirectionAndMarketController.validate();
+        }
         if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_AMOUNT_AND_PRICE) {
             return tradeWizardAmountAndPriceController.validate();
-        } else if (calledFromNext && model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHODS) {
+        }
+        if (calledFromNext && model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHODS) {
             // For PaymentMethod we tolerate to go back without having one selected
             return tradeWizardPaymentMethodsController.validate();
         }
