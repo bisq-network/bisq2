@@ -66,6 +66,7 @@ public class SupportController extends ContentTabController<SupportModel> {
                 .filter(c -> c.getSubDomain() == SubDomain.SUPPORT_SUPPORT).findFirst()
                 .orElseThrow());
         chatChannelSelectionService.selectChannel(model.getAssistanceChannel());
+
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
     }

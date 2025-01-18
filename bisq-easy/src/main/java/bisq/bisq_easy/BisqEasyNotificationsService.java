@@ -74,8 +74,8 @@ public class BisqEasyNotificationsService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications);
-        chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
         isNotificationPanelDismissed.addObserver(isNotificationPanelDismissed -> updateNotificationVisibilityState());
         settingsService.getCookieChanged().addObserver(cookieChanged -> updateBisqEasyOfferbookPredicate());
@@ -84,7 +84,7 @@ public class BisqEasyNotificationsService implements Service {
         return CompletableFuture.completedFuture(true);
     }
 
-    private void handleNotifications(ChatNotification notification) {
+    private void handleNotification(ChatNotification notification) {
         if (notification == null) {
             return;
         }

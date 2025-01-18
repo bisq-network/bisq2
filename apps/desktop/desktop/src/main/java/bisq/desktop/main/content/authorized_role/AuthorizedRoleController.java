@@ -71,8 +71,8 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     public void onActivate() {
         super.onActivate();
 
-        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications);
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
@@ -109,7 +109,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         });
     }
 
-    private void handleNotifications(ChatNotification notification) {
+    private void handleNotification(ChatNotification notification) {
         if (notification == null) {
             return;
         }
