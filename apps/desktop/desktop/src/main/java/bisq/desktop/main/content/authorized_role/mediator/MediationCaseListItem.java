@@ -59,7 +59,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
 
     private final Trader maker, taker;
     private final long date, price, baseAmount, quoteAmount;
-    private final String dateString, timeString, tradeId, shortTradeId, offerId, directionalTitle, market,
+    private final String dateString, timeString, tradeId, shortTradeId, directionalTitle, market,
             priceString, baseAmountString, quoteAmountString, paymentMethod;
     private final boolean isMakerRequester;
     private final Badge makersBadge = new Badge();
@@ -95,7 +95,6 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
 
         tradeId = channel.getTradeId();
         shortTradeId = tradeId.substring(0, 8);
-        offerId = offer.getId();
         directionalTitle = offer.getDirection().getDirectionalTitle();
         date = contract.getTakeOfferDate();
         dateString = DateFormatter.formatDate(date);
