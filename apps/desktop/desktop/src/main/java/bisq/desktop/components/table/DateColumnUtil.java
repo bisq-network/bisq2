@@ -29,7 +29,8 @@ public class DateColumnUtil {
                 .fixWidth(85)
                 .comparator(Comparator.comparing(T::getDate))
                 .sortType(TableColumn.SortType.DESCENDING)
-                .setCellFactory(getCellFactory());
+                .setCellFactory(getCellFactory())
+                .valueSupplier(item -> item.getDateString() + " " + item.getTimeString()); // For csv export
         if (title != null) {
             builder.title(title);
         } else {

@@ -193,6 +193,7 @@ public class BisqTableView<T> extends TableView<T> {
                 .fixWidth(3)
                 .setCellFactory(getSelectionMarkerCellFactory())
                 .isSortable(false)
+                .includeForCsv(false)
                 .build();
     }
 
