@@ -9,7 +9,6 @@ import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.reputation.ranking.ReputationRankingView;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
