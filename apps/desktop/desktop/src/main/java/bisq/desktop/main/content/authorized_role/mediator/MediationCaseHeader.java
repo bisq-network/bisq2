@@ -57,7 +57,7 @@ public class MediationCaseHeader {
         return controller.view.getRoot();
     }
 
-    public void setMediationCaseListItem(MediatorView.ListItem item) {
+    public void setMediationCaseListItem(MediationCaseListItem item) {
         controller.setMediationCaseListItem(item);
     }
 
@@ -88,7 +88,7 @@ public class MediationCaseHeader {
             view = new View(model, this);
         }
 
-        private void setMediationCaseListItem(MediatorView.ListItem item) {
+        private void setMediationCaseListItem(MediationCaseListItem item) {
             model.getMediationCaseListItem().set(item);
         }
 
@@ -125,14 +125,14 @@ public class MediationCaseHeader {
         }
 
         private void doClose() {
-            MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
+            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
             channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), listItem.getChannel());
             mediatorService.closeMediationCase(listItem.getMediationCase());
             onCloseHandler.run();
         }
 
         private void doReOpen() {
-            MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
+            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
             channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), listItem.getChannel());
             mediatorService.reOpenMediationCase(listItem.getMediationCase());
             onReOpenHandler.run();
@@ -142,7 +142,7 @@ public class MediationCaseHeader {
     @Slf4j
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<MediatorView.ListItem> mediationCaseListItem = new SimpleObjectProperty<>();
+        private final ObjectProperty<MediationCaseListItem> mediationCaseListItem = new SimpleObjectProperty<>();
         private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     }
 

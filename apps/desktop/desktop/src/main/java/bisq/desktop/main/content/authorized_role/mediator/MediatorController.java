@@ -90,7 +90,7 @@ public class MediatorController implements Controller {
         model.getListItems().onActivate();
         applyFilteredListPredicate(model.getShowClosedCases().get());
 
-        mediationCaseListItemPin = FxBindings.<MediationCase, MediatorView.ListItem>bind(model.getListItems())
+        mediationCaseListItemPin = FxBindings.<MediationCase, MediationCaseListItem>bind(model.getListItems())
                 .filter(mediationCase -> {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
                     BisqEasyContract contract = mediationRequest.getContract();
@@ -123,7 +123,7 @@ public class MediatorController implements Controller {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
                     UserIdentity myUserIdentity = mediatorService.findMyMediatorUserIdentity(mediationRequest.getContract().getMediator()).orElseThrow();
                     BisqEasyOpenTradeChannel channel = findOrCreateChannel(mediationRequest, myUserIdentity);
-                    return new MediatorView.ListItem(serviceProvider, mediationCase, channel);
+                    return new MediationCaseListItem(serviceProvider, mediationCase, channel);
                 })
                 .to(mediatorService.getMediationCases());
 
@@ -163,7 +163,7 @@ public class MediatorController implements Controller {
         selectedChannelPin.unbind();
     }
 
-    void onSelectItem(MediatorView.ListItem item) {
+    void onSelectItem(MediationCaseListItem item) {
         if (item == null) {
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
@@ -222,7 +222,7 @@ public class MediatorController implements Controller {
 
     private void update() {
         // The sortedList is already sorted by date (triggered by the usage of the dateColumn)
-        SortedList<MediatorView.ListItem> sortedList = model.getListItems().getSortedList();
+        SortedList<MediationCaseListItem> sortedList = model.getListItems().getSortedList();
         boolean isEmpty = sortedList.isEmpty();
         model.getNoOpenCases().set(isEmpty);
         if (isEmpty) {

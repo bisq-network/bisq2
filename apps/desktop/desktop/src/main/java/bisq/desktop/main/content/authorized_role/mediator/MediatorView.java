@@ -17,13 +17,8 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.data.Quadruple;
-import bisq.common.observable.Pin;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.CssConfig;
-import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -36,15 +31,6 @@ import bisq.desktop.components.table.*;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.presentation.formatters.DateFormatter;
-import bisq.presentation.formatters.TimeFormatter;
-import bisq.support.mediation.MediationCase;
-import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
-import bisq.user.profile.UserProfile;
-import bisq.user.reputation.ReputationScore;
-import bisq.user.reputation.ReputationService;
 import javafx.beans.InvalidationListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -59,26 +45,20 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class MediatorView extends View<ScrollPane, MediatorModel, MediatorController> {
     private final Switch showClosedCasesSwitch;
     private final VBox centerVBox, chatVBox;
-    private final BisqTableView<ListItem> tableView;
+    private final BisqTableView<MediationCaseListItem> tableView;
     private final Button toggleChatWindowButton;
     private final AnchorPane tableViewAnchorPane;
-    private BisqTableColumn<ListItem> closeCaseDateColumn;
+    private BisqTableColumn<MediationCaseListItem> closeCaseDateColumn;
 
     private final InvalidationListener listItemListener;
     private Subscription noOpenCasesPin, tableViewSelectionPin, selectedModelItemPin, showClosedCasesPin, chatWindowPin;
@@ -274,19 +254,19 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     private void configTableView() {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
                 .title(Res.get("authorizedRole.mediator.table.maker"))
                 .minWidth(120)
                 .left()
                 .comparator(Comparator.comparing(item -> item.getMaker().getUserName()))
                 .setCellFactory(getMakerCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
                 .minWidth(95)
-                .comparator(Comparator.comparing(ListItem::getDirectionalTitle))
+                .comparator(Comparator.comparing(MediationCaseListItem::getDirectionalTitle))
                 .setCellFactory(getDirectionCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
                 .title(Res.get("authorizedRole.mediator.table.taker"))
                 .minWidth(120)
                 .left()
@@ -296,44 +276,44 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
         tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
                 .minWidth(85)
-                .comparator(Comparator.comparing(ListItem::getTradeId))
-                .valueSupplier(ListItem::getShortTradeId)
-                .tooltipSupplier(ListItem::getTradeId)
+                .comparator(Comparator.comparing(MediationCaseListItem::getTradeId))
+                .valueSupplier(MediationCaseListItem::getShortTradeId)
+                .tooltipSupplier(MediationCaseListItem::getTradeId)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(ListItem::getQuoteAmount))
-                .valueSupplier(ListItem::getQuoteAmountString)
+                .comparator(Comparator.comparing(MediationCaseListItem::getQuoteAmount))
+                .valueSupplier(MediationCaseListItem::getQuoteAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(ListItem::getBaseAmount))
-                .valueSupplier(ListItem::getBaseAmountString)
+                .comparator(Comparator.comparing(MediationCaseListItem::getBaseAmount))
+                .valueSupplier(MediationCaseListItem::getBaseAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
                 .fixWidth(170)
-                .comparator(Comparator.comparing(ListItem::getPrice))
-                .valueSupplier(ListItem::getPriceString)
+                .comparator(Comparator.comparing(MediationCaseListItem::getPrice))
+                .valueSupplier(MediationCaseListItem::getPriceString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<MediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
                 .minWidth(130)
                 .right()
-                .comparator(Comparator.comparing(ListItem::getPaymentMethod))
-                .valueSupplier(ListItem::getPaymentMethod)
-                .tooltipSupplier(ListItem::getPaymentMethod)
+                .comparator(Comparator.comparing(MediationCaseListItem::getPaymentMethod))
+                .valueSupplier(MediationCaseListItem::getPaymentMethod)
+                .tooltipSupplier(MediationCaseListItem::getPaymentMethod)
                 .build());
-        closeCaseDateColumn = new BisqTableColumn.Builder<ListItem>()
+        closeCaseDateColumn = new BisqTableColumn.Builder<MediationCaseListItem>()
                 .title(Res.get("authorizedRole.mediator.table.header.closeCaseDate"))
                 .minWidth(130)
                 .right()
-                .comparator(Comparator.comparing(ListItem::getCloseCaseDate))
+                .comparator(Comparator.comparing(MediationCaseListItem::getCloseCaseDate))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getCloseDateCellFactory())
                 .build();
@@ -341,14 +321,14 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
     }
 
 
-    private Callback<TableColumn<ListItem, ListItem>,
-            TableCell<ListItem, ListItem>> getCloseDateCellFactory() {
+    private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
+            TableCell<MediationCaseListItem, MediationCaseListItem>> getCloseDateCellFactory() {
         return column -> new TableCell<>() {
 
             private final Label label = new Label();
 
             @Override
-            protected void updateItem(ListItem item, boolean empty) {
+            protected void updateItem(MediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -367,14 +347,14 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         };
     }
 
-    private Callback<TableColumn<ListItem, ListItem>,
-            TableCell<ListItem, ListItem>> getDirectionCellFactory() {
+    private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
+            TableCell<MediationCaseListItem, MediationCaseListItem>> getDirectionCellFactory() {
         return column -> new TableCell<>() {
 
             private final Label label = new Label();
 
             @Override
-            protected void updateItem(ListItem item, boolean empty) {
+            protected void updateItem(MediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -388,14 +368,14 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         };
     }
 
-    private Callback<TableColumn<ListItem, ListItem>,
-            TableCell<ListItem, ListItem>> getMakerCellFactory() {
+    private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
+            TableCell<MediationCaseListItem, MediationCaseListItem>> getMakerCellFactory() {
         return column -> new TableCell<>() {
 
             private UserProfileDisplay userProfileDisplay;
 
             @Override
-            protected void updateItem(ListItem item, boolean empty) {
+            protected void updateItem(MediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -411,14 +391,14 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         };
     }
 
-    private Callback<TableColumn<ListItem, ListItem>,
-            TableCell<ListItem, ListItem>> getTakerCellFactory() {
+    private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
+            TableCell<MediationCaseListItem, MediationCaseListItem>> getTakerCellFactory() {
         return column -> new TableCell<>() {
 
             private UserProfileDisplay userProfileDisplay;
 
             @Override
-            protected void updateItem(ListItem item, boolean empty) {
+            protected void updateItem(MediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
@@ -434,10 +414,10 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         };
     }
 
-    private static UserProfileDisplay applyTraderToTableCell(TableCell<ListItem, ListItem> tableCell,
-                                                             ListItem item,
+    private static UserProfileDisplay applyTraderToTableCell(TableCell<MediationCaseListItem, MediationCaseListItem> tableCell,
+                                                             MediationCaseListItem item,
                                                              boolean isRequester,
-                                                             ListItem.Trader trader) {
+                                                             MediationCaseListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
         userProfileDisplay.setUserProfile(trader.getUserProfile());
         if (isRequester) {
@@ -458,133 +438,4 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         return userProfileDisplay;
     }
 
-    @Slf4j
-    @Getter
-    @ToString
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    public static class ListItem implements ActivatableTableItem, DateTableItem {
-        @EqualsAndHashCode.Include
-        private final MediationCase mediationCase;
-        @EqualsAndHashCode.Include
-        private final BisqEasyOpenTradeChannel channel;
-        private final ChatNotificationService chatNotificationService;
-        private final ReputationService reputationService;
-
-        private final Trader maker, taker;
-        private final long date, price, baseAmount, quoteAmount;
-        private final String dateString, timeString, tradeId, shortTradeId, offerId, directionalTitle, market,
-                priceString, baseAmountString, quoteAmountString, paymentMethod;
-        private final boolean isMakerRequester;
-        private final Badge makersBadge = new Badge();
-        private final Badge takersBadge = new Badge();
-        private Pin changedChatNotificationPin;
-        private Long closeCaseDate = 0L;
-        private String closeCaseDateString = "";
-        private String closeCaseTimeString = "";
-
-        ListItem(ServiceProvider serviceProvider,
-                 MediationCase mediationCase,
-                 BisqEasyOpenTradeChannel channel) {
-            this.mediationCase = mediationCase;
-            this.channel = channel;
-
-            reputationService = serviceProvider.getUserService().getReputationService();
-            chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-            BisqEasyContract contract = mediationCase.getMediationRequest().getContract();
-            BisqEasyOffer offer = contract.getOffer();
-            List<UserProfile> traders = new ArrayList<>(channel.getTraders());
-            offer.getMakerNetworkId().getId();
-
-            Trader trader1 = new Trader(traders.get(0), reputationService);
-            Trader trader2 = new Trader(traders.get(1), reputationService);
-            if (offer.getMakerNetworkId().getId().equals(trader1.getUserProfile().getId())) {
-                maker = trader1;
-                taker = trader2;
-            } else {
-                maker = trader2;
-                taker = trader1;
-            }
-            isMakerRequester = mediationCase.getMediationRequest().getRequester().equals(maker.userProfile);
-
-            tradeId = channel.getTradeId();
-            shortTradeId = tradeId.substring(0, 8);
-            offerId = offer.getId();
-            directionalTitle = offer.getDirection().getDirectionalTitle();
-            date = contract.getTakeOfferDate();
-            dateString = DateFormatter.formatDate(date);
-            timeString = DateFormatter.formatTime(date);
-            market = offer.getMarket().toString();
-            price = BisqEasyTradeUtils.getPriceQuote(contract).getValue();
-            priceString = BisqEasyTradeFormatter.formatPriceWithCode(contract);
-            baseAmount = contract.getBaseSideAmount();
-            baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(contract);
-            quoteAmount = contract.getQuoteSideAmount();
-            quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(contract);
-            paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
-        }
-
-        @Override
-        public void onActivate() {
-            Optional<Long> optionalCloseCaseDate = mediationCase.getCloseCaseDate();
-            closeCaseDate = optionalCloseCaseDate.orElse(0L);
-            closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
-            closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");
-
-            changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
-                if (notification == null) {
-                    return;
-                }
-                UIThread.run(() -> {
-                    long numNotificationsFromMaker = getNumNotifications(maker.getUserProfile());
-                    makersBadge.setText(numNotificationsFromMaker > 0 ?
-                            String.valueOf(numNotificationsFromMaker) :
-                            "");
-                    long numNotificationsFromTaker = getNumNotifications(taker.getUserProfile());
-                    takersBadge.setText(numNotificationsFromTaker > 0 ?
-                            String.valueOf(numNotificationsFromTaker) :
-                            "");
-                });
-            });
-        }
-
-        @Override
-        public void onDeactivate() {
-            changedChatNotificationPin.unbind();
-        }
-
-        private long getNumNotifications(UserProfile userProfile) {
-            return chatNotificationService.getNotConsumedNotifications(channel)
-                    .filter(notification -> notification.getSenderUserProfile().isPresent())
-                    .filter(notification -> notification.getSenderUserProfile().get().equals(userProfile))
-                    .count();
-        }
-
-        @Getter
-        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-        static class Trader {
-            @EqualsAndHashCode.Include
-            private final UserProfile userProfile;
-            private final String userName;
-            private final String totalReputationScoreString;
-            private final String profileAgeString;
-            private final ReputationScore reputationScore;
-            private final long totalReputationScore, profileAge;
-
-            Trader(UserProfile userProfile,
-                   ReputationService reputationService) {
-                this.userProfile = userProfile;
-                userName = userProfile.getUserName();
-
-                reputationScore = reputationService.getReputationScore(userProfile);
-                totalReputationScore = reputationScore.getTotalScore();
-                totalReputationScoreString = String.valueOf(reputationScore);
-
-                Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
-                profileAge = optionalProfileAge.orElse(0L);
-                profileAgeString = optionalProfileAge
-                        .map(TimeFormatter::formatAgeInDaysAndYears)
-                        .orElse(Res.get("data.na"));
-            }
-        }
-    }
 }
