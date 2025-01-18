@@ -110,8 +110,11 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     }
 
     private void handleNotifications(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
         UIThread.run(() -> {
-            long numNotifications = notification != null && bisqEasyNotificationsService.isMediatorsNotification(notification) ?
+            long numNotifications = bisqEasyNotificationsService.isMediatorsNotification(notification) ?
                     chatNotificationService.getNumNotifications(notification.getChatChannelDomain(), notification.getChatChannelId()) :
                     0;
 

@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.authorized_role.mediator;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -116,26 +117,28 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
         closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
         closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");
 
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
-            if (notification == null) {
-                return;
-            }
-            UIThread.run(() -> {
-                long numNotificationsFromMaker = getNumNotifications(maker.getUserProfile());
-                makersBadge.setText(numNotificationsFromMaker > 0 ?
-                        String.valueOf(numNotificationsFromMaker) :
-                        "");
-                long numNotificationsFromTaker = getNumNotifications(taker.getUserProfile());
-                takersBadge.setText(numNotificationsFromTaker > 0 ?
-                        String.valueOf(numNotificationsFromTaker) :
-                        "");
-            });
-        });
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
     }
 
     @Override
     public void onDeactivate() {
         changedChatNotificationPin.unbind();
+    }
+
+    private void handleNotifications(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
+        UIThread.run(() -> {
+            long numNotificationsFromMaker = getNumNotifications(maker.getUserProfile());
+            makersBadge.setText(numNotificationsFromMaker > 0 ?
+                    String.valueOf(numNotificationsFromMaker) :
+                    "");
+            long numNotificationsFromTaker = getNumNotifications(taker.getUserProfile());
+            takersBadge.setText(numNotificationsFromTaker > 0 ?
+                    String.valueOf(numNotificationsFromTaker) :
+                    "");
+        });
     }
 
     private long getNumNotifications(UserProfile userProfile) {
