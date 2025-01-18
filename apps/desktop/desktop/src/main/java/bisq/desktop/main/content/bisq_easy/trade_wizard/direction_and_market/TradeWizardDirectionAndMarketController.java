@@ -189,11 +189,6 @@ public class TradeWizardDirectionAndMarketController implements Controller {
         closeAndNavigateToHandler.accept(NavigationTarget.BUILD_REPUTATION);
     }
 
-    void onTradeWithoutReputation() {
-        navigationButtonsVisibleHandler.accept(true);
-        onNextHandler.run();
-    }
-
     void onMarketListItemClicked(TradeWizardDirectionAndMarketView.ListItem item) {
         if (item == null) {
             return;
