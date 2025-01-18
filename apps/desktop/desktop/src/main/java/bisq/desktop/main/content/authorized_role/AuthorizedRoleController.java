@@ -115,7 +115,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         }
         UIThread.run(() -> {
             long numNotifications = bisqEasyNotificationsService.isMediatorsNotification(notification) ?
-                    chatNotificationService.getNumNotifications(notification.getChatChannelDomain(), notification.getChatChannelId()) :
+                    bisqEasyNotificationsService.getMediatorsNotConsumedNotifications().count() :
                     0;
 
             findTabButton(NavigationTarget.MEDIATOR).ifPresent(tabButton ->

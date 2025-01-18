@@ -127,7 +127,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
     }
 
     private void handleNotification(ChatNotification notification) {
-        if (notification == null) {
+        if (notification == null || !notification.getChatChannelId().equals(channel.getId())) {
             return;
         }
         UIThread.run(() -> {
