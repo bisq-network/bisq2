@@ -252,7 +252,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
         warningIcon.getStyleClass().add("text-fill-light-dimmed");
 
-        HBox headlineBox = new HBox(5, warningIcon, headlineLabel);
+        HBox headlineBox = new HBox(15, warningIcon, headlineLabel);
         headlineBox.setAlignment(Pos.CENTER);
 
         Label subtitleLabel1 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1"));
