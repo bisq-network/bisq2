@@ -38,6 +38,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
 import javafx.collections.transformation.SortedList;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,7 +90,7 @@ public class MediatorController implements Controller {
         model.getListItems().onActivate();
         applyFilteredListPredicate(model.getShowClosedCases().get());
 
-        mediationCaseListItemPin = FxBindings.<MediationCase, MediatorView.ListItem>bind(model.getListItems())
+        mediationCaseListItemPin = FxBindings.<MediationCase, MediationCaseListItem>bind(model.getListItems())
                 .filter(mediationCase -> {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
                     BisqEasyContract contract = mediationRequest.getContract();
@@ -122,7 +123,7 @@ public class MediatorController implements Controller {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
                     UserIdentity myUserIdentity = mediatorService.findMyMediatorUserIdentity(mediationRequest.getContract().getMediator()).orElseThrow();
                     BisqEasyOpenTradeChannel channel = findOrCreateChannel(mediationRequest, myUserIdentity);
-                    return new MediatorView.ListItem(serviceProvider, mediationCase, channel);
+                    return new MediationCaseListItem(serviceProvider, mediationCase, channel);
                 })
                 .to(mediatorService.getMediationCases());
 
@@ -153,13 +154,16 @@ public class MediatorController implements Controller {
 
     @Override
     public void onDeactivate() {
+        doCloseChatWindow();
+
         model.getListItems().removeListener(itemListener);
         model.getListItems().onDeactivate();
+        model.getChatWindow().set(null);
         mediationCaseListItemPin.unbind();
         selectedChannelPin.unbind();
     }
 
-    void onSelectItem(MediatorView.ListItem item) {
+    void onSelectItem(MediationCaseListItem item) {
         if (item == null) {
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
@@ -170,6 +174,26 @@ public class MediatorController implements Controller {
     void onToggleClosedCases() {
         model.getShowClosedCases().set(!model.getShowClosedCases().get());
         applyShowClosedCasesChange();
+    }
+
+
+    void onToggleChatWindow() {
+        if (model.getChatWindow().get() == null) {
+            model.getChatWindow().set(new Stage());
+        } else {
+            doCloseChatWindow();
+        }
+    }
+
+    void onCloseChatWindow() {
+        doCloseChatWindow();
+    }
+
+    private void doCloseChatWindow() {
+        if (model.getChatWindow().get() != null) {
+            model.getChatWindow().get().hide();
+        }
+        model.getChatWindow().set(null);
     }
 
     private void closeCaseHandler() {
@@ -198,7 +222,7 @@ public class MediatorController implements Controller {
 
     private void update() {
         // The sortedList is already sorted by date (triggered by the usage of the dateColumn)
-        SortedList<MediatorView.ListItem> sortedList = model.getListItems().getSortedList();
+        SortedList<MediationCaseListItem> sortedList = model.getListItems().getSortedList();
         boolean isEmpty = sortedList.isEmpty();
         model.getNoOpenCases().set(isEmpty);
         if (isEmpty) {

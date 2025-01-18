@@ -437,6 +437,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         String platformDetails = Platform.getDetails();
         String errorReport = Res.get("popup.reportBug.report", version, platformDetails, message);
         TextArea errorReportTextArea = new TextArea(errorReport);
+        errorReportTextArea.setContextMenu(new ContextMenu());
         errorReportTextArea.setEditable(false);
         errorReportTextArea.setPrefWidth(width);
         errorReportTextArea.setWrapText(true);

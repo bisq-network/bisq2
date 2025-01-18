@@ -74,7 +74,7 @@ public class ProfileCardOverviewController implements Controller {
         model.setStatement(userProfile.getStatement().isBlank() ? "-" : userProfile.getStatement());
 
         String userProfileId = userProfile.getId();
-        long numOffers = getMyOffers(userProfileId).count();
+        long numOffers = getOffers(userProfileId).count();
         model.setNumOffers(String.valueOf(numOffers));
 
         long numPublicTextMessages = getNumPublicTextMessages(userProfileId).count();
@@ -122,7 +122,7 @@ public class ProfileCardOverviewController implements Controller {
     }
 
     private long getTotalBaseOfferAmount(String userProfileId, Predicate<BisqEasyOffer> predicate) {
-        return getMyOffers(userProfileId)
+        return getOffers(userProfileId)
                 .map(message -> message.getBisqEasyOffer().orElseThrow())
                 .filter(predicate)
                 .flatMap(offer -> OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, offer).stream())
@@ -130,7 +130,7 @@ public class ProfileCardOverviewController implements Controller {
                 .sum();
     }
 
-    private Stream<BisqEasyOfferbookMessage> getMyOffers(String userProfileId) {
+    private Stream<BisqEasyOfferbookMessage> getOffers(String userProfileId) {
         return bisqEasyOfferbookChannelService.getChannels().stream()
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)

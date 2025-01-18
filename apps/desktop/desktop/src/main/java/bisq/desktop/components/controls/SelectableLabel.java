@@ -22,6 +22,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.WeakListChangeListener;
 import javafx.scene.Cursor;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
@@ -74,6 +75,7 @@ public class SelectableLabel extends StackPane {
         getChildren().add(label);
         label.setText(text);
         label.setCursor(Cursor.TEXT);
+        textArea.setContextMenu(new ContextMenu());
         textArea.setText(text);
         textArea.getStyleClass().addAll("selectable-label", "hide-vertical-scrollbar");
         label.heightProperty().addListener(labelHeightListener);

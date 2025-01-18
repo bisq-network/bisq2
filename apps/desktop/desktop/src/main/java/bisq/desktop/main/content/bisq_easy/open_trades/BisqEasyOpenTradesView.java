@@ -335,10 +335,11 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .minWidth(85)
                 .comparator(Comparator.comparing(OpenTradeListItem::getTradeId))
                 .valueSupplier(OpenTradeListItem::getShortTradeId)
+                .tooltipSupplier(OpenTradeListItem::getTradeId)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
-                .fixWidth(95)
+                .fixWidth(120)
                 .comparator(Comparator.comparing(OpenTradeListItem::getQuoteAmount))
                 .valueSupplier(OpenTradeListItem::getQuoteAmountString)
                 .build());
@@ -350,7 +351,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
-                .fixWidth(135)
+                .fixWidth(170)
                 .comparator(Comparator.comparing(OpenTradeListItem::getPrice))
                 .valueSupplier(OpenTradeListItem::getPriceString)
                 .build());

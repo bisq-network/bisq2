@@ -36,6 +36,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
@@ -56,7 +57,7 @@ public class MediationCaseHeader {
         return controller.view.getRoot();
     }
 
-    public void setMediationCaseListItem(MediatorView.ListItem item) {
+    public void setMediationCaseListItem(MediationCaseListItem item) {
         controller.setMediationCaseListItem(item);
     }
 
@@ -87,7 +88,7 @@ public class MediationCaseHeader {
             view = new View(model, this);
         }
 
-        private void setMediationCaseListItem(MediatorView.ListItem item) {
+        private void setMediationCaseListItem(MediationCaseListItem item) {
             model.getMediationCaseListItem().set(item);
         }
 
@@ -124,14 +125,14 @@ public class MediationCaseHeader {
         }
 
         private void doClose() {
-            MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
+            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
             channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), listItem.getChannel());
             mediatorService.closeMediationCase(listItem.getMediationCase());
             onCloseHandler.run();
         }
 
         private void doReOpen() {
-            MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
+            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
             channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), listItem.getChannel());
             mediatorService.reOpenMediationCase(listItem.getMediationCase());
             onReOpenHandler.run();
@@ -141,7 +142,7 @@ public class MediationCaseHeader {
     @Slf4j
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<MediatorView.ListItem> mediationCaseListItem = new SimpleObjectProperty<>();
+        private final ObjectProperty<MediationCaseListItem> mediationCaseListItem = new SimpleObjectProperty<>();
         private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     }
 
@@ -161,7 +162,7 @@ public class MediationCaseHeader {
             root.setMinHeight(HEIGHT);
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.CENTER_LEFT);
-            root.setPadding(new Insets(0, 30, 0, 30));
+            root.setPadding(new Insets(0, 0, 0, 30));
             root.getStyleClass().add("chat-container-header");
 
             tradeId = getElements(Res.get("bisqEasy.tradeState.header.tradeId"));
@@ -179,13 +180,20 @@ public class MediationCaseHeader {
 
             openCloseButton = new Button();
             openCloseButton.setDefaultButton(true);
+            openCloseButton.setMinWidth(120);
+            openCloseButton.setStyle("-fx-padding: 5 16 5 16");
 
             leaveButton = new Button(Res.get("authorizedRole.mediator.leave"));
             leaveButton.getStyleClass().add("outlined-button");
+            leaveButton.setMinWidth(120);
+            leaveButton.setStyle("-fx-padding: 5 16 5 16");
 
+            Region spacer = Spacer.fillHBox();
+            HBox.setMargin(spacer, new Insets(0, -50, 0, 0));
             HBox.setMargin(directionalTitle, new Insets(10, -20, 0, -20));
             HBox.setMargin(leaveButton, new Insets(0, -20, 0, 0));
-            root.getChildren().addAll(maker.getThird(), directionalTitle, taker.getThird(), tradeId.getThird(), Spacer.fillHBox(), leaveButton, openCloseButton);
+            HBox.setMargin(openCloseButton, new Insets(0, -20, 0, 0));
+            root.getChildren().addAll(maker.getThird(), directionalTitle, taker.getThird(), tradeId.getThird(), spacer, leaveButton, openCloseButton);
         }
 
         @Override

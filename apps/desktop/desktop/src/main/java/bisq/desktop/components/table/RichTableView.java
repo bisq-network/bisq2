@@ -9,7 +9,6 @@ import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.reputation.ranking.ReputationRankingView;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -288,18 +287,18 @@ public class RichTableView<T> extends VBox {
     public static final class FilterMenuItem<T> extends DropdownBisqMenuItem implements Toggle {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
-        public static FilterMenuItem<ReputationRankingView.ListItem> getShowAllFilterMenuItem(ToggleGroup toggleGroup) {
+        public static <T> FilterMenuItem<T> getShowAllFilterMenuItem(ToggleGroup toggleGroup) {
             return new RichTableView.FilterMenuItem<>(toggleGroup, Res.get("component.standardTable.filter.showAll"), Optional.empty(), e -> true);
         }
 
-        public static Optional<FilterMenuItem<ReputationRankingView.ListItem>> fromToggle(Toggle selectedToggle) {
+        public static <T> Optional<FilterMenuItem<T>> fromToggle(Toggle selectedToggle) {
             if (selectedToggle == null) {
                 return Optional.empty();
             }
             if (selectedToggle instanceof RichTableView.FilterMenuItem) {
                 try {
                     //noinspection unchecked
-                    return Optional.of((RichTableView.FilterMenuItem<ReputationRankingView.ListItem>) selectedToggle);
+                    return Optional.of((RichTableView.FilterMenuItem<T>) selectedToggle);
                 } catch (ClassCastException e) {
                     log.error("Cast failed", e);
                     return Optional.empty();
