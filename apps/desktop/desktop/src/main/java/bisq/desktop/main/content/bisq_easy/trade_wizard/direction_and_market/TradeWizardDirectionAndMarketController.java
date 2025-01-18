@@ -33,7 +33,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
@@ -79,6 +78,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
         model = new TradeWizardDirectionAndMarketModel();
         view = new TradeWizardDirectionAndMarketView(model, this);
         setDirection(Direction.BUY);
+        setIsAllowedToCreateOffer();
         applyShowReputationInfo();
     }
 
@@ -97,6 +97,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     @Override
     public void onActivate() {
         setDirection(Direction.BUY);
+        setIsAllowedToCreateOffer();
         applyShowReputationInfo();
 
         model.setFormattedAmountWithoutReputationNeeded(Optional.ofNullable(bisqEasyOfferbookSelectionService.getSelectedChannel().get())
@@ -162,6 +163,15 @@ public class TradeWizardDirectionAndMarketController implements Controller {
         searchTextPin.unsubscribe();
     }
 
+    public boolean validate() {
+        if (model.getDirection().get() == Direction.SELL && !model.isAllowedToCreateSellOffer()) {
+            showReputationInfoOverlay();
+            return false;
+        }
+
+        return true;
+    }
+
     void onSelectDirection(Direction direction) {
         setDirection(direction);
         applyShowReputationInfo();
@@ -177,11 +187,6 @@ public class TradeWizardDirectionAndMarketController implements Controller {
 
     void onBuildReputation() {
         closeAndNavigateToHandler.accept(NavigationTarget.BUILD_REPUTATION);
-    }
-
-    void onTradeWithoutReputation() {
-        navigationButtonsVisibleHandler.accept(true);
-        onNextHandler.run();
     }
 
     void onMarketListItemClicked(TradeWizardDirectionAndMarketView.ListItem item) {
@@ -201,6 +206,11 @@ public class TradeWizardDirectionAndMarketController implements Controller {
         model.getDirection().set(direction);
     }
 
+    private void setIsAllowedToCreateOffer() {
+        model.setAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.isAllowedToCreateSellOffer(
+                reputationService, userIdentityService.getSelectedUserIdentity().getUserProfile()));
+    }
+
     private void applyShowReputationInfo() {
         if (model.getDirection().get() == Direction.BUY) {
             model.getShowReputationInfo().set(false);
@@ -208,17 +218,21 @@ public class TradeWizardDirectionAndMarketController implements Controller {
             return;
         }
 
-        ReputationScore reputationScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile());
-        if (!reputationScore.hasReputation()) {
-            navigationButtonsVisibleHandler.accept(false);
-            model.getShowReputationInfo().set(true);
-            view.getRoot().setOnKeyPressed(keyEvent -> {
-                KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-                });
-                KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseReputationInfo);
-            });
+        // Sell offer
+        if (!model.isAllowedToCreateSellOffer()) {
+            showReputationInfoOverlay();
         } else {
             view.getRoot().setOnKeyPressed(null);
         }
+    }
+
+    private void showReputationInfoOverlay() {
+        navigationButtonsVisibleHandler.accept(false);
+        model.getShowReputationInfo().set(true);
+        view.getRoot().setOnKeyPressed(keyEvent -> {
+            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+            });
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseReputationInfo);
+        });
     }
 }

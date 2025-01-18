@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
 import bisq.common.currency.FiatCurrency;
 import bisq.common.currency.Market;
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
@@ -32,6 +33,7 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -69,9 +71,7 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
     private final BisqPopup marketSelectionPopup;
     private final HBox currencyLabelBox;
     private Subscription directionSubscription, showReputationInfoPin, marketPin, marketSelectionPin;
-    private Button withoutReputationButton, backToBuyButton;
-    private Button gainReputationButton;
-    private Label subtitleLabel2;
+    private Button backToBuyButton, gainReputationButton;
 
     public TradeWizardDirectionAndMarketView(TradeWizardDirectionAndMarketModel model,
                                              TradeWizardDirectionAndMarketController controller) {
@@ -154,13 +154,10 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
 
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
-        subtitleLabel2.setText(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2", model.getFormattedAmountWithoutReputationNeeded()));
-
         buyButton.disableProperty().bind(model.getBuyButtonDisabled());
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
         gainReputationButton.setOnAction(evt -> controller.onBuildReputation());
-        withoutReputationButton.setOnAction(evt -> controller.onTradeWithoutReputation());
         backToBuyButton.setOnAction(evt -> controller.onCloseReputationInfo());
 
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
@@ -216,7 +213,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
         gainReputationButton.setOnAction(null);
-        withoutReputationButton.setOnAction(null);
         backToBuyButton.setOnAction(null);
 
         directionSubscription.unsubscribe();
@@ -252,29 +248,38 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         headlineLabel.setAlignment(Pos.CENTER);
         headlineLabel.setMaxWidth(width - 60);
 
+        Label warningIcon = new Label();
+        Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1.7em");
+        warningIcon.getStyleClass().add("text-fill-light-dimmed");
+
+        HBox headlineBox = new HBox(15, warningIcon, headlineLabel);
+        headlineBox.setAlignment(Pos.CENTER);
+
         Label subtitleLabel1 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle1"));
         subtitleLabel1.setMaxWidth(width - 60);
         subtitleLabel1.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
-        gainReputationButton.getStyleClass().add("outlined-button");
-
-        subtitleLabel2 = new Label();
+        Label subtitleLabel2 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle2"));
         subtitleLabel2.setMaxWidth(width - 60);
         subtitleLabel2.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        withoutReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.tradeWithoutReputation"));
-        backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.backToBuy"));
+        Label subtitleLabel3 = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.subTitle3"));
+        subtitleLabel3.setMaxWidth(width - 60);
+        subtitleLabel3.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
-        HBox buttons = new HBox(7, backToBuyButton, withoutReputationButton);
+        backToBuyButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.backToBuy"));
+        gainReputationButton = new Button(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.gainReputation"));
+        gainReputationButton.setDefaultButton(true);
+
+        HBox buttons = new HBox(7, backToBuyButton, gainReputationButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(gainReputationButton, new Insets(10, 0, 20, 0));
+        VBox.setMargin(headlineBox, new Insets(20, 0, 20, 0));
         VBox.setMargin(buttons, new Insets(30, 0, 0, 0));
-        contentBox.getChildren().addAll(headlineLabel,
+        contentBox.getChildren().addAll(headlineBox,
                 subtitleLabel1,
-                gainReputationButton,
                 subtitleLabel2,
+                subtitleLabel3,
                 buttons);
         reputationInfo.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
