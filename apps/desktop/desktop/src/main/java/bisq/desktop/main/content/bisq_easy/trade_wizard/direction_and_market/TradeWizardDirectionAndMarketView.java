@@ -243,7 +243,6 @@ public class TradeWizardDirectionAndMarketView extends View<StackPane, TradeWiza
         reputationInfo.setVisible(false);
         reputationInfo.setAlignment(Pos.TOP_CENTER);
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.directionAndMarket.feedback.headline"));
-        headlineLabel.setGraphic(ImageUtil.getImageViewById(""));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setTextAlignment(TextAlignment.CENTER);
         headlineLabel.setAlignment(Pos.CENTER);
