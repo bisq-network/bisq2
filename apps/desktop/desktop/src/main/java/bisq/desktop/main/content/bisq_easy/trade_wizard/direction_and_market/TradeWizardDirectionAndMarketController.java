@@ -175,7 +175,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     void onSelectDirection(Direction direction) {
         setDirection(direction);
         applyShowReputationInfo();
-        if (direction == Direction.BUY && !model.getShowReputationInfo().get()) {
+        if (!model.getShowReputationInfo().get()) {
             onNextHandler.run();
         }
     }
