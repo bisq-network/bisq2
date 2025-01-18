@@ -117,7 +117,8 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
         closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
         closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");
 
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
     }
 
     @Override
@@ -125,7 +126,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
         changedChatNotificationPin.unbind();
     }
 
-    private void handleNotifications(ChatNotification notification) {
+    private void handleNotification(ChatNotification notification) {
         if (notification == null) {
             return;
         }

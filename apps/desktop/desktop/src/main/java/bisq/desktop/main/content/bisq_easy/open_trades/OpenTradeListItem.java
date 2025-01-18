@@ -105,6 +105,7 @@ class OpenTradeListItem implements DateTableItem {
         myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
         reputationScore = reputationService.getReputationScore(peersUserProfile);
 
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
         isInMediationPin = channel.isInMediationObservable().addObserver(isInMediation -> {
