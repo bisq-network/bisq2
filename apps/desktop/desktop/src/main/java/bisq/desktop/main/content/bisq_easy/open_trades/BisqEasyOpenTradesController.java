@@ -174,9 +174,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
                 tradeStateController.setSelectedChannel(null);
                 tradeDataHeader.setSelectedChannel(null);
                 maybeSelectFirst();
-                return;
-            }
-            if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
+            } else if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
                 UserProfile peerUserProfile = tradeChannel.getPeer();
                 String peerUserName = peerUserProfile.getUserName();
 
@@ -185,7 +183,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
                         serviceProvider.getConfig().getAppName(), peerUserName, shortTradeId));
 
                 model.getListItems().stream()
-                        .filter(item -> item.getChannel().equals(tradeChannel))
+                        .filter(item -> item.getChannel().getId().equals(tradeChannel.getId()))
                         .findAny()
                         .ifPresent(item -> model.getSelectedItem().set(item));
 

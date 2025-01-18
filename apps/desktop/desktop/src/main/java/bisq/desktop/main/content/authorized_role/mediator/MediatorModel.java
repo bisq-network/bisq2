@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatMessage;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.table.TableList;
 import javafx.beans.property.*;
@@ -26,16 +24,9 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Slf4j
 @Getter
 public class MediatorModel implements Model {
-    private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
-    private final StringProperty selectedChatMessages = new SimpleStringProperty("");
-    private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
-
     private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     private final BooleanProperty noOpenCases = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
@@ -44,5 +35,13 @@ public class MediatorModel implements Model {
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
 
     public MediatorModel() {
+    }
+    public void reset() {
+        // We dont reset showClosedCases
+        noOpenCases.setValue(false);
+        chatWindowTitle.setValue(null);
+        listItems.clear();
+        selectedItem.set(null);
+        chatWindow.set(null);
     }
 }

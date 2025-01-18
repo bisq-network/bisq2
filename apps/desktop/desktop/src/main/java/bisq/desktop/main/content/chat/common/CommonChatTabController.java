@@ -76,6 +76,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
 
         selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
                 channel -> UIThread.run(() -> handleSelectedChannelChanged(channel)));
+
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
     }

@@ -216,11 +216,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         updateFavouriteMarketChannelItems();
         maybeSelectFirst();
 
-        changedNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
-            if (notification != null) {
-                UIThread.run(() -> applyNotification(notification));
-            }
-        });
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
         bisqEasyOfferbookMessageTypeFilterPin = FxBindings.bindBiDir(model.getMessageTypeFilter())
                 .to(settingsService.getBisqEasyOfferbookMessageTypeFilter());
@@ -375,10 +372,15 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 .filter(e -> e.getChannel().getId().equals(chatChannelId))
                 .findFirst();
     }
+    private void handleNotification(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
 
-    private void applyNotification(ChatNotification notification) {
-        findMarketChannelItem(notification.getChatChannelId())
-                .ifPresent(MarketChannelItem::refreshNotifications);
+        UIThread.run(()->{
+            findMarketChannelItem(notification.getChatChannelId())
+                    .ifPresent(MarketChannelItem::refreshNotifications);
+        });
     }
 
 /*

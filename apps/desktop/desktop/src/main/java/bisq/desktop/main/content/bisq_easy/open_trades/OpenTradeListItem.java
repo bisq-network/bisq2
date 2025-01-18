@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -104,27 +105,8 @@ class OpenTradeListItem implements DateTableItem {
         myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
         reputationScore = reputationService.getReputationScore(peersUserProfile);
 
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification ->
-                UIThread.run(() -> {
-                    if (notification == null) {
-                        return;
-                    }
-                    if (!notification.getChatChannelId().equals(channel.getId())) {
-                        return;
-                    }
-                    boolean isSenderMediator = notification.getSenderUserProfile().equals(channel.getMediator());
-                    boolean isNotificationFromMediator = notification.getMediator().equals(notification.getSenderUserProfile());
-                    long numNotifications = chatNotificationService.getNumNotifications(channel);
-                    if (isSenderMediator && isNotificationFromMediator) {
-                        mediatorNumNotifications = numNotifications - peerNumNotifications;
-                        String value = mediatorNumNotifications > 0 ? String.valueOf(mediatorNumNotifications) : "";
-                        mediatorNumNotificationsProperty.set(value);
-                    } else {
-                        peerNumNotifications = numNotifications - mediatorNumNotifications;
-                        String value = peerNumNotifications > 0 ? String.valueOf(peerNumNotifications) : "";
-                        peerNumNotificationsProperty.set(value);
-                    }
-                }));
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
         isInMediationPin = channel.isInMediationObservable().addObserver(isInMediation -> {
             if (isInMediation == null) {
@@ -140,5 +122,25 @@ class OpenTradeListItem implements DateTableItem {
     public void dispose() {
         changedChatNotificationPin.unbind();
         isInMediationPin.unbind();
+    }
+
+    private void handleNotification(ChatNotification notification) {
+        if (notification == null || !notification.getChatChannelId().equals(channel.getId())) {
+            return;
+        }
+        UIThread.run(() -> {
+            boolean isSenderMediator = notification.getSenderUserProfile().equals(channel.getMediator());
+            boolean isNotificationFromMediator = notification.getMediator().equals(notification.getSenderUserProfile());
+            long numNotifications = chatNotificationService.getNumNotifications(channel);
+            if (isSenderMediator && isNotificationFromMediator) {
+                mediatorNumNotifications = numNotifications - peerNumNotifications;
+                String value = mediatorNumNotifications > 0 ? String.valueOf(mediatorNumNotifications) : "";
+                mediatorNumNotificationsProperty.set(value);
+            } else {
+                peerNumNotifications = numNotifications - mediatorNumNotifications;
+                String value = peerNumNotifications > 0 ? String.valueOf(peerNumNotifications) : "";
+                peerNumNotificationsProperty.set(value);
+            }
+        });
     }
 }
