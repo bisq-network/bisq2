@@ -7,18 +7,16 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.*;
+import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.SearchBox;
+import bisq.desktop.components.controls.Switch;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateColumnUtil;
-import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -34,12 +32,8 @@ import org.fxmisc.easybind.Subscription;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Convenience class for a feature rich table view with a headline, search, num entries and support for filters.
@@ -47,69 +41,37 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 class MediationTableView extends VBox {
-    private final Optional<List<RichTableView.FilterMenuItem<MediationCaseListItem>>> filterItems;
-    private final Optional<ToggleGroup> toggleGroup;
-    private final Consumer<String> searchTextHandler;
-    private final Label numEntriesLabel;
-    @Getter
-    private final BisqTableView<MediationCaseListItem> tableView;
-    private final DropdownMenu filterMenu;
-    private final BisqTooltip tooltip;
-    private final SearchBox searchBox;
-    private final Hyperlink exportHyperlink;
-    private final ChangeListener<Toggle> toggleChangeListener;
-    private final ListChangeListener<MediationCaseListItem> listChangeListener;
+    private final MediatorModel model;
+    private final MediatorController controller;
+
     private final Switch showClosedCasesSwitch;
-    private Subscription searchTextPin;
+    private final SearchBox searchBox;
+    private final BisqTableView<MediationCaseListItem> tableView;
     private BisqTableColumn<MediationCaseListItem> closeCaseDateColumn;
-    private MediatorModel model;
-    private MediatorController controller;
+    private final Hyperlink exportHyperlink;
+    private final Label numEntriesLabel;
+    private final ListChangeListener<MediationCaseListItem> listChangeListener;
+    private Subscription searchTextPin;
     private Subscription showClosedCasesPin, selectedModelItemPin, tableViewSelectionPin, noOpenCasesPin, chatWindowPin;
 
     MediationTableView(MediatorModel model, MediatorController controller) {
-        this(model.getListItems().getSortedList(),
-                Optional.empty(),
-                Optional.empty());
         this.model = model;
         this.controller = controller;
-    }
-
-    MediationTableView(SortedList<MediationCaseListItem> sortedList,
-                       Optional<List<RichTableView.FilterMenuItem<MediationCaseListItem>>> filterItems,
-                       Optional<ToggleGroup> toggleGroup) {
-        this.filterItems = filterItems;
-        this.toggleGroup = toggleGroup;
-        this.searchTextHandler = this::applySearchPredicate;
-        if (filterItems.isPresent()) {
-            checkArgument(toggleGroup.isPresent(), "filterItems and toggleGroup must be both present or empty");
-        }
-        if (toggleGroup.isPresent()) {
-            checkArgument(filterItems.isPresent(), "filterItems and toggleGroup must be both present or empty");
-        }
 
         Label headlineLabel = new Label(Res.get("authorizedRole.mediator.table.headline"));
         headlineLabel.getStyleClass().add("bisq-easy-container-headline");
 
-        filterMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        filterMenu.setManaged(filterItems.isPresent());
-        filterMenu.setVisible(filterMenu.isManaged());
-        filterItems.ifPresent(filterMenu::addMenuItems);
-        tooltip = new BisqTooltip();
-        filterMenu.setTooltip(tooltip);
+        showClosedCasesSwitch = new Switch(Res.get("authorizedRole.mediator.showClosedCases"));
 
         searchBox = new SearchBox();
         searchBox.setPrefWidth(90);
         HBox.setMargin(searchBox, new Insets(0, 4, 0, 0));
-        HBox filterBox = new HBox(10, searchBox, filterMenu);
 
-        showClosedCasesSwitch = new Switch(Res.get("authorizedRole.mediator.showClosedCases"));
-
-        HBox headerBox = new HBox(10, headlineLabel, Spacer.fillHBox(), showClosedCasesSwitch, filterBox);
+        HBox headerBox = new HBox(10, headlineLabel, Spacer.fillHBox(), showClosedCasesSwitch, searchBox);
         headerBox.setAlignment(Pos.CENTER_LEFT);
         headerBox.setPadding(new Insets(15, 30, 15, 30));
-        // headerBox.getStyleClass().add("chat-container-header");
 
-        tableView = new BisqTableView<>(sortedList);
+        tableView = new BisqTableView<>(model.getListItems().getSortedList());
         tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
         configTableView();
 
@@ -135,17 +97,13 @@ class MediationTableView extends VBox {
         setFillWidth(true);
 
         listChangeListener = c -> listItemsChanged();
-        toggleChangeListener = (observable, oldValue, newValue) -> selectedFilterMenuItemChanged();
     }
 
     void initialize() {
         tableView.initialize();
         tableView.getItems().addListener(listChangeListener);
         listItemsChanged();
-        toggleGroup.ifPresent(toggleGroup -> toggleGroup.selectedToggleProperty().addListener(toggleChangeListener));
-        selectedFilterMenuItemChanged();
-        filterItems.ifPresent(filterItems -> filterItems.forEach(RichTableView.FilterMenuItem::initialize));
-        searchTextPin = EasyBind.subscribe(searchBox.textProperty(), searchTextHandler);
+        searchTextPin = EasyBind.subscribe(searchBox.textProperty(), this::applySearchPredicate);
         exportHyperlink.setOnAction(ev -> {
             List<String> headers = buildCsvHeaders();
             List<List<String>> data = buildCsvData();
@@ -201,8 +159,6 @@ class MediationTableView extends VBox {
     void dispose() {
         tableView.dispose();
         tableView.getItems().removeListener(listChangeListener);
-        toggleGroup.ifPresent(toggleGroup -> toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener));
-        filterItems.ifPresent(filterItems -> filterItems.forEach(RichTableView.FilterMenuItem::dispose));
 
         searchTextPin.unsubscribe();
         showClosedCasesPin.unsubscribe();
@@ -263,44 +219,10 @@ class MediationTableView extends VBox {
                         item.getCloseCaseTimeString().toLowerCase().contains(string));
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // TableView delegates
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void refresh() {
-        tableView.refresh();
-    }
-
-    public ObservableList<TableColumn<MediationCaseListItem, ?>> getSortOrder() {
-        return tableView.getSortOrder();
-    }
-
-    public ObservableList<MediationCaseListItem> getItems() {
-        return tableView.getItems();
-    }
-
-    public ObservableList<TableColumn<MediationCaseListItem, ?>> getColumns() {
-        return tableView.getColumns();
-    }
-
-    public void setFixHeight(double value) {
-        tableView.setFixHeight(value);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void selectedFilterMenuItemChanged() {
-        toggleGroup.flatMap(toggleGroup -> RichTableView.FilterMenuItem.fromToggle(toggleGroup.getSelectedToggle()))
-                .ifPresent(filterMenuItem -> {
-                    tooltip.setText(Res.get("component.standardTable.filter.tooltip", filterMenuItem.getTitle()));
-                    filterMenu.setLabelAsContent(filterMenuItem.getTitle());
-                });
-    }
 
     private void listItemsChanged() {
         numEntriesLabel.setText(Res.get("component.standardTable.numEntries", tableView.getItems().size()));
@@ -396,7 +318,6 @@ class MediationTableView extends VBox {
                 .build();
         tableView.getColumns().add(closeCaseDateColumn);
     }
-
 
     private Callback<TableColumn<MediationCaseListItem, MediationCaseListItem>,
             TableCell<MediationCaseListItem, MediationCaseListItem>> getCloseDateCellFactory() {
@@ -514,136 +435,4 @@ class MediationTableView extends VBox {
         tableCell.setGraphic(badge);
         return userProfileDisplay;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // FilterMenuItem
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-   /* @ToString
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-    public static final class FilterMenuItem<MediationCaseListItem> extends DropdownBisqMenuItem implements Toggle {
-        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
-
-        public static FilterMenuItem<MediationCaseListItem> getShowAllFilterMenuItem(ToggleGroup toggleGroup) {
-            return new MediationTableView.FilterMenuItem<>(toggleGroup, Res.get("component.standardTable.filter.showAll"), Optional.empty(), e -> true);
-        }
-
-        public static Optional<FilterMenuItem> fromToggle(Toggle selectedToggle) {
-            if (selectedToggle == null) {
-                return Optional.empty();
-            }
-            if (selectedToggle instanceof MediationTableView.FilterMenuItem) {
-                try {
-                    //noinspection unchecked
-                    return Optional.of((MediationTableView.FilterMenuItem<MediationCaseListItem>) selectedToggle);
-                } catch (ClassCastException e) {
-                    log.error("Cast failed", e);
-                    return Optional.empty();
-                }
-            }
-            log.warn("Unexpected type: selectedToggle={}", selectedToggle);
-            return Optional.empty();
-        }
-
-        @Getter
-        private final String title;
-        @EqualsAndHashCode.Include
-        @Getter
-        private final Optional<Object> data;
-        @Getter
-        private final Predicate<MediationCaseListItem> filter;
-        private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
-        private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
-        private final ChangeListener<Toggle> toggleChangeListener;
-
-        public FilterMenuItem(ToggleGroup toggleGroup,
-                              String title,
-                              Optional<Object> data,
-                              Predicate<MediationCaseListItem> filter) {
-            this(toggleGroup, "check-white", "check-white", title, data, filter);
-        }
-
-        public FilterMenuItem(ToggleGroup toggleGroup,
-                              String defaultIconId,
-                              String activeIconId,
-                              String title,
-                              Optional<Object> data,
-                              Predicate<MediationCaseListItem> filter) {
-            super(defaultIconId, activeIconId, title);
-
-            this.title = title;
-            this.data = data;
-            this.filter = filter;
-
-            setToggleGroup(toggleGroup);
-            getStyleClass().add("dropdown-menu-item");
-
-            toggleChangeListener = (observable, oldValue, newValue) -> toggleChanged();
-        }
-
-        public void initialize() {
-            getToggleGroup().selectedToggleProperty().addListener(toggleChangeListener);
-            toggleChanged();
-            setOnAction(e -> getToggleGroup().selectToggle(this));
-            applyStyle();
-        }
-
-        public void dispose() {
-            getToggleGroup().selectedToggleProperty().removeListener(toggleChangeListener);
-            setOnAction(null);
-        }
-
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        // Toggle implementation
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        @Override
-        public ToggleGroup getToggleGroup() {
-            return toggleGroupProperty.get();
-        }
-
-        @Override
-        public void setToggleGroup(ToggleGroup toggleGroup) {
-            toggleGroupProperty.set(toggleGroup);
-        }
-
-        @Override
-        public ObjectProperty<ToggleGroup> toggleGroupProperty() {
-            return toggleGroupProperty;
-        }
-
-        @Override
-        public boolean isSelected() {
-            return selectedProperty.get();
-        }
-
-        @Override
-        public BooleanProperty selectedProperty() {
-            return selectedProperty;
-        }
-
-        @Override
-        public void setSelected(boolean selected) {
-            selectedProperty.set(selected);
-            applyStyle();
-        }
-
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        // Private
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        private void toggleChanged() {
-            setSelected(this.equals(getToggleGroup().getSelectedToggle()));
-        }
-
-        private void applyStyle() {
-            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected());
-        }
-    }*/
 }
