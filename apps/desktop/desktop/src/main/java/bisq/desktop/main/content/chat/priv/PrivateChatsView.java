@@ -236,7 +236,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileDisplay.setUserProfile(item.getPeersUserProfile());
+                    userProfileDisplay.setUserProfile(item.getPeersUserProfile(), false);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     badge.textProperty().bind(item.getNumNotificationsString());
 

@@ -387,7 +387,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileIcon.setUserProfile(item.getMyUserProfile());
+                    userProfileIcon.setUserProfile(item.getMyUserProfile(), false);
                     // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
                     setGraphic(stackPane);
                 } else {
@@ -408,9 +408,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
+                    userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
-                    userProfileDisplay.setUserProfile(item.getPeersUserProfile());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
@@ -446,7 +445,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
                 if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
                     UserProfile mediator = item.getChannel().getMediator().get();
-                    userProfileDisplay = new UserProfileDisplay(mediator);
+                    userProfileDisplay = new UserProfileDisplay(mediator, false);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
 
                     badge = new Badge(userProfileDisplay);

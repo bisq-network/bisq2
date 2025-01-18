@@ -416,8 +416,7 @@ class MediationTableView extends VBox {
                                                              MediationCaseListItem item,
                                                              boolean isRequester,
                                                              MediationCaseListItem.Trader trader) {
-        UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
-        userProfileDisplay.setUserProfile(trader.getUserProfile());
+        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(trader.getUserProfile(), false);
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");
         }
