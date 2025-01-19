@@ -128,14 +128,14 @@ class TradePhaseBox {
 
                     case TAKER_SENT_TAKE_OFFER_REQUEST:
 
-                    // Seller
+                        // Seller
                     case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                     case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                     case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                     case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                     case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
                     case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-                    // Buyer
+                        // Buyer
                     case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
                     case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
                     case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA_:
@@ -159,7 +159,7 @@ class TradePhaseBox {
                     case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
                     case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
                     case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                    // Buyer
+                        // Buyer
                     case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
                     case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
                     case BUYER_SENT_FIAT_SENT_CONFIRMATION:
@@ -384,7 +384,7 @@ class TradePhaseBox {
                     badge.getStyleClass().add("bisq-easy-trade-state-phase-badge-completed");
                     label.getStyleClass().add("bisq-easy-trade-state-phase-completed");
                 } else {
-                    badge.setText(String.valueOf(index));
+                    badge.setText(String.valueOf(index + 1));
                     badge.getLabel().setGraphic(null);
                     if (index == phaseIndex.intValue()) {
                         // current
@@ -414,7 +414,6 @@ class TradePhaseBox {
             label.getStyleClass().add("bisq-easy-trade-state-phase");
             Badge badge = new Badge();
             badge.setUseAnimation(false);
-            badge.setText(String.valueOf(index));
             HBox hBox = new HBox(7.5, badge, label);
             hBox.setAlignment(Pos.CENTER_LEFT);
             return new Triple<>(hBox, label, badge);
