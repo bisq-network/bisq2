@@ -63,6 +63,7 @@ public class AmountSelectionModel implements Model {
     private ObjectProperty<Monetary> minRangeQuoteSideValue = new SimpleObjectProperty<>();
     @Setter
     private ObjectProperty<Monetary> maxRangeQuoteSideValue = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> maxQuoteAllowedLimitation = new SimpleObjectProperty<>();
     @Setter
     private Monetary leftMarkerQuoteSideValue;
     @Setter
@@ -96,6 +97,7 @@ public class AmountSelectionModel implements Model {
         maxRangeBaseSideValue.set(null);
         minRangeQuoteSideValue.set(null);
         maxRangeQuoteSideValue.set(null);
+        maxQuoteAllowedLimitation.set(null);
         leftMarkerQuoteSideValue = null;
         rightMarkerQuoteSideValue = null;
         sliderTrackStyle.set(null);
