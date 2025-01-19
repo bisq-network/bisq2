@@ -32,8 +32,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
-import javafx.scene.text.TextAlignment;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -51,11 +54,10 @@ public class TradeCompletedTable extends VBox {
         WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeCompleted.info"));
 
         HBox headerHBox = createWaitingInfo(waitingAnimation, headline, info);
+        headerHBox.setAlignment(Pos.CENTER);
 
         Label tableTitle = new Label(Res.get("bisqEasy.tradeCompleted.tableTitle").toUpperCase());
         tableTitle.getStyleClass().addAll("trade-completed-table-title", "font-light");
-        tableTitle.setAlignment(Pos.CENTER_LEFT);
-        tableTitle.setTextAlignment(TextAlignment.LEFT);
 
         // Header
         headerGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
@@ -95,7 +97,7 @@ public class TradeCompletedTable extends VBox {
         VBox.setMargin(line2, new Insets(30, 0, 5, 0));
         VBox.setMargin(line3, new Insets(5, 0, 10, 0));
         getChildren().addAll(headerHBox, tableTitle, line1, headerGridPane, line2, bodyGridPane, line3);
-        //setAlignment(Pos.CENTER);
+        setAlignment(Pos.CENTER);
     }
 
     public void initialize(UserProfile userProfile,
@@ -244,10 +246,8 @@ public class TradeCompletedTable extends VBox {
 
     private HBox createWaitingInfo(WaitingAnimation animation, WrappingText headline, WrappingText info) {
         animation.setAlignment(Pos.CENTER);
-        VBox text = new VBox(headline, info);
-        text.setAlignment(Pos.CENTER_LEFT);
-        text.setSpacing(10);
-        return new HBox(20, animation, text);
+        VBox textBox = new VBox(10, headline, info);
+        return new HBox(20, animation, textBox);
     }
 
 }
