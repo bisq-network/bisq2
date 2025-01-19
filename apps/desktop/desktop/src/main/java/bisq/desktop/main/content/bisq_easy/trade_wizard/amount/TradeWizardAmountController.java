@@ -380,11 +380,15 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void applyFixedAmountSpec(long maxOrFixAmount) {
-        model.getQuoteSideAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+        if (maxOrFixAmount > 0) {
+            model.getQuoteSideAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+        }
     }
 
     private void applyRangeAmountSpec(long minAmount, long maxOrFixAmount) {
-        model.getQuoteSideAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
+        if (minAmount > 0 && maxOrFixAmount > 0) {
+            model.getQuoteSideAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
+        }
     }
 
     private Optional<PriceQuote> findBestOfferQuote() {
@@ -655,15 +659,27 @@ public class TradeWizardAmountController implements Controller {
         Monetary defaultFiatAmount = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, model.getMarket(), defaultUsdAmount)
                 .orElseThrow().round(0);
         boolean isCreateOfferMode = model.isCreateOfferMode();
+        boolean isBuyer = model.getDirection().isBuy();
         if (isCreateOfferMode) {
             model.getIsLearnMoreVisible().set(true);
-            amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
+            if (isBuyer) {
+                amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
+            } else {
+                Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount().round(0);
+                if (reputationBasedMaxAmount.getValue() < minRangeValue.getValue()) {
+                    minRangeValue = reputationBasedMaxAmount;
+                }
+                if (reputationBasedMaxAmount.getValue() < maxRangeValue.getValue()) {
+                    maxRangeValue = reputationBasedMaxAmount;
+                }
+                amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
+            }
         } else {
             // Wizard
             applyMarkerRange();
 
             model.getIsLearnMoreVisible().set(model.getDirection().isSell());
-            if (model.getDirection().isBuy()) {
+            if (isBuyer) {
                 amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
             } else {
                 amountSelectionController.setMinMaxRange(minRangeValue, model.getReputationBasedMaxAmount().round(0));
@@ -674,7 +690,7 @@ public class TradeWizardAmountController implements Controller {
             }
         }
 
-        if (model.getDirection().isBuy()) {
+        if (isBuyer) {
             // Buyer case
             model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.learnMore"));
             model.setLinkToWikiText(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.linkToWikiText"));
