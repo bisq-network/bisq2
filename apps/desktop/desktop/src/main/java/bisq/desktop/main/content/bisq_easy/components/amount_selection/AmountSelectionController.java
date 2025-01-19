@@ -458,17 +458,19 @@ public class AmountSelectionController implements Controller {
         long rightMarkerQuoteSideValue = Optional.ofNullable(model.getRightMarkerQuoteSideValue()).orElse(minRangeMonetary).getValue();
         double right = rightMarkerQuoteSideValue - minRangeMonetaryValue;
         double rightPercentage = range != 0 ? 100 * right / range : 0;
-        // Adjust values to match slider knob better
-        if (rightPercentage < 2) {
-          rightPercentage += 1.2;
-        } else if (rightPercentage < 8) {
-            rightPercentage += 1;
-        } else if (rightPercentage < 15) {
-            rightPercentage += 0.9;
-        } else if (rightPercentage < 24) {
-            rightPercentage += 0.7;
-        } else if (rightPercentage < 60) {
-            rightPercentage += 0.5;
+        if (model.getDirection().isSell()) {
+            // Adjust values to match slider knob better
+            if (rightPercentage < 2) {
+                rightPercentage += 1.2;
+            } else if (rightPercentage < 8) {
+                rightPercentage += 1;
+            } else if (rightPercentage < 15) {
+                rightPercentage += 0.9;
+            } else if (rightPercentage < 24) {
+                rightPercentage += 0.7;
+            } else if (rightPercentage < 60) {
+                rightPercentage += 0.5;
+            }
         }
 
         // E.g.: -bisq-dark-grey-50 0%, -bisq-dark-grey-50 30.0%, -bisq2-green 30.0%, -bisq2-green 60.0%, -bisq-dark-grey-50 60.0%, -bisq-dark-grey-50 100%)
