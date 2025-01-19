@@ -56,7 +56,6 @@ public class TradeWizardAmountAndPriceController implements Controller {
         view = new TradeWizardAmountAndPriceView(model,
                 this,
                 tradeWizardAmountController.getView().getRoot(),
-                tradeWizardAmountController.getView().getAmountLimitInfoHBox(),
                 tradeWizardAmountController.getView().getAmountLimitInfoOverlay(),
                 tradeWizardPriceController.getView().getRoot());
     }

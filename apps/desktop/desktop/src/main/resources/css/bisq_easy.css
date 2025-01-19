@@ -1335,10 +1335,11 @@
 }
 
 .trade-wizard-amount-limit-info {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
+    -fx-wrap-text: true;
 }
 
 .trade-wizard-amount-limit-info-overlay-link.hyperlink {
