@@ -36,7 +36,6 @@ import lombok.Setter;
 
 @Getter
 public class AmountSelectionModel implements Model {
-    private final boolean useQuoteCurrencyForMinMaxRange;
     private final double sliderMin = 0;
     private final double sliderMax = 1;
 
@@ -79,10 +78,6 @@ public class AmountSelectionModel implements Model {
     private final StringProperty maxRangeValueAsString = new SimpleStringProperty();
     private final StringProperty maxRangeCodeAsString = new SimpleStringProperty();
     private final BooleanProperty showRangeAmountSelection = new SimpleBooleanProperty(false);
-
-    public AmountSelectionModel(boolean useQuoteCurrencyForMinMaxRange) {
-        this.useQuoteCurrencyForMinMaxRange = useQuoteCurrencyForMinMaxRange;
-    }
 
     void reset() {
         maxOrFixedBaseSideAmount.set(null);

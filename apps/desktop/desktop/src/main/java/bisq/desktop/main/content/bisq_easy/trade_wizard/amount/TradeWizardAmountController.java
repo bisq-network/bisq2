@@ -110,7 +110,7 @@ public class TradeWizardAmountController implements Controller {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new TradeWizardAmountModel();
 
-        amountSelectionController = new AmountSelectionController(serviceProvider, true);
+        amountSelectionController = new AmountSelectionController(serviceProvider);
         view = new TradeWizardAmountView(model, this, amountSelectionController);
     }
 
