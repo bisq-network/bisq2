@@ -424,8 +424,14 @@ public class AmountSelectionController implements Controller {
 
         Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ? maxRangeMonetary : priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
         model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
-        model.getMaxRangeValueAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryAsFiat));
         model.getMaxRangeCodeAsString().set(maxRangeMonetaryAsFiat.getCode());
+
+        Monetary maxRangeMonetaryLimitationAsFiat = maxRangeMonetaryAsFiat;
+        if (model.getMaxQuoteAllowedLimitation().get() != null) {
+            Monetary maxQuoteAllowedLimitation = model.getMaxQuoteAllowedLimitation().get();
+            maxRangeMonetaryLimitationAsFiat = isMaxRangeMonetaryFiat ? maxQuoteAllowedLimitation : priceQuote.toQuoteSideMonetary(maxQuoteAllowedLimitation).round(0);
+        }
+        model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryLimitationAsFiat));
 
         applySliderTrackStyle();
     }
