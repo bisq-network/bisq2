@@ -18,13 +18,16 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
@@ -58,7 +61,9 @@ public class BuyerState4 extends BaseState {
     private static class Controller extends BaseState.Controller<Model, View> {
         private final ExplorerService explorerService;
 
-        private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        private Controller(ServiceProvider serviceProvider,
+                           BisqEasyTrade bisqEasyTrade,
+                           BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
@@ -90,7 +95,9 @@ public class BuyerState4 extends BaseState {
             model.setFiatCurrency(model.getBisqEasyTrade().getOffer().getMarket().getQuoteCurrencyCode());
             model.setPaymentMethod(model.getBisqEasyTrade().getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
             model.setTradeId(model.getBisqEasyTrade().getShortId());
-            model.setTradeDate(DateFormatter.formatDate(model.getBisqEasyTrade().getContract().getTakeOfferDate()));
+            String tradeDate = DateFormatter.formatDate(model.getBisqEasyTrade().getContract().getTakeOfferDate());
+            String tradeTime = DateFormatter.formatTime(model.getBisqEasyTrade().getContract().getTakeOfferDate());
+            model.setTradeDate(tradeDate + " " + tradeTime);
             model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(model.getBisqEasyTrade())));
             model.setPriceSymbol(model.getBisqEasyOffer().getMarket().getMarketCodes());
         }
@@ -109,6 +116,11 @@ public class BuyerState4 extends BaseState {
                     })
                     .closeButtonText(Res.get("action.cancel"))
                     .show();
+        }
+
+        private void onShowDetails() {
+            Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
+                    new TradeDetailsController.InitData(model.getBisqEasyTrade(), model.getChannel()));
         }
 
         private void onExportTrade() {
@@ -152,7 +164,7 @@ public class BuyerState4 extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final Button closeTradeButton, exportButton;
+        private final Button closeTradeButton, exportButton, detailsButton;
         private final TradeCompletedTable tradeCompletedTable;
 
         private View(Model model, Controller controller) {
@@ -160,10 +172,11 @@ public class BuyerState4 extends BaseState {
 
             tradeCompletedTable = new TradeCompletedTable();
 
+            detailsButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.showDetails"));
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.exportTrade"));
             closeTradeButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.leaveChannel"));
             closeTradeButton.setDefaultButton(true);
-            HBox buttons = new HBox(20, exportButton, closeTradeButton);
+            HBox buttons = new HBox(20, detailsButton, exportButton, closeTradeButton);
             buttons.setAlignment(Pos.BOTTOM_RIGHT);
             VBox.setMargin(buttons, new Insets(0, 0, 20, 0));
 
@@ -189,8 +202,9 @@ public class BuyerState4 extends BaseState {
                 tradeCompletedTable.getOpenTxExplorerButton().setOnAction(e -> controller.openExplorer());
                 tradeCompletedTable.getCopyTxExplorerLinkButton().setOnAction(e -> controller.copyExplorerLink());
             }
-            closeTradeButton.setOnAction(e -> controller.onCloseCompletedTrade());
+            detailsButton.setOnAction(e -> controller.onShowDetails());
             exportButton.setOnAction(e -> controller.onExportTrade());
+            closeTradeButton.setOnAction(e -> controller.onCloseCompletedTrade());
         }
 
         @Override
@@ -198,8 +212,9 @@ public class BuyerState4 extends BaseState {
             super.onViewDetached();
 
             tradeCompletedTable.dispose();
-            closeTradeButton.setOnAction(null);
+            detailsButton.setOnAction(null);
             exportButton.setOnAction(null);
+            closeTradeButton.setOnAction(null);
         }
     }
 }

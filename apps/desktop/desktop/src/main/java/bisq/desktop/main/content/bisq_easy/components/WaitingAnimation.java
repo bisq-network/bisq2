@@ -119,6 +119,7 @@ public class WaitingAnimation extends StackPane {
             case BITCOIN_PAYMENT -> "bitcoin-payment";
             case BITCOIN_CONFIRMATION -> "bitcoin-confirmation";
             case SCAN_WITH_CAMERA -> "scan-with-camera";
+            case TRADE_COMPLETED -> "take-bisq-easy-offer";
         };
     }
 

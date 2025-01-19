@@ -20,9 +20,11 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
@@ -31,6 +33,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
+import javafx.scene.text.TextAlignment;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -39,15 +42,20 @@ public class TradeCompletedTable extends VBox {
     private final GridPane headerGridPane, bodyGridPane;
     @Getter
     private final BisqMenuItem copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton;
+    private final WaitingAnimation waitingAnimation;
 
     public TradeCompletedTable() {
-        Label title = new Label(Res.get("bisqEasy.tradeCompleted.title"));
-        title.setGraphic(ImageUtil.getImageViewById("complete-trade"));
-        title.setGraphicTextGap(30);
-        title.getStyleClass().add("trade-completed-title");
+        waitingAnimation = new WaitingAnimation(WaitingState.TRADE_COMPLETED);
+
+        WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeCompleted.title"));
+        WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeCompleted.info"));
+
+        HBox headerHBox = createWaitingInfo(waitingAnimation, headline, info);
 
         Label tableTitle = new Label(Res.get("bisqEasy.tradeCompleted.tableTitle").toUpperCase());
-        tableTitle.getStyleClass().add("trade-completed-table-title");
+        tableTitle.getStyleClass().addAll("trade-completed-table-title", "font-light");
+        tableTitle.setAlignment(Pos.CENTER_LEFT);
+        tableTitle.setTextAlignment(TextAlignment.LEFT);
 
         // Header
         headerGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
@@ -73,7 +81,7 @@ public class TradeCompletedTable extends VBox {
         copyTxExplorerLinkButton.setVisible(false);
         copyTxExplorerLinkButton.setManaged(false);
 
-        openTxExplorerButton = new BisqMenuItem("open-link-grey","open-link-white");
+        openTxExplorerButton = new BisqMenuItem("open-link-grey", "open-link-white");
         openTxExplorerButton.useIconOnly();
         openTxExplorerButton.setTooltip(Res.get("bisqEasy.tradeCompleted.body.txId.tooltip"));
         openTxExplorerButton.setVisible(false);
@@ -82,12 +90,12 @@ public class TradeCompletedTable extends VBox {
         Region line1 = getLine();
         Region line2 = getLine();
         Region line3 = getLine();
-        VBox.setMargin(title, new Insets(10, 0, 20, 0));
+        VBox.setMargin(headerHBox, new Insets(10, 0, 30, 0));
         VBox.setMargin(line1, new Insets(10, 0, 5, 0));
         VBox.setMargin(line2, new Insets(30, 0, 5, 0));
         VBox.setMargin(line3, new Insets(5, 0, 10, 0));
-        getChildren().addAll(title, tableTitle, line1, headerGridPane, line2, bodyGridPane, line3);
-        setAlignment(Pos.CENTER);
+        getChildren().addAll(headerHBox, tableTitle, line1, headerGridPane, line2, bodyGridPane, line3);
+        //setAlignment(Pos.CENTER);
     }
 
     public void initialize(UserProfile userProfile,
@@ -95,19 +103,21 @@ public class TradeCompletedTable extends VBox {
                            String btcAmount,
                            String fiatAmount,
                            String fiatCurrency,
-                           String paymentMethodUsed,
-                           String tradeIdUsed,
+                           String paymentMethod,
+                           String tradeId,
                            String tradeDate,
-                           String tradePriceUsed,
-                           String tradePriceSymbolUsed,
+                           String tradePrice,
+                           String tradePriceSymbol,
                            Optional<Pair<String, String>> txIdDescriptionAndValue) {
+        waitingAnimation.play();
+
         // Header
         int rowTitle = 0;
         int rowValue = 1;
 
         int col = 0;
         Label tradeWith = new Label(Res.get("bisqEasy.tradeCompleted.header.tradeWith").toUpperCase());
-        tradeWith.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
+        tradeWith.getStyleClass().addAll("dimmed-text");
         UserProfileDisplay tradeWithValue = new UserProfileDisplay(userProfile);
         headerGridPane.add(tradeWith, col, rowTitle);
         headerGridPane.add(tradeWithValue, col, rowValue);
@@ -116,7 +126,7 @@ public class TradeCompletedTable extends VBox {
         Label myDirection = isBuyer
                 ? new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.buyer").toUpperCase())
                 : new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.seller").toUpperCase());
-        myDirection.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
+        myDirection.getStyleClass().addAll("dimmed-text");
         Label myDirectionValue = new Label(btcAmount);
         myDirectionValue.getStyleClass().add("medium-text");
         Label directionBtc = new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.btc").toUpperCase());
@@ -130,7 +140,7 @@ public class TradeCompletedTable extends VBox {
         Label myOutcome = isBuyer
                 ? new Label(Res.get("bisqEasy.tradeCompleted.header.myOutcome.buyer").toUpperCase())
                 : new Label(Res.get("bisqEasy.tradeCompleted.header.myOutcome.seller").toUpperCase());
-        myOutcome.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
+        myOutcome.getStyleClass().addAll("dimmed-text");
         Label myOutcomeValue = new Label(fiatAmount);
         myOutcomeValue.getStyleClass().add("medium-text");
         Label fiat = new Label(fiatCurrency.toUpperCase());
@@ -141,49 +151,50 @@ public class TradeCompletedTable extends VBox {
         headerGridPane.add(fiatBox, col, rowValue);
 
         ++col;
-        Label paymentMethod = new Label(Res.get("bisqEasy.tradeCompleted.header.paymentMethod").toUpperCase());
-        paymentMethod.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
-        Label paymentMethodValue = new Label(paymentMethodUsed);
-        paymentMethodValue.getStyleClass().add("medium-text");
-        GridPane.setValignment(paymentMethodValue, VPos.TOP);
-        headerGridPane.add(paymentMethod, col, rowTitle);
-        headerGridPane.add(paymentMethodValue, col, rowValue);
+        Label tradePriceLabel = new Label(Res.get("bisqEasy.tradeCompleted.header.tradePrice").toUpperCase());
+        tradePriceLabel.getStyleClass().addAll("dimmed-text");
+        Label tradePriceValue = new Label(tradePrice);
+        tradePriceValue.getStyleClass().add("medium-text");
+        Label tradePriceSymbolLabel = new Label(tradePriceSymbol.toUpperCase());
+        tradePriceSymbolLabel.getStyleClass().addAll("small-text", "text-fill-grey-dimmed");
+        HBox tradePriceBox = new HBox(5, tradePriceValue, tradePriceSymbolLabel);
+        tradePriceBox.setAlignment(Pos.BASELINE_LEFT);
+        headerGridPane.add(tradePriceLabel, col, rowTitle);
+        headerGridPane.add(tradePriceBox, col, rowValue);
 
         ++col;
-        Label tradeId = new Label(Res.get("bisqEasy.tradeCompleted.header.tradeId").toUpperCase());
-        tradeId.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
-        Label tradeIdValue = new Label(tradeIdUsed);
-        tradeIdValue.getStyleClass().add("medium-text");
-        GridPane.setValignment(tradeIdValue, VPos.TOP);
-        headerGridPane.add(tradeId, col, rowTitle);
-        headerGridPane.add(tradeIdValue, col, rowValue);
+        Label paymentMethodLabel = new Label(Res.get("bisqEasy.tradeCompleted.header.paymentMethod").toUpperCase());
+        paymentMethodLabel.getStyleClass().addAll("dimmed-text");
+        Label paymentMethodValue = new Label(paymentMethod);
+        paymentMethodValue.getStyleClass().add("medium-text");
+        GridPane.setValignment(paymentMethodValue, VPos.TOP);
+        headerGridPane.add(paymentMethodLabel, col, rowTitle);
+        headerGridPane.add(paymentMethodValue, col, rowValue);
 
         // Body
         int colTitle = 0;
         int colValue = 1;
         int row = 0;
+
         Label date = new Label(Res.get("bisqEasy.tradeCompleted.body.date"));
-        date.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
+        date.getStyleClass().addAll("dimmed-text");
         Label dateValue = new Label(tradeDate);
         dateValue.getStyleClass().add("medium-text");
         bodyGridPane.add(date, colTitle, row);
         bodyGridPane.add(dateValue, colValue, row);
 
         ++row;
-        Label tradePrice = new Label(Res.get("bisqEasy.tradeCompleted.body.tradePrice"));
-        tradePrice.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
-        Label tradePriceValue = new Label(tradePriceUsed);
-        tradePriceValue.getStyleClass().add("medium-text");
-        Label tradePriceSymbol = new Label(tradePriceSymbolUsed.toUpperCase());
-        tradePriceSymbol.getStyleClass().addAll("small-text", "text-fill-grey-dimmed");
-        HBox tradePriceBox = new HBox(5, tradePriceValue, tradePriceSymbol);
-        tradePriceBox.setAlignment(Pos.BOTTOM_LEFT);
-        bodyGridPane.add(tradePrice, colTitle, row);
-        bodyGridPane.add(tradePriceBox, colValue, row);
+        Label tradeIdLabel = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeId"));
+        tradeIdLabel.getStyleClass().addAll("dimmed-text");
+        Label tradeIdValue = new Label(tradeId);
+        tradeIdValue.getStyleClass().add("medium-text");
+        bodyGridPane.add(tradeIdLabel, colTitle, row);
+        bodyGridPane.add(tradeIdValue, colValue, row);
+
 
         ++row;
         Label tradeFee = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeFee"));
-        tradeFee.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
+        tradeFee.getStyleClass().addAll("dimmed-text");
         Label tradeFeeValue = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeFee.value"));
         tradeFeeValue.getStyleClass().add("medium-text");
         bodyGridPane.add(tradeFee, colTitle, row);
@@ -192,10 +203,10 @@ public class TradeCompletedTable extends VBox {
         if (txIdDescriptionAndValue.isPresent()) {
             ++row;
             Label txIdTitle = new Label(txIdDescriptionAndValue.get().getFirst());
-            txIdTitle.getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
+            txIdTitle.getStyleClass().addAll("dimmed-text");
             String txId = txIdDescriptionAndValue.get().getSecond();
             Label txIdValue = new Label(txId);
-            txIdValue.getStyleClass().addAll("medium-text", "text-fill-green");
+            txIdValue.getStyleClass().addAll("medium-text"/*, "text-fill-green"*/);
 
             HBox txValueBox = new HBox(1, txIdValue, Spacer.fillHBox(), copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton);
             txValueBox.setAlignment(Pos.CENTER_LEFT);
@@ -230,4 +241,13 @@ public class TradeCompletedTable extends VBox {
         line.setPadding(new Insets(9, 0, 8, 0));
         return line;
     }
+
+    private HBox createWaitingInfo(WaitingAnimation animation, WrappingText headline, WrappingText info) {
+        animation.setAlignment(Pos.CENTER);
+        VBox text = new VBox(headline, info);
+        text.setAlignment(Pos.CENTER_LEFT);
+        text.setSpacing(10);
+        return new HBox(20, animation, text);
+    }
+
 }
