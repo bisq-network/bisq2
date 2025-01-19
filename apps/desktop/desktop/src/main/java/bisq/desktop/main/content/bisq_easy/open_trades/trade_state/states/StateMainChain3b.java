@@ -321,6 +321,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
 
             confirmationStatePin = EasyBind.subscribe(model.getConfirmationState(), confirmationState -> {
                 if (confirmationState != null) {
+                    btcBalance.validate();
                     btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-in-mempool");
                     btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-confirmed");
                     btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-failed");
