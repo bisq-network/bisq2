@@ -227,7 +227,7 @@ public class AmountSelectionView extends View<VBox, AmountSelectionModel, Amount
         description.textProperty().bind(model.getDescription());
         minRangeValue.textProperty().bind(model.getMinRangeValueAsString());
         minRangeCode.textProperty().bind(model.getMinRangeCodeAsString());
-        maxRangeValue.textProperty().bind(model.getMaxRangeValueAsString());
+        maxRangeValue.textProperty().bind(model.getMaxRangeValueLimitationAsString());
         maxRangeCode.textProperty().bind(model.getMaxRangeCodeAsString());
         quoteAmountSeparator.visibleProperty().bind(model.getIsRangeAmountEnabled());
         quoteAmountSeparator.managedProperty().bind(model.getIsRangeAmountEnabled());

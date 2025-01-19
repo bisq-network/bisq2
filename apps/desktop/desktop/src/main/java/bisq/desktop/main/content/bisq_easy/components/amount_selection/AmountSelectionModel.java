@@ -76,7 +76,7 @@ public class AmountSelectionModel implements Model {
     private final StringProperty description = new SimpleStringProperty();
     private final StringProperty minRangeValueAsString = new SimpleStringProperty();
     private final StringProperty minRangeCodeAsString = new SimpleStringProperty();
-    private final StringProperty maxRangeValueAsString = new SimpleStringProperty();
+    private final StringProperty maxRangeValueLimitationAsString = new SimpleStringProperty();
     private final StringProperty maxRangeCodeAsString = new SimpleStringProperty();
     private final BooleanProperty showRangeAmountSelection = new SimpleBooleanProperty(false);
 
@@ -106,7 +106,7 @@ public class AmountSelectionModel implements Model {
         description.set(null);
         minRangeValueAsString.set(null);
         minRangeCodeAsString.set(null);
-        maxRangeValueAsString.set(null);
+        maxRangeValueLimitationAsString.set(null);
         maxRangeCodeAsString.set(null);
         showRangeAmountSelection.set(false);
     }
