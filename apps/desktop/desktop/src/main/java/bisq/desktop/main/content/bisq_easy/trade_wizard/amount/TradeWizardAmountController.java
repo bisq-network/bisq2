@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -94,12 +95,14 @@ public class TradeWizardAmountController implements Controller {
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
+    private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private Subscription isRangeAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin;
 
     public TradeWizardAmountController(ServiceProvider serviceProvider,
                                        Region owner,
-                                       Consumer<Boolean> navigationButtonsVisibleHandler) {
+                                       Consumer<Boolean> navigationButtonsVisibleHandler,
+                                       Consumer<NavigationTarget> closeAndNavigateToHandler) {
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
@@ -108,6 +111,7 @@ public class TradeWizardAmountController implements Controller {
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
+        this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         model = new TradeWizardAmountModel();
 
         amountSelectionController = new AmountSelectionController(serviceProvider);
@@ -212,6 +216,7 @@ public class TradeWizardAmountController implements Controller {
 
         Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
         model.getIsRangeAmountEnabled().set(cookieValue && model.getShowRangeAmounts().get());
+        model.getShouldShowHowToBuildReputationButton().set(model.isCreateOfferMode() && model.getDirection().isSell());
 
         minAmountCompBaseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMinBaseSideAmount(),
                 value -> {
@@ -319,6 +324,10 @@ public class TradeWizardAmountController implements Controller {
         view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
         model.getIsAmountLimitInfoOverlayVisible().set(false);
+    }
+
+    void onLearnHowToBuildReputation() {
+        closeAndNavigateToHandler.accept(NavigationTarget.BUILD_REPUTATION);
     }
 
     void onOpenWiki(String url) {

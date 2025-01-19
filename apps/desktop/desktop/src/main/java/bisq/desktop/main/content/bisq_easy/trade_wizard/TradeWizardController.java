@@ -92,7 +92,8 @@ public class TradeWizardController extends NavigationController implements InitW
                 this::closeAndNavigateTo);
         tradeWizardAmountAndPriceController = new TradeWizardAmountAndPriceController(serviceProvider,
                 view.getRoot(),
-                this::setMainButtonsVisibleState);
+                this::setMainButtonsVisibleState,
+                this::closeAndNavigateTo);
         tradeWizardPaymentMethodsController = new TradeWizardPaymentMethodsController(serviceProvider, view.getRoot(), this::onNext);
         tradeWizardSelectOfferController = new TradeWizardSelectOfferController(serviceProvider,
                 this::onBack,
