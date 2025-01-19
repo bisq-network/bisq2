@@ -52,6 +52,7 @@ public class TradeWizardAmountModel implements Model {
     private final StringProperty amountLimitInfo = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
     private final BooleanProperty shouldShowAmountLimitInfo = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowHowToBuildReputationButton = new SimpleBooleanProperty();
     @Setter
     private String amountLimitInfoLink;
     @Setter
@@ -80,6 +81,7 @@ public class TradeWizardAmountModel implements Model {
         amountLimitInfo.set(null);
         amountLimitInfoOverlayInfo.set(null);
         shouldShowAmountLimitInfo.set(false);
+        shouldShowHowToBuildReputationButton.set(false);
         amountLimitInfoLink = null;
         linkToWikiText = null;
         isCreateOfferMode = false;
