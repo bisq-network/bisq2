@@ -50,10 +50,8 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
     private final StringProperty amountLimitInfo = new SimpleStringProperty();
-    private final StringProperty amountLimitInfoLeadLine = new SimpleStringProperty();
-    private final StringProperty amountLimitInfoAmount = new SimpleStringProperty();
     private final StringProperty amountLimitInfoOverlayInfo = new SimpleStringProperty();
-    private final BooleanProperty isAmountHyperLinkDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowAmountLimitInfo = new SimpleBooleanProperty();
     @Setter
     private String amountLimitInfoLink;
     @Setter
@@ -69,8 +67,6 @@ public class TradeWizardAmountModel implements Model {
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
     private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
-    private final BooleanProperty isWarningIconVisible = new SimpleBooleanProperty();
-    private final BooleanProperty isLearnMoreVisible = new SimpleBooleanProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
     private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
@@ -82,9 +78,8 @@ public class TradeWizardAmountModel implements Model {
         bitcoinPaymentMethods = new ArrayList<>();
         fiatPaymentMethods = new ArrayList<>();
         amountLimitInfo.set(null);
-        amountLimitInfoAmount.set(null);
         amountLimitInfoOverlayInfo.set(null);
-        isAmountHyperLinkDisabled.set(false);
+        shouldShowAmountLimitInfo.set(false);
         amountLimitInfoLink = null;
         linkToWikiText = null;
         isCreateOfferMode = false;
@@ -92,8 +87,6 @@ public class TradeWizardAmountModel implements Model {
         showRangeAmounts.set(false);
         isRangeAmountEnabled.set(false);
         isAmountLimitInfoOverlayVisible.set(false);
-        isWarningIconVisible.set(false);
-        isLearnMoreVisible.set(false);
         priceTooltip.set(null);
         quoteSideAmountSpec.set(null);
         priceQuote.set(null);
