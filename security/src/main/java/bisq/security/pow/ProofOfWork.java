@@ -21,11 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,38 +37,22 @@ import java.util.Optional;
 public final class ProofOfWork implements NetworkProto {
     // With HashCashV2 we use the 20 byte hash of the serialized message for the payload
     // instead the serialized message as in HashCash(V1)
-    @Schema(
-            description = "payload as byte array field represented as a JSON array of integers",
-            type = "array",
-            example = "[-80, -19, -60, 119, -20, -106, 115, 121, -122, 122, -28, 75, 30, 3, 15, -92, -8, -26, -125, 39]"
-    )
     private final byte[] payload;
     private final long counter;
     // If challenge does not make sense we set it null
     // Challenge need to be hashed to 256 bits
     @Nullable
-    @Schema(
-            description = "payload as byte array field represented as a JSON array of integers",
-            type = "array",
-            example = "[-20, -106, 115, 121, -122, 122]"
-    )
     private final byte[] challenge; // 32 bytes
     private final double difficulty;
-    @Schema(
-            description = "payload as byte array field represented as a JSON array of integers",
-            type = "array",
-            example = "[0, 0, 0, 0, 0, 1, 108, 27]"
-    )
     private final byte[] solution; // 72 bytes
     private final long duration;
 
-    @JsonCreator
-    public ProofOfWork(@JsonProperty("payload") byte[] payload,
-                       @JsonProperty("counter") long counter,
-                       @JsonProperty("challenge") @Nullable byte[] challenge,
-                       @JsonProperty("difficulty") double difficulty,
-                       @JsonProperty("solution") byte[] solution,
-                       @JsonProperty("duration") long duration) {
+    public ProofOfWork(byte[] payload,
+                       long counter,
+                       @Nullable byte[] challenge,
+                       double difficulty,
+                       byte[] solution,
+                       long duration) {
         this.payload = payload;
         this.counter = counter;
         this.challenge = challenge;
@@ -126,7 +106,6 @@ public final class ProofOfWork implements NetworkProto {
         );
     }
 
-    @JsonIgnore
     public double getLog2Difficulty() {
         return MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2);
     }
