@@ -38,7 +38,6 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,
                                          TradeWizardAmountAndPriceController controller,
                                          VBox amountSelection,
-                                         HBox infoAndWarningsSection,
                                          VBox amountOverlay,
                                          VBox priceSelection) {
         super(new VBox(), model, controller);
@@ -53,7 +52,7 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
         HBox amountAndPriceHBox = new HBox(20, amountSelection, amountAtPriceSymbol, priceSelection);
         amountAndPriceHBox.getStyleClass().add("amount-and-price-box");
 
-        content = new VBox(20, headline, amountAndPriceHBox, infoAndWarningsSection);
+        content = new VBox(20, headline, amountAndPriceHBox);
         content.getStyleClass().add("content-box");
 
         StackPane layeredContent = new StackPane(content, amountOverlay);

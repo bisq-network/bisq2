@@ -46,7 +46,6 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
     private final VBox amountLimitInfoOverlay;
     private final Button closeOverlayButton, fixedAmount, rangeAmount;
     private final HBox amountModelsBox;
-    @Getter
     private final HBox amountLimitInfoHBox;
     private Subscription isRangeAmountEnabledPin;
 
@@ -68,6 +67,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
         learnMoreHyperLink = new Hyperlink();
         learnMoreHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+        learnMoreHyperLink.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
         amountLimitInfoHBox = new HBox(2.5, amountLimitInfo, learnMoreHyperLink);
         amountLimitInfoHBox.setAlignment(Pos.CENTER);
@@ -95,7 +95,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
         amountLimitInfoOverlay = getAmountLimitInfoOverlay(amountLimitInfoOverlayInfo, closeOverlayButton, linkToWikiText, linkToWiki);
 
-        root.getChildren().addAll(amountModelsBox, amountBox);
+        root.getChildren().addAll(amountModelsBox, amountBox, amountLimitInfoHBox);
         root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("bisq-easy-trade-wizard-amount-step");
     }
