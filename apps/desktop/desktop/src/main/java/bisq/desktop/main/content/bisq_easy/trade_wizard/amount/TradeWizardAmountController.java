@@ -662,6 +662,7 @@ public class TradeWizardAmountController implements Controller {
         boolean isBuyer = model.getDirection().isBuy();
         if (isCreateOfferMode) {
             model.getIsLearnMoreVisible().set(true);
+            amountSelectionController.setMaxAllowedLimitation(maxRangeValue);
             if (isBuyer) {
                 amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
             } else {
