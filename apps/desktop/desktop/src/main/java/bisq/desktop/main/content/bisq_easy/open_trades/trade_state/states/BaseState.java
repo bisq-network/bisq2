@@ -149,9 +149,7 @@ public abstract class BaseState {
             VBox text = new VBox(headline, info);
             text.setAlignment(Pos.CENTER_LEFT);
             text.setSpacing(10);
-            HBox waitingInfo = new HBox(animation, text);
-            waitingInfo.setSpacing(20);
-            return waitingInfo;
+            return new HBox(20, animation, text);
         }
     }
 }
