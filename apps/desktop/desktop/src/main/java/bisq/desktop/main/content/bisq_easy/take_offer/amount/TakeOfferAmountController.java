@@ -62,7 +62,7 @@ public class TakeOfferAmountController implements Controller {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        amountSelectionController = new AmountSelectionController(serviceProvider, true);
+        amountSelectionController = new AmountSelectionController(serviceProvider);
         view = new TakeOfferAmountView(model, this, amountSelectionController.getView().getRoot());
     }
 

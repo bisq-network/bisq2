@@ -36,7 +36,6 @@ import lombok.Setter;
 
 @Getter
 public class AmountSelectionModel implements Model {
-    private final boolean useQuoteCurrencyForMinMaxRange;
     private final double sliderMin = 0;
     private final double sliderMax = 1;
 
@@ -64,6 +63,7 @@ public class AmountSelectionModel implements Model {
     private ObjectProperty<Monetary> minRangeQuoteSideValue = new SimpleObjectProperty<>();
     @Setter
     private ObjectProperty<Monetary> maxRangeQuoteSideValue = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> maxQuoteAllowedLimitation = new SimpleObjectProperty<>();
     @Setter
     private Monetary leftMarkerQuoteSideValue;
     @Setter
@@ -76,13 +76,9 @@ public class AmountSelectionModel implements Model {
     private final StringProperty description = new SimpleStringProperty();
     private final StringProperty minRangeValueAsString = new SimpleStringProperty();
     private final StringProperty minRangeCodeAsString = new SimpleStringProperty();
-    private final StringProperty maxRangeValueAsString = new SimpleStringProperty();
+    private final StringProperty maxRangeValueLimitationAsString = new SimpleStringProperty();
     private final StringProperty maxRangeCodeAsString = new SimpleStringProperty();
     private final BooleanProperty showRangeAmountSelection = new SimpleBooleanProperty(false);
-
-    public AmountSelectionModel(boolean useQuoteCurrencyForMinMaxRange) {
-        this.useQuoteCurrencyForMinMaxRange = useQuoteCurrencyForMinMaxRange;
-    }
 
     void reset() {
         maxOrFixedBaseSideAmount.set(null);
@@ -101,6 +97,7 @@ public class AmountSelectionModel implements Model {
         maxRangeBaseSideValue.set(null);
         minRangeQuoteSideValue.set(null);
         maxRangeQuoteSideValue.set(null);
+        maxQuoteAllowedLimitation.set(null);
         leftMarkerQuoteSideValue = null;
         rightMarkerQuoteSideValue = null;
         sliderTrackStyle.set(null);
@@ -109,7 +106,7 @@ public class AmountSelectionModel implements Model {
         description.set(null);
         minRangeValueAsString.set(null);
         minRangeCodeAsString.set(null);
-        maxRangeValueAsString.set(null);
+        maxRangeValueLimitationAsString.set(null);
         maxRangeCodeAsString.set(null);
         showRangeAmountSelection.set(false);
     }
