@@ -45,6 +45,9 @@ public class TradeDetailsModel extends NavigationModel {
     private boolean isOnChainSettlement;
     private String btcPaymentAddress;
     private boolean isBtcPaymentDataEmpty;
+    private String paymentProof;
+    private boolean isPaymentProofEmpty;
+    private boolean isPaymentProofVisible;
     private String paymentAccountData;
     private boolean isPaymentAccountDataEmpty;
     private String assignedMediator;
