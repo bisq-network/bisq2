@@ -32,6 +32,7 @@ import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController
 import bisq.desktop.main.content.bisq_easy.onboarding.BisqEasyOnboardingController;
 import bisq.desktop.main.content.bisq_easy.open_trades.BisqEasyOpenTradesController;
 import bisq.desktop.main.content.bisq_easy.private_chats.BisqEasyPrivateChatsController;
+import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,6 +58,9 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     @Override
     public void onActivate() {
         super.onActivate();
+        findTabButton(NavigationTarget.BISQ_EASY_OFFERBOOK).ifPresent(tabButton ->
+                tabButton.showClearButton(Res.get("bisqEasy.offerbook.clearNotifications"),
+                        () -> chatNotificationService.consume(ChatChannelDomain.BISQ_EASY_OFFERBOOK)));
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
@@ -65,6 +69,8 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     @Override
     public void onDeactivate() {
         super.onDeactivate();
+
+        findTabButton(NavigationTarget.BISQ_EASY_OFFERBOOK).ifPresent(TabButton::disposeClearButton);
 
         changedChatNotificationPin.unbind();
     }

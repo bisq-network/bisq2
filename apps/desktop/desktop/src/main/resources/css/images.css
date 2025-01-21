@@ -131,6 +131,10 @@
     -fx-image: url("/images/field-add-white.png");
 }
 
+#clear-notifications {
+    -fx-image: url("/images/clear-notifications.png");
+}
+
 #remove {
     -fx-image: url("/images/field-remove.png");
 }
