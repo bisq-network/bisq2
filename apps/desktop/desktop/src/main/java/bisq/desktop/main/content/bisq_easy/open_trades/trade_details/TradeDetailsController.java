@@ -101,17 +101,30 @@ public class TradeDetailsController extends NavigationController implements Init
         model.setSettlementMethod(contract.getBaseSidePaymentMethodSpec().getShortDisplayString());
         model.setTradeId(trade.getId());
         model.setPeerNetworkAddress(channel.getPeer().getAddressByTransportDisplayString(50));
-        model.setOnChainSettlement(contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN);
+
+        model.setPaymentAccountDataEmpty(trade.getPaymentAccountData().get() == null);
+        model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
+        model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
+
+        model.setPaymentAccountData(trade.getPaymentAccountData().get() == null
+                ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
+                : trade.getPaymentAccountData().get());
+
         model.setBtcPaymentAddress(trade.getBitcoinPaymentData().get() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
                 : trade.getBitcoinPaymentData().get());
         model.setBtcPaymentDataEmpty(trade.getBitcoinPaymentData().get() == null);
-        model.setPaymentAccountData(trade.getPaymentAccountData().get() == null
+
+        model.setPaymentProof(trade.getPaymentProof().get() == null
                 ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getPaymentAccountData().get());
-        model.setPaymentAccountDataEmpty(trade.getPaymentAccountData().get() == null);
-        model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
-        model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
+                : trade.getPaymentProof().get());
+        model.setPaymentProofEmpty(trade.getPaymentProof().get() == null);
+
+        boolean isOnChainSettlement = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
+        model.setOnChainSettlement(isOnChainSettlement);
+
+        // At LN its optional, so we show it only if set
+        model.setPaymentProofVisible(isOnChainSettlement || trade.getPaymentProof().get() != null);
     }
 
     @Override

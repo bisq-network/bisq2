@@ -12,6 +12,10 @@
     -fx-font-size: 0.769em;
 }
 
+.compact-text {
+    -fx-font-size: 0.9em !important;
+}
+
 .medium-text {
     -fx-font-size: 1.02em !important;
 }

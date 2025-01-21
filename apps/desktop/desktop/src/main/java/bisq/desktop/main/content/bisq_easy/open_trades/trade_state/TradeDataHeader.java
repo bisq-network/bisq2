@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
@@ -218,9 +218,7 @@ public class TradeDataHeader {
             rightAmount.getFirst().getThird().textProperty().bind(model.getRightCode());
             tradeId.getSecond().textProperty().bind(model.getTradeId());
 
-            userProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), userProfile -> {
-                peersUserProfileDisplay.setUserProfile(userProfile);
-            });
+            userProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), peersUserProfileDisplay::setUserProfile);
             reputationScorePin = EasyBind.subscribe(model.getReputationScore(), peersUserProfileDisplay::setReputationScore);
         }
 
