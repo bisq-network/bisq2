@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -163,8 +164,8 @@ public class AmountSelectionController implements Controller {
     }
 
     public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
-        boolean minRangeValueIsFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(minRangeValue.getCode());
-        boolean maxRangeValueIsFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(maxRangeValue.getCode());
+        boolean minRangeValueIsFiat = TradeCurrency.isFiat(minRangeValue.getCode());
+        boolean maxRangeValueIsFiat = TradeCurrency.isFiat(maxRangeValue.getCode());
         checkArgument(minRangeValueIsFiat && maxRangeValueIsFiat,
                 "The provided minRangeValue and maxRangeValue must be fiat currencies as useQuoteCurrencyForMinMaxRange is set to true.");
 
