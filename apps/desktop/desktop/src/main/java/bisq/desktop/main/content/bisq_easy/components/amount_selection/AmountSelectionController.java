@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
-import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
@@ -38,8 +37,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class AmountSelectionController implements Controller {
     private static final String SLIDER_TRACK_DEFAULT_COLOR = "-bisq-dark-grey-50";
@@ -54,12 +51,11 @@ public class AmountSelectionController implements Controller {
     private final ChangeListener<PriceQuote> quoteListener;
     private final PriceInput price;
     private final ChangeListener<Number> maxOrFixedSliderListener, minSliderListener;
-    private Subscription maxOrFixedBaseAmountFromModelPin, maxOrFixedBaseAmountFromCompPin, maxOrFixedQuoteAmountFromCompPin,
-            maxOrFixedQuoteSideAmountValidPin, minBaseAmountFromModelPin, minBaseAmountFromCompPin, minQuoteAmountFromCompPin,
+    private Subscription maxOrFixedQuoteAmountFromModelPin, maxOrFixedQuoteAmountFromCompPin,
+            maxOrFixedQuoteSideAmountValidPin, minQuoteAmountFromModelPin, minQuoteAmountFromCompPin,
             minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin;
 
-    public AmountSelectionController(ServiceProvider serviceProvider,
-                                     boolean useQuoteCurrencyForMinMaxRange) {
+    public AmountSelectionController(ServiceProvider serviceProvider) {
         // max or fixed amount
         maxOrFixedQuoteSideAmountInput = new QuoteAmountInputBox(false, true);
         maxOrFixedBaseSideAmountInput = new BaseAmountBox(true);
@@ -72,7 +68,7 @@ public class AmountSelectionController implements Controller {
 
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
-        model = new AmountSelectionModel(useQuoteCurrencyForMinMaxRange);
+        model = new AmountSelectionModel();
         view = new AmountSelectionView(model, this,
                 maxOrFixedBaseSideAmountInput,
                 maxOrFixedQuoteSideAmountInput,
@@ -85,17 +81,15 @@ public class AmountSelectionController implements Controller {
         maxOrFixedQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMaxOrFixedBaseFromQuote);
         minQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMinBaseFromQuote);
         quoteListener = (observable, oldValue, newValue) -> {
-            model.getMinRangeBaseSideValue().set(null);
-            model.getMaxRangeBaseSideValue().set(null);
-            model.getMinRangeQuoteSideValue().set(null);
-            model.getMaxRangeQuoteSideValue().set(null);
+            model.getMinRangeSideValue().set(null);
+            model.getMaxRangeSideValue().set(null);
             applyInitialRangeValues();
             UIThread.runOnNextRenderFrame(this::applyQuote);
         };
         maxOrFixedSliderListener = (observable, oldValue, newValue) ->
-            applySliderValue(newValue.doubleValue(), maxOrFixedQuoteSideAmountInput, maxOrFixedBaseSideAmountInput);
+            applySliderValue(newValue.doubleValue(), maxOrFixedQuoteSideAmountInput);
         minSliderListener = (observable, oldValue, newValue) ->
-            applySliderValue(newValue.doubleValue(), minQuoteSideAmountInput, minBaseSideAmountInput);
+            applySliderValue(newValue.doubleValue(), minQuoteSideAmountInput);
     }
 
     public void setMaxOrFixedBaseSideAmount(Monetary value) {
@@ -159,17 +153,11 @@ public class AmountSelectionController implements Controller {
         model.getDescription().set(description);
     }
 
-    public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
-        boolean minRangeValueIsFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(minRangeValue.getCode());
-        boolean maxRangeValueIsFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(maxRangeValue.getCode());
-        if (model.isUseQuoteCurrencyForMinMaxRange()) {
-            checkArgument(minRangeValueIsFiat && maxRangeValueIsFiat,
-                    "The provided minRangeValue and maxRangeValue must be fiat currencies as useQuoteCurrencyForMinMaxRange is set to true.");
-        } else {
-            checkArgument(!minRangeValueIsFiat && !maxRangeValueIsFiat,
-                    "The provided minRangeValue and maxRangeValue must not be fiat currencies as useQuoteCurrencyForMinMaxRange is set to false.");
-        }
+    public void setMaxAllowedLimitation(Monetary maxAllowedLimitation) {
+        model.getMaxRangeAllowedLimitation().set(maxAllowedLimitation);
+    }
 
+    public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
         model.getMinRangeMonetary().set(minRangeValue);
         model.getMaxRangeMonetary().set(maxRangeValue);
         applyInitialRangeValues();
@@ -183,10 +171,6 @@ public class AmountSelectionController implements Controller {
     public void setRightMarkerQuoteSideValue(Monetary quoteSideAmount) {
         model.setRightMarkerQuoteSideValue(quoteSideAmount);
         applySliderTrackStyle();
-    }
-
-    public void applyReputationBasedQuoteSideAmount() {
-        maxOrFixedQuoteSideAmountInput.setAmount(model.getRightMarkerQuoteSideValue());
     }
 
     public void setQuote(PriceQuote priceQuote) {
@@ -218,10 +202,8 @@ public class AmountSelectionController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getMinRangeBaseSideValue().set(null);
-        model.getMaxRangeBaseSideValue().set(null);
-        model.getMinRangeQuoteSideValue().set(null);
-        model.getMaxRangeQuoteSideValue().set(null);
+        model.getMinRangeSideValue().set(null);
+        model.getMaxRangeSideValue().set(null);
         applyInitialRangeValues();
 
         model.getMaxOrFixedQuoteSideAmount().addListener(maxOrFixedQuoteSideAmountFromModelListener);
@@ -244,68 +226,24 @@ public class AmountSelectionController implements Controller {
         }
         setMinBaseFromQuote();
 
-        maxOrFixedBaseAmountFromModelPin = EasyBind.subscribe(model.getMaxOrFixedBaseSideAmount(), amount -> {
+        maxOrFixedQuoteAmountFromModelPin = EasyBind.subscribe(model.getMaxOrFixedQuoteSideAmount(), amount -> {
             // Only apply value from component to slider if we have no focus on slider (not used)
-            if (amount != null) {
-                if (!model.getMaxOrFixedAmountSliderFocus().get()) {
-                    long min = model.getMinRangeBaseSideValue().get().getValue();
-                    long max = model.getMaxRangeBaseSideValue().get().getValue();
-                    double sliderValue = (amount.getValue() - min) / ((double) max - min);
-                    model.getMaxOrFixedAmountSliderValue().set(sliderValue);
-                }
+            if (amount != null && !model.getMaxOrFixedAmountSliderFocus().get()) {
+                model.getMaxOrFixedAmountSliderValue().set(getSliderValue(amount.getValue()));
             }
         });
 
-        minBaseAmountFromModelPin = EasyBind.subscribe(model.getMinBaseSideAmount(), amount -> {
+        minQuoteAmountFromModelPin = EasyBind.subscribe(model.getMinQuoteSideAmount(), amount -> {
             // Only apply value from component to slider if we have no focus on slider (not used)
-            if (amount != null) {
-                if (!model.getMinAmountSliderFocus().get()) {
-                    long min = model.getMinRangeBaseSideValue().get().getValue();
-                    long max = model.getMaxRangeBaseSideValue().get().getValue();
-                    double sliderValue = (amount.getValue() - min) / ((double) max - min);
-                    model.getMinAmountSliderValue().set(sliderValue);
-                }
+            if (amount != null && !model.getMinAmountSliderFocus().get()) {
+                model.getMinAmountSliderValue().set(getSliderValue(amount.getValue()));
             }
         });
-
-        maxOrFixedBaseAmountFromCompPin = EasyBind.subscribe(maxOrFixedBaseSideAmountInput.amountProperty(),
-                amount -> {
-                    Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
-                    if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
-                        model.getMaxOrFixedBaseSideAmount().set(maxRangeValue);
-                        setMaxOrFixedQuoteFromBase();
-                        maxOrFixedBaseSideAmountInput.setAmount(maxRangeValue);
-                    } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
-                        model.getMaxOrFixedBaseSideAmount().set(minRangeValue);
-                        setMaxOrFixedQuoteFromBase();
-                        maxOrFixedBaseSideAmountInput.setAmount(minRangeValue);
-                    } else {
-                        model.getMaxOrFixedBaseSideAmount().set(amount);
-                    }
-                });
-
-        minBaseAmountFromCompPin = EasyBind.subscribe(minBaseSideAmountInput.amountProperty(),
-                amount -> {
-                    Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
-                    if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
-                        model.getMinBaseSideAmount().set(maxRangeValue);
-                        setMinQuoteFromBase();
-                        minBaseSideAmountInput.setAmount(maxRangeValue);
-                    } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
-                        model.getMinBaseSideAmount().set(minRangeValue);
-                        setMinQuoteFromBase();
-                        minBaseSideAmountInput.setAmount(minRangeValue);
-                    } else {
-                        model.getMinBaseSideAmount().set(amount);
-                    }
-                });
 
         maxOrFixedQuoteAmountFromCompPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.amountProperty(),
                 amount -> {
-                    Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
+                    Monetary minRangeValue = model.getMinRangeSideValue().get();
+                    Monetary maxRangeValue = model.getMaxRangeSideValue().get();
                     if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
                         model.getMaxOrFixedQuoteSideAmount().set(maxRangeValue);
                         setMaxOrFixedBaseFromQuote();
@@ -321,8 +259,8 @@ public class AmountSelectionController implements Controller {
 
         minQuoteAmountFromCompPin = EasyBind.subscribe(minQuoteSideAmountInput.amountProperty(),
                 amount -> {
-                    Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
+                    Monetary minRangeValue = model.getMinRangeSideValue().get();
+                    Monetary maxRangeValue = model.getMaxRangeSideValue().get();
                     if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
                         model.getMinQuoteSideAmount().set(maxRangeValue);
                         setMinBaseFromQuote();
@@ -363,10 +301,8 @@ public class AmountSelectionController implements Controller {
         model.getMaxOrFixedAmountSliderValue().removeListener(maxOrFixedSliderListener);
         model.getMinAmountSliderValue().removeListener(minSliderListener);
 
-        maxOrFixedBaseAmountFromModelPin.unsubscribe();
-        minBaseAmountFromModelPin.unsubscribe();
-        maxOrFixedBaseAmountFromCompPin.unsubscribe();
-        minBaseAmountFromCompPin.unsubscribe();
+        maxOrFixedQuoteAmountFromModelPin.unsubscribe();
+        minQuoteAmountFromModelPin.unsubscribe();
         maxOrFixedQuoteAmountFromCompPin.unsubscribe();
         minQuoteAmountFromCompPin.unsubscribe();
         priceFromCompPin.unsubscribe();
@@ -380,11 +316,23 @@ public class AmountSelectionController implements Controller {
         model.setRightMarkerQuoteSideValue(null);
     }
 
+    double getMaxAllowedSliderValue() {
+        return getSliderValue(model.getMaxRangeSideValue().get().getValue());
+    }
+
+    private double getSliderValue(long amountValue) {
+        long min = model.getMinRangeSideValue().get().getValue();
+        long max = model.getMaxRangeAllowedLimitation().get() != null
+                ? model.getMaxRangeAllowedLimitation().get().getValue()
+                : model.getMaxRangeSideValue().get().getValue();
+        return (double) (amountValue - min) / (max - min);
+    }
+
     private void initializeQuoteSideAmount(QuoteAmountInputBox quoteSideAmountInput) {
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote != null) {
-            Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
-            Monetary maxRangeQuoteSideValue = model.getMaxRangeQuoteSideValue().get();
+            Monetary minRangeQuoteSideValue = model.getMinRangeSideValue().get();
+            Monetary maxRangeQuoteSideValue = model.getMaxRangeSideValue().get();
             long midValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
             Monetary exactAmount =  Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode());
             quoteSideAmountInput.setAmount(exactAmount.round(0));
@@ -412,43 +360,27 @@ public class AmountSelectionController implements Controller {
 
         Monetary minRangeMonetary = model.getMinRangeMonetary().get();
         Monetary maxRangeMonetary = model.getMaxRangeMonetary().get();
-        boolean isMinRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(minRangeMonetary.getCode());
-        boolean isMaxRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(maxRangeMonetary.getCode());
 
-        Monetary minRangeMonetaryAsCoin = !isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toBaseSideMonetary(minRangeMonetary);
-        model.getMinRangeBaseSideValue().set(minRangeMonetaryAsCoin);
-        if (!model.isUseQuoteCurrencyForMinMaxRange()) {
-            model.getMinRangeValueAsString().set(AmountFormatter.formatAmount(minRangeMonetaryAsCoin));
-            model.getMinRangeCodeAsString().set(minRangeMonetaryAsCoin.getCode());
-        }
+        model.getMinRangeSideValue().set(minRangeMonetary);
+        model.getMinRangeValueAsString().set(AmountFormatter.formatAmount(minRangeMonetary));
+        model.getMinRangeCodeAsString().set(minRangeMonetary.getCode());
 
-        Monetary maxRangeMonetaryAsCoin = !isMaxRangeMonetaryFiat ? maxRangeMonetary : priceQuote.toBaseSideMonetary(maxRangeMonetary);
-        model.getMaxRangeBaseSideValue().set(maxRangeMonetaryAsCoin);
-        if (!model.isUseQuoteCurrencyForMinMaxRange()) {
-            model.getMaxRangeValueAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryAsCoin));
-            model.getMaxRangeCodeAsString().set(maxRangeMonetaryAsCoin.getCode());
-        }
+        model.getMaxRangeSideValue().set(maxRangeMonetary);
+        model.getMaxRangeCodeAsString().set(maxRangeMonetary.getCode());
 
-        Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
-        model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
-        if (model.isUseQuoteCurrencyForMinMaxRange()) {
-            model.getMinRangeValueAsString().set(AmountFormatter.formatAmount(minRangeMonetaryAsFiat));
-            model.getMinRangeCodeAsString().set(minRangeMonetaryAsFiat.getCode());
-        }
-
-        Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ? maxRangeMonetary : priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
-        model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
-        if (model.isUseQuoteCurrencyForMinMaxRange()) {
-            model.getMaxRangeValueAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryAsFiat));
-            model.getMaxRangeCodeAsString().set(maxRangeMonetaryAsFiat.getCode());
-        }
+        Monetary maxRangeMonetaryLimitation = model.getMaxRangeAllowedLimitation().get() != null
+                ? model.getMaxRangeAllowedLimitation().get()
+                : maxRangeMonetary;
+        model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryLimitation));
 
         applySliderTrackStyle();
     }
 
     private void applySliderTrackStyle() {
-        Monetary minRangeMonetary = model.getMinRangeQuoteSideValue().get();
-        Monetary maxRangeMonetary = model.getMaxRangeQuoteSideValue().get();
+        Monetary minRangeMonetary = model.getMinRangeSideValue().get();
+        Monetary maxRangeMonetary = model.getMaxRangeAllowedLimitation() != null
+                ? model.getMaxRangeAllowedLimitation().get()
+                : model.getMaxRangeSideValue().get();
         if (minRangeMonetary == null || maxRangeMonetary == null) {
             return;
         }
@@ -466,6 +398,20 @@ public class AmountSelectionController implements Controller {
         long rightMarkerQuoteSideValue = Optional.ofNullable(model.getRightMarkerQuoteSideValue()).orElse(minRangeMonetary).getValue();
         double right = rightMarkerQuoteSideValue - minRangeMonetaryValue;
         double rightPercentage = range != 0 ? 100 * right / range : 0;
+        if (model.getDirection().isSell()) {
+            // Adjust values to match slider knob better
+            if (rightPercentage < 2) {
+                rightPercentage += 1.2;
+            } else if (rightPercentage < 8) {
+                rightPercentage += 1;
+            } else if (rightPercentage < 15) {
+                rightPercentage += 0.9;
+            } else if (rightPercentage < 24) {
+                rightPercentage += 0.7;
+            } else if (rightPercentage < 60) {
+                rightPercentage += 0.5;
+            }
+        }
 
         // E.g.: -bisq-dark-grey-50 0%, -bisq-dark-grey-50 30.0%, -bisq2-green 30.0%, -bisq2-green 60.0%, -bisq-dark-grey-50 60.0%, -bisq-dark-grey-50 100%)
         String segments = String.format(
@@ -482,20 +428,14 @@ public class AmountSelectionController implements Controller {
         model.getSliderTrackStyle().set(style);
     }
 
-    private void applySliderValue(double sliderValue, QuoteAmountInputBox bigAmountInput, BaseAmountBox smallAmountInput) {
-        if (model.getMinRangeQuoteSideValue().get() != null && model.getMinRangeBaseSideValue().get() != null) {
-            long min = model.isUseQuoteCurrencyForMinMaxRange() ?
-                    model.getMinRangeQuoteSideValue().get().getValue() :
-                    model.getMinRangeBaseSideValue().get().getValue();
-            long max = model.isUseQuoteCurrencyForMinMaxRange() ?
-                    model.getMaxRangeQuoteSideValue().get().getValue() :
-                    model.getMaxRangeBaseSideValue().get().getValue();
+    private void applySliderValue(double sliderValue, QuoteAmountInputBox bigAmountInput) {
+        if (model.getMinRangeSideValue().get() != null) {
+            long min = model.getMinRangeSideValue().get().getValue();
+            long max = model.getMaxRangeAllowedLimitation().get() != null
+                    ? model.getMaxRangeAllowedLimitation().get().getValue()
+                    : model.getMaxRangeSideValue().get().getValue();
             long value = Math.round(sliderValue * (max - min)) + min;
-            if (model.isUseQuoteCurrencyForMinMaxRange()) {
-                bigAmountInput.setAmount(Monetary.from(value, model.getMarket().getQuoteCurrencyCode()));
-            } else {
-                smallAmountInput.setAmount(Monetary.from(value, model.getMarket().getBaseCurrencyCode()));
-            }
+            bigAmountInput.setAmount(Monetary.from(value, model.getMarket().getQuoteCurrencyCode()));
         }
     }
 

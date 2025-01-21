@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -47,16 +48,17 @@ public class TradeWizardAmountAndPriceController implements Controller {
 
     public TradeWizardAmountAndPriceController(ServiceProvider serviceProvider,
                                                Region owner,
-                                               Consumer<Boolean> navigationButtonsVisibleHandler) {
+                                               Consumer<Boolean> navigationButtonsVisibleHandler,
+                                               Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.owner = owner;
-        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, owner, navigationButtonsVisibleHandler);
+        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, owner,
+                navigationButtonsVisibleHandler, closeAndNavigateToHandler);
         tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, owner);
 
         model = new TradeWizardAmountAndPriceModel();
         view = new TradeWizardAmountAndPriceView(model,
                 this,
                 tradeWizardAmountController.getView().getRoot(),
-                tradeWizardAmountController.getView().getAmountLimitInfoWithWarnIcon(),
                 tradeWizardAmountController.getView().getAmountLimitInfoOverlay(),
                 tradeWizardPriceController.getView().getRoot());
     }
