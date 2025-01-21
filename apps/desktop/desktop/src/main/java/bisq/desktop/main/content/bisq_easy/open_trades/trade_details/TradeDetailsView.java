@@ -172,11 +172,12 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         Label detailsLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.details").toUpperCase());
         detailsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
         Region detailsLine = getLine();
+
         VBox.setMargin(headline, new Insets(-5, 0, 5, 0));
+        VBox.setMargin(overviewLabel, new Insets(0, 0, -5, 0));
         VBox.setMargin(detailsLabel, new Insets(15, 0, -5, 0));
         VBox content = new VBox(10,
                 headline,
-
                 overviewLabel,
                 overviewLine,
                 tradersAndRoleBox,
@@ -185,7 +186,6 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
                 paymentAccountDataBox,
                 btcPaymentAddressBox,
                 paymentProofBox,
-
                 detailsLabel,
                 detailsLine,
                 tradeIdBox,
