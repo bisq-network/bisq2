@@ -56,10 +56,6 @@ public class AmountSelectionModel implements Model {
     @Setter
     private ObjectProperty<Monetary> maxRangeMonetary = new SimpleObjectProperty<>(BisqEasyTradeAmountLimits.DEFAULT_MAX_BTC_TRADE_AMOUNT);
     @Setter
-    private ObjectProperty<Monetary> minRangeBaseSideValue = new SimpleObjectProperty<>();
-    @Setter
-    private ObjectProperty<Monetary> maxRangeBaseSideValue = new SimpleObjectProperty<>();
-    @Setter
     private ObjectProperty<Monetary> minRangeQuoteSideValue = new SimpleObjectProperty<>();
     @Setter
     private ObjectProperty<Monetary> maxRangeQuoteSideValue = new SimpleObjectProperty<>();
@@ -93,8 +89,6 @@ public class AmountSelectionModel implements Model {
         isRangeAmountEnabled.set(false);
         minRangeMonetary.set(BisqEasyTradeAmountLimits.DEFAULT_MIN_BTC_TRADE_AMOUNT);
         maxRangeMonetary.set(BisqEasyTradeAmountLimits.DEFAULT_MAX_BTC_TRADE_AMOUNT);
-        minRangeBaseSideValue.set(null);
-        maxRangeBaseSideValue.set(null);
         minRangeQuoteSideValue.set(null);
         maxRangeQuoteSideValue.set(null);
         maxQuoteAllowedLimitation.set(null);
