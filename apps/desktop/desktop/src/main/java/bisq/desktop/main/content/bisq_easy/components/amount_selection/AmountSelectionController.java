@@ -369,8 +369,8 @@ public class AmountSelectionController implements Controller {
 
         Monetary minRangeMonetary = model.getMinRangeMonetary().get();
         Monetary maxRangeMonetary = model.getMaxRangeMonetary().get();
-        boolean isMinRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(minRangeMonetary.getCode());
-        boolean isMaxRangeMonetaryFiat = FiatCurrencyRepository.getCurrencyByCodeMap().containsKey(maxRangeMonetary.getCode());
+        boolean isMinRangeMonetaryFiat = TradeCurrency.isFiat(minRangeMonetary.getCode());
+        boolean isMaxRangeMonetaryFiat = TradeCurrency.isFiat(maxRangeMonetary.getCode());
 
         Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
         model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
