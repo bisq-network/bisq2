@@ -24,6 +24,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.platform.MemoryReportService;
@@ -144,10 +145,11 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                     networkService.addConfidentialMessageListener(this);
                     authorizedBondedRolesService.addListener(this);
 
+                    int delay = DevMode.isDevMode() ? 1 : 60;
                     initialDelayScheduler = Scheduler.run(this::initialRepublish)
                             .host(this)
                             .runnableName("initialRepublish")
-                            .after(60, TimeUnit.SECONDS);
+                            .after(delay, TimeUnit.SECONDS);
                 });
     }
 
