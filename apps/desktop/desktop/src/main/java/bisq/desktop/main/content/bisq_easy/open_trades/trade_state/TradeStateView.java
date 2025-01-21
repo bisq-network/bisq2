@@ -20,9 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -30,12 +28,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -62,12 +55,13 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         interruptTradeButton.setMinWidth(160);
         interruptTradeButton.getStyleClass().add("outlined-button");
 
-        ImageView greenInfoIcon = ImageUtil.getImageViewById("icon-info-green");
-        tradeDetailsButton = BisqIconButton.createIconButton(greenInfoIcon, Res.get("bisqEasy.openTrades.tradeDetails.open"));
+        tradeDetailsButton = new Button(Res.get("bisqEasy.openTrades.tradeDetails.button"));
+        tradeDetailsButton.getStyleClass().addAll("grey-transparent-outlined-button");
+        tradeDetailsButton.setMinWidth(160);
 
-        tradeDataHeader.getChildren().addAll(tradeDetailsButton, Spacer.fillHBox(), interruptTradeButton);
+        HBox.setMargin(tradeDetailsButton, new Insets(0, -20, 0, 0));
+        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), tradeDetailsButton, interruptTradeButton);
         tradeDataHeaderBox = new VBox(tradeDataHeader, Layout.hLine());
-
 
         Label isInMediationIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
         isInMediationIcon.getStyleClass().add("bisq-easy-trade-isInMediation-headline");
