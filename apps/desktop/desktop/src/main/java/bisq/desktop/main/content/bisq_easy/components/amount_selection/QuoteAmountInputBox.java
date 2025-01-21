@@ -197,8 +197,6 @@ public class QuoteAmountInputBox {
         private Optional<Integer> textInputMaxCharCount = Optional.empty();
         private Market selectedMarket;
         private boolean hasFocus;
-        @Setter
-        private boolean useLowPrecision = true;
 
         private Model(boolean isBaseCurrency, boolean showCurrencyCode) {
             this.isBaseCurrency = isBaseCurrency;
@@ -284,7 +282,7 @@ public class QuoteAmountInputBox {
         }
 
         private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, model.useLowPrecision));
+            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
             textInput.selectRange(textInput.getLength(), textInput.getLength());
         }
     }
