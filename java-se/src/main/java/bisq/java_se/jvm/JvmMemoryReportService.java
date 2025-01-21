@@ -28,6 +28,8 @@ import com.sun.management.UnixOperatingSystemMXBean;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.management.ManagementFactory;
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -89,48 +91,59 @@ public class JvmMemoryReportService implements MemoryReportService {
             customBisqThreads.append(header);
             boolean showJvmThreads = true;
             Thread.getAllStackTraces().keySet().stream()
-                    //.sorted(Comparator.comparing(Thread::threadId))
+                    .sorted(Comparator.comparing(Thread::getId))
                     .forEach(thread -> {
-                        String groupName = thread.getThreadGroup().getName();
-                        String threadName = thread.getName();
-                        String fullName = StringUtils.truncate("[" + groupName + "] " + threadName, nameLength);
-                        long threadId = 0;//thread.threadId();
-                        String time = threadProfiler.getThreadTime(threadId).map(nanoTime ->
-                                        SimpleTimeFormatter.formatDuration(TimeUnit.NANOSECONDS.toMillis(nanoTime)))
-                                .orElse("N/A");
-                        String memory = threadProfiler.getThreadMemory(threadId)
-                                .map(DataSizeFormatter::format)
-                                .orElse("N/A");
-                        int priority = thread.getPriority();
-                        String threadState = thread.getState().name();
-                        if (threadState.equals("BLOCKED")) {
-                            log.warn("Thread {} is in {} state. It might be caused by a deadlock or resource block. " +
-                                    "thread={}", threadId, threadState, thread);
-                        }
-                        String line = String.format(format,
-                                threadId,
-                                priority,
-                                fullName,
-                                threadState,
-                                time,
-                                memory
-                        );
-                        Set<String> excludes = Set.of("DestroyJavaVM",
-                                "JavaFX-Launcher",
-                                "JavaFX Application Thread",
-                                "QuantumRenderer-0",
-                                "JNA Cleaner",
-                                "HTTP-Dispatcher",
-                                "idle-timeout-task",
-                                "InvokeLaterDispatcher",
-                                "Prism Font Disposer",
-                                "Java Sound Event Dispatcher",
-                                "CompletableFutureDelayScheduler",
-                                "PulseTimer-CVDisplayLink thread");//
-                        if (groupName.equals("main") && priority <= 5 && !excludes.contains(threadName)) {
-                            customBisqThreads.append(line);
-                        } else if (showJvmThreads) {
-                            jvmThreads.append(line);
+                        try {
+                            ThreadGroup threadGroup = thread.getThreadGroup();
+                            String groupName = threadGroup != null ? threadGroup.getName() : "N/A";
+                            String threadName = thread.getName();
+                            String fullName = StringUtils.truncate("[" + groupName + "] " + threadName, nameLength);
+                            long threadId = thread.getId();
+                            Optional<Long> threadTime = Optional.empty();
+                            try {
+                                threadTime = threadProfiler.getThreadTime(threadId);
+                            } catch (Exception ignored) {
+                                // Not all threads support that
+                            }
+                            String time = threadTime.map(nanoTime ->
+                                            SimpleTimeFormatter.formatDuration(TimeUnit.NANOSECONDS.toMillis(nanoTime)))
+                                    .orElse("N/A");
+                            String memory = threadProfiler.getThreadMemory(threadId)
+                                    .map(DataSizeFormatter::format)
+                                    .orElse("N/A");
+                            int priority = thread.getPriority();
+                            String threadState = thread.getState().name();
+                            if (threadState.equals("BLOCKED")) {
+                                log.warn("Thread {} is in {} state. It might be caused by a deadlock or resource block. " +
+                                        "thread={}", threadId, threadState, thread);
+                            }
+                            String line = String.format(format,
+                                    threadId,
+                                    priority,
+                                    fullName,
+                                    threadState,
+                                    time,
+                                    memory
+                            );
+                            Set<String> excludes = Set.of("DestroyJavaVM",
+                                    "JavaFX-Launcher",
+                                    "JavaFX Application Thread",
+                                    "QuantumRenderer-0",
+                                    "JNA Cleaner",
+                                    "HTTP-Dispatcher",
+                                    "idle-timeout-task",
+                                    "InvokeLaterDispatcher",
+                                    "Prism Font Disposer",
+                                    "Java Sound Event Dispatcher",
+                                    "CompletableFutureDelayScheduler",
+                                    "PulseTimer-CVDisplayLink thread");//
+                            if (groupName.equals("main") && priority <= 5 && !excludes.contains(threadName)) {
+                                customBisqThreads.append(line);
+                            } else if (showJvmThreads) {
+                                jvmThreads.append(line);
+                            }
+                        } catch (Exception e) {
+                            log.error("Error at generating logs for threads", e);
                         }
                     });
 
