@@ -17,9 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
-import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
-import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -38,8 +36,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AmountSelectionController implements Controller {
@@ -162,11 +158,6 @@ public class AmountSelectionController implements Controller {
     }
 
     public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
-        boolean minRangeValueIsFiat = TradeCurrency.isFiat(minRangeValue.getCode());
-        boolean maxRangeValueIsFiat = TradeCurrency.isFiat(maxRangeValue.getCode());
-        checkArgument(minRangeValueIsFiat && maxRangeValueIsFiat,
-                "The provided minRangeValue and maxRangeValue must be fiat currencies as useQuoteCurrencyForMinMaxRange is set to true.");
-
         model.getMinRangeMonetary().set(minRangeValue);
         model.getMaxRangeMonetary().set(maxRangeValue);
         applyInitialRangeValues();
@@ -369,24 +360,18 @@ public class AmountSelectionController implements Controller {
 
         Monetary minRangeMonetary = model.getMinRangeMonetary().get();
         Monetary maxRangeMonetary = model.getMaxRangeMonetary().get();
-        boolean isMinRangeMonetaryFiat = TradeCurrency.isFiat(minRangeMonetary.getCode());
-        boolean isMaxRangeMonetaryFiat = TradeCurrency.isFiat(maxRangeMonetary.getCode());
 
-        Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
-        model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
-        model.getMinRangeValueAsString().set(AmountFormatter.formatAmount(minRangeMonetaryAsFiat));
-        model.getMinRangeCodeAsString().set(minRangeMonetaryAsFiat.getCode());
+        model.getMinRangeQuoteSideValue().set(minRangeMonetary);
+        model.getMinRangeValueAsString().set(AmountFormatter.formatAmount(minRangeMonetary));
+        model.getMinRangeCodeAsString().set(minRangeMonetary.getCode());
 
-        Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ? maxRangeMonetary : priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
-        model.getMaxRangeQuoteSideValue().set(maxRangeMonetaryAsFiat);
-        model.getMaxRangeCodeAsString().set(maxRangeMonetaryAsFiat.getCode());
+        model.getMaxRangeQuoteSideValue().set(maxRangeMonetary);
+        model.getMaxRangeCodeAsString().set(maxRangeMonetary.getCode());
 
-        Monetary maxRangeMonetaryLimitationAsFiat = maxRangeMonetaryAsFiat;
-        if (model.getMaxQuoteAllowedLimitation().get() != null) {
-            Monetary maxQuoteAllowedLimitation = model.getMaxQuoteAllowedLimitation().get();
-            maxRangeMonetaryLimitationAsFiat = isMaxRangeMonetaryFiat ? maxQuoteAllowedLimitation : priceQuote.toQuoteSideMonetary(maxQuoteAllowedLimitation).round(0);
-        }
-        model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryLimitationAsFiat));
+        Monetary maxRangeMonetaryLimitation = model.getMaxQuoteAllowedLimitation().get() != null
+                ? model.getMaxQuoteAllowedLimitation().get()
+                : maxRangeMonetary;
+        model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryLimitation));
 
         applySliderTrackStyle();
     }
