@@ -33,7 +33,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
@@ -86,10 +85,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton reputation = createNavigationButton(Res.get("navigation.reputation"),
                 "nav-reputation",
                 NavigationTarget.REPUTATION, false);
-        // TODO: Remove in 2.1.2
-        Label reputationLabel = reputation.getButtonLabel();
-        reputationLabel.setGraphic(ImageUtil.getImageViewById("new-badge"));
-        reputationLabel.setContentDisplay(ContentDisplay.RIGHT);
 
         LeftNavButton protocols = createNavigationButton(Res.get("navigation.tradeApps"),
                 "nav-trade",
