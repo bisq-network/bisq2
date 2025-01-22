@@ -67,6 +67,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         warningIcon = new Label();
         warningIcon.getStyleClass().add("text-fill-grey-dimmed");
         warningIcon.setPadding(new Insets(0, 2.5, 0, 0));
+        warningIcon.setMinWidth(Label.USE_PREF_SIZE);
         Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1em");
 
         amountLimitInfo = new Label();

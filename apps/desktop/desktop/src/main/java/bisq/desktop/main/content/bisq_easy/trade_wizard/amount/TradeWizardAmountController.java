@@ -208,6 +208,7 @@ public class TradeWizardAmountController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getShouldShowWarningIcon().set(false);
         applyQuoteSideMinMaxRange();
 
         if (model.getPriceQuote().get() == null && amountSelectionController.getQuote().get() != null) {
