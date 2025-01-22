@@ -31,7 +31,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -149,7 +148,6 @@ public class BisqEasyTradeAmountLimits {
         } else {
             result = Result.SCORE_TOO_LOW;
         }
-        result.setRequiredReputationScore(requiredReputationScore);
         return result;
     }
 
@@ -233,10 +231,6 @@ public class BisqEasyTradeAmountLimits {
         MATCH_TOLERATED_SCORE,
         MATCH_MIN_SCORE,
         SCORE_TOO_LOW;
-
-        // TODO: Remove this. We cannot have mutable properties inside an enum
-        @Setter
-        private Long requiredReputationScore;
 
         public boolean isValid() {
             return this != SCORE_TOO_LOW;
