@@ -107,6 +107,8 @@ public class BisqEasyTradeAmountLimits {
                 });
     }
 
+
+
     public static Optional<Result> checkOfferAmountLimitForMaxOrFixedAmount(ReputationService reputationService,
                                                                             UserIdentityService userIdentityService,
                                                                             UserProfileService userProfileService,
@@ -157,7 +159,7 @@ public class BisqEasyTradeAmountLimits {
                 .flatMap(fiatAmount -> findRequiredReputationScoreByFiatAmount(marketPriceService, offer.getMarket(), fiatAmount));
     }
 
-    private static Optional<Long> findRequiredReputationScoreForMinAmount(MarketPriceService marketPriceService,
+    public static Optional<Long> findRequiredReputationScoreForMinAmount(MarketPriceService marketPriceService,
                                                                           BisqEasyOffer offer) {
         return OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, offer)
                 .flatMap(fiatAmount -> findRequiredReputationScoreByFiatAmount(marketPriceService, offer.getMarket(), fiatAmount));
@@ -232,6 +234,7 @@ public class BisqEasyTradeAmountLimits {
         MATCH_MIN_SCORE,
         SCORE_TOO_LOW;
 
+        // TODO: Remove this. We cannot have mutable properties inside an enum
         @Setter
         private Long requiredReputationScore;
 
