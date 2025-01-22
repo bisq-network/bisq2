@@ -325,9 +325,11 @@ public class MarketPriceRequestService {
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
+                    MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromName(provider);
+                    MarketPriceProviderInfo marketPriceProviderInfo = new MarketPriceProviderInfo(marketPriceProvider, marketPriceProvider.getDisplayName().orElse(provider));
                     MarketPrice marketPrice = new MarketPrice(priceQuote,
                             timestamp,
-                            MarketPriceProvider.fromName(provider));
+                            marketPriceProviderInfo);
                     if (marketPrice.isValidDate()) {
                         marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
                         map.put(priceQuote.getMarket(), marketPrice);

@@ -5,11 +5,10 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 import com.google.common.base.Enums;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 @Slf4j
 @ToString
@@ -21,26 +20,18 @@ public enum MarketPriceProvider implements ProtoEnum {
     OTHER;
 
     public static MarketPriceProvider fromName(String name) {
-        return Enums.getIfPresent(MarketPriceProvider.class, name).or(otherWithName(name));
+        return Enums.getIfPresent(MarketPriceProvider.class, name).or(OTHER);
     }
 
-    private static MarketPriceProvider otherWithName(String name) {
-        MarketPriceProvider other = OTHER;
-        other.setDisplayName(name);
-        return other;
-    }
-
-
-    @Nullable
     @Getter
-    @Setter
-    private String displayName;
+    private final transient Optional<String> displayName;
 
     MarketPriceProvider() {
+        this.displayName = Optional.empty();
     }
 
     MarketPriceProvider(String displayName) {
-        this.displayName = displayName;
+        this.displayName = Optional.of(displayName);
     }
 
     @Override
