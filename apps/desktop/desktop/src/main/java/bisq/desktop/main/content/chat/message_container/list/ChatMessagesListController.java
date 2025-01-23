@@ -342,7 +342,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         .closeButtonText(Res.get("action.close"))
                         .show();
                 } else {
-                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty()));
+                    Optional<Monetary> reputationBasedQuoteSideAmount = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, bisqEasyOffer.getMarket(), sellersScore);
+                    Monetary offersMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
+                    if (reputationBasedQuoteSideAmount.isPresent() && offersMaxAmount.isGreaterThan(reputationBasedQuoteSideAmount.get())) {
+                        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, reputationBasedQuoteSideAmount));
+                    } else {
+                        Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty()));
+                    }
+
                 }
             } else {
                 //  I am as taker the seller. We check if my reputation permits to take the offer
@@ -361,7 +368,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     } else {
                         Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer, Optional.empty()));
                     }
-
                 }
             }
         } else {
