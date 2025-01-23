@@ -42,6 +42,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static bisq.bisq_easy.BisqEasyTradeAmountLimits.*;
 import static bisq.presentation.formatters.AmountFormatter.formatAmountWithCode;
@@ -55,9 +56,12 @@ public class TakeOfferAmountController implements Controller {
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private Subscription baseSideAmountPin, quoteSideAmountPin;
 
-    public TakeOfferAmountController(ServiceProvider serviceProvider) {
+    public TakeOfferAmountController(ServiceProvider serviceProvider,
+                                     Consumer<Boolean> navigationButtonsVisibleHandler) {
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new TakeOfferAmountModel();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -141,6 +145,7 @@ public class TakeOfferAmountController implements Controller {
         baseSideAmountPin.unsubscribe();
         quoteSideAmountPin.unsubscribe();
         view.getRoot().setOnKeyPressed(null);
+        navigationButtonsVisibleHandler.accept(true);
         model.getIsWarningIconVisible().set(false);
         model.getIsAmountLimitInfoOverlayVisible().set(false);
         model.setSellersReputationBasedQuoteSideAmount(null);
@@ -151,7 +156,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     void onShowAmountLimitInfoOverlay() {
-        // TODO: Do not show next button
+        navigationButtonsVisibleHandler.accept(false);
         model.getIsAmountLimitInfoOverlayVisible().set(true);
         view.getRoot().setOnKeyPressed(keyEvent -> {
             KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
@@ -161,9 +166,9 @@ public class TakeOfferAmountController implements Controller {
     }
 
     void onCloseAmountLimitInfoOverlay() {
-        // TODO: Show next button again
-        model.getIsAmountLimitInfoOverlayVisible().set(false);
         view.getRoot().setOnKeyPressed(null);
+        navigationButtonsVisibleHandler.accept(true);
+        model.getIsAmountLimitInfoOverlayVisible().set(false);
     }
 
     void onOpenWiki(String url) {

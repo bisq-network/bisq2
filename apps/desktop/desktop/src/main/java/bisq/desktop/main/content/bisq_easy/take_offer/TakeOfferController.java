@@ -81,7 +81,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         model = new TakeOfferModel();
         view = new TakeOfferView(model, this);
 
-        takeOfferAmountController = new TakeOfferAmountController(serviceProvider);
+        takeOfferAmountController = new TakeOfferAmountController(serviceProvider, this::setMainButtonsVisibleState);
         takeOfferPaymentController = new TakeOfferPaymentController(serviceProvider);
         takeOfferReviewController = new TakeOfferReviewController(serviceProvider, this::setMainButtonsVisibleState, this::closeAndNavigateTo);
     }
@@ -237,6 +237,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     private void setMainButtonsVisibleState(boolean value) {
         NavigationTarget navigationTarget = model.getNavigationTarget();
         model.getBackButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
+        model.getNextButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
         model.getCloseButtonVisible().set(value);
     }
 }
