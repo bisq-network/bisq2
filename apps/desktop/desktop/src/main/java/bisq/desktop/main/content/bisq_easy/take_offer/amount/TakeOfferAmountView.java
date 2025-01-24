@@ -32,6 +32,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -180,8 +181,12 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         HBox linkBox = new HBox(5, linkToWikiText, linkToWiki);
         linkBox.setAlignment(Pos.BASELINE_LEFT);
 
+        VBox overlayText = new VBox(20, amountLimitInfoOverlayInfo, linkBox);
+        overlayText.setAlignment(Pos.TOP_LEFT);
+        overlayText.setFillWidth(true);
+
         VBox.setMargin(linkBox, new Insets(-22.5, 0, 20, 0));
-        VBox content = new VBox(20, headlineLabel, amountLimitInfoOverlayInfo, linkBox, closeOverlayButton);
+        VBox content = new VBox(20, headlineLabel, overlayText, closeOverlayButton);
         content.setAlignment(Pos.TOP_CENTER);
         content.getStyleClass().setAll("trade-wizard-feedback-bg");
         content.setPadding(new Insets(30));
