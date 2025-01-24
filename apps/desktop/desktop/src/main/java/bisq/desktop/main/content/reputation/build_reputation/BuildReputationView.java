@@ -104,9 +104,10 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         HBox learnMoreHBox = new HBox(4, learnMoreLabel, learnMoreLink);
 
 
+        VBox.setMargin(introLabelPart2, new Insets(20, 0, 20, 0));
         VBox contentBox = new VBox(20);
-        contentBox.getChildren().addAll(headlineLabel, introLabelPart1, formulaHBox,
-                formulaFootnote, introLabelPart2, title, burnAndBondBox, signedAccountAndAgeBox, learnMoreHBox);
+        contentBox.getChildren().addAll(headlineLabel, introLabelPart1, formulaHBox, introLabelPart2, formulaFootnote,
+                title, burnAndBondBox, signedAccountAndAgeBox, learnMoreHBox);
         contentBox.getStyleClass().add("bisq-common-bg");
         VBox.setMargin(formulaFootnote, new Insets(-15, 0, 0, 0));
         VBox.setMargin(title, new Insets(25, 0, 0, 0));
