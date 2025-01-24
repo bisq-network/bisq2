@@ -45,7 +45,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
     private final VBox content, amountLimitInfoOverlay;
     private final Button closeOverlayButton;
     private final HBox amountLimitInfoHBox;
-    private Subscription isAmountLimitInfoVisiblePin;
+    private Subscription isAmountLimitInfoVisiblePin, isWarningIconVisiblePin;
 
     public TakeOfferAmountView(TakeOfferAmountModel model,
                                TakeOfferAmountController controller,
@@ -93,7 +93,6 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
 
     @Override
     protected void onViewAttached() {
-        warningIcon.visibleProperty().bind(model.getIsWarningIconVisible());
         headlineLabel.setText(model.getHeadline());
         learnMore.setText(model.getAmountLimitInfoLink());
         linkToWikiText.setText(model.getLinkToWikiText());
@@ -126,6 +125,12 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
                     }
                 });
 
+        isWarningIconVisiblePin  = EasyBind.subscribe(model.getIsWarningIconVisible(), isWarningIconVisible -> {
+            warningIcon.setVisible(isWarningIconVisible);
+            amountLimitInfo.getStyleClass().setAll("font-size-11", "wrap-text", "font-light");
+            amountLimitInfo.getStyleClass().add(isWarningIconVisible ? "bisq-text-white" : "bisq-text-grey-9");
+        });
+
         amountLimitInfoAmount.setOnAction(e -> controller.onSetReputationBasedAmount());
         learnMore.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
@@ -134,7 +139,6 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
 
     @Override
     protected void onViewDetached() {
-        warningIcon.visibleProperty().unbind();
         amountLimitInfo.textProperty().unbind();
         amountLimitInfoAmount.textProperty().unbind();
         amountLimitInfoOverlayInfo.textProperty().unbind();
@@ -148,6 +152,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         amountLimitInfoHBox.visibleProperty().unbind();
 
         isAmountLimitInfoVisiblePin.unsubscribe();
+        isWarningIconVisiblePin.unsubscribe();
 
         amountLimitInfoAmount.setOnAction(null);
         learnMore.setOnAction(null);
@@ -162,7 +167,6 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        amountLimitInfoOverlayInfo.getStyleClass().addAll("bisq-text-21", "wrap-text");
         amountLimitInfoOverlayInfo.setAlignment(Pos.BASELINE_LEFT);
 
         linkToWikiText.getStyleClass().addAll("bisq-text-21", "wrap-text");
