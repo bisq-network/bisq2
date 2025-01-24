@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
@@ -54,11 +53,9 @@ public class TakeOfferController extends NavigationController implements InitWit
     @ToString
     public static class InitData {
         private final BisqEasyOffer bisqEasyOffer;
-        private final Optional<Monetary> reputationBasedQuoteSideAmount;
 
-        public InitData(BisqEasyOffer bisqEasyOffer, Optional<Monetary> reputationBasedQuoteSideAmount) {
+        public InitData(BisqEasyOffer bisqEasyOffer) {
             this.bisqEasyOffer = bisqEasyOffer;
-            this.reputationBasedQuoteSideAmount = reputationBasedQuoteSideAmount;
         }
     }
 
@@ -81,7 +78,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         model = new TakeOfferModel();
         view = new TakeOfferView(model, this);
 
-        takeOfferAmountController = new TakeOfferAmountController(serviceProvider);
+        takeOfferAmountController = new TakeOfferAmountController(serviceProvider, this::setMainButtonsVisibleState);
         takeOfferPaymentController = new TakeOfferPaymentController(serviceProvider);
         takeOfferReviewController = new TakeOfferReviewController(serviceProvider, this::setMainButtonsVisibleState, this::closeAndNavigateTo);
     }
@@ -94,7 +91,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     public void initWithData(InitData initData) {
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
-        takeOfferAmountController.init(bisqEasyOffer, initData.getReputationBasedQuoteSideAmount());
+        takeOfferAmountController.init(bisqEasyOffer);
         takeOfferPaymentController.init(bisqEasyOffer);
         takeOfferReviewController.init(bisqEasyOffer);
 
@@ -237,6 +234,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     private void setMainButtonsVisibleState(boolean value) {
         NavigationTarget navigationTarget = model.getNavigationTarget();
         model.getBackButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
+        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TAKE_OFFER_REVIEW);
         model.getCloseButtonVisible().set(value);
     }
 }
