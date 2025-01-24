@@ -44,9 +44,6 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.*;
-import static bisq.presentation.formatters.AmountFormatter.formatAmountWithCode;
-
 @Slf4j
 public class TakeOfferAmountController implements Controller {
     private final TakeOfferAmountModel model;
@@ -88,28 +85,7 @@ public class TakeOfferAmountController implements Controller {
         if (OptionalQuoteSideMinAmount.isPresent()) {
             Monetary quoteSideMinAmount = OptionalQuoteSideMinAmount.get().round(0);
             Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow().round(0);
-            String formattedMinAmount = AmountFormatter.formatAmount(quoteSideMinAmount);
-            Monetary maxAmount = offersQuoteSideMaxOrFixedAmount;
-            if (optionalReputationBasedQuoteSideAmount.isPresent()) {
-                // Offer range amounts are more than what is permitted with the seller's reputation
-//                Monetary reputationBasedQuoteSideAmount = optionalReputationBasedQuoteSideAmount.get().round(0);
-//                maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
-//                        ? reputationBasedQuoteSideAmount
-//                        : offersQuoteSideMaxOrFixedAmount;
-//                amountSelectionController.setMaxAllowedLimitation(offersQuoteSideMaxOrFixedAmount);
-//                amountSelectionController.setRightMarkerQuoteSideValue(maxAmount);
-                applyQuoteSideMinMaxRange(quoteSideMinAmount, maxAmount);
-
-                long sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
-                // TODO: Sentence needs to go in the model then rendered in the view
-                amountSelectionController.setDescription(Res.get("bisqEasy.takeOffer.amount.description.limitedByTakersReputation",
-                        sellersScore,
-                        formattedMinAmount,
-                        AmountFormatter.formatAmountWithCode(maxAmount)));
-            } else {
-                // Offer range amounts are within seller's reputation
-                applyQuoteSideMinMaxRange(quoteSideMinAmount, maxAmount);
-            }
+            applyQuoteSideMinMaxRange(quoteSideMinAmount, offersQuoteSideMaxOrFixedAmount);
             String btcAmount = takersDirection.isBuy()
                     ? Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount")
                     : Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount");
@@ -130,7 +106,9 @@ public class TakeOfferAmountController implements Controller {
     @Override
     public void onActivate() {
         baseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedBaseSideAmount(),
-                amount -> model.getTakersBaseSideAmount().set(amount));
+                amount -> {
+                    model.getTakersBaseSideAmount().set(amount);
+                });
         quoteSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedQuoteSideAmount(),
                 amount -> {
                     model.getTakersQuoteSideAmount().set(amount);
