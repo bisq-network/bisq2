@@ -152,7 +152,7 @@ public class BuildReputationView extends View<VBox, BuildReputationModel, BuildR
         Region line = new Region();
         line.setMinHeight(1);
         line.setMaxHeight(1);
-        line.setStyle("-fx-background-color: -bisq-border-color-grey");
+        line.setStyle("-fx-background-color: -fx-light-text-color");
         line.setPadding(new Insets(9, 0, 8, 0));
         return line;
     }
