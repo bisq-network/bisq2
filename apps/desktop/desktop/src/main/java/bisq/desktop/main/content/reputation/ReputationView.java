@@ -31,8 +31,8 @@ public class ReputationView extends ContentTabView<ReputationModel, ReputationCo
         super(model, controller);
 
         addTab(Res.get("reputation.buildReputation"), NavigationTarget.BUILD_REPUTATION);
-        addTab(Res.get("reputation.ranking"), NavigationTarget.REPUTATION_RANKING);
         addTab(Res.get("reputation.score"), NavigationTarget.REPUTATION_SCORE);
+        addTab(Res.get("reputation.ranking"), NavigationTarget.REPUTATION_RANKING);
     }
 
     @Override
