@@ -67,7 +67,7 @@ public class TakeOfferAmountController implements Controller {
         view = new TakeOfferAmountView(model, this, amountSelectionController.getView().getRoot());
     }
 
-    public void init(BisqEasyOffer bisqEasyOffer, Optional<Monetary> optionalReputationBasedQuoteSideAmount) {
+    public void init(BisqEasyOffer bisqEasyOffer) {
         model.setBisqEasyOffer(bisqEasyOffer);
 
         Direction takersDirection = bisqEasyOffer.getTakersDirection();

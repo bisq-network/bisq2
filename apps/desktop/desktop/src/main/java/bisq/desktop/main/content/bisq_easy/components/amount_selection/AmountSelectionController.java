@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
-import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Fiat;
