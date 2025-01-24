@@ -237,7 +237,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     private void setMainButtonsVisibleState(boolean value) {
         NavigationTarget navigationTarget = model.getNavigationTarget();
         model.getBackButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
-        model.getNextButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
+        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.TAKE_OFFER_REVIEW);
         model.getCloseButtonVisible().set(value);
     }
 }
