@@ -81,8 +81,8 @@ public class AmountSelectionController implements Controller {
         maxOrFixedQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMaxOrFixedBaseFromQuote);
         minQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMinBaseFromQuote);
         quoteListener = (observable, oldValue, newValue) -> {
-            model.getMinRangeSideValue().set(null);
-            model.getMaxRangeSideValue().set(null);
+            model.getMinRangeQuoteSideValue().set(null);
+            model.getMaxRangeQuoteSideValue().set(null);
             applyInitialRangeValues();
             UIThread.runOnNextRenderFrame(this::applyQuote);
         };
@@ -154,7 +154,7 @@ public class AmountSelectionController implements Controller {
     }
 
     public void setMaxAllowedLimitation(Monetary maxAllowedLimitation) {
-        model.getMaxRangeAllowedLimitation().set(maxAllowedLimitation);
+        model.getMaxQuoteAllowedLimitation().set(maxAllowedLimitation);
     }
 
     public void setMinMaxRange(Monetary minRangeValue, Monetary maxRangeValue) {
@@ -202,8 +202,8 @@ public class AmountSelectionController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getMinRangeSideValue().set(null);
-        model.getMaxRangeSideValue().set(null);
+        model.getMinRangeQuoteSideValue().set(null);
+        model.getMaxRangeQuoteSideValue().set(null);
         applyInitialRangeValues();
 
         model.getMaxOrFixedQuoteSideAmount().addListener(maxOrFixedQuoteSideAmountFromModelListener);
@@ -242,8 +242,8 @@ public class AmountSelectionController implements Controller {
 
         maxOrFixedQuoteAmountFromCompPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.amountProperty(),
                 amount -> {
-                    Monetary minRangeValue = model.getMinRangeSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeSideValue().get();
+                    Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
+                    Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
                     if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
                         model.getMaxOrFixedQuoteSideAmount().set(maxRangeValue);
                         setMaxOrFixedBaseFromQuote();
@@ -259,8 +259,8 @@ public class AmountSelectionController implements Controller {
 
         minQuoteAmountFromCompPin = EasyBind.subscribe(minQuoteSideAmountInput.amountProperty(),
                 amount -> {
-                    Monetary minRangeValue = model.getMinRangeSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeSideValue().get();
+                    Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
+                    Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
                     if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
                         model.getMinQuoteSideAmount().set(maxRangeValue);
                         setMinBaseFromQuote();
@@ -317,22 +317,22 @@ public class AmountSelectionController implements Controller {
     }
 
     double getMaxAllowedSliderValue() {
-        return getSliderValue(model.getMaxRangeSideValue().get().getValue());
+        return getSliderValue(model.getMaxRangeQuoteSideValue().get().getValue());
     }
 
     private double getSliderValue(long amountValue) {
-        long min = model.getMinRangeSideValue().get().getValue();
-        long max = model.getMaxRangeAllowedLimitation().get() != null
-                ? model.getMaxRangeAllowedLimitation().get().getValue()
-                : model.getMaxRangeSideValue().get().getValue();
+        long min = model.getMinRangeQuoteSideValue().get().getValue();
+        long max = model.getMaxQuoteAllowedLimitation().get() != null
+                ? model.getMaxQuoteAllowedLimitation().get().getValue()
+                : model.getMaxRangeQuoteSideValue().get().getValue();
         return (double) (amountValue - min) / (max - min);
     }
 
     private void initializeQuoteSideAmount(QuoteAmountInputBox quoteSideAmountInput) {
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote != null) {
-            Monetary minRangeQuoteSideValue = model.getMinRangeSideValue().get();
-            Monetary maxRangeQuoteSideValue = model.getMaxRangeSideValue().get();
+            Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
+            Monetary maxRangeQuoteSideValue = model.getMaxRangeQuoteSideValue().get();
             long midValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
             Monetary exactAmount =  Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode());
             quoteSideAmountInput.setAmount(exactAmount.round(0));
@@ -361,15 +361,15 @@ public class AmountSelectionController implements Controller {
         Monetary minRangeMonetary = model.getMinRangeMonetary().get();
         Monetary maxRangeMonetary = model.getMaxRangeMonetary().get();
 
-        model.getMinRangeSideValue().set(minRangeMonetary);
+        model.getMinRangeQuoteSideValue().set(minRangeMonetary);
         model.getMinRangeValueAsString().set(AmountFormatter.formatAmount(minRangeMonetary));
         model.getMinRangeCodeAsString().set(minRangeMonetary.getCode());
 
-        model.getMaxRangeSideValue().set(maxRangeMonetary);
+        model.getMaxRangeQuoteSideValue().set(maxRangeMonetary);
         model.getMaxRangeCodeAsString().set(maxRangeMonetary.getCode());
 
-        Monetary maxRangeMonetaryLimitation = model.getMaxRangeAllowedLimitation().get() != null
-                ? model.getMaxRangeAllowedLimitation().get()
+        Monetary maxRangeMonetaryLimitation = model.getMaxQuoteAllowedLimitation().get() != null
+                ? model.getMaxQuoteAllowedLimitation().get()
                 : maxRangeMonetary;
         model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryLimitation));
 
@@ -377,10 +377,10 @@ public class AmountSelectionController implements Controller {
     }
 
     private void applySliderTrackStyle() {
-        Monetary minRangeMonetary = model.getMinRangeSideValue().get();
-        Monetary maxRangeMonetary = model.getMaxRangeAllowedLimitation() != null
-                ? model.getMaxRangeAllowedLimitation().get()
-                : model.getMaxRangeSideValue().get();
+        Monetary minRangeMonetary = model.getMinRangeQuoteSideValue().get();
+        Monetary maxRangeMonetary = model.getMaxQuoteAllowedLimitation() != null
+                ? model.getMaxQuoteAllowedLimitation().get()
+                : model.getMaxRangeQuoteSideValue().get();
         if (minRangeMonetary == null || maxRangeMonetary == null) {
             return;
         }
@@ -429,11 +429,11 @@ public class AmountSelectionController implements Controller {
     }
 
     private void applySliderValue(double sliderValue, QuoteAmountInputBox bigAmountInput) {
-        if (model.getMinRangeSideValue().get() != null) {
-            long min = model.getMinRangeSideValue().get().getValue();
-            long max = model.getMaxRangeAllowedLimitation().get() != null
-                    ? model.getMaxRangeAllowedLimitation().get().getValue()
-                    : model.getMaxRangeSideValue().get().getValue();
+        if (model.getMinRangeQuoteSideValue().get() != null) {
+            long min = model.getMinRangeQuoteSideValue().get().getValue();
+            long max = model.getMaxQuoteAllowedLimitation().get() != null
+                    ? model.getMaxQuoteAllowedLimitation().get().getValue()
+                    : model.getMaxRangeQuoteSideValue().get().getValue();
             long value = Math.round(sliderValue * (max - min)) + min;
             bigAmountInput.setAmount(Monetary.from(value, model.getMarket().getQuoteCurrencyCode()));
         }
