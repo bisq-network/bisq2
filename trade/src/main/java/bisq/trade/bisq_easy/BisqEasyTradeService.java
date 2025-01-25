@@ -92,7 +92,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
@@ -142,39 +141,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return CompletableFuture.completedFuture(true);
     }
 
-    private void maybeRedactDataOfCompletedTrades() {
-        int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
-        if (numDays < SettingsService.MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
-                numDays > SettingsService.MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
-            numDays = SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
-            // We fix the settings value and by changing it we get called again
-            settingsService.getNumDaysAfterRedactingTradeData().set(numDays);
-            return;
-        }
-
-        long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
-        // Trades which ended up with a failure or got stuck will never get the completed date set.
-        // We use a more constrained duration of 45-90 days.
-        int numDaysForNotCompletedTrades = Math.max(45, Math.min(90, numDays));
-        long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
-        long numChanges = getTrades().stream()
-                .filter(trade -> {
-                    if (StringUtils.isNotEmpty(trade.getPaymentAccountData().get())) {
-                        return false;
-                    }
-                    boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
-                            .orElse(trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
-                    if (doRedaction) {
-                        trade.getPaymentAccountData().set(Res.get("data.redacted"));
-                    }
-                    return doRedaction;
-                })
-                .count();
-        if (numChanges > 0) {
-            persist();
-        }
-    }
-
     public CompletableFuture<Boolean> shutdown() {
         serviceProvider.getNetworkService().removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
@@ -183,7 +149,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -212,7 +177,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Message event
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
@@ -221,20 +185,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         handleEvent(protocol, message);
     }
 
-    private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
-        BisqEasyProtocol protocol = getProtocol(message.getTradeId());
-        handleEvent(protocol, message);
-    }
-
-    private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
-        BisqEasyProtocol protocol = getProtocol(message.getTradeId());
-        handleEvent(protocol, message);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Events
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public BisqEasyProtocol createBisqEasyProtocol(Identity takerIdentity,
@@ -322,6 +275,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
 
+    private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
+        BisqEasyProtocol protocol = getProtocol(message.getTradeId());
+        handleEvent(protocol, message);
+    }
+
+    private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
+        BisqEasyProtocol protocol = getProtocol(message.getTradeId());
+        handleEvent(protocol, message);
+    }
     private void handleEvent(BisqEasyProtocol protocol, Event event) {
         protocol.handle(event);
         persist();
@@ -330,22 +292,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Misc API
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private BisqEasyProtocol createProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
-        // We only create the data required for the protocol creation.
-        // Verification will happen in the BisqEasyTakeOfferRequestHandler
-        BisqEasyOffer offer = contract.getOffer();
-        boolean isBuyer = offer.getMakersDirection().isBuy();
-        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
-        String tradeId = bisqEasyTrade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
-        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
-        persistableStore.addTrade(bisqEasyTrade);
-        return createAndAddTradeProtocol(bisqEasyTrade);
-    }
 
     public Optional<BisqEasyProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
@@ -378,8 +325,21 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // TradeProtocol factory
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private BisqEasyProtocol createProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
+        // We only create the data required for the protocol creation.
+        // Verification will happen in the BisqEasyTakeOfferRequestHandler
+        BisqEasyOffer offer = contract.getOffer();
+        boolean isBuyer = offer.getMakersDirection().isBuy();
+        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
+        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
+        String tradeId = bisqEasyTrade.getId();
+        checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
+        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
+        persistableStore.addTrade(bisqEasyTrade);
+        return createAndAddTradeProtocol(bisqEasyTrade);
+    }
 
     private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade) {
         String id = trade.getId();
@@ -415,4 +375,43 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                             "The Bisq security manager has published an emergency alert with a min. version required for trading.");
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Redact sensible data
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void maybeRedactDataOfCompletedTrades() {
+        int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
+        if (numDays < SettingsService.MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
+                numDays > SettingsService.MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
+            numDays = SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+            // We fix the settings value and by changing it we get called again
+            settingsService.getNumDaysAfterRedactingTradeData().set(numDays);
+            return;
+        }
+
+        long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
+        // Trades which ended up with a failure or got stuck will never get the completed date set.
+        // We use a more constrained duration of 45-90 days.
+        int numDaysForNotCompletedTrades = Math.max(45, Math.min(90, numDays));
+        long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
+        long numChanges = getTrades().stream()
+                .filter(trade -> {
+                    if (StringUtils.isNotEmpty(trade.getPaymentAccountData().get())) {
+                        return false;
+                    }
+                    boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
+                            .orElse(trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
+                    if (doRedaction) {
+                        trade.getPaymentAccountData().set(Res.get("data.redacted"));
+                    }
+                    return doRedaction;
+                })
+                .count();
+        if (numChanges > 0) {
+            persist();
+        }
+    }
+
 }
