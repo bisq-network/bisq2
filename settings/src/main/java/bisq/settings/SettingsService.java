@@ -25,6 +25,7 @@ import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.persistence.DbSubDirectory;
@@ -40,6 +41,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+// TODO Use setters and use ReadOnlyObservable for Observable getters and validate input where it is needed.
+// Use new FxBindings binding API for ReadOnlyObservable and setters in client which write the value
+// Add default, min, max fields if appropriate.
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
     @Deprecated(since = "2.1.1")
@@ -65,10 +69,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     private boolean isInitialized;
 
     public SettingsService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this,
-                DbSubDirectory.SETTINGS,
-                persistableStore);
-        SettingsService.instance = this;
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
+        instance = this;
     }
 
 
@@ -171,8 +173,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.difficultyAdjustmentFactor;
     }
 
-    public Observable<Double> getMaxTradePriceDeviation() {
+    public ReadOnlyObservable<Double> getMaxTradePriceDeviation() {
         return persistableStore.maxTradePriceDeviation;
+    }
+
+    public void setMaxTradePriceDeviation(double value) {
+        if (value >= MIN_TRADE_PRICE_DEVIATION && value <= MAX_TRADE_PRICE_DEVIATION) {
+            persistableStore.maxTradePriceDeviation.set(value);
+        }
     }
 
     public Observable<ChatNotificationType> getChatNotificationType() {
@@ -231,8 +239,18 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.bisqEasyOfferbookMessageTypeFilter;
     }
 
-    public Observable<Integer> getNumDaysAfterRedactingTradeData() {
+    public Observable<Integer> getNumDaysAfterRedactingTradeData2() {
         return persistableStore.numDaysAfterRedactingTradeData;
+    }
+
+    public ReadOnlyObservable<Integer> getNumDaysAfterRedactingTradeData() {
+        return persistableStore.numDaysAfterRedactingTradeData;
+    }
+
+    public void setNumDaysAfterRedactingTradeData(int value) {
+        if (value >= MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA && value <= MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
+            persistableStore.numDaysAfterRedactingTradeData.set(value);
+        }
     }
 
 

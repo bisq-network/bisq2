@@ -409,14 +409,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     private void maybeRedactDataOfCompletedTrades() {
         int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
-        if (numDays < SettingsService.MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
-                numDays > SettingsService.MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
-            numDays = SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
-            // We fix the settings value and by changing it we get called again
-            settingsService.getNumDaysAfterRedactingTradeData().set(numDays);
-            return;
-        }
-
         long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
         // Trades which ended up with a failure or got stuck will never get the completed date set.
         // We use a more constrained duration of 45-90 days.
