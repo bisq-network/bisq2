@@ -49,6 +49,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public final static double MIN_TRADE_PRICE_DEVIATION = 0.01; // 1%
     public final static double MAX_TRADE_PRICE_DEVIATION = 0.1; // 10%
 
+    public final static int DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 90;
+    public final static int MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 30;
+    public final static int MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 365;
+
     @Getter
     private static SettingsService instance;
 
@@ -99,6 +103,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
             persist();
         });
         getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist());
+        getNumDaysAfterRedactingTradeData().addObserver(value -> persist());
 
         isInitialized = true;
 
@@ -224,6 +229,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
         return persistableStore.bisqEasyOfferbookMessageTypeFilter;
+    }
+
+    public Observable<Integer> getNumDaysAfterRedactingTradeData() {
+        return persistableStore.numDaysAfterRedactingTradeData;
     }
 
 

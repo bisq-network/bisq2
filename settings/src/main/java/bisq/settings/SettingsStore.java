@@ -66,6 +66,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> showMyOffersOnly = new Observable<>();
     final Observable<Double> totalMaxBackupSizeInMB = new Observable<>();
     final Observable<ChatMessageType> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
+    final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -93,7 +94,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 PlatformUtils.getHomeDirectory(),
                 false,
                 BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB,
-                ChatMessageType.ALL);
+                ChatMessageType.ALL,
+                SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
     }
 
     public SettingsStore(Cookie cookie,
@@ -121,7 +123,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          String backupLocation,
                          boolean showMyOffersOnly,
                          double totalMaxBackupSizeInMB,
-                         ChatMessageType bisqEasyOfferbookMessageTypeFilter) {
+                         ChatMessageType bisqEasyOfferbookMessageTypeFilter,
+                         int numDaysAfterRedactingTradeData) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -148,6 +151,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.showMyOffersOnly.set(showMyOffersOnly);
         this.totalMaxBackupSizeInMB.set(totalMaxBackupSizeInMB);
         this.bisqEasyOfferbookMessageTypeFilter.set(bisqEasyOfferbookMessageTypeFilter);
+        this.numDaysAfterRedactingTradeData.set(numDaysAfterRedactingTradeData);
     }
 
     @Override
@@ -178,7 +182,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setBackupLocation(backupLocation.get())
                 .setShowMyOffersOnly(showMyOffersOnly.get())
                 .setTotalMaxBackupSizeInMB(totalMaxBackupSizeInMB.get())
-                .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get().toProtoEnum());
+                .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get().toProtoEnum())
+                .setNumDaysAfterRedactingTradeData(numDaysAfterRedactingTradeData.get());
     }
 
     @Override
@@ -197,6 +202,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
         if (totalMaxBackupSizeInMB == 0) {
             totalMaxBackupSizeInMB = BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB;
+        }
+        int numDaysAfterRedactingTradeData = proto.getNumDaysAfterRedactingTradeData();
+        if (numDaysAfterRedactingTradeData == 0) {
+            numDaysAfterRedactingTradeData = SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
         }
         return new SettingsStore(Cookie.fromProto(proto.getCookie()),
                 proto.getDontShowAgainMapMap().entrySet().stream()
@@ -225,7 +234,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getBackupLocation(),
                 proto.getShowMyOffersOnly(),
                 totalMaxBackupSizeInMB,
-                ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()));
+                ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
+                numDaysAfterRedactingTradeData);
     }
 
     @Override
@@ -266,7 +276,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 backupLocation.get(),
                 showMyOffersOnly.get(),
                 totalMaxBackupSizeInMB.get(),
-                bisqEasyOfferbookMessageTypeFilter.get());
+                bisqEasyOfferbookMessageTypeFilter.get(),
+                numDaysAfterRedactingTradeData.get());
     }
 
     @Override
@@ -298,6 +309,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             showMyOffersOnly.set(persisted.showMyOffersOnly.get());
             totalMaxBackupSizeInMB.set(persisted.totalMaxBackupSizeInMB.get());
             bisqEasyOfferbookMessageTypeFilter.set(persisted.bisqEasyOfferbookMessageTypeFilter.get());
+            numDaysAfterRedactingTradeData.set(persisted.numDaysAfterRedactingTradeData.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }
