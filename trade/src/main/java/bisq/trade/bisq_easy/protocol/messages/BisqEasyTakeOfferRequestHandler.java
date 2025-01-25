@@ -125,7 +125,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
                 .selectMediator(takersOffer.getMakersUserProfileId(), trade.getTaker().getNetworkId().getId());
-        checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match. " +
+        checkArgument(mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId)), "Mediators do not match. " +
                 "\nmediator=" + mediator +
                 "\ntakersContract.getMediator()=" + takersContract.getMediator());
 
