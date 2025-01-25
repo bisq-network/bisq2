@@ -74,9 +74,9 @@ public class BondedRolesService implements Service {
         releaseNotificationsService = new ReleaseNotificationsService(authorizedBondedRolesService);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");

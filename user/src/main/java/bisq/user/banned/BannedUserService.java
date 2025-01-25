@@ -48,9 +48,9 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -65,9 +65,9 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
@@ -92,9 +92,9 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public ObservableSet<BannedUserProfileData> getBannedUserProfileDataSet() {
         return persistableStore.getBannedUserProfileDataSet();
@@ -114,9 +114,9 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private boolean isAuthorized(AuthorizedData authorizedData) {
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.MODERATOR);

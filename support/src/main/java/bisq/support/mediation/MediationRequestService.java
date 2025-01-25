@@ -72,9 +72,9 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -89,9 +89,9 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // MessageListener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
@@ -101,9 +101,9 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void requestMediation(BisqEasyOpenTradeChannel channel,
                                  BisqEasyContract contract) {
@@ -152,9 +152,9 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void processMediationResponse(MediatorsResponse mediatorsResponse) {
         bisqEasyOpenTradeChannelService.findChannelByTradeId(mediatorsResponse.getTradeId())

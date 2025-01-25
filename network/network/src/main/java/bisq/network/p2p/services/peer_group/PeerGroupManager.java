@@ -179,9 +179,9 @@ public class PeerGroupManager implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Node.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -229,9 +229,9 @@ public class PeerGroupManager implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Seed nodes
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
         seedNodeAddresses.forEach(peerGroupService::addSeedNodeAddress);
@@ -246,9 +246,9 @@ public class PeerGroupManager implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Tasks
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void doHouseKeeping() {
         log.debug("{} called runBlockingTasks", node);
@@ -421,9 +421,9 @@ public class PeerGroupManager implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     // Used for Stream.skip, therefor we sort by descending numPendingRequests and descending creationDate so that we close
     // the oldest connections which have the least pending requests first.

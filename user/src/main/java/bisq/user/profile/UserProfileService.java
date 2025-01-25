@@ -72,9 +72,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
@@ -98,9 +98,9 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Optional<UserProfile> findUserProfile(String id) {
         return Optional.ofNullable(getUserProfileById().get(id));

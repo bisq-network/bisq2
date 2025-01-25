@@ -138,9 +138,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 .collect(Collectors.toSet()));
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -172,9 +172,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Consume notifications
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void consume(ChatChannel<?> channel) {
         consume(channel.getChatChannelDomain(), channel.getId());
@@ -193,9 +193,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Not consumed notifications
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Stream<ChatNotification> getNotConsumedNotifications() {
         synchronized (persistableStore) {
@@ -225,9 +225,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Number of not consumed notifications
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public long getNumNotifications(ChatChannel<?> channel) {
         return getNumNotifications(channel.getChatChannelDomain(), channel.getId());
@@ -242,9 +242,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // ChatChannelDomain based Predicate
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void putPredicate(ChatChannelDomain chatChannelDomain, Predicate<ChatNotification> predicate) {
         predicateByChatChannelDomain.put(chatChannelDomain, predicate);
@@ -267,9 +267,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void addNotification(ChatNotification notification) {
         boolean wasAdded = false;

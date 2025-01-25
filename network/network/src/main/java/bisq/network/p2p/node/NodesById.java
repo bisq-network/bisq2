@@ -72,9 +72,9 @@ public class NodesById implements Node.Listener {
         this.authorizationService = authorizationService;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Node createAndConfigNode(NetworkId networkId, boolean isDefaultNode) {
         Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
@@ -161,9 +161,9 @@ public class NodesById implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Node.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -219,9 +219,9 @@ public class NodesById implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private Node getOrCreateNode(NetworkId networkId) {
         return findNode(networkId)

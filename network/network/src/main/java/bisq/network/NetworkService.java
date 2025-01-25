@@ -179,9 +179,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
@@ -217,9 +217,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Initialize nodes or return initialized node
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     /**
      * Returns an initialized node for the given transport. If the node was not yet initialized we do the initialization,
@@ -246,9 +246,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Send confidential message
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     /**
      * Send message via given senderNetworkIdWithKeyPair to the receiverNetworkId as encrypted message.
@@ -303,9 +303,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthenticatedData
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData,
                                                                        KeyPair keyPair) {
@@ -340,9 +340,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthorizedData
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                                                                     KeyPair keyPair) {
@@ -380,9 +380,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AppendOnlyData
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<BroadcastResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
@@ -390,9 +390,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Listeners
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void addDataServiceListener(Listener listener) {
         dataService.orElseThrow().addListener(listener);
@@ -419,9 +419,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public BaseHttpClient getHttpClient(String url, String userAgent, TransportType transportType) {
         // socksProxy only supported for TOR
@@ -453,9 +453,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Get optional
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Optional<ServiceNode> findServiceNode(TransportType transport) {
         return serviceNodesByTransport.findServiceNode(transport);
@@ -474,9 +474,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Add seed node from seed node bonded role
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void addSeedNodeAddressByTransport(AddressByTransportTypeMap seedNode) {
         serviceNodesByTransport.addSeedNode(seedNode);
@@ -491,9 +491,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Check peer's online state (In case of Tor it checks if the onionservice is published)
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Map<TransportType, Boolean>> isPeerOnline(NetworkId networkId,
                                                                        AddressByTransportTypeMap peer) {
@@ -505,9 +505,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Expose pending ResendMessageData and ConfidentialMessageService for higher level services
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Set<ResendMessageData> getPendingResendMessageDataSet() {
         return resendMessageService.map(ResendMessageService::getPendingResendMessageDataSet).orElse(new HashSet<>());
@@ -521,9 +521,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Report
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Report> requestReport(Address address) {
         return serviceNodesByTransport.requestReport(address);

@@ -67,9 +67,9 @@ public class MarketPricePropagationService implements Service {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
         return networkService.publishAuthorizedData(data,

@@ -35,9 +35,9 @@ import java.util.Optional;
  */
 public class OfferAmountUtil {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // BaseAmount: If no BaseAmountSpec we calculate it from the QuoteAmountSpec with the PriceSpec
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     // Fixed
     public static Optional<Monetary> findBaseSideFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
@@ -119,9 +119,9 @@ public class OfferAmountUtil {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // QuoteAmount: If no QuoteAmountSpec we calculate it from the BaseAmountSpec with the PriceSpec
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     // Fixed
     public static Optional<Monetary> findQuoteSideFixedAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {

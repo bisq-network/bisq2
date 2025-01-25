@@ -65,9 +65,9 @@ public class PeerExchangeAttempt {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> startAsync(int minSuccess, List<Address> candidates) {
         checkArgument(!peerExchangeFuture.isDone(), "peerExchangeFuture already done");
@@ -104,9 +104,9 @@ public class PeerExchangeAttempt {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void onPeerExchangeComplete(Throwable throwable, AtomicInteger numMinSuccess, int candidatesSize) {
         if (isShutdownInProgress.get()) {

@@ -271,9 +271,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API - called from client
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void refreshMessages() {
         model.getChatMessages().setAll(new ArrayList<>(model.getChatMessages()));
@@ -289,9 +289,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // UI - delegate to client
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void onMention(UserProfile userProfile) {
         mentionUserHandler.accept(userProfile);
@@ -306,9 +306,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // UI - handler
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void onTakeOffer(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(), "message must contain offer");
@@ -532,9 +532,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Scrolling
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void applyScrollValue(double scrollValue) {
         model.getScrollValue().set(scrollValue);
@@ -570,9 +570,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
         // Private chats are all using the DISCUSSION ChatChannelDomain

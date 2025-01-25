@@ -131,9 +131,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void registerResendMessageData(ResendMessageData resendMessageData) {
         if (isShutdown) {
@@ -165,9 +165,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void resendMessage(ResendMessageData data, int maxResends) {
         String messageId = data.getId();

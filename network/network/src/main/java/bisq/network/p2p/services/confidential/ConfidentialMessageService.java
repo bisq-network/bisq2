@@ -98,9 +98,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Node.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -118,9 +118,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMailboxDataAdded(MailboxData mailboxData) {
@@ -144,9 +144,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public SendConfidentialMessageResult send(EnvelopePayloadMessage envelopePayloadMessage,
                                               NetworkId receiverNetworkId,
@@ -280,9 +280,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private SendConfidentialMessageResult storeInMailbox(EnvelopePayloadMessage envelopePayloadMessage,
                                                          PubKey receiverPubKey,

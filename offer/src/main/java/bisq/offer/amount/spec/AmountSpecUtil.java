@@ -28,9 +28,9 @@ import java.util.Optional;
  */
 public class AmountSpecUtil {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // BaseAmount: Monetary from BaseSideAmountSpec otherwise empty Optional
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public static Optional<Monetary> findBaseSideFixedAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
         return findBaseSideFixedAmountSpec(amountSpec)
@@ -61,9 +61,9 @@ public class AmountSpecUtil {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // QuoteAmount: Monetary from QuoteAmountSpec otherwise empty Optional
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public static Optional<Monetary> findQuoteSideFixedAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
         return findQuoteSideFixedAmountSpec(amountSpec)
@@ -94,9 +94,9 @@ public class AmountSpecUtil {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Find AmountSpec implementations
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public static Optional<BaseSideFixedAmountSpec> findBaseSideFixedAmountSpec(AmountSpec amountSpec) {
         return amountSpec instanceof BaseSideFixedAmountSpec ?

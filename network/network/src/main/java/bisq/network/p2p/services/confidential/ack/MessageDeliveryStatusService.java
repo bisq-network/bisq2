@@ -96,9 +96,9 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // ConfidentialMessageService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
@@ -110,9 +110,9 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void applyMessageDeliveryStatus(String messageId, MessageDeliveryStatus status) {
         Map<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId = getMessageDeliveryStatusByMessageId();
@@ -141,9 +141,9 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void processAckMessage(AckMessage ackMessage) {
         String messageId = ackMessage.getId();
