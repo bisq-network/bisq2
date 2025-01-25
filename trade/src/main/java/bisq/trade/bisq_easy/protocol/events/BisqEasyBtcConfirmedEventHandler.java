@@ -22,6 +22,8 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeEventHandler;
 
+import java.util.Optional;
+
 public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasyTrade> {
 
     public BisqEasyBtcConfirmedEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
@@ -30,8 +32,10 @@ public class BisqEasyBtcConfirmedEventHandler extends TradeEventHandler<BisqEasy
 
     @Override
     public void handle(Event event) {
+        commitToModel();
     }
 
     private void commitToModel() {
+        trade.setTradeCompletedDate(Optional.of(System.currentTimeMillis()));
     }
 }

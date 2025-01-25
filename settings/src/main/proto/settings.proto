@@ -72,4 +72,5 @@ message SettingsStore {
   bool showMyOffersOnly = 24;
   double totalMaxBackupSizeInMB = 25;
   ChatMessageType bisqEasyOfferbookMessageTypeFilter = 26;
+  sint32 numDaysAfterRedactingTradeData = 27;
 }

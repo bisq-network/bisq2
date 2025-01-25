@@ -25,6 +25,7 @@ import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.persistence.DbSubDirectory;
@@ -40,11 +41,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+// TODO Use setters and use ReadOnlyObservable for Observable getters and validate input where it is needed.
+// Use new FxBindings binding API for ReadOnlyObservable and setters in client which write the value
+// Add default, min, max fields if appropriate.
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
     @Deprecated(since = "2.1.1")
     public final static long DEFAULT_MIN_REQUIRED_REPUTATION_SCORE = 30_000;
+
     public final static double DEFAULT_MAX_TRADE_PRICE_DEVIATION = 0.05; // 5%
+    public final static double MIN_TRADE_PRICE_DEVIATION = 0.01; // 1%
+    public final static double MAX_TRADE_PRICE_DEVIATION = 0.1; // 10%
+
+    public final static int DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 90;
+    public final static int MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 30;
+    public final static int MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 365;
 
     @Getter
     private static SettingsService instance;
@@ -58,10 +69,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     private boolean isInitialized;
 
     public SettingsService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this,
-                DbSubDirectory.SETTINGS,
-                persistableStore);
-        SettingsService.instance = this;
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
+        instance = this;
     }
 
 
@@ -96,6 +105,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
             persist();
         });
         getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist());
+        getNumDaysAfterRedactingTradeData().addObserver(value -> persist());
 
         isInitialized = true;
 
@@ -163,8 +173,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.difficultyAdjustmentFactor;
     }
 
-    public Observable<Double> getMaxTradePriceDeviation() {
+    public ReadOnlyObservable<Double> getMaxTradePriceDeviation() {
         return persistableStore.maxTradePriceDeviation;
+    }
+
+    public void setMaxTradePriceDeviation(double value) {
+        if (value >= MIN_TRADE_PRICE_DEVIATION && value <= MAX_TRADE_PRICE_DEVIATION) {
+            persistableStore.maxTradePriceDeviation.set(value);
+        }
     }
 
     public Observable<ChatNotificationType> getChatNotificationType() {
@@ -221,6 +237,16 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
         return persistableStore.bisqEasyOfferbookMessageTypeFilter;
+    }
+
+    public ReadOnlyObservable<Integer> getNumDaysAfterRedactingTradeData() {
+        return persistableStore.numDaysAfterRedactingTradeData;
+    }
+
+    public void setNumDaysAfterRedactingTradeData(int value) {
+        if (value >= MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA && value <= MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
+            persistableStore.numDaysAfterRedactingTradeData.set(value);
+        }
     }
 
 

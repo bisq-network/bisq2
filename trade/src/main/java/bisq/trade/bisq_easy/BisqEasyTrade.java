@@ -31,6 +31,7 @@ import bisq.trade.TradeRole;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,6 +55,10 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
     // Wrapper for stateObservable which is not handled as generic in Fsm
     private final transient Observable<BisqEasyTradeState> tradeState = new Observable<>();
+
+    @Setter
+    @Getter
+    private Optional<Long> tradeCompletedDate = Optional.empty();
 
     public BisqEasyTrade(BisqEasyContract contract,
                          boolean isBuyer,
@@ -106,6 +111,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         Optional.ofNullable(bitcoinPaymentData.get()).ifPresent(builder::setBitcoinPaymentData);
         Optional.ofNullable(paymentProof.get()).ifPresent(builder::setPaymentProof);
         Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProtoEnum()));
+        tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
         return builder;
     }
 
@@ -143,6 +149,10 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         if (bisqEasyTradeProto.hasInterruptTradeInitiator()) {
             trade.getInterruptTradeInitiator().set(Role.fromProto(bisqEasyTradeProto.getInterruptTradeInitiator()));
         }
+        if (bisqEasyTradeProto.hasTradeCompletedDate()) {
+            trade.setTradeCompletedDate(Optional.of(bisqEasyTradeProto.getTradeCompletedDate()));
+        }
+
         return trade;
     }
 

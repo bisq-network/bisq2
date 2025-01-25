@@ -32,11 +32,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -108,6 +104,7 @@ public class TradeCompletedTable extends VBox {
                            String paymentMethod,
                            String tradeId,
                            String tradeDate,
+                           String tradeDuration,
                            String tradePrice,
                            String tradePriceSymbol,
                            Optional<Pair<String, String>> txIdDescriptionAndValue) {
@@ -178,12 +175,23 @@ public class TradeCompletedTable extends VBox {
         int colValue = 1;
         int row = 0;
 
-        Label date = new Label(Res.get("bisqEasy.tradeCompleted.body.date"));
-        date.getStyleClass().addAll("dimmed-text");
+        Label tradeDateLabel = new Label(Res.get("bisqEasy.tradeCompleted.body.date"));
+        tradeDateLabel.getStyleClass().addAll("dimmed-text");
         Label dateValue = new Label(tradeDate);
         dateValue.getStyleClass().add("medium-text");
-        bodyGridPane.add(date, colTitle, row);
+        bodyGridPane.add(tradeDateLabel, colTitle, row);
         bodyGridPane.add(dateValue, colValue, row);
+
+        // For completed trades before v2.1.3 we do not get the tradeDuration set
+        if (!tradeDuration.isEmpty()) {
+            ++row;
+            Label tradeDurationLabel = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeDuration"));
+            tradeDurationLabel.getStyleClass().addAll("dimmed-text");
+            Label tradeDurationValue = new Label(tradeDuration);
+            tradeDurationValue.getStyleClass().add("medium-text");
+            bodyGridPane.add(tradeDurationLabel, colTitle, row);
+            bodyGridPane.add(tradeDurationValue, colValue, row);
+        }
 
         ++row;
         Label tradeIdLabel = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeId"));
@@ -193,14 +201,13 @@ public class TradeCompletedTable extends VBox {
         bodyGridPane.add(tradeIdLabel, colTitle, row);
         bodyGridPane.add(tradeIdValue, colValue, row);
 
-
-        ++row;
+       /* ++row;
         Label tradeFee = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeFee"));
         tradeFee.getStyleClass().addAll("dimmed-text");
         Label tradeFeeValue = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeFee.value"));
         tradeFeeValue.getStyleClass().add("medium-text");
         bodyGridPane.add(tradeFee, colTitle, row);
-        bodyGridPane.add(tradeFeeValue, colValue, row);
+        bodyGridPane.add(tradeFeeValue, colValue, row);*/
 
         if (txIdDescriptionAndValue.isPresent()) {
             ++row;

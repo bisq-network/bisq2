@@ -69,6 +69,10 @@ public class FxBindings {
         return new IntegerPropertyBindings(observer);
     }
 
+    public static IntegerBiDirPropertyBindings bindBiDir(IntegerProperty observer) {
+        return new IntegerBiDirPropertyBindings(observer);
+    }
+
     public static BooleanPropertyBindings bind(BooleanProperty observer) {
         return new BooleanPropertyBindings(observer);
     }
@@ -277,6 +281,18 @@ public class FxBindings {
                 pin.unbind();
             };
         }
+
+        public Pin to(ReadOnlyObservable<Boolean> observable, Consumer<Boolean> setter) {
+            ChangeListener<Boolean> listener = (o, oldValue, newValue) -> {
+                setter.accept(newValue);
+            };
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
     }
 
     public static final class StringBiDirPropertyBindings {
@@ -288,6 +304,18 @@ public class FxBindings {
 
         public Pin to(Observable<String> observable) {
             ChangeListener<String> listener = (o, oldValue, newValue) -> observable.set(newValue);
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
+
+        public Pin to(ReadOnlyObservable<String> observable, Consumer<String> setter) {
+            ChangeListener<String> listener = (o, oldValue, newValue) -> {
+                setter.accept(newValue);
+            };
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
             return () -> {
@@ -313,6 +341,48 @@ public class FxBindings {
                 pin.unbind();
             };
         }
+
+        public Pin to(ReadOnlyObservable<Long> observable, Consumer<Long> setter) {
+            ChangeListener<Number> listener = (o, oldValue, newValue) -> {
+                setter.accept((Long) newValue);
+            };
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
+    }
+
+    public static final class IntegerBiDirPropertyBindings {
+        private final IntegerProperty observer;
+
+        public IntegerBiDirPropertyBindings(IntegerProperty observer) {
+            this.observer = observer;
+        }
+
+        public Pin to(Observable<Integer> observable) {
+            ChangeListener<Number> listener = (o, oldValue, newValue) -> observable.set((Integer) newValue);
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
+
+        public Pin to(ReadOnlyObservable<Integer> observable, Consumer<Integer> setter) {
+            ChangeListener<Number> listener = (o, oldValue, newValue) -> {
+                setter.accept((Integer) newValue);
+            };
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
     }
 
     public static final class DoubleBiDirPropertyBindings {
@@ -331,6 +401,18 @@ public class FxBindings {
                 pin.unbind();
             };
         }
+
+        public Pin to(ReadOnlyObservable<Double> observable, Consumer<Double> setter) {
+            ChangeListener<Number> listener = (o, oldValue, newValue) -> {
+                setter.accept((Double) newValue);
+            };
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
     }
 
     public static final class ObjectBiDirPropertyBindings<S> {
@@ -342,6 +424,18 @@ public class FxBindings {
 
         public Pin to(Observable<S> observable) {
             ChangeListener<S> listener = (o, oldValue, newValue) -> observable.set(newValue);
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
+
+        public Pin to(ReadOnlyObservable<S> observable, Consumer<S> setter) {
+            ChangeListener<S> listener = (o, oldValue, newValue) -> {
+                setter.accept(newValue);
+            };
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
             return () -> {

@@ -40,7 +40,7 @@ import java.util.Optional;
 @Slf4j
 public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, TradeDetailsController> {
     private final Button closeButton;
-    private final Label headline, tradeDateLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
+    private final Label headline, tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
             fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
             settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressTitleLabel,
             btcPaymentAddressDetailsLabel, paymentProofTitleLabel, paymentProofDetailsLabel,
@@ -48,7 +48,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
     private final HBox assignedMediatorBox;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
             btcPaymentAddressCopyButton, paymentProofCopyButton, paymentAccountDataCopyButton;
-    private final HBox paymentProofBox;
+    private final HBox paymentProofBox, tradeDurationBox;
 
     public TradeDetailsView(TradeDetailsModel model, TradeDetailsController controller) {
         super(new VBox(), model, controller);
@@ -64,8 +64,11 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
 
         // Trade date
         tradeDateLabel = getValueLabel();
-        HBox tradeDateBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradeDate",
-                tradeDateLabel);
+        HBox tradeDateBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradeDate", tradeDateLabel);
+
+        // Trade duration
+        tradeDurationLabel = getValueLabel();
+        tradeDurationBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradeDuration", tradeDurationLabel);
 
         // Traders / Roles
         Label mePrefixLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.me"));
@@ -190,6 +193,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
                 detailsLine,
                 tradeIdBox,
                 tradeDateBox,
+                tradeDurationBox,
                 offerTypeAndMarketBox,
                 peerNetworkAddressBox,
                 assignedMediatorBox
@@ -215,6 +219,11 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
     protected void onViewAttached() {
         headline.setText(Res.get("bisqEasy.openTrades.tradeDetails.headline"));
         tradeDateLabel.setText(model.getTradeDate());
+
+        tradeDurationBox.setVisible(model.getTradeDuration().isPresent());
+        tradeDurationBox.setManaged(model.getTradeDuration().isPresent());
+        tradeDurationLabel.setText(model.getTradeDuration().orElse(""));
+
         meLabel.setText(model.getMe());
         peerLabel.setText(model.getPeer());
         offerTypeLabel.setText(model.getOfferType());
