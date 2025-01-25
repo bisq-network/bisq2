@@ -218,13 +218,17 @@ public abstract class BubbleMessageBox extends MessageBox {
                 return;
             }
             dateTime.setVisible(true);
-            actionsHBox.setVisible(true);
+            showActionsHBox();
         } else {
             if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenuBox.getIsMenuShowing().get()) {
                 dateTime.setVisible(false);
                 actionsHBox.setVisible(false);
             }
         }
+    }
+
+    protected void showActionsHBox() {
+        actionsHBox.setVisible(true);
     }
 
     private HBox createAndGetSupportedLanguagesBox() {
