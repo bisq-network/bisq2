@@ -24,11 +24,22 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DoubleStringConverter extends StringConverter<Number> {
+    private final double defaultValue;
+
     public DoubleStringConverter() {
+        defaultValue = 0;
+    }
+
+    public DoubleStringConverter(double defaultValue) {
+        this.defaultValue = defaultValue;
     }
 
     public Number fromString(String value) {
-        return MathUtils.parseToDouble(value);
+        try {
+            return MathUtils.parseToDouble(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 
     public String toString(Number numberValue) {
