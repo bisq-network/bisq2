@@ -239,10 +239,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.bisqEasyOfferbookMessageTypeFilter;
     }
 
-    public Observable<Integer> getNumDaysAfterRedactingTradeData2() {
-        return persistableStore.numDaysAfterRedactingTradeData;
-    }
-
     public ReadOnlyObservable<Integer> getNumDaysAfterRedactingTradeData() {
         return persistableStore.numDaysAfterRedactingTradeData;
     }

@@ -96,9 +96,11 @@ public class SettingsRestApi extends RestApiBase {
                 supportedLanguageCodes.clear();
                 supportedLanguageCodes.addAll(request.supportedLanguageCodes());
             } else if (request.maxTradePriceDeviation() != null) {
-                settingsService.getMaxTradePriceDeviation().set(request.maxTradePriceDeviation());
+                settingsService.setMaxTradePriceDeviation(request.maxTradePriceDeviation());
             } else if (request.selectedMarket() != null) {
                 settingsService.getSelectedMarket().set(DtoMappings.MarketMapping.toBisq2Model(request.selectedMarket()));
+            } else if (request.numDaysAfterRedactingTradeData() != null) {
+                settingsService.setNumDaysAfterRedactingTradeData(request.numDaysAfterRedactingTradeData());
             } else {
                 return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid request: " + request);
             }

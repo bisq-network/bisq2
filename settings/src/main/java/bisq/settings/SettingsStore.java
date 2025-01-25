@@ -35,6 +35,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static bisq.settings.SettingsService.*;
+
 @Slf4j
 public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Cookie cookie;
@@ -73,7 +75,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashMap<>(),
                 true,
                 MarketRepository.getDefault(),
-                SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
+                DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
                 false,
                 false,
                 ChatNotificationType.ALL,
@@ -87,7 +89,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 new HashSet<>(),
                 false,
-                SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION,
+                DEFAULT_MAX_TRADE_PRICE_DEVIATION,
                 false,
                 false,
                 false,
@@ -95,7 +97,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB,
                 ChatMessageType.ALL,
-                SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
+                DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
     }
 
     public SettingsStore(Cookie cookie,
@@ -192,21 +194,23 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
-        // When users update from 2.0.2 the default value is 0. We require anyway a 1% as min. value so we use the
-        // fact that 0 is invalid to convert to the default value at updates.
-        // Can be removed once it's not expected anymore that users update from v2.0.2.
         double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
-        if (maxTradePriceDeviation == 0) {
-            maxTradePriceDeviation = SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+        if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||
+                maxTradePriceDeviation > MAX_TRADE_PRICE_DEVIATION) {
+            maxTradePriceDeviation = DEFAULT_MAX_TRADE_PRICE_DEVIATION;
         }
+
         double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
         if (totalMaxBackupSizeInMB == 0) {
             totalMaxBackupSizeInMB = BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB;
         }
+
         int numDaysAfterRedactingTradeData = proto.getNumDaysAfterRedactingTradeData();
-        if (numDaysAfterRedactingTradeData == 0) {
-            numDaysAfterRedactingTradeData = SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+        if (numDaysAfterRedactingTradeData < MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
+                numDaysAfterRedactingTradeData > MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
+            numDaysAfterRedactingTradeData = DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
         }
+
         return new SettingsStore(Cookie.fromProto(proto.getCookie()),
                 proto.getDontShowAgainMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
