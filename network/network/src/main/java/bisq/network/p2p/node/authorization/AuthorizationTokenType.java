@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public enum AuthorizationTokenType implements ProtoEnum {
     HASH_CASH,
+    @Deprecated(since = "2.1.2")
     EQUI_HASH,
     HASH_CASH_V2;
 

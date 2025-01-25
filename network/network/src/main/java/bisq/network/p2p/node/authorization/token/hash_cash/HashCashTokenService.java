@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
+@Deprecated(since = "2.1.2")
 public class HashCashTokenService extends AuthorizationTokenService<HashCashToken> {
     public final static double MIN_MESSAGE_COST = 0.01;
     public final static double MIN_LOAD = 0.01;

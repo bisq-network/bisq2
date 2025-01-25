@@ -31,6 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
+@Deprecated(since = "2.1.2")
 public final class HashCashToken extends AuthorizationToken {
     private final ProofOfWork proofOfWork;
     private final int messageCounter;
