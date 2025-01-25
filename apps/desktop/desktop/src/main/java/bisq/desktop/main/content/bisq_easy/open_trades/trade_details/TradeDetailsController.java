@@ -61,9 +61,7 @@ public class TradeDetailsController extends NavigationController implements Init
     private final TradeDetailsModel model;
     @Getter
     private final TradeDetailsView view;
-    private BisqEasyTrade trade;
-    private BisqEasyOpenTradeChannel channel;
-    private BisqEasyContract contract;
+
 
     public TradeDetailsController(ServiceProvider serviceProvider) {
         super(NavigationTarget.BISQ_EASY_TRADE_DETAILS);
@@ -74,13 +72,16 @@ public class TradeDetailsController extends NavigationController implements Init
 
     @Override
     public void initWithData(InitData initData) {
-        trade = initData.bisqEasyTrade;
-        channel = initData.channel;
-        contract = trade.getContract();
+        model.setTrade(initData.bisqEasyTrade);
+        model.setChannel(initData.channel);
     }
 
     @Override
     public void onActivate() {
+        BisqEasyTrade trade = model.getTrade();
+        BisqEasyOpenTradeChannel channel = model.getChannel();
+        BisqEasyContract contract = trade.getContract();
+
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
         model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
         model.setPeer(channel.getPeer().getUserName());
