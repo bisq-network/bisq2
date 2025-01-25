@@ -24,6 +24,7 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.platform.Version;
@@ -32,6 +33,8 @@ import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -66,27 +69,36 @@ import static com.google.common.base.Preconditions.*;
 @Slf4j
 @Getter
 public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStore>, Service, ConfidentialMessageService.Listener {
-    @Getter
-    private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
+    private final ServiceProvider serviceProvider;
+    private final NetworkService networkService;
+    private final IdentityService identityService;
+    private final SettingsService settingsService;
+    private final BannedUserService bannedUserService;
+    private final AlertService alertService;
+
     @Getter
     private final Persistence<BisqEasyTradeStore> persistence;
-    private final ServiceProvider serviceProvider;
-    private final BannedUserService bannedUserService;
+    @Getter
+    private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
 
     // We don't persist the protocol, only the model.
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
-    private final AlertService alertService;
-    private final SettingsService settingsService;
     private boolean haltTrading;
     private boolean requireVersionForTrading;
     private Optional<String> minVersion = Optional.empty();
 
+    private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
+    private Scheduler numDaysAfterRedactingTradeDataScheduler;
+
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
-        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.serviceProvider = serviceProvider;
+        networkService = serviceProvider.getNetworkService();
+        identityService =  serviceProvider.getIdentityService();
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
+
+        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
 
@@ -95,10 +107,11 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        serviceProvider.getNetworkService().addConfidentialMessageListener(this);
+        networkService.addConfidentialMessageListener(this);
 
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
-        alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
+
+        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY) {
@@ -135,14 +148,27 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             }
         });
 
-        Scheduler.run(this::maybeRedactDataOfCompletedTrades).periodically(1, TimeUnit.HOURS);
-        settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
+        numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades).periodically(1, TimeUnit.HOURS);
+        numDaysAfterRedactingTradeDataPin = settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
 
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        serviceProvider.getNetworkService().removeConfidentialMessageListener(this);
+        if(authorizedAlertDataSetPin != null) {
+            authorizedAlertDataSetPin.unbind();
+            authorizedAlertDataSetPin = null;
+        }
+        if(numDaysAfterRedactingTradeDataPin != null) {
+            numDaysAfterRedactingTradeDataPin.unbind();
+            numDaysAfterRedactingTradeDataPin = null;
+        }
+        if(numDaysAfterRedactingTradeDataScheduler != null) {
+            numDaysAfterRedactingTradeDataScheduler.stop();
+            numDaysAfterRedactingTradeDataScheduler = null;
+        }
+
+        networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -332,7 +358,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         // Verification will happen in the BisqEasyTakeOfferRequestHandler
         BisqEasyOffer offer = contract.getOffer();
         boolean isBuyer = offer.getMakersDirection().isBuy();
-        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
+        Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
         BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
         String tradeId = bisqEasyTrade.getId();
         checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
