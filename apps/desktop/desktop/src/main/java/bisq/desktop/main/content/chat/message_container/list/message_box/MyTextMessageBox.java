@@ -174,6 +174,11 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         cancelEditButton.setOnAction(e -> onCloseEditMessage());
     }
 
+    @Override
+    protected void showActionsHBox() {
+        actionsHBox.setVisible(!editButtonsHBox.isVisible());
+    }
+
     private void onEditMessage() {
         actionsHBox.setVisible(false);
         editInputField.setVisible(true);
