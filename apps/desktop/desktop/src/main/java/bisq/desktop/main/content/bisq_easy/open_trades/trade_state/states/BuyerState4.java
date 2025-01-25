@@ -22,6 +22,7 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -32,6 +33,7 @@ import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUti
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
@@ -83,22 +85,30 @@ public class BuyerState4 extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            BitcoinPaymentRail paymentRail = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade();
+            BisqEasyContract contract = bisqEasyTrade.getContract();
+            BitcoinPaymentRail paymentRail = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
             String name = paymentRail.name();
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof." + name));
             model.setBlockExplorerLinkVisible(paymentRail == BitcoinPaymentRail.MAIN_CHAIN);
-            String paymentProof = model.getBisqEasyTrade().getPaymentProof().get();
+            String paymentProof = bisqEasyTrade.getPaymentProof().get();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
             model.setTradePeer(model.getChannel().getPeer());
-            model.setBuyer(model.getBisqEasyTrade().isBuyer());
-            model.setFiatCurrency(model.getBisqEasyTrade().getOffer().getMarket().getQuoteCurrencyCode());
-            model.setPaymentMethod(model.getBisqEasyTrade().getContract().getQuoteSidePaymentMethodSpec().getShortDisplayString());
-            model.setTradeId(model.getBisqEasyTrade().getShortId());
-            String tradeDate = DateFormatter.formatDate(model.getBisqEasyTrade().getContract().getTakeOfferDate());
-            String tradeTime = DateFormatter.formatTime(model.getBisqEasyTrade().getContract().getTakeOfferDate());
-            model.setTradeDate(tradeDate + " " + tradeTime);
-            model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(model.getBisqEasyTrade())));
+            model.setBuyer(bisqEasyTrade.isBuyer());
+            model.setFiatCurrency(bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
+            model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
+            model.setTradeId(bisqEasyTrade.getShortId());
+            long takeOfferDate = contract.getTakeOfferDate();
+            model.setTradeDate(DateFormatter.formatDateTime(takeOfferDate));
+
+            String tradeDuration = bisqEasyTrade.getTradeCompletedDate()
+                    .map(tradeCompletedDate -> tradeCompletedDate - takeOfferDate)
+                    .map(TimeFormatter::formatAge)
+                    .orElse("");
+            model.setTradeDuration(tradeDuration);
+
+            model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(bisqEasyTrade)));
             model.setPriceSymbol(model.getBisqEasyOffer().getMarket().getMarketCodes());
         }
 
@@ -154,6 +164,7 @@ public class BuyerState4 extends BaseState {
         protected String paymentMethod;
         protected String tradeId;
         protected String tradeDate;
+        protected String tradeDuration;
         protected String price;
         protected String priceSymbol;
         protected Optional<String> txId = Optional.empty();
@@ -196,7 +207,7 @@ public class BuyerState4 extends BaseState {
             }
             tradeCompletedTable.initialize(model.getTradePeer(), model.isBuyer(), model.getBaseAmount(),
                     model.getQuoteAmount(), model.getFiatCurrency(), model.getPaymentMethod(), model.getTradeId(),
-                    model.getTradeDate(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
+                    model.getTradeDate(), model.getTradeDuration(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
             if (model.isBlockExplorerLinkVisible()) {
                 tradeCompletedTable.showBlockExplorerLink();
                 tradeCompletedTable.getOpenTxExplorerButton().setOnAction(e -> controller.openExplorer());

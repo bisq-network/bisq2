@@ -31,6 +31,7 @@ import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
@@ -83,6 +84,12 @@ public class TradeDetailsController extends NavigationController implements Init
         BisqEasyContract contract = trade.getContract();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
+
+        Optional<String> tradeDuration = trade.getTradeCompletedDate()
+                .map(tradeCompletedDate -> tradeCompletedDate - contract.getTakeOfferDate())
+                .map(TimeFormatter::formatAge);
+        model.setTradeDuration(tradeDuration);
+
         model.setMe(String.format("%s (%s)", channel.getMyUserIdentity().getNickName(), BisqEasyTradeFormatter.getMakerTakerRole(trade).toLowerCase()));
         model.setPeer(channel.getPeer().getUserName());
         model.setOfferType(trade.getOffer().getDirection().isBuy()
