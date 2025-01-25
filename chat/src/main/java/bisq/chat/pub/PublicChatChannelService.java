@@ -20,10 +20,13 @@ package bisq.chat.pub;
 import bisq.chat.*;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
+import bisq.common.observable.Pin;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
+import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.PersistableStore;
@@ -33,7 +36,9 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -41,6 +46,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>,
         S extends PersistableStore<S>, R extends ChatMessageReaction> extends ChatChannelService<M, C, S> implements DataService.Listener {
+
+    private boolean initialized = false;
+    private boolean allInventoryDataReceived = false;
+    private final Set<Pin> allInventoryDataReceivedPins = new HashSet<>();
 
     public PublicChatChannelService(NetworkService networkService,
                                     UserService userService,
@@ -61,13 +70,26 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         networkService.getDataService().ifPresent(dataService ->
                 dataService.getAuthenticatedData().forEach(this::handleAuthenticatedDataAdded));
 
+        networkService.getSupportedTransportTypes().forEach(type ->
+                networkService.getServiceNodesByTransport().findServiceNode(type)
+                        .flatMap(ServiceNode::getInventoryService).stream()
+                        .map(InventoryService::getInventoryRequestService)
+                        .forEach(inventoryRequestService -> {
+                            Pin pin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
+                                if (allDataReceived) {
+                                    allInventoryDataReceived = true;
+                                }
+                            });
+                            allInventoryDataReceivedPins.add(pin);
+                        }));
+        initialized= true;
         return CompletableFuture.completedFuture(true);
     }
 
-    protected abstract void handleAuthenticatedDataAdded(AuthenticatedData authenticatedData);
-
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        allInventoryDataReceivedPins.forEach(Pin::unbind);
+        allInventoryDataReceivedPins.clear();
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -87,11 +109,20 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     public CompletableFuture<BroadcastResult> publishChatMessage(M message,
                                                                  UserIdentity userIdentity) {
-        if (bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())) {
+        String authorUserProfileId = message.getAuthorUserProfileId();
+
+        // For rate limit violation we let the user know that his message was not sent, by not inserting the message.
+        if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {
             return CompletableFuture.failedFuture(new RuntimeException());
         }
+
         // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
         findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
+
+        // For banned users we hide that their message is not published by inserting it to their local message list.
+        if (bannedUserService.isUserProfileBanned(authorUserProfileId)) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return networkService.publishAuthenticatedData(message, keyPair);
@@ -108,7 +139,8 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 });
     }
 
-    public CompletableFuture<BroadcastResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair networkIdWithKeyPair) {
+    public CompletableFuture<BroadcastResult> deleteChatMessage(M chatMessage,
+                                                                NetworkIdWithKeyPair networkIdWithKeyPair) {
         return networkService.removeAuthenticatedData(chatMessage, networkIdWithKeyPair.getKeyPair());
     }
 
@@ -129,7 +161,8 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         return networkService.publishAuthenticatedData((DistributedData) chatMessageReaction, keyPair);
     }
 
-    public CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction, NetworkIdWithKeyPair networkIdWithKeyPair) {
+    public CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction,
+                                                                        NetworkIdWithKeyPair networkIdWithKeyPair) {
         checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
         return networkService.removeAuthenticatedData((DistributedData) chatMessageReaction, networkIdWithKeyPair.getKeyPair());
     }
@@ -163,6 +196,8 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         persist();
     }
 
+    protected abstract void handleAuthenticatedDataAdded(AuthenticatedData authenticatedData);
+
     protected abstract M createChatMessage(String text,
                                            Optional<Citation> citation,
                                            C publicChannel,
@@ -189,4 +224,13 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     }
 
     protected abstract R createChatMessageReaction(M message, Reaction reaction, UserIdentity userIdentity);
+
+
+    protected void checkRateLimit(String authorUserProfileId, long messageDate) {
+        // If we receive the message from the network after inventory requests are completed, we use our local receive time.
+        // Otherwise, at batch processing inventory data we use the senders date.
+        // Using the senders date for all cases would add risk for abuse by manipulating the date.
+        long timestamp = allInventoryDataReceived && initialized ? System.currentTimeMillis() : messageDate;
+        bannedUserService.checkRateLimit(authorUserProfileId, timestamp);
+    }
 }

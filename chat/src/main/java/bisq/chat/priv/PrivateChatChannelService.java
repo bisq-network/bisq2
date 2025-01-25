@@ -261,4 +261,9 @@ public abstract class PrivateChatChannelService<
                                                                    Reaction reaction,
                                                                    String messageReactionId,
                                                                    boolean isRemoved);
+
+    @Override
+    protected void checkRateLimit(String authorUserProfileId, long messageDate) {
+        // For private messages we don't check, as user can ignore anyway the peer.
+    }
 }
