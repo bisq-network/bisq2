@@ -32,7 +32,7 @@ public class TradeSettingsController implements Controller {
     private final TradeSettingsModel model;
     private final SettingsService settingsService;
 
-    private Pin closeMyOfferWhenTakenPin,maxTradePriceDeviationPin;
+    private Pin closeMyOfferWhenTakenPin, maxTradePriceDeviationPin;
 
     public TradeSettingsController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -50,6 +50,9 @@ public class TradeSettingsController implements Controller {
 
     @Override
     public void onDeactivate() {
+        if (model.getMaxTradePriceDeviationValidator().getHasErrors()) {
+            settingsService.getMaxTradePriceDeviation().set(SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION);
+        }
         closeMyOfferWhenTakenPin.unbind();
         maxTradePriceDeviationPin.unbind();
     }

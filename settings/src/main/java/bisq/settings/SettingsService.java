@@ -44,7 +44,10 @@ import java.util.concurrent.CompletableFuture;
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
     @Deprecated(since = "2.1.1")
     public final static long DEFAULT_MIN_REQUIRED_REPUTATION_SCORE = 30_000;
+
     public final static double DEFAULT_MAX_TRADE_PRICE_DEVIATION = 0.05; // 5%
+    public final static double MIN_TRADE_PRICE_DEVIATION = 0.01; // 1%
+    public final static double MAX_TRADE_PRICE_DEVIATION = 0.1; // 10%
 
     @Getter
     private static SettingsService instance;

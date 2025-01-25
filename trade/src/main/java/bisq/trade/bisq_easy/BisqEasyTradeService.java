@@ -61,7 +61,6 @@ import static com.google.common.base.Preconditions.*;
 @Slf4j
 @Getter
 public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStore>, Service, ConfidentialMessageService.Listener {
-    public final static double MAX_TRADE_PRICE_DEVIATION = 0.1; // 10%
     @Getter
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
     @Getter

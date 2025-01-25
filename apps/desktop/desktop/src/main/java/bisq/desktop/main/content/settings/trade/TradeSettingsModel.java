@@ -17,16 +17,28 @@
 
 package bisq.desktop.main.content.settings.trade;
 
+import bisq.desktop.common.converters.PercentageStringConverter;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.controls.validator.PercentageValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.i18n.Res;
+import bisq.settings.SettingsService;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
 
 @Slf4j
 @Getter
 public class TradeSettingsModel implements Model {
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
     private final DoubleProperty maxTradePriceDeviation = new SimpleDoubleProperty();
+    private final IntegerProperty numDaysAfterRedactingTradeData = new SimpleIntegerProperty();
+    private final ValidatorBase maxTradePriceDeviationValidator =
+            new PercentageValidator(Res.get("settings.trade.maxTradePriceDeviation.invalid",
+                    SettingsService.MIN_TRADE_PRICE_DEVIATION, SettingsService.MAX_TRADE_PRICE_DEVIATION * 100),
+                    SettingsService.MIN_TRADE_PRICE_DEVIATION, SettingsService.MAX_TRADE_PRICE_DEVIATION);
+    private final PercentageStringConverter maxTradePriceDeviationConverter = new PercentageStringConverter(SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION);
 
     public TradeSettingsModel() {
     }
