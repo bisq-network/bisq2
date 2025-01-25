@@ -84,6 +84,7 @@ message BisqEasyTrade {
   optional string bitcoinPaymentData = 2;
   optional string paymentProof = 3;
   optional contract.Role interruptTradeInitiator = 4;
+  optional sint64 tradeCompletedDate = 5;
 }
 
 message BisqEasyTradeStore {
