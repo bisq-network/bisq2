@@ -33,9 +33,9 @@ import java.util.function.BiFunction;
 @Slf4j
 public class OfferAmountFormatter {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // BaseAmount
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     // Either min-max or fixed
     public static String formatBaseAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
@@ -161,9 +161,9 @@ public class OfferAmountFormatter {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // QuoteAmount
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     // Either min-max or fixed
     public static String formatQuoteAmount(MarketPriceService marketPriceService, Offer<?, ?> offer) {
@@ -311,9 +311,9 @@ public class OfferAmountFormatter {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private static BiFunction<Monetary, Boolean, String> getFormatFunction(boolean withCode) {
         BiFunction<Monetary, Boolean, String> formatAmount = AmountFormatter::formatAmount;

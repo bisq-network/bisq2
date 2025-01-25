@@ -181,8 +181,8 @@ public class NetworkLoadService {
         long numConnections = getAllCurrentConnections().count();
         long networkDatabaseSize = storageService.getNetworkDatabaseSize(); // takes about 50 ms
 
-        StringBuilder sb = new StringBuilder("\n\n////////////////////////////////////////////////////////////////////////////////////////////////////");
-        sb.append("\nNetwork statistics").append(("\n////////////////////////////////////////////////////////////////////////////////////////////////////"))
+        StringBuilder sb = new StringBuilder("\n\n/* --------------------------------------------------------------------- */");
+        sb.append("\nNetwork statistics").append(("\n/* --------------------------------------------------------------------- */"))
                 .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
                 .append("\nNumber of Connections: ").append(numConnections)
 
@@ -200,7 +200,7 @@ public class NetworkLoadService {
                 .append("\nNumber of messages received by class name:").append(numReceivedMessagesByClassNameBuilder)
                 .append("\nNumber of distributed data received by class name:").append(numReceivedDistributedDataByClassNameBuilder)
 
-                .append("\n////////////////////////////////////////////////////////////////////////////////////////////////////");
+                .append("\n/* --------------------------------------------------------------------- */");
 
         // We apply a factor to each max value based on the maxNumConnectedPeers to reflect higher expected load
         // This is mainly important for seed nodes which are configured with higher maxNumConnectedPeers.

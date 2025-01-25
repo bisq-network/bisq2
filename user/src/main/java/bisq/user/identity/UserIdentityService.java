@@ -88,9 +88,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
@@ -107,9 +107,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public ProofOfWork mintNymProofOfWork(byte[] pubKeyHash) {
         return hashCashProofOfWorkService.mint(pubKeyHash, null, MINT_NYM_DIFFICULTY);

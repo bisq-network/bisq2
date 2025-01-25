@@ -83,9 +83,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Proto
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public bisq.user.protobuf.UserIdentityStore.Builder getBuilder(boolean serializeForHash) {
@@ -148,9 +148,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // PersistableStore
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public UserIdentityStore getClone() {
@@ -192,9 +192,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Package scope API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     CompletableFuture<AesSecretKey> deriveKeyFromPassword(CharSequence password) {
         return CompletableFuture.supplyAsync(() -> {
@@ -277,9 +277,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Package scope Getter/Setter
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     Observable<UserIdentity> getSelectedUserIdentityObservable() {
         return selectedUserIdentityObservable;
@@ -328,9 +328,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private String getSelectedUserIdentityId() {
         return getSelectedUserIdentity() != null ? getSelectedUserIdentity().getId() : null;

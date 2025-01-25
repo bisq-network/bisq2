@@ -41,9 +41,9 @@ public class AlertService implements Service, AuthorizedBondedRolesService.Liste
         this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -57,9 +57,9 @@ public class AlertService implements Service, AuthorizedBondedRolesService.Liste
         return CompletableFuture.completedFuture(true);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {

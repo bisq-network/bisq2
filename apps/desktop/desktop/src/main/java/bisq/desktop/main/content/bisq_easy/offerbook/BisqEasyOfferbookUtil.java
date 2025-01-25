@@ -80,9 +80,9 @@ public class BisqEasyOfferbookUtil {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // MARKETS' LIST
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
             TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory(boolean isFavouritesTableView) {

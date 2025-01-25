@@ -63,9 +63,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // MessageListener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
@@ -77,9 +77,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public ObservableSet<TwoPartyPrivateChatChannel> getChannels() {
@@ -124,9 +124,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     protected TwoPartyPrivateChatMessage createAndGetNewPrivateChatMessage(String messageId,

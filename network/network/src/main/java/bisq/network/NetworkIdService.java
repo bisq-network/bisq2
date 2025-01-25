@@ -73,9 +73,9 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         return CompletableFuture.completedFuture(true);
@@ -86,9 +86,9 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public NetworkId getOrCreateDefaultNetworkId() {
         // keyBundleService creates the defaultKeyBundle at initialize, and is called before we get initialized
@@ -127,9 +127,9 @@ public class NetworkIdService implements PersistenceClient<NetworkIdStore>, Serv
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private NetworkId createNetworkId(KeyBundle keyBundle, String tag) {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();

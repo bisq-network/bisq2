@@ -102,9 +102,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         networkService.addConfidentialMessageListener(this);
@@ -173,9 +173,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // MessageListener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
@@ -201,9 +201,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Message event
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyContract bisqEasyContract = checkNotNull(message.getBisqEasyContract());
@@ -212,9 +212,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Events
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public BisqEasyProtocol createBisqEasyProtocol(Identity takerIdentity,
                                                    BisqEasyOffer bisqEasyOffer,
@@ -316,9 +316,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Misc API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Optional<BisqEasyProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
@@ -349,9 +349,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // TradeProtocol factory
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private BisqEasyProtocol createProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
         // We only create the data required for the protocol creation.
@@ -403,9 +403,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Redact sensible data
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void maybeRedactDataOfCompletedTrades() {
         int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();

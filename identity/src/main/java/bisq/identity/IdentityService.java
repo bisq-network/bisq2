@@ -68,9 +68,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     /**
      * Creates and initialized the default identity. This includes initialisation of the associated network node
@@ -119,9 +119,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Identity getOrCreateDefaultIdentity() {
         Optional<Identity> defaultIdentity = persistableStore.getDefaultIdentity();
@@ -202,9 +202,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void initializeActiveIdentities(TransportType transportType) {
         getActiveIdentityByTag().values().stream()

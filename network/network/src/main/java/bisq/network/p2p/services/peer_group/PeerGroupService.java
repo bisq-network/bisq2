@@ -101,9 +101,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
                 persistableStore);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Persisted peers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Map<Address, Peer> getPersistedPeersByAddress() {
         return persistableStore.getPersistedPeersByAddress();
@@ -164,9 +164,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Reported peers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Set<Peer> getReportedPeers() {
         return new HashSet<>(reportedPeersByAddress.values());
@@ -195,9 +195,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Connections
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public boolean isSeed(Connection connection) {
         return seedNodeAddresses.stream().anyMatch(seedAddress -> seedAddress.equals(connection.getPeerAddress()));
@@ -212,9 +212,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Peers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Stream<Peer> getAllConnectedPeers(Node node) {
         return node.getAllActiveConnections().map(connection -> {
@@ -263,9 +263,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Address
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void addSeedNodeAddress(Address seedNodeAddress) {
         if (seedNodeAddress != null) {
@@ -291,9 +291,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void maybePrintReportedPeers(Map<Address, Peer> map, String info) {
         if (System.currentTimeMillis() - lastReportTs < MIN_PRINT_INTERVAL) {

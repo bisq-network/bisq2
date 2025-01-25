@@ -42,9 +42,9 @@ public class ReleaseNotificationsService implements Service, AuthorizedBondedRol
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -59,9 +59,9 @@ public class ReleaseNotificationsService implements Service, AuthorizedBondedRol
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
@@ -83,9 +83,9 @@ public class ReleaseNotificationsService implements Service, AuthorizedBondedRol
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private boolean isAuthorized(AuthorizedData authorizedData) {
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.RELEASE_MANAGER);

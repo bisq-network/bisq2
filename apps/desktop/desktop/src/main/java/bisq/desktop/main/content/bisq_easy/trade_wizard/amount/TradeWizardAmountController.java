@@ -763,9 +763,9 @@ public class TradeWizardAmountController implements Controller {
                 .count();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Filter
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private boolean isValidDirection(BisqEasyOffer peersOffer) {
         return peersOffer.getTakersDirection().equals(model.getDirection());

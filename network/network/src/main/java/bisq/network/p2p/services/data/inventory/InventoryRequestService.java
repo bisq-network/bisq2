@@ -90,9 +90,9 @@ public class InventoryRequestService implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Node.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -150,9 +150,9 @@ public class InventoryRequestService implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Request inventory
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private CompletableFuture<Inventory> requestInventory(Connection connection) {
         return requestFromPeer(connection)

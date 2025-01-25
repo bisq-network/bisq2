@@ -73,9 +73,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
@@ -99,9 +99,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
@@ -122,9 +122,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void setSelectedMarket(Market market) {
         getSelectedMarket().set(market);
@@ -148,9 +148,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private boolean isAuthorized(AuthorizedData authorizedData) {
         // The oracle node runs the MarketPricePropagationService. The BondedRoleType.MARKET_PRICE_NODE runs

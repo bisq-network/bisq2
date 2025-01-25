@@ -183,9 +183,9 @@ public class ServiceNode implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Node.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -207,9 +207,9 @@ public class ServiceNode implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     Node getInitializedDefaultNode(NetworkId defaultNetworkId) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, true);

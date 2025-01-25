@@ -87,9 +87,9 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         return CompletableFuture.completedFuture(true);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {

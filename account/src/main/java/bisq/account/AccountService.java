@@ -55,9 +55,9 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         return CompletableFuture.completedFuture(true);
@@ -68,9 +68,9 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Map<String, Account<?, ? extends PaymentMethod<?>>> getAccountByNameMap() {
         return persistableStore.getAccountByName();

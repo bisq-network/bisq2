@@ -158,9 +158,9 @@ public class I2pEmbeddedRouter {
         return localRouter.getRouter().isRunning();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @SuppressWarnings("SpellCheckingInspection")
     private void startEmbeddedRouter(boolean extendedI2pLogging) throws IOException {
