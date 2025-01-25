@@ -65,7 +65,7 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         numDaysAfterRedactingTradeData.setMaxWidth(TEXT_FIELD_WIDTH);
         numDaysAfterRedactingTradeData.setStringConverter(model.getNumDaysAfterRedactingTradeDataConverter());
 
-        VBox.setMargin(maxTradePriceDeviation, new Insets(15, 0, 0, 0));
+        VBox.setMargin(maxTradePriceDeviation, new Insets(15, 0, 15, 0));
         VBox tradeVBox = new VBox(10, closeMyOfferWhenTaken, maxTradePriceDeviation, numDaysAfterRedactingTradeData);
 
         VBox.setMargin(tradeVBox, new Insets(0, 5, 0, 5));

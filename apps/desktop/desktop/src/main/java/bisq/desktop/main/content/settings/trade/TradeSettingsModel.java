@@ -40,7 +40,7 @@ public class TradeSettingsModel implements Model {
     private final PercentageStringConverter maxTradePriceDeviationConverter = new PercentageStringConverter(SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION);
     private final ValidatorBase maxTradePriceDeviationValidator =
             new PercentageValidator(Res.get("settings.trade.maxTradePriceDeviation.invalid",
-                    SettingsService.MIN_TRADE_PRICE_DEVIATION, SettingsService.MAX_TRADE_PRICE_DEVIATION * 100),
+                    SettingsService.MIN_TRADE_PRICE_DEVIATION * 100, SettingsService.MAX_TRADE_PRICE_DEVIATION * 100),
                     SettingsService.MIN_TRADE_PRICE_DEVIATION, SettingsService.MAX_TRADE_PRICE_DEVIATION);
 
     private final LongStringConverter numDaysAfterRedactingTradeDataConverter = new LongStringConverter(SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
