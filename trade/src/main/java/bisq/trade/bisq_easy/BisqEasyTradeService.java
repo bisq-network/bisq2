@@ -27,7 +27,10 @@ import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.platform.Version;
+import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -39,6 +42,7 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
+import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
@@ -55,6 +59,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -71,6 +76,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // We don't persist the protocol, only the model.
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
     private final AlertService alertService;
+    private final SettingsService settingsService;
     private boolean haltTrading;
     private boolean requireVersionForTrading;
     private Optional<String> minVersion = Optional.empty();
@@ -78,6 +84,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.serviceProvider = serviceProvider;
+        settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
     }
@@ -85,6 +92,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
@@ -128,7 +136,43 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             }
         });
 
+        Scheduler.run(this::maybeRedactDataOfCompletedTrades).periodically(1, TimeUnit.HOURS);
+        settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
+
         return CompletableFuture.completedFuture(true);
+    }
+
+    private void maybeRedactDataOfCompletedTrades() {
+        int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
+        if (numDays < SettingsService.MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
+                numDays > SettingsService.MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
+            numDays = SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+            // We fix the settings value and by changing it we get called again
+            settingsService.getNumDaysAfterRedactingTradeData().set(numDays);
+            return;
+        }
+
+        long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
+        // Trades which ended up with a failure or got stuck will never get the completed date set.
+        // We use a more constrained duration of 45-90 days.
+        int numDaysForNotCompletedTrades = Math.max(45, Math.min(90, numDays));
+        long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
+        long numChanges = getTrades().stream()
+                .filter(trade -> {
+                    if (StringUtils.isNotEmpty(trade.getPaymentAccountData().get())) {
+                        return false;
+                    }
+                    boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
+                            .orElse(trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
+                    if (doRedaction) {
+                        trade.getPaymentAccountData().set(Res.get("data.redacted"));
+                    }
+                    return doRedaction;
+                })
+                .count();
+        if (numChanges > 0) {
+            persist();
+        }
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -139,6 +183,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -167,6 +212,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Message event
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
@@ -188,6 +234,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Events
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public BisqEasyProtocol createBisqEasyProtocol(Identity takerIdentity,
@@ -283,6 +330,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Misc API
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private BisqEasyProtocol createProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
@@ -330,6 +378,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // TradeProtocol factory
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade) {
