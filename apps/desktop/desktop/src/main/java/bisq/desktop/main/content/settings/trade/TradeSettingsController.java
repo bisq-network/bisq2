@@ -32,7 +32,7 @@ public class TradeSettingsController implements Controller {
     private final TradeSettingsModel model;
     private final SettingsService settingsService;
 
-    private Pin closeMyOfferWhenTakenPin, maxTradePriceDeviationPin;
+    private Pin closeMyOfferWhenTakenPin, maxTradePriceDeviationPin, tradeAgeForRedactingDataPin;
 
     public TradeSettingsController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -46,6 +46,8 @@ public class TradeSettingsController implements Controller {
                 .to(settingsService.getCloseMyOfferWhenTaken());
         maxTradePriceDeviationPin = FxBindings.bindBiDir(model.getMaxTradePriceDeviation())
                 .to(settingsService.getMaxTradePriceDeviation());
+        tradeAgeForRedactingDataPin = FxBindings.bindBiDir(model.getNumDaysAfterRedactingTradeData())
+                .to(settingsService.getNumDaysAfterRedactingTradeData());
     }
 
     @Override
@@ -53,7 +55,11 @@ public class TradeSettingsController implements Controller {
         if (model.getMaxTradePriceDeviationValidator().getHasErrors()) {
             settingsService.getMaxTradePriceDeviation().set(SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION);
         }
+        if (model.getNumDaysAfterRedactingTradeDataValidator().getHasErrors()) {
+            settingsService.getNumDaysAfterRedactingTradeData().set(SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
+        }
         closeMyOfferWhenTakenPin.unbind();
         maxTradePriceDeviationPin.unbind();
+        tradeAgeForRedactingDataPin.unbind();
     }
 }

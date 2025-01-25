@@ -41,7 +41,7 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
     private static final double TEXT_FIELD_WIDTH = 500;
 
     private final Switch closeMyOfferWhenTaken;
-    private final MaterialTextField maxTradePriceDeviation;
+    private final MaterialTextField maxTradePriceDeviation, numDaysAfterRedactingTradeData;
 
     public TradeSettingsView(TradeSettingsModel model, TradeSettingsController controller) {
         super(new VBox(), model, controller);
@@ -59,8 +59,14 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         maxTradePriceDeviation.setMaxWidth(TEXT_FIELD_WIDTH);
         maxTradePriceDeviation.setStringConverter(model.getMaxTradePriceDeviationConverter());
 
+        numDaysAfterRedactingTradeData = new MaterialTextField(Res.get("settings.trade.numDaysAfterRedactingTradeData"),
+                null, Res.get("settings.trade.numDaysAfterRedactingTradeData.help"));
+        numDaysAfterRedactingTradeData.setValidators(model.getNumDaysAfterRedactingTradeDataValidator());
+        numDaysAfterRedactingTradeData.setMaxWidth(TEXT_FIELD_WIDTH);
+        numDaysAfterRedactingTradeData.setStringConverter(model.getNumDaysAfterRedactingTradeDataConverter());
+
         VBox.setMargin(maxTradePriceDeviation, new Insets(15, 0, 0, 0));
-        VBox tradeVBox = new VBox(10, closeMyOfferWhenTaken, maxTradePriceDeviation);
+        VBox tradeVBox = new VBox(10, closeMyOfferWhenTaken, maxTradePriceDeviation, numDaysAfterRedactingTradeData);
 
         VBox.setMargin(tradeVBox, new Insets(0, 5, 0, 5));
         VBox contentBox = new VBox(50);
@@ -77,6 +83,10 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         Bindings.bindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation(),
                 model.getMaxTradePriceDeviationConverter());
         maxTradePriceDeviation.validate(); // Needed to show help field as its shown only if input is valid
+
+        Bindings.bindBidirectional(numDaysAfterRedactingTradeData.textProperty(), model.getNumDaysAfterRedactingTradeData(),
+                model.getNumDaysAfterRedactingTradeDataConverter());
+        numDaysAfterRedactingTradeData.validate(); // Needed to show help field as its shown only if input is valid
     }
 
     @Override
@@ -85,5 +95,8 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
 
         Bindings.unbindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation());
         maxTradePriceDeviation.resetValidation();
+
+        Bindings.unbindBidirectional(numDaysAfterRedactingTradeData.textProperty(), model.getNumDaysAfterRedactingTradeData());
+        numDaysAfterRedactingTradeData.resetValidation();
     }
 }
