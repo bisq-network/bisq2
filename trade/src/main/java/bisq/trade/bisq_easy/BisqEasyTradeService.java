@@ -416,7 +416,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
         long numChanges = getTrades().stream()
                 .filter(trade -> {
-                    if (StringUtils.isNotEmpty(trade.getPaymentAccountData().get())) {
+                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get())) {
                         return false;
                     }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
