@@ -33,6 +33,7 @@ public class ProfileCardModel extends TabModel {
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();
     private final StringProperty offersTabButtonText = new SimpleStringProperty();
+    private final StringProperty messagesTabButtonText = new SimpleStringProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
