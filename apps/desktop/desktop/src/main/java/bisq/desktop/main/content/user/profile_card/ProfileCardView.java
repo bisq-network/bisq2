@@ -40,7 +40,7 @@ import org.fxmisc.easybind.Subscription;
 public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardController> {
     public final static double SUB_VIEWS_CONTENT_HEIGHT = 307;
     private final ProfileCardController controller;
-    private final TabButton offersTabButton;
+    private final TabButton offersTabButton, messagesTabButton;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
@@ -63,7 +63,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         addTab(Res.get("user.profileCard.tab.details"), NavigationTarget.PROFILE_CARD_DETAILS);
         addTab(Res.get("user.profileCard.tab.reputation"), NavigationTarget.PROFILE_CARD_REPUTATION);
         offersTabButton = addTab("", NavigationTarget.PROFILE_CARD_OFFERS);
-        addTab(Res.get("user.profileCard.tab.messages"), NavigationTarget.PROFILE_CARD_MESSAGES);
+        messagesTabButton = addTab("", NavigationTarget.PROFILE_CARD_MESSAGES);
     }
 
     @Override
@@ -77,6 +77,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.visibleProperty().bind(model.getShouldShowUserActionsMenu());
         userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
         offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
+        messagesTabButton.getLabel().textProperty().bind(model.getMessagesTabButtonText());
 
         UserProfile userProfile = model.getUserProfile();
         userProfileIcon.setUserProfile(userProfile, false);
@@ -116,6 +117,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.visibleProperty().unbind();
         userActionsBox.managedProperty().unbind();
         offersTabButton.getLabel().textProperty().unbind();
+        messagesTabButton.getLabel().textProperty().unbind();
 
         reputationScorePin.unsubscribe();
 

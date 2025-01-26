@@ -19,7 +19,11 @@ package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.common.CommonPublicChatMessage;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
@@ -45,6 +49,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Slf4j
 public class ProfileCardController extends TabController<ProfileCardModel>
@@ -129,6 +134,8 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         model.getShouldShowUserActionsMenu().set(!isMyProfile);
         model.getOffersTabButtonText().set(Res.get("user.profileCard.tab.offers",
                 profileCardOffersController.getNumberOffers()).toUpperCase());
+        model.getMessagesTabButtonText().set(Res.get("user.profileCard.tab.messages",
+                profileCardMessagesController.getNumberMessages(userProfile.getId())).toUpperCase());
     }
 
     @Override
