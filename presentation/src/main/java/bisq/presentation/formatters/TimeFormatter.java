@@ -78,6 +78,25 @@ public class TimeFormatter {
         }
     }
 
+    public static String formatAgeCompact(long duration) {
+        if (duration < 0) {
+            return Res.get("data.na");
+        }
+        long sec = duration / 1000;
+        long min = sec / 60;
+        long hours = min / 60;
+        min = min % 60;
+        long days = hours / 24;
+        hours = hours % 24;
+        if (days > 0) {
+            return String.format("%dd %dh", days, hours);
+        } else if (hours > 0) {
+            return String.format("%dh %dmin", hours, min);
+        } else {
+            return min == 0 ? Res.get("temporal.online") : String.format("%dmin", min);
+        }
+    }
+
     public static String formatAgeInDaysAndYears(long date) {
         long totalDays = getAgeInDays(date);
         long years = totalDays / 365;

@@ -31,15 +31,13 @@ public class ProfileCardOverviewModel implements Model {
     @Setter
     private UserProfile userProfile;
     @Setter
-    private String numOffers;
-    @Setter
-    private String numPublicTextMessages;
-    @Setter
     private String totalBaseOfferAmountToBuy;
     @Setter
     private String totalBaseOfferAmountToSell;
     @Setter
     private String profileAge;
+    @Setter
+    private String sellingLimit;
     @Setter
     private String statement;
     @Setter

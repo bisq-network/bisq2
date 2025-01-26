@@ -65,18 +65,12 @@ public class BisqEasyTradeAmountLimits {
     }
 
     // TODO add BSQ/USD price into calculation to take into account the value of the investment (at burn time)
-    private static Fiat getMaxUsdTradeAmount(long totalScore) {
+    public static Fiat getMaxUsdTradeAmount(long totalScore) {
         // A reputation score of 30k gives a max trade amount of 150 USD
         // Upper limit is 600 USD
         Monetary maxAmountAllowedByReputation = getUsdAmountFromReputationScore(totalScore);
         long value = Math.min(MAX_USD_TRADE_AMOUNT.getValue(), maxAmountAllowedByReputation.getValue());
-        Fiat maxUsdTradeAmount = Fiat.fromValue(value, "USD");
-
-        // We tolerate up to 25 USD trade amount for users with no or low reputation (< 5000)
-        if (maxUsdTradeAmount.isLessThan(MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION)) {
-            return MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
-        }
-        return maxUsdTradeAmount;
+        return Fiat.fromValue(value, "USD");
     }
 
 

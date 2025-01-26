@@ -17,15 +17,11 @@
 
 package bisq.desktop.main.content.user.profile_card.overview;
 
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.common.CommonPublicChatChannelService;
-import bisq.chat.common.CommonPublicChatMessage;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
@@ -40,7 +36,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -51,7 +46,6 @@ public class ProfileCardOverviewController implements Controller {
     private final ProfileCardOverviewModel model;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final MarketPriceService marketPriceService;
-    private final Map<ChatChannelDomain, CommonPublicChatChannelService> commonPublicChatChannelServices;
     private final ReputationService reputationService;
 
     private UIScheduler livenessUpdateScheduler;
@@ -59,7 +53,6 @@ public class ProfileCardOverviewController implements Controller {
     public ProfileCardOverviewController(ServiceProvider serviceProvider) {
         ChatService chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
-        commonPublicChatChannelServices = chatService.getCommonPublicChatChannelServices();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         reputationService = serviceProvider.getUserService().getReputationService();
 
@@ -74,19 +67,15 @@ public class ProfileCardOverviewController implements Controller {
         model.setStatement(userProfile.getStatement().isBlank() ? "-" : userProfile.getStatement());
 
         String userProfileId = userProfile.getId();
-        long numOffers = getOffers(userProfileId).count();
-        model.setNumOffers(String.valueOf(numOffers));
-
-        long numPublicTextMessages = getNumPublicTextMessages(userProfileId).count();
-        model.setNumPublicTextMessages(String.valueOf(numPublicTextMessages));
-
         long totalBaseOfferAmountToBuy = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDirection().isBuy());
-        String formattedTotalBaseOfferAmountToBuy = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(totalBaseOfferAmountToBuy));
+        String formattedTotalBaseOfferAmountToBuy = AmountFormatter.formatAmount(Coin.asBtcFromValue(totalBaseOfferAmountToBuy));
         model.setTotalBaseOfferAmountToBuy(formattedTotalBaseOfferAmountToBuy);
 
         long totalBaseOfferAmountToSell = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDirection().isSell());
-        String formattedTotalBaseOfferAmountToSell = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(totalBaseOfferAmountToSell));
+        String formattedTotalBaseOfferAmountToSell = AmountFormatter.formatAmount(Coin.asBtcFromValue(totalBaseOfferAmountToSell));
         model.setTotalBaseOfferAmountToSell(formattedTotalBaseOfferAmountToSell);
+
+        model.setSellingLimit(String.valueOf(AmountFormatter.formatAmount(getSellingAmountLimit(userProfileId))));
 
         model.setProfileAge(reputationService.getProfileAgeService().getProfileAge(userProfile)
                 .map(TimeFormatter::formatAgeInDaysAndYears)
@@ -106,11 +95,10 @@ public class ProfileCardOverviewController implements Controller {
                         model.getLastUserActivity().set(Res.get("data.na"));
                     } else {
                         long age = Math.max(0, System.currentTimeMillis() - publishDate);
-                        String formattedAge = TimeFormatter.formatAge(age);
-                        model.getLastUserActivity().set(Res.get("user.userProfile.livenessState.ageDisplay", formattedAge));
+                        model.getLastUserActivity().set(TimeFormatter.formatAgeCompact(age));
                     }
                 })
-                .periodically(0, 1, TimeUnit.SECONDS);
+                .periodically(0, 1, TimeUnit.MINUTES);
     }
 
     @Override
@@ -137,17 +125,8 @@ public class ProfileCardOverviewController implements Controller {
                 .filter(message -> message.getAuthorUserProfileId().equals(userProfileId));
     }
 
-    private Stream<ChatMessage> getNumPublicTextMessages(String userProfileId) {
-        Stream<CommonPublicChatMessage> commonPublicChatMessagesStream = commonPublicChatChannelServices.values().stream()
-                .flatMap(service -> service.getChannels().stream())
-                .flatMap(channel -> channel.getChatMessages().stream())
-                .filter(message -> message.getChatMessageType() == ChatMessageType.TEXT)
-                .filter(message -> message.getAuthorUserProfileId().equals(userProfileId));
-        Stream<BisqEasyOfferbookMessage> bisqEasyOfferbookMessageStream = bisqEasyOfferbookChannelService.getChannels().stream()
-                .flatMap(channel -> channel.getChatMessages().stream())
-                .filter(message -> !message.hasBisqEasyOffer())
-                .filter(message -> message.getChatMessageType() == ChatMessageType.TEXT) // Is redundant but let's keep it for covering potential future changes
-                .filter(message -> message.getAuthorUserProfileId().equals(userProfileId));
-        return Stream.concat(commonPublicChatMessagesStream, bisqEasyOfferbookMessageStream);
+    private Monetary getSellingAmountLimit(String userProfileId) {
+        long userReputationScore = reputationService.getReputationScore(userProfileId).getTotalScore();
+        return BisqEasyTradeAmountLimits.getMaxUsdTradeAmount(userReputationScore);
     }
 }
