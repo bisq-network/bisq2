@@ -27,8 +27,7 @@ import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.controls.validator.SettableErrorValidator;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.support.mediation.MediationRequestService;
-import bisq.support.moderator.ModeratorService;
+import bisq.support.moderator.ModerationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
@@ -55,8 +54,7 @@ public class BuyerState2a extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final BisqEasyService bisqEasyService;
-        private final MediationRequestService mediationRequestService;
-        private final ModeratorService moderatorService;
+        private final ModerationRequestService moderationRequestService;
 
         private Controller(ServiceProvider serviceProvider,
                            BisqEasyTrade bisqEasyTrade,
@@ -64,8 +62,7 @@ public class BuyerState2a extends BaseState {
             super(serviceProvider, bisqEasyTrade, channel);
 
             bisqEasyService = serviceProvider.getBisqEasyService();
-            mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
-            moderatorService = serviceProvider.getSupportService().getModeratorService();
+            moderationRequestService = serviceProvider.getSupportService().getModerationRequestService();
         }
 
         @Override
@@ -92,7 +89,7 @@ public class BuyerState2a extends BaseState {
 
                 // Report to moderator
                 String message = "Account data of " + peerUserName + " is banned: " + sellersAccountData;
-                moderatorService.reportUserProfile(peer, message);
+                moderationRequestService.reportUserProfile(peer, message);
 
                 // We reject the trade to avoid the banned user can continue
                 bisqEasyTradeService.cancelTrade(bisqEasyTrade);

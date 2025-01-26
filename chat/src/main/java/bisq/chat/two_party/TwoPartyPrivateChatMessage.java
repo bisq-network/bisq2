@@ -136,8 +136,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
     }
 
     @Override
-    public void addChatMessageReaction(ChatMessageReaction newReaction) {
-        TwoPartyPrivateChatMessageReaction newTwoPartyReaction = (TwoPartyPrivateChatMessageReaction) newReaction;
-        addPrivateChatMessageReaction(newTwoPartyReaction);
+    public boolean addChatMessageReaction(ChatMessageReaction chatMessageReaction) {
+        return addPrivateChatMessageReaction((TwoPartyPrivateChatMessageReaction) chatMessageReaction);
     }
 }

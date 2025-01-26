@@ -71,7 +71,7 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
     }
 
     @Override
-    public void addChatMessageReaction(ChatMessageReaction reaction) {
-        getChatMessageReactions().add(reaction);
+    public boolean addChatMessageReaction(ChatMessageReaction reaction) {
+        return getChatMessageReactions().add(reaction);
     }
 }

@@ -104,20 +104,20 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
     }
 
     public BisqEasyOpenTradeMessage(String tradeId,
-                                     String messageId,
-                                     ChatChannelDomain chatChannelDomain,
-                                     String channelId,
-                                     UserProfile senderUserProfile,
-                                     String receiverUserProfileId,
-                                     NetworkId receiverNetworkId,
-                                     @Nullable String text,
-                                     Optional<Citation> citation,
-                                     long date,
-                                     boolean wasEdited,
-                                     Optional<UserProfile> mediator,
-                                     ChatMessageType chatMessageType,
-                                     Optional<BisqEasyOffer> bisqEasyOffer,
-                                     Set<BisqEasyOpenTradeMessageReaction> reactions) {
+                                    String messageId,
+                                    ChatChannelDomain chatChannelDomain,
+                                    String channelId,
+                                    UserProfile senderUserProfile,
+                                    String receiverUserProfileId,
+                                    NetworkId receiverNetworkId,
+                                    @Nullable String text,
+                                    Optional<Citation> citation,
+                                    long date,
+                                    boolean wasEdited,
+                                    Optional<UserProfile> mediator,
+                                    ChatMessageType chatMessageType,
+                                    Optional<BisqEasyOffer> bisqEasyOffer,
+                                    Set<BisqEasyOpenTradeMessageReaction> reactions) {
         super(messageId, chatChannelDomain, channelId, senderUserProfile, receiverUserProfileId,
                 receiverNetworkId, text, citation, date, wasEdited, chatMessageType, reactions);
         this.tradeId = tradeId;
@@ -222,8 +222,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
     }
 
     @Override
-    public void addChatMessageReaction(ChatMessageReaction newReaction) {
-        BisqEasyOpenTradeMessageReaction newBisqEasyOpenTradeReaction = (BisqEasyOpenTradeMessageReaction) newReaction;
-        addPrivateChatMessageReaction(newBisqEasyOpenTradeReaction);
+    public boolean addChatMessageReaction(ChatMessageReaction chatMessageReaction) {
+        return addPrivateChatMessageReaction((BisqEasyOpenTradeMessageReaction) chatMessageReaction);
     }
 }

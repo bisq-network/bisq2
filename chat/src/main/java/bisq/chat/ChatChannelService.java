@@ -62,19 +62,32 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     }
 
     public void addMessage(M message, C channel) {
-        if (bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())) {
+        String authorUserProfileId = message.getAuthorUserProfileId();
+        if (bannedUserService.isUserProfileBanned(authorUserProfileId)) {
             log.warn("Message ignored as sender is banned");
             return;
         }
+        if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {
+            log.warn("Message ignored as sender exceeded rate limit");
+            return;
+        }
         synchronized (getPersistableStore()) {
-            channel.addChatMessage(message);
+            boolean changed = channel.addChatMessage(message);
+            if (changed) {
+                checkRateLimit(authorUserProfileId, message.getDate());
+            }
         }
         persist();
     }
 
     protected boolean isValid(M message) {
-        if (bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())) {
-            log.warn("Message invalid as sender is banned. AuthorUserProfileId={}",message.getAuthorUserProfileId());
+        String authorUserProfileId = message.getAuthorUserProfileId();
+        if (bannedUserService.isUserProfileBanned(authorUserProfileId)) {
+            log.warn("Message invalid as sender is banned. AuthorUserProfileId={}", authorUserProfileId);
+            return false;
+        }
+        if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {
+            log.warn("Message ignored as sender exceeded rate limit");
             return false;
         }
         return true;
@@ -123,12 +136,20 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     protected abstract String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel);
 
     protected void addMessageReaction(ChatMessageReaction chatMessageReaction, M message) {
-        if (bannedUserService.isUserProfileBanned(chatMessageReaction.getUserProfileId())) {
-            log.warn("Reaction ignored as sender is banned.");
+        String authorUserProfileId = chatMessageReaction.getUserProfileId();
+        if (bannedUserService.isUserProfileBanned(authorUserProfileId)) {
+            log.warn("ChatMessageReaction ignored as sender is banned.");
+            return;
+        }
+        if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {
+            log.warn("ChatMessageReaction ignored as sender exceeded rate limit");
             return;
         }
         synchronized (getPersistableStore()) {
-            message.addChatMessageReaction(chatMessageReaction);
+            boolean changed = message.addChatMessageReaction(chatMessageReaction);
+            if (changed) {
+                checkRateLimit(authorUserProfileId, chatMessageReaction.getDate());
+            }
         }
         persist();
     }
@@ -139,4 +160,6 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         }
         persist();
     }
+
+    protected abstract void checkRateLimit(String authorUserProfileId, long messageDate);
 }

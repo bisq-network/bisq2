@@ -19,7 +19,9 @@ package bisq.support.moderator;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatService;
@@ -27,11 +29,12 @@ import bisq.chat.Citation;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
-import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -45,14 +48,14 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageService.Listener {
@@ -69,20 +72,22 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         }
     }
 
+    private final NetworkService networkService;
+    private final ChatService chatService;
+    private final UserIdentityService userIdentityService;
+    private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
+    private final BannedUserService bannedUserService;
+    private final UserProfileService userProfileService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final boolean staticPublicKeysProvided;
+
     @Getter
     private final ModeratorStore persistableStore = new ModeratorStore();
     @Getter
     private final Persistence<ModeratorStore> persistence;
 
-    private final NetworkService networkService;
-    @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
-    private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    private final UserIdentityService userIdentityService;
-    private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
-    private final BannedUserService bannedUserService;
-    private final boolean staticPublicKeysProvided;
-    private final ChatService chatService;
+    private Pin rateLimitExceedingUserProfileIdMapPin;
 
     public ModeratorService(ModeratorService.Config config,
                             PersistenceService persistenceService,
@@ -90,14 +95,16 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
                             UserService userService,
                             BondedRolesService bondedRolesService,
                             ChatService chatService) {
-        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.networkService = networkService;
+        this.chatService = chatService;
         userIdentityService = userService.getUserIdentityService();
-        authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         twoPartyPrivateChatChannelService = chatService.getTwoPartyPrivateChatChannelService();
         bannedUserService = userService.getBannedUserService();
+        userProfileService = userService.getUserProfileService();
+        authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         staticPublicKeysProvided = config.isStaticPublicKeysProvided();
-        this.chatService = chatService;
+
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
 
@@ -108,11 +115,18 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.addConfidentialMessageListener(this);
+
+        addObserverIfModerator();
+
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (rateLimitExceedingUserProfileIdMapPin != null) {
+            rateLimitExceedingUserProfileIdMapPin.unbind();
+            rateLimitExceedingUserProfileIdMapPin = null;
+        }
         networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -133,29 +147,6 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     /* --------------------------------------------------------------------- */
     // API
     /* --------------------------------------------------------------------- */
-
-    public ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {
-        return persistableStore.getReportToModeratorMessages();
-    }
-
-    public void reportUserProfile(UserProfile accusedUserProfile, String message) {
-        ChatChannelDomain chatChannelDomain= ChatChannelDomain.DISCUSSION;
-        UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity();
-        checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
-
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
-        long date = System.currentTimeMillis();
-        authorizedBondedRolesService.getAuthorizedBondedRoleStream().filter(e -> e.getBondedRoleType() == BondedRoleType.MODERATOR)
-                .forEach(bondedRole -> {
-                    String reportSenderUserProfileId = myUserIdentity.getUserProfile().getId();
-                    ReportToModeratorMessage report = new ReportToModeratorMessage(date,
-                            reportSenderUserProfileId,
-                            accusedUserProfile,
-                            message,
-                            chatChannelDomain);
-                    networkService.confidentialSend(report, bondedRole.getNetworkId(), senderNetworkIdWithKeyPair);
-                });
-    }
 
     public void deleteReportToModeratorMessage(ReportToModeratorMessage reportToModeratorMessage) {
         getReportToModeratorMessages().remove(reportToModeratorMessage);
@@ -205,6 +196,10 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No channel found")));
     }
 
+    public ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {
+        return persistableStore.getReportToModeratorMessages();
+    }
+
     private void processReportToModeratorMessage(ReportToModeratorMessage message) {
         if (bannedUserService.isUserProfileBanned(message.getReporterUserProfileId())) {
             log.warn("Message ignored as sender is banned");
@@ -212,5 +207,61 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         }
         getReportToModeratorMessages().add(message);
         persist();
+    }
+
+    private void addObserverIfModerator() {
+        Set<String> myUserProfileIds = userIdentityService.getMyUserProfileIds();
+        authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(BondedRole bondedRole) {
+                AuthorizedBondedRole authorizedBondedRole = bondedRole.getAuthorizedBondedRole();
+                boolean isMyProfile = myUserProfileIds.contains(authorizedBondedRole.getProfileId());
+                if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.MODERATOR &&
+                        isMyProfile &&
+                        rateLimitExceedingUserProfileIdMapPin == null) {
+                    rateLimitExceedingUserProfileIdMapPin = bannedUserService.getRateLimitExceedingUserProfiles().addObserver(new CollectionObserver<>() {
+                        @Override
+                        public void add(String userProfileId) {
+                            selfReportRateLimitExceedingUserProfileId(userProfileId);
+                        }
+
+                        @Override
+                        public void remove(Object element) {
+                        }
+
+                        @Override
+                        public void clear() {
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void remove(Object element) {
+            }
+
+            @Override
+            public void clear() {
+            }
+        });
+    }
+
+    private void selfReportRateLimitExceedingUserProfileId(String userProfileId) {
+        ObservableSet<ReportToModeratorMessage> reportToModeratorMessages = getReportToModeratorMessages();
+        boolean notYetReported = reportToModeratorMessages.stream()
+                .noneMatch(message -> message.getAccusedUserProfile().getId().equals(userProfileId));
+        if (notYetReported) {
+            userProfileService.findUserProfile(userProfileId)
+                    .ifPresent(accusedUserProfile -> {
+                        String myUserProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
+                        ReportToModeratorMessage report = new ReportToModeratorMessage(System.currentTimeMillis(),
+                                myUserProfileId,
+                                accusedUserProfile,
+                                "Moderator self-reported user who exceeded message rate limit", // Only for moderator, thus not translated
+                                ChatChannelDomain.DISCUSSION);
+                        reportToModeratorMessages.add(report);
+                        persist();
+                    });
+        }
     }
 }

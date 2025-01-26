@@ -24,7 +24,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
-import bisq.support.moderator.ModeratorService;
+import bisq.support.moderator.ModerationRequestService;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
@@ -67,11 +67,11 @@ public class ReportToModeratorWindow {
         @Getter
         private final View view;
         private final Model model;
-        private final ModeratorService moderatorService;
+        private final ModerationRequestService moderationRequestService;
         private final ServiceProvider serviceProvider;
 
         private Controller(ServiceProvider serviceProvider) {
-            moderatorService = serviceProvider.getSupportService().getModeratorService();
+            moderationRequestService = serviceProvider.getSupportService().getModerationRequestService();
             this.serviceProvider = serviceProvider;
             model = new Model();
             view = new View(model, this);
@@ -101,7 +101,7 @@ public class ReportToModeratorWindow {
                 return;
             }
 
-            moderatorService.reportUserProfile(model.getAccusedUserProfile(), message);
+            moderationRequestService.reportUserProfile(model.getAccusedUserProfile(), message);
             onCancel();
         }
 
