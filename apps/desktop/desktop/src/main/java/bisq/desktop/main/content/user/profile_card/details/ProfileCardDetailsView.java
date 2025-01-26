@@ -123,7 +123,7 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
     }
 
     private HBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, Optional<BisqMenuItem> button) {
-        Label titleLabel = new Label(Res.get(title));
+        Label titleLabel = new Label(Res.get(title).toUpperCase());
         double width = 200;
         titleLabel.setMaxWidth(width);
         titleLabel.setMinWidth(width);
