@@ -19,46 +19,61 @@ package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
 public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel, ProfileCardOverviewController> {
-    private final Label numOffersAndMessagesLabel, totalBaseOfferAmountToBuyAndSellLabel,
-            profileAgeLabel, lastUserActivityLabel, statementLabel,tradeTermsTextArea;
+    private final Label totalBaseToBuyLabel, totalBaseToSellLabel, profileAgeLabel, lastUserActivityLabel,
+            statementLabel, sellingLimitLabel, tradeTermsTextArea;
 
     public ProfileCardOverviewView(ProfileCardOverviewModel model,
                                    ProfileCardOverviewController controller) {
         super(new VBox(), model, controller);
 
         lastUserActivityLabel = new Label();
-        HBox lastUserActivityBox = createAndGetTitleAndDetailsBox("user.profileCard.details.lastUserActivity", lastUserActivityLabel);
+        VBox lastUserActivityBox = createAndGetTitleAndMetricBox("user.profileCard.details.lastUserActivity", lastUserActivityLabel);
 
         profileAgeLabel = new Label();
-        HBox profileAgeBox = createAndGetTitleAndDetailsBox("user.profileCard.details.profileAge", profileAgeLabel);
+        VBox profileAgeBox = createAndGetTitleAndMetricBox("user.profileCard.details.profileAge", profileAgeLabel);
 
-        numOffersAndMessagesLabel = new Label();
-        HBox numOffersAndMessagesBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.numOffersAndMessages", numOffersAndMessagesLabel);
+        totalBaseToBuyLabel = new Label();
+        Label toBuyUnitLabel = new Label("BTC");
+        VBox totalBaseToBuyBox = createAndGetTitleAndMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyLabel, toBuyUnitLabel);
 
-        totalBaseOfferAmountToBuyAndSellLabel = new Label();
-        HBox totalBaseOfferAmountToBuyAndSellBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.totalBaseOfferAmountToBuyAndSell", totalBaseOfferAmountToBuyAndSellLabel);
+        Label toSellUnitLabel = new Label("BTC");
+        totalBaseToSellLabel = new Label();
+        VBox totalBaseToSellBox = createAndGetTitleAndMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellLabel, toSellUnitLabel);
+
+        sellingLimitLabel = new Label();
+        Label sellingLimitUnitLabel = new Label("USD");
+        VBox sellingLimitBox = createAndGetTitleAndMetricBox("user.profileCard.overview.sellingLimit", sellingLimitLabel, sellingLimitUnitLabel);
+
+        HBox metricsHBox = new HBox(
+                lastUserActivityBox,
+                Spacer.fillHBox(),
+                profileAgeBox,
+                Spacer.fillHBox(),
+                totalBaseToBuyBox,
+                Spacer.fillHBox(),
+                totalBaseToSellBox,
+                Spacer.fillHBox(),
+                sellingLimitBox);
 
         statementLabel = new Label();
-        HBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel);
+        VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 20);
 
         tradeTermsTextArea = new Label();
-        HBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.tradeTerms", tradeTermsTextArea, Optional.empty());
+        VBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.tradeTerms", tradeTermsTextArea, 80);
 
-        VBox contentBox = new VBox(20, lastUserActivityBox, profileAgeBox, numOffersAndMessagesBox,
-                totalBaseOfferAmountToBuyAndSellBox, statementBox, tradeTermsBox);
+        VBox contentBox = new VBox(20, metricsHBox, getLine(), statementBox, tradeTermsBox);
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.TOP_LEFT);
         contentBox.setMinHeight(307);
@@ -73,15 +88,15 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
     @Override
     protected void onViewAttached() {
         profileAgeLabel.setText(model.getProfileAge());
-        numOffersAndMessagesLabel.setText(model.getNumOffers() + " / " + model.getNumPublicTextMessages());
-        totalBaseOfferAmountToBuyAndSellLabel.setText(model.getTotalBaseOfferAmountToBuy() + " / " + model.getTotalBaseOfferAmountToSell());
+        totalBaseToBuyLabel.setText(model.getTotalBaseOfferAmountToBuy());
+        totalBaseToSellLabel.setText(model.getTotalBaseOfferAmountToSell());
+        sellingLimitLabel.setText(model.getSellingLimit());
         statementLabel.setText(model.getStatement());
         tradeTermsTextArea.setText(model.getTradeTerms());
 
         lastUserActivityLabel.textProperty().bind(model.getLastUserActivity());
 
         root.requestFocus();
-
     }
 
     @Override
@@ -89,28 +104,47 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         lastUserActivityLabel.textProperty().unbind();
     }
 
-    private HBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel) {
-        return createAndGetTitleAndDetailsBox(title, detailsLabel, Optional.empty());
+    private VBox createAndGetTitleAndMetricBox(String title, Label detailsLabel) {
+        Label titleLabel = new Label(Res.get(title).toUpperCase());
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
+        detailsLabel.getStyleClass().addAll("text-fill-white", "metric");
+        VBox vBox = new VBox(titleLabel, detailsLabel);
+        vBox.setAlignment(Pos.CENTER);
+        return vBox;
     }
 
-    private HBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, Optional<BisqMenuItem> button) {
-        Label titleLabel = new Label(Res.get(title));
-        double width = 200;
-        titleLabel.setMaxWidth(width);
-        titleLabel.setMinWidth(width);
-        titleLabel.setPrefWidth(width);
-        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
+    private VBox createAndGetTitleAndMetricBox(String title, Label detailsLabel, Label unitLabel) {
+        Label titleLabel = new Label(Res.get(title).toUpperCase());
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
+        detailsLabel.getStyleClass().addAll("text-fill-white", "metric");
+        unitLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
+        HBox detailsAndUnitHBox = new HBox(3, detailsLabel, unitLabel);
+        detailsAndUnitHBox.setAlignment(Pos.BASELINE_CENTER);
+        return new VBox(titleLabel, detailsAndUnitHBox);
+    }
 
+    private Region getLine() {
+        Region line = new Region();
+        line.setMinHeight(1);
+        line.setMaxHeight(1);
+        line.setStyle("-fx-background-color: -bisq-border-color-grey");
+        line.setPadding(new Insets(9, 0, 8, 0));
+        return line;
+    }
+
+    private VBox createAndGetTitleAndDetailsBox(String title, Label detailsLabel, double height) {
+        Label titleLabel = new Label(Res.get(title).toUpperCase());
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
         detailsLabel.getStyleClass().addAll("text-fill-white", "normal-text");
-
-        HBox hBox = new HBox(titleLabel, detailsLabel);
-        hBox.setAlignment(Pos.BASELINE_LEFT);
-
-        if (button.isPresent()) {
-            button.get().useIconOnly(17);
-            HBox.setMargin(button.get(), new Insets(0, 0, 0, 40));
-            hBox.getChildren().addAll(Spacer.fillHBox(), button.get());
-        }
-        return hBox;
+        detailsLabel.setWrapText(true);
+        detailsLabel.setMinHeight(Label.USE_PREF_SIZE);
+        detailsLabel.setAlignment(Pos.TOP_LEFT);
+        ScrollPane detailsScrollPane = new ScrollPane(detailsLabel);
+        detailsScrollPane.setMinHeight(height);
+        detailsScrollPane.setMaxHeight(height);
+        detailsScrollPane.setPrefHeight(height);
+        detailsScrollPane.setFitToWidth(true);
+        detailsScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        return new VBox(3, titleLabel, detailsScrollPane);
     }
 }

@@ -37,7 +37,6 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
     private final Label nickNameLabel, botIdLabel, userIdLabel, transportAddressLabel, totalReputationScoreLabel,
             profileAgeLabel, versionLabel;
     private final BisqMenuItem nickNameCopyButton, botIdCopyButton, userIdCopyButton, transportAddressCopyButton;
-    private HBox statementBox;
 
     public ProfileCardDetailsView(ProfileCardDetailsModel model,
                                   ProfileCardDetailsController controller) {
@@ -128,7 +127,7 @@ public class ProfileCardDetailsView extends View<VBox, ProfileCardDetailsModel, 
         titleLabel.setMaxWidth(width);
         titleLabel.setMinWidth(width);
         titleLabel.setPrefWidth(width);
-        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
 
         detailsLabel.getStyleClass().addAll("text-fill-white", "normal-text");
 

@@ -146,7 +146,7 @@
     -fx-padding: 0 0 -3 0;
 }
 
-.profile-card .overview .title {
+.profile-card .overview .metric {
     -fx-font-size: 1.4em;
     -fx-font-family: "IBM Plex Sans Light";
 }
