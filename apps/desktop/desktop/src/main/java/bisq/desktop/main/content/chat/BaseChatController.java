@@ -39,6 +39,7 @@ import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -60,7 +61,8 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final UserProfileService userProfileService;
     protected final ChannelSidebar channelSidebar;
     protected final ChatMessageContainerController chatMessageContainerController;
-    private final BisqEasyTradeService bisqEasyTradeService;
+    protected final BisqEasyTradeService bisqEasyTradeService;
+    protected final ReputationService reputationService;
     protected Subscription searchTextPin;
     protected Pin selectedChannelPin, selectedNotificationSettingPin;
 
@@ -75,7 +77,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
-
+        reputationService = serviceProvider.getUserService().getReputationService();
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider,
                 chatChannelDomain,
                 this::openProfileCard);

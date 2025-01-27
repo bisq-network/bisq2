@@ -72,9 +72,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -102,6 +100,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final Optional<ResendMessageService> resendMessageService;
     private final MarketPriceService marketPriceService;
     private final LeavePrivateChatManager leavePrivateChatManager;
+
+    private final Set<String> offersWithInvalidSellerReputation = new HashSet<>();
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
@@ -332,8 +332,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         Optional<Long> requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
         Optional<Long> requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMinAmount(marketPriceService, bisqEasyOffer);
         if (requiredReputationScoreForMaxOrFixedAmount.isPresent()) {
-            Long requiredReputationScoreForMaxOrFixed = requiredReputationScoreForMaxOrFixedAmount.get();
-            Long requiredReputationScoreForMinOrFixed = requiredReputationScoreForMinAmount.orElse(requiredReputationScoreForMaxOrFixed);
+            long requiredReputationScoreForMaxOrFixed = requiredReputationScoreForMaxOrFixedAmount.get();
+            long requiredReputationScoreForMinOrFixed = requiredReputationScoreForMinAmount.orElse(requiredReputationScoreForMaxOrFixed);
             String minFiatAmount = OfferAmountFormatter.formatQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer, true);
             String maxFiatAmount = OfferAmountFormatter.formatQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer, true);
             boolean isAmountRangeOffer = bisqEasyOffer.getAmountSpec() instanceof RangeAmountSpec;
@@ -347,14 +347,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 boolean canBuyerTakeOffer = sellersScore >= requiredReputationScoreForMinOrFixed;
                 if (!canBuyerTakeOffer) {
                     new Popup()
-                        .headline(Res.get("chat.message.takeOffer.buyer.invalidOffer.headline"))
-                        .warning(Res.get(isAmountRangeOffer
-                                ? "chat.message.takeOffer.buyer.invalidOffer.rangeAmount.text"
-                                : "chat.message.takeOffer.buyer.invalidOffer.fixedAmount.text",
-                                sellersScore,
-                                isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
-                                isAmountRangeOffer ? minFiatAmount : maxFiatAmount))
-                        .show();
+                            .headline(Res.get("chat.message.takeOffer.buyer.invalidOffer.headline"))
+                            .warning(Res.get(isAmountRangeOffer
+                                            ? "chat.message.takeOffer.buyer.invalidOffer.rangeAmount.text"
+                                            : "chat.message.takeOffer.buyer.invalidOffer.fixedAmount.text",
+                                    sellersScore,
+                                    isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
+                                    isAmountRangeOffer ? minFiatAmount : maxFiatAmount))
+                            .show();
                 } else {
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
                 }
@@ -366,8 +366,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     new Popup()
                             .headline(Res.get("chat.message.takeOffer.seller.insufficientScore.headline"))
                             .warning(Res.get(isAmountRangeOffer
-                                    ? "chat.message.takeOffer.seller.insufficientScore.rangeAmount.warning"
-                                    : "chat.message.takeOffer.seller.insufficientScore.fixedAmount.warning",
+                                            ? "chat.message.takeOffer.seller.insufficientScore.rangeAmount.warning"
+                                            : "chat.message.takeOffer.seller.insufficientScore.fixedAmount.warning",
                                     sellersScore,
                                     isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
                                     isAmountRangeOffer ? minFiatAmount : maxFiatAmount))
@@ -586,13 +586,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             if (senderUserProfile.isEmpty()) {
                 return false;
             }
-            if (bannedUserService.isUserProfileBanned(item.getChatMessage().getAuthorUserProfileId()) ||
+            ChatMessage chatMessage = item.getChatMessage();
+            if (bannedUserService.isUserProfileBanned(chatMessage.getAuthorUserProfileId()) ||
                     bannedUserService.isUserProfileBanned(senderUserProfile.get())) {
                 return false;
             }
 
             boolean messageTypePredicate = true; // messageTypeFilter == bisq.settings.ChatMessageType.ALL
-            if (item.getChatMessage() instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+            if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
                 bisq.settings.ChatMessageType messageTypeFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get();
                 if (messageTypeFilter == bisq.settings.ChatMessageType.TEXT) {
                     messageTypePredicate = !bisqEasyOfferbookMessage.hasBisqEasyOffer();
@@ -603,7 +604,15 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
             // We do not display the take offer message as it has no text and is used only for sending the offer
             // to the peer and signalling the take offer event.
-            if (item.getChatMessage().getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
+            if (chatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
+                return false;
+            }
+
+            if (!chatMessage.isMyMessage(userIdentityService) &&
+                    !BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService,
+                            userProfileService,
+                            reputationService,
+                            chatMessage)) {
                 return false;
             }
 

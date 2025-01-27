@@ -21,6 +21,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.bisq_easy.BisqEasyServiceUtil;
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -74,6 +75,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         reputationService = serviceProvider.getUserService().getReputationService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
+
         model = new OfferbookListModel();
         view = new OfferbookListView(model, this);
     }
@@ -129,7 +131,8 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-                if (BisqEasyServiceUtil.authorNotBannedOrIgnored(userProfileService, bannedUserService, bisqEasyOfferbookMessage)) {
+                if (BisqEasyServiceUtil.authorNotBannedOrIgnored(userProfileService, bannedUserService, bisqEasyOfferbookMessage) &&
+                        bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
                     UIThread.runOnNextRenderFrame(() -> {
                         if (model.getOfferbookListItems().stream()
                                 .noneMatch(item -> item.getBisqEasyOfferbookMessage().equals(bisqEasyOfferbookMessage))) {
@@ -257,6 +260,11 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         boolean myOffersOnly = model.getShowMyOffersOnly().get();
         UserProfile mySelectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
         boolean isMyOffer = item.getSenderUserProfile().equals(mySelectedUserProfile);
+
+        BisqEasyOfferbookMessage chatMessage = item.getBisqEasyOfferbookMessage();
+        if (!chatMessage.isMyMessage(userIdentityService) && !BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService, userProfileService, reputationService, chatMessage)) {
+            return false;
+        }
         return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters) && (!myOffersOnly || isMyOffer);
     }
 

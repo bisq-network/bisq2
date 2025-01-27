@@ -18,6 +18,8 @@
 package bisq.bisq_easy;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.ChatMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Coin;
@@ -29,11 +31,14 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class BisqEasyTradeAmountLimits {
@@ -46,6 +51,7 @@ public class BisqEasyTradeAmountLimits {
     public static final long MIN_REPUTATION_SCORE = 5000;
     public static final double TOLERANCE = 0.05;
     private static final long MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER = 1200;
+    private static final Set<String> SELL_OFFERS_WITH_INSUFFICIENT_REPUTATION = new HashSet<>();
 
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
@@ -100,8 +106,6 @@ public class BisqEasyTradeAmountLimits {
                 });
     }
 
-
-
     public static Optional<Result> checkOfferAmountLimitForMaxOrFixedAmount(ReputationService reputationService,
                                                                             UserIdentityService userIdentityService,
                                                                             UserProfileService userProfileService,
@@ -152,7 +156,7 @@ public class BisqEasyTradeAmountLimits {
     }
 
     public static Optional<Long> findRequiredReputationScoreForMinAmount(MarketPriceService marketPriceService,
-                                                                          BisqEasyOffer offer) {
+                                                                         BisqEasyOffer offer) {
         return OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, offer)
                 .flatMap(fiatAmount -> findRequiredReputationScoreByFiatAmount(marketPriceService, offer.getMarket(), fiatAmount));
     }
@@ -216,6 +220,50 @@ public class BisqEasyTradeAmountLimits {
 
     public static long withTolerance(long makersReputationScore) {
         return MathUtils.roundDoubleToLong(makersReputationScore * (1 + TOLERANCE));
+    }
+
+
+    // If not my message and if offer message we filter sell offers of makers with too low reputation
+    // This was needed at the v2.1.3 update and can be removed later once no invalid offers are expected anymore.
+    public static boolean hasSellerSufficientReputation(MarketPriceService marketPriceService,
+                                                        UserProfileService userProfileService,
+                                                        ReputationService reputationService,
+                                                        ChatMessage chatMessage) {
+        return hasSellerSufficientReputation(marketPriceService, userProfileService, reputationService, chatMessage, true);
+    }
+    public static boolean hasSellerSufficientReputation(MarketPriceService marketPriceService,
+                                                        UserProfileService userProfileService,
+                                                        ReputationService reputationService,
+                                                        ChatMessage chatMessage,
+                                                        boolean useCache) {
+        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage &&
+                bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
+            BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
+            String offerId = bisqEasyOffer.getId();
+            if (useCache && SELL_OFFERS_WITH_INSUFFICIENT_REPUTATION.contains(offerId)) {
+                return false;
+            }
+            if (bisqEasyOffer.getDirection().isSell()) {
+                Optional<Long> requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+                if (requiredReputationScoreForMaxOrFixedAmount.isPresent()) {
+                    Optional<Long> requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMinAmount(marketPriceService, bisqEasyOffer);
+                    long requiredReputationScoreForMaxOrFixed = requiredReputationScoreForMaxOrFixedAmount.get();
+                    long requiredReputationScoreForMinOrFixed = requiredReputationScoreForMinAmount.orElse(requiredReputationScoreForMaxOrFixed);
+                    long sellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
+                            .map(reputationService::getReputationScore)
+                            .map(ReputationScore::getTotalScore)
+                            .orElse(0L);
+                    boolean hasInsufficientReputation = sellersScore < requiredReputationScoreForMinOrFixed;
+                    if (hasInsufficientReputation) {
+                        if (useCache) {
+                            SELL_OFFERS_WITH_INSUFFICIENT_REPUTATION.add(offerId);
+                        }
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
 
