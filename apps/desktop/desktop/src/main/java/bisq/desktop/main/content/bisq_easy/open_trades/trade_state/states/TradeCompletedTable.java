@@ -34,9 +34,11 @@ import javafx.geometry.VPos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+@Slf4j
 public class TradeCompletedTable extends VBox {
     private final GridPane headerGridPane, bodyGridPane;
     @Getter
@@ -57,7 +59,6 @@ public class TradeCompletedTable extends VBox {
 
         // Header
         headerGridPane = GridPaneUtil.getGridPane(10, 10, new Insets(0));
-        headerGridPane.setMouseTransparent(true);
         GridPaneUtil.setGridPaneMultiColumnsConstraints(headerGridPane, 5);
 
         // Body
