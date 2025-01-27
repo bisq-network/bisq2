@@ -160,7 +160,8 @@ public class TakeOfferAmountController implements Controller {
             long sellersReputationScore = reputationService.getReputationScore(bisqEasyOffer.getMakersUserProfileId()).getTotalScore();
             model.setSellersReputationScore(sellersReputationScore);
             Monetary reputationBasedQuoteSideAmount = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, sellersReputationScore)
-                    .orElseThrow().round(0);
+                    .orElseThrow()
+                    .round(0);
             model.setSellersReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
         }
         long sellersReputationScore = model.getSellersReputationScore();
@@ -182,7 +183,7 @@ public class TakeOfferAmountController implements Controller {
                 // Max amount not covered by security from reputation score
                 model.getIsAmountLimitInfoVisible().set(true);
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.minAmountCovered", sellersReputationScore));
-                String formattedAmount = AmountFormatter.formatAmountWithCode(reputationBasedQuoteSideAmount);
+                String formattedAmount = AmountFormatter.formatQuoteAmountWithCode(reputationBasedQuoteSideAmount);
                 model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfoAmount", formattedAmount));
                 model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.minAmountCovered.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
             } else {
@@ -199,7 +200,7 @@ public class TakeOfferAmountController implements Controller {
                         model.getIsAmountHyperLinkDisabled().set(myReputationBasedQuoteSideAmount.isGreaterThan(offersQuoteSideMaxOrFixedAmount));
                         amountSelectionController.setRightMarkerQuoteSideValue(myReputationBasedQuoteSideAmount);
                         model.getIsAmountLimitInfoVisible().set(false);
-                        String formattedAmount = AmountFormatter.formatAmountWithCode(myReputationBasedQuoteSideAmount);
+                        String formattedAmount = AmountFormatter.formatQuoteAmountWithCode(myReputationBasedQuoteSideAmount);
                         model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfoAmount", formattedAmount));
                         model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
                         if (myReputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)) {

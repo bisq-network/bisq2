@@ -33,7 +33,7 @@ public class AmountFormatter {
                 AmountFormatter.formatAmount(amount, useLowPrecision);
     }
 
-    public static String formatAmountWithCode(Monetary amount) {
+    public static String formatQuoteAmountWithCode(Monetary amount) {
         return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), true);
     }
 

@@ -31,7 +31,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.Direction;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -44,8 +43,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
 
 @Slf4j
 public class TradeWizardDirectionAndMarketController implements Controller {
@@ -99,15 +96,6 @@ public class TradeWizardDirectionAndMarketController implements Controller {
         setDirection(Direction.BUY);
         setIsAllowedToCreateOffer();
         applyShowReputationInfo();
-
-        model.setFormattedAmountWithoutReputationNeeded(Optional.ofNullable(bisqEasyOfferbookSelectionService.getSelectedChannel().get())
-                .filter(channel -> channel instanceof BisqEasyOfferbookChannel)
-                .map(channel -> (BisqEasyOfferbookChannel) channel)
-                .map(BisqEasyOfferbookChannel::getMarket)
-                .flatMap(market -> BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, market, MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION))
-                .map(amount -> amount.round(0))
-                .map(AmountFormatter::formatAmountWithCode)
-                .orElse("25 USD"));
 
         model.getSearchText().set("");
         if (model.getSelectedMarket().get() == null) {

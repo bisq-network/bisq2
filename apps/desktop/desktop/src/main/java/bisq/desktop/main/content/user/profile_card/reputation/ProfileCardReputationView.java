@@ -138,7 +138,7 @@ public class ProfileCardReputationView extends View<VBox, ProfileCardReputationM
             age = TimeFormatter.getAgeInDays(blockTime);
             ageString = TimeFormatter.formatAgeInDaysAndYears(blockTime);
             sourceString = reputationSource.getDisplayString();
-            amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.fromValue(amount, "BSQ"))).orElse("-");
+            amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.fromValue(amount, "BSQ"), false)).orElse("-");
             scoreString = String.valueOf(score);
             lockTimeString = optionalLockTime.map(String::valueOf).orElse("-");
         }
