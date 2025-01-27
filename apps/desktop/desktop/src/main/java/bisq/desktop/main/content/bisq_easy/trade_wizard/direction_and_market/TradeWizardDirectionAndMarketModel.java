@@ -47,8 +47,6 @@ public class TradeWizardDirectionAndMarketModel implements Model {
     private final ObservableList<TradeWizardDirectionAndMarketView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<TradeWizardDirectionAndMarketView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<TradeWizardDirectionAndMarketView.ListItem> sortedList = new SortedList<>(filteredList);
-    @Setter
-    private String formattedAmountWithoutReputationNeeded;
 
     void reset() {
         isAllowedToCreateSellOffer = false;

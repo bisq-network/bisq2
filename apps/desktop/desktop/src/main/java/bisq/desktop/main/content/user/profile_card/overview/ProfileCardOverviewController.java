@@ -68,14 +68,14 @@ public class ProfileCardOverviewController implements Controller {
 
         String userProfileId = userProfile.getId();
         long totalBaseOfferAmountToBuy = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDirection().isBuy());
-        String formattedTotalBaseOfferAmountToBuy = AmountFormatter.formatAmount(Coin.asBtcFromValue(totalBaseOfferAmountToBuy));
+        String formattedTotalBaseOfferAmountToBuy = AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(totalBaseOfferAmountToBuy));
         model.setTotalBaseOfferAmountToBuy(formattedTotalBaseOfferAmountToBuy);
 
         long totalBaseOfferAmountToSell = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDirection().isSell());
-        String formattedTotalBaseOfferAmountToSell = AmountFormatter.formatAmount(Coin.asBtcFromValue(totalBaseOfferAmountToSell));
+        String formattedTotalBaseOfferAmountToSell = AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(totalBaseOfferAmountToSell));
         model.setTotalBaseOfferAmountToSell(formattedTotalBaseOfferAmountToSell);
 
-        model.setSellingLimit(String.valueOf(AmountFormatter.formatAmount(getSellingAmountLimit(userProfileId))));
+        model.setSellingLimit(String.valueOf(AmountFormatter.formatQuoteAmount(getSellingAmountLimitInUsd(userProfileId))));
 
         model.setProfileAge(reputationService.getProfileAgeService().getProfileAge(userProfile)
                 .map(TimeFormatter::formatAgeInDaysAndYears)
@@ -125,7 +125,7 @@ public class ProfileCardOverviewController implements Controller {
                 .filter(message -> message.getAuthorUserProfileId().equals(userProfileId));
     }
 
-    private Monetary getSellingAmountLimit(String userProfileId) {
+    private Monetary getSellingAmountLimitInUsd(String userProfileId) {
         long userReputationScore = reputationService.getReputationScore(userProfileId).getTotalScore();
         return BisqEasyTradeAmountLimits.getMaxUsdTradeAmount(userReputationScore);
     }

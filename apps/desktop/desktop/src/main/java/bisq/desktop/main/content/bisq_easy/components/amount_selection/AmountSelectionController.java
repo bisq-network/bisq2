@@ -62,12 +62,10 @@ public class AmountSelectionController implements Controller {
         // max or fixed amount
         maxOrFixedQuoteSideAmountInput = new QuoteAmountInputBox(false, true);
         maxOrFixedBaseSideAmountInput = new BaseAmountBox(true);
-        maxOrFixedBaseSideAmountInput.setUseLowPrecision(false);
 
         // min amount (only applies when selecting a range)
         minQuoteSideAmountInput = new QuoteAmountInputBox(false, false);
         minBaseSideAmountInput = new BaseAmountBox(false);
-        minBaseSideAmountInput.setUseLowPrecision(false);
 
         price = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
 
@@ -419,7 +417,7 @@ public class AmountSelectionController implements Controller {
 
         Monetary minRangeMonetaryAsFiat = isMinRangeMonetaryFiat ? minRangeMonetary : priceQuote.toQuoteSideMonetary(minRangeMonetary).round(0);
         model.getMinRangeQuoteSideValue().set(minRangeMonetaryAsFiat);
-        model.getMinRangeValueAsString().set(AmountFormatter.formatAmount(minRangeMonetaryAsFiat));
+        model.getMinRangeValueAsString().set(AmountFormatter.formatQuoteAmount(minRangeMonetaryAsFiat));
         model.getMinRangeCodeAsString().set(minRangeMonetaryAsFiat.getCode());
 
         Monetary maxRangeMonetaryAsFiat = isMaxRangeMonetaryFiat ? maxRangeMonetary : priceQuote.toQuoteSideMonetary(maxRangeMonetary).round(0);
@@ -431,7 +429,7 @@ public class AmountSelectionController implements Controller {
             Monetary maxQuoteAllowedLimitation = model.getMaxQuoteAllowedLimitation().get();
             maxRangeMonetaryLimitationAsFiat = isMaxRangeMonetaryFiat ? maxQuoteAllowedLimitation : priceQuote.toQuoteSideMonetary(maxQuoteAllowedLimitation).round(0);
         }
-        model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatAmount(maxRangeMonetaryLimitationAsFiat));
+        model.getMaxRangeValueLimitationAsString().set(AmountFormatter.formatQuoteAmount(maxRangeMonetaryLimitationAsFiat));
 
         applySliderTrackStyle();
     }
@@ -495,7 +493,12 @@ public class AmountSelectionController implements Controller {
                     ? model.getMaxQuoteAllowedLimitation().get().getValue()
                     : model.getMaxRangeQuoteSideValue().get().getValue();
             long value = Math.round(sliderValue * (max - min)) + min;
-            bigAmountInput.setAmount(Monetary.from(value, model.getMarket().getQuoteCurrencyCode()));
+
+            String quoteCurrencyCode = model.getMarket().getQuoteCurrencyCode();
+            Monetary exactQuoteAmount = Monetary.from(value, quoteCurrencyCode);
+            long roundedValueForLowPrecision = exactQuoteAmount.getRoundedValueForPrecision(0);
+            Monetary roundedQuoteAmount = Monetary.from(roundedValueForLowPrecision, quoteCurrencyCode);
+            bigAmountInput.setAmount(roundedQuoteAmount);
         }
     }
 

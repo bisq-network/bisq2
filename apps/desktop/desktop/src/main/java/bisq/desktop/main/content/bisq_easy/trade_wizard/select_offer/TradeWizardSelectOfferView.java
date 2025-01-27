@@ -329,7 +329,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                             bisqEasyOffer.getMarket())
                     .orElseThrow();
             baseAmountAsLong = baseAmountAsMonetary.getValue();
-            baseAmountDisplayString = AmountFormatter.formatAmountWithCode(baseAmountAsMonetary, false);
+            baseAmountDisplayString = AmountFormatter.formatBaseAmountWithCode(baseAmountAsMonetary);
             reputationScore = authorUserProfile.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);
         }

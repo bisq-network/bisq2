@@ -292,7 +292,7 @@ public class TradeRestApi extends RestApiBase {
     private void handleSellerConfirmFiatReceipt(BisqEasyOpenTradeChannel channel, BisqEasyTrade trade, String userName) throws Exception {
         long quoteSideAmount = trade.getContract().getQuoteSideAmount();
         String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
-        String formattedQuoteAmount = AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
+        String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
         String encoded = Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage", userName, formattedQuoteAmount);
         bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         bisqEasyTradeService.sellerConfirmFiatReceipt(trade);

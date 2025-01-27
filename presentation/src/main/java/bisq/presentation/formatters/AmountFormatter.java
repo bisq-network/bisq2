@@ -28,37 +28,60 @@ import java.util.Optional;
 
 @Slf4j
 public class AmountFormatter {
-    public static String formatAmountWithMinAmount(Monetary amount, Optional<Long> optionalMinAmount, boolean useLowPrecision) {
-        return AmountFormatter.formatMinAmount(optionalMinAmount, amount, useLowPrecision) +
-                AmountFormatter.formatAmount(amount, useLowPrecision);
-    }
-
-    public static String formatAmountWithCode(Monetary amount) {
-        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), true);
-    }
-
+    // Generic amount
     public static String formatAmountWithCode(Monetary amount, boolean useLowPrecision) {
         return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), useLowPrecision);
-    }
-
-    public static String formatAmountWithCode(Monetary amount, Locale locale, boolean useLowPrecision) {
-        return formatAmount(amount, locale, useLowPrecision) + " " + amount.getCode();
-    }
-
-    public static String formatAmount(Monetary amount) {
-        return formatAmount(amount, LocaleRepository.getDefaultLocale(), true);
     }
 
     public static String formatAmount(Monetary amount, boolean useLowPrecision) {
         return formatAmount(amount, LocaleRepository.getDefaultLocale(), useLowPrecision);
     }
 
-    public static String formatAmount(Monetary amount, Locale locale) {
-        return getDecimalFormat(amount, locale, true).format(amount.asDouble());
-    }
-
     public static String formatAmount(Monetary amount, Locale locale, boolean useLowPrecision) {
         return getDecimalFormat(amount, locale, useLowPrecision).format(amount.asDouble());
+    }
+
+    public static String formatAmountWithCode(Monetary amount, Locale locale, boolean useLowPrecision) {
+        return formatAmount(amount, locale, useLowPrecision) + " " + amount.getCode();
+    }
+
+    public static String formatAmountWithMinAmount(Monetary amount,
+                                                   Optional<Long> optionalMinAmount,
+                                                   boolean useLowPrecision) {
+        return AmountFormatter.formatMinAmount(optionalMinAmount, amount, useLowPrecision) +
+                AmountFormatter.formatAmount(amount, useLowPrecision);
+    }
+
+    public static String formatMinAmount(Optional<Long> optionalMinAmount, Monetary amount, boolean useLowPrecision) {
+        return formatMinAmount(optionalMinAmount, amount, LocaleRepository.getDefaultLocale(), useLowPrecision);
+    }
+
+    public static String formatMinAmount(Optional<Long> optionalMinAmount,
+                                         Monetary amount,
+                                         Locale locale,
+                                         boolean useLowPrecision) {
+        return optionalMinAmount
+                .map(minAmount -> getDecimalFormat(amount, locale, useLowPrecision).format(amount.toDouble(minAmount)) + " - ")
+                .orElse("");
+    }
+
+
+    // Base amount
+    public static String formatBaseAmount(Monetary amount) {
+        return formatAmount(amount, false);
+    }
+
+    public static String formatBaseAmountWithCode(Monetary amount) {
+        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), false);
+    }
+
+    // Quote amount
+    public static String formatQuoteAmount(Monetary amount) {
+        return formatAmount(amount, true);
+    }
+
+    public static String formatQuoteAmountWithCode(Monetary amount) {
+        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), true);
     }
 
     public static String formatWithDecimalGroups(Monetary amount, Locale locale, boolean useLowPrecision) {
@@ -75,16 +98,6 @@ public class AmountFormatter {
         } else {
             return formatted;
         }
-    }
-
-    public static String formatMinAmount(Optional<Long> optionalMinAmount, Monetary amount, boolean useLowPrecision) {
-        return formatMinAmount(optionalMinAmount, amount, LocaleRepository.getDefaultLocale(), useLowPrecision);
-    }
-
-    public static String formatMinAmount(Optional<Long> optionalMinAmount, Monetary amount, Locale locale, boolean useLowPrecision) {
-        return optionalMinAmount
-                .map(minAmount -> getDecimalFormat(amount, locale, useLowPrecision).format(amount.toDouble(minAmount)) + " - ")
-                .orElse("");
     }
 
     private static DecimalFormatter.Format getDecimalFormat(Monetary amount, Locale locale, boolean useLowPrecision) {

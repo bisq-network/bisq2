@@ -80,10 +80,10 @@ public abstract class BaseState {
 
             long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
             long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
-            model.setBaseAmount(AmountFormatter.formatAmount(Coin.asBtcFromValue(baseSideAmount), false));
-            model.setFormattedBaseAmount(AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount), false));
-            model.setQuoteAmount(AmountFormatter.formatAmount(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
-            model.setFormattedQuoteAmount(AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
+            model.setBaseAmount(AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(baseSideAmount)));
+            model.setFormattedBaseAmount(AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
+            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
+            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
         }
 
         @Override

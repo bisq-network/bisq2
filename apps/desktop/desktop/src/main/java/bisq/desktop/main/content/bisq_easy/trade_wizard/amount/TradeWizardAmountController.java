@@ -76,7 +76,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static bisq.bisq_easy.BisqEasyTradeAmountLimits.*;
-import static bisq.presentation.formatters.AmountFormatter.formatAmountWithCode;
+import static bisq.presentation.formatters.AmountFormatter.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -518,7 +518,7 @@ public class TradeWizardAmountController implements Controller {
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
                 .filter(e -> e.getValue() >= requiredReputationScoreForMinAmount || requiredReputationScoreForMinAmount <= MIN_REPUTATION_SCORE)
                 .count();
-        String formattedMaxOrFixedAmount = formatAmountWithCode(maxOrFixedQuoteSideAmount, true);
+        String formattedMaxOrFixedAmount = formatQuoteAmountWithCode(maxOrFixedQuoteSideAmount);
         model.getShouldShowWarningIcon().set(false);
         if (model.isCreateOfferMode()) {
             // Create offer
@@ -527,7 +527,7 @@ public class TradeWizardAmountController implements Controller {
                 String numSellers = Res.getPluralization("bisqEasy.tradeWizard.amount.buyer.numSellers", numPotentialTakersForMinAmount);
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo", numSellers));
 
-                String formattedMinAmount = formatAmountWithCode(minQuoteSideAmount, true);
+                String formattedMinAmount = formatQuoteAmountWithCode(minQuoteSideAmount);
                 if (numPotentialTakersForMinAmount == 0) {
                     model.getShouldShowWarningIcon().set(true);
                     model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.noSellers",
@@ -558,7 +558,7 @@ public class TradeWizardAmountController implements Controller {
             String numOffers = Res.getPluralization("bisqEasy.tradeWizard.amount.numOffers", numMatchingOffers);
 
             boolean weakSecurity = maxOrFixedQuoteSideAmount.isLessThanOrEqual(MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION);
-            String formatted = formatAmountWithCode(MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION, true);
+            String formatted = formatQuoteAmountWithCode(MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION);
             if (weakSecurity) {
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.wizard.info", formatted));
             } else {
@@ -637,7 +637,7 @@ public class TradeWizardAmountController implements Controller {
             model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
             Monetary reputationBasedQuoteSideAmount = model.getReputationBasedMaxAmount();
             long myReputationScore = model.getMyReputationScore();
-            String formattedAmount = formatAmountWithCode(reputationBasedQuoteSideAmount, true);
+            String formattedAmount = formatQuoteAmountWithCode(reputationBasedQuoteSideAmount);
             model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo", formattedAmount));
             model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay", myReputationScore, formattedAmount));
             if (isCreateOfferMode) {

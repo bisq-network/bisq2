@@ -113,9 +113,9 @@ public class TradeDataHeader {
                 long baseSideAmount = bisqEasyTrade.getContract().getBaseSideAmount();
                 long quoteSideAmount = bisqEasyTrade.getContract().getQuoteSideAmount();
                 Coin baseAmount = Coin.asBtcFromValue(baseSideAmount);
-                String baseAmountString = AmountFormatter.formatAmount(baseAmount, false);
+                String baseAmountString = AmountFormatter.formatBaseAmount(baseAmount);
                 Monetary quoteAmount = Fiat.from(quoteSideAmount, bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
-                String quoteAmountString = AmountFormatter.formatAmount(quoteAmount);
+                String quoteAmountString = AmountFormatter.formatQuoteAmount(quoteAmount);
                 if (bisqEasyTrade.isSeller()) {
                     model.getDirection().set(Res.get("offer.sell").toUpperCase());
                     model.getLeftAmountDescription().set(Res.get("bisqEasy.tradeState.header.send").toUpperCase());
