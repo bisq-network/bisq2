@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.components;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.chat.Citation;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
@@ -70,7 +71,9 @@ public class CitationBlock {
         if (text == null || text.isEmpty() || userProfile == null) {
             return Optional.empty();
         }
-        return Optional.of(new Citation(userProfile.getId(), text));
+
+        String truncated = StringUtils.truncate(text, Citation.MAX_TEXT_LENGTH);
+        return Optional.of(new Citation(userProfile.getId(), truncated));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
