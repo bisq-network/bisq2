@@ -20,11 +20,15 @@ package bisq.desktop.main.content.user.profile_card.offers;
 import bisq.desktop.common.view.Model;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class ProfileCardOffersModel implements Model {
-    private final ObservableList<ProfileCardOfferListItem> listItems = FXCollections.observableArrayList();
+    private final ObservableList<ProfileCardOfferListItem> offerbookListItems = FXCollections.observableArrayList();
+    private final FilteredList<ProfileCardOfferListItem> filteredOfferbookListItems = new FilteredList<>(offerbookListItems);
+    private final SortedList<ProfileCardOfferListItem> sortedOfferbookListItems = new SortedList<>(filteredOfferbookListItems);
 }

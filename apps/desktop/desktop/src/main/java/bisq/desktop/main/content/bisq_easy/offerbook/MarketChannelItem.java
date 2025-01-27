@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.notifications.ChatNotificationService;
@@ -26,6 +28,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.settings.FavouriteMarketsService;
+import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -49,6 +53,9 @@ public class MarketChannelItem {
     private final FavouriteMarketsService favouriteMarketsService;
     private final ChatNotificationService chatNotificationService;
     private final Market market;
+    private final MarketPriceService marketPriceService;
+    private final UserProfileService userProfileService;
+    private final ReputationService reputationService;
     private final SimpleIntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
     private final SimpleStringProperty numMarketNotifications = new SimpleStringProperty();
@@ -56,12 +63,18 @@ public class MarketChannelItem {
 
     MarketChannelItem(BisqEasyOfferbookChannel channel,
                       FavouriteMarketsService favouriteMarketsService,
-                      ChatNotificationService chatNotificationService) {
+                      ChatNotificationService chatNotificationService,
+                      MarketPriceService marketPriceService,
+                      UserProfileService userProfileService,
+                      ReputationService reputationService) {
         this.channel = channel;
 
         this.favouriteMarketsService = favouriteMarketsService;
         this.chatNotificationService = chatNotificationService;
         market = channel.getMarket();
+        this.marketPriceService = marketPriceService;
+        this.userProfileService = userProfileService;
+        this.reputationService = reputationService;
         refreshNotifications();
         initialize();
     }
@@ -91,6 +104,10 @@ public class MarketChannelItem {
         UIThread.run(() -> {
             int numOffers = (int) channel.getChatMessages().stream()
                     .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                    .filter(chatMessage-> BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService,
+                            userProfileService,
+                            reputationService,
+                            chatMessage))
                     .count();
             getNumOffers().set(numOffers);
         });

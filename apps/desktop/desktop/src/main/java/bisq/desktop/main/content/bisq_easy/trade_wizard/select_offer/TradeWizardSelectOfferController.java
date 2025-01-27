@@ -324,6 +324,12 @@ public class TradeWizardSelectOfferController implements Controller {
                 if (!result.map(BisqEasyTradeAmountLimits.Result::isValid).orElse(false)) {
                     return false;
                 }
+                if (!BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService,
+                        userProfileService,
+                        reputationService,
+                        peersOffer)) {
+                    return false;
+                }
 
                 return true;
             } catch (Throwable t) {

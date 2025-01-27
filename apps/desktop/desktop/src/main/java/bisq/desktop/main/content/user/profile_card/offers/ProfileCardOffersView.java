@@ -51,7 +51,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
         VBox vBox = new VBox();
         vBox.setFillWidth(true);
         vBox.getStyleClass().add("profile-card-table-header");
-        tableView = new BisqTableView<>(model.getListItems());
+        tableView = new BisqTableView<>(model.getFilteredOfferbookListItems());
         tableView.getStyleClass().addAll("profile-card-table", "rich-table-view");
         tableView.allowVerticalScrollbar();
         tableView.setPlaceholderText(Res.get("user.profileCard.offers.table.placeholderText"));

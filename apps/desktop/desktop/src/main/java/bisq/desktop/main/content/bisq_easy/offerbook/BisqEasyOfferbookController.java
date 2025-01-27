@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.bisq_easy.BisqEasyMarketFilter;
+import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
@@ -25,6 +26,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
@@ -37,6 +39,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list.OfferbookListController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
@@ -52,10 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -227,6 +227,39 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             item.getNumOffers().addListener(numberChangeListener);
             marketNumOffersListeners.put(item, numberChangeListener);
         });
+
+        Set<BisqEasyOfferbookMessage> mySellOffersWithSufficientReputation = bisqEasyOfferbookChannelService.getChannels().stream()
+                .flatMap(channel -> channel.getChatMessages().stream())
+                .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                .filter(message -> message.isMyMessage(userIdentityService))
+                .filter(message -> !BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService,
+                        userProfileService,
+                        reputationService,
+                        message,
+                        false))
+                .collect(Collectors.toSet());
+        if (!mySellOffersWithSufficientReputation.isEmpty()) {
+            new Popup().headline(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.headline"))
+                    .warning(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.message"))
+                    .secondaryActionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.removeOffers"))
+                    .onSecondaryAction(() -> {
+                        mySellOffersWithSufficientReputation.forEach(message -> {
+                            String authorUserProfileId = message.getAuthorUserProfileId();
+                            userIdentityService.findUserIdentity(authorUserProfileId)
+                                    .ifPresent(authorUserIdentity -> {
+                                        bisqEasyOfferbookChannelService.deleteChatMessage(message, authorUserIdentity.getNetworkIdWithKeyPair())
+                                                .whenComplete((result, throwable) -> {
+                                                    if (throwable != null) {
+                                                        log.error("We got an error at doDeleteMessage", throwable);
+                                                    }
+                                                });
+                                    });
+                        });
+                    })
+                    .onAction(() -> Navigation.navigateTo(NavigationTarget.BUILD_REPUTATION))
+                    .actionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.buildReputation"))
+                    .show();
+        }
     }
 
     @Override
@@ -323,7 +356,12 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     private void createMarketChannels() {
         List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
-                .map(channel -> new MarketChannelItem(channel, favouriteMarketsService, chatNotificationService))
+                .map(channel -> new MarketChannelItem(channel,
+                        favouriteMarketsService,
+                        chatNotificationService,
+                        marketPriceService,
+                        userProfileService,
+                        reputationService))
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);
     }
@@ -372,12 +410,13 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 .filter(e -> e.getChannel().getId().equals(chatChannelId))
                 .findFirst();
     }
+
     private void handleNotification(ChatNotification notification) {
         if (notification == null) {
             return;
         }
 
-        UIThread.run(()->{
+        UIThread.run(() -> {
             findMarketChannelItem(notification.getChatChannelId())
                     .ifPresent(MarketChannelItem::refreshNotifications);
         });
