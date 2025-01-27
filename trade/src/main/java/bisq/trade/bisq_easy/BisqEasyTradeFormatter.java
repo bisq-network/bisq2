@@ -29,11 +29,11 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String formatBaseSideAmount(BisqEasyContract contract) {
-        return AmountFormatter.formatAmount(BisqEasyTradeUtils.getBaseSideMonetary(contract), false);
+        return AmountFormatter.formatBaseAmount(BisqEasyTradeUtils.getBaseSideMonetary(contract));
     }
 
     public static String formatQuoteSideAmount(BisqEasyTrade trade) {
-        return AmountFormatter.formatAmount(BisqEasyTradeUtils.getQuoteSideMonetary(trade), true);
+        return AmountFormatter.formatQuoteAmount(BisqEasyTradeUtils.getQuoteSideMonetary(trade));
     }
 
     public static String formatQuoteSideAmountWithCode(BisqEasyTrade trade) {
@@ -41,7 +41,7 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String formatQuoteSideAmountWithCode(BisqEasyContract contract) {
-        return AmountFormatter.formatAmountWithCode(BisqEasyTradeUtils.getQuoteSideMonetary(contract), true);
+        return AmountFormatter.formatQuoteAmountWithCode(BisqEasyTradeUtils.getQuoteSideMonetary(contract));
     }
 
     public static String formatPriceWithCode(BisqEasyTrade trade) {

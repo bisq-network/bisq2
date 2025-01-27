@@ -262,8 +262,8 @@ public class TakeOfferReviewController implements Controller {
         String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
         Monetary fixBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary fixQuoteSideAmount = model.getTakersQuoteSideAmount();
-        String formattedBaseAmount = AmountFormatter.formatAmount(fixBaseSideAmount, false);
-        String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount);
+        String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
+        String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
         Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
         boolean isMainChain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
         model.setFeeDetailsVisible(isMainChain);

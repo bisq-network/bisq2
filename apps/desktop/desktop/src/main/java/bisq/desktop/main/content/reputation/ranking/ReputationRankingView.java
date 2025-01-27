@@ -403,7 +403,7 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
 
         private String formatReputationSourceValue(ReputationSource reputationSource, long value) {
             return switch (reputationSource) {
-                case BURNED_BSQ, BSQ_BOND -> AmountFormatter.formatAmount(Coin.asBsqFromValue(value));
+                case BURNED_BSQ, BSQ_BOND -> AmountFormatter.formatAmount(Coin.asBsqFromValue(value), false);
                 case PROFILE_AGE, BISQ1_ACCOUNT_AGE, BISQ1_SIGNED_ACCOUNT_AGE_WITNESS ->
                         value > 0 ? TimeFormatter.formatAgeInDaysAndYears(value) : "";
             };

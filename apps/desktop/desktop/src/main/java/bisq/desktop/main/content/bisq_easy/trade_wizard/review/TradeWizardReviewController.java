@@ -286,10 +286,10 @@ public class TradeWizardReviewController implements Controller {
             Monetary maxQuoteSideAmount = OfferAmountUtil.findQuoteSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setMaxQuoteSideAmount(maxQuoteSideAmount);
 
-            String formattedMinQuoteAmount = AmountFormatter.formatAmount(minQuoteSideAmount, true);
-            String formattedMinBaseAmount = AmountFormatter.formatAmount(minBaseSideAmount, false);
-            String formattedMaxQuoteAmount = AmountFormatter.formatAmount(maxQuoteSideAmount, true);
-            String formattedMaxBaseAmount = AmountFormatter.formatAmount(maxBaseSideAmount, false);
+            String formattedMinQuoteAmount = AmountFormatter.formatQuoteAmount(minQuoteSideAmount);
+            String formattedMinBaseAmount = AmountFormatter.formatBaseAmount(minBaseSideAmount);
+            String formattedMaxQuoteAmount = AmountFormatter.formatQuoteAmount(maxQuoteSideAmount);
+            String formattedMaxBaseAmount = AmountFormatter.formatBaseAmount(maxBaseSideAmount);
             if (isCreateOfferMode && direction.isSell()) {
                 toSendAmount = formattedMinBaseAmount + " " + DASH_SYMBOL + " " + formattedMaxBaseAmount;
                 toSendCode = maxBaseSideAmount.getCode();
@@ -304,11 +304,11 @@ public class TradeWizardReviewController implements Controller {
         } else {
             Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixBaseSideAmount(fixBaseSideAmount);
-            String formattedBaseAmount = AmountFormatter.formatAmount(fixBaseSideAmount, false);
+            String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
 
             Monetary fixQuoteSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             model.setFixQuoteSideAmount(fixQuoteSideAmount);
-            String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount, true);
+            String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
 
             if (isCreateOfferMode && direction.isSell()) {
                 toSendAmount = formattedBaseAmount;

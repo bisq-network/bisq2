@@ -23,11 +23,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
@@ -36,7 +32,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -74,10 +69,6 @@ public class BaseAmountBox {
 
     public void setTooltip(String tooltip) {
         controller.model.tooltip.set(tooltip);
-    }
-
-    public void setUseLowPrecision(boolean useLowPrecision) {
-        controller.model.setUseLowPrecision(useLowPrecision);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -121,8 +112,6 @@ public class BaseAmountBox {
         private final StringProperty code = new SimpleStringProperty();
         private final StringProperty tooltip = new SimpleStringProperty(Res.get(DEFAULT_TOOLTIP));
         private Market selectedMarket;
-        @Setter
-        private boolean useLowPrecision = true;
 
         private Model(boolean showCurrencyCode) {
             this.showCurrencyCode = showCurrencyCode;
@@ -200,7 +189,7 @@ public class BaseAmountBox {
         }
 
         private void applyAmount(Monetary newValue) {
-            baseAmountLabel.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, model.useLowPrecision));
+            baseAmountLabel.setText(newValue == null ? "" : AmountFormatter.formatBaseAmount(newValue));
         }
     }
 }
