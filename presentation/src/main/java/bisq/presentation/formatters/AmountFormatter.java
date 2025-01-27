@@ -41,6 +41,10 @@ public class AmountFormatter {
         return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), useLowPrecision);
     }
 
+    public static String formatBaseAmountWithCode(Monetary amount) {
+        return formatAmountWithCode(amount, LocaleRepository.getDefaultLocale(), false);
+    }
+
     public static String formatAmountWithCode(Monetary amount, Locale locale, boolean useLowPrecision) {
         return formatAmount(amount, locale, useLowPrecision) + " " + amount.getCode();
     }

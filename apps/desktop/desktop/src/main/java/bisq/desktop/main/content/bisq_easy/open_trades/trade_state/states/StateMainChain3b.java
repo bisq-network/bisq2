@@ -143,7 +143,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
             if (StringUtils.isEmpty(txValue)) {
                 return Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress", address, txId);
             } else {
-                String tradeAmount = getFormattedAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
+                String tradeAmount = getFormattedBaseAmount(model.getBisqEasyTrade().getContract().getBaseSideAmount());
                 return Res.get("bisqEasy.tradeState.info.phase3b.button.next.amountNotMatching", address, txId, txValue, tradeAmount);
             }
         }
@@ -219,7 +219,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
                 explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.noOutputsForAddress"));
             } else if (txOutputValuesForAddress.size() == 1) {
                 long outputValue = txOutputValuesForAddress.get(0);
-                model.getBtcBalance().set(getFormattedAmount(outputValue));
+                model.getBtcBalance().set(getFormattedBaseAmount(outputValue));
                 long tradeAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
                 if (outputValue != tradeAmount) {
                     explorerResultValidator.setMessage(Res.get("bisqEasy.tradeState.info.phase3b.balance.invalid.amountNotMatching"));
@@ -231,8 +231,8 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
             UIThread.runOnNextRenderFrame(explorerResultValidator::validate);
         }
 
-        private static String getFormattedAmount(long value) {
-            return AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(value), false);
+        private static String getFormattedBaseAmount(long value) {
+            return AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(value));
         }
 
         private List<Long> findTxOutputValuesForAddress(Tx tx, String address) {
