@@ -110,7 +110,7 @@ public abstract class CatHashService<T> {
         String[] paths = BucketEncoder.toPaths(buckets, bucketConfig.getPathTemplates());
         // For retina support we scale by 2
         T image = composeImage(paths, 2 * SIZE_OF_CACHED_ICONS);
-        log.info("Creating user profile icon for {} took {} ms.", userProfileId, System.currentTimeMillis() - ts);
+        //log.info("Creating user profile icon for {} took {} ms.", userProfileId, System.currentTimeMillis() - ts);
         if (useCache && cache.size() < MAX_CACHE_SIZE) {
             cache.put(catHashInput, image);
 
