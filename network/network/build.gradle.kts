@@ -21,7 +21,6 @@ dependencies {
 
     implementation(libs.apache.httpcomponents.httpclient)
     implementation(libs.chimp.jsocks)
-    implementation(libs.bundles.rest.api.libs)
 
     integrationTestImplementation(libs.mockito)
 }

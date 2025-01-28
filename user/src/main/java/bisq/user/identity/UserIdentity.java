@@ -21,8 +21,6 @@ import bisq.common.proto.PersistableProto;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.user.profile.UserProfile;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,7 +33,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @ToString
 @Getter
-@Schema(name = "UserProfile")
 public final class UserIdentity implements PersistableProto {
     private final Identity identity;
     private final UserProfile userProfile;
@@ -65,32 +62,26 @@ public final class UserIdentity implements PersistableProto {
     }
 
     // Delegates
-    @JsonIgnore
     public byte[] getPubKeyHash() {
         return userProfile.getPubKeyHash();
     }
 
-    @JsonIgnore
     public String getId() {
         return userProfile.getId();
     }
 
-    @JsonIgnore
     public String getNym() {
         return userProfile.getNym();
     }
 
-    @JsonIgnore
     public String getNickName() {
         return userProfile.getNickName();
     }
 
-    @JsonIgnore
     public NetworkIdWithKeyPair getNetworkIdWithKeyPair() {
         return identity.getNetworkIdWithKeyPair();
     }
 
-    @JsonIgnore
     public String getUserName() {
         return userProfile.getUserName();
     }

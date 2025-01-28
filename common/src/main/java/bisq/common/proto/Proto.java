@@ -18,7 +18,6 @@
 package bisq.common.proto;
 
 import bisq.common.annotation.ExcludeForHash;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import org.slf4j.Logger;
@@ -67,7 +66,6 @@ public interface Proto {
         return resolveProto(true).toByteArray();
     }
 
-    @JsonIgnore
     default int getSerializedSize() {
         return resolveProto(false).getSerializedSize();
     }
@@ -76,7 +74,6 @@ public interface Proto {
         completeProto().writeDelimitedTo(outputStream);
     }
 
-    @JsonIgnore
     default Set<String> getExcludedFields() {
         return Arrays.stream(getClass().getDeclaredFields())
                 .peek(field -> field.setAccessible(true))
@@ -90,7 +87,6 @@ public interface Proto {
                 .collect(Collectors.toSet());
     }
 
-    @JsonIgnore
     default int getVersion() {
         return 0;
     }

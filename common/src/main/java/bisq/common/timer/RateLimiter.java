@@ -31,10 +31,10 @@ public class RateLimiter {
     private final static long HOUR = 60 * MINUTE;
     private final static long DAY = 24 * HOUR;
 
-    private final static int DEFAULT_MAX_PER_SECOND = 3;
-    private final static int DEFAULT_MAX_PER_MINUTE = 30;
-    private final static int DEFAULT_MAX_PER_HOUR = 120;
-    private final static int DEFAULT_MAX_PER_DAY = 300;
+    public final static int DEFAULT_MAX_PER_SECOND = 3;
+    public final static int DEFAULT_MAX_PER_MINUTE = 30;
+    public final static int DEFAULT_MAX_PER_HOUR = 120;
+    public final static int DEFAULT_MAX_PER_DAY = 300;
 
     private final Clock clock;
     private final int maxPerSecond;

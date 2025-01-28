@@ -18,11 +18,9 @@
 package bisq.node_monitor;
 
 import bisq.common.network.Address;
-import bisq.http_api.rest_api.error.RestApiException;
-import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.http_api.rest_api.error.RestApiException;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.reporting.Report;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,6 +32,7 @@ import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Path("/report")
@@ -71,16 +70,16 @@ public class NodeMonitorRestApi {
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = Report.class)
+                            schema = @Schema(implementation = ReportDto.class)
                     )}
     )
     @GET
     @Path("{address}")
-    public Report getReport(
+    public ReportDto getReport(
             @Parameter(description = "address from which we request the report")
             @PathParam("address") String address) {
         try {
-            return networkService.requestReport(Address.fromFullAddress(address)).get();
+            return ReportDto.from(networkService.requestReport(Address.fromFullAddress(address)).get());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore interrupt status
             throw new RestApiException(e);
@@ -98,14 +97,18 @@ public class NodeMonitorRestApi {
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = Report.class)
+                            schema = @Schema(implementation = ReportDto.class)
                     )}
     )
-    public List<Report> getReports(@Parameter(description = "JSON array of addresses") List<String> addresses) {
+    public List<ReportDto> getReports(@Parameter(description = "JSON array of addresses") List<String> addresses) {
         try {
             return CompletableFutureUtils.allOf(addresses.stream()
-                            .map(address -> networkService.requestReport(Address.fromFullAddress(address))))
-                    .get();
+                            .map(address -> networkService.requestReport(Address.fromFullAddress(address)))
+                            .collect(Collectors.toSet()))
+                    .get()
+                    .stream()
+                    .map(ReportDto::from)
+                    .collect(Collectors.toList());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore interrupt status
             throw new RestApiException(e);

@@ -20,7 +20,6 @@ package bisq.common.network;
 import bisq.common.proto.NetworkProto;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -85,28 +84,23 @@ public final class Address implements NetworkProto, Comparable<Address> {
         return new Address(proto.getHost(), proto.getPort());
     }
 
-    @JsonIgnore
     public boolean isClearNetAddress() {
         return InetAddresses.isInetAddress(host);
     }
 
-    @JsonIgnore
     public boolean isTorAddress() {
         return host.endsWith(".onion");
     }
 
-    @JsonIgnore
     public boolean isI2pAddress() {
         //TODO (deferred) add more specific check
         return !isClearNetAddress() && !isTorAddress();
     }
 
-    @JsonIgnore
     public boolean isLocalhost() {
         return host.equals("127.0.0.1");
     }
 
-    @JsonIgnore
     public TransportType getTransportType() {
         if (isClearNetAddress()) {
             return TransportType.CLEAR;
@@ -119,7 +113,6 @@ public final class Address implements NetworkProto, Comparable<Address> {
         }
     }
 
-    @JsonIgnore
     public String getFullAddress() {
         return host + ":" + port;
     }

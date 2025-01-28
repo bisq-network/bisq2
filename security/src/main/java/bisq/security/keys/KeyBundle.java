@@ -1,7 +1,6 @@
 package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -18,11 +17,9 @@ public class KeyBundle implements PersistableProto {
     private final TorKeyPair torKeyPair;
     private final String keyId;
     @ToString.Exclude
-    @JsonIgnore
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final byte[] encodedPrivateKey;
     @ToString.Exclude
-    @JsonIgnore
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final byte[] encodedPublicKey;
     // private final I2pKeyPair i2PKeyPair;
