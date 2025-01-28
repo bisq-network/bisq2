@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.proto.NetworkProto;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,7 +29,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 @ToString
-@Schema(name = "Report")
 public final class Report implements NetworkProto {
     private final TreeMap<String, Integer> authorizedDataPerClassName;
     private final TreeMap<String, Integer> authenticatedDataPerClassName;
@@ -39,7 +37,6 @@ public final class Report implements NetworkProto {
     private final int memoryUsed;
     private final int numThreads;
     private final double nodeLoad;
-
 
     public Report(TreeMap<String, Integer> authorizedDataPerClassName,
                   TreeMap<String, Integer> authenticatedDataPerClassName,

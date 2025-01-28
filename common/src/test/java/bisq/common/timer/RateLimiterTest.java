@@ -84,7 +84,7 @@ public class RateLimiterTest {
         // Using system clock, only the first 5 messages pass.
         rateLimiter = new RateLimiter();
         for (int i = 0; i < 100; i++) {
-            if (i < 5) {
+            if (i < RateLimiter.DEFAULT_MAX_PER_SECOND) {
                 assertFalse(rateLimiter.exceedsLimit(userId));
             } else {
                 assertTrue(rateLimiter.exceedsLimit(userId));

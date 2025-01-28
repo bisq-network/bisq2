@@ -88,12 +88,12 @@ public class NodeMonitorService implements Service {
         }
     }
 
-    public List<AddressDetails> getAddressDetails(List<String> addressList) {
+    public List<AddressDetailsDto> getAddressDetails(List<String> addressList) {
         Set<BondedRole> bondedRoles = bondedRolesService.getAuthorizedBondedRolesService().getBondedRoles();
         return bondedRoles.stream()
                 .flatMap(bondedRole -> bondedRole.getAuthorizedBondedRole().getAddressByTransportTypeMap().stream().flatMap(addressMap -> addressMap.values().stream()
                         .filter(address -> addressList.contains(address.toString())) // Nutze addressList
-                        .map(address -> new AddressDetails(
+                        .map(address -> new AddressDetailsDto(
                                 address.toString(),
                                 bondedRole.getAuthorizedBondedRole().getBondedRoleType().name(),
                                 userService.getUserProfileService()

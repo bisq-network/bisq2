@@ -18,13 +18,10 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.proto.NetworkProto;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 // Interface covering data for storage. Implemented by AppendOnlyData, AuthenticatedData
 public interface StorageData extends NetworkProto {
-    @JsonIgnore
     MetaData getMetaData();
 
-    @JsonIgnore
     boolean isDataInvalid(byte[] ownerPubKeyHash);
 }

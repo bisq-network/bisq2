@@ -20,7 +20,6 @@ package bisq.network.identity;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.NetworkProto;
 import bisq.security.keys.PubKey;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -59,22 +58,18 @@ public final class NetworkId implements NetworkProto {
                 PubKey.fromProto(proto.getPubKey()));
     }
 
-    @JsonIgnore
     public String getId() {
         return pubKey.getId();
     }
 
-    @JsonIgnore
     public String getKeyId() {
         return pubKey.getKeyId();
     }
 
-    @JsonIgnore
     public String getInfo() {
         return "ID: " + getId().substring(0, 8) + "; " + getAddresses();
     }
 
-    @JsonIgnore
     public String getAddresses() {
         return "Addresses: " +
                 Joiner.on(", ").join(addressByTransportTypeMap.values());

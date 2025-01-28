@@ -155,8 +155,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
         // ApplicationVersion is excluded in equals check, so we check manually for it.
         if (existingUserProfile.isEmpty() ||
-                !existingUserProfile.get().equals(userProfile)
-                || !existingUserProfile.get().getApplicationVersion().equals(userProfile.getApplicationVersion())) {
+                !existingUserProfile.get().equals(userProfile) ||
+                !existingUserProfile.get().getApplicationVersion().equals(userProfile.getApplicationVersion())) {
             if (verifyUserProfile(userProfile)) {
                 ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
                 synchronized (persistableStore) {
@@ -169,6 +169,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         } else {
             if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
                 existingUserProfile.get().setPublishDate(userProfile.getPublishDate());
+                persist();
             }
         }
     }
@@ -179,7 +180,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
             removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
             userProfileById.remove(userProfile.getId());
         }
-        numUserProfiles.set(userProfileById.values().size());
+        numUserProfiles.set(userProfileById.size());
         persist();
     }
 
