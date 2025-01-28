@@ -23,6 +23,8 @@ import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -35,9 +37,13 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -64,6 +70,9 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     @Getter
     protected final Observable<Pair<String, Long>> userProfileIdScorePair = new Observable<>();
+    private final Map<ByteArray, Set<T>> pendingAuthorizedDistributedDataMap = new ConcurrentHashMap<>();
+    private Pin userProfileByIdPin;
+
 
     public SourceReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
@@ -79,13 +88,39 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     public CompletableFuture<Boolean> initialize() {
         authorizedBondedRolesService.addListener(this);
+        // In case we have received a AuthorizedDistributedData without the matching user profile because the
+        // user profile was not retrieved yet from the network, we reprocess the AuthorizedDistributedData.
+        userProfileByIdPin = userProfileService.getUserProfileById().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(String key, UserProfile userProfile) {
+                handleAddedUserProfile(userProfile);
+            }
+
+            @Override
+            public void putAll(Map<? extends String, ? extends UserProfile> map) {
+                map.values().forEach(value -> handleAddedUserProfile(value));
+            }
+
+            @Override
+            public void remove(Object key) {
+            }
+
+            @Override
+            public void clear() {
+            }
+        });
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        if (userProfileByIdPin != null) {
+            userProfileByIdPin.unbind();
+            userProfileByIdPin = null;
+        }
         authorizedBondedRolesService.removeListener(this);
         return CompletableFuture.completedFuture(true);
     }
+
 
     /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
@@ -96,20 +131,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         findRelevantData(authorizedData.getAuthorizedDistributedData())
                 .ifPresent(data -> {
                     if (isAuthorized(authorizedData) && isValidVersion(data)) {
-                        ByteArray providedHash = getDataKey(data);
-                        // Clone to avoid ConcurrentModificationException
-                        Collection<UserProfile> values = new ArrayList<>(userProfileService.getUserProfileById().values());
-                        values.stream()
-                                .filter(userProfile -> getUserProfileKey(userProfile).equals(providedHash))
-                                .forEach(userProfile -> {
-                                    ByteArray hash = getUserProfileKey(userProfile);
-                                    if (!dataSetByHash.containsKey(hash)) {
-                                        dataSetByHash.put(hash, new HashSet<>());
-                                    }
-                                    Set<T> dataSet = dataSetByHash.get(hash);
-                                    addToDataSet(dataSet, data);
-                                    putScore(userProfile.getId(), dataSet);
-                                });
+                        handleAddedAuthorizedDistributedData(data);
                     }
                 });
     }
@@ -160,5 +182,55 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         long age = Math.max(0, System.currentTimeMillis() - eventTime);
         double ageFactor = Math.min(1, age / MAX_AGE_BOOST_PERIOD);
         return 1 + ageFactor;
+    }
+
+    private void handleAddedUserProfile(UserProfile userProfile) {
+        ByteArray userProfileKey = getUserProfileKey(userProfile);
+        Set<T> dataSet = pendingAuthorizedDistributedDataMap.get(userProfileKey);
+        if (dataSet != null) {
+            // Clone to avoid ConcurrentModificationException
+            Set<T> clone = new HashSet<>(dataSet);
+            clone.forEach(data -> {
+                // We could get multiple AuthorizedDistributedData for one user profile
+               /* log.debug("We received a user profile with username {} which had a pending " +
+                                "AuthorizedDistributedData with dataKey {} and re-process the AuthorizedDistributedData",
+                        userProfile.getUserName(), getDataKey(data));*/
+                handleAddedAuthorizedDistributedData(data);
+                dataSet.remove(data);
+                if (dataSet.isEmpty()) {
+                    pendingAuthorizedDistributedDataMap.remove(userProfileKey);
+                }
+            });
+        }
+    }
+
+    private void handleAddedAuthorizedDistributedData(T data) {
+        ByteArray providedHash = getDataKey(data);
+        // Clone to avoid ConcurrentModificationException
+        Set<UserProfile> clone = new HashSet<>(userProfileService.getUserProfileById().values());
+        clone.stream()
+                .filter(userProfile -> getUserProfileKey(userProfile).equals(providedHash))
+                .findAny() // We can only have one user profile for a given AuthorizedDistributedData
+                .ifPresentOrElse(userProfile -> {
+                    ByteArray hash = getUserProfileKey(userProfile);
+                    if (!dataSetByHash.containsKey(hash)) {
+                        dataSetByHash.put(hash, new HashSet<>());
+                    }
+                    Set<T> dataSet = dataSetByHash.get(hash);
+                    addToDataSet(dataSet, data);
+                    putScore(userProfile.getId(), dataSet);
+                }, () -> {
+                    // It is expected to receive data which do not have a matching user profile at startup in case
+                    // the AuthorizedDistributedData is delivered before the user profile.
+                    // As the TTL of the reputation AuthorizedDistributedData is 100 days, but the user profile only
+                    // 15 days, that is another reason why we will get AuthorizedDistributedData without matching
+                    // user profile.
+                    log.debug("Could not find a user profile matching the data key {} from the AuthorizedDistributedData. " +
+                                    "We add it to the pendingAuthorizedDistributedDataSet for re-processing once a new user profile gets added.",
+                            providedHash);
+                    pendingAuthorizedDistributedDataMap.putIfAbsent(providedHash, new CopyOnWriteArraySet<>());
+                    Set<T> dataSet = pendingAuthorizedDistributedDataMap.get(providedHash);
+                    dataSet.add(data);
+                });
     }
 }
