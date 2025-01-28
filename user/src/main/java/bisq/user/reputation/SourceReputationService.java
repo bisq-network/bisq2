@@ -70,7 +70,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     @Getter
     protected final Observable<Pair<String, Long>> userProfileIdScorePair = new Observable<>();
-    private final Map<ByteArray, Set<T>> pendingAuthorizedDistributedDataMap = new ConcurrentHashMap<>();
+    private final Map<ByteArray, Set<T>> pendingDataSetByHash = new ConcurrentHashMap<>();
     private Pin userProfileByIdPin;
 
 
@@ -186,7 +186,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     private void handleAddedUserProfile(UserProfile userProfile) {
         ByteArray userProfileKey = getUserProfileKey(userProfile);
-        Set<T> dataSet = pendingAuthorizedDistributedDataMap.get(userProfileKey);
+        Set<T> dataSet = pendingDataSetByHash.get(userProfileKey);
         if (dataSet != null) {
             // Clone to avoid ConcurrentModificationException
             Set<T> clone = new HashSet<>(dataSet);
@@ -198,7 +198,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
                 handleAddedAuthorizedDistributedData(data);
                 dataSet.remove(data);
                 if (dataSet.isEmpty()) {
-                    pendingAuthorizedDistributedDataMap.remove(userProfileKey);
+                    pendingDataSetByHash.remove(userProfileKey);
                 }
             });
         }
@@ -228,8 +228,8 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
                     log.debug("Could not find a user profile matching the data key {} from the AuthorizedDistributedData. " +
                                     "We add it to the pendingAuthorizedDistributedDataSet for re-processing once a new user profile gets added.",
                             providedHash);
-                    pendingAuthorizedDistributedDataMap.putIfAbsent(providedHash, new CopyOnWriteArraySet<>());
-                    Set<T> dataSet = pendingAuthorizedDistributedDataMap.get(providedHash);
+                    pendingDataSetByHash.putIfAbsent(providedHash, new CopyOnWriteArraySet<>());
+                    Set<T> dataSet = pendingDataSetByHash.get(providedHash);
                     dataSet.add(data);
                 });
     }

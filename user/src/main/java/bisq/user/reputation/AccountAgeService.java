@@ -197,6 +197,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         if (now - persistableStore.getLastRequested() > AuthorizedAccountAgeData.TTL / 2) {
             persistableStore.getJsonRequests().forEach(this::doRequestAuthorization);
             persistableStore.setLastRequested(now);
+            persist();
         }
     }
 }

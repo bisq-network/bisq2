@@ -42,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +57,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     private final ProfileAgeStore persistableStore = new ProfileAgeStore();
     @Getter
     private final Persistence<ProfileAgeStore> persistence;
+    private CompletableFuture<Void> requestForAllProfileIdsBeforeExpiredFuture, requestForAllProfileIdsFuture;
 
     public ProfileAgeService(PersistenceService persistenceService,
                              NetworkService networkService,
@@ -75,7 +77,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         Scheduler.run(this::maybeRequestAgain)
                 .host(this)
                 .runnableName("maybeRequestAgain")
-                .after(3, TimeUnit.SECONDS);
+                .after(30, TimeUnit.SECONDS);
 
         userIdentityService.getNewlyCreatedUserIdentity().addObserver(userIdentity -> {
             if (userIdentity != null) {
@@ -118,6 +120,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         }
 
         // If new data is older than existing entry we clear set and add our new data, otherwise we ignore the new data.
+        // We only have one item added as we add only if empty.
         AuthorizedTimestampData existing = new ArrayList<>(dataSet).get(0);
         if (existing.getDate() > data.getDate()) {
             dataSet.clear();
@@ -139,12 +142,11 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     public long calculateScore(AuthorizedTimestampData data) {
         // We do not apply any reputation score to the profile age
         return 0;
-        //Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
     }
 
     public Optional<Long> getProfileAge(UserProfile userProfile) {
         return Optional.ofNullable(dataSetByHash.get(userProfile.getProfileAgeKey()))
-                .flatMap(e -> e.stream().findFirst())
+                .flatMap(e -> e.stream().findFirst()) // We have only 1 item in the dataSet
                 .map(AuthorizedTimestampData::getDate);
     }
 
@@ -158,7 +160,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
 
     private void maybeRequestAgain() {
         boolean didRequestForAllProfileIds = requestForAllProfileIdsBeforeExpired();
-        if (!didRequestForAllProfileIds) {
+        if (!didRequestForAllProfileIds && requestForAllProfileIdsFuture == null) {
             // We check if we have some userProfiles which have not been timestamped yet.
             // If so, we request timestamping of the missing one.
             var timeStamped = networkService.getDataService()
@@ -167,32 +169,53 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
                             .map(authorizedData -> (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData())
                             .map(AuthorizedTimestampData::getProfileId)
                             .collect(Collectors.toSet()));
-            userIdentityService.getUserIdentities().stream()
+            List<String> candidates = userIdentityService.getUserIdentities().stream()
                     .map(userIdentity -> userIdentity.getUserProfile().getId())
                     .filter(profileId -> timeStamped.isEmpty() || !timeStamped.get().contains(profileId))
-                    .forEach(this::requestTimestamp);
+                    .collect(Collectors.toList());
+            requestForAllProfileIdsFuture = requestTimestampWithRandomDelay(candidates,
+                    "requestForAllProfileIds")
+                    .whenComplete((r, t) -> {
+                        requestForAllProfileIdsFuture = null;
+                    });
         }
     }
 
     private boolean requestForAllProfileIdsBeforeExpired() {
         // Before timeout gets triggered we request 
         long now = System.currentTimeMillis();
-        if (now - persistableStore.getLastRequested() > AuthorizedTimestampData.TTL / 2) {
-            persistableStore.setLastRequested(now);
-            persist();
-
-            Set<String> profileIds = new HashSet<>(persistableStore.getProfileIds());
-            CompletableFuture.runAsync(() -> profileIds.forEach(userProfileId -> {
-                        requestTimestamp(userProfileId);
-                        long delay = 30_000 + new Random().nextInt(90_000);
-                        try {
-                            Thread.sleep(delay);
-                        } catch (InterruptedException ignore) {
+        boolean shouldRepublish = now - persistableStore.getLastRequested() > AuthorizedTimestampData.TTL / 2;
+        if (requestForAllProfileIdsBeforeExpiredFuture == null && shouldRepublish) {
+            requestForAllProfileIdsBeforeExpiredFuture = requestTimestampWithRandomDelay(persistableStore.getProfileIds(),
+                    "requestForAllProfileIdsBeforeExpired")
+                    .whenComplete((nil, t) -> {
+                        if (t == null) {
+                            persistableStore.setLastRequested(now);
+                            persist();
                         }
-                    }),
-                    ExecutorFactory.newSingleThreadScheduledExecutor("requestForAllProfileIdsBeforeExpired"));
+                        requestForAllProfileIdsBeforeExpiredFuture = null;
+                    });
             return true;
         }
         return false;
+    }
+
+    private CompletableFuture<Void> requestTimestampWithRandomDelay(Collection<String> profileIds, String threadName) {
+        return CompletableFuture.runAsync(() -> {
+            List<String> candidates = new ArrayList<>(profileIds);
+            Collections.shuffle(candidates);
+            AtomicInteger index = new AtomicInteger();
+            candidates.forEach(userProfileId -> {
+                boolean wasSent = requestTimestamp(userProfileId);
+                if (wasSent && index.get() > 0) {
+                    long delay = 30_000 + new Random().nextInt(90_000);
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ignore) {
+                    }
+                }
+                index.getAndIncrement();
+            });
+        }, ExecutorFactory.newSingleThreadScheduledExecutor(threadName));
     }
 }
