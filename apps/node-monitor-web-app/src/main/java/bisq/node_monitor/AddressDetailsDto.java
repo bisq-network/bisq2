@@ -18,24 +18,7 @@
 package bisq.node_monitor;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Getter
-@EqualsAndHashCode
-@ToString
 @Schema(name = "AddressDetails")
-public final class AddressDetails {
-    private final String address;
-    private final String bondedRoleType;
-    private final String nickNameOrBondUserName;
-
-    public AddressDetails(String address, String bondedRoleType, String nickNameOrBondUserName) {
-        this.address = address;
-        this.bondedRoleType = bondedRoleType;
-        this.nickNameOrBondUserName = nickNameOrBondUserName;
-    }
+public record AddressDetailsDto(String address, String bondedRoleType, String nickNameOrBondUserName) {
 }

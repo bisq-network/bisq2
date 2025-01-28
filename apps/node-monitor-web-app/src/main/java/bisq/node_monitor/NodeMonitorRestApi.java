@@ -123,8 +123,8 @@ public class NodeMonitorRestApi {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Get address info for a set of addresses provided in JSON format")
     @ApiResponse(responseCode = "200", description = "The set of address info (host, role type, nickname, or bond name)",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddressDetails[].class)))
-    public List<AddressDetails> getAddressDetails(@Parameter(description = "JSON array of addresses") List<String> addresses) {
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddressDetailsDto[].class)))
+    public List<AddressDetailsDto> getAddressDetails(@Parameter(description = "JSON array of addresses") List<String> addresses) {
         try {
             log.info("Received request to get address infos for: {}", addresses);
             return nodeMonitorService.getAddressDetails(addresses);
