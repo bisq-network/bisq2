@@ -206,6 +206,16 @@ public class DesktopController extends NavigationController {
     public void onUncaughtException(Thread thread, Throwable throwable) {
         log.error("Uncaught exception from thread {}", thread);
         log.error("Uncaught exception:", throwable);
+        if (throwable instanceof UnsupportedOperationException &&
+                throwable.getMessage() != null &&
+                throwable.getMessage().contains("system tray")) {
+            // User with Ubuntu 24.04.1 LTS / Wayland reported an UnsupportedOperationException, despite we use the
+            // SystemTray only in AwtNotificationService which is used only for Windows and the usage there is covered
+            // by a try/catch. It is unclear from where it gets called as the stacktrace does not expose the path to a
+            // Bisq source code caller.
+            // See https://github.com/bisq-network/bisq2/issues/2832
+            return;
+        }
         UIThread.run(() -> new Popup().error(throwable).show());
     }
 
