@@ -49,6 +49,7 @@ import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.awt.SystemTray;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -276,9 +277,9 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 case MAC_OS:
                     return Optional.of(new OsxNotificationService());
                 case WINDOWS:
-                    return Optional.of(new AwtNotificationService());
-                default:
+                    return SystemTray.isSupported() ? Optional.of(new AwtNotificationService()) : Optional.empty();
                 case ANDROID:
+                default:
                     return Optional.empty();
             }
         } catch (Exception e) {

@@ -31,12 +31,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class AwtNotificationService implements OsSpecificNotificationService {
     private boolean isSupported;
-    private final TrayIcon trayIcon;
+    private TrayIcon trayIcon;
 
     public AwtNotificationService() {
-        URL image = getClass().getClassLoader().getResource("images/app_window/icon_128.png");
-        trayIcon = new TrayIcon(new ImageIcon(image, "Bisq 2").getImage());
-        trayIcon.setImageAutoSize(true);
     }
 
     @Override
@@ -44,6 +41,9 @@ public class AwtNotificationService implements OsSpecificNotificationService {
         try {
             checkArgument(SystemTray.isSupported(), "SystemTray is not supported");
             SystemTray systemTray = SystemTray.getSystemTray();
+            URL image = getClass().getClassLoader().getResource("images/app_window/icon_128.png");
+            trayIcon = new TrayIcon(new ImageIcon(image, "Bisq 2").getImage());
+            trayIcon.setImageAutoSize(true);
             systemTray.add(trayIcon);
             isSupported = true;
         } catch (Exception e) {

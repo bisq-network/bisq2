@@ -27,9 +27,9 @@ import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.http_api.HttpApiService;
-import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.web_socket.WebSocketService;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -51,6 +51,7 @@ import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.awt.SystemTray;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -163,7 +164,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 systemNotificationService,
                 tradeService);
 
-         openTradeItemsService = new OpenTradeItemsService( chatService, tradeService, userService);
+        openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
@@ -284,9 +285,9 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 case MAC_OS:
                     return Optional.of(new OsxNotificationService());
                 case WINDOWS:
-                    return Optional.of(new AwtNotificationService());
-                default:
+                    return SystemTray.isSupported() ? Optional.of(new AwtNotificationService()) : Optional.empty();
                 case ANDROID:
+                default:
                     return Optional.empty();
             }
         } catch (Exception e) {
