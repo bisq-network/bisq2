@@ -551,12 +551,7 @@ public class AmountSelectionController implements Controller {
     }
 
     private void applyQuote() {
-        if (model.getMaxOrFixedBaseSideAmount() == null) {
-            setMaxOrFixedBaseFromQuote();
-            setMinBaseFromQuote();
-        } else {
-            setMaxOrFixedQuoteFromBase();
-            setMinQuoteFromBase();
-        }
+        setMaxOrFixedBaseFromQuote();
+        setMinBaseFromQuote();
     }
 }

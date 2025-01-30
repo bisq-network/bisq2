@@ -270,14 +270,7 @@ public class TradeWizardAmountController implements Controller {
         applyAmountSpec();
 
         if (model.isCreateOfferMode()) {
-            model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice"));
-//            Optional<PriceQuote> marketPriceQuote = getMarketPriceQuote();
-//            if (model.getPriceQuote().get() != null && marketPriceQuote.isPresent()
-//                    && !model.getPriceQuote().get().equals(marketPriceQuote.get())) {
-//                model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.selectedPrice"));
-//            } else {
-//                model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice"));
-//            }
+            model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.selectedPrice"));
         } else {
             // Use best price of matching offer if any match found, otherwise market price.
             Optional<String> bestOffersPriceTooltip = findBestOfferQuote()
