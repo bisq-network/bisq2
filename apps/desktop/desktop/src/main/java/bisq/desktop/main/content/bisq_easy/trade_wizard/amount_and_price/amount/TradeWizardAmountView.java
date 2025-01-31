@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount;
 
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
@@ -45,10 +45,9 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
     private final Label amountLimitInfo, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
     private final Hyperlink learnMoreHyperLink, linkToWiki;
     @Getter
-    private final VBox amountLimitInfoOverlay;
+    private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountModelsBox;
-    private final HBox amountLimitInfoHBox;
+    private final HBox amountModelsBox, amountLimitInfoHBox, amountBox;
     private Subscription isRangeAmountEnabledPin;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
@@ -60,7 +59,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
         VBox amountSelectionRoot = amountSelectionController.getView().getRoot();
         amountSelectionRoot.getStyleClass().add("min-amount");
-        HBox amountBox = new HBox(0, amountSelectionRoot);
+        amountBox = new HBox(0, amountSelectionRoot);
         amountBox.setAlignment(Pos.BASELINE_LEFT);
         amountBox.getStyleClass().add("amount-box");
 
@@ -104,7 +103,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         linkToWikiText = new Label();
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
         linkToWiki.getStyleClass().add("text-fill-green");
-        amountLimitInfoOverlay = getAmountLimitInfoOverlay(amountLimitInfoOverlayInfo, closeOverlayButton,
+        overlay = createOverlay(amountLimitInfoOverlayInfo, closeOverlayButton,
                 linkToWikiText, linkToWiki, learnHowToBuildReputation);
 
         root.getChildren().addAll(amountModelsBox, amountBox, amountLimitInfoHBox);
@@ -139,10 +138,10 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
             amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
-        learnMoreHyperLink.setOnAction(e -> controller.onShowAmountLimitInfoOverlay());
+        learnMoreHyperLink.setOnAction(e -> controller.onShowOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
-        closeOverlayButton.setOnAction(e -> controller.onCloseAmountLimitInfoOverlay());
+        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
         fixedAmount.setOnAction(e -> controller.useFixedAmount());
         rangeAmount.setOnAction(e -> controller.useRangeAmount());
     }
@@ -170,11 +169,11 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         rangeAmount.setOnAction(null);
     }
 
-    private static VBox getAmountLimitInfoOverlay(Label amountLimitInfo,
-                                                  Button closeOverlayButton,
-                                                  Label linkToWikiText,
-                                                  Hyperlink linkToWiki,
-                                                  Button learnHowToBuildReputation) {
+    private static VBox createOverlay(Label amountLimitInfo,
+                                      Button closeOverlayButton,
+                                      Label linkToWikiText,
+                                      Hyperlink linkToWiki,
+                                      Button learnHowToBuildReputation) {
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 

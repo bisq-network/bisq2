@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.price;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
@@ -33,6 +33,7 @@ import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -41,6 +42,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static bisq.presentation.parser.PercentageParser.parse;
 
@@ -51,15 +53,19 @@ public class TradeWizardPriceController implements Controller {
     private final TradeWizardPriceView view;
     private final PriceInput priceInput;
     private final Region owner;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin, priceSliderValuePin, percentagePin;
 
-    public TradeWizardPriceController(ServiceProvider serviceProvider, Region owner) {
+    public TradeWizardPriceController(ServiceProvider serviceProvider,
+                                      Region owner,
+                                      Consumer<Boolean> navigationButtonsVisibleHandler) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         this.owner = owner;
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new TradeWizardPriceModel();
         view = new TradeWizardPriceView(model, this, priceInput);
     }
@@ -96,6 +102,10 @@ public class TradeWizardPriceController implements Controller {
                     .show();
             return false;
         }
+    }
+
+    public ReadOnlyBooleanProperty getIsOverlayVisible() {
+        return model.getIsOverlayVisible();
     }
 
     @Override
@@ -151,7 +161,7 @@ public class TradeWizardPriceController implements Controller {
 
     @Override
     public void onDeactivate() {
-        model.getShouldShowLearnWhyOverlay().set(false);
+        model.getIsOverlayVisible().set(false);
 
         priceInputPin.unsubscribe();
         isPriceInvalidPin.unsubscribe();
@@ -161,6 +171,8 @@ public class TradeWizardPriceController implements Controller {
         percentagePin.unsubscribe();
 
         view.getRoot().setOnKeyPressed(null);
+        navigationButtonsVisibleHandler.accept(true);
+        model.getIsOverlayVisible().set(false);
     }
 
     void onPercentageFocussed(boolean focussed) {
@@ -243,17 +255,19 @@ public class TradeWizardPriceController implements Controller {
         }
     }
 
-    void showLearnWhySection() {
-        model.getShouldShowLearnWhyOverlay().set(true);
+    void onShowOverlay() {
+        navigationButtonsVisibleHandler.accept(false);
+        model.getIsOverlayVisible().set(true);
         view.getRoot().setOnKeyPressed(keyEvent -> {
             KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
             });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::closeLearnWhySection);
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
         });
     }
 
-    void closeLearnWhySection() {
-        model.getShouldShowLearnWhyOverlay().set(false);
+    void onCloseOverlay() {
+        navigationButtonsVisibleHandler.accept(true);
+        model.getIsOverlayVisible().set(false);
         view.getRoot().setOnKeyPressed(null);
     }
 
@@ -369,6 +383,8 @@ public class TradeWizardPriceController implements Controller {
             } else {
                 feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.veryGood"));
             }
+
+            model.getShouldShowWarningIcon().set(percentageValue < 0.05);
             model.getFeedbackSentence().set(feedbackSentence);
         } else {
             model.getFeedbackSentence().set(null);
@@ -376,7 +392,9 @@ public class TradeWizardPriceController implements Controller {
     }
 
     private String getFeedbackSentence(String adjective) {
-        return Res.get("bisqEasy.price.feedback.sentence", adjective);
+        return model.getDirection().isBuy()
+                ? Res.get("bisqEasy.price.feedback.buyOffer.sentence", adjective)
+                : Res.get("bisqEasy.price.feedback.sellOffer.sentence", adjective);
     }
 
     private void applyPriceFromCookie(String price) {

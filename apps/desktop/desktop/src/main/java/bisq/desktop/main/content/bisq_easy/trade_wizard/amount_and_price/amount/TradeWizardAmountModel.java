@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
@@ -68,7 +68,7 @@ public class TradeWizardAmountModel implements Model {
     private long myReputationScore;
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isRangeAmountEnabled = new SimpleBooleanProperty();
-    private final BooleanProperty isAmountLimitInfoOverlayVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
     private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
@@ -90,7 +90,7 @@ public class TradeWizardAmountModel implements Model {
         baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
         isRangeAmountEnabled.set(false);
-        isAmountLimitInfoOverlayVisible.set(false);
+        isOverlayVisible.set(false);
         priceTooltip.set(null);
         quoteSideAmountSpec.set(null);
         priceQuote.set(null);

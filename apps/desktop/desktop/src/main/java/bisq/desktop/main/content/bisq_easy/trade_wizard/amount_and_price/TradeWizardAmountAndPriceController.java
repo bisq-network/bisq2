@@ -23,8 +23,8 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.price.TradeWizardPriceController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount.TradeWizardAmountController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.price.TradeWizardPriceController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideAmountSpec;
@@ -51,27 +51,35 @@ public class TradeWizardAmountAndPriceController implements Controller {
                                                Consumer<Boolean> navigationButtonsVisibleHandler,
                                                Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.owner = owner;
-        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, owner,
-                navigationButtonsVisibleHandler, closeAndNavigateToHandler);
-        tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, owner);
+        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider,
+                owner,
+                navigationButtonsVisibleHandler,
+                closeAndNavigateToHandler);
+        tradeWizardPriceController = new TradeWizardPriceController(serviceProvider,
+                owner,
+                navigationButtonsVisibleHandler);
 
         model = new TradeWizardAmountAndPriceModel();
         view = new TradeWizardAmountAndPriceView(model,
                 this,
                 tradeWizardAmountController.getView().getRoot(),
-                tradeWizardAmountController.getView().getAmountLimitInfoOverlay(),
-                tradeWizardPriceController.getView().getRoot());
+                tradeWizardAmountController.getView().getOverlay(),
+                tradeWizardPriceController.getView().getRoot(),
+                tradeWizardPriceController.getView().getOverlay());
     }
+
 
     @Override
     public void onActivate() {
         model.setHeadline(getHeadline());
-        model.getIsAmountOverlayVisible().bind(tradeWizardAmountController.getIsAmountOverlayVisible());
+        model.getIsAmountOverlayVisible().bind(tradeWizardAmountController.getIsOverlayVisible());
+        model.getIsPriceOverlayVisible().bind(tradeWizardPriceController.getIsOverlayVisible());
     }
 
     @Override
     public void onDeactivate() {
         model.getIsAmountOverlayVisible().unbind();
+        model.getIsPriceOverlayVisible().unbind();
     }
 
     public void reset() {
@@ -95,6 +103,7 @@ public class TradeWizardAmountAndPriceController implements Controller {
     public void setMarket(Market market) {
         tradeWizardAmountController.setMarket(market);
         tradeWizardPriceController.setMarket(market);
+        model.setMarket(market);
     }
 
     public void updateQuoteSideAmountSpecWithPriceSpec(PriceSpec priceSpec) {
@@ -124,7 +133,10 @@ public class TradeWizardAmountAndPriceController implements Controller {
 
     private String getHeadline() {
         if (model.isCreateOfferMode()) {
-            return Res.get("bisqEasy.tradeWizard.amountAtPrice.headline");
+            String quoteCurrencyCode = model.getMarket().getQuoteCurrencyCode();
+            return model.getDirection().isBuy()
+                    ? Res.get("bisqEasy.tradeWizard.amountAtPrice.buy.headline", quoteCurrencyCode)
+                    : Res.get("bisqEasy.tradeWizard.amountAtPrice.sell.headline", quoteCurrencyCode);
         }
 
         return model.getDirection().isBuy()

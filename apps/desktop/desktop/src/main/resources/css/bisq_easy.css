@@ -725,12 +725,6 @@
     -fx-alignment: top-center;
 }
 
-.bisq-easy-trade-wizard-price-step-pane {
-    -fx-pref-width: 340;
-    -fx-max-width: 340;
-    -fx-min-width: 340;
-}
-
 .amount-and-price-step .content-box {
     -fx-padding: 40 0 0 0;
     -fx-alignment: top-center;
@@ -1097,13 +1091,6 @@
     -fx-alignment: baseline-left;
 }
 
-.bisq-easy-trade-wizard-price-step .price-content {
-    -fx-alignment: center;
-    -fx-max-width: 340;
-    -fx-min-width: 340;
-    -fx-pref-width: 340;
-}
-
 .bisq-easy-trade-wizard-price-step .selection-models,
 .bisq-easy-trade-wizard-amount-step .selection-models {
     -fx-alignment: center;
@@ -1161,7 +1148,7 @@
     -fx-padding: 0 0 15 0;
 }
 
-.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-text {
+.learn-why-text {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.15em;
