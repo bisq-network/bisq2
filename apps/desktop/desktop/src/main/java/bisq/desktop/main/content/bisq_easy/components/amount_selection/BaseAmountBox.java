@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BaseAmountBox {
-    private static final double ICON_SCALE = 0.8;
+    private static final double ICON_SCALE = 0.85;
     private static final double ICON_OPACITY = 0.5;
     private static final String DEFAULT_TOOLTIP = "bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice";
     private static final String AMOUNT_TEXT_ID = "quote-amount-text-field";
@@ -154,6 +154,7 @@ public class BaseAmountBox {
             baseAmountInfoIcon.getStyleClass().add("base-amount-info-icon");
             baseAmountInfoIcon.setMinWidth(Label.USE_PREF_SIZE);
 
+            HBox.setMargin(baseAmountInfoIcon, new Insets(0, 0, 0, 4));
             root.getChildren().addAll(baseAmountLabel, codeLabel, baseAmountInfoIcon);
             root.setAlignment(Pos.CENTER);
             root.getStyleClass().add("base-amount-box");
