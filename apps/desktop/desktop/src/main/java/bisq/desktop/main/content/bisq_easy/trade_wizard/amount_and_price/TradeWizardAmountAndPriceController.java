@@ -59,14 +59,14 @@ public class TradeWizardAmountAndPriceController implements Controller {
         view = new TradeWizardAmountAndPriceView(model,
                 this,
                 tradeWizardAmountController.getView().getRoot(),
-                tradeWizardAmountController.getView().getAmountLimitInfoOverlay(),
+                tradeWizardAmountController.getView().getOverlay(),
                 tradeWizardPriceController.getView().getRoot());
     }
 
     @Override
     public void onActivate() {
         model.setHeadline(getHeadline());
-        model.getIsAmountOverlayVisible().bind(tradeWizardAmountController.getIsAmountOverlayVisible());
+        model.getIsAmountOverlayVisible().bind(tradeWizardAmountController.getIsOverlayVisible());
     }
 
     @Override

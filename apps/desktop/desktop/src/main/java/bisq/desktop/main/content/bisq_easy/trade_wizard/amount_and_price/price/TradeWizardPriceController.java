@@ -151,7 +151,7 @@ public class TradeWizardPriceController implements Controller {
 
     @Override
     public void onDeactivate() {
-        model.getShouldShowLearnWhyOverlay().set(false);
+        model.getIsOverlayVisible().set(false);
 
         priceInputPin.unsubscribe();
         isPriceInvalidPin.unsubscribe();
@@ -243,17 +243,17 @@ public class TradeWizardPriceController implements Controller {
         }
     }
 
-    void showLearnWhySection() {
-        model.getShouldShowLearnWhyOverlay().set(true);
+    void onShowOverlay() {
+        model.getIsOverlayVisible().set(true);
         view.getRoot().setOnKeyPressed(keyEvent -> {
             KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
             });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::closeLearnWhySection);
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
         });
     }
 
-    void closeLearnWhySection() {
-        model.getShouldShowLearnWhyOverlay().set(false);
+    void onCloseOverlay() {
+        model.getIsOverlayVisible().set(false);
         view.getRoot().setOnKeyPressed(null);
     }
 

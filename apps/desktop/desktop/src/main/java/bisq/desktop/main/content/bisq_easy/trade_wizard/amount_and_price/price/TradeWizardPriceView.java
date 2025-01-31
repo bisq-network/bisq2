@@ -51,7 +51,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("00");
 
     private final PriceInputBox percentageInput;
-    private final VBox learnWhyOverlay, content;
+    private final VBox overlay, content;
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, closeLearnWhyButton;
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
@@ -131,12 +131,12 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         // Overlay
         closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
-        learnWhyOverlay = createAndGetLearnWhyOverlay();
+        overlay = createAndGetLearnWhyOverlay();
 
         VBox.setMargin(sliderBox, new Insets(22.5, 0, 0, 0));
         content = new VBox(10, pricingModels, fieldsBox, sliderBox, feedbackBox);
         content.getStyleClass().add("price-content");
-        StackPane layeredContent = new StackPane(content, learnWhyOverlay);
+        StackPane layeredContent = new StackPane(content, overlay);
         layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");
         root.getChildren().addAll(layeredContent);
         root.getStyleClass().add("bisq-easy-trade-wizard-price-step-pane");
@@ -163,23 +163,23 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
 
-        shouldShowLearnWhyOverlayPin = EasyBind.subscribe(model.getShouldShowLearnWhyOverlay(), showOverlay -> UIScheduler.run(() -> {
+        shouldShowLearnWhyOverlayPin = EasyBind.subscribe(model.getIsOverlayVisible(), showOverlay -> UIScheduler.run(() -> {
             if (showOverlay) {
-                learnWhyOverlay.setVisible(true);
-                learnWhyOverlay.setManaged(true);
+                overlay.setVisible(true);
+                overlay.setManaged(true);
                 Transitions.blurStrong(content, 0);
-                Transitions.slideInTop(learnWhyOverlay, 450);
+                Transitions.slideInTop(overlay, 450);
             } else {
-                learnWhyOverlay.setVisible(false);
-                learnWhyOverlay.setManaged(false);
+                overlay.setVisible(false);
+                overlay.setManaged(false);
                 Transitions.removeEffect(content);
             }
         }).after(100));
 
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
         fixedPrice.setOnAction(e -> controller.useFixedPrice());
-        showLearnWhyButton.setOnAction(e -> controller.showLearnWhySection());
-        closeLearnWhyButton.setOnAction(e -> controller.closeLearnWhySection());
+        showLearnWhyButton.setOnAction(e -> controller.onShowOverlay());
+        closeLearnWhyButton.setOnAction(e -> controller.onCloseOverlay());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.

@@ -41,11 +41,7 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.AmountSpecUtil;
-import bisq.offer.amount.spec.FixedAmountSpec;
-import bisq.offer.amount.spec.QuoteSideAmountSpec;
-import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
-import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
+import bisq.offer.amount.spec.*;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
@@ -76,7 +72,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static bisq.bisq_easy.BisqEasyTradeAmountLimits.*;
-import static bisq.presentation.formatters.AmountFormatter.*;
+import static bisq.presentation.formatters.AmountFormatter.formatQuoteAmountWithCode;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -202,8 +198,8 @@ public class TradeWizardAmountController implements Controller {
         return model.getQuoteSideAmountSpec();
     }
 
-    public ReadOnlyBooleanProperty getIsAmountOverlayVisible() {
-        return model.getIsAmountLimitInfoOverlayVisible();
+    public ReadOnlyBooleanProperty getIsOverlayVisible() {
+        return model.getIsOverlayVisible();
     }
 
     @Override
@@ -301,23 +297,23 @@ public class TradeWizardAmountController implements Controller {
         priceTooltipPin.unsubscribe();
         view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
-        model.getIsAmountLimitInfoOverlayVisible().set(false);
+        model.getIsOverlayVisible().set(false);
     }
 
-    void onShowAmountLimitInfoOverlay() {
+    void onShowOverlay() {
         navigationButtonsVisibleHandler.accept(false);
-        model.getIsAmountLimitInfoOverlayVisible().set(true);
+        model.getIsOverlayVisible().set(true);
         view.getRoot().setOnKeyPressed(keyEvent -> {
             KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
             });
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseAmountLimitInfoOverlay);
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
         });
     }
 
-    void onCloseAmountLimitInfoOverlay() {
+    void onCloseOverlay() {
         view.getRoot().setOnKeyPressed(null);
         navigationButtonsVisibleHandler.accept(true);
-        model.getIsAmountLimitInfoOverlayVisible().set(false);
+        model.getIsOverlayVisible().set(false);
     }
 
     void onLearnHowToBuildReputation() {
