@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
