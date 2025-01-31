@@ -120,7 +120,9 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         unitLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
         HBox detailsAndUnitHBox = new HBox(3, detailsLabel, unitLabel);
         detailsAndUnitHBox.setAlignment(Pos.BASELINE_CENTER);
-        return new VBox(titleLabel, detailsAndUnitHBox);
+        VBox vBox = new VBox(titleLabel, detailsAndUnitHBox);
+        vBox.setAlignment(Pos.CENTER);
+        return vBox;
     }
 
     private Region getLine() {
