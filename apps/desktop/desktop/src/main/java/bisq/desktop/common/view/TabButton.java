@@ -124,6 +124,7 @@ public class TabButton extends Pane implements Toggle {
         numMessagesBadge = new Badge();
 
         clearNotificationsButton = BisqIconButton.createIconButton("clear-notifications");
+        clearNotificationsButton.getGraphic().setOpacity(0.8);
         clearNotificationsButton.setOpacity(0);
         Pane clearNotificationsButtonPane = new Pane(clearNotificationsButton);
         clearNotificationsButtonPane.setLayoutX(-1.5);
