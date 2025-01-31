@@ -47,8 +47,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
     @Getter
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountModelsBox;
-    private final HBox amountLimitInfoHBox;
+    private final HBox amountModelsBox, amountLimitInfoHBox, amountBox;
     private Subscription isRangeAmountEnabledPin;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
@@ -60,7 +59,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
         VBox amountSelectionRoot = amountSelectionController.getView().getRoot();
         amountSelectionRoot.getStyleClass().add("min-amount");
-        HBox amountBox = new HBox(0, amountSelectionRoot);
+        amountBox = new HBox(0, amountSelectionRoot);
         amountBox.setAlignment(Pos.BASELINE_LEFT);
         amountBox.getStyleClass().add("amount-box");
 
@@ -104,7 +103,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         linkToWikiText = new Label();
         linkToWiki = new Hyperlink("https://bisq.wiki/Reputation");
         linkToWiki.getStyleClass().add("text-fill-green");
-        overlay = getOverlay(amountLimitInfoOverlayInfo, closeOverlayButton,
+        overlay = createOverlay(amountLimitInfoOverlayInfo, closeOverlayButton,
                 linkToWikiText, linkToWiki, learnHowToBuildReputation);
 
         root.getChildren().addAll(amountModelsBox, amountBox, amountLimitInfoHBox);
@@ -170,11 +169,11 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         rangeAmount.setOnAction(null);
     }
 
-    private static VBox getOverlay(Label amountLimitInfo,
-                                   Button closeOverlayButton,
-                                   Label linkToWikiText,
-                                   Hyperlink linkToWiki,
-                                   Button learnHowToBuildReputation) {
+    private static VBox createOverlay(Label amountLimitInfo,
+                                      Button closeOverlayButton,
+                                      Label linkToWikiText,
+                                      Hyperlink linkToWiki,
+                                      Button learnHowToBuildReputation) {
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.amount.limitInfo.overlay.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 

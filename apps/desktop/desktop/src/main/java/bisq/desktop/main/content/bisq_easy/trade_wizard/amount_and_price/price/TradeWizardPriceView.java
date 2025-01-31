@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.price;
 
 import bisq.desktop.common.Icons;
-import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -37,8 +36,8 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -51,17 +50,20 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("00");
 
     private final PriceInputBox percentageInput;
-    private final VBox overlay, content;
+    @Getter
+    private final VBox overlay;
     private final PriceInput priceInput;
-    private final Button percentagePrice, fixedPrice, closeLearnWhyButton;
+    private final Button percentagePrice, fixedPrice, closeOverlayButton;
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
     private final HBox feedbackBox;
     private final Slider slider;
     private final Hyperlink showLearnWhyButton;
-    private Subscription percentageFocussedPin, useFixPricePin, shouldShowLearnWhyOverlayPin;
+    private Subscription percentageFocussedPin, useFixPricePin;
 
-    public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
-        super(new VBox(), model, controller);
+    public TradeWizardPriceView(TradeWizardPriceModel model,
+                                TradeWizardPriceController controller,
+                                PriceInput priceInput) {
+        super(new VBox(10), model, controller);
 
         this.priceInput = priceInput;
 
@@ -130,16 +132,12 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackBox.setAlignment(Pos.CENTER);
 
         // Overlay
-        closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
-        overlay = createAndGetLearnWhyOverlay();
+        closeOverlayButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
+        overlay = createOverlay();
 
         VBox.setMargin(sliderBox, new Insets(22.5, 0, 0, 0));
-        content = new VBox(10, pricingModels, fieldsBox, sliderBox, feedbackBox);
-        content.getStyleClass().add("price-content");
-        StackPane layeredContent = new StackPane(content, overlay);
-        layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");
-        root.getChildren().addAll(layeredContent);
-        root.getStyleClass().add("bisq-easy-trade-wizard-price-step-pane");
+        root.getChildren().addAll(pricingModels, fieldsBox, sliderBox, feedbackBox);
+        root.getStyleClass().add("bisq-easy-trade-wizard-price-step");
     }
 
     @Override
@@ -163,23 +161,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
 
-        shouldShowLearnWhyOverlayPin = EasyBind.subscribe(model.getIsOverlayVisible(), showOverlay -> UIScheduler.run(() -> {
-            if (showOverlay) {
-                overlay.setVisible(true);
-                overlay.setManaged(true);
-                Transitions.blurStrong(content, 0);
-                Transitions.slideInTop(overlay, 450);
-            } else {
-                overlay.setVisible(false);
-                overlay.setManaged(false);
-                Transitions.removeEffect(content);
-            }
-        }).after(100));
-
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
         fixedPrice.setOnAction(e -> controller.useFixedPrice());
         showLearnWhyButton.setOnAction(e -> controller.onShowOverlay());
-        closeLearnWhyButton.setOnAction(e -> controller.onCloseOverlay());
+        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -205,12 +190,11 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         percentageFocussedPin.unsubscribe();
         useFixPricePin.unsubscribe();
-        shouldShowLearnWhyOverlayPin.unsubscribe();
 
         percentagePrice.setOnAction(null);
         fixedPrice.setOnAction(null);
         showLearnWhyButton.setOnAction(null);
-        closeLearnWhyButton.setOnAction(null);
+        closeOverlayButton.setOnAction(null);
 
         Parent node = root;
         while (node.getParent() != null) {
@@ -247,18 +231,21 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         }
     }
 
-    private VBox createAndGetLearnWhyOverlay() {
-        Label learnWhyTitle = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.title"));
-        learnWhyTitle.getStyleClass().addAll("learn-why-title-label", "large-text");
+    private VBox createOverlay() {
+        Label headlineLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.title"));
+        headlineLabel.getStyleClass().addAll("learn-why-title-label", "large-text");
         Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
-        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "learn-why-intro-label");
+        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "learn-why-intro-label", "wrap-text");
         UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
                 "learn-why-text", 7, 10, "- ", "- ");
+        VBox.setMargin(closeOverlayButton, new Insets(10, 0, 0, 0));
+        VBox content = new VBox(40, headlineLabel, learnWhyIntroLabel, learnWhyExpositionList, closeOverlayButton);
+        content.setAlignment(Pos.TOP_CENTER);
+        content.getStyleClass().setAll("trade-wizard-feedback-bg");
+        content.setPadding(new Insets(30));
 
-        VBox overlay = new VBox(10, learnWhyTitle, learnWhyIntroLabel, learnWhyExpositionList, closeLearnWhyButton);
-        overlay.getStyleClass().addAll("trade-wizard-feedback-bg", "learn-why-overlay");
-        StackPane.setAlignment(overlay, Pos.TOP_CENTER);
-        StackPane.setMargin(overlay, new Insets(-63, 0, 0, 0));
-        return overlay;
+        VBox vBox = new VBox(content, Spacer.fillVBox());
+        content.setMaxWidth(700);
+        return vBox;
     }
 }

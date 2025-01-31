@@ -33,6 +33,7 @@ import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -41,6 +42,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static bisq.presentation.parser.PercentageParser.parse;
 
@@ -51,15 +53,19 @@ public class TradeWizardPriceController implements Controller {
     private final TradeWizardPriceView view;
     private final PriceInput priceInput;
     private final Region owner;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin, priceSliderValuePin, percentagePin;
 
-    public TradeWizardPriceController(ServiceProvider serviceProvider, Region owner) {
+    public TradeWizardPriceController(ServiceProvider serviceProvider,
+                                      Region owner,
+                                      Consumer<Boolean> navigationButtonsVisibleHandler) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         this.owner = owner;
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new TradeWizardPriceModel();
         view = new TradeWizardPriceView(model, this, priceInput);
     }
@@ -96,6 +102,10 @@ public class TradeWizardPriceController implements Controller {
                     .show();
             return false;
         }
+    }
+
+    public ReadOnlyBooleanProperty getIsOverlayVisible() {
+        return model.getIsOverlayVisible();
     }
 
     @Override
@@ -161,6 +171,8 @@ public class TradeWizardPriceController implements Controller {
         percentagePin.unsubscribe();
 
         view.getRoot().setOnKeyPressed(null);
+        navigationButtonsVisibleHandler.accept(true);
+        model.getIsOverlayVisible().set(false);
     }
 
     void onPercentageFocussed(boolean focussed) {
@@ -244,6 +256,7 @@ public class TradeWizardPriceController implements Controller {
     }
 
     void onShowOverlay() {
+        navigationButtonsVisibleHandler.accept(false);
         model.getIsOverlayVisible().set(true);
         view.getRoot().setOnKeyPressed(keyEvent -> {
             KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
@@ -253,6 +266,7 @@ public class TradeWizardPriceController implements Controller {
     }
 
     void onCloseOverlay() {
+        navigationButtonsVisibleHandler.accept(true);
         model.getIsOverlayVisible().set(false);
         view.getRoot().setOnKeyPressed(null);
     }

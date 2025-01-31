@@ -51,27 +51,35 @@ public class TradeWizardAmountAndPriceController implements Controller {
                                                Consumer<Boolean> navigationButtonsVisibleHandler,
                                                Consumer<NavigationTarget> closeAndNavigateToHandler) {
         this.owner = owner;
-        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, owner,
-                navigationButtonsVisibleHandler, closeAndNavigateToHandler);
-        tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, owner);
+        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider,
+                owner,
+                navigationButtonsVisibleHandler,
+                closeAndNavigateToHandler);
+        tradeWizardPriceController = new TradeWizardPriceController(serviceProvider,
+                owner,
+                navigationButtonsVisibleHandler);
 
         model = new TradeWizardAmountAndPriceModel();
         view = new TradeWizardAmountAndPriceView(model,
                 this,
                 tradeWizardAmountController.getView().getRoot(),
                 tradeWizardAmountController.getView().getOverlay(),
-                tradeWizardPriceController.getView().getRoot());
+                tradeWizardPriceController.getView().getRoot(),
+                tradeWizardPriceController.getView().getOverlay());
     }
+
 
     @Override
     public void onActivate() {
         model.setHeadline(getHeadline());
         model.getIsAmountOverlayVisible().bind(tradeWizardAmountController.getIsOverlayVisible());
+        model.getIsPriceOverlayVisible().bind(tradeWizardPriceController.getIsOverlayVisible());
     }
 
     @Override
     public void onDeactivate() {
         model.getIsAmountOverlayVisible().unbind();
+        model.getIsPriceOverlayVisible().unbind();
     }
 
     public void reset() {

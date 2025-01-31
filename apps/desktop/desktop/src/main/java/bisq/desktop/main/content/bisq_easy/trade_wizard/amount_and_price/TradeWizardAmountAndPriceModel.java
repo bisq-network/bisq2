@@ -36,6 +36,7 @@ public class TradeWizardAmountAndPriceModel implements Model {
     private Direction direction;
     private Market market;
     private final BooleanProperty isAmountOverlayVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isPriceOverlayVisible = new SimpleBooleanProperty();
 
     public void reset() {
         isCreateOfferMode = false;
@@ -44,5 +45,6 @@ public class TradeWizardAmountAndPriceModel implements Model {
         direction = null;
         market = null;
         isAmountOverlayVisible.set(false);
+        isPriceOverlayVisible.set(false);
     }
 }

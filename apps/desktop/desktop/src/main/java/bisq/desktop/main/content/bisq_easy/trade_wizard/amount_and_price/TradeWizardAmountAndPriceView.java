@@ -32,18 +32,23 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountAndPriceModel, TradeWizardAmountAndPriceController> {
     private final Label headline, amountAtPriceSymbol;
-    private final VBox priceSelection, content, amountOverlay;
-    private Subscription isAmountOverlayVisiblePin;
+    private final VBox priceSelection;
+    private final VBox priceOverlay;
+    private final VBox content;
+    private final VBox amountOverlay;
+    private Subscription isAmountOverlayVisiblePin, isPriceOverlayVisiblePin;
 
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,
                                          TradeWizardAmountAndPriceController controller,
                                          VBox amountSelection,
                                          VBox amountOverlay,
-                                         VBox priceSelection) {
+                                         VBox priceSelection,
+                                         VBox priceOverlay) {
         super(new VBox(), model, controller);
 
         this.amountOverlay = amountOverlay;
         this.priceSelection = priceSelection;
+        this.priceOverlay = priceOverlay;
         headline = new Label();
         headline.getStyleClass().add("bisq-text-headline-2");
         amountAtPriceSymbol = new Label("@");
@@ -55,14 +60,22 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
         content = new VBox(20, headline, amountAndPriceHBox);
         content.getStyleClass().add("content-box");
 
-        StackPane layeredContent = new StackPane(content, amountOverlay);
+        StackPane layeredContent = new StackPane(content, amountOverlay, priceOverlay);
         StackPane.setMargin(amountOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
+        // For unclear reasons the priceOverlay is not centered
+        StackPane.setMargin(priceOverlay, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 70));
         root.getChildren().addAll(layeredContent);
         root.getStyleClass().add("amount-and-price-step");
     }
 
     @Override
     protected void onViewAttached() {
+        if (model.isCreateOfferMode()) {
+            VBox.setMargin(headline, new Insets(0, 0, 0, 0));
+        } else {
+            VBox.setMargin(headline, new Insets(30, 0, 10, 0));
+        }
+
         headline.textProperty().set(model.getHeadline());
         amountAtPriceSymbol.visibleProperty().set(model.isShowPriceSelection());
         amountAtPriceSymbol.managedProperty().set(model.isShowPriceSelection());
@@ -83,10 +96,26 @@ public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountA
                 }
             }
         });
+
+        isPriceOverlayVisiblePin = EasyBind.subscribe(model.getIsPriceOverlayVisible(), isPriceOverlayVisible -> {
+            if (isPriceOverlayVisible) {
+                priceOverlay.setVisible(true);
+                priceOverlay.setOpacity(1);
+                Transitions.blurStrong(content, 0);
+                Transitions.slideInTop(priceOverlay, 450);
+            } else {
+                Transitions.removeEffect(content);
+                if (priceOverlay.isVisible()) {
+                    Transitions.fadeOut(priceOverlay, Transitions.DEFAULT_DURATION / 2,
+                            () -> priceOverlay.setVisible(false));
+                }
+            }
+        });
     }
 
     @Override
     protected void onViewDetached() {
         isAmountOverlayVisiblePin.unsubscribe();
+        isPriceOverlayVisiblePin.unsubscribe();
     }
 }
