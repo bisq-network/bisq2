@@ -90,9 +90,9 @@ public class AmountSelectionController implements Controller {
             UIThread.runOnNextRenderFrame(this::applyQuote);
         };
         maxOrFixedSliderListener = (observable, oldValue, newValue) ->
-            applySliderValue(newValue.doubleValue(), maxOrFixedQuoteSideAmountInput);
+                applySliderValue(newValue.doubleValue(), maxOrFixedQuoteSideAmountInput);
         minSliderListener = (observable, oldValue, newValue) ->
-            applySliderValue(newValue.doubleValue(), minQuoteSideAmountInput);
+                applySliderValue(newValue.doubleValue(), minQuoteSideAmountInput);
     }
 
     public void setMaxOrFixedBaseSideAmount(Monetary value) {
@@ -380,7 +380,7 @@ public class AmountSelectionController implements Controller {
             Monetary minRangeQuoteSideValue = model.getMinRangeQuoteSideValue().get();
             Monetary maxRangeQuoteSideValue = model.getMaxRangeQuoteSideValue().get();
             long midValue = minRangeQuoteSideValue.getValue() + (maxRangeQuoteSideValue.getValue() - minRangeQuoteSideValue.getValue()) / 2;
-            Monetary exactAmount =  Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode());
+            Monetary exactAmount = Fiat.fromValue(midValue, priceQuote.getQuoteSideMonetary().getCode());
             quoteSideAmountInput.setAmount(exactAmount.round(0));
         } else {
             log.warn("price.quoteProperty().get() is null. We use a fiat value of 100 as default value.");

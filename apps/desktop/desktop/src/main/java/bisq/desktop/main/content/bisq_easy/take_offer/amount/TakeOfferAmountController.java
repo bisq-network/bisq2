@@ -156,8 +156,11 @@ public class TakeOfferAmountController implements Controller {
     private void applyQuoteSideMinMaxRange(Monetary minRangeValue, Monetary offersQuoteSideMaxOrFixedAmount) {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         Market market = bisqEasyOffer.getMarket();
+        String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
+        String makersUserProfileId = bisqEasyOffer.getMakersUserProfileId();
         if (model.getSellersReputationBasedQuoteSideAmount() == null) {
-            long sellersReputationScore = reputationService.getReputationScore(bisqEasyOffer.getMakersUserProfileId()).getTotalScore();
+            String sellersProfileId = bisqEasyOffer.getDirection().isSell() ? makersUserProfileId : myProfileId;
+            long sellersReputationScore = reputationService.getReputationScore(sellersProfileId).getTotalScore();
             model.setSellersReputationScore(sellersReputationScore);
             Monetary reputationBasedQuoteSideAmount = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, sellersReputationScore)
                     .orElseThrow()
@@ -192,7 +195,6 @@ public class TakeOfferAmountController implements Controller {
         } else {
             // Seller case
             model.setLinkToWikiText(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay.linkToWikiText"));
-            String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
             long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
             BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, myReputationScore)
                     .ifPresent(myReputationBasedQuoteSideAmount -> {
