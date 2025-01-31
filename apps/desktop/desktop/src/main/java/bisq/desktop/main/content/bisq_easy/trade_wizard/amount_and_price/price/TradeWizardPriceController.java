@@ -369,6 +369,8 @@ public class TradeWizardPriceController implements Controller {
             } else {
                 feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.veryGood"));
             }
+
+            model.getShouldShowWarningIcon().set(percentageValue < 0.05);
             model.getFeedbackSentence().set(feedbackSentence);
         } else {
             model.getFeedbackSentence().set(null);
@@ -376,7 +378,9 @@ public class TradeWizardPriceController implements Controller {
     }
 
     private String getFeedbackSentence(String adjective) {
-        return Res.get("bisqEasy.price.feedback.sentence", adjective);
+        return model.getDirection().isBuy()
+                ? Res.get("bisqEasy.price.feedback.buyOffer.sentence", adjective)
+                : Res.get("bisqEasy.price.feedback.sellOffer.sentence", adjective);
     }
 
     private void applyPriceFromCookie(String price) {

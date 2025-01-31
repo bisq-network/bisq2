@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.price;
 
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
@@ -27,10 +28,12 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.desktop.main.content.bisq_easy.components.PriceInputBox;
 import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
@@ -50,10 +53,11 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final PriceInputBox percentageInput;
     private final VBox learnWhyOverlay, content;
     private final PriceInput priceInput;
-    private final Button percentagePrice, fixedPrice, showLearnWhyButton, closeLearnWhyButton;
-    private final Label feedbackSentence, minSliderValue, maxSliderValue;
+    private final Button percentagePrice, fixedPrice, closeLearnWhyButton;
+    private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
     private final HBox feedbackBox;
     private final Slider slider;
+    private final Hyperlink showLearnWhyButton;
     private Subscription percentageFocussedPin, useFixPricePin, shouldShowLearnWhyOverlayPin;
 
     public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
@@ -109,19 +113,28 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         VBox sliderBox = new VBox(2, slider, sliderIndicators);
 
         // Feedback sentence
+        warningIcon = new Label();
+        warningIcon.getStyleClass().add("text-fill-grey-dimmed");
+        warningIcon.setPadding(new Insets(0, 2.5, 0, 0));
+        warningIcon.setMinWidth(Label.USE_PREF_SIZE);
+        Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, warningIcon, "1em");
+
         feedbackSentence = new Label();
-        feedbackSentence.getStyleClass().add("bisq-text-3");
-        showLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.openButton"));
-        showLearnWhyButton.getStyleClass().add("learn-why-button");
-        feedbackBox = new HBox(5, feedbackSentence, showLearnWhyButton);
-        feedbackBox.getStyleClass().add("feedback-box");
+        feedbackSentence.getStyleClass().add("trade-wizard-amount-limit-info");
+
+        showLearnWhyButton = new Hyperlink(Res.get("bisqEasy.price.feedback.learnWhySection.openButton"));
+        showLearnWhyButton.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+        showLearnWhyButton.setMinWidth(Hyperlink.USE_PREF_SIZE);
+
+        feedbackBox = new HBox(2.5, warningIcon, feedbackSentence, showLearnWhyButton);
+        feedbackBox.setAlignment(Pos.CENTER);
 
         // Overlay
         closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
         learnWhyOverlay = createAndGetLearnWhyOverlay();
 
         VBox.setMargin(sliderBox, new Insets(22.5, 0, 0, 0));
-        content = new VBox(10, pricingModels, fieldsBox, sliderBox/*, feedbackBox*/);
+        content = new VBox(10, pricingModels, fieldsBox, sliderBox, feedbackBox);
         content.getStyleClass().add("price-content");
         StackPane layeredContent = new StackPane(content, learnWhyOverlay);
         layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");
@@ -138,6 +151,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageInput.conversionPriceSymbolTextProperty().set(model.getMarket().getMarketCodes());
         percentageInput.initialize();
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
+        warningIcon.visibleProperty().bind(model.getShouldShowWarningIcon());
+        warningIcon.managedProperty().bind(model.getShouldShowWarningIcon());
         feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
         slider.valueProperty().bindBidirectional(model.getPriceSliderValue());
@@ -183,6 +198,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackSentence.textProperty().unbind();
         feedbackBox.visibleProperty().unbind();
         feedbackBox.managedProperty().unbind();
+        warningIcon.visibleProperty().unbind();
+        warningIcon.managedProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getPriceSliderValue());
         model.getSliderFocus().unbind();
 

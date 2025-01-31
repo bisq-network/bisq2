@@ -51,6 +51,7 @@ public class TradeWizardPriceModel implements Model {
     private final StringProperty feedbackSentence = new SimpleStringProperty();
     private final BooleanProperty shouldShowLearnWhyOverlay = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowFeedback = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowWarningIcon = new SimpleBooleanProperty();
     @Setter
     private boolean isFocused;
     private final DoubleProperty priceSliderValue = new SimpleDoubleProperty();
