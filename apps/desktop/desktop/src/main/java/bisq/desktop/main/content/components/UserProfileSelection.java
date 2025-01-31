@@ -257,7 +257,7 @@ public class UserProfileSelection {
             dropdownMenu.setContent(userProfileDisplay);
             dropdownMenu.useSpaceBetweenContentAndIcon();
 
-            singleUserProfileDisplay = new UserProfileDisplay(iconSize, false);
+            singleUserProfileDisplay = new UserProfileDisplay(iconSize, true);
             singleUserProfileHBox = new HBox(singleUserProfileDisplay);
             singleUserProfileHBox.getStyleClass().add("single-user-profile");
             singleUserProfileHBox.setFillHeight(true);
@@ -282,7 +282,7 @@ public class UserProfileSelection {
             selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserIdentity(), selectedUserIdentity -> {
                 userProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile(), false);
                 userProfileDisplay.setReputationScore(model.getUserReputationScore());
-                singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile(), false);
+                singleUserProfileDisplay.setUserProfile(selectedUserIdentity.getUserProfile(), true);
                 singleUserProfileDisplay.setReputationScore(model.getUserReputationScore());
                 model.getUserProfiles().forEach(userProfileMenuItem ->
                         userProfileMenuItem.updateSelection(selectedUserIdentity.equals(userProfileMenuItem.getUserIdentity())));
