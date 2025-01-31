@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price;
 
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import javafx.beans.property.BooleanProperty;
@@ -33,6 +34,7 @@ public class TradeWizardAmountAndPriceModel implements Model {
     private boolean showPriceSelection;
     private String headline;
     private Direction direction;
+    private Market market;
     private final BooleanProperty isAmountOverlayVisible = new SimpleBooleanProperty();
 
     public void reset() {
@@ -40,6 +42,7 @@ public class TradeWizardAmountAndPriceModel implements Model {
         showPriceSelection = false;
         headline = "";
         direction = null;
+        market = null;
         isAmountOverlayVisible.set(false);
     }
 }

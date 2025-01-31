@@ -95,6 +95,7 @@ public class TradeWizardAmountAndPriceController implements Controller {
     public void setMarket(Market market) {
         tradeWizardAmountController.setMarket(market);
         tradeWizardPriceController.setMarket(market);
+        model.setMarket(market);
     }
 
     public void updateQuoteSideAmountSpecWithPriceSpec(PriceSpec priceSpec) {
@@ -124,7 +125,10 @@ public class TradeWizardAmountAndPriceController implements Controller {
 
     private String getHeadline() {
         if (model.isCreateOfferMode()) {
-            return Res.get("bisqEasy.tradeWizard.amountAtPrice.headline");
+            String quoteCurrencyCode = model.getMarket().getQuoteCurrencyCode();
+            return model.getDirection().isBuy()
+                    ? Res.get("bisqEasy.tradeWizard.amountAtPrice.buy.headline", quoteCurrencyCode)
+                    : Res.get("bisqEasy.tradeWizard.amountAtPrice.sell.headline", quoteCurrencyCode);
         }
 
         return model.getDirection().isBuy()
