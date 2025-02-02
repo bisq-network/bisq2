@@ -81,18 +81,14 @@ public class TakeOfferAmountController implements Controller {
         PriceUtil.findQuote(marketPriceService, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
                 .ifPresent(amountSelectionController::setQuote);
 
-        Optional<Monetary> OptionalQuoteSideMinAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, bisqEasyOffer);
-        if (OptionalQuoteSideMinAmount.isPresent()) {
-            Monetary quoteSideMinAmount = OptionalQuoteSideMinAmount.get().round(0);
-            Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow().round(0);
-            applyQuoteSideMinMaxRange(quoteSideMinAmount, offersQuoteSideMaxOrFixedAmount);
-            String btcAmount = takersDirection.isBuy()
-                    ? Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount")
-                    : Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount");
-            Optional<String> priceQuoteOptional = PriceUtil.findQuote(marketPriceService, model.getBisqEasyOffer())
-                    .map(priceQuote -> "\n" + Res.get("bisqEasy.component.amount.baseSide.tooltip.taker.offerPrice", PriceFormatter.formatWithCode(priceQuote)));
-            priceQuoteOptional.ifPresent(priceQuote -> amountSelectionController.setTooltip(String.format("%s%s", btcAmount, priceQuote)));
-        }
+        applyQuoteSideMinMaxRange();
+
+        String btcAmount = takersDirection.isBuy()
+                ? Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount")
+                : Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount");
+        Optional<String> priceQuoteOptional = PriceUtil.findQuote(marketPriceService, model.getBisqEasyOffer())
+                .map(priceQuote -> "\n" + Res.get("bisqEasy.component.amount.baseSide.tooltip.taker.offerPrice", PriceFormatter.formatWithCode(priceQuote)));
+        priceQuoteOptional.ifPresent(priceQuote -> amountSelectionController.setTooltip(String.format("%s%s", btcAmount, priceQuote)));
     }
 
     public ReadOnlyObjectProperty<Monetary> getTakersQuoteSideAmount() {
@@ -105,6 +101,7 @@ public class TakeOfferAmountController implements Controller {
 
     @Override
     public void onActivate() {
+        applyQuoteSideMinMaxRange();
         baseSideAmountPin = EasyBind.subscribe(amountSelectionController.getMaxOrFixedBaseSideAmount(),
                 amount -> {
                     model.getTakersBaseSideAmount().set(amount);
@@ -153,8 +150,16 @@ public class TakeOfferAmountController implements Controller {
         Browser.open(url);
     }
 
-    private void applyQuoteSideMinMaxRange(Monetary minRangeValue, Monetary offersQuoteSideMaxOrFixedAmount) {
+    private void applyQuoteSideMinMaxRange() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+        if (bisqEasyOffer == null) {
+            return;
+        }
+        Optional<Monetary> OptionalQuoteSideMinAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, bisqEasyOffer);
+        if (OptionalQuoteSideMinAmount.isEmpty()) {
+            return;
+        }
+
         Market market = bisqEasyOffer.getMarket();
         String myProfileId = userIdentityService.getSelectedUserIdentity().getUserProfile().getId();
         String makersUserProfileId = bisqEasyOffer.getMakersUserProfileId();
@@ -169,6 +174,8 @@ public class TakeOfferAmountController implements Controller {
         }
         long sellersReputationScore = model.getSellersReputationScore();
         Monetary reputationBasedQuoteSideAmount = model.getSellersReputationBasedQuoteSideAmount().round(0);
+        Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow().round(0);
+        Monetary minRangeValue = OptionalQuoteSideMinAmount.get().round(0);
         Monetary maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
                 ? reputationBasedQuoteSideAmount
                 : offersQuoteSideMaxOrFixedAmount;
