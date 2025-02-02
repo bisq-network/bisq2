@@ -167,6 +167,7 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         amountLimitInfoOverlayInfo.setAlignment(Pos.BASELINE_LEFT);
+        amountLimitInfoOverlayInfo.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
         linkToWikiText.getStyleClass().addAll("bisq-text-21", "wrap-text");
 
