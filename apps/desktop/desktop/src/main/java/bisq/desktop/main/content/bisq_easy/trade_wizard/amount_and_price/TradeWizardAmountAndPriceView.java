@@ -32,10 +32,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeWizardAmountAndPriceView extends View<VBox, TradeWizardAmountAndPriceModel, TradeWizardAmountAndPriceController> {
     private final Label headline, amountAtPriceSymbol;
-    private final VBox priceSelection;
-    private final VBox priceOverlay;
-    private final VBox content;
-    private final VBox amountOverlay;
+    private final VBox priceSelection, priceOverlay, content, amountOverlay;
     private Subscription isAmountOverlayVisiblePin, isPriceOverlayVisiblePin;
 
     public TradeWizardAmountAndPriceView(TradeWizardAmountAndPriceModel model,

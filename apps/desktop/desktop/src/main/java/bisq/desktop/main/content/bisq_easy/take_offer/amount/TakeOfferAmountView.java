@@ -32,7 +32,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -110,21 +109,20 @@ public class TakeOfferAmountView extends View<StackPane, TakeOfferAmountModel, T
         amountLimitInfoHBox.managedProperty().bind(model.getIsAmountLimitInfoVisible());
         amountLimitInfoHBox.visibleProperty().bind(model.getIsAmountLimitInfoVisible());
 
-        isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(),
-                isAmountLimitInfoVisible -> {
-                    if (isAmountLimitInfoVisible) {
-                        amountLimitInfoOverlay.setVisible(true);
-                        amountLimitInfoOverlay.setOpacity(1);
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(amountLimitInfoOverlay, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                        if (amountLimitInfoOverlay.isVisible()) {
-                            Transitions.fadeOut(amountLimitInfoOverlay, Transitions.DEFAULT_DURATION / 2,
-                                    () -> amountLimitInfoOverlay.setVisible(false));
-                        }
-                    }
-                });
+        isAmountLimitInfoVisiblePin = EasyBind.subscribe(model.getIsAmountLimitInfoOverlayVisible(), isAmountLimitInfoVisible -> {
+            if (isAmountLimitInfoVisible) {
+                amountLimitInfoOverlay.setVisible(true);
+                amountLimitInfoOverlay.setOpacity(1);
+                Transitions.blurStrong(content, 0);
+                Transitions.slideInTop(amountLimitInfoOverlay, 450);
+            } else {
+                Transitions.removeEffect(content);
+                if (amountLimitInfoOverlay.isVisible()) {
+                    Transitions.fadeOut(amountLimitInfoOverlay, Transitions.DEFAULT_DURATION / 2,
+                            () -> amountLimitInfoOverlay.setVisible(false));
+                }
+            }
+        });
 
         isWarningIconVisiblePin  = EasyBind.subscribe(model.getIsWarningIconVisible(), isWarningIconVisible -> {
             warningIcon.setVisible(isWarningIconVisible);
