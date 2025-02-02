@@ -47,7 +47,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
     @Getter
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
-    private final HBox amountModelsBox, amountLimitInfoHBox, amountBox;
+    private final HBox amountModelsBox, amountLimitInfoHBox;
     private Subscription isRangeAmountEnabledPin;
 
     public TradeWizardAmountView(TradeWizardAmountModel model,
@@ -59,7 +59,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
         VBox amountSelectionRoot = amountSelectionController.getView().getRoot();
         amountSelectionRoot.getStyleClass().add("min-amount");
-        amountBox = new HBox(0, amountSelectionRoot);
+        HBox amountBox = new HBox(0, amountSelectionRoot);
         amountBox.setAlignment(Pos.BASELINE_LEFT);
         amountBox.getStyleClass().add("amount-box");
 
