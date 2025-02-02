@@ -1014,13 +1014,13 @@
 
 .amount-selection .range-value,
 .amount-selection .range-code,
-.price-content .range-value {
+.bisq-easy-trade-wizard-price-step .range-value {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-mid-grey-20;
 }
 
 .amount-selection .range-value,
-.price-content .range-value {
+.bisq-easy-trade-wizard-price-step .range-value {
     -fx-font-size: 1.1em;
 }
 
