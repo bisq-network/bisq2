@@ -49,8 +49,6 @@ import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.user.banned.BannedUserService;
@@ -205,10 +203,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
         if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
             onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
-        } else if (bisqEasyTradeMessage instanceof BisqEasyBtcAddressMessage) {
-            onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) bisqEasyTradeMessage);
-        } else if (bisqEasyTradeMessage instanceof BisqEasyAccountDataMessage) {
-            onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) bisqEasyTradeMessage);
         } else {
             handleBisqEasyTradeMessage(bisqEasyTradeMessage);
         }
@@ -306,23 +300,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private void handleBisqEasyTradeEvent(BisqEasyTrade trade, BisqEasyTradeEvent event) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
-        handleEvent(getProtocol(trade.getId()), event);
+        String tradeId = trade.getId();
+        findProtocol(tradeId).ifPresentOrElse(protocol -> handleEvent(protocol, event),
+                () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
         String tradeId = message.getTradeId();
         findProtocol(tradeId).ifPresentOrElse(protocol -> handleEvent(protocol, message),
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
-    }
-
-    private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
-        BisqEasyProtocol protocol = getProtocol(message.getTradeId());
-        handleEvent(protocol, message);
-    }
-
-    private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
-        BisqEasyProtocol protocol = getProtocol(message.getTradeId());
-        handleEvent(protocol, message);
     }
 
     private void handleEvent(BisqEasyProtocol protocol, Event event) {
@@ -337,12 +323,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     public Optional<BisqEasyProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
-    }
-
-    public BisqEasyProtocol getProtocol(String id) throws IllegalArgumentException {
-        Optional<BisqEasyProtocol> protocol = findProtocol(id);
-        checkArgument(protocol.isPresent(), "No protocol found for trade ID " + id);
-        return protocol.get();
     }
 
     public Optional<BisqEasyTrade> findTrade(String tradeId) {
