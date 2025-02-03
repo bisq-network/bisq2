@@ -95,9 +95,11 @@ public class ReputationRankingController implements Controller {
             @Override
             public void putAll(Map<? extends String, ? extends UserProfile> map) {
                 UIThread.run(() -> {
-                    CatHash.pruneOutdatedProfileIcons(new HashSet<>(map.values()));
+                    HashSet<UserProfile> userProfilesClone = new HashSet<>(map.values());
+                    CatHash.pruneOutdatedProfileIcons(userProfilesClone);
 
-                    List<ReputationRankingView.ListItem> listItems = map.values().stream()
+                    HashSet<? extends UserProfile> clone = new HashSet<>(map.values());
+                    List<ReputationRankingView.ListItem> listItems = clone.stream()
                             .map(userProfile -> new ReputationRankingView.ListItem(userProfile,
                                     reputationService,
                                     ReputationRankingController.this,
