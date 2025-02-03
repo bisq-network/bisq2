@@ -371,6 +371,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                                     sellersScore,
                                     isAmountRangeOffer ? requiredReputationScoreForMinOrFixed : requiredReputationScoreForMaxOrFixed,
                                     isAmountRangeOffer ? minFiatAmount : maxFiatAmount))
+                            .onAction(() -> Navigation.navigateTo(NavigationTarget.BUILD_REPUTATION))
+                            .actionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.buildReputation"))
                             .show();
                 } else {
                     Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
