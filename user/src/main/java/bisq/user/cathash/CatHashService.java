@@ -19,6 +19,7 @@ package bisq.user.cathash;
 
 import bisq.common.encoding.Hex;
 import bisq.common.file.FileUtils;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ByteArrayUtils;
 import bisq.user.profile.UserProfile;
 import lombok.Setter;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -156,16 +158,18 @@ public abstract class CatHashService<T> {
                         .orElse(new HashSet<>());
                 Set<String> toRemove = new HashSet<>(fromDisk);
                 toRemove.removeAll(fromData);
-                log.info("We remove following user profile icons which are not found in the current user profile list:{}", toRemove);
-                toRemove.forEach(fileName -> {
-                    File file = Path.of(iconsDirectory.getAbsolutePath(), versionDir, fileName).toFile();
-                    try {
-                        log.error("Remove {}", file);
-                        FileUtils.deleteFile(file);
-                    } catch (IOException e) {
-                        log.error("Failed to remove file {}", file, e);
-                    }
-                });
+                CompletableFuture.runAsync(() -> {
+                    log.info("We remove following user profile icons which are not found in the current user profile list:{}", toRemove);
+                    toRemove.forEach(fileName -> {
+                        File file = Path.of(iconsDirectory.getAbsolutePath(), versionDir, fileName).toFile();
+                        try {
+                            log.error("Remove {}", file);
+                            FileUtils.deleteFile(file);
+                        } catch (IOException e) {
+                            log.error("Failed to remove file {}", file, e);
+                        }
+                    });
+                }, ExecutorFactory.newSingleThreadExecutor("pruneOutdatedProfileIcons"));
             } catch (Exception e) {
                 log.error("Unexpected versionDir {}", versionDir, e);
             }
