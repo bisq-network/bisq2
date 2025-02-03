@@ -276,7 +276,7 @@ public class BisqEasyTradeAmountLimits {
                         .map(reputationService::getReputationScore)
                         .map(ReputationScore::getTotalScore)
                         .orElse(0L);
-                boolean hasInsufficientReputation = sellersScore < requiredReputationScoreForMinOrFixed;
+                boolean hasInsufficientReputation = withTolerance(sellersScore) < requiredReputationScoreForMinOrFixed;
                 if (hasInsufficientReputation) {
                     if (useCache) {
                         SELL_OFFERS_WITH_INSUFFICIENT_REPUTATION.add(offerId);
