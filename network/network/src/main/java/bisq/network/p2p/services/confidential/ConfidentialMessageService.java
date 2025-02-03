@@ -41,6 +41,7 @@ import bisq.security.HybridEncryption;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -74,6 +75,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    @Getter
     private final Set<EnvelopePayloadMessage> processedEnvelopePayloadMessages = new HashSet<>();
     private volatile boolean isShutdownInProgress;
 
@@ -377,7 +379,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
                         // For backward compatibility we send 2 versions of mailbox data, thus we will receive each
                         // mailbox data 2 times. We do not want that client code need to deal with duplications,
-                        // thus we filter here out the duplicated message and.
+                        // thus we filter here out the duplicated message.
                         boolean wasNotPresent = processedEnvelopePayloadMessages.add(decryptedEnvelopePayloadMessage);
                         if (wasNotPresent) {
                             PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());

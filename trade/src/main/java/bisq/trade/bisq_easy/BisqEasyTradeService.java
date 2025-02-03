@@ -22,7 +22,6 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
-import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -49,8 +48,6 @@ import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.user.banned.BannedUserService;
@@ -64,7 +61,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -93,7 +90,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
-        identityService =  serviceProvider.getIdentityService();
+        identityService = serviceProvider.getIdentityService();
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
@@ -107,9 +104,19 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        networkService.addConfidentialMessageListener(this);
-
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
+
+        networkService.getConfidentialMessageServices().stream()
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                .forEach(message -> {
+                    if (message instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
+                        log.info("We have already processed a mailbox message for {} before we added the listener and apply that to our handler",
+                                message.getClass().getSimpleName());
+                        processBisqEasyTradeMessage(bisqEasyTradeMessage);
+                    }
+                });
+
+        networkService.addConfidentialMessageListener(this);
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
@@ -155,15 +162,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        if(authorizedAlertDataSetPin != null) {
+        if (authorizedAlertDataSetPin != null) {
             authorizedAlertDataSetPin.unbind();
             authorizedAlertDataSetPin = null;
         }
-        if(numDaysAfterRedactingTradeDataPin != null) {
+        if (numDaysAfterRedactingTradeDataPin != null) {
             numDaysAfterRedactingTradeDataPin.unbind();
             numDaysAfterRedactingTradeDataPin = null;
         }
-        if(numDaysAfterRedactingTradeDataScheduler != null) {
+        if (numDaysAfterRedactingTradeDataScheduler != null) {
             numDaysAfterRedactingTradeDataScheduler.stop();
             numDaysAfterRedactingTradeDataScheduler = null;
         }
@@ -180,23 +187,23 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
-            verifyTradingNotOnHalt();
-            verifyMinVersionForTrading();
+            processBisqEasyTradeMessage(bisqEasyTradeMessage);
+        }
+    }
 
-            if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
-                log.warn("Message ignored as sender is banned");
-                return;
-            }
+    private void processBisqEasyTradeMessage(BisqEasyTradeMessage bisqEasyTradeMessage) {
+        verifyTradingNotOnHalt();
+        verifyMinVersionForTrading();
 
-            if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
-                onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyBtcAddressMessage) {
-                onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyAccountDataMessage) {
-                onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) bisqEasyTradeMessage);
-            } else {
-                handleBisqEasyTradeMessage(bisqEasyTradeMessage);
-            }
+        if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
+            log.warn("Message ignored as sender is banned");
+            return;
+        }
+
+        if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
+            handleBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
+        } else {
+            handleBisqEasyTradeMessage(bisqEasyTradeMessage);
         }
     }
 
@@ -205,10 +212,20 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // Message event
     /* --------------------------------------------------------------------- */
 
-    private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
-        BisqEasyContract bisqEasyContract = checkNotNull(message.getBisqEasyContract());
+    private void handleBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
+        BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
         BisqEasyProtocol protocol = createProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
-        handleEvent(protocol, message);
+        protocol.handle(message);
+        persist();
+    }
+
+    private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
+        String tradeId = message.getTradeId();
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    protocol.handle(message);
+                    persist();
+                },
+                () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
 
 
@@ -292,27 +309,12 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private void handleBisqEasyTradeEvent(BisqEasyTrade trade, BisqEasyTradeEvent event) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
-        handleEvent(getProtocol(trade.getId()), event);
-    }
-
-    private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
-        String tradeId = message.getTradeId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> handleEvent(protocol, message),
+        String tradeId = trade.getId();
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    protocol.handle(event);
+                    persist();
+                },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
-    }
-
-    private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
-        BisqEasyProtocol protocol = getProtocol(message.getTradeId());
-        handleEvent(protocol, message);
-    }
-
-    private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
-        BisqEasyProtocol protocol = getProtocol(message.getTradeId());
-        handleEvent(protocol, message);
-    }
-    private void handleEvent(BisqEasyProtocol protocol, Event event) {
-        protocol.handle(event);
-        persist();
     }
 
 
@@ -322,12 +324,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     public Optional<BisqEasyProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
-    }
-
-    public BisqEasyProtocol getProtocol(String id) throws IllegalArgumentException {
-        Optional<BisqEasyProtocol> protocol = findProtocol(id);
-        checkArgument(protocol.isPresent(), "No protocol found for trade ID " + id);
-        return protocol.get();
     }
 
     public Optional<BisqEasyTrade> findTrade(String tradeId) {
