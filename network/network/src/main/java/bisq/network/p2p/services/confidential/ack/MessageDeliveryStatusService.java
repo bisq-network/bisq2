@@ -88,6 +88,9 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                 .runnableName("checkPending")
                 .after(1000);
 
+        networkService.getConfidentialMessageServices().stream()
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                .forEach(this::onMessage);
         networkService.addConfidentialMessageListener(this);
     }
 

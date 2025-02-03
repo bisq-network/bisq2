@@ -20,6 +20,7 @@ package bisq.trade.submarine;
 import bisq.common.application.Service;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
+import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -51,9 +52,11 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
 
     // We don't persist the protocol, only the model.
     private final Map<String, SubmarineProtocol> tradeProtocolById = new ConcurrentHashMap<>();
+    private final NetworkService networkService;
 
     public SubmarineTradeService(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
+        networkService = serviceProvider.getNetworkService();
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
@@ -63,7 +66,10 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        serviceProvider.getNetworkService().addConfidentialMessageListener(this);
+        networkService.getConfidentialMessageServices().stream()
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                .forEach(this::onMessage);
+        networkService.addConfidentialMessageListener(this);
 
         persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
 
@@ -71,7 +77,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        serviceProvider.getNetworkService().removeConfidentialMessageListener(this);
+        networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

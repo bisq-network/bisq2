@@ -64,6 +64,9 @@ public abstract class PrivateChatChannelService<
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        networkService.getConfidentialMessageServices().stream()
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                .forEach(this::onMessage);
         networkService.addConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }

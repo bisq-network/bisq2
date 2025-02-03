@@ -80,6 +80,9 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
+        networkService.getConfidentialMessageServices().stream()
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                .forEach(this::onMessage);
         networkService.addConfidentialMessageListener(this);
         authorizedBondedRolesService.addListener(this);
 
