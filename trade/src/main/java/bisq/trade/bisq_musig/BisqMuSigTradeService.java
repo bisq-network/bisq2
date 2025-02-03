@@ -20,6 +20,7 @@ package bisq.trade.bisq_musig;
 import bisq.common.application.Service;
 import bisq.contract.bisq_musig.BisqMuSigContract;
 import bisq.identity.Identity;
+import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -47,14 +48,16 @@ public class BisqMuSigTradeService implements PersistenceClient<BisqMuSigTradeSt
     private final BisqMuSigTradeStore persistableStore = new BisqMuSigTradeStore();
     @Getter
     private final Persistence<BisqMuSigTradeStore> persistence;
-    private final ServiceProvider serviceProvider;
 
     // We don't persist the protocol, only the model.
     private final Map<String, BisqMuSigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
+    private final ServiceProvider serviceProvider;
+    private final NetworkService networkService;
 
     public BisqMuSigTradeService(ServiceProvider serviceProvider) {
-        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.serviceProvider = serviceProvider;
+        networkService = serviceProvider.getNetworkService();
+        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
 
@@ -63,7 +66,10 @@ public class BisqMuSigTradeService implements PersistenceClient<BisqMuSigTradeSt
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        serviceProvider.getNetworkService().addConfidentialMessageListener(this);
+        networkService.getConfidentialMessageServices().stream()
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                .forEach(this::onMessage);
+        networkService.addConfidentialMessageListener(this);
 
         persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
 
@@ -71,7 +77,7 @@ public class BisqMuSigTradeService implements PersistenceClient<BisqMuSigTradeSt
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        serviceProvider.getNetworkService().removeConfidentialMessageListener(this);
+        networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

@@ -142,6 +142,9 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         log.info("initialize");
         return httpService.initialize()
                 .whenComplete((result, throwable) -> {
+                    networkService.getConfidentialMessageServices().stream()
+                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                            .forEach(this::onMessage);
                     networkService.addConfidentialMessageListener(this);
                     authorizedBondedRolesService.addListener(this);
 
