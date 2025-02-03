@@ -22,7 +22,6 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
-import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -202,7 +201,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         }
 
         if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
-            onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
+            handleBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
         } else {
             handleBisqEasyTradeMessage(bisqEasyTradeMessage);
         }
@@ -213,10 +212,20 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // Message event
     /* --------------------------------------------------------------------- */
 
-    private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
+    private void handleBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
         BisqEasyProtocol protocol = createProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
-        handleEvent(protocol, message);
+        protocol.handle(message);
+        persist();
+    }
+
+    private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
+        String tradeId = message.getTradeId();
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    protocol.handle(message);
+                    persist();
+                },
+                () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
 
 
@@ -301,19 +310,11 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> handleEvent(protocol, event),
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    protocol.handle(event);
+                    persist();
+                },
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
-    }
-
-    private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
-        String tradeId = message.getTradeId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> handleEvent(protocol, message),
-                () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
-    }
-
-    private void handleEvent(BisqEasyProtocol protocol, Event event) {
-        protocol.handle(event);
-        persist();
     }
 
 
