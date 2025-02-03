@@ -107,9 +107,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        networkService.addConfidentialMessageListener(this);
-
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
+
+        networkService.addConfidentialMessageListener(this);
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
