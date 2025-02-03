@@ -19,6 +19,7 @@ package bisq.os_specific.notifications.osx;
 
 import bisq.common.platform.OS;
 import bisq.common.platform.Version;
+import bisq.common.threading.ExecutorFactory;
 import bisq.os_specific.notifications.osx.foundation.Foundation;
 import bisq.os_specific.notifications.osx.foundation.ID;
 import bisq.presentation.notifications.OsSpecificNotificationService;
@@ -37,16 +38,18 @@ public class OsxNotificationService implements OsSpecificNotificationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        try {
-            checkArgument(new Version(OS.getOsVersion()).aboveOrEqual("10.8.0"),
-                    "OSX version must be at least 10.8.0 (Mountain Lion)");
-            // If native lib would not be supported it throws an exception
-            Foundation.init();
-            isSupported = true;
-        } catch (Exception e) {
-            log.warn("OsxNotificationService not supported.", e);
-            isSupported = false;
-        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                checkArgument(new Version(OS.getOsVersion()).aboveOrEqual("10.8.0"),
+                        "OSX version must be at least 10.8.0 (Mountain Lion)");
+                // If native lib would not be supported it throws an exception
+                Foundation.init();
+                isSupported = true;
+            } catch (Exception e) {
+                log.warn("OsxNotificationService not supported.", e);
+                isSupported = false;
+            }
+        }, ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService"));
         return CompletableFuture.completedFuture(true);
     }
 
