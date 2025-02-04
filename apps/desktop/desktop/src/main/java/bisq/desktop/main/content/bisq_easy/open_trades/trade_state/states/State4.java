@@ -30,6 +30,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
+import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
@@ -37,6 +38,8 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -61,6 +64,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
                                        BisqEasyOpenTradeChannel channel);
 
     protected static abstract class Controller<M extends State4.Model, V extends State4.View<?, ?>> extends BaseState.Controller<M, V> {
+        private final ReputationService reputationService;
         protected final ExplorerService explorerService;
 
         protected Controller(ServiceProvider serviceProvider,
@@ -69,6 +73,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             super(serviceProvider, bisqEasyTrade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
+            reputationService = serviceProvider.getUserService().getReputationService();
         }
 
         @Override
@@ -84,7 +89,8 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             String paymentProof = bisqEasyTrade.getPaymentProof().get();
             model.setPaymentProof(paymentProof);
             model.setPaymentProofVisible(paymentProof != null);
-            model.setTradePeer(model.getChannel().getPeer());
+            UserProfile tradePeer = model.getChannel().getPeer();
+            model.setTradePeer(tradePeer);
             model.setBuyer(bisqEasyTrade.isBuyer());
             model.setFiatCurrency(bisqEasyTrade.getOffer().getMarket().getQuoteCurrencyCode());
             model.setPaymentMethod(contract.getQuoteSidePaymentMethodSpec().getShortDisplayString());
@@ -100,6 +106,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
             model.setPrice(PriceFormatter.format(BisqEasyTradeUtils.getPriceQuote(bisqEasyTrade)));
             model.setPriceSymbol(model.getBisqEasyOffer().getMarket().getMarketCodes());
+            model.setTradePeerReputationScore(reputationService.findReputationScore(tradePeer).orElse(ReputationScore.NONE));
         }
 
         @Override
@@ -158,6 +165,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         protected String price;
         protected String priceSymbol;
         protected Optional<String> txId = Optional.empty();
+        protected ReputationScore tradePeerReputationScore;
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -165,6 +173,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
     }
 
     public static abstract class View<M extends State4.Model, C extends State4.Controller<?, ?>> extends BaseState.View<M, C> {
+        private final UserProfileDisplay peerProfileDisplay;
         protected final Button closeTradeButton, exportButton, detailsButton;
         protected final TradeCompletedTable tradeCompletedTable;
 
@@ -172,6 +181,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             super(model, controller);
 
             tradeCompletedTable = new TradeCompletedTable();
+            peerProfileDisplay = new UserProfileDisplay();
 
             detailsButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.showDetails"));
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.exportTrade"));
@@ -195,7 +205,9 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             if (model.isPaymentProofVisible()) {
                 txIdDescriptionAndValue = Optional.of(new Pair<>(model.getPaymentProofDescription(), model.getPaymentProof()));
             }
-            tradeCompletedTable.initialize(model.getTradePeer(), model.isBuyer(), model.getBaseAmount(),
+            peerProfileDisplay.setUserProfile(model.getTradePeer());
+            peerProfileDisplay.setReputationScore(model.getTradePeerReputationScore());
+            tradeCompletedTable.initialize(peerProfileDisplay, model.isBuyer(), model.getBaseAmount(),
                     model.getQuoteAmount(), model.getFiatCurrency(), model.getPaymentMethod(), model.getTradeId(),
                     model.getTradeDate(), model.getTradeDuration(), model.getPrice(), model.getPriceSymbol(), txIdDescriptionAndValue);
             if (model.isBlockExplorerLinkVisible()) {
@@ -213,6 +225,8 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             super.onViewDetached();
 
             tradeCompletedTable.dispose();
+            peerProfileDisplay.dispose();
+
             detailsButton.setOnAction(null);
             exportButton.setOnAction(null);
             closeTradeButton.setOnAction(null);

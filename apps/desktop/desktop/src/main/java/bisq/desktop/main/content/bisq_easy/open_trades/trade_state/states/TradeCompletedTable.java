@@ -27,7 +27,6 @@ import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
-import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
@@ -97,7 +96,7 @@ public class TradeCompletedTable extends VBox {
         setAlignment(Pos.CENTER);
     }
 
-    public void initialize(UserProfile userProfile,
+    public void initialize(UserProfileDisplay tradeWithValue,
                            boolean isBuyer,
                            String btcAmount,
                            String fiatAmount,
@@ -118,7 +117,6 @@ public class TradeCompletedTable extends VBox {
         int col = 0;
         Label tradeWith = new Label(Res.get("bisqEasy.tradeCompleted.header.tradeWith").toUpperCase());
         tradeWith.getStyleClass().addAll("dimmed-text");
-        UserProfileDisplay tradeWithValue = new UserProfileDisplay(userProfile);
         headerGridPane.add(tradeWith, col, rowTitle);
         headerGridPane.add(tradeWithValue, col, rowValue);
 
