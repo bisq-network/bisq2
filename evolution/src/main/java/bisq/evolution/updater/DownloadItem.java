@@ -44,11 +44,11 @@ public class DownloadItem {
         List<DownloadItem> downloadItems = new ArrayList<>();
         downloadItems.add(create(SIGNING_KEY_FILE, baseUrl, destinationDirectory));
         for (String key : keys) {
-            String keyFileName = key + EXTENSION;
+            String keyFileName = key + ASC_EXTENSION;
             downloadItems.add(create(keyFileName, baseUrl, destinationDirectory));
             downloadItems.add(create(keyFileName, FROM_BISQ_WEBPAGE_PREFIX + keyFileName, PUB_KEYS_URL, destinationDirectory));
         }
-        downloadItems.add(create(fileName + EXTENSION, baseUrl, destinationDirectory));
+        downloadItems.add(create(fileName + ASC_EXTENSION, baseUrl, destinationDirectory));
         downloadItems.add(create(fileName, baseUrl, destinationDirectory));
         return downloadItems;
     }

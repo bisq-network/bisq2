@@ -43,22 +43,22 @@ public class DownloadedFilesVerification {
             DownloadedFilesVerification.checkIfSigningKeyMatchesKeyInResources(signingKeyId, signingKey);
         }
 
-        File signingKeyFile = Path.of(directory, signingKeyId + EXTENSION).toFile();
-        File sigFile = Path.of(directory, fileName + EXTENSION).toFile();
-        File file = Path.of(directory, fileName).toFile();
-        checkArgument(PgPUtils.isSignatureValid(signingKeyFile, sigFile, file), "Signature verification failed");
+        File signingKeyFile = Path.of(directory, signingKeyId + ASC_EXTENSION).toFile();
+        File sigFile = Path.of(directory, fileName + ASC_EXTENSION).toFile();
+        File dataFile = Path.of(directory, fileName).toFile();
+        checkArgument(PgPUtils.isSignatureValid(signingKeyFile, sigFile, dataFile), "Signature verification failed");
         log.info("signature verification succeeded");
     }
-
     private static void checkIfSigningKeyMatchesKeyFromWebpage(String directory, String keyId, String signingKey) throws IOException {
-        String keyFileName = FROM_BISQ_WEBPAGE_PREFIX + keyId + EXTENSION;
+        String keyFileName = FROM_BISQ_WEBPAGE_PREFIX + keyId + ASC_EXTENSION;
         String keyFromWebpage = FileUtils.readStringFromFile(Path.of(directory, keyFileName).toFile());
         checkArgument(keyFromWebpage.equals(signingKey),
                 "Key from webpage not matching signing key. keyFromWebpage=" + keyFromWebpage + "; signingKey=" + signingKey);
     }
 
+
     private static void checkIfSigningKeyMatchesKeyInResources(String keyId, String signingKey) throws IOException {
-        String keyFromResources = FileUtils.readStringFromResource("keys/" + keyId + EXTENSION);
+        String keyFromResources = FileUtils.readStringFromResource("keys/" + keyId + ASC_EXTENSION);
         checkArgument(keyFromResources.equals(signingKey),
                 "Key from resources not matching signing key. keyFromResources=" + keyFromResources + "; signingKey=" + signingKey);
     }
