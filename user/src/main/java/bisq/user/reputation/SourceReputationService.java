@@ -71,6 +71,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     @Getter
     protected final Observable<Pair<String, Long>> userProfileIdScorePair = new Observable<>();
     private final Map<ByteArray, Set<T>> pendingDataSetByHash = new ConcurrentHashMap<>();
+    private final Map<ByteArray, UserProfile> userProfileByUserProfileKey = new ConcurrentHashMap<>();
     private Pin userProfileByIdPin;
 
 
@@ -186,6 +187,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     private void handleAddedUserProfile(UserProfile userProfile) {
         ByteArray userProfileKey = getUserProfileKey(userProfile);
+        userProfileByUserProfileKey.putIfAbsent(userProfileKey, userProfile);
         Set<T> dataSet = pendingDataSetByHash.get(userProfileKey);
         if (dataSet != null) {
             // Clone to avoid ConcurrentModificationException
@@ -206,11 +208,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     private void handleAddedAuthorizedDistributedData(T data) {
         ByteArray providedHash = getDataKey(data);
-        // Clone to avoid ConcurrentModificationException
-        Set<UserProfile> clone = new HashSet<>(userProfileService.getUserProfileById().values());
-        clone.stream()
-                .filter(userProfile -> getUserProfileKey(userProfile).equals(providedHash))
-                .findAny() // We can only have one user profile for a given AuthorizedDistributedData
+        Optional.ofNullable(userProfileByUserProfileKey.get(providedHash))
                 .ifPresentOrElse(userProfile -> {
                     ByteArray hash = getUserProfileKey(userProfile);
                     if (!dataSetByHash.containsKey(hash)) {
