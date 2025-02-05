@@ -807,24 +807,30 @@ public class DtoMappings {
             if (value == null) {
                 return null;
             }
-            return switch (value) {
-                case MarketPriceSpecDto marketPriceSpecDto -> MarketPriceSpecMapping.toBisq2Model(marketPriceSpecDto);
-                case FixPriceSpecDto fixPriceSpecDto -> FixPriceSpecMapping.toBisq2Model(fixPriceSpecDto);
-                case FloatPriceSpecDto floatPriceSpecDto -> FloatPriceSpecMapping.toBisq2Model(floatPriceSpecDto);
-                case null, default -> throw new IllegalArgumentException("Unsupported PriceSpecDto " + value);
-            };
+            if (value instanceof MarketPriceSpecDto marketPriceSpecDto) {
+                return MarketPriceSpecMapping.toBisq2Model(marketPriceSpecDto);
+            } else if (value instanceof FixPriceSpecDto fixPriceSpecDto) {
+                return FixPriceSpecMapping.toBisq2Model(fixPriceSpecDto);
+            } else if (value instanceof FloatPriceSpecDto floatPriceSpecDto) {
+                return FloatPriceSpecMapping.toBisq2Model(floatPriceSpecDto);
+            } else {
+                throw new IllegalArgumentException("Unsupported PriceSpecDto " + value);
+            }
         }
 
         public static PriceSpecDto fromBisq2Model(PriceSpec value) {
             if (value == null) {
                 return null;
             }
-            return switch (value) {
-                case MarketPriceSpec marketPriceSpec -> MarketPriceSpecMapping.fromBisq2Model(marketPriceSpec);
-                case FixPriceSpec fixPriceSpec -> FixPriceSpecMapping.fromBisq2Model(fixPriceSpec);
-                case FloatPriceSpec floatPriceSpec -> FloatPriceSpecMapping.fromBisq2Model(floatPriceSpec);
-                case null, default -> throw new IllegalArgumentException("Unsupported PriceSpec " + value);
-            };
+            if (value instanceof MarketPriceSpec marketPriceSpec) {
+                return MarketPriceSpecMapping.fromBisq2Model(marketPriceSpec);
+            } else if (value instanceof FixPriceSpec fixPriceSpec) {
+                return FixPriceSpecMapping.fromBisq2Model(fixPriceSpec);
+            } else if (value instanceof FloatPriceSpec floatPriceSpec) {
+                return FloatPriceSpecMapping.fromBisq2Model(floatPriceSpec);
+            } else {
+                throw new IllegalArgumentException("Unsupported PriceSpecDto " + value);
+            }
         }
     }
 
