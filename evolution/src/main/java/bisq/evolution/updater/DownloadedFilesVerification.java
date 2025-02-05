@@ -31,35 +31,48 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class DownloadedFilesVerification {
-    public static void verify(String directory, String fileName, List<String> keyIds, boolean ignoreSigningKeyInResourcesCheck) throws IOException {
+    public static void verify(String directory,
+                              String dataFileName,
+                              List<String> keyIds,
+                              boolean ignoreSigningKeyInResourcesCheck) throws IOException {
         String signingKeyId = getSigningKeyId(directory);
         checkArgument(keyIds.contains(signingKeyId), "signingKeyId not matching any of the provided keys");
         String signingKey = getSigningKey(directory, signingKeyId);
+        File sigFile = Path.of(directory, dataFileName + ASC_EXTENSION).toFile(); // E.g. Bisq-2.1.3.dmg.asc
+        File dataFile = Path.of(directory, dataFileName).toFile(); // E.g. Bisq2.dmg
 
         // We require that the signing key is provided on the Bisq webpage
-        DownloadedFilesVerification.checkIfSigningKeyMatchesKeyFromWebpage(directory, signingKeyId, signingKey);
+        checkSignatureWithKeyFromWebpage(directory, signingKeyId, signingKey, sigFile, dataFile);
 
         if (!ignoreSigningKeyInResourcesCheck) {
-            DownloadedFilesVerification.checkIfSigningKeyMatchesKeyInResources(signingKeyId, signingKey);
+            checkSignatureWithKeyInResources(directory, signingKeyId, signingKey, sigFile, dataFile);
         }
 
-        File signingKeyFile = Path.of(directory, signingKeyId + ASC_EXTENSION).toFile();
-        File sigFile = Path.of(directory, fileName + ASC_EXTENSION).toFile();
-        File dataFile = Path.of(directory, fileName).toFile();
-        checkArgument(PgPUtils.isSignatureValid(signingKeyFile, sigFile, dataFile), "Signature verification failed");
+        String signingKeyFileName = signingKeyId + ASC_EXTENSION;
+        File signingKeyFile = Path.of(directory, signingKeyId + ASC_EXTENSION).toFile(); // E.g. E222AA02.asc
+        checkArgument(PgPUtils.isSignatureValid(signingKeyFile, sigFile, dataFile), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
         log.info("signature verification succeeded");
     }
-    private static void checkIfSigningKeyMatchesKeyFromWebpage(String directory, String keyId, String signingKey) throws IOException {
-        String keyFileName = FROM_BISQ_WEBPAGE_PREFIX + keyId + ASC_EXTENSION;
-        String keyFromWebpage = FileUtils.readStringFromFile(Path.of(directory, keyFileName).toFile());
-        checkArgument(keyFromWebpage.equals(signingKey),
-                "Key from webpage not matching signing key. keyFromWebpage=" + keyFromWebpage + "; signingKey=" + signingKey);
+
+    private static void checkSignatureWithKeyFromWebpage(String directory,
+                                                         String signingKeyId,
+                                                         String signingKey,
+                                                         File sigFile,
+                                                         File dataFile) {
+
+        String signingKeyFileName = FROM_BISQ_WEBPAGE_PREFIX + signingKeyId + ASC_EXTENSION;
+        File signingKeyFile = Path.of(directory, signingKeyFileName).toFile(); // E.g. from_bisq_webpage_E222AA02.asc
+        checkArgument(PgPUtils.isSignatureValid(signingKeyFile, sigFile, dataFile), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
     }
 
-
-    private static void checkIfSigningKeyMatchesKeyInResources(String keyId, String signingKey) throws IOException {
-        String keyFromResources = FileUtils.readStringFromResource("keys/" + keyId + ASC_EXTENSION);
-        checkArgument(keyFromResources.equals(signingKey),
-                "Key from resources not matching signing key. keyFromResources=" + keyFromResources + "; signingKey=" + signingKey);
+    private static void checkSignatureWithKeyInResources(String directory,
+                                                         String signingKeyId,
+                                                         String signingKey,
+                                                         File sigFile,
+                                                         File dataFile) throws IOException {
+        String signingKeyFileName = FROM_RESOURCES_PREFIX + signingKeyId + ASC_EXTENSION;
+        File signingKeyFile = Path.of(directory, signingKeyFileName).toFile(); // E.g. from_resources_E222AA02.asc
+        FileUtils.resourceToFile("keys/" + signingKeyId + ASC_EXTENSION, signingKeyFile); // We copy key from resources to download directory
+        checkArgument(PgPUtils.isSignatureValid(signingKeyFile, sigFile, dataFile), "Signature verification failed: signingKeyFileName=" + signingKeyFileName);
     }
 }
