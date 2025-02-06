@@ -181,7 +181,7 @@ public class TradeCompletedTable extends VBox {
         bodyGridPane.add(tradeDateLabel, colTitle, row);
         bodyGridPane.add(dateValue, colValue, row);
 
-        // For completed trades before v2.1.3 we do not get the tradeDuration set
+        // For completed trades before v2.1.4 we do not get the tradeDuration set
         if (!tradeDuration.isEmpty()) {
             ++row;
             Label tradeDurationLabel = new Label(Res.get("bisqEasy.tradeCompleted.body.tradeDuration"));

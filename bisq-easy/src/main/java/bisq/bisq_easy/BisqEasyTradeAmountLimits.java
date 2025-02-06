@@ -224,7 +224,7 @@ public class BisqEasyTradeAmountLimits {
 
 
     // If not my message and if offer message we filter sell offers of makers with too low reputation
-    // This was needed at the v2.1.3 update and can be removed later once no invalid offers are expected anymore.
+    // This was needed at the v2.1.4 update and can be removed later once no invalid offers are expected anymore.
     public static boolean hasSellerSufficientReputation(MarketPriceService marketPriceService,
                                                         UserProfileService userProfileService,
                                                         ReputationService reputationService,
