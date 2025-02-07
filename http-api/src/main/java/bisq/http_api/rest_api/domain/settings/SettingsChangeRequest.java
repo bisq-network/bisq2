@@ -30,6 +30,7 @@ public record SettingsChangeRequest(
         @Nullable Set<String> supportedLanguageCodes,
         @Nullable Double maxTradePriceDeviation,
         @Nullable MarketDto selectedMarket,
-        @Nullable Integer numDaysAfterRedactingTradeData
+        @Nullable Integer numDaysAfterRedactingTradeData,
+        @Nullable Boolean useAnimations
 ) {
 }

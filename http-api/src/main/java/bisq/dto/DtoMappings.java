@@ -975,7 +975,9 @@ public class DtoMappings {
                     settingsService.getSupportedLanguageCodes(),
                     settingsService.getMaxTradePriceDeviation().get(),
                     MarketMapping.fromBisq2Model(settingsService.getSelectedMarket().get()),
-                    settingsService.getNumDaysAfterRedactingTradeData().get());
+                    settingsService.getNumDaysAfterRedactingTradeData().get(),
+                    settingsService.getUseAnimations().get()
+            );
         }
     }
 
