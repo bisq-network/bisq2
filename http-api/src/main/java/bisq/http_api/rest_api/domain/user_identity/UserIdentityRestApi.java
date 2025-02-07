@@ -65,6 +65,28 @@ public class UserIdentityRestApi extends RestApiBase {
     }
 
     @GET
+    @Path("/ping")
+    @Operation(
+            summary = "Respond to ping requests",
+            description = "Responds a ping request with its correponding pong message",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Pong response OK",
+                            content = @Content(schema = @Schema(implementation = PongResponse.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response pingPong() {
+        try {
+//            uncomment to test slow response
+//            Thread.sleep(3000);
+            return buildOkResponse(new PongResponse());
+        } catch (Exception e) {
+            log.error("Error responding to pong", e);
+            return buildErrorResponse("Failed to respond ACK");
+        }
+    }
+
+    @GET
     @Path("/key-material")
     @Operation(
             summary = "Generate Prepared Data",
