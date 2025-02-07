@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,7 +52,15 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
     public bisq.trade.protobuf.BisqEasyTradeStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.BisqEasyTradeStore.newBuilder()
                 .addAllTrades(trades.stream()
-                        .map(e -> e.toProto(serializeForHash))
+                        .map(trade -> {
+                            try {
+                                return trade.toProto(serializeForHash);
+                            } catch (Exception e) {
+                                log.error("Could not create proto from BisqEasyTrade {}", trade, e);
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
                         .collect(Collectors.toList()))
                 .addAllTradeIds(tradeIds);
     }
@@ -63,7 +72,16 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
 
     public static BisqEasyTradeStore fromProto(bisq.trade.protobuf.BisqEasyTradeStore proto) {
         var trades = proto.getTradesList().stream()
-                .map(BisqEasyTrade::fromProto)
+                .map(tradeProto -> {
+                    try {
+                        return BisqEasyTrade.fromProto(tradeProto);
+                    } catch (Exception e) {
+                        log.error("Could not create BisqEasyTrade from proto {}", tradeProto, e);
+                        return null;
+                    }
+
+                })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         return new BisqEasyTradeStore(trades, new HashSet<>(proto.getTradeIdsList()));
     }
