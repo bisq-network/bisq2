@@ -17,6 +17,7 @@
 
 package bisq.os_specific.notifications.other;
 
+import bisq.common.threading.ExecutorFactory;
 import bisq.presentation.notifications.OsSpecificNotificationService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,18 +39,20 @@ public class AwtNotificationService implements OsSpecificNotificationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        try {
-            checkArgument(SystemTray.isSupported(), "SystemTray is not supported");
-            SystemTray systemTray = SystemTray.getSystemTray();
-            URL image = getClass().getClassLoader().getResource("images/app_window/icon_128.png");
-            trayIcon = new TrayIcon(new ImageIcon(image, "Bisq 2").getImage());
-            trayIcon.setImageAutoSize(true);
-            systemTray.add(trayIcon);
-            isSupported = true;
-        } catch (Exception e) {
-            log.warn("AwtNotificationService not supported.", e);
-            isSupported = false;
-        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                checkArgument(SystemTray.isSupported(), "SystemTray is not supported");
+                SystemTray systemTray = SystemTray.getSystemTray();
+                URL image = getClass().getClassLoader().getResource("images/app_window/icon_128.png");
+                trayIcon = new TrayIcon(new ImageIcon(image, "Bisq 2").getImage());
+                trayIcon.setImageAutoSize(true);
+                systemTray.add(trayIcon);
+                isSupported = true;
+            } catch (Exception e) {
+                log.warn("AwtNotificationService not supported.", e);
+                isSupported = false;
+            }
+        }, ExecutorFactory.newSingleThreadExecutor("initialize-NotificationService"));
         return CompletableFuture.completedFuture(true);
     }
 
