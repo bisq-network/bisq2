@@ -108,7 +108,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         BisqEasyOfferbookModel model = new BisqEasyOfferbookModel(chatChannelDomain);
 
         // As we pass some data from the model we cannot create it in the createDependencies method.
-        offerbookListController = new OfferbookListController(serviceProvider, chatMessageContainerController);
+        offerbookListController = new OfferbookListController(serviceProvider);
         model.setShowOfferListExpanded(offerbookListController.getShowOfferListExpanded());
         return model;
     }

@@ -31,7 +31,6 @@ import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
 import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -53,7 +52,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class OfferbookListController implements bisq.desktop.common.view.Controller {
-    private final ChatMessageContainerController chatMessageContainerController;
     private final OfferbookListModel model;
     @Getter
     private final OfferbookListView view;
@@ -67,9 +65,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin, userIdentityPin;
     private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin, showMyOffersOnlyFromModelPin;
 
-    public OfferbookListController(ServiceProvider serviceProvider,
-                                   ChatMessageContainerController chatMessageContainerController) {
-        this.chatMessageContainerController = chatMessageContainerController;
+    public OfferbookListController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
