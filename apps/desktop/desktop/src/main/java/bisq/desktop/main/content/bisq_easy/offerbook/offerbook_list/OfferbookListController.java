@@ -20,8 +20,8 @@ package bisq.desktop.main.content.bisq_easy.offerbook.offerbook_list;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
+import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -86,15 +86,15 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     public void onActivate() {
         showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
         showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
-        showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> applyPredicate());
+        showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> updatePredicate());
         activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
             String hint = count.intValue() == 0 ? Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title.all") : count.toString();
             model.getPaymentFilterTitle().set(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title", hint));
-            applyPredicate();
+            updatePredicate();
         });
         showMyOffersOnlyPin = FxBindings.bindBiDir(model.getShowMyOffersOnly()).to(settingsService.getShowMyOffersOnly());
-        showMyOffersOnlyFromModelPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffersOnly -> applyPredicate());
-        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::applyPredicate));
+        showMyOffersOnlyFromModelPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffersOnly -> updatePredicate());
+        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::updatePredicate));
     }
 
     @Override
@@ -244,26 +244,24 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         model.getActiveMarketPaymentsCount().set(count);
     }
 
-    private void applyPredicate() {
-        model.getFilteredOfferbookListItems().setPredicate(this::shouldShowListItem);
-    }
+    private void updatePredicate() {
+        model.getFilteredOfferbookListItems().setPredicate(item -> {
+            // Apply filters
+            boolean matchesDirection = model.getShowBuyOffers().get() == item.isBuyOffer();
+            boolean paymentFiltersApplied = model.getActiveMarketPaymentsCount().get() != 0;
+            boolean matchesPaymentFilters = paymentFiltersApplied && item.getFiatPaymentMethods().stream()
+                    .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
+                            || model.getSelectedMarketPayments().contains(payment));
+            boolean myOffersOnly = model.getShowMyOffersOnly().get();
+            UserProfile mySelectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+            boolean isMyOffer = item.getSenderUserProfile().equals(mySelectedUserProfile);
 
-    private boolean shouldShowListItem(OfferbookListItem item) {
-        // Apply filters
-        boolean matchesDirection = model.getShowBuyOffers().get() == item.isBuyOffer();
-        boolean paymentFiltersApplied = model.getActiveMarketPaymentsCount().get() != 0;
-        boolean matchesPaymentFilters = paymentFiltersApplied && item.getFiatPaymentMethods().stream()
-                .anyMatch(payment -> (payment.isCustomPaymentMethod() && model.getIsCustomPaymentsSelected().get())
-                        || model.getSelectedMarketPayments().contains(payment));
-        boolean myOffersOnly = model.getShowMyOffersOnly().get();
-        UserProfile mySelectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-        boolean isMyOffer = item.getSenderUserProfile().equals(mySelectedUserProfile);
-
-        BisqEasyOfferbookMessage chatMessage = item.getBisqEasyOfferbookMessage();
-        if (!chatMessage.isMyMessage(userIdentityService) && !bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(chatMessage)) {
-            return false;
-        }
-        return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters) && (!myOffersOnly || isMyOffer);
+            BisqEasyOfferbookMessage chatMessage = item.getBisqEasyOfferbookMessage();
+            if (!chatMessage.isMyMessage(userIdentityService) && !bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(chatMessage)) {
+                return false;
+            }
+            return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters) && (!myOffersOnly || isMyOffer);
+        });
     }
 
     private String getCookieSubKey() {
