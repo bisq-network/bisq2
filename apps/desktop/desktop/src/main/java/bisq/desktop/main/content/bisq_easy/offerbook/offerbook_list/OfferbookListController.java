@@ -62,7 +62,8 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final UserIdentityService userIdentityService;
     private final BannedUserService bannedUserService;
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
-    private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin, userIdentityPin;
+    private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin,
+            userIdentityPin, userProfileIdWithScoreChangePin;
     private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin, showMyOffersOnlyFromModelPin;
 
     public OfferbookListController(ServiceProvider serviceProvider) {
@@ -95,6 +96,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         showMyOffersOnlyPin = FxBindings.bindBiDir(model.getShowMyOffersOnly()).to(settingsService.getShowMyOffersOnly());
         showMyOffersOnlyFromModelPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffersOnly -> updatePredicate());
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::updatePredicate));
+        userProfileIdWithScoreChangePin = reputationService.getUserProfileIdWithScoreChange().addObserver(userProfileId -> UIThread.run(this::updatePredicate));
     }
 
     @Override
@@ -111,6 +113,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         showMyOffersOnlyPin.unbind();
         showMyOffersOnlyFromModelPin.unsubscribe();
         userIdentityPin.unbind();
+        userProfileIdWithScoreChangePin.unbind();
     }
 
     public void setSelectedChannel(BisqEasyOfferbookChannel channel) {
