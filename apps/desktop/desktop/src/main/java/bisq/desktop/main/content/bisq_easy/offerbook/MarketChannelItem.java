@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.bisq_easy.BisqEasyTradeAmountLimitService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -56,6 +56,7 @@ public class MarketChannelItem {
     private final MarketPriceService marketPriceService;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
+    private final BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService;
     private final SimpleIntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
     private final SimpleStringProperty numMarketNotifications = new SimpleStringProperty();
@@ -66,7 +67,8 @@ public class MarketChannelItem {
                       ChatNotificationService chatNotificationService,
                       MarketPriceService marketPriceService,
                       UserProfileService userProfileService,
-                      ReputationService reputationService) {
+                      ReputationService reputationService,
+                      BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService) {
         this.channel = channel;
 
         this.favouriteMarketsService = favouriteMarketsService;
@@ -75,6 +77,8 @@ public class MarketChannelItem {
         this.marketPriceService = marketPriceService;
         this.userProfileService = userProfileService;
         this.reputationService = reputationService;
+        this.bisqEasyTradeAmountLimitService = bisqEasyTradeAmountLimitService;
+
         refreshNotifications();
         initialize();
     }
@@ -104,10 +108,7 @@ public class MarketChannelItem {
         UIThread.run(() -> {
             int numOffers = (int) channel.getChatMessages().stream()
                     .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
-                    .filter(chatMessage-> BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService,
-                            userProfileService,
-                            reputationService,
-                            chatMessage))
+                    .filter(bisqEasyTradeAmountLimitService::hasSellerSufficientReputation)
                     .count();
             getNumOffers().set(numOffers);
         });

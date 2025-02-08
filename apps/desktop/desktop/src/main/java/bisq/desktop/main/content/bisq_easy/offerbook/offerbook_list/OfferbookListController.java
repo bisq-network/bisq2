@@ -21,7 +21,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethodUtil;
 import bisq.account.payment_method.FiatPaymentRail;
 import bisq.bisq_easy.BisqEasyServiceUtil;
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.bisq_easy.BisqEasyTradeAmountLimitService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -63,6 +63,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
     private final BannedUserService bannedUserService;
+    private final BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService;
     private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin, userIdentityPin;
     private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin, showMyOffersOnlyFromModelPin;
 
@@ -75,6 +76,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         reputationService = serviceProvider.getUserService().getReputationService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        bisqEasyTradeAmountLimitService = serviceProvider.getBisqEasyService().getBisqEasyTradeAmountLimitService();
 
         model = new OfferbookListModel();
         view = new OfferbookListView(model, this);
@@ -262,7 +264,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         boolean isMyOffer = item.getSenderUserProfile().equals(mySelectedUserProfile);
 
         BisqEasyOfferbookMessage chatMessage = item.getBisqEasyOfferbookMessage();
-        if (!chatMessage.isMyMessage(userIdentityService) && !BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService, userProfileService, reputationService, chatMessage)) {
+        if (!chatMessage.isMyMessage(userIdentityService) && !bisqEasyTradeAmountLimitService.hasSellerSufficientReputation(chatMessage)) {
             return false;
         }
         return matchesDirection && (!paymentFiltersApplied || matchesPaymentFilters) && (!myOffersOnly || isMyOffer);

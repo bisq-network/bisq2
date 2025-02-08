@@ -18,11 +18,7 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelSelectionService;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
+import bisq.chat.*;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.common.observable.Pin;

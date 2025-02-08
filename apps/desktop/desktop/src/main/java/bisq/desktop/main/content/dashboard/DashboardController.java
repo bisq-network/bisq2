@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.dashboard;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.bisq_easy.BisqEasyTradeAmountLimitService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -32,7 +32,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,7 +48,7 @@ public class DashboardController implements Controller {
     private final UserProfileService userProfileService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private final ReputationService reputationService;
+    private final BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService;
     private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin;
     private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
@@ -59,7 +58,7 @@ public class DashboardController implements Controller {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
-        reputationService = serviceProvider.getUserService().getReputationService();
+        bisqEasyTradeAmountLimitService = serviceProvider.getBisqEasyService().getBisqEasyTradeAmountLimitService();
 
         model = new DashboardModel();
         view = new DashboardView(model, this);
@@ -125,12 +124,7 @@ public class DashboardController implements Controller {
                     model.getOffersOnline().set(String.valueOf(bisqEasyOfferbookChannelService.getChannels().stream()
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
-                            .filter(chatMessage ->
-                                    BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService,
-                                            userProfileService,
-                                            reputationService,
-                                            chatMessage)
-                            )
+                            .filter(bisqEasyTradeAmountLimitService::hasSellerSufficientReputation)
                             .count())));
         }
     }
