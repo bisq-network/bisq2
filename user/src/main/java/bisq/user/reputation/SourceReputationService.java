@@ -99,7 +99,8 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
             @Override
             public void putAll(Map<? extends String, ? extends UserProfile> map) {
-                map.values().forEach(value -> handleAddedUserProfile(value));
+                // Clone to unmodifiable Map to avoid ConcurrentModificationException
+                Map.copyOf(map).values().forEach(value -> handleAddedUserProfile(value));
             }
 
             @Override
