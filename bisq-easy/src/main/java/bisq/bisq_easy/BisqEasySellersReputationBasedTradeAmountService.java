@@ -21,6 +21,7 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -28,16 +29,19 @@ import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class BisqEasySellersReputationBasedTradeAmountService implements Service {
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
-    private final Set<String> sellOffersWithInsufficientReputation = new HashSet<>();
+    private final Map<String, Set<String>> sellOffersWithInsufficientReputationByMakersProfileId = new ConcurrentHashMap<>();
+    private Pin userProfileIdWithScoreChangePin;
 
     public BisqEasySellersReputationBasedTradeAmountService(UserProfileService userProfileService,
                                                             ReputationService reputationService,
@@ -55,12 +59,24 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
+        userProfileIdWithScoreChangePin = reputationService.getUserProfileIdWithScoreChange().addObserver(this::userProfileIdWithScoreChanged);
+
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        if (userProfileIdWithScoreChangePin != null) {
+            userProfileIdWithScoreChangePin.unbind();
+            userProfileIdWithScoreChangePin = null;
+        }
         return CompletableFuture.completedFuture(true);
     }
+
+    private void userProfileIdWithScoreChanged(String userProfileId) {
+        // We remove the cached data if we get any change of the users reputation score
+        sellOffersWithInsufficientReputationByMakersProfileId.remove(userProfileId);
+    }
+
 
     // If not my message and if offer message we filter sell offers of makers with too low reputation
     // This was needed at the v2.1.4 update and can be removed later once no invalid offers are expected anymore.
@@ -82,7 +98,10 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
 
     public boolean hasSellerSufficientReputation(BisqEasyOffer bisqEasyOffer, boolean useCache) {
         String offerId = bisqEasyOffer.getId();
-        if (useCache && sellOffersWithInsufficientReputation.contains(offerId)) {
+        String makersUserProfileId = bisqEasyOffer.getMakersUserProfileId();
+        if (useCache &&
+                sellOffersWithInsufficientReputationByMakersProfileId.containsKey(makersUserProfileId) &&
+                sellOffersWithInsufficientReputationByMakersProfileId.get(makersUserProfileId).contains(offerId)) {
             return false;
         }
 
@@ -92,14 +111,15 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
                 Optional<Long> requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMinAmount(marketPriceService, bisqEasyOffer);
                 long requiredReputationScoreForMaxOrFixed = requiredReputationScoreForMaxOrFixedAmount.get();
                 long requiredReputationScoreForMinOrFixed = requiredReputationScoreForMinAmount.orElse(requiredReputationScoreForMaxOrFixed);
-                long sellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
+                long sellersScore = userProfileService.findUserProfile(makersUserProfileId)
                         .map(reputationService::getReputationScore)
                         .map(ReputationScore::getTotalScore)
                         .orElse(0L);
                 boolean hasInsufficientReputation = BisqEasyTradeAmountLimits.withTolerance(sellersScore) < requiredReputationScoreForMinOrFixed;
                 if (hasInsufficientReputation) {
                     if (useCache) {
-                        sellOffersWithInsufficientReputation.add(offerId);
+                        sellOffersWithInsufficientReputationByMakersProfileId.putIfAbsent(makersUserProfileId, new HashSet<>());
+                        sellOffersWithInsufficientReputationByMakersProfileId.get(makersUserProfileId).add(offerId);
                     }
                     return false;
                 }
