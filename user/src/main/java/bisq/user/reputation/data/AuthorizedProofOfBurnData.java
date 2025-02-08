@@ -76,7 +76,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         this(VERSION, blockTime, amount, hash, blockHeight, txId, staticPublicKeysProvided);
     }
 
-    public AuthorizedProofOfBurnData(int version,
+    private AuthorizedProofOfBurnData(int version,
                                      long blockTime,
                                      long amount,
                                      byte[] hash,

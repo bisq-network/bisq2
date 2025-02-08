@@ -78,7 +78,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
         this(VERSION, blockTime, amount, hash, lockTime, blockHeight, txId, staticPublicKeysProvided);
     }
 
-    public AuthorizedBondedReputationData(int version,
+    private AuthorizedBondedReputationData(int version,
                                           long blockTime,
                                           long amount,
                                           byte[] hash,

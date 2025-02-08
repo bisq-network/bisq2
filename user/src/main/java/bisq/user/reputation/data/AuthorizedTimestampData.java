@@ -68,7 +68,7 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
                 staticPublicKeysProvided);
     }
 
-    public AuthorizedTimestampData(int version,
+    private AuthorizedTimestampData(int version,
                                     String profileId,
                                     long date,
                                     boolean staticPublicKeysProvided) {
