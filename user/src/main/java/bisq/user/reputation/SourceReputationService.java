@@ -132,13 +132,13 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         findRelevantData(authorizedData.getAuthorizedDistributedData())
                 .ifPresent(data -> {
-                    if (isAuthorized(authorizedData) && isValidVersion(data)) {
+                    if (isAuthorized(authorizedData) && isDataValid(data)) {
                         handleAddedAuthorizedDistributedData(data);
                     }
                 });
     }
 
-    protected boolean isValidVersion(T data) {
+    protected boolean isDataValid(T data) {
         return true;
     }
 
