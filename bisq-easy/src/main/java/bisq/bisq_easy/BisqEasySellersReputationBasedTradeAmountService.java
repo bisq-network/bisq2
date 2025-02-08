@@ -72,14 +72,6 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
         return CompletableFuture.completedFuture(true);
     }
 
-    private void userProfileIdWithScoreChanged(String userProfileId) {
-        if (userProfileId != null) {
-            // We remove the cached data if we get any change of the users reputation score
-            sellOffersWithInsufficientReputationByMakersProfileId.remove(userProfileId);
-        }
-    }
-
-
     // If not my message and if offer message we filter sell offers of makers with too low reputation
     // This was needed at the v2.1.4 update and can be removed later once no invalid offers are expected anymore.
     public boolean hasSellerSufficientReputation(ChatMessage chatMessage) {
@@ -98,7 +90,7 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
         return hasSellerSufficientReputation(bisqEasyOffer, true);
     }
 
-    public boolean hasSellerSufficientReputation(BisqEasyOffer bisqEasyOffer, boolean useCache) {
+    private boolean hasSellerSufficientReputation(BisqEasyOffer bisqEasyOffer, boolean useCache) {
         String offerId = bisqEasyOffer.getId();
         String makersUserProfileId = bisqEasyOffer.getMakersUserProfileId();
         if (useCache &&
@@ -128,5 +120,12 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
             }
         }
         return true;
+    }
+
+    private void userProfileIdWithScoreChanged(String userProfileId) {
+        if (userProfileId != null) {
+            // We remove the cached data if we get any change of the users reputation score
+            sellOffersWithInsufficientReputationByMakersProfileId.remove(userProfileId);
+        }
     }
 }
