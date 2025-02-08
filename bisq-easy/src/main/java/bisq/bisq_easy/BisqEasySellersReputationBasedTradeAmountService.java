@@ -73,8 +73,10 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
     }
 
     private void userProfileIdWithScoreChanged(String userProfileId) {
-        // We remove the cached data if we get any change of the users reputation score
-        sellOffersWithInsufficientReputationByMakersProfileId.remove(userProfileId);
+        if (userProfileId != null) {
+            // We remove the cached data if we get any change of the users reputation score
+            sellOffersWithInsufficientReputationByMakersProfileId.remove(userProfileId);
+        }
     }
 
 
