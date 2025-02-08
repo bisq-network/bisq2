@@ -25,6 +25,7 @@ import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
+import bisq.http_api.rest_api.domain.network.NetworkRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
@@ -74,6 +75,7 @@ public class HttpApiService implements Service {
                     userService,
                     supportedService,
                     tradeService);
+            NetworkRestApi networkRestApi = new NetworkRestApi();
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
@@ -82,6 +84,7 @@ public class HttpApiService implements Service {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         tradeRestApi,
+                        networkRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi,
                         settingsRestApi,
@@ -95,6 +98,7 @@ public class HttpApiService implements Service {
                 var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         tradeRestApi,
+                        networkRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi,
                         settingsRestApi,
