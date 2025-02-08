@@ -60,7 +60,7 @@ public class ProfileCardDetailsController implements Controller {
     @Override
     public void onActivate() {
         UserProfile userProfile = model.getUserProfile();
-        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(() -> {
+        reputationChangedPin = reputationService.getUserProfileIdWithScoreChange().addObserver(userProfileId -> UIThread.run(() -> {
             ReputationScore reputationScore = reputationService.getReputationScore(userProfile);
             model.getTotalReputationScore().set(String.valueOf(reputationScore.getTotalScore()));
         }));

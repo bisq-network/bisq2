@@ -115,7 +115,7 @@ public class UserProfileController implements Controller {
                     });
                 }
         );
-        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
+        reputationChangedPin = reputationService.getUserProfileIdWithScoreChange().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
     }
 
     @Override
