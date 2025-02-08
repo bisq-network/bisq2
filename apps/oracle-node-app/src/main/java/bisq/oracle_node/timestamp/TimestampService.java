@@ -154,10 +154,6 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
         }
         AuthorizedTimestampData authorizedTimestampData = new AuthorizedTimestampData(profileId, date, staticPublicKeysProvided);
         publishAuthorizedData(authorizedTimestampData);
-
-        // Can be removed once there are no pre 2.1.0 versions out there anymore
-        AuthorizedTimestampData oldVersion = new AuthorizedTimestampData(0, profileId, date, staticPublicKeysProvided);
-        publishAuthorizedData(oldVersion);
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {

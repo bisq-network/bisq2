@@ -265,16 +265,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
             ThreadName.set(this, "publishProofOfBurnDtoSet");
             // After v2.1.0 we can remove support for version 0 data
             log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
-            Stream<AuthorizedProofOfBurnData> oldVersions = proofOfBurnList.stream()
-                    .map(dto -> new AuthorizedProofOfBurnData(
-                            0,
-                            dto.getBlockTime(),
-                            dto.getAmount(),
-                            Hex.decode(dto.getHash()),
-                            dto.getBlockHeight(),
-                            dto.getTxId(),
-                            staticPublicKeysProvided));
-            Stream<AuthorizedProofOfBurnData> newVersions = proofOfBurnList.stream()
+            Stream<AuthorizedProofOfBurnData> stream = proofOfBurnList.stream()
                     .map(dto -> new AuthorizedProofOfBurnData(
                             dto.getBlockTime(),
                             dto.getAmount(),
@@ -282,7 +273,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                             dto.getBlockHeight(),
                             dto.getTxId(),
                             staticPublicKeysProvided));
-            return CompletableFutureUtils.allOf(Stream.concat(oldVersions, newVersions)
+            return CompletableFutureUtils.allOf(stream
                             .map(this::publishAuthorizedData)
                             .collect(Collectors.toList()))
                     .thenApply(results -> !results.contains(false))
@@ -295,17 +286,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
             ThreadName.set(this, "publishBondedReputationDtoSet");
             // After v2.1.0 we can remove support for version 0 data
             log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
-            Stream<AuthorizedBondedReputationData> oldVersions = bondedReputationList.stream()
-                    .map(dto -> new AuthorizedBondedReputationData(
-                            0,
-                            dto.getBlockTime(),
-                            dto.getAmount(),
-                            Hex.decode(dto.getHash()),
-                            dto.getLockTime(),
-                            dto.getBlockHeight(),
-                            dto.getTxId(),
-                            staticPublicKeysProvided));
-            Stream<AuthorizedBondedReputationData> newVersions = bondedReputationList.stream()
+            Stream<AuthorizedBondedReputationData> stream = bondedReputationList.stream()
                     .map(dto -> new AuthorizedBondedReputationData(
                             dto.getBlockTime(),
                             dto.getAmount(),
@@ -314,7 +295,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                             dto.getBlockHeight(),
                             dto.getTxId(),
                             staticPublicKeysProvided));
-            return CompletableFutureUtils.allOf(Stream.concat(oldVersions, newVersions)
+            return CompletableFutureUtils.allOf(stream
                             .map(this::publishAuthorizedData)
                             .collect(Collectors.toList()))
                     .thenApply(results -> !results.contains(false))
@@ -419,13 +400,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                                 requestDate,
                                                 staticPublicKeysProvided);
                                         publishAuthorizedData(data);
-
-                                        // Can be removed once there are no pre 2.1.0 versions out there anymore
-                                        AuthorizedAccountAgeData oldVersion = new AuthorizedAccountAgeData(0,
-                                                data.getProfileId(),
-                                                data.getDate(),
-                                                data.isStaticPublicKeysProvided());
-                                        publishAuthorizedData(oldVersion);
                                     } else {
                                         log.warn("Date of account age for {} is not matching the date from the users request. " +
                                                         "Date from bridge service call: {}; Date from users request: {}",
@@ -472,13 +446,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                                 request.getWitnessSignDate(),
                                                 staticPublicKeysProvided);
                                         publishAuthorizedData(data);
-
-                                        // Can be removed once there are no pre 2.1.0 versions out there anymore
-                                        AuthorizedSignedWitnessData oldVersion = new AuthorizedSignedWitnessData(0,
-                                                data.getProfileId(),
-                                                data.getWitnessSignDate(),
-                                                data.isStaticPublicKeysProvided());
-                                        publishAuthorizedData(oldVersion);
                                     } else {
                                         log.warn("Date of signed witness for {} is not matching the date from the users request. " +
                                                         "Date from bridge service call: {}; Date from users request: {}",
