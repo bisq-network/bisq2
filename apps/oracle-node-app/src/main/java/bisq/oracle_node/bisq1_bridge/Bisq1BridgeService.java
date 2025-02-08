@@ -103,8 +103,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     @Setter
     private AuthorizedOracleNode authorizedOracleNode;
     @Setter
-    private AuthorizedOracleNode authorizedOracleNodeOldVersion;
-    @Setter
     private Identity identity;
 
     @Nullable
@@ -497,25 +495,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
                                         .forEach(this::removeAuthorizedData);
                             } else {
                                 publishAuthorizedData(data);
-                            }
-
-                            // Can be removed once there are no pre 2.1.0 versions out there anymore
-                            AuthorizedBondedRole oldVersion = new AuthorizedBondedRole(0,
-                                    profileId,
-                                    request.getAuthorizedPublicKey(),
-                                    bondedRoleType,
-                                    bondUserName,
-                                    signatureBase64,
-                                    request.getAddressByTransportTypeMap(),
-                                    request.getNetworkId(),
-                                    Optional.of(authorizedOracleNodeOldVersion),
-                                    false);
-                            if (request.isCancellationRequest()) {
-                                authorizedBondedRolesService.getAuthorizedBondedRoleStream()
-                                        .filter(authorizedBondedRole -> authorizedBondedRole.equals(oldVersion))
-                                        .forEach(this::removeAuthorizedData);
-                            } else {
-                                publishAuthorizedData(oldVersion);
                             }
                         } else {
                             log.warn("RequestBondedRole failed. {}", bondedRoleVerificationDto.getErrorMessage());
