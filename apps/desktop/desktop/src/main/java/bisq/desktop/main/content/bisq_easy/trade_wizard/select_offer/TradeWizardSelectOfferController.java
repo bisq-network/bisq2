@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.bisq_easy.BisqEasyTradeAmountLimitService;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -77,7 +77,7 @@ public class TradeWizardSelectOfferController implements Controller {
     private final MarketPriceService marketPriceService;
     private final BannedUserService bannedUserService;
     private final BisqEasyTradeService bisqEasyTradeService;
-    private final BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
 
     public TradeWizardSelectOfferController(ServiceProvider serviceProvider,
                                             Runnable onBackHandler,
@@ -90,7 +90,7 @@ public class TradeWizardSelectOfferController implements Controller {
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
         SettingsService settingsService = serviceProvider.getSettingsService();
-        bisqEasyTradeAmountLimitService = serviceProvider.getBisqEasyService().getBisqEasyTradeAmountLimitService();
+        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -324,7 +324,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 if (!result.map(BisqEasyTradeAmountLimits.Result::isValid).orElse(false)) {
                     return false;
                 }
-                if (!bisqEasyTradeAmountLimitService.hasSellerSufficientReputation(peersOffer)) {
+                if (!bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(peersOffer)) {
                     return false;
                 }
 

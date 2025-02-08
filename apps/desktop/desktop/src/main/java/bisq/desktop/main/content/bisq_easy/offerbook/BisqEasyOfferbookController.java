@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.bisq_easy.BisqEasyMarketFilter;
-import bisq.bisq_easy.BisqEasyTradeAmountLimitService;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
@@ -68,7 +68,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final FavouriteMarketsService favouriteMarketsService;
     private final ChatNotificationService chatNotificationService;
-    private final BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final Predicate<MarketChannelItem> marketChannelItemsPredicate;
@@ -90,7 +90,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-        bisqEasyTradeAmountLimitService = serviceProvider.getBisqEasyService().getBisqEasyTradeAmountLimitService();
+        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
 
         bisqEasyOfferbookModel = getModel();
         createMarketChannels();
@@ -236,7 +236,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                 .filter(message -> message.isMyMessage(userIdentityService))
-                .filter(message -> !bisqEasyTradeAmountLimitService.hasSellerSufficientReputation(message, false))
+                .filter(message -> !bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(message, false))
                 .collect(Collectors.toSet());
         if (!mySellOffersWithSufficientReputation.isEmpty()) {
             new Popup().headline(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.headline"))
@@ -362,7 +362,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         marketPriceService,
                         userProfileService,
                         reputationService,
-                        bisqEasyTradeAmountLimitService))
+                        bisqEasySellersReputationBasedTradeAmountService))
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);
     }

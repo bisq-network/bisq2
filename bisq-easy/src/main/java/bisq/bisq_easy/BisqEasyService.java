@@ -79,7 +79,7 @@ public class BisqEasyService implements Service {
     private final AlertService alertService;
 
     private final Set<String> bannedAccountDataSet = new HashSet<>();
-    private final BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDiffAdjustmentValueOrDefaultPin, selectedMarketPin, authorizedAlertDataSetPin;
 
@@ -120,7 +120,7 @@ public class BisqEasyService implements Service {
                 chatService.getBisqEasyOfferbookChannelService(),
                 settingsService);
 
-        bisqEasyTradeAmountLimitService = new BisqEasyTradeAmountLimitService(userService.getUserProfileService(),
+        bisqEasySellersReputationBasedTradeAmountService = new BisqEasySellersReputationBasedTradeAmountService(userService.getUserProfileService(),
                 userService.getReputationService(),
                 marketPriceService);
     }
@@ -170,7 +170,7 @@ public class BisqEasyService implements Service {
                 BisqEasyService.this.bannedAccountDataSet.clear();
             }
         });
-        return bisqEasyTradeAmountLimitService.initialize()
+        return bisqEasySellersReputationBasedTradeAmountService.initialize()
                 .thenCompose(result -> bisqEasyNotificationsService.initialize());
     }
 

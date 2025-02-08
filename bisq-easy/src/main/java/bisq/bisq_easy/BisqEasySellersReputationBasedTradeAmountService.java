@@ -33,15 +33,15 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class BisqEasyTradeAmountLimitService implements Service {
+public class BisqEasySellersReputationBasedTradeAmountService implements Service {
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
     private final Set<String> sellOffersWithInsufficientReputation = new HashSet<>();
 
-    public BisqEasyTradeAmountLimitService(UserProfileService userProfileService,
-                                           ReputationService reputationService,
-                                           MarketPriceService marketPriceService) {
+    public BisqEasySellersReputationBasedTradeAmountService(UserProfileService userProfileService,
+                                                            ReputationService reputationService,
+                                                            MarketPriceService marketPriceService) {
         this.userProfileService = userProfileService;
         this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
@@ -80,8 +80,7 @@ public class BisqEasyTradeAmountLimitService implements Service {
         return hasSellerSufficientReputation(bisqEasyOffer, true);
     }
 
-    public boolean hasSellerSufficientReputation(BisqEasyOffer bisqEasyOffer,
-                                                 boolean useCache) {
+    public boolean hasSellerSufficientReputation(BisqEasyOffer bisqEasyOffer, boolean useCache) {
         String offerId = bisqEasyOffer.getId();
         if (useCache && sellOffersWithInsufficientReputation.contains(offerId)) {
             return false;

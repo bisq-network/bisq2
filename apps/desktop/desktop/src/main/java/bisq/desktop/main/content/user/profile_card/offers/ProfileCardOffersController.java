@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.profile_card.offers;
 
-import bisq.bisq_easy.BisqEasyTradeAmountLimitService;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -43,7 +43,7 @@ public class ProfileCardOffersController implements Controller {
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookChannelSelectionService;
-    private final BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
 
     public ProfileCardOffersController(ServiceProvider serviceProvider) {
         model = new ProfileCardOffersModel();
@@ -52,7 +52,7 @@ public class ProfileCardOffersController implements Controller {
         bisqEasyOfferbookChannelSelectionService = serviceProvider.getChatService().getBisqEasyOfferbookChannelSelectionService();
         reputationService = serviceProvider.getUserService().getReputationService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-        bisqEasyTradeAmountLimitService = serviceProvider.getBisqEasyService().getBisqEasyTradeAmountLimitService();
+        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
     }
 
     @Override
@@ -77,7 +77,7 @@ public class ProfileCardOffersController implements Controller {
         }
         model.getOfferbookListItems().addAll(userOffers);
         model.getFilteredOfferbookListItems().setPredicate(item ->
-                bisqEasyTradeAmountLimitService.hasSellerSufficientReputation(item.getBisqEasyOfferbookMessage()));
+                bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(item.getBisqEasyOfferbookMessage()));
     }
 
     public String getNumberOffers() {

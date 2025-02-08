@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.dashboard;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bisq_easy.BisqEasyTradeAmountLimitService;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -48,7 +48,7 @@ public class DashboardController implements Controller {
     private final UserProfileService userProfileService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private final BisqEasyTradeAmountLimitService bisqEasyTradeAmountLimitService;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin;
     private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
@@ -58,7 +58,7 @@ public class DashboardController implements Controller {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
-        bisqEasyTradeAmountLimitService = serviceProvider.getBisqEasyService().getBisqEasyTradeAmountLimitService();
+        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
 
         model = new DashboardModel();
         view = new DashboardView(model, this);
@@ -124,7 +124,7 @@ public class DashboardController implements Controller {
                     model.getOffersOnline().set(String.valueOf(bisqEasyOfferbookChannelService.getChannels().stream()
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
-                            .filter(bisqEasyTradeAmountLimitService::hasSellerSufficientReputation)
+                            .filter(bisqEasySellersReputationBasedTradeAmountService::hasSellerSufficientReputation)
                             .count())));
         }
     }
