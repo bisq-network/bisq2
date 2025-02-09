@@ -137,6 +137,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
 
             {
                 marketLogoAndCodeBox.setAlignment(Pos.CENTER_LEFT);
+                marketLogoAndCodeBox.setPadding(new Insets(0, 0, 0, 10));
             }
 
             @Override
