@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.chat.message_container.list;
 
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -99,6 +100,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final NetworkService networkService;
     private final Optional<ResendMessageService> resendMessageService;
     private final MarketPriceService marketPriceService;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private final LeavePrivateChatManager leavePrivateChatManager;
 
     private final Set<String> offersWithInvalidSellerReputation = new HashSet<>();
@@ -123,6 +125,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         networkService = serviceProvider.getNetworkService();
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
+
         this.mentionUserHandler = mentionUserHandler;
         this.showChatUserDetailsHandler = showChatUserDetailsHandler;
         this.replyHandler = replyHandler;
@@ -611,10 +615,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             }
 
             if (!chatMessage.isMyMessage(userIdentityService) &&
-                    !BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService,
-                            userProfileService,
-                            reputationService,
-                            chatMessage)) {
+                    !bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(chatMessage)) {
                 return false;
             }
 

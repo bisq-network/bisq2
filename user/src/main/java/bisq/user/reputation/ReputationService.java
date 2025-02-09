@@ -42,7 +42,7 @@ public class ReputationService implements Service {
     private final BondedReputationService bondedReputationService;
     private final AccountAgeService accountAgeService;
     private final SignedWitnessService signedWitnessService;
-    private final Observable<String> changedUserProfileScore = new Observable<>();
+    private final Observable<String> userProfileIdWithScoreChange = new Observable<>();
     private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     private final ProfileAgeService profileAgeService;
     private final NetworkService networkService;
@@ -154,7 +154,7 @@ public class ReputationService implements Service {
                 signedWitnessService.getScore(userProfileId) +
                 profileAgeService.getScore(userProfileId);
         scoreByUserProfileId.put(userProfileId, score);
-        changedUserProfileScore.set(userProfileId);
+        userProfileIdWithScoreChange.set(userProfileId);
     }
 
     @VisibleForTesting

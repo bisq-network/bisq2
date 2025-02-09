@@ -99,7 +99,8 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
             @Override
             public void putAll(Map<? extends String, ? extends UserProfile> map) {
-                map.values().forEach(value -> handleAddedUserProfile(value));
+                // Clone to unmodifiable Map to avoid ConcurrentModificationException
+                Map.copyOf(map).values().forEach(value -> handleAddedUserProfile(value));
             }
 
             @Override
@@ -131,13 +132,13 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         findRelevantData(authorizedData.getAuthorizedDistributedData())
                 .ifPresent(data -> {
-                    if (isAuthorized(authorizedData) && isValidVersion(data)) {
+                    if (isAuthorized(authorizedData) && isDataValid(data)) {
                         handleAddedAuthorizedDistributedData(data);
                     }
                 });
     }
 
-    protected boolean isValidVersion(T data) {
+    protected boolean isDataValid(T data) {
         return true;
     }
 

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.bisq_easy.BisqEasyMarketFilter;
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
@@ -67,10 +67,13 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final FavouriteMarketsService favouriteMarketsService;
-    private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final ChatNotificationService chatNotificationService;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+
+    private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final Predicate<MarketChannelItem> marketChannelItemsPredicate;
     private final Predicate<MarketChannelItem> favouriteMarketChannelItemsPredicate;
+
     private OfferbookListController offerbookListController;
     private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
             favouriteMarketsPin, showMarketSelectionListCollapsedSettingsPin,
@@ -87,6 +90,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
 
         bisqEasyOfferbookModel = getModel();
         createMarketChannels();
@@ -104,7 +108,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         BisqEasyOfferbookModel model = new BisqEasyOfferbookModel(chatChannelDomain);
 
         // As we pass some data from the model we cannot create it in the createDependencies method.
-        offerbookListController = new OfferbookListController(serviceProvider, chatMessageContainerController);
+        offerbookListController = new OfferbookListController(serviceProvider);
         model.setShowOfferListExpanded(offerbookListController.getShowOfferListExpanded());
         return model;
     }
@@ -232,11 +236,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                 .filter(message -> message.isMyMessage(userIdentityService))
-                .filter(message -> !BisqEasyTradeAmountLimits.hasSellerSufficientReputation(marketPriceService,
-                        userProfileService,
-                        reputationService,
-                        message,
-                        false))
+                .filter(message -> !bisqEasySellersReputationBasedTradeAmountService.hasSellerSufficientReputation(message, false))
                 .collect(Collectors.toSet());
         if (!mySellOffersWithSufficientReputation.isEmpty()) {
             new Popup().headline(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.headline"))
@@ -361,7 +361,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         chatNotificationService,
                         marketPriceService,
                         userProfileService,
-                        reputationService))
+                        reputationService,
+                        bisqEasySellersReputationBasedTradeAmountService))
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);
     }

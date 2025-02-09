@@ -56,10 +56,16 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     }
 
     @Override
-    protected boolean isValidVersion(AuthorizedProofOfBurnData data) {
-        // We added fields in AuthorizedProofOfBurnData in v2.1.0 and increased version in AuthorizedProofOfBurnData to 1.
-        // As we publish both version 0 and version 1 objects we ignore the version 0 objects to avoid duplicates.
-        return data.getVersion() > 0;
+    protected boolean isDataValid(AuthorizedProofOfBurnData data) {
+        // We added fields in AuthorizedBondedReputationData in v2.1.0 and increased version in AuthorizedBondedReputationData to 1.
+        // We had published both version 0 and 1 data, and old version 0 had no txId and blockHeight set.
+        // Version 0 data with txId and blockHeight do not cause any conflict as the hashcode is the same as a version 1 data.
+        // Though version 0 data without txId and blockHeight would have a diff. hashcode and would cause duplication
+        // in the score calculations.
+        // With 2.1.5 we do not publish version 0 data anymore, but as they have a TTL of 100 days,
+        // they will be present still a while. From June 2025 on there should not no version 0 data anymore in the network
+        // and this check can be removed.
+        return data.getTxId().length() == 64 && data.getBlockHeight() > 0;
     }
 
     @Override
