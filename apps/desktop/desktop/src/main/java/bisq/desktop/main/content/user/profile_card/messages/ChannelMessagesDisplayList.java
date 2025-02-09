@@ -188,15 +188,13 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                         ? NavigationTarget.CHAT_DISCUSSION
                         : NavigationTarget.SUPPORT_ASSISTANCE);
                 commonPublicChatChannelServices.get(chatChannelDomain).findChannel(publicChatMessage.getChannelId())
-                        .ifPresent(channel -> {
-                            // TODO.
-                        });
+                        .ifPresent(channel -> channel.getHighlightedMessage().set(publicChatMessage));
             } else if (chatChannelDomain == BISQ_EASY_OFFERBOOK) {
                 navigationTarget = Optional.of(NavigationTarget.BISQ_EASY_OFFERBOOK);
                 bisqEasyOfferbookChannelService.findChannel(publicChatMessage.getChannelId())
                     .ifPresent(channel -> {
                         bisqEasyOfferbookChannelSelectionService.selectChannel(channel);
-                        // channel.getHighlightedMessage().set(publicChatMessage);
+                        channel.getHighlightedMessage().set(publicChatMessage);
                 });
             }
 
