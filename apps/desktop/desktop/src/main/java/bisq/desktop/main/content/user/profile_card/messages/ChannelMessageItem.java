@@ -26,6 +26,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.text.DateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
 
@@ -33,7 +34,7 @@ import static bisq.desktop.main.content.chat.message_container.ChatMessageContai
 
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class ChannelMessageItem {
+public class ChannelMessageItem implements Comparable<ChannelMessageItem> {
     @EqualsAndHashCode.Include
     private final PublicChatMessage publicChatMessage;
 
@@ -60,5 +61,11 @@ public class ChannelMessageItem {
     }
 
     public void dispose() {
+    }
+
+    @Override
+    public int compareTo(ChannelMessageItem o) {
+        return Comparator.comparing(PublicChatMessage::getDate)
+                .compare(this.getPublicChatMessage(), o.getPublicChatMessage());
     }
 }

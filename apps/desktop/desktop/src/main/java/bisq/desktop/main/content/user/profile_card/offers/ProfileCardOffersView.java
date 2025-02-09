@@ -137,6 +137,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
 
             {
                 marketLogoAndCodeBox.setAlignment(Pos.CENTER_LEFT);
+                marketLogoAndCodeBox.setPadding(new Insets(0, 0, 0, 10));
             }
 
             @Override
@@ -234,7 +235,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
 
             {
                 goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;");
-                goToOfferButton.getStyleClass().add("go-to-offer-button");
+                goToOfferButton.getStyleClass().add("text-underline");
             }
 
             @Override

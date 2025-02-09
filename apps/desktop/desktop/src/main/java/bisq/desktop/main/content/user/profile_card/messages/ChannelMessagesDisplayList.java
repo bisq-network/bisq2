@@ -17,9 +17,15 @@
 
 package bisq.desktop.main.content.user.profile_card.messages;
 
+import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookSelectionService;
+import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.observable.Pin;
@@ -27,8 +33,12 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -36,6 +46,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -48,9 +59,10 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 
+import java.util.Map;
 import java.util.Optional;
 
-import static bisq.chat.ChatChannelDomain.DISCUSSION;
+import static bisq.chat.ChatChannelDomain.*;
 
 public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
     private final Controller controller;
@@ -76,6 +88,9 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private final PublicChatChannel<M> publicChatChannel;
         private final UserProfile userProfile;
         private final UserProfileService userProfileService;
+        private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+        private final BisqEasyOfferbookSelectionService bisqEasyOfferbookChannelSelectionService;
+        private final Map<ChatChannelDomain, CommonPublicChatChannelService> commonPublicChatChannelServices;
         private Pin publicMessagesPin;
 
         private Controller(ServiceProvider serviceProvider,
@@ -86,6 +101,11 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             this.publicChatChannel = publicChatChannel;
             this.userProfile = userProfile;
             userProfileService = serviceProvider.getUserService().getUserProfileService();
+
+            ChatService chatService = serviceProvider.getChatService();
+            bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
+            bisqEasyOfferbookChannelSelectionService = chatService.getBisqEasyOfferbookChannelSelectionService();
+            commonPublicChatChannelServices = chatService.getCommonPublicChatChannelServices();
         }
 
         @Override
@@ -144,6 +164,8 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                 }
             });
 
+            model.getSortedChannelMessageItems().setComparator(ChannelMessageItem::compareTo);
+
             updateShouldShow();
         }
 
@@ -158,6 +180,27 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                     .orElse(Res.get("data.na"));
         }
 
+        private void onGoToMessage(PublicChatMessage publicChatMessage) {
+            ChatChannelDomain chatChannelDomain = publicChatMessage.getChatChannelDomain();
+            Optional<NavigationTarget> navigationTarget = Optional.empty();
+            if (chatChannelDomain == DISCUSSION || chatChannelDomain == SUPPORT) {
+                navigationTarget = Optional.of(chatChannelDomain == DISCUSSION
+                        ? NavigationTarget.CHAT_DISCUSSION
+                        : NavigationTarget.SUPPORT_ASSISTANCE);
+                commonPublicChatChannelServices.get(chatChannelDomain).findChannel(publicChatMessage.getChannelId())
+                        .ifPresent(channel -> channel.getHighlightedMessage().set(publicChatMessage));
+            } else if (chatChannelDomain == BISQ_EASY_OFFERBOOK) {
+                navigationTarget = Optional.of(NavigationTarget.BISQ_EASY_OFFERBOOK);
+                bisqEasyOfferbookChannelService.findChannel(publicChatMessage.getChannelId())
+                    .ifPresent(channel -> {
+                        bisqEasyOfferbookChannelSelectionService.selectChannel(channel);
+                        channel.getHighlightedMessage().set(publicChatMessage);
+                });
+            }
+
+            navigationTarget.ifPresent(navTarget -> OverlayController.hide(() -> Navigation.navigateTo(navTarget)));
+        }
+
         private void updateShouldShow() {
             model.getShouldShow().set(!model.getChannelMessageItems().isEmpty());
         }
@@ -169,6 +212,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private final StringProperty channelIconId = new SimpleStringProperty();
         private final StringProperty marketCurrencyCode = new SimpleStringProperty();
         private final ObservableList<ChannelMessageItem> channelMessageItems = FXCollections.observableArrayList();
+        private final SortedList<ChannelMessageItem> sortedChannelMessageItems = new SortedList<>(channelMessageItems);
         private final BooleanProperty shouldShow = new SimpleBooleanProperty();
     }
 
@@ -212,7 +256,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             headline.setGraphicTextGap(10);
             root.visibleProperty().bind(model.getShouldShow());
             root.managedProperty().bind(model.getShouldShow());
-            model.getChannelMessageItems().addListener(listChangeListener);
+            model.getSortedChannelMessageItems().addListener(listChangeListener);
             updateMessageListVBox();
         }
 
@@ -220,18 +264,19 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         protected void onViewDetached() {
             root.visibleProperty().unbind();
             root.managedProperty().unbind();
-            model.getChannelMessageItems().removeListener(listChangeListener);
+            model.getSortedChannelMessageItems().removeListener(listChangeListener);
         }
 
         private void updateMessageListVBox() {
             clearMessageListVBox();
-            model.getChannelMessageItems().forEach(item -> {
+            model.getSortedChannelMessageItems().forEach(item -> {
                 ChannelMessageBox channelMessageBox = new ChannelMessageBox();
                 String citationAuthorId = "";
                 if (item.getCitation().isPresent()) {
                     citationAuthorId = item.getCitation().get().getAuthorUserProfileId();
                 }
                 channelMessageBox.setChannelMessageItem(item, controller.getUserName(citationAuthorId));
+                channelMessageBox.getGoToMessageButton().setOnAction(e -> controller.onGoToMessage(item.getPublicChatMessage()));
                 messageListVBox.getChildren().add(channelMessageBox);
             });
         }
@@ -258,6 +303,8 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private final Label dateTimeLabel, textMessageLabel, citationMessage, citationAuthor;
         private final VBox citationMessageVBox;
         private final ImageView catHashImageView;
+        @Getter
+        private final BisqMenuItem goToMessageButton;
 
         private ChannelMessageBox() {
             dateTimeLabel = new Label();
@@ -288,17 +335,28 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             catHashImageView.setFitHeight(catHashImageView.getFitWidth());
             HBox.setMargin(catHashImageView, new Insets(5, 0, 0, 5));
 
+            goToMessageButton = new BisqMenuItem(Res.get("user.profileCard.messages.goToMessage.button"));
+            goToMessageButton.getStyleClass().addAll("text-underline", "text-fill-grey-dimmed");
+            goToMessageButton.setMaxWidth(BisqMenuItem.USE_PREF_SIZE);
+            goToMessageButton.setMinWidth(BisqMenuItem.USE_PREF_SIZE);
+            HBox.setMargin(goToMessageButton, new Insets(0, 0, 0, 20));
+
             HBox messageBubbleHBox = new HBox(15, catHashImageView, textMessageVBox);
             messageBubbleHBox.setAlignment(Pos.TOP_LEFT);
             messageBubbleHBox.getStyleClass().add("message-bg");
             messageBubbleHBox.setPadding(new Insets(5, 15, 5, 15));
 
-            VBox messageBg = new VBox(dateTimeLabel, messageBubbleHBox);
+            HBox bubbleAndGoToButtonHBox = new HBox(messageBubbleHBox, Spacer.fillHBox(), goToMessageButton);
+            bubbleAndGoToButtonHBox.setAlignment(Pos.CENTER_LEFT);
+            HBox.setHgrow(bubbleAndGoToButtonHBox, Priority.ALWAYS);
+
+            VBox messageBg = new VBox(dateTimeLabel, bubbleAndGoToButtonHBox);
+            messageBg.setFillWidth(true);
+            HBox.setHgrow(messageBg, Priority.ALWAYS);
 
             setAlignment(Pos.CENTER_LEFT);
             setFillHeight(true);
             setPadding(new Insets(0, 50, 0, 50));
-            // TODO: Add goToMessage button
             getChildren().add(messageBg);
         }
 
@@ -319,6 +377,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
         private void dispose() {
             catHashImageView.setImage(null);
+            goToMessageButton.setOnAction(null);
         }
     }
 }

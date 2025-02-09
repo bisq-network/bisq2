@@ -20,6 +20,7 @@ package bisq.chat.pub;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
+import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,6 +32,7 @@ import lombok.ToString;
 public abstract class PublicChatChannel<M extends PublicChatMessage> extends ChatChannel<M> {
     // Transient because we do not persist the messages as they are persisted in the P2P data store.
     protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
+    private final Observable<PublicChatMessage> highlightedMessage = new Observable<>();
 
     public PublicChatChannel(String id,
                              ChatChannelDomain chatChannelDomain,

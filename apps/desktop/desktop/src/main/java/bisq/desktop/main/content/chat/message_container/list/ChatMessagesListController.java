@@ -102,8 +102,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final MarketPriceService marketPriceService;
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private final LeavePrivateChatManager leavePrivateChatManager;
-
-    private final Set<String> offersWithInvalidSellerReputation = new HashSet<>();
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
@@ -252,14 +250,13 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             }
         });
 
-        if (channel instanceof BisqEasyOfferbookChannel bisqEasyOfferbookChannel) {
+        if (channel instanceof PublicChatChannel<?> publicChatChannel) {
             if (highlightedMessagePin != null) {
                 highlightedMessagePin.unbind();
             }
-            highlightedMessagePin = bisqEasyOfferbookChannel.getHighlightedMessage().addObserver(highlightedMessage -> {
+            highlightedMessagePin = publicChatChannel.getHighlightedMessage().addObserver(highlightedMessage -> {
                 if (highlightedMessage != null) {
-                    model.getChatMessages().stream()
-                            .filter(ChatMessageListItem::isBisqEasyPublicChatMessageWithOffer)
+                    model.getChatMessages()
                             .forEach(item -> {
                                 boolean shouldHighlightMessage = item.getChatMessage().getId().equals(highlightedMessage.getId());
                                 item.getShowHighlighted().set(shouldHighlightMessage);
@@ -269,7 +266,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                                 }
                             });
                 }
-
             });
         }
     }
