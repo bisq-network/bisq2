@@ -28,7 +28,6 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -93,10 +92,15 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
     private boolean hasSellerSufficientReputation(BisqEasyOffer bisqEasyOffer, boolean useCache) {
         String offerId = bisqEasyOffer.getId();
         String makersUserProfileId = bisqEasyOffer.getMakersUserProfileId();
-        if (useCache &&
-                sellOffersWithInsufficientReputationByMakersProfileId.containsKey(makersUserProfileId) &&
-                sellOffersWithInsufficientReputationByMakersProfileId.get(makersUserProfileId).contains(offerId)) {
-            return false;
+        if (useCache) {
+            // The computeIfPresent method invocation is performed atomically.
+            Set<String> sellOffersWithInsufficientReputation = sellOffersWithInsufficientReputationByMakersProfileId
+                    .computeIfPresent(makersUserProfileId, (k, set) ->
+                            set.contains(offerId) ? set : null
+                    );
+            if (sellOffersWithInsufficientReputation != null) {
+                return false;
+            }
         }
 
         if (bisqEasyOffer.getDirection().isSell()) {
@@ -112,8 +116,15 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
                 boolean hasInsufficientReputation = BisqEasyTradeAmountLimits.withTolerance(sellersScore) < requiredReputationScoreForMinOrFixed;
                 if (hasInsufficientReputation) {
                     if (useCache) {
-                        sellOffersWithInsufficientReputationByMakersProfileId.putIfAbsent(makersUserProfileId, new HashSet<>());
-                        sellOffersWithInsufficientReputationByMakersProfileId.get(makersUserProfileId).add(offerId);
+                        // The compute method invocation is performed atomically.
+                        sellOffersWithInsufficientReputationByMakersProfileId
+                                .compute(makersUserProfileId, (k, set) -> {
+                                    if (set == null) {
+                                        set = ConcurrentHashMap.newKeySet();
+                                    }
+                                    set.add(offerId);
+                                    return set;
+                                });
                     }
                     return false;
                 }
