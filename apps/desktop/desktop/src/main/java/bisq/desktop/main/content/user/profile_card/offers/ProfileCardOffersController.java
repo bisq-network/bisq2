@@ -61,6 +61,7 @@ public class ProfileCardOffersController implements Controller {
 
     @Override
     public void onDeactivate() {
+        model.getOfferbookListItems().forEach(ProfileCardOfferListItem::dispose);
     }
 
     public void setUserProfile(UserProfile userProfile) {
