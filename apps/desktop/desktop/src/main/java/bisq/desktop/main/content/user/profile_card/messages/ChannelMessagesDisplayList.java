@@ -28,6 +28,8 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
@@ -262,6 +264,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private final Label dateTimeLabel, textMessageLabel, citationMessage, citationAuthor;
         private final VBox citationMessageVBox;
         private final ImageView catHashImageView;
+        private final BisqMenuItem goToMessageButton;
 
         private ChannelMessageBox() {
             dateTimeLabel = new Label();
@@ -292,17 +295,28 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             catHashImageView.setFitHeight(catHashImageView.getFitWidth());
             HBox.setMargin(catHashImageView, new Insets(5, 0, 0, 5));
 
+            goToMessageButton = new BisqMenuItem(Res.get("user.profileCard.messages.goToMessage.button"));
+            goToMessageButton.getStyleClass().addAll("text-underline", "text-fill-grey-dimmed");
+            goToMessageButton.setMaxWidth(BisqMenuItem.USE_PREF_SIZE);
+            goToMessageButton.setMinWidth(BisqMenuItem.USE_PREF_SIZE);
+            HBox.setMargin(goToMessageButton, new Insets(0, 0, 0, 20));
+
             HBox messageBubbleHBox = new HBox(15, catHashImageView, textMessageVBox);
             messageBubbleHBox.setAlignment(Pos.TOP_LEFT);
             messageBubbleHBox.getStyleClass().add("message-bg");
             messageBubbleHBox.setPadding(new Insets(5, 15, 5, 15));
 
-            VBox messageBg = new VBox(dateTimeLabel, messageBubbleHBox);
+            HBox bubbleAndGoToButtonHBox = new HBox(messageBubbleHBox, Spacer.fillHBox(), goToMessageButton);
+            bubbleAndGoToButtonHBox.setAlignment(Pos.CENTER_LEFT);
+            HBox.setHgrow(bubbleAndGoToButtonHBox, Priority.ALWAYS);
+
+            VBox messageBg = new VBox(dateTimeLabel, bubbleAndGoToButtonHBox);
+            messageBg.setFillWidth(true);
+            HBox.setHgrow(messageBg, Priority.ALWAYS);
 
             setAlignment(Pos.CENTER_LEFT);
             setFillHeight(true);
             setPadding(new Insets(0, 50, 0, 50));
-            // TODO: Add goToMessage button
             getChildren().add(messageBg);
         }
 
