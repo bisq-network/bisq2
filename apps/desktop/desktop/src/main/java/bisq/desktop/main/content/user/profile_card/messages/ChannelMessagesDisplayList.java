@@ -36,6 +36,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -144,6 +145,8 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                 }
             });
 
+            model.getSortedChannelMessageItems().setComparator(ChannelMessageItem::compareTo);
+
             updateShouldShow();
         }
 
@@ -169,6 +172,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private final StringProperty channelIconId = new SimpleStringProperty();
         private final StringProperty marketCurrencyCode = new SimpleStringProperty();
         private final ObservableList<ChannelMessageItem> channelMessageItems = FXCollections.observableArrayList();
+        private final SortedList<ChannelMessageItem> sortedChannelMessageItems = new SortedList<>(channelMessageItems);
         private final BooleanProperty shouldShow = new SimpleBooleanProperty();
     }
 
@@ -212,7 +216,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             headline.setGraphicTextGap(10);
             root.visibleProperty().bind(model.getShouldShow());
             root.managedProperty().bind(model.getShouldShow());
-            model.getChannelMessageItems().addListener(listChangeListener);
+            model.getSortedChannelMessageItems().addListener(listChangeListener);
             updateMessageListVBox();
         }
 
@@ -220,12 +224,12 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         protected void onViewDetached() {
             root.visibleProperty().unbind();
             root.managedProperty().unbind();
-            model.getChannelMessageItems().removeListener(listChangeListener);
+            model.getSortedChannelMessageItems().removeListener(listChangeListener);
         }
 
         private void updateMessageListVBox() {
             clearMessageListVBox();
-            model.getChannelMessageItems().forEach(item -> {
+            model.getSortedChannelMessageItems().forEach(item -> {
                 ChannelMessageBox channelMessageBox = new ChannelMessageBox();
                 String citationAuthorId = "";
                 if (item.getCitation().isPresent()) {
