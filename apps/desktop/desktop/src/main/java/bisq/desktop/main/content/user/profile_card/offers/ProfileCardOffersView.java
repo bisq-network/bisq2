@@ -234,7 +234,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
 
             {
                 goToOfferButton.setStyle("-fx-text-fill: -fx-mid-text-color;");
-                goToOfferButton.getStyleClass().add("go-to-offer-button");
+                goToOfferButton.getStyleClass().add("text-underline");
             }
 
             @Override
