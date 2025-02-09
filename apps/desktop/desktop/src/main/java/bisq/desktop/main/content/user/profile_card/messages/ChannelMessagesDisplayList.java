@@ -17,9 +17,15 @@
 
 package bisq.desktop.main.content.user.profile_card.messages;
 
+import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookSelectionService;
+import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.observable.Pin;
@@ -27,10 +33,12 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -51,9 +59,10 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 
+import java.util.Map;
 import java.util.Optional;
 
-import static bisq.chat.ChatChannelDomain.DISCUSSION;
+import static bisq.chat.ChatChannelDomain.*;
 
 public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
     private final Controller controller;
@@ -79,6 +88,9 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private final PublicChatChannel<M> publicChatChannel;
         private final UserProfile userProfile;
         private final UserProfileService userProfileService;
+        private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+        private final BisqEasyOfferbookSelectionService bisqEasyOfferbookChannelSelectionService;
+        private final Map<ChatChannelDomain, CommonPublicChatChannelService> commonPublicChatChannelServices;
         private Pin publicMessagesPin;
 
         private Controller(ServiceProvider serviceProvider,
@@ -89,6 +101,11 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             this.publicChatChannel = publicChatChannel;
             this.userProfile = userProfile;
             userProfileService = serviceProvider.getUserService().getUserProfileService();
+
+            ChatService chatService = serviceProvider.getChatService();
+            bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
+            bisqEasyOfferbookChannelSelectionService = chatService.getBisqEasyOfferbookChannelSelectionService();
+            commonPublicChatChannelServices = chatService.getCommonPublicChatChannelServices();
         }
 
         @Override
@@ -161,6 +178,29 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             return userProfileService.findUserProfile(userProfileId)
                     .map(UserProfile::getUserName)
                     .orElse(Res.get("data.na"));
+        }
+
+        private void onGoToMessage(PublicChatMessage publicChatMessage) {
+            ChatChannelDomain chatChannelDomain = publicChatMessage.getChatChannelDomain();
+            Optional<NavigationTarget> navigationTarget = Optional.empty();
+            if (chatChannelDomain == DISCUSSION || chatChannelDomain == SUPPORT) {
+                navigationTarget = Optional.of(chatChannelDomain == DISCUSSION
+                        ? NavigationTarget.CHAT_DISCUSSION
+                        : NavigationTarget.SUPPORT_ASSISTANCE);
+                commonPublicChatChannelServices.get(chatChannelDomain).findChannel(publicChatMessage.getChannelId())
+                        .ifPresent(channel -> {
+                            // TODO.
+                        });
+            } else if (chatChannelDomain == BISQ_EASY_OFFERBOOK) {
+                navigationTarget = Optional.of(NavigationTarget.BISQ_EASY_OFFERBOOK);
+                bisqEasyOfferbookChannelService.findChannel(publicChatMessage.getChannelId())
+                    .ifPresent(channel -> {
+                        bisqEasyOfferbookChannelSelectionService.selectChannel(channel);
+                        // channel.getHighlightedMessage().set(publicChatMessage);
+                });
+            }
+
+            navigationTarget.ifPresent(navTarget -> OverlayController.hide(() -> Navigation.navigateTo(navTarget)));
         }
 
         private void updateShouldShow() {
@@ -238,6 +278,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
                     citationAuthorId = item.getCitation().get().getAuthorUserProfileId();
                 }
                 channelMessageBox.setChannelMessageItem(item, controller.getUserName(citationAuthorId));
+                channelMessageBox.getGoToMessageButton().setOnAction(e -> controller.onGoToMessage(item.getPublicChatMessage()));
                 messageListVBox.getChildren().add(channelMessageBox);
             });
         }
@@ -264,6 +305,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private final Label dateTimeLabel, textMessageLabel, citationMessage, citationAuthor;
         private final VBox citationMessageVBox;
         private final ImageView catHashImageView;
+        @Getter
         private final BisqMenuItem goToMessageButton;
 
         private ChannelMessageBox() {
@@ -337,6 +379,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
         private void dispose() {
             catHashImageView.setImage(null);
+            goToMessageButton.setOnAction(null);
         }
     }
 }
