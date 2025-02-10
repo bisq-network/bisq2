@@ -63,7 +63,7 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
         // Version 0 data with txId and blockHeight do not cause any conflict as the hashcode is the same as a version 1 data.
         // Though version 0 data without txId and blockHeight would have a diff. hashcode and would cause duplication
         // in the score calculations.
-        // With 2.1.5 we do not publish version 0 data anymore, but as they have a TTL of 100 days,
+        // With 2.1.6 we do not publish version 0 data anymore, but as they have a TTL of 100 days,
         // they will be present still a while. From June 2025 on there should not no version 0 data anymore in the network
         // and this check can be removed.
         // In case would get old protobuf data where txId and blockHeight are not present, we would get an empty string
