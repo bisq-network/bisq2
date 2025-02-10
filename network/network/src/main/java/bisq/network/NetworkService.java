@@ -183,6 +183,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Service
     /* --------------------------------------------------------------------- */
 
+    public Integer getNumberOfConnectedNodes() {
+        NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
+        Map<TransportType, CompletableFuture<Node>> map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId);
+        return map.size();
+    }
+
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
