@@ -183,8 +183,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.preventStandbyMode.set(preventStandbyMode);
     }
 
-    public Observable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
+    public ReadOnlyObservable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
         return persistableStore.ignoreDiffAdjustmentFromSecManager;
+    }
+
+    public void setIgnoreDiffAdjustmentFromSecManager(boolean ignoreDiffAdjustmentFromSecManager) {
+        persistableStore.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
     }
 
     public Observable<Double> getDifficultyAdjustmentFactor() {
