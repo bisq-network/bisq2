@@ -224,7 +224,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         changedNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
         bisqEasyOfferbookMessageTypeFilterPin = FxBindings.bindBiDir(model.getMessageTypeFilter())
-                .to(settingsService.getBisqEasyOfferbookMessageTypeFilter());
+                .to(settingsService.getBisqEasyOfferbookMessageTypeFilter(), settingsService::setBisqEasyOfferbookMessageTypeFilter);
 
         model.getMarketChannelItems().forEach(item -> {
             ChangeListener<Number> numberChangeListener = (obs, oldValue, newValue) -> updateFilteredMarketChannelItems();

@@ -304,8 +304,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.totalMaxBackupSizeInMB;
     }
 
-    public Observable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
+    public ReadOnlyObservable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
         return persistableStore.bisqEasyOfferbookMessageTypeFilter;
+    }
+
+    public void setBisqEasyOfferbookMessageTypeFilter(ChatMessageType chatMessageType) {
+        persistableStore.bisqEasyOfferbookMessageTypeFilter.set(chatMessageType);
     }
 
     public ReadOnlyObservable<Integer> getNumDaysAfterRedactingTradeData() {
