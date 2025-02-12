@@ -90,7 +90,7 @@ public class SettingsRestApi extends RestApiBase {
             } else if (request.closeMyOfferWhenTaken() != null) {
                 settingsService.setCloseMyOfferWhenTaken(request.closeMyOfferWhenTaken());
             } else if (request.languageCode() != null) {
-                settingsService.getLanguageCode().set(request.languageCode());
+                settingsService.setLanguageCode(request.languageCode());
             } else if (request.supportedLanguageCodes() != null) {
                 ObservableSet<String> supportedLanguageCodes = settingsService.getSupportedLanguageCodes();
                 supportedLanguageCodes.clear();
