@@ -85,7 +85,8 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
     @Override
     public void onActivate() {
-        showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
+        showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers())
+                .to(settingsService.getShowBuyOffers(), settingsService::setShowBuyOffers);
         showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
         showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> updatePredicate());
         activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
