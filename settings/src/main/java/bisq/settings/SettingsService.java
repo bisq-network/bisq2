@@ -175,8 +175,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.tradeRulesConfirmed.set(tradeRulesConfirmed);
     }
 
-    public Observable<Boolean> getPreventStandbyMode() {
+    public ReadOnlyObservable<Boolean> getPreventStandbyMode() {
         return persistableStore.preventStandbyMode;
+    }
+
+    public void setPreventStandbyMode(boolean preventStandbyMode) {
+        persistableStore.preventStandbyMode.set(preventStandbyMode);
     }
 
     public Observable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
