@@ -149,8 +149,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     // Getters for Observable
     /* --------------------------------------------------------------------- */
 
-    public Observable<Market> getSelectedMarket() {
+    public ReadOnlyObservable<Market> getSelectedMarket() {
         return persistableStore.selectedMarket;
+    }
+
+    public void setSelectedMarket(Market market) {
+        if (market != null) {
+            persistableStore.selectedMarket.set(market);
+        }
     }
 
     public Observable<Boolean> getUseAnimations() {
