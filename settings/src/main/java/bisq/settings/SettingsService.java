@@ -167,8 +167,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.useAnimations.set(useAnimations);
     }
 
-    public Observable<Boolean> getTradeRulesConfirmed() {
+    public ReadOnlyObservable<Boolean> getTradeRulesConfirmed() {
         return persistableStore.tradeRulesConfirmed;
+    }
+
+    public void setTradeRulesConfirmed(boolean tradeRulesConfirmed) {
+        persistableStore.tradeRulesConfirmed.set(tradeRulesConfirmed);
     }
 
     public Observable<Boolean> getPreventStandbyMode() {

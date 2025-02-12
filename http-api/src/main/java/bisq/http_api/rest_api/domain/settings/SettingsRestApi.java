@@ -86,7 +86,7 @@ public class SettingsRestApi extends RestApiBase {
             if (request.isTacAccepted() != null) {
                 settingsService.getIsTacAccepted().set(request.isTacAccepted());
             } else if (request.tradeRulesConfirmed() != null) {
-                settingsService.getTradeRulesConfirmed().set(request.tradeRulesConfirmed());
+                settingsService.setTradeRulesConfirmed(request.tradeRulesConfirmed());
             } else if (request.closeMyOfferWhenTaken() != null) {
                 settingsService.getCloseMyOfferWhenTaken().set(request.closeMyOfferWhenTaken());
             } else if (request.languageCode() != null) {
