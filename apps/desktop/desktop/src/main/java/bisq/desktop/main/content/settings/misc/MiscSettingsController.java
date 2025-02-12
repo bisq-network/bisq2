@@ -62,7 +62,7 @@ public class MiscSettingsController implements Controller {
                             mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
                         }
                         difficultyAdjustmentFactorPin = FxBindings.bindBiDir(model.getDifficultyAdjustmentFactor())
-                                .to(settingsService.getDifficultyAdjustmentFactor());
+                                .to(settingsService.getDifficultyAdjustmentFactor(), settingsService::setDifficultyAdjustmentFactor);
                     } else {
                         model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.network.difficultyAdjustmentFactor.description.fromSecManager"));
 

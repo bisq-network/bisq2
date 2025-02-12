@@ -28,6 +28,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -191,8 +192,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
     }
 
-    public Observable<Double> getDifficultyAdjustmentFactor() {
+    public ReadOnlyObservable<Double> getDifficultyAdjustmentFactor() {
         return persistableStore.difficultyAdjustmentFactor;
+    }
+
+    public void setDifficultyAdjustmentFactor(double value) {
+        if (value >= NetworkLoad.MIN_DIFFICULTY_ADJUSTMENT && value <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT) {
+            persistableStore.difficultyAdjustmentFactor.set(value);
+        }
     }
 
     public ReadOnlyObservable<Double> getMaxTradePriceDeviation() {

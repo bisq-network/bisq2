@@ -44,7 +44,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
     private static final double TEXT_FIELD_WIDTH = 500;
     private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
             new NumberValidator(Res.get("settings.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
-                    0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
+                    NetworkLoad.MIN_DIFFICULTY_ADJUSTMENT, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
     private static final ValidatorBase TOTAL_MAX_BACKUP_SIZE_VALIDATOR =
             new NumberValidator(Res.get("settings.backup.totalMaxBackupSizeInMB.invalid", 1, 1000),
                     1, 1000);
