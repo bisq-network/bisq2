@@ -46,7 +46,7 @@ public class DisplaySettingsController implements Controller {
     @Override
     public void onActivate() {
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations())
-                .to(settingsService.getUseAnimations());
+                .to(settingsService.getUseAnimations(), settingsService::setUseAnimations);
         preventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
                 .to(settingsService.getPreventStandbyMode());
     }

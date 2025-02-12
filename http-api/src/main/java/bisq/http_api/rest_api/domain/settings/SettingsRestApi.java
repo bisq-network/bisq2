@@ -102,7 +102,7 @@ public class SettingsRestApi extends RestApiBase {
             } else if (request.numDaysAfterRedactingTradeData() != null) {
                 settingsService.setNumDaysAfterRedactingTradeData(request.numDaysAfterRedactingTradeData());
             } else if (request.useAnimations() != null) {
-                settingsService.getUseAnimations().set(request.useAnimations());
+                settingsService.setUseAnimations(request.useAnimations());
             } else {
                 return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid request: " + request);
             }
