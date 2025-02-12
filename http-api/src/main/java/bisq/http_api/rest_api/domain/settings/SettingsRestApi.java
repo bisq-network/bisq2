@@ -84,13 +84,13 @@ public class SettingsRestApi extends RestApiBase {
     public Response updateSetting(@Valid SettingsChangeRequest request) {
         try {
             if (request.isTacAccepted() != null) {
-                settingsService.getIsTacAccepted().set(request.isTacAccepted());
+                settingsService.setIsTacAccepted(request.isTacAccepted());
             } else if (request.tradeRulesConfirmed() != null) {
-                settingsService.getTradeRulesConfirmed().set(request.tradeRulesConfirmed());
+                settingsService.setTradeRulesConfirmed(request.tradeRulesConfirmed());
             } else if (request.closeMyOfferWhenTaken() != null) {
-                settingsService.getCloseMyOfferWhenTaken().set(request.closeMyOfferWhenTaken());
+                settingsService.setCloseMyOfferWhenTaken(request.closeMyOfferWhenTaken());
             } else if (request.languageCode() != null) {
-                settingsService.getLanguageCode().set(request.languageCode());
+                settingsService.setLanguageCode(request.languageCode());
             } else if (request.supportedLanguageCodes() != null) {
                 ObservableSet<String> supportedLanguageCodes = settingsService.getSupportedLanguageCodes();
                 supportedLanguageCodes.clear();
@@ -98,11 +98,11 @@ public class SettingsRestApi extends RestApiBase {
             } else if (request.maxTradePriceDeviation() != null) {
                 settingsService.setMaxTradePriceDeviation(request.maxTradePriceDeviation());
             } else if (request.selectedMarket() != null) {
-                settingsService.getSelectedMarket().set(DtoMappings.MarketMapping.toBisq2Model(request.selectedMarket()));
+                settingsService.setSelectedMarket(DtoMappings.MarketMapping.toBisq2Model(request.selectedMarket()));
             } else if (request.numDaysAfterRedactingTradeData() != null) {
                 settingsService.setNumDaysAfterRedactingTradeData(request.numDaysAfterRedactingTradeData());
             } else if (request.useAnimations() != null) {
-                settingsService.getUseAnimations().set(request.useAnimations());
+                settingsService.setUseAnimations(request.useAnimations());
             } else {
                 return buildErrorResponse(Response.Status.BAD_REQUEST, "Invalid request: " + request);
             }

@@ -42,7 +42,6 @@ import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -137,8 +136,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     public void onActivate() {
         model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
 
-        bisqEasyOfferbookMessageTypeFilterPin = FxBindings.subscribe(settingsService.getBisqEasyOfferbookMessageTypeFilter(),
-                filter -> UIThread.run(this::applyPredicate));
+        bisqEasyOfferbookMessageTypeFilterPin = settingsService.getBisqEasyOfferbookMessageTypeFilter()
+                .addObserver(filter -> UIThread.run(this::applyPredicate));
 
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();

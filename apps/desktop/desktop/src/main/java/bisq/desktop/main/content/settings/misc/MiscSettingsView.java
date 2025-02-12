@@ -29,6 +29,7 @@ import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.backup.BackupService;
+import bisq.settings.SettingsService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
@@ -44,10 +45,10 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
     private static final double TEXT_FIELD_WIDTH = 500;
     private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
             new NumberValidator(Res.get("settings.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
-                    0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
+                    NetworkLoad.MIN_DIFFICULTY_ADJUSTMENT, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
     private static final ValidatorBase TOTAL_MAX_BACKUP_SIZE_VALIDATOR =
-            new NumberValidator(Res.get("settings.backup.totalMaxBackupSizeInMB.invalid", 1, 1000),
-                    1, 1000);
+            new NumberValidator(Res.get("settings.backup.totalMaxBackupSizeInMB.invalid", SettingsService.MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB, SettingsService.MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB),
+                    SettingsService.MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB, SettingsService.MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB);
 
     private final Switch ignoreDiffAdjustFromSecManagerSwitch;
     private final MaterialTextField difficultyAdjustmentFactor, totalMaxBackupSizeInMB;

@@ -252,7 +252,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
             if (hasShowOnlyOffersFilter) {
                 new Popup().information(Res.get("chat.message.send.offerOnly.warn"))
                         .actionButtonText(Res.get("confirmation.yes"))
-                        .onAction(() -> settingsService.getBisqEasyOfferbookMessageTypeFilter().set(ChatMessageType.ALL))
+                        .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
                         .closeButtonText(Res.get("confirmation.no"))
                         .dontShowAgainId(dontShowAgainId)
                         .show();

@@ -85,15 +85,18 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
     @Override
     public void onActivate() {
-        showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
-        showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
+        showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers())
+                .to(settingsService.getShowBuyOffers(), settingsService::setShowBuyOffers);
+        showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded())
+                .to(settingsService.getShowOfferListExpanded(), settingsService::setShowOfferListExpanded);
         showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> updatePredicate());
         activeMarketPaymentsCountPin = EasyBind.subscribe(model.getActiveMarketPaymentsCount(), count -> {
             String hint = count.intValue() == 0 ? Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title.all") : count.toString();
             model.getPaymentFilterTitle().set(Res.get("bisqEasy.offerbook.offerList.table.filters.paymentMethods.title", hint));
             updatePredicate();
         });
-        showMyOffersOnlyPin = FxBindings.bindBiDir(model.getShowMyOffersOnly()).to(settingsService.getShowMyOffersOnly());
+        showMyOffersOnlyPin = FxBindings.bindBiDir(model.getShowMyOffersOnly())
+                .to(settingsService.getShowMyOffersOnly(), settingsService::setShowMyOffersOnly);
         showMyOffersOnlyFromModelPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffersOnly -> updatePredicate());
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::updatePredicate));
         userProfileIdWithScoreChangePin = reputationService.getUserProfileIdWithScoreChange().addObserver(userProfileId -> UIThread.run(this::updatePredicate));

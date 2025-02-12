@@ -400,7 +400,7 @@ public class TradeWizardReviewController implements Controller {
         if (hasShowOnlyTextFilter) {
             new Popup().information(Res.get("chat.message.send.textMsgOnly.warn"))
                     .actionButtonText(Res.get("confirmation.yes"))
-                    .onAction(() -> settingsService.getBisqEasyOfferbookMessageTypeFilter().set(ChatMessageType.ALL))
+                    .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
                     .closeButtonText(Res.get("confirmation.no"))
                     .dontShowAgainId(dontShowAgainId)
                     .show();

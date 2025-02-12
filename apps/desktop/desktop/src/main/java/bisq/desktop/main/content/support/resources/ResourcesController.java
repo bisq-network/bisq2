@@ -69,7 +69,7 @@ public class ResourcesController implements Controller {
         model.getBackupButtonDefault().bind(model.getBackupLocation().isEmpty().not());
         model.getBackupButtonDisabled().bind(model.getBackupLocation().isEmpty());
         backupLocationPin = FxBindings.bindBiDir(model.getBackupLocation())
-                .to(settingsService.getBackupLocation());
+                .to(settingsService.getBackupLocation(), settingsService::setBackupLocation);
 
     }
 

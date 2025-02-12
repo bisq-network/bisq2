@@ -52,7 +52,7 @@ public class MiscSettingsController implements Controller {
     @Override
     public void onActivate() {
         ignoreDiffAdjustmentFromSecManagerPin = FxBindings.bindBiDir(model.getIgnoreDiffAdjustmentFromSecManager())
-                .to(settingsService.getIgnoreDiffAdjustmentFromSecManager());
+                .to(settingsService.getIgnoreDiffAdjustmentFromSecManager(), settingsService::setIgnoreDiffAdjustmentFromSecManager);
         model.getDifficultyAdjustmentFactorEditable().bind(model.getIgnoreDiffAdjustmentFromSecManager());
         difficultyAdjustmentFactorDescriptionTextPin = EasyBind.subscribe(model.getIgnoreDiffAdjustmentFromSecManager(),
                 value -> {
@@ -62,7 +62,7 @@ public class MiscSettingsController implements Controller {
                             mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
                         }
                         difficultyAdjustmentFactorPin = FxBindings.bindBiDir(model.getDifficultyAdjustmentFactor())
-                                .to(settingsService.getDifficultyAdjustmentFactor());
+                                .to(settingsService.getDifficultyAdjustmentFactor(), settingsService::setDifficultyAdjustmentFactor);
                     } else {
                         model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.network.difficultyAdjustmentFactor.description.fromSecManager"));
 
@@ -76,7 +76,7 @@ public class MiscSettingsController implements Controller {
                 });
 
         totalMaxBackupSizeInMBPin = FxBindings.bindBiDir(model.getTotalMaxBackupSizeInMB())
-                .to(settingsService.getTotalMaxBackupSizeInMB());
+                .to(settingsService.getTotalMaxBackupSizeInMB(), settingsService::setTotalMaxBackupSizeInMB);
     }
 
     @Override

@@ -129,7 +129,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getMarketSelectorSearchText().set("");
 
         showMarketSelectionListCollapsedSettingsPin = FxBindings.bindBiDir(model.getShowMarketSelectionListCollapsed())
-                .to(settingsService.getShowMarketSelectionListCollapsed());
+                .to(settingsService.getShowMarketSelectionListCollapsed(), settingsService::setShowMarketSelectionListCollapsed);
 
         ObservableSet<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChannels.addObserver(() ->
@@ -224,7 +224,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         changedNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
         bisqEasyOfferbookMessageTypeFilterPin = FxBindings.bindBiDir(model.getMessageTypeFilter())
-                .to(settingsService.getBisqEasyOfferbookMessageTypeFilter());
+                .to(settingsService.getBisqEasyOfferbookMessageTypeFilter(), settingsService::setBisqEasyOfferbookMessageTypeFilter);
 
         model.getMarketChannelItems().forEach(item -> {
             ChangeListener<Number> numberChangeListener = (obs, oldValue, newValue) -> updateFilteredMarketChannelItems();

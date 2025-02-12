@@ -43,7 +43,7 @@ public class TradeSettingsController implements Controller {
     @Override
     public void onActivate() {
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken())
-                .to(settingsService.getCloseMyOfferWhenTaken());
+                .to(settingsService.getCloseMyOfferWhenTaken(), settingsService::setCloseMyOfferWhenTaken);
         maxTradePriceDeviationPin = FxBindings.bindBiDir(model.getMaxTradePriceDeviation())
                 .to(settingsService.getMaxTradePriceDeviation(), settingsService::setMaxTradePriceDeviation);
 

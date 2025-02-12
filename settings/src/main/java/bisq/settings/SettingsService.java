@@ -28,6 +28,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -41,9 +42,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-// TODO Use setters and use ReadOnlyObservable for Observable getters and validate input where it is needed.
-// Use new FxBindings binding API for ReadOnlyObservable and setters in client which write the value
-// Add default, min, max fields if appropriate.
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
     @Deprecated(since = "2.1.1")
@@ -56,6 +54,9 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public final static int DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 90;
     public final static int MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 30;
     public final static int MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 365;
+
+    public final static double MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB = 1;
+    public final static double MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB = 1000;
 
     @Getter
     private static SettingsService instance;
@@ -149,27 +150,27 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     // Getters for Observable
     /* --------------------------------------------------------------------- */
 
-    public Observable<Market> getSelectedMarket() {
+    public ReadOnlyObservable<Market> getSelectedMarket() {
         return persistableStore.selectedMarket;
     }
 
-    public Observable<Boolean> getUseAnimations() {
+    public ReadOnlyObservable<Boolean> getUseAnimations() {
         return persistableStore.useAnimations;
     }
 
-    public Observable<Boolean> getTradeRulesConfirmed() {
+    public ReadOnlyObservable<Boolean> getTradeRulesConfirmed() {
         return persistableStore.tradeRulesConfirmed;
     }
 
-    public Observable<Boolean> getPreventStandbyMode() {
+    public ReadOnlyObservable<Boolean> getPreventStandbyMode() {
         return persistableStore.preventStandbyMode;
     }
 
-    public Observable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
+    public ReadOnlyObservable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
         return persistableStore.ignoreDiffAdjustmentFromSecManager;
     }
 
-    public Observable<Double> getDifficultyAdjustmentFactor() {
+    public ReadOnlyObservable<Double> getDifficultyAdjustmentFactor() {
         return persistableStore.difficultyAdjustmentFactor;
     }
 
@@ -177,17 +178,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.maxTradePriceDeviation;
     }
 
-    public void setMaxTradePriceDeviation(double value) {
-        if (value >= MIN_TRADE_PRICE_DEVIATION && value <= MAX_TRADE_PRICE_DEVIATION) {
-            persistableStore.maxTradePriceDeviation.set(value);
-        }
-    }
-
-    public Observable<ChatNotificationType> getChatNotificationType() {
+    public ReadOnlyObservable<ChatNotificationType> getChatNotificationType() {
         return persistableStore.chatNotificationType;
     }
 
-    public Observable<Boolean> getIsTacAccepted() {
+    public ReadOnlyObservable<Boolean> getIsTacAccepted() {
         return persistableStore.isTacAccepted;
     }
 
@@ -199,11 +194,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.supportedLanguageCodes;
     }
 
-    public Observable<Boolean> getCloseMyOfferWhenTaken() {
+    public ReadOnlyObservable<Boolean> getCloseMyOfferWhenTaken() {
         return persistableStore.closeMyOfferWhenTaken;
     }
 
-    public Observable<String> getLanguageCode() {
+    public ReadOnlyObservable<String> getLanguageCode() {
         return persistableStore.languageCode;
     }
 
@@ -211,36 +206,125 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.favouriteMarkets;
     }
 
-    public Observable<Boolean> getShowBuyOffers() {
+    public ReadOnlyObservable<Boolean> getShowBuyOffers() {
         return persistableStore.showBuyOffers;
     }
 
-    public Observable<Boolean> getShowOfferListExpanded() {
+    public ReadOnlyObservable<Boolean> getShowOfferListExpanded() {
         return persistableStore.showOfferListExpanded;
     }
 
-    public Observable<Boolean> getShowMarketSelectionListCollapsed() {
+    public ReadOnlyObservable<Boolean> getShowMarketSelectionListCollapsed() {
         return persistableStore.showMarketSelectionListCollapsed;
     }
 
-    public Observable<String> getBackupLocation() {
+    public ReadOnlyObservable<String> getBackupLocation() {
         return persistableStore.backupLocation;
     }
 
-    public Observable<Boolean> getShowMyOffersOnly() {
+    public ReadOnlyObservable<Boolean> getShowMyOffersOnly() {
         return persistableStore.showMyOffersOnly;
     }
 
-    public Observable<Double> getTotalMaxBackupSizeInMB() {
+    public ReadOnlyObservable<Double> getTotalMaxBackupSizeInMB() {
         return persistableStore.totalMaxBackupSizeInMB;
     }
 
-    public Observable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
+    public ReadOnlyObservable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
         return persistableStore.bisqEasyOfferbookMessageTypeFilter;
     }
 
     public ReadOnlyObservable<Integer> getNumDaysAfterRedactingTradeData() {
         return persistableStore.numDaysAfterRedactingTradeData;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Setters
+    /* --------------------------------------------------------------------- */
+
+    public void setSelectedMarket(Market market) {
+        if (market != null) {
+            persistableStore.selectedMarket.set(market);
+        }
+    }
+
+    public void setUseAnimations(boolean useAnimations) {
+        persistableStore.useAnimations.set(useAnimations);
+    }
+
+    public void setTradeRulesConfirmed(boolean tradeRulesConfirmed) {
+        persistableStore.tradeRulesConfirmed.set(tradeRulesConfirmed);
+    }
+
+    public void setPreventStandbyMode(boolean preventStandbyMode) {
+        persistableStore.preventStandbyMode.set(preventStandbyMode);
+    }
+
+    public void setIgnoreDiffAdjustmentFromSecManager(boolean ignoreDiffAdjustmentFromSecManager) {
+        persistableStore.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
+    }
+
+    public void setDifficultyAdjustmentFactor(double value) {
+        if (value >= NetworkLoad.MIN_DIFFICULTY_ADJUSTMENT && value <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT) {
+            persistableStore.difficultyAdjustmentFactor.set(value);
+        }
+    }
+
+    public void setMaxTradePriceDeviation(double value) {
+        if (value >= MIN_TRADE_PRICE_DEVIATION && value <= MAX_TRADE_PRICE_DEVIATION) {
+            persistableStore.maxTradePriceDeviation.set(value);
+        }
+    }
+
+    public void setChatNotificationType(ChatNotificationType chatNotificationType) {
+        persistableStore.chatNotificationType.set(chatNotificationType);
+    }
+
+    public void setIsTacAccepted(boolean isTacAccepted) {
+        persistableStore.isTacAccepted.set(isTacAccepted);
+    }
+
+    public void setCloseMyOfferWhenTaken(boolean closeMyOfferWhenTaken) {
+        persistableStore.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
+    }
+
+    public void setLanguageCode(String languageCode) {
+        if (languageCode != null && LanguageRepository.CODES.contains(languageCode)) {
+            persistableStore.languageCode.set(languageCode);
+        }
+    }
+
+    public void setShowBuyOffers(boolean showBuyOffers) {
+        persistableStore.showBuyOffers.set(showBuyOffers);
+    }
+
+    public void setShowOfferListExpanded(boolean showOfferListExpanded) {
+        persistableStore.showOfferListExpanded.set(showOfferListExpanded);
+    }
+
+    public void setShowMarketSelectionListCollapsed(boolean showMarketSelectionListCollapsed) {
+        persistableStore.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
+    }
+
+    public void setBackupLocation(String backupLocation) {
+        if (backupLocation != null) {
+            persistableStore.backupLocation.set(backupLocation);
+        }
+    }
+
+    public void setShowMyOffersOnly(boolean showMyOffersOnly) {
+        persistableStore.showMyOffersOnly.set(showMyOffersOnly);
+    }
+
+    public void setTotalMaxBackupSizeInMB(double value) {
+        if (value >= MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB && value <= MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB) {
+            persistableStore.totalMaxBackupSizeInMB.set(value);
+        }
+    }
+
+    public void setBisqEasyOfferbookMessageTypeFilter(ChatMessageType chatMessageType) {
+        persistableStore.bisqEasyOfferbookMessageTypeFilter.set(chatMessageType);
     }
 
     public void setNumDaysAfterRedactingTradeData(int value) {
