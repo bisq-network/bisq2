@@ -286,8 +286,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.backupLocation;
     }
 
-    public Observable<Boolean> getShowMyOffersOnly() {
+    public ReadOnlyObservable<Boolean> getShowMyOffersOnly() {
         return persistableStore.showMyOffersOnly;
+    }
+
+    public void setShowMyOffersOnly(boolean showMyOffersOnly) {
+        persistableStore.showMyOffersOnly.set(showMyOffersOnly);
     }
 
     public Observable<Double> getTotalMaxBackupSizeInMB() {
