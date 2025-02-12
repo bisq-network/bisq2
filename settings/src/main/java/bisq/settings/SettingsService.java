@@ -42,9 +42,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-// TODO Use setters and use ReadOnlyObservable for Observable getters and validate input where it is needed.
-// Use new FxBindings binding API for ReadOnlyObservable and setters in client which write the value
-// Add default, min, max fields if appropriate.
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
     @Deprecated(since = "2.1.1")
