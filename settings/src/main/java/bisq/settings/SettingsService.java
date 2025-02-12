@@ -266,8 +266,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.showBuyOffers.set(showBuyOffers);
     }
 
-    public Observable<Boolean> getShowOfferListExpanded() {
+    public ReadOnlyObservable<Boolean> getShowOfferListExpanded() {
         return persistableStore.showOfferListExpanded;
+    }
+
+    public void setShowOfferListExpanded(boolean showOfferListExpanded) {
+        persistableStore.showOfferListExpanded.set(showOfferListExpanded);
     }
 
     public Observable<Boolean> getShowMarketSelectionListCollapsed() {
