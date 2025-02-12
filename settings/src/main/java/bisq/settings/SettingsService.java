@@ -154,78 +154,36 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.selectedMarket;
     }
 
-    public void setSelectedMarket(Market market) {
-        if (market != null) {
-            persistableStore.selectedMarket.set(market);
-        }
-    }
-
     public ReadOnlyObservable<Boolean> getUseAnimations() {
         return persistableStore.useAnimations;
-    }
-
-    public void setUseAnimations(boolean useAnimations) {
-        persistableStore.useAnimations.set(useAnimations);
     }
 
     public ReadOnlyObservable<Boolean> getTradeRulesConfirmed() {
         return persistableStore.tradeRulesConfirmed;
     }
 
-    public void setTradeRulesConfirmed(boolean tradeRulesConfirmed) {
-        persistableStore.tradeRulesConfirmed.set(tradeRulesConfirmed);
-    }
-
     public ReadOnlyObservable<Boolean> getPreventStandbyMode() {
         return persistableStore.preventStandbyMode;
-    }
-
-    public void setPreventStandbyMode(boolean preventStandbyMode) {
-        persistableStore.preventStandbyMode.set(preventStandbyMode);
     }
 
     public ReadOnlyObservable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
         return persistableStore.ignoreDiffAdjustmentFromSecManager;
     }
 
-    public void setIgnoreDiffAdjustmentFromSecManager(boolean ignoreDiffAdjustmentFromSecManager) {
-        persistableStore.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
-    }
-
     public ReadOnlyObservable<Double> getDifficultyAdjustmentFactor() {
         return persistableStore.difficultyAdjustmentFactor;
-    }
-
-    public void setDifficultyAdjustmentFactor(double value) {
-        if (value >= NetworkLoad.MIN_DIFFICULTY_ADJUSTMENT && value <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT) {
-            persistableStore.difficultyAdjustmentFactor.set(value);
-        }
     }
 
     public ReadOnlyObservable<Double> getMaxTradePriceDeviation() {
         return persistableStore.maxTradePriceDeviation;
     }
 
-    public void setMaxTradePriceDeviation(double value) {
-        if (value >= MIN_TRADE_PRICE_DEVIATION && value <= MAX_TRADE_PRICE_DEVIATION) {
-            persistableStore.maxTradePriceDeviation.set(value);
-        }
-    }
-
     public ReadOnlyObservable<ChatNotificationType> getChatNotificationType() {
         return persistableStore.chatNotificationType;
     }
 
-    public void setChatNotificationType(ChatNotificationType chatNotificationType) {
-        persistableStore.chatNotificationType.set(chatNotificationType);
-    }
-
     public ReadOnlyObservable<Boolean> getIsTacAccepted() {
         return persistableStore.isTacAccepted;
-    }
-
-    public void setIsTacAccepted(boolean isTacAccepted) {
-        persistableStore.isTacAccepted.set(isTacAccepted);
     }
 
     public ObservableSet<String> getConsumedAlertIds() {
@@ -240,18 +198,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.closeMyOfferWhenTaken;
     }
 
-    public void setCloseMyOfferWhenTaken(boolean closeMyOfferWhenTaken) {
-        persistableStore.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
-    }
-
     public ReadOnlyObservable<String> getLanguageCode() {
         return persistableStore.languageCode;
-    }
-
-    public void setLanguageCode(String languageCode) {
-        if (languageCode != null && LanguageRepository.CODES.contains(languageCode)) {
-            persistableStore.languageCode.set(languageCode);
-        }
     }
 
     public ObservableSet<Market> getFavouriteMarkets() {
@@ -262,28 +210,101 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.showBuyOffers;
     }
 
-    public void setShowBuyOffers(boolean showBuyOffers) {
-        persistableStore.showBuyOffers.set(showBuyOffers);
-    }
-
     public ReadOnlyObservable<Boolean> getShowOfferListExpanded() {
         return persistableStore.showOfferListExpanded;
-    }
-
-    public void setShowOfferListExpanded(boolean showOfferListExpanded) {
-        persistableStore.showOfferListExpanded.set(showOfferListExpanded);
     }
 
     public ReadOnlyObservable<Boolean> getShowMarketSelectionListCollapsed() {
         return persistableStore.showMarketSelectionListCollapsed;
     }
 
-    public void setShowMarketSelectionListCollapsed(boolean showMarketSelectionListCollapsed) {
-        persistableStore.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
-    }
-
     public ReadOnlyObservable<String> getBackupLocation() {
         return persistableStore.backupLocation;
+    }
+
+    public ReadOnlyObservable<Boolean> getShowMyOffersOnly() {
+        return persistableStore.showMyOffersOnly;
+    }
+
+    public ReadOnlyObservable<Double> getTotalMaxBackupSizeInMB() {
+        return persistableStore.totalMaxBackupSizeInMB;
+    }
+
+    public ReadOnlyObservable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
+        return persistableStore.bisqEasyOfferbookMessageTypeFilter;
+    }
+
+    public ReadOnlyObservable<Integer> getNumDaysAfterRedactingTradeData() {
+        return persistableStore.numDaysAfterRedactingTradeData;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Setters
+    /* --------------------------------------------------------------------- */
+
+    public void setSelectedMarket(Market market) {
+        if (market != null) {
+            persistableStore.selectedMarket.set(market);
+        }
+    }
+
+    public void setUseAnimations(boolean useAnimations) {
+        persistableStore.useAnimations.set(useAnimations);
+    }
+
+    public void setTradeRulesConfirmed(boolean tradeRulesConfirmed) {
+        persistableStore.tradeRulesConfirmed.set(tradeRulesConfirmed);
+    }
+
+    public void setPreventStandbyMode(boolean preventStandbyMode) {
+        persistableStore.preventStandbyMode.set(preventStandbyMode);
+    }
+
+    public void setIgnoreDiffAdjustmentFromSecManager(boolean ignoreDiffAdjustmentFromSecManager) {
+        persistableStore.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
+    }
+
+    public void setDifficultyAdjustmentFactor(double value) {
+        if (value >= NetworkLoad.MIN_DIFFICULTY_ADJUSTMENT && value <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT) {
+            persistableStore.difficultyAdjustmentFactor.set(value);
+        }
+    }
+
+    public void setMaxTradePriceDeviation(double value) {
+        if (value >= MIN_TRADE_PRICE_DEVIATION && value <= MAX_TRADE_PRICE_DEVIATION) {
+            persistableStore.maxTradePriceDeviation.set(value);
+        }
+    }
+
+    public void setChatNotificationType(ChatNotificationType chatNotificationType) {
+        persistableStore.chatNotificationType.set(chatNotificationType);
+    }
+
+    public void setIsTacAccepted(boolean isTacAccepted) {
+        persistableStore.isTacAccepted.set(isTacAccepted);
+    }
+
+    public void setCloseMyOfferWhenTaken(boolean closeMyOfferWhenTaken) {
+        persistableStore.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
+    }
+
+    public void setLanguageCode(String languageCode) {
+        if (languageCode != null && LanguageRepository.CODES.contains(languageCode)) {
+            persistableStore.languageCode.set(languageCode);
+        }
+    }
+
+    public void setShowBuyOffers(boolean showBuyOffers) {
+        persistableStore.showBuyOffers.set(showBuyOffers);
+    }
+
+    public void setShowOfferListExpanded(boolean showOfferListExpanded) {
+        persistableStore.showOfferListExpanded.set(showOfferListExpanded);
+    }
+
+    public void setShowMarketSelectionListCollapsed(boolean showMarketSelectionListCollapsed) {
+        persistableStore.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
     }
 
     public void setBackupLocation(String backupLocation) {
@@ -292,16 +313,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         }
     }
 
-    public ReadOnlyObservable<Boolean> getShowMyOffersOnly() {
-        return persistableStore.showMyOffersOnly;
-    }
-
     public void setShowMyOffersOnly(boolean showMyOffersOnly) {
         persistableStore.showMyOffersOnly.set(showMyOffersOnly);
-    }
-
-    public ReadOnlyObservable<Double> getTotalMaxBackupSizeInMB() {
-        return persistableStore.totalMaxBackupSizeInMB;
     }
 
     public void setTotalMaxBackupSizeInMB(double value) {
@@ -310,16 +323,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         }
     }
 
-    public ReadOnlyObservable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {
-        return persistableStore.bisqEasyOfferbookMessageTypeFilter;
-    }
-
     public void setBisqEasyOfferbookMessageTypeFilter(ChatMessageType chatMessageType) {
         persistableStore.bisqEasyOfferbookMessageTypeFilter.set(chatMessageType);
-    }
-
-    public ReadOnlyObservable<Integer> getNumDaysAfterRedactingTradeData() {
-        return persistableStore.numDaysAfterRedactingTradeData;
     }
 
     public void setNumDaysAfterRedactingTradeData(int value) {
