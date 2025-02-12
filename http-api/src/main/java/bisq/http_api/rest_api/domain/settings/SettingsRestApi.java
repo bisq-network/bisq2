@@ -84,7 +84,7 @@ public class SettingsRestApi extends RestApiBase {
     public Response updateSetting(@Valid SettingsChangeRequest request) {
         try {
             if (request.isTacAccepted() != null) {
-                settingsService.getIsTacAccepted().set(request.isTacAccepted());
+                settingsService.setIsTacAccepted(request.isTacAccepted());
             } else if (request.tradeRulesConfirmed() != null) {
                 settingsService.setTradeRulesConfirmed(request.tradeRulesConfirmed());
             } else if (request.closeMyOfferWhenTaken() != null) {

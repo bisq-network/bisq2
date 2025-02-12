@@ -220,8 +220,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.chatNotificationType.set(chatNotificationType);
     }
 
-    public Observable<Boolean> getIsTacAccepted() {
+    public ReadOnlyObservable<Boolean> getIsTacAccepted() {
         return persistableStore.isTacAccepted;
+    }
+
+    public void setIsTacAccepted(boolean isTacAccepted) {
+        persistableStore.isTacAccepted.set(isTacAccepted);
     }
 
     public ObservableSet<String> getConsumedAlertIds() {
