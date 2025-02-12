@@ -55,7 +55,7 @@ public class NotificationsSettingsController implements Controller {
     @Override
     public void onActivate() {
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType())
-                .to(settingsService.getChatNotificationType());
+                .to(settingsService.getChatNotificationType(), settingsService::setChatNotificationType);
         model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
         notifyForPreReleasePin = EasyBind.subscribe(model.getNotifyForPreRelease(),
                 value -> {
