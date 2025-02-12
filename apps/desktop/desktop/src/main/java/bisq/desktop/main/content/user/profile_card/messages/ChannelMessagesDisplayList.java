@@ -274,8 +274,8 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
         private void updateMessageListVBox() {
             clearMessageListVBox();
-            model.getSortedChannelMessageItems().forEach(item -> {
-                messageListVBox.getChildren().add(new ChannelMessageBox(item));
+            model.getSortedChannelMessageItems().forEach(channelMessageItem -> {
+                messageListVBox.getChildren().add(new ChannelMessageBox(channelMessageItem));
             });
         }
 
