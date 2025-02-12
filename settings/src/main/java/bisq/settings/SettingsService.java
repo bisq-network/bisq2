@@ -58,6 +58,9 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public final static int MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 30;
     public final static int MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 365;
 
+    public final static double MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB = 1;
+    public final static double MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB = 1000;
+
     @Getter
     private static SettingsService instance;
 
@@ -300,8 +303,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.showMyOffersOnly.set(showMyOffersOnly);
     }
 
-    public Observable<Double> getTotalMaxBackupSizeInMB() {
+    public ReadOnlyObservable<Double> getTotalMaxBackupSizeInMB() {
         return persistableStore.totalMaxBackupSizeInMB;
+    }
+
+    public void setTotalMaxBackupSizeInMB(double value) {
+        if (value >= MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB && value <= MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB) {
+            persistableStore.totalMaxBackupSizeInMB.set(value);
+        }
     }
 
     public ReadOnlyObservable<ChatMessageType> getBisqEasyOfferbookMessageTypeFilter() {

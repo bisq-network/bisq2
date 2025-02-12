@@ -76,7 +76,7 @@ public class MiscSettingsController implements Controller {
                 });
 
         totalMaxBackupSizeInMBPin = FxBindings.bindBiDir(model.getTotalMaxBackupSizeInMB())
-                .to(settingsService.getTotalMaxBackupSizeInMB());
+                .to(settingsService.getTotalMaxBackupSizeInMB(), settingsService::setTotalMaxBackupSizeInMB);
     }
 
     @Override
