@@ -282,8 +282,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         persistableStore.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
     }
 
-    public Observable<String> getBackupLocation() {
+    public ReadOnlyObservable<String> getBackupLocation() {
         return persistableStore.backupLocation;
+    }
+
+    public void setBackupLocation(String backupLocation) {
+        if (backupLocation != null) {
+            persistableStore.backupLocation.set(backupLocation);
+        }
     }
 
     public ReadOnlyObservable<Boolean> getShowMyOffersOnly() {
