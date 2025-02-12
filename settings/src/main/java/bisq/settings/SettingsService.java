@@ -236,8 +236,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.supportedLanguageCodes;
     }
 
-    public Observable<Boolean> getCloseMyOfferWhenTaken() {
+    public ReadOnlyObservable<Boolean> getCloseMyOfferWhenTaken() {
         return persistableStore.closeMyOfferWhenTaken;
+    }
+
+    public void setCloseMyOfferWhenTaken(boolean closeMyOfferWhenTaken) {
+        persistableStore.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
     }
 
     public Observable<String> getLanguageCode() {
