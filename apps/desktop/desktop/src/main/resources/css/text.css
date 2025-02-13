@@ -513,12 +513,12 @@
 
 .bisq-smaller-label {
     -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 0.73em;
+    -fx-font-size: 1em;
 }
 
 .bisq-smaller-dimmed-label {
     -fx-text-fill: -fx-mid-text-color;
-    -fx-font-size: 0.73em;
+    -fx-font-size: 1em;
 }
 
 .bisq-grey-dimmed {
