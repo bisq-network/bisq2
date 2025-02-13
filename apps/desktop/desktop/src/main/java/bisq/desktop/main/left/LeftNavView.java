@@ -163,7 +163,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         mainMenuItems.setLayoutY(menuTop);
 
         version = new Label(model.getVersion());
-        version.setOpacity(0.9);
+        version.setOpacity(0.5);
         version.getStyleClass().add("bisq-smaller-dimmed-label");
         version.setLayoutX(91);
         version.setLayoutY(24);
