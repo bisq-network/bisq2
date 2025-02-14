@@ -102,7 +102,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 bannedAccountData);
     }
 
-    public AuthorizedAlertData(int version,
+    private AuthorizedAlertData(int version,
                                 String id,
                                 long date,
                                 AlertType alertType,
