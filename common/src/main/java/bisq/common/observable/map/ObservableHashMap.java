@@ -24,12 +24,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @EqualsAndHashCode
 public class ObservableHashMap<K, V> implements Map<K, V> {
     @Getter
-    private final Map<K, V> map = new HashMap<>();
+    private final Map<K, V> map = new ConcurrentHashMap<>();
 
     @EqualsAndHashCode.Exclude
     private final List<HashMapObserver<K, V>> observers = new CopyOnWriteArrayList<>();
