@@ -164,7 +164,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         version = new Label(model.getVersion());
         version.setOpacity(0.5);
-        version.getStyleClass().add("bisq-smaller-dimmed-label");
+        version.getStyleClass().add("bisq-smaller-dimmed-label-version");
         version.setLayoutX(91);
         version.setLayoutY(24);
         Pane logoAndVersion = new Pane(logoExpanded, logoCollapsed, version);
@@ -274,12 +274,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 newVersionAvailable -> {
                     if (newVersionAvailable) {
                         version.setOpacity(1);
-                        version.getStyleClass().remove("bisq-smaller-dimmed-label");
+                        version.getStyleClass().remove("bisq-smaller-dimmed-label-version");
                         version.getStyleClass().addAll("bisq-smaller-label", "text-underline", "hand-cursor");
                         version.setOnMouseClicked(e -> controller.onOpenUpdateWindow());
                     } else {
                         version.setOpacity(0.5);
-                        version.getStyleClass().add("bisq-smaller-dimmed-label");
+                        version.getStyleClass().add("bisq-smaller-dimmed-label-version");
                         version.getStyleClass().removeAll("bisq-smaller-label", "text-underline", "hand-cursor");
                         version.setOnMouseClicked(null);
                     }
