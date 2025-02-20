@@ -335,11 +335,10 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             VBox textMessageVBox = new VBox(10, citationMessageVBox, textMessageLabel);
             HBox.setMargin(textMessageVBox, new Insets(0, 0, 0, -10));
 
-            catHashImageView = new ImageView();
-            catHashImageView.setImage(CatHash.getImage(channelMessageItem.getSenderUserProfile(),
-                    catHashImageView.getFitWidth()));
-            catHashImageView.setFitWidth(30);
-            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+            int size = 30;
+            catHashImageView = new ImageView(CatHash.getImage(channelMessageItem.getSenderUserProfile(), size));
+            catHashImageView.setFitWidth(size);
+            catHashImageView.setFitHeight(size);
             HBox.setMargin(catHashImageView, new Insets(5, 0, 0, 5));
 
             goToMessageButton = new BisqMenuItem(Res.get("user.profileCard.messages.goToMessage.button"));
