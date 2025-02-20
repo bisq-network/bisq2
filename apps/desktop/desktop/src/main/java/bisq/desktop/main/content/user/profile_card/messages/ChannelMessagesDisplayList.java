@@ -365,11 +365,6 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
             setFillHeight(true);
             setPadding(new Insets(0, 50, 0, 50));
             getChildren().add(messageBg);
-
-            initialize();
-        }
-
-        private void initialize() {
         }
 
         private void dispose() {
