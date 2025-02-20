@@ -275,7 +275,7 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         private void updateMessageListVBox() {
             clearMessageListVBox();
             model.getSortedChannelMessageItems().forEach(channelMessageItem -> {
-                messageListVBox.getChildren().add(new ChannelMessageBox(channelMessageItem));
+                messageListVBox.getChildren().add(new ChannelMessageBox(channelMessageItem, controller));
             });
         }
 
@@ -298,11 +298,12 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
         }
     }
 
-    private class ChannelMessageBox extends HBox {
+    private static class ChannelMessageBox extends HBox {
         private final ImageView catHashImageView;
         private final BisqMenuItem goToMessageButton;
 
-        private ChannelMessageBox(ChannelMessageItem channelMessageItem) {
+        private ChannelMessageBox(ChannelMessageItem channelMessageItem,
+                                  ChannelMessagesDisplayList<?>.Controller  controller) {
             Label dateTimeLabel = new Label(channelMessageItem.getDateTime());
             dateTimeLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
 
