@@ -281,9 +281,8 @@ public class ChannelMessagesDisplayList<M extends PublicChatMessage> {
 
         private void clearMessageListVBox() {
             messageListVBox.getChildren().forEach(node -> {
-                if (node.getClass().equals(ChannelMessageBox.class)) {
-                    //noinspection unchecked
-                    ((ChannelMessageBox) node).dispose();
+                if (node instanceof ChannelMessageBox channelMessageBox) {
+                    channelMessageBox.dispose();
                 }
             });
             messageListVBox.getChildren().clear();
