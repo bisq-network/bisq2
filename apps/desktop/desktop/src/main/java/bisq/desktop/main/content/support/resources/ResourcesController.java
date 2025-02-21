@@ -81,11 +81,11 @@ public class ResourcesController implements Controller {
     }
 
     void onOpenLogFile() {
-        PlatformUtils.open(Path.of(baseDir, "bisq.log").toFile());
+        PlatformUtils.open(Paths.get(baseDir, "bisq.log").toFile());
     }
 
     void onOpenTorLogFile() {
-        PlatformUtils.open(Path.of(baseDir, "tor", "debug.log").toFile());
+        PlatformUtils.open(Paths.get(baseDir, "tor", "debug.log").toFile());
     }
 
     void onOpenDataDir() {

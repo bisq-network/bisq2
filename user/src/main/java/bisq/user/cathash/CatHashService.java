@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -70,8 +71,8 @@ public abstract class CatHashService<T> {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger catHashInput = new BigInteger(combined);
         String userProfileId = Hex.encode(pubKeyHash);
-        File iconsDir = Path.of(getCatHashIconsDirectory().toString(), "v" + avatarVersion).toFile();
-        File iconFile = Path.of(iconsDir.getAbsolutePath(), userProfileId + ".raw").toFile();
+        File iconsDir = Paths.get(getCatHashIconsDirectory().toString(), "v" + avatarVersion).toFile();
+        File iconFile = Paths.get(iconsDir.getAbsolutePath(), userProfileId + ".raw").toFile();
 
         boolean useCache = size <= SIZE_OF_CACHED_ICONS;
         if (useCache) {
@@ -161,7 +162,7 @@ public abstract class CatHashService<T> {
                 CompletableFuture.runAsync(() -> {
                     log.info("We remove following user profile icons which are not found in the current user profile list:{}", toRemove);
                     toRemove.forEach(fileName -> {
-                        File file = Path.of(iconsDirectory.getAbsolutePath(), versionDir, fileName).toFile();
+                        File file = Paths.get(iconsDirectory.getAbsolutePath(), versionDir, fileName).toFile();
                         try {
                             log.error("Remove {}", file);
                             FileUtils.deleteFile(file);
@@ -181,7 +182,7 @@ public abstract class CatHashService<T> {
     }
 
     private Path getCatHashIconsDirectory() {
-        return Path.of(baseDir.toString(), "db", "cache", "cat_hash_icons");
+        return Paths.get(baseDir.toString(), "db", "cache", "cat_hash_icons");
     }
 
     private BucketConfig getBucketConfig(int avatarVersion) {

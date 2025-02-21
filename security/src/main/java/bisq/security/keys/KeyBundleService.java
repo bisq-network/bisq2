@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Objects;
@@ -79,7 +80,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     public CompletableFuture<Boolean> initialize() {
         String defaultKeyId = getDefaultKeyId();
         String tag = "default";
-        Path storagePath = Path.of(baseDir, "db", "private", "tor");
+        Path storagePath = Paths.get(baseDir, "db", "private", "tor");
         if (defaultTorPrivateKey.isEmpty()) {
             return getOrCreateKeyBundleAsync(defaultKeyId)
                     .thenApply(keyBundle -> {

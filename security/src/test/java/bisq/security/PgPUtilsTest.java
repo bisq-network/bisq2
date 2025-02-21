@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SignatureException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,7 +86,7 @@ public class PgPUtilsTest {
     }
 
     private PGPPublicKeyRing getPGPPublicKeyRing(String fileName) throws IOException, PGPException {
-        File file = Path.of("temp", fileName).toFile();
+        File file = Paths.get("temp", fileName).toFile();
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
                 OutputStream out = new FileOutputStream(file);
@@ -98,7 +99,7 @@ public class PgPUtilsTest {
     }
 
     private PGPSignature getPGPSignature(String fileName) throws IOException, SignatureException {
-        File file = Path.of("temp", fileName).toFile();
+        File file = Paths.get("temp", fileName).toFile();
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
                 OutputStream out = new FileOutputStream(file);
@@ -111,7 +112,7 @@ public class PgPUtilsTest {
     }
 
     private File getDataAsFile(String fileName) throws IOException {
-        File file = Path.of("temp", fileName).toFile();
+        File file = Paths.get("temp", fileName).toFile();
         try {
             try (InputStream resource = FileUtils.getResourceAsStream(fileName)) {
                 OutputStream out = new FileOutputStream(file);

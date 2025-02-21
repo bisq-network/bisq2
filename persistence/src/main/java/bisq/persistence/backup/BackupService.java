@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -78,7 +79,7 @@ public class BackupService {
         this.maxBackupSize = maxBackupSize;
 
         fileName = storeFilePath.getFileName().toString();
-        Path backupDir = Path.of(storeFilePath.toString()
+        Path backupDir = Paths.get(storeFilePath.toString()
                 .replaceFirst("db", "backups")
                 .replace(fileName, ""));
         String dirName = fileName.replace(Persistence.EXTENSION, "")
