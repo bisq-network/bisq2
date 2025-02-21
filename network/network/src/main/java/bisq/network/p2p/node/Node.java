@@ -405,8 +405,7 @@ public class Node implements Connection.Handler {
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
-        // This code can be removed once no old versions are expected anymore.
-        log.info("Create outbound connection to {} with capability version 1", address);
+        log.info("Create outbound connection to {}", address);
         return doCreateOutboundConnection(address, myCapability);
     }
 
