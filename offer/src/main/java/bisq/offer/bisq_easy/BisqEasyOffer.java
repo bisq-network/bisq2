@@ -62,7 +62,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          List<String> supportedLanguageCodes) {
         // We use the default SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE (as we don't have the dependency
         // to settings we use the plain value) so that offers from makers on 2.1.1 can only be taken by v2.1.0 takers with
-        // 30k reputation score. This can be removed once there are no pre-2.1.1 users anymore.
+        // 30k reputation score.
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,

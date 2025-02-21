@@ -30,6 +30,8 @@ import lombok.ToString;
 public final class InventoryResponse implements BroadcastMessage, Response {
     private static final int VERSION = 1;
 
+    // The version field was used to support changes at v2.1.0. Atm it is not used anymore, but we
+    // keep it for potential future use.
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

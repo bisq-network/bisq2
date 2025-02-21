@@ -66,8 +66,8 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
         // With 2.1.6 we do not publish version 0 data anymore, but as they have a TTL of 100 days,
         // they will be present still a while. From June 2025 on there should not no version 0 data anymore in the network
         // and this check can be removed.
-        // In case would get old protobuf data where txId and blockHeight are not present, we would get an empty string
-        // an 0 as values (default values for missing fields).
+        // In case we would get old protobuf data where txId and blockHeight are not present, we would get an empty string
+        // and 0 as values (default values for missing fields).
         return data.getTxId().length() == 64 && data.getBlockHeight() > 0;
     }
 
