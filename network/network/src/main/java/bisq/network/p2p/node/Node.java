@@ -18,6 +18,9 @@
 package bisq.network.p2p.node;
 
 
+import bisq.common.network.Address;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
@@ -25,9 +28,6 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.common.network.Address;
-import bisq.common.network.TransportConfig;
-import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -57,7 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
-import static bisq.network.p2p.node.ConnectionException.Reason.*;
+import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.Node.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -77,7 +77,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Node implements Connection.Handler {
-    public static final int PREFERRED_VERSION = 1;
 
     public enum State {
         NEW,
@@ -407,22 +406,8 @@ public class Node implements Connection.Handler {
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
         // This code can be removed once no old versions are expected anymore.
-        Capability candidate = Capability.withVersion(myCapability, PREFERRED_VERSION);
         log.info("Create outbound connection to {} with capability version 1", address);
-        try {
-            return doCreateOutboundConnection(address, candidate);
-        } catch (ConnectionException e) {
-            if (e.getCause() != null && e.getReason() != null && e.getReason() == HANDSHAKE_FAILED) {
-                log.warn("Handshake at creating outbound connection to {} failed. We try again with capability version 0. Error: {}",
-                        address, ExceptionUtil.getRootCauseMessage(e));
-                int version = PREFERRED_VERSION == 0 ? 1 : 0;
-                candidate = Capability.withVersion(myCapability, version);
-                return doCreateOutboundConnection(address, candidate);
-            } else {
-                // In case of other ConnectExceptions we don't try again as peer is offline
-                throw e;
-            }
-        }
+        return doCreateOutboundConnection(address, myCapability);
     }
 
     private Connection doCreateOutboundConnection(Address address, Capability myCapability) {
