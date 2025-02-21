@@ -44,6 +44,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -139,7 +140,8 @@ public abstract class ApplicationService implements Service {
         Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
                 .map(Path::of)
                 .orElse(userDataDir.resolve(appName));
-        File customConfigFile = Path.of(appDataDir.toString(), "bisq.conf").toFile();
+        // J8 compatible to avoid issues on mobile Samsung devices
+        File customConfigFile = Paths.get(appDataDir.toString(), "bisq.conf").toFile();
         com.typesafe.config.Config typesafeConfig;
         boolean customConfigProvided = customConfigFile.exists();
         if (customConfigProvided) {
