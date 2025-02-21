@@ -32,7 +32,6 @@ import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.function.Predicate;
 
 @Slf4j
 public class InventoryResponseService implements Node.Listener {
@@ -81,14 +80,10 @@ public class InventoryResponseService implements Node.Listener {
             FilterService<? extends InventoryFilter> filterService = filterServiceMap.get(inventoryFilterType);
             long ts = System.currentTimeMillis();
             int requestersVersion = request.getVersion();
+            Inventory inventory = filterService.createInventory(inventoryFilter);
 
-            // We filter out version 1 objects in Add/Remove DataRequest objects which would break the hash when requested from old nodes (pre v.2.1.0)
-            // This code can be removed once there are no old nodes expected in the network anymore.
-            Predicate<Integer> predicate = distributedDataVersion -> requestersVersion > 0 || distributedDataVersion == 0;
-
-            Inventory inventory = filterService.createInventory(inventoryFilter, predicate);
-
-            // The requestersVersion param can be removed once there are no old nodes expected in the network anymore.
+            // The requestersVersion param was used to support changes at v2.1.0. Atm it is not used anymore, but we
+            // keep it for potential future use.
             InventoryResponse inventoryResponse = new InventoryResponse(requestersVersion, inventory, request.getNonce());
 
             NetworkService.NETWORK_IO_POOL.submit(() -> {
