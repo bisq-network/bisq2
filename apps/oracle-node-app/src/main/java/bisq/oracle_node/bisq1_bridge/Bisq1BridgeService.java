@@ -261,7 +261,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         return CompletableFuture.supplyAsync(() -> {
             ThreadName.set(this, "publishProofOfBurnDtoSet");
-            // After v2.1.0 we can remove support for version 0 data
             log.info("publishProofOfBurnDtoSet: proofOfBurnList={}", proofOfBurnList);
             Stream<AuthorizedProofOfBurnData> stream = proofOfBurnList.stream()
                     .map(dto -> new AuthorizedProofOfBurnData(
@@ -282,7 +281,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
         return CompletableFuture.supplyAsync(() -> {
             ThreadName.set(this, "publishBondedReputationDtoSet");
-            // After v2.1.0 we can remove support for version 0 data
             log.info("publishBondedReputationDtoSet: bondedReputationList={}", bondedReputationList);
             Stream<AuthorizedBondedReputationData> stream = bondedReputationList.stream()
                     .map(dto -> new AuthorizedBondedReputationData(
