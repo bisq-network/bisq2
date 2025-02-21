@@ -60,16 +60,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 created);
     }
 
-    public static RemoveMailboxRequest cloneWithVersion0(RemoveMailboxRequest request) {
-        return new RemoveMailboxRequest(0,
-                request.getMetaData(),
-                request.getHash(),
-                request.getReceiverPublicKeyBytes(),
-                request.getReceiverPublicKey(),
-                request.getSignature(),
-                request.getCreated());
-    }
-
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
