@@ -68,7 +68,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    // Added in version 2.1.4
+    // Added in version 2.1.6
     private final Optional<String> bannedAccountData;
 
     public AuthorizedAlertData(String id,
