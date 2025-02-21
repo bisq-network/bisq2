@@ -101,7 +101,7 @@ public class PersistenceService {
         List<CompletableFuture<Void>> list = clients.stream()
                 .map(PersistenceClient::getPersistence)
                 .map(Persistence::pruneBackups)
-                .toList();
+                .collect(Collectors.toList());
         return CompletableFutureUtils.allOf(list).thenApply(l -> null);
     }
 
