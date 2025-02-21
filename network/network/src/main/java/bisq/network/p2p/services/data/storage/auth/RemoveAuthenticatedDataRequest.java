@@ -61,17 +61,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 signature);
     }
 
-
-    public static RemoveAuthenticatedDataRequest cloneWithVersion0(RemoveAuthenticatedDataRequest request) {
-        return new RemoveAuthenticatedDataRequest(0,
-                request.getMetaData(),
-                request.getHash(),
-                request.getOwnerPublicKeyBytes(),
-                request.getOwnerPublicKey(),
-                request.getSequenceNumber(),
-                request.getSignature());
-    }
-
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
