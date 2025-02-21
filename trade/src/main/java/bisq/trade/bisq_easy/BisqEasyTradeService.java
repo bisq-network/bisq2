@@ -57,8 +57,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -86,6 +88,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
+    private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -206,6 +209,11 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         BisqEasyProtocol protocol = createProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
         protocol.handle(message);
         persist();
+
+        if (!pendingMessages.isEmpty()) {
+            log.info("We have pendingMessages. We try to re-process them now.");
+            pendingMessages.forEach(this::handleBisqEasyTradeMessage);
+        }
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
@@ -213,8 +221,22 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         findProtocol(tradeId).ifPresentOrElse(protocol -> {
                     protocol.handle(message);
                     persist();
+
+                    if (pendingMessages.contains(message)) {
+                        log.info("We remove message {} from pendingMessages.", message);
+                        pendingMessages.remove(message);
+                    }
+
+                    if (!pendingMessages.isEmpty()) {
+                        log.info("We have pendingMessages. We try to re-process them now.");
+                        pendingMessages.forEach(this::handleBisqEasyTradeMessage);
+                    }
                 },
-                () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
+                () -> {
+                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
+                            "re-processing when the next message arrives. message={}", tradeId, message);
+                    pendingMessages.add(message);
+                });
     }
 
 
