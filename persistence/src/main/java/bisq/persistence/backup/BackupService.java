@@ -36,6 +36,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * We back up the persisted data at each write operation. We append the date time format with minutes as smallest time unit.
@@ -270,7 +271,7 @@ public class BackupService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .sorted()
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private static long getBackupAgeInDays(BackupFileInfo backupFileInfo, LocalDateTime now) {

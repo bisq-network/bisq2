@@ -388,12 +388,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(e -> e.getDistributedData().getClass().getSimpleName())
-                    .toList();
+                    .collect(Collectors.toList());
             var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (RemoveAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(RemoveAuthenticatedDataRequest::getClassName)
-                    .toList();
+                    .collect(Collectors.toList());
             var className = Stream.concat(added.stream(), removed.stream())
                     .findAny().orElse(persistence.getFileName().replace("Store", "")); // Remove trailing Store postfix
             log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
