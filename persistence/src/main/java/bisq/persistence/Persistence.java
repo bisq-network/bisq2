@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -44,7 +45,7 @@ public class Persistence<T extends PersistableStore<T>> {
     public Persistence(String directory, String fileName, MaxBackupSize maxBackupSize) {
         this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
-        storePath = Path.of(directory, storageFileName + EXTENSION);
+        storePath = Paths.get(directory, storageFileName + EXTENSION);
         var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }

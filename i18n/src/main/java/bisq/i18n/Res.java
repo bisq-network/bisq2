@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -56,10 +57,11 @@ public class Res {
 
         bundles.clear();
 
+        // use collectors to avoid Samsung devices crashes (not fully supporting Java 16+ APIs
         bundles.addAll(
                 BUNDLE_NAMES.stream()
                         .map(bundleName -> ResourceBundle.getBundle(bundleName, locale))
-                        .toList()
+                        .collect(Collectors.toList())
         );
     }
 

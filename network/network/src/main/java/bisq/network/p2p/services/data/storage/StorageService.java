@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -534,7 +535,7 @@ public class StorageService {
         return NetworkStorageWhiteList.getClassNames().stream()
                 .filter(className -> {
                     String storageFileName = StringUtils.camelCaseToSnakeCase(className + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
-                    return Path.of(directory, storageFileName).toFile().exists();
+                    return Paths.get(directory, storageFileName).toFile().exists();
                 })
                 .collect(Collectors.toSet());
     }

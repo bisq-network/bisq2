@@ -29,12 +29,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * We back up the persisted data at each write operation. We append the date time format with minutes as smallest time unit.
@@ -78,7 +80,7 @@ public class BackupService {
         this.maxBackupSize = maxBackupSize;
 
         fileName = storeFilePath.getFileName().toString();
-        Path backupDir = Path.of(storeFilePath.toString()
+        Path backupDir = Paths.get(storeFilePath.toString()
                 .replaceFirst("db", "backups")
                 .replace(fileName, ""));
         String dirName = fileName.replace(Persistence.EXTENSION, "")
@@ -269,7 +271,7 @@ public class BackupService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .sorted()
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private static long getBackupAgeInDays(BackupFileInfo backupFileInfo, LocalDateTime now) {
