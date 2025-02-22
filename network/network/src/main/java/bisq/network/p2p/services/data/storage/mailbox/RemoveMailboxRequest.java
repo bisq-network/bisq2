@@ -61,7 +61,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
 
     @EqualsAndHashCode.Exclude
