@@ -7,8 +7,8 @@ import bisq.network.p2p.node.Feature;
 import java.util.Optional;
 
 public enum AuthorizationTokenType implements ProtoEnum {
-    HASH_CASH,
     @Deprecated(since = "2.1.2")
+    HASH_CASH,
     EQUI_HASH,
     HASH_CASH_V2;
 

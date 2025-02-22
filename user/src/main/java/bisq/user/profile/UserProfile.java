@@ -78,12 +78,6 @@ public final class UserProfile implements DistributedData, PublishDateAware {
                 statement);
     }
 
-    public static UserProfile withVersion(UserProfile userProfile, int version) {
-        return new UserProfile(version, userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
-                userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement(),
-                ApplicationVersion.getVersion().getVersionAsString());
-    }
-
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
@@ -100,11 +94,10 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     @EqualsAndHashCode.Include
     private final String statement;
 
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @ExcludeForHash
     private final int avatarVersion;
     @ExcludeForHash
     private final int version;
-    @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String applicationVersion;
 
     private transient String nym;

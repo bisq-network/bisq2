@@ -314,14 +314,6 @@ public class DataService implements StorageService.Listener {
                     try {
                         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
                         DataStorageResult dataStorageResult = store.remove(request);
-
-                        // Send also with version 0 for backward compatibility
-                        RemoveAuthenticatedDataRequest oldVersion = RemoveAuthenticatedDataRequest.cloneWithVersion0(request);
-                        DataStorageResult oldVersionDataStorageResult = store.remove(oldVersion);
-                        if (dataStorageResult.isSuccess() || oldVersionDataStorageResult.isSuccess()) {
-                            broadcasters.forEach(broadcaster -> broadcaster.broadcast(oldVersion));
-                        }
-
                         if (dataStorageResult.isSuccess()) {
                             return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
                         } else {
@@ -344,14 +336,6 @@ public class DataService implements StorageService.Listener {
                     try {
                         RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, keyPair);
                         DataStorageResult dataStorageResult = store.remove(request);
-
-                        // Send also with version 0 for backward compatibility
-                        RemoveMailboxRequest oldVersion = RemoveMailboxRequest.cloneWithVersion0(request);
-                        DataStorageResult oldVersionDataStorageResult = store.remove(oldVersion);
-                        if (dataStorageResult.isSuccess() || oldVersionDataStorageResult.isSuccess()) {
-                            broadcasters.forEach(broadcaster -> broadcaster.broadcast(oldVersion));
-                        }
-
                         if (dataStorageResult.isSuccess()) {
                             return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
                         } else {

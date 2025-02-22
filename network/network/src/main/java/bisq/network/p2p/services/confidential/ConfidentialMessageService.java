@@ -347,11 +347,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
         // TODO (refactor, low prio) async for creating the stores, could be made blocking
         BroadcastResult mailboxFuture = dataService.get().addMailboxData(mailboxData, senderKeyPair, publicKey).join();
-
-        // Send also with version 0 for backward compatibility
-        MailboxData oldVersion = MailboxData.cloneWithVersion0(mailboxData);
-        dataService.get().addMailboxData(oldVersion, senderKeyPair, publicKey).join();
-
         return new SendConfidentialMessageResult(MessageDeliveryStatus.TRY_ADD_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 
