@@ -80,9 +80,11 @@ public class BackupService {
         this.maxBackupSize = maxBackupSize;
 
         fileName = storeFilePath.getFileName().toString();
-        Path backupDir = Paths.get(storeFilePath.toString()
+        String relativeStoreFilePath = storeFilePath.toString().replaceFirst(dataDir.toString(), "");
+        String relativeBackupDir = relativeStoreFilePath
                 .replaceFirst("db", "backups")
-                .replace(fileName, ""));
+                .replace(fileName, "");
+        Path backupDir = Paths.get(dataDir.toString(), relativeBackupDir);
         String dirName = fileName.replace(Persistence.EXTENSION, "")
                 .replace("_store", "");
         dirPath = backupDir.resolve(dirName);
