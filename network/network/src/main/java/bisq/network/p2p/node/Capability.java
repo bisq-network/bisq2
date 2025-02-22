@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,6 +62,14 @@ public final class Capability implements NetworkProto {
                                           List<TransportType> supportedTransportTypes,
                                           List<Feature> features) {
         return new Capability(VERSION, address, supportedTransportTypes, features, ApplicationVersion.getVersion().getVersionAsString());
+    }
+
+    public static Capability withVersion(Capability capability, int version) {
+        return new Capability(version,
+                capability.getAddress(),
+                new ArrayList<>(capability.getSupportedTransportTypes()),
+                new ArrayList<>(capability.getFeatures()),
+                capability.getApplicationVersion());
     }
 
     @VisibleForTesting
