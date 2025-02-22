@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,23 +52,21 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     abstract public T getFilter();
 
-    abstract protected boolean isAuthenticatedDataRequestMissing(T filter,
-                                                                 Map.Entry<ByteArray, AuthenticatedDataRequest> mapEntry);
+    abstract protected boolean isAuthenticatedDataRequestMissing(T filter, Map.Entry<ByteArray, AuthenticatedDataRequest> mapEntry);
 
     abstract protected boolean isMailboxRequestMissing(T filter, Map.Entry<ByteArray, MailboxRequest> mapEntry);
 
-    abstract protected boolean isAddAppendOnlyDataRequestMissing(T filter,
-                                                                 Map.Entry<ByteArray, AddAppendOnlyDataRequest> entry);
+    abstract protected boolean isAddAppendOnlyDataRequestMissing(T filter, Map.Entry<ByteArray, AddAppendOnlyDataRequest> entry);
 
-    public Inventory createInventory(InventoryFilter inventoryFilter) {
+    public Inventory createInventory(InventoryFilter inventoryFilter, Predicate<Integer> predicate) {
         final AtomicInteger accumulatedSize = new AtomicInteger();
         final AtomicBoolean maxSizeReached = new AtomicBoolean();
         // The type is not defined at compile time, thus we do a safe cast
         T filter = safeCast(inventoryFilter);
-        List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached);
+        List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached, predicate);
 
         if (!maxSizeReached.get()) {
-            dataRequests.addAll(getMailboxRequests(filter, accumulatedSize, maxSizeReached));
+            dataRequests.addAll(getMailboxRequests(filter, accumulatedSize, maxSizeReached, predicate));
         }
 
         if (!maxSizeReached.get()) {
@@ -83,7 +82,8 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     private List<DataRequest> getAuthenticatedDataRequests(T filter,
                                                            AtomicInteger accumulatedSize,
-                                                           AtomicBoolean maxSizeReached) {
+                                                           AtomicBoolean maxSizeReached,
+                                                           Predicate<Integer> predicate) {
         List<AddAuthenticatedDataRequest> addRequests = new ArrayList<>();
         List<RemoveAuthenticatedDataRequest> removeRequests = new ArrayList<>();
         storageService.getAuthenticatedDataStoreMaps().flatMap(map -> map.entrySet().stream())
@@ -92,9 +92,13 @@ public abstract class FilterService<T extends InventoryFilter> {
                         AuthenticatedDataRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
                             DistributedData distributedData = addAuthenticatedDataRequest.getDistributedData();
-                            addRequests.add(addAuthenticatedDataRequest);
+                            if (predicate.test(distributedData.getVersion())) {
+                                addRequests.add(addAuthenticatedDataRequest);
+                            }
                         } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
-                            removeRequests.add(removeAuthenticatedDataRequest);
+                            if (predicate.test(removeAuthenticatedDataRequest.getVersion())) {
+                                removeRequests.add(removeAuthenticatedDataRequest);
+                            }
                         }
                         // Refresh is ignored
                     }
@@ -129,7 +133,8 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     private List<DataRequest> getMailboxRequests(T filter,
                                                  AtomicInteger accumulatedSize,
-                                                 AtomicBoolean maxSizeReached) {
+                                                 AtomicBoolean maxSizeReached,
+                                                 Predicate<Integer> predicate) {
         List<AddMailboxRequest> addRequests = new ArrayList<>();
         List<RemoveMailboxRequest> removeRequests = new ArrayList<>();
         storageService.getMailboxStoreMaps().flatMap(map -> map.entrySet().stream())
@@ -137,9 +142,13 @@ public abstract class FilterService<T extends InventoryFilter> {
                     if (isMailboxRequestMissing(filter, mapEntry)) {
                         MailboxRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddMailboxRequest addMailboxRequest) {
-                            addRequests.add(addMailboxRequest);
+                            if (predicate.test(addMailboxRequest.getMailboxSequentialData().getMailboxData().getVersion())) {
+                                addRequests.add(addMailboxRequest);
+                            }
                         } else if (dataRequest instanceof RemoveMailboxRequest removeMailboxRequest) {
-                            removeRequests.add(removeMailboxRequest);
+                            if (predicate.test(removeMailboxRequest.getVersion())) {
+                                removeRequests.add(removeMailboxRequest);
+                            }
                         }
                     }
                 });

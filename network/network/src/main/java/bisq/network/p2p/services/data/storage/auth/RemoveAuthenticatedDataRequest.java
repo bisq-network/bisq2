@@ -62,7 +62,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     }
 
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
 
     @EqualsAndHashCode.Exclude

@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,15 +49,27 @@ public final class Capability implements NetworkProto {
     private final int version;
     private final Address address;
     private final List<TransportType> supportedTransportTypes;
+    // ExcludeForHash from version 1 on to not break hash for pow check or version 0. We add version 2 and 3 for extra safety...
+    // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final List<Feature> features;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String applicationVersion;
 
     public static Capability myCapability(Address address,
                                           List<TransportType> supportedTransportTypes,
                                           List<Feature> features) {
         return new Capability(VERSION, address, supportedTransportTypes, features, ApplicationVersion.getVersion().getVersionAsString());
+    }
+
+    public static Capability withVersion(Capability capability, int version) {
+        return new Capability(version,
+                capability.getAddress(),
+                new ArrayList<>(capability.getSupportedTransportTypes()),
+                new ArrayList<>(capability.getFeatures()),
+                capability.getApplicationVersion());
     }
 
     @VisibleForTesting
