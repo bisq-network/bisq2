@@ -54,11 +54,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final Button horizontalExpandIcon, horizontalCollapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
-    private final VBox mainMenuItems;
+    private final VBox mainMenuItems, networkInfoRoot;
     private final int menuTop;
     private final LeftNavButton authorizedRole;
     private final Label version;
-    private final VBox networkInfoRoot;
     private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, newVersionAvailablePin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller, VBox networkInfoRoot) {
@@ -163,10 +162,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         mainMenuItems.setLayoutY(menuTop);
 
         version = new Label(model.getVersion());
-        version.setOpacity(0.5);
-        version.getStyleClass().add("bisq-smaller-dimmed-label");
         version.setLayoutX(91);
-        version.setLayoutY(26.5);
         Pane logoAndVersion = new Pane(logoExpanded, logoCollapsed, version);
 
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
@@ -273,14 +269,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         newVersionAvailablePin = EasyBind.subscribe(model.getNewVersionAvailable(),
                 newVersionAvailable -> {
                     if (newVersionAvailable) {
-                        version.setOpacity(1);
                         version.getStyleClass().remove("bisq-smaller-dimmed-label");
                         version.getStyleClass().addAll("bisq-smaller-label", "text-underline", "hand-cursor");
+                        version.setLayoutY(26);
                         version.setOnMouseClicked(e -> controller.onOpenUpdateWindow());
                     } else {
-                        version.setOpacity(0.5);
                         version.getStyleClass().add("bisq-smaller-dimmed-label");
                         version.getStyleClass().removeAll("bisq-smaller-label", "text-underline", "hand-cursor");
+                        version.setLayoutY(25);
                         version.setOnMouseClicked(null);
                     }
                 });
