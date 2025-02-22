@@ -54,7 +54,9 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     private final long blockTime;
     private final long amount;
     private final byte[] hash;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
     private final int blockHeight;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String txId;
 
     @ExcludeForHash

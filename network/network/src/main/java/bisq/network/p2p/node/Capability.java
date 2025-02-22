@@ -51,6 +51,7 @@ public final class Capability implements NetworkProto {
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final List<Feature> features;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String applicationVersion;
 
     public static Capability myCapability(Address address,

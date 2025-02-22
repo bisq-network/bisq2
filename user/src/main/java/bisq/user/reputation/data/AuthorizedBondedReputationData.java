@@ -55,7 +55,9 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     private final long amount;
     private final byte[] hash;
     private final long lockTime;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
     private final int blockHeight;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String txId;
 
     @ExcludeForHash

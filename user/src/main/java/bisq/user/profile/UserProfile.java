@@ -98,6 +98,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     private final int avatarVersion;
     @ExcludeForHash
     private final int version;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String applicationVersion;
 
     private transient String nym;
