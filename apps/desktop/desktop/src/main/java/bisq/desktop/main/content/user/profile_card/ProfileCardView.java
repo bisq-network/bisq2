@@ -152,10 +152,10 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
         double size = 100;
         userProfileIcon = new UserProfileIcon(size);
-        bondedRoleBadge = ImageUtil.getImageViewById("nav-authorized-role-active");
+        bondedRoleBadge = ImageUtil.getImageViewById("moderator-badge-large");
         StackPane profileIconWithBadge = new StackPane(userProfileIcon, bondedRoleBadge);
 
-        double adjustment = size * 0.8;
+        double adjustment = size * 0.85;
         double top = -adjustment / 2;
         double right = -adjustment / 2;
         double bottom = adjustment / 2;

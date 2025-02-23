@@ -981,6 +981,14 @@
     -fx-image: url("/images/icons/interchangeable-green.png");
 }
 
+#moderator-badge {
+    -fx-image: url("/images/icons/moderator-badge.png");
+}
+
+#moderator-badge-large {
+    -fx-image: url("/images/icons/moderator-badge-large.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
