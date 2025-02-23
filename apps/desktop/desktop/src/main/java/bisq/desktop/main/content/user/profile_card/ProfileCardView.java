@@ -37,7 +37,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -152,15 +151,6 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
         double size = 100;
         userProfileIcon = new UserProfileIcon(size);
-        bondedRoleBadge = ImageUtil.getImageViewById("moderator-badge-large");
-        StackPane profileIconWithBadge = new StackPane(userProfileIcon, bondedRoleBadge);
-
-        double adjustment = size * 0.85;
-        double top = -adjustment / 2;
-        double right = -adjustment / 2;
-        double bottom = adjustment / 2;
-        double left = adjustment / 2;
-        StackPane.setMargin(bondedRoleBadge, new Insets(top, right, bottom, left));
 
         reputationScoreDisplay = new ReputationScoreDisplay();
         reputationScoreDisplay.setScale(1.5);
@@ -179,8 +169,13 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         HBox rankingBox = new HBox(5, rankigTitleLabel, rankingLabel);
         rankingBox.getStyleClass().add("ranking-box");
 
+        bondedRoleBadge = ImageUtil.getImageViewById("moderator-badge-large");
+        // TODO: Update image
+        bondedRoleBadge.setScaleX(0.8);
+        bondedRoleBadge.setScaleY(0.8);
         userNickNameLabel = new Label();
         userNickNameLabel.getStyleClass().addAll("text-fill-white", "large-text");
+        userNickNameLabel.setGraphic(bondedRoleBadge);
         userNymLabel = new Label();
         userNymLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
 
@@ -200,7 +195,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report);
         VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationBox, Spacer.fillVBox(), userActionsBox);
         userNameReputationAndActionsBox.getStyleClass().add("header-content");
-        HBox header = new HBox(40, profileIconWithBadge, userNameReputationAndActionsBox);
+        HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);
         header.setPadding(new Insets(0, 0, 20, 0));
 
         tabs.setFillHeight(true);
