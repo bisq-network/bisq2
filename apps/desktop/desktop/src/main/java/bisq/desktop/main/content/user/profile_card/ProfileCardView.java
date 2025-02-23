@@ -18,11 +18,13 @@
 package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.desktop.overlay.OverlayModel;
@@ -32,7 +34,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -41,12 +46,14 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     public final static double SUB_VIEWS_CONTENT_HEIGHT = 307;
     private final ProfileCardController controller;
     private final TabButton offersTabButton, messagesTabButton;
+    private final BisqTooltip tooltip = new BisqTooltip();
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
     private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report;
     private Button closeButton;
     private HBox userActionsBox;
+    private ImageView bondedRoleBadge;
     private Subscription reputationScorePin;
 
     public ProfileCardView(ProfileCardModel model, ProfileCardController controller) {
@@ -78,9 +85,14 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
         offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
         messagesTabButton.getLabel().textProperty().bind(model.getMessagesTabButtonText());
+        bondedRoleBadge.visibleProperty().bind(model.getShouldShowBondedRoleBadge());
+        bondedRoleBadge.managedProperty().bind(model.getShouldShowBondedRoleBadge());
 
         UserProfile userProfile = model.getUserProfile();
-        userProfileIcon.setUserProfile(userProfile, false);
+        userProfileIcon.setUserProfile(userProfile, false, false);
+        tooltip.setText(model.getBondedRoleBadgeTooltip());
+        Tooltip.install(bondedRoleBadge, tooltip);
+
         String nickname = userProfile.getNickName();
         userNickNameLabel.setText(controller.isUserProfileBanned()
                 ? Res.get("user.profileCard.userNickname.banned", nickname)
@@ -118,6 +130,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.managedProperty().unbind();
         offersTabButton.getLabel().textProperty().unbind();
         messagesTabButton.getLabel().textProperty().unbind();
+        bondedRoleBadge.visibleProperty().unbind();
+        bondedRoleBadge.managedProperty().unbind();
 
         reputationScorePin.unsubscribe();
 
@@ -126,6 +140,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         undoIgnore.setOnAction(null);
         report.setOnAction(null);
         closeButton.setOnAction(null);
+
+        Tooltip.uninstall(bondedRoleBadge, tooltip);
     }
 
     @Override
@@ -134,7 +150,18 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
         closeButtonRow.setPadding(new Insets(15, 15 - SIDE_PADDING, 0, 0));
 
-        userProfileIcon = new UserProfileIcon(100);
+        double size = 100;
+        userProfileIcon = new UserProfileIcon(size);
+        bondedRoleBadge = ImageUtil.getImageViewById("nav-authorized-role-active");
+        StackPane profileIconWithBadge = new StackPane(userProfileIcon, bondedRoleBadge);
+
+        double adjustment = size * 0.8;
+        double top = -adjustment / 2;
+        double right = -adjustment / 2;
+        double bottom = adjustment / 2;
+        double left = adjustment / 2;
+        StackPane.setMargin(bondedRoleBadge, new Insets(top, right, bottom, left));
+
         reputationScoreDisplay = new ReputationScoreDisplay();
         reputationScoreDisplay.setScale(1.5);
 
@@ -173,7 +200,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report);
         VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationBox, Spacer.fillVBox(), userActionsBox);
         userNameReputationAndActionsBox.getStyleClass().add("header-content");
-        HBox header = new HBox(40, userProfileIcon, userNameReputationAndActionsBox);
+        HBox header = new HBox(40, profileIconWithBadge, userNameReputationAndActionsBox);
         header.setPadding(new Insets(0, 0, 20, 0));
 
         tabs.setFillHeight(true);

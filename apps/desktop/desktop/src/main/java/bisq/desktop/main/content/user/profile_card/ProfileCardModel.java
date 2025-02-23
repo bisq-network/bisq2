@@ -29,11 +29,14 @@ import lombok.Setter;
 public class ProfileCardModel extends TabModel {
     @Setter
     private UserProfile userProfile;
+    @Setter
+    private String bondedRoleBadgeTooltip;
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();
     private final StringProperty offersTabButtonText = new SimpleStringProperty();
     private final StringProperty messagesTabButtonText = new SimpleStringProperty();
+    private final BooleanProperty shouldShowBondedRoleBadge = new SimpleBooleanProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
