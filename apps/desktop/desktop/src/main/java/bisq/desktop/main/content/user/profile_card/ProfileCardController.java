@@ -145,7 +145,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
                                 && userProfile.getId().equals(bondedRole.getProfileId()))
                 .map(AuthorizedBondedRole::getBondedRoleType)
                 .toList();
-        model.getShouldShowBondedRoleBadge().set(!bondedRoles.isEmpty());
+        model.setShouldShowBondedRoleBadge(!bondedRoles.isEmpty());
 
         String bondedRoleBadgeTooltip =
                 bondedRoles.contains(BondedRoleType.MEDIATOR) && bondedRoles.contains(BondedRoleType.MODERATOR)

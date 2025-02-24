@@ -83,11 +83,12 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
         offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
         messagesTabButton.getLabel().textProperty().bind(model.getMessagesTabButtonText());
-        bondedRoleBadgeBox.visibleProperty().bind(model.getShouldShowBondedRoleBadge());
-        bondedRoleBadgeBox.managedProperty().bind(model.getShouldShowBondedRoleBadge());
 
         UserProfile userProfile = model.getUserProfile();
         userProfileIcon.setUserProfile(userProfile, false, false);
+
+        bondedRoleBadgeBox.setVisible(model.isShouldShowBondedRoleBadge());
+        bondedRoleBadgeBox.setManaged(model.isShouldShowBondedRoleBadge());
 
         tooltip.setText(model.getBondedRoleBadgeTooltip());
         Tooltip.install(bondedRoleBadgeBox, tooltip);
@@ -130,8 +131,6 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.managedProperty().unbind();
         offersTabButton.getLabel().textProperty().unbind();
         messagesTabButton.getLabel().textProperty().unbind();
-        bondedRoleBadgeBox.visibleProperty().unbind();
-        bondedRoleBadgeBox.managedProperty().unbind();
 
         reputationScorePin.unsubscribe();
 
