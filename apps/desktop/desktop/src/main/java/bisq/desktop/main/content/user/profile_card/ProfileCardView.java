@@ -18,13 +18,12 @@
 package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqMenuItem;
-import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.components.BondedRoleBadge;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.desktop.overlay.OverlayModel;
@@ -34,8 +33,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
@@ -43,15 +40,16 @@ import org.fxmisc.easybind.Subscription;
 
 public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardController> {
     public final static double SUB_VIEWS_CONTENT_HEIGHT = 307;
+
     private final ProfileCardController controller;
     private final TabButton offersTabButton, messagesTabButton;
-    private final BisqTooltip tooltip = new BisqTooltip();
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
     private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report;
     private Button closeButton;
-    private HBox userActionsBox, bondedRoleBadgeBox;
+    private HBox userActionsBox;
+    private BondedRoleBadge bondedRoleBadge;
     private Subscription reputationScorePin;
 
     public ProfileCardView(ProfileCardModel model, ProfileCardController controller) {
@@ -87,11 +85,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         UserProfile userProfile = model.getUserProfile();
         userProfileIcon.setUserProfile(userProfile, false, false);
 
-        bondedRoleBadgeBox.setVisible(model.isShouldShowBondedRoleBadge());
-        bondedRoleBadgeBox.setManaged(model.isShouldShowBondedRoleBadge());
-
-        tooltip.setText(model.getBondedRoleBadgeTooltip());
-        Tooltip.install(bondedRoleBadgeBox, tooltip);
+        bondedRoleBadge.setUserProfileBondedRoles(model.getUserProfileBondedRoles());
 
         String nickname = userProfile.getNickName();
         userNickNameLabel.setText(controller.isUserProfileBanned()
@@ -140,7 +134,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         report.setOnAction(null);
         closeButton.setOnAction(null);
 
-        Tooltip.uninstall(bondedRoleBadgeBox, tooltip);
+        bondedRoleBadge.dispose();
     }
 
     @Override
@@ -169,10 +163,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         HBox rankingBox = new HBox(5, rankigTitleLabel, rankingLabel);
         rankingBox.getStyleClass().add("ranking-box");
 
-        ImageView bondedRoleBadge = ImageUtil.getImageViewById("moderator-badge-large");
-        bondedRoleBadgeBox = new HBox(bondedRoleBadge);
-        bondedRoleBadgeBox.setAlignment(Pos.BOTTOM_LEFT);
-        bondedRoleBadgeBox.setPadding(new Insets(0, -5, 5, 0));
+        bondedRoleBadge = new BondedRoleBadge(true);
 
         userNickNameLabel = new Label();
         userNickNameLabel.getStyleClass().addAll("text-fill-white", "large-text");
@@ -190,7 +181,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         report = new BisqMenuItem("report-grey", "report-white",
                 Res.get("user.profileCard.userActions.report"));
 
-        HBox userNameBox = new HBox(10, bondedRoleBadgeBox, userNickNameLabel, userNymLabel);
+        HBox userNameBox = new HBox(10, bondedRoleBadge, userNickNameLabel, userNymLabel);
         HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreBox, rankingBox);
         reputationBox.setAlignment(Pos.BOTTOM_LEFT);
         userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report);

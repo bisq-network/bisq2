@@ -20,6 +20,9 @@ package bisq.desktop.main.content.chat.message_container.list;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyServiceUtil;
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -42,6 +45,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.components.BondedRoleBadge;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -124,6 +128,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final HashMap<Reaction, ReactionItem> userReactions = new HashMap<>();
     private Optional<Pin> userReactionsPin = Optional.empty();
 
+    // Bonded role badge
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final BondedRoleBadge bondedRoleBadge = new BondedRoleBadge(false);
+
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
                                MarketPriceService marketPriceService,
@@ -132,12 +140,14 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                BisqEasyTradeService bisqEasyTradeService,
                                UserIdentityService userIdentityService,
                                NetworkService networkService,
-                               Optional<ResendMessageService> resendMessageService) {
+                               Optional<ResendMessageService> resendMessageService,
+                               AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
         this.marketPriceService = marketPriceService;
         this.userIdentityService = userIdentityService;
         this.resendMessageService = resendMessageService;
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
 
         if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
             senderUserProfile = Optional.of(userProfileService.getManagedUserProfile(privateChatMessage.getSenderUserProfile()));
@@ -178,6 +188,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         createAndAddSubscriptionToUserReactions(userProfileService);
         initializeDeliveryStatusIcons();
         addSubscriptionToMessageDeliveryStatus(networkService);
+        setupBondedRoleBadge();
     }
 
     @Override
@@ -199,6 +210,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         statusPins.forEach(Pin::unbind);
         userReactionsPin.ifPresent(Pin::unbind);
         userIdentityPin.unbind();
+        bondedRoleBadge.dispose();
     }
 
     public boolean hasTradeChatOffer() {
@@ -446,5 +458,18 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private void onUserIdentity() {
         UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
         userReactions.forEach((key, value) -> value.setSelectedUserProfile(selectedUserProfile));
+    }
+
+    private void setupBondedRoleBadge() {
+        senderUserProfile.ifPresent(userProfile -> {
+            List<BondedRoleType> bondedRoles = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                    .filter(bondedRole ->
+                            (bondedRole.getBondedRoleType() == BondedRoleType.MEDIATOR
+                                    || bondedRole.getBondedRoleType() == BondedRoleType.MODERATOR)
+                                    && userProfile.getId().equals(bondedRole.getProfileId()))
+                    .map(AuthorizedBondedRole::getBondedRoleType)
+                    .toList();
+            bondedRoleBadge.setUserProfileBondedRoles(bondedRoles);
+        });
     }
 }

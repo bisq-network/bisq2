@@ -145,15 +145,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
                                 && userProfile.getId().equals(bondedRole.getProfileId()))
                 .map(AuthorizedBondedRole::getBondedRoleType)
                 .toList();
-        model.setShouldShowBondedRoleBadge(!bondedRoles.isEmpty());
-
-        String bondedRoleBadgeTooltip =
-                bondedRoles.contains(BondedRoleType.MEDIATOR) && bondedRoles.contains(BondedRoleType.MODERATOR)
-                        ? Res.get("user.profileCard.bondedRoleBadge.MediatorAndModerator")
-                        : bondedRoles.contains(BondedRoleType.MODERATOR) ? Res.get("user.profileCard.bondedRoleBadge.Moderator")
-                        : bondedRoles.contains(BondedRoleType.MEDIATOR) ? Res.get("user.profileCard.bondedRoleBadge.Mediator")
-                        : "";
-        model.setBondedRoleBadgeTooltip(bondedRoleBadgeTooltip);
+        model.setUserProfileBondedRoles(bondedRoles);
     }
 
     @Override
