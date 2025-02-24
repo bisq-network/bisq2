@@ -87,11 +87,20 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         }
     }
 
+    private void updateTooltipText() {
+        tooltipText = userProfileInfo + livenessState + versionInfo;
+        tooltip.setText(tooltipText);
+    }
+
     public void setUserProfile(@Nullable UserProfile userProfile) {
         setUserProfile(userProfile, true);
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile, boolean openProfileCardOnClick) {
+        setUserProfile(userProfile, openProfileCardOnClick, true);
+    }
+
+    public void setUserProfile(@Nullable UserProfile userProfile, boolean openProfileCardOnClick, boolean showTooltip) {
         this.userProfile = userProfile;
 
         if (userProfile == null) {
@@ -110,7 +119,9 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         versionInfo = Res.get("user.userProfile.version", version);
         updateTooltipText();
 
-        Tooltip.install(this, tooltip);
+        if (showTooltip) {
+            Tooltip.install(this, tooltip);
+        }
 
         if (getScene() == null) {
             sceneProperty().addListener(sceneChangeListener);
@@ -166,10 +177,5 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     public void hideLivenessIndicator() {
         livenessIndicator.hide();
         livenessScheduler.disable();
-    }
-
-    private void updateTooltipText() {
-        tooltipText = userProfileInfo + livenessState + versionInfo;
-        tooltip.setText(tooltipText);
     }
 }

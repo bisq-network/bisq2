@@ -131,6 +131,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected void setUpUserNameAndDateTime() {
         userName = new Label();
         userName.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
+
         dateTime = new Label();
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
         dateTime.setText(item.getDate());

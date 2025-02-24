@@ -58,7 +58,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     protected void setUpUserNameAndDateTime() {
         super.setUpUserNameAndDateTime();
 
-        userNameAndDateHBox = new HBox(10, userName, dateTime);
+        userNameAndDateHBox = new HBox(10, item.getBondedRoleBadge(), userName, dateTime);
         userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
     }
 

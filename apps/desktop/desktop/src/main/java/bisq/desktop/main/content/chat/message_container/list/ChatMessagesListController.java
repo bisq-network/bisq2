@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bisq_easy.NavigationTarget;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.*;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
@@ -100,6 +101,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final Optional<ResendMessageService> resendMessageService;
     private final MarketPriceService marketPriceService;
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
@@ -123,6 +125,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
+        authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
 
         this.mentionUserHandler = mentionUserHandler;
         this.showChatUserDetailsHandler = showChatUserDetailsHandler;
@@ -635,7 +638,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         bisqEasyTradeService,
                         userIdentityService,
                         networkService,
-                        resendMessageService))
+                        resendMessageService,
+                        authorizedBondedRolesService))
                 .collect(Collectors.toSet()));
         model.getChatMessageIds().clear();
         model.getChatMessageIds().addAll(model.getChatMessages().stream()
@@ -661,7 +665,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                             bisqEasyTradeService,
                             userIdentityService,
                             networkService,
-                            resendMessageService);
+                            resendMessageService,
+                            authorizedBondedRolesService);
                     model.getChatMessages().add(item);
                     maybeScrollDownOnNewItemAdded();
                 });
