@@ -51,8 +51,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
     private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report;
     private Button closeButton;
-    private HBox userActionsBox;
-    private ImageView bondedRoleBadge;
+    private HBox userActionsBox, bondedRoleBadgeBox;
     private Subscription reputationScorePin;
 
     public ProfileCardView(ProfileCardModel model, ProfileCardController controller) {
@@ -84,18 +83,20 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
         offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
         messagesTabButton.getLabel().textProperty().bind(model.getMessagesTabButtonText());
-        bondedRoleBadge.visibleProperty().bind(model.getShouldShowBondedRoleBadge());
-        bondedRoleBadge.managedProperty().bind(model.getShouldShowBondedRoleBadge());
+        bondedRoleBadgeBox.visibleProperty().bind(model.getShouldShowBondedRoleBadge());
+        bondedRoleBadgeBox.managedProperty().bind(model.getShouldShowBondedRoleBadge());
 
         UserProfile userProfile = model.getUserProfile();
         userProfileIcon.setUserProfile(userProfile, false, false);
+
         tooltip.setText(model.getBondedRoleBadgeTooltip());
-        Tooltip.install(bondedRoleBadge, tooltip);
+        Tooltip.install(bondedRoleBadgeBox, tooltip);
 
         String nickname = userProfile.getNickName();
         userNickNameLabel.setText(controller.isUserProfileBanned()
                 ? Res.get("user.profileCard.userNickname.banned", nickname)
                 : nickname);
+
         userNymLabel.setText(String.format("[%s]", userProfile.getNym()));
         if (controller.isUserProfileBanned()) {
             userNickNameLabel.getStyleClass().add("error");
@@ -129,8 +130,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         userActionsBox.managedProperty().unbind();
         offersTabButton.getLabel().textProperty().unbind();
         messagesTabButton.getLabel().textProperty().unbind();
-        bondedRoleBadge.visibleProperty().unbind();
-        bondedRoleBadge.managedProperty().unbind();
+        bondedRoleBadgeBox.visibleProperty().unbind();
+        bondedRoleBadgeBox.managedProperty().unbind();
 
         reputationScorePin.unsubscribe();
 
@@ -140,7 +141,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         report.setOnAction(null);
         closeButton.setOnAction(null);
 
-        Tooltip.uninstall(bondedRoleBadge, tooltip);
+        Tooltip.uninstall(bondedRoleBadgeBox, tooltip);
     }
 
     @Override
@@ -169,15 +170,17 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         HBox rankingBox = new HBox(5, rankigTitleLabel, rankingLabel);
         rankingBox.getStyleClass().add("ranking-box");
 
-        bondedRoleBadge = ImageUtil.getImageViewById("moderator-badge-large");
-        // TODO: Update image
-        bondedRoleBadge.setScaleX(0.8);
-        bondedRoleBadge.setScaleY(0.8);
+        ImageView bondedRoleBadge = ImageUtil.getImageViewById("moderator-badge-large");
+        bondedRoleBadgeBox = new HBox(bondedRoleBadge);
+        bondedRoleBadgeBox.setAlignment(Pos.BOTTOM_LEFT);
+        bondedRoleBadgeBox.setPadding(new Insets(0, -5, 5, 0));
+
         userNickNameLabel = new Label();
         userNickNameLabel.getStyleClass().addAll("text-fill-white", "large-text");
-        userNickNameLabel.setGraphic(bondedRoleBadge);
+
         userNymLabel = new Label();
         userNymLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        userNymLabel.setPadding(new Insets(7, 0, -7, 0));
 
         sendPrivateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white",
                 Res.get("user.profileCard.userActions.sendPrivateMessage"));
@@ -188,8 +191,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         report = new BisqMenuItem("report-grey", "report-white",
                 Res.get("user.profileCard.userActions.report"));
 
-        HBox userNameBox = new HBox(10, userNickNameLabel, userNymLabel);
-        userNameBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox userNameBox = new HBox(10, bondedRoleBadgeBox, userNickNameLabel, userNymLabel);
         HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreBox, rankingBox);
         reputationBox.setAlignment(Pos.BOTTOM_LEFT);
         userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report);
