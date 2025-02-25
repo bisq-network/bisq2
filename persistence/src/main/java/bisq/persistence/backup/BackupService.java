@@ -80,14 +80,7 @@ public class BackupService {
         this.maxBackupSize = maxBackupSize;
 
         fileName = storeFilePath.getFileName().toString();
-        String relativeStoreFilePath = storeFilePath.toString().replaceFirst(dataDir.toString(), "");
-        String relativeBackupDir = relativeStoreFilePath
-                .replaceFirst("db", "backups")
-                .replace(fileName, "");
-        Path backupDir = Paths.get(dataDir.toString(), relativeBackupDir);
-        String dirName = fileName.replace(Persistence.EXTENSION, "")
-                .replace("_store", "");
-        dirPath = backupDir.resolve(dirName);
+        dirPath = resolveDirPath(dataDir, storeFilePath);
     }
 
     public void maybeMigrateLegacyBackupFile() {
@@ -250,6 +243,38 @@ public class BackupService {
     /* --------------------------------------------------------------------- */
     // Utils
     /* --------------------------------------------------------------------- */
+
+    @VisibleForTesting
+    static Path resolveDirPath(Path dataDir, Path storeFilePath) {
+        String fileName = storeFilePath.getFileName().toString();
+        String relativeStoreFilePath = getRelativePath(dataDir, storeFilePath);
+        String relativeBackupDir = relativeStoreFilePath
+                .replaceFirst("db", "backups")
+                .replace(Persistence.EXTENSION, "")
+                .replace("_store", "");
+        // We don't use `resolve` as we use it in unit test which need to be OS independent.
+        return Paths.get(dataDir.toString() + relativeBackupDir);
+    }
+
+    @VisibleForTesting
+    static String getRelativePath(Path dataDir, Path filePath) {
+        // We don't use File.pathSeparator as we use it in unit test which need to be OS independent.
+        boolean isWindowsPath = dataDir.toString().contains("\\");
+        String normalizedDataDir = dataDir.toString().replace("\\", "/");
+        String normalizedFilePath = filePath.toString().replace("\\", "/");
+
+        // Ensure dataDir is a prefix of filePath
+        if (!normalizedFilePath.startsWith(normalizedDataDir)) {
+            throw new IllegalArgumentException("File path is not inside the data directory");
+        }
+
+        String normalizedRelativePath = normalizedFilePath.substring(normalizedDataDir.length());
+        if (isWindowsPath) {
+            return normalizedRelativePath.replace("/", "\\");
+        } else {
+            return normalizedRelativePath;
+        }
+    }
 
     @VisibleForTesting
     File getBackupFile() throws IOException {
