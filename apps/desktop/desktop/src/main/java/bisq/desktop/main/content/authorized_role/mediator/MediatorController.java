@@ -243,9 +243,11 @@ public class MediatorController implements Controller {
     }
 
     private void maybeSelectFirst() {
-        if (!model.getListItems().getFilteredList().isEmpty()) {
-            UIThread.runOnNextRenderFrame(() -> selectionService.selectChannel(model.getListItems().getSortedList().get(0).getChannel()));
-        }
+        UIThread.runOnNextRenderFrame(() -> {
+            if (!model.getListItems().getFilteredList().isEmpty()) {
+                selectionService.selectChannel(model.getListItems().getSortedList().get(0).getChannel());
+            }
+        });
     }
 
     private BisqEasyOpenTradeChannel findOrCreateChannel(MediationRequest mediationRequest,
