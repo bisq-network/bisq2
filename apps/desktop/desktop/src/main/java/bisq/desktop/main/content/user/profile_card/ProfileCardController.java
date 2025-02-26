@@ -130,13 +130,13 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         profileCardOffersController.setUserProfile(userProfile);
         profileCardMessagesController.setUserProfile(userProfile);
 
-        model.getReputationScore().set(reputationService.getReputationScore(userProfile));
+        model.setReputationScore(reputationService.getReputationScore(userProfile));
 
         boolean isMyProfile = userIdentityService.isUserIdentityPresent(userProfile.getId());
-        model.getShouldShowUserActionsMenu().set(!isMyProfile);
-        model.getOffersTabButtonText().set(Res.get("user.profileCard.tab.offers",
+        model.setShouldShowUserActionsMenu(!isMyProfile);
+        model.setOffersTabButtonText(Res.get("user.profileCard.tab.offers",
                 profileCardOffersController.getNumberOffers()).toUpperCase());
-        model.getMessagesTabButtonText().set(Res.get("user.profileCard.tab.messages",
+        model.setMessagesTabButtonText(Res.get("user.profileCard.tab.messages",
                 profileCardMessagesController.getNumberMessages(userProfile.getId())).toUpperCase());
 
         Set<BondedRoleType> bondedRoleTypes = authorizedBondedRolesService.getAuthorizedBondedRoleStream()

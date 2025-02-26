@@ -46,5 +46,6 @@ public class ProfileCardDetailsModel implements Model {
     private String version;
     @Setter
     private Optional<String> statement = Optional.empty();
+
     private final StringProperty totalReputationScore = new SimpleStringProperty();
 }
