@@ -462,14 +462,14 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     private void setupBondedRoleBadge() {
         senderUserProfile.ifPresent(userProfile -> {
-            List<BondedRoleType> bondedRoles = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+            Set<BondedRoleType> bondedRoleTypes = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                     .filter(bondedRole ->
                             (bondedRole.getBondedRoleType() == BondedRoleType.MEDIATOR
                                     || bondedRole.getBondedRoleType() == BondedRoleType.MODERATOR)
                                     && userProfile.getId().equals(bondedRole.getProfileId()))
                     .map(AuthorizedBondedRole::getBondedRoleType)
-                    .toList();
-            bondedRoleBadge.setUserProfileBondedRoles(bondedRoles);
+                    .collect(Collectors.toSet());
+            bondedRoleBadge.applyBondedRoleTypes(bondedRoleTypes);
         });
     }
 }

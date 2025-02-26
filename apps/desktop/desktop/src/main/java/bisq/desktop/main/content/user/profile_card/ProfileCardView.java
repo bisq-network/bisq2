@@ -85,7 +85,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         UserProfile userProfile = model.getUserProfile();
         userProfileIcon.setUserProfile(userProfile, false, false);
 
-        bondedRoleBadge.setUserProfileBondedRoles(model.getUserProfileBondedRoles());
+        bondedRoleBadge.applyBondedRoleTypes(model.getUserProfileBondedRoleTypes());
 
         String nickname = userProfile.getNickName();
         userNickNameLabel.setText(controller.isUserProfileBanned()

@@ -47,8 +47,9 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ProfileCardController extends TabController<ProfileCardModel>
@@ -138,14 +139,14 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         model.getMessagesTabButtonText().set(Res.get("user.profileCard.tab.messages",
                 profileCardMessagesController.getNumberMessages(userProfile.getId())).toUpperCase());
 
-        List<BondedRoleType> bondedRoles = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+        Set<BondedRoleType> bondedRoleTypes = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                 .filter(bondedRole ->
                         (bondedRole.getBondedRoleType() == BondedRoleType.MEDIATOR
                                 || bondedRole.getBondedRoleType() == BondedRoleType.MODERATOR)
                                 && userProfile.getId().equals(bondedRole.getProfileId()))
                 .map(AuthorizedBondedRole::getBondedRoleType)
-                .toList();
-        model.setUserProfileBondedRoles(bondedRoles);
+                .collect(Collectors.toSet());
+        model.setUserProfileBondedRoleTypes(bondedRoleTypes);
     }
 
     @Override

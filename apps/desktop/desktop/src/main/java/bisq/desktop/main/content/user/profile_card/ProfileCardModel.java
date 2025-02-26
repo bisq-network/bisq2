@@ -26,14 +26,15 @@ import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 public class ProfileCardModel extends TabModel {
     @Setter
     private UserProfile userProfile;
     @Setter
-    private List<BondedRoleType> userProfileBondedRoles;
+    private Set<BondedRoleType> userProfileBondedRoleTypes = new HashSet<>();
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();

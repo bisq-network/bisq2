@@ -27,7 +27,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 
-import java.util.List;
+import java.util.Set;
 
 public class BondedRoleBadge extends HBox {
     private final BisqTooltip tooltip = new BisqTooltip();
@@ -46,21 +46,23 @@ public class BondedRoleBadge extends HBox {
 
         setVisible(false);
         setManaged(false);
-
-        Tooltip.install(this, tooltip);
     }
 
-    public void setUserProfileBondedRoles(List<BondedRoleType> userBondedRoles) {
-        boolean hasBondedRole = !userBondedRoles.isEmpty();
+    public void applyBondedRoleTypes(Set<BondedRoleType> bondedRoleTypes) {
+        boolean hasBondedRole = !bondedRoleTypes.isEmpty();
         setVisible(hasBondedRole);
         setManaged(hasBondedRole);
-        String bondedRoleBadgeTooltip =
-                userBondedRoles.contains(BondedRoleType.MEDIATOR) && userBondedRoles.contains(BondedRoleType.MODERATOR)
-                        ? Res.get("user.profileCard.bondedRoleBadge.MediatorAndModerator")
-                        : userBondedRoles.contains(BondedRoleType.MODERATOR) ? Res.get("user.profileCard.bondedRoleBadge.Moderator")
-                        : userBondedRoles.contains(BondedRoleType.MEDIATOR) ? Res.get("user.profileCard.bondedRoleBadge.Mediator")
-                        : "";
-        tooltip.setText(hasBondedRole ? bondedRoleBadgeTooltip : "");
+
+        if (hasBondedRole) {
+            String bondedRoleBadgeTooltip =
+                    bondedRoleTypes.contains(BondedRoleType.MEDIATOR) && bondedRoleTypes.contains(BondedRoleType.MODERATOR)
+                            ? Res.get("user.profileCard.bondedRoleBadge.MediatorAndModerator")
+                            : bondedRoleTypes.contains(BondedRoleType.MODERATOR) ? Res.get("user.profileCard.bondedRoleBadge.Moderator")
+                            : bondedRoleTypes.contains(BondedRoleType.MEDIATOR) ? Res.get("user.profileCard.bondedRoleBadge.Mediator")
+                            : "";
+            tooltip.setText(bondedRoleBadgeTooltip);
+            Tooltip.install(this, tooltip);
+        }
     }
 
     public void dispose() {
