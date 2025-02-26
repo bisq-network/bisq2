@@ -246,7 +246,6 @@ public class BackupService {
 
     @VisibleForTesting
     static Path resolveDirPath(Path dataDir, Path storeFilePath) {
-        String fileName = storeFilePath.getFileName().toString();
         String relativeStoreFilePath = getRelativePath(dataDir, storeFilePath);
         String relativeBackupDir = relativeStoreFilePath
                 .replaceFirst("db", "backups")
