@@ -22,24 +22,32 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.TabModel;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 @Getter
 public class ProfileCardModel extends TabModel {
     @Setter
     private UserProfile userProfile;
     @Setter
     private Set<BondedRoleType> userProfileBondedRoleTypes = new HashSet<>();
-    private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
+    @Setter
+    private ReputationScore reputationScore;
+    @Setter
+    private boolean shouldShowUserActionsMenu;
+    @Setter
+    private String offersTabButtonText;
+    @Setter
+    private String messagesTabButtonText;
+
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
-    private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();
-    private final StringProperty offersTabButtonText = new SimpleStringProperty();
-    private final StringProperty messagesTabButtonText = new SimpleStringProperty();
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

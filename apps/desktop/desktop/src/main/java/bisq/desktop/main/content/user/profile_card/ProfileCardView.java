@@ -29,14 +29,13 @@ import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardController> {
     public final static double SUB_VIEWS_CONTENT_HEIGHT = 307;
@@ -50,7 +49,6 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private Button closeButton;
     private HBox userActionsBox;
     private BondedRoleBadge bondedRoleBadge;
-    private Subscription reputationScorePin;
 
     public ProfileCardView(ProfileCardModel model, ProfileCardController controller) {
         super(model, controller);
@@ -71,16 +69,12 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
     @Override
     protected void onViewAttached() {
-        sendPrivateMsg.visibleProperty().bind(model.getShouldShowUserActionsMenu());
-        sendPrivateMsg.managedProperty().bind(model.getShouldShowUserActionsMenu());
-        ignore.visibleProperty().bind(model.getIgnoreUserSelected().not().and(model.getShouldShowUserActionsMenu()));
-        ignore.managedProperty().bind(model.getIgnoreUserSelected().not().and(model.getShouldShowUserActionsMenu()));
-        undoIgnore.visibleProperty().bind(model.getIgnoreUserSelected().and(model.getShouldShowUserActionsMenu()));
-        undoIgnore.managedProperty().bind(model.getIgnoreUserSelected().and(model.getShouldShowUserActionsMenu()));
-        userActionsBox.visibleProperty().bind(model.getShouldShowUserActionsMenu());
-        userActionsBox.managedProperty().bind(model.getShouldShowUserActionsMenu());
-        offersTabButton.getLabel().textProperty().bind(model.getOffersTabButtonText());
-        messagesTabButton.getLabel().textProperty().bind(model.getMessagesTabButtonText());
+        sendPrivateMsg.setVisible(model.isShouldShowUserActionsMenu());
+        sendPrivateMsg.setManaged(model.isShouldShowUserActionsMenu());
+        userActionsBox.setVisible(model.isShouldShowUserActionsMenu());
+        userActionsBox.setManaged(model.isShouldShowUserActionsMenu());
+        offersTabButton.getLabel().setText(model.getOffersTabButtonText());
+        messagesTabButton.getLabel().setText(model.getMessagesTabButtonText());
 
         UserProfile userProfile = model.getUserProfile();
         userProfileIcon.setUserProfile(userProfile, false, false);
@@ -98,13 +92,17 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
             userNymLabel.getStyleClass().add("error");
         }
 
-        reputationScorePin = EasyBind.subscribe(model.getReputationScore(), reputationScore -> {
-            if (reputationScore != null) {
-                reputationScoreDisplay.setReputationScore(reputationScore);
-                totalRepScoreLabel.setText(String.valueOf(reputationScore.getTotalScore()));
-                rankingLabel.setText(reputationScore.getRankingAsString());
-            }
-        });
+        if (model.getReputationScore() != null) {
+            ReputationScore reputationScore = model.getReputationScore();
+            reputationScoreDisplay.setReputationScore(reputationScore);
+            totalRepScoreLabel.setText(String.valueOf(reputationScore.getTotalScore()));
+            rankingLabel.setText(reputationScore.getRankingAsString());
+        }
+
+        ignore.visibleProperty().bind(model.getIgnoreUserSelected().not());
+        ignore.managedProperty().bind(model.getIgnoreUserSelected().not());
+        undoIgnore.visibleProperty().bind(model.getIgnoreUserSelected());
+        undoIgnore.managedProperty().bind(model.getIgnoreUserSelected());
 
         sendPrivateMsg.setOnAction(e -> controller.onSendPrivateMessage());
         ignore.setOnAction(e -> controller.onToggleIgnoreUser());
@@ -115,18 +113,10 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
 
     @Override
     protected void onViewDetached() {
-        sendPrivateMsg.visibleProperty().unbind();
-        sendPrivateMsg.managedProperty().unbind();
         ignore.visibleProperty().unbind();
         ignore.managedProperty().unbind();
         undoIgnore.visibleProperty().unbind();
         undoIgnore.managedProperty().unbind();
-        userActionsBox.visibleProperty().unbind();
-        userActionsBox.managedProperty().unbind();
-        offersTabButton.getLabel().textProperty().unbind();
-        messagesTabButton.getLabel().textProperty().unbind();
-
-        reputationScorePin.unsubscribe();
 
         sendPrivateMsg.setOnAction(null);
         ignore.setOnAction(null);
