@@ -23,6 +23,7 @@ import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.main.content.components.BondedRoleBadge;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.desktop.overlay.OverlayModel;
@@ -39,6 +40,7 @@ import org.fxmisc.easybind.Subscription;
 
 public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardController> {
     public final static double SUB_VIEWS_CONTENT_HEIGHT = 307;
+
     private final ProfileCardController controller;
     private final TabButton offersTabButton, messagesTabButton;
     private UserProfileIcon userProfileIcon;
@@ -47,6 +49,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private BisqMenuItem sendPrivateMsg, ignore, undoIgnore, report;
     private Button closeButton;
     private HBox userActionsBox;
+    private BondedRoleBadge bondedRoleBadge;
     private Subscription reputationScorePin;
 
     public ProfileCardView(ProfileCardModel model, ProfileCardController controller) {
@@ -80,11 +83,15 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         messagesTabButton.getLabel().textProperty().bind(model.getMessagesTabButtonText());
 
         UserProfile userProfile = model.getUserProfile();
-        userProfileIcon.setUserProfile(userProfile, false);
+        userProfileIcon.setUserProfile(userProfile, false, false);
+
+        bondedRoleBadge.applyBondedRoleTypes(model.getUserProfileBondedRoleTypes());
+
         String nickname = userProfile.getNickName();
         userNickNameLabel.setText(controller.isUserProfileBanned()
                 ? Res.get("user.profileCard.userNickname.banned", nickname)
                 : nickname);
+
         userNymLabel.setText(String.format("[%s]", userProfile.getNym()));
         if (controller.isUserProfileBanned()) {
             userNickNameLabel.getStyleClass().add("error");
@@ -126,6 +133,8 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         undoIgnore.setOnAction(null);
         report.setOnAction(null);
         closeButton.setOnAction(null);
+
+        bondedRoleBadge.dispose();
     }
 
     @Override
@@ -134,7 +143,9 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
         closeButtonRow.setPadding(new Insets(15, 15 - SIDE_PADDING, 0, 0));
 
-        userProfileIcon = new UserProfileIcon(100);
+        double size = 100;
+        userProfileIcon = new UserProfileIcon(size);
+
         reputationScoreDisplay = new ReputationScoreDisplay();
         reputationScoreDisplay.setScale(1.5);
 
@@ -152,10 +163,14 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         HBox rankingBox = new HBox(5, rankigTitleLabel, rankingLabel);
         rankingBox.getStyleClass().add("ranking-box");
 
+        bondedRoleBadge = new BondedRoleBadge(true);
+
         userNickNameLabel = new Label();
         userNickNameLabel.getStyleClass().addAll("text-fill-white", "large-text");
+
         userNymLabel = new Label();
         userNymLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        userNymLabel.setPadding(new Insets(7, 0, -7, 0));
 
         sendPrivateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white",
                 Res.get("user.profileCard.userActions.sendPrivateMessage"));
@@ -166,8 +181,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         report = new BisqMenuItem("report-grey", "report-white",
                 Res.get("user.profileCard.userActions.report"));
 
-        HBox userNameBox = new HBox(10, userNickNameLabel, userNymLabel);
-        userNameBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox userNameBox = new HBox(10, bondedRoleBadge, userNickNameLabel, userNymLabel);
         HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreBox, rankingBox);
         reputationBox.setAlignment(Pos.BOTTOM_LEFT);
         userActionsBox = new HBox(30, sendPrivateMsg, ignore, undoIgnore, report);

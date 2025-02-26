@@ -18,12 +18,11 @@
 package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.common.CommonPublicChatMessage;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
@@ -49,7 +48,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ProfileCardController extends TabController<ProfileCardModel>
@@ -83,6 +83,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     private final ProfileCardReputationController profileCardReputationController;
     private final ProfileCardOffersController profileCardOffersController;
     private final ProfileCardMessagesController profileCardMessagesController;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private Optional<Runnable> ignoreUserStateHandler;
 
     public ProfileCardController(ServiceProvider serviceProvider) {
@@ -100,6 +101,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
         profileCardReputationController = new ProfileCardReputationController(serviceProvider);
         profileCardOffersController = new ProfileCardOffersController(serviceProvider);
         profileCardMessagesController = new ProfileCardMessagesController(serviceProvider);
+        authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
 
         view = new ProfileCardView(model, this);
     }
@@ -136,6 +138,15 @@ public class ProfileCardController extends TabController<ProfileCardModel>
                 profileCardOffersController.getNumberOffers()).toUpperCase());
         model.getMessagesTabButtonText().set(Res.get("user.profileCard.tab.messages",
                 profileCardMessagesController.getNumberMessages(userProfile.getId())).toUpperCase());
+
+        Set<BondedRoleType> bondedRoleTypes = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                .filter(bondedRole ->
+                        (bondedRole.getBondedRoleType() == BondedRoleType.MEDIATOR
+                                || bondedRole.getBondedRoleType() == BondedRoleType.MODERATOR)
+                                && userProfile.getId().equals(bondedRole.getProfileId()))
+                .map(AuthorizedBondedRole::getBondedRoleType)
+                .collect(Collectors.toSet());
+        model.setUserProfileBondedRoleTypes(bondedRoleTypes);
     }
 
     @Override

@@ -103,7 +103,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         super.setUpUserNameAndDateTime();
 
         messageStatusHbox = new HBox(5);
-        userNameAndDateHBox = new HBox(10, dateTime, messageStatusHbox, userName);
+        userNameAndDateHBox = new HBox(10, dateTime, messageStatusHbox, item.getBondedRoleBadge(), userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
         setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
     }

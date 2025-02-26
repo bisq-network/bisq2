@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.profile_card;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.TabModel;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -25,10 +26,15 @@ import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 public class ProfileCardModel extends TabModel {
     @Setter
     private UserProfile userProfile;
+    @Setter
+    private Set<BondedRoleType> userProfileBondedRoleTypes = new HashSet<>();
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowUserActionsMenu = new SimpleBooleanProperty();
