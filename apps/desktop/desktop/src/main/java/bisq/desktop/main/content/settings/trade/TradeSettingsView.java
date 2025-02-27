@@ -20,11 +20,8 @@ package bisq.desktop.main.content.settings.trade;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
-import bisq.desktop.components.controls.validator.NumberValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
-import bisq.user.reputation.ReputationScore;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -34,10 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSettingsController> {
-    private static final ValidatorBase REPUTATION_SCORE_VALIDATOR =
-            new NumberValidator(Res.get("settings.trade.minReputationScore.invalid", ReputationScore.MAX_VALUE),
-                    0, ReputationScore.MAX_VALUE);
-
     private static final double TEXT_FIELD_WIDTH = 500;
 
     private final Switch closeMyOfferWhenTaken;
