@@ -246,7 +246,8 @@ public class BackupService {
 
     @VisibleForTesting
     static Path resolveDirPath(Path dataDir, Path storeFilePath) {
-        String relativeStoreFilePath = getRelativePath(dataDir, storeFilePath);
+        boolean isWindowsPath = dataDir.toString().contains("\\");
+        String relativeStoreFilePath = getRelativePath(dataDir, storeFilePath, isWindowsPath);
         String relativeBackupDir = relativeStoreFilePath
                 .replaceFirst("db", "backups")
                 .replace(Persistence.EXTENSION, "")
@@ -255,10 +256,11 @@ public class BackupService {
         return Paths.get(dataDir.toString() + relativeBackupDir);
     }
 
+
+
     @VisibleForTesting
-    static String getRelativePath(Path dataDir, Path filePath) {
+    static String getRelativePath(Path dataDir, Path filePath, boolean isWindowsPath) {
         // We don't use File.pathSeparator as we use it in unit test which need to be OS independent.
-        boolean isWindowsPath = dataDir.toString().contains("\\");
         String normalizedDataDir = dataDir.toString().replace("\\", "/");
         String normalizedFilePath = filePath.toString().replace("\\", "/");
 
