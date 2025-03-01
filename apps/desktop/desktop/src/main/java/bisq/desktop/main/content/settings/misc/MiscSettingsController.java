@@ -65,7 +65,6 @@ public class MiscSettingsController implements Controller {
                                 .to(settingsService.getDifficultyAdjustmentFactor(), settingsService::setDifficultyAdjustmentFactor);
                     } else {
                         model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.network.difficultyAdjustmentFactor.description.fromSecManager"));
-
                         if (difficultyAdjustmentFactorPin != null) {
                             difficultyAdjustmentFactorPin.unbind();
                         }

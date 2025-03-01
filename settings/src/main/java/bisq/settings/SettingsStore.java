@@ -27,7 +27,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistableStore;
-import bisq.persistence.backup.BackupService;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +94,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 PlatformUtils.getHomeDirectory(),
                 false,
-                BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB,
+                DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB,
                 ChatMessageType.ALL,
                 DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
     }
@@ -202,7 +201,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
 
         double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
         if (totalMaxBackupSizeInMB == 0) {
-            totalMaxBackupSizeInMB = BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB;
+            totalMaxBackupSizeInMB = DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
         }
 
         int numDaysAfterRedactingTradeData = proto.getNumDaysAfterRedactingTradeData();

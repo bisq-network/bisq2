@@ -55,6 +55,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public final static int MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 30;
     public final static int MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 365;
 
+    public final static double DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB = 100;
     public final static double MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB = 1;
     public final static double MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB = 1000;
 
