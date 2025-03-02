@@ -98,7 +98,7 @@ public class SellerState2b extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount()));
+            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getBisqEasyTrade().getShortId()));
             fiatReceivedButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
             fiatReceivedButton.setOnAction(e -> controller.onConfirmFiatReceipt());
         }
