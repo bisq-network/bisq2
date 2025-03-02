@@ -50,11 +50,10 @@ public class BisqEasyNotificationsService implements Service {
     @Getter
     private final Observable<Boolean> isNotificationPanelVisible = new Observable<>();
     @Getter
-    private final ObservableSet<String> tradeIdsOfNotifications = new ObservableSet<>();
+    private final ObservableSet<ChatNotification> tradeNotifications = new ObservableSet<>();
     // We do not persist the state of a closed notification panel as we prefer to show the panel again at restart.
     // If any new notification gets added the panel will also be shown again.
-    @Getter
-    private final Observable<Boolean> isNotificationPanelDismissed = new Observable<>(false);
+    private final ObservableSet<ChatNotification> dismissedNotifications = new ObservableSet<>();
 
     public BisqEasyNotificationsService(ChatNotificationService chatNotificationService,
                                         MediatorService mediatorService,
@@ -77,7 +76,6 @@ public class BisqEasyNotificationsService implements Service {
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
-        isNotificationPanelDismissed.addObserver(isNotificationPanelDismissed -> updateNotificationVisibilityState());
         settingsService.getCookieChanged().addObserver(cookieChanged -> updateBisqEasyOfferbookPredicate());
         settingsService.getFavouriteMarkets().addObserver(this::updateBisqEasyOfferbookPredicate);
 
@@ -89,17 +87,15 @@ public class BisqEasyNotificationsService implements Service {
             return;
         }
 
-        tradeIdsOfNotifications.setAll(chatNotificationService.getNotConsumedNotifications(ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                .flatMap(chatNotification -> chatNotification.getTradeId().stream())
+        tradeNotifications.setAll(chatNotificationService.getNotConsumedNotifications(ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
+                .filter(chatNotification -> !dismissedNotifications.contains(chatNotification))
                 .collect(Collectors.toSet()));
-        // Reset dismissed state if we get a new notification
-        if (!tradeIdsOfNotifications.isEmpty()) {
-            isNotificationPanelDismissed.set(false);
-        }
         updateNotificationVisibilityState();
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        chatNotificationService.getChangedNotification().removeObserver(this::handleNotification);
+        settingsService.getCookieChanged().removeObserver(cookieChanged -> updateBisqEasyOfferbookPredicate());
         return CompletableFuture.completedFuture(true);
     }
 
@@ -142,11 +138,15 @@ public class BisqEasyNotificationsService implements Service {
                 .count();
     }
 
-    private void updateNotificationVisibilityState() {
-        isNotificationPanelVisible.set(!isNotificationPanelDismissed.get() &&
-                !tradeIdsOfNotifications.isEmpty());
+    public void dismissNotification() {
+        dismissedNotifications.addAll(tradeNotifications);
+        tradeNotifications.clear();
+        updateNotificationVisibilityState();
     }
 
+    private void updateNotificationVisibilityState() {
+        isNotificationPanelVisible.set(!tradeNotifications.isEmpty());
+    }
 
     public void updateBisqEasyOfferbookPredicate() {
         String cookie = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).orElse(null);
