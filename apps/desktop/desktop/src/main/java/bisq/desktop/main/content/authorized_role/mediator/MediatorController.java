@@ -42,6 +42,8 @@ import javafx.collections.transformation.SortedList;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
@@ -66,6 +68,7 @@ public class MediatorController implements Controller {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final InvalidationListener itemListener;
     private Pin mediationCaseListItemPin, selectedChannelPin;
+    private Subscription searchPredicatePin, closedCasesPredicatePin;
 
     public MediatorController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -131,6 +134,8 @@ public class MediatorController implements Controller {
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
+        searchPredicatePin = EasyBind.subscribe(model.getSearchPredicate(), searchPredicate -> updatePredicate());
+        closedCasesPredicatePin = EasyBind.subscribe(model.getClosedCasesPredicate(), closedCasesPredicate -> updatePredicate());
         maybeSelectFirst();
         update();
 
@@ -147,6 +152,8 @@ public class MediatorController implements Controller {
 
         mediationCaseListItemPin.unbind();
         selectedChannelPin.unbind();
+        searchPredicatePin.unsubscribe();
+        closedCasesPredicatePin.unsubscribe();
     }
 
     void onSelectItem(MediationCaseListItem item) {
@@ -219,14 +226,18 @@ public class MediatorController implements Controller {
         maybeSelectFirst();
     }
 
-    private void applyFilteredListPredicate(boolean showClosedCases) {
-        if (showClosedCases) {
-            model.getListItems().setPredicate(item -> item.getMediationCase().getIsClosed().get());
-        } else {
-            model.getListItems().setPredicate(item -> !item.getMediationCase().getIsClosed().get());
-        }
+    private void updatePredicate() {
+        model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
         maybeSelectFirst();
         update();
+    }
+
+    private void applyFilteredListPredicate(boolean showClosedCases) {
+        if (showClosedCases) {
+            model.getClosedCasesPredicate().set(item -> item.getMediationCase().getIsClosed().get());
+        } else {
+            model.getClosedCasesPredicate().set(item -> !item.getMediationCase().getIsClosed().get());
+        }
     }
 
     private void update() {
