@@ -17,19 +17,11 @@
 
 package bisq.desktop.main.content.settings.misc;
 
-import bisq.common.util.MathUtils;
-import bisq.desktop.common.converters.Converters;
-import bisq.desktop.common.converters.DoubleStringConverter;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
-import bisq.desktop.components.controls.validator.NumberValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
-import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.persistence.backup.BackupService;
-import bisq.settings.SettingsService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
@@ -43,12 +35,6 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettingsController> {
     private static final double TEXT_FIELD_WIDTH = 500;
-    private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
-            new NumberValidator(Res.get("settings.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
-                    NetworkLoad.MIN_DIFFICULTY_ADJUSTMENT, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
-    private static final ValidatorBase TOTAL_MAX_BACKUP_SIZE_VALIDATOR =
-            new NumberValidator(Res.get("settings.backup.totalMaxBackupSizeInMB.invalid", SettingsService.MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB, SettingsService.MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB),
-                    SettingsService.MIN_TOTAL_MAX_BACKUP_SIZE_IN_MB, SettingsService.MAX_TOTAL_MAX_BACKUP_SIZE_IN_MB);
 
     private final Switch ignoreDiffAdjustFromSecManagerSwitch;
     private final MaterialTextField difficultyAdjustmentFactor, totalMaxBackupSizeInMB;
@@ -64,8 +50,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
 
         difficultyAdjustmentFactor = new MaterialTextField();
         difficultyAdjustmentFactor.setMaxWidth(TEXT_FIELD_WIDTH);
-        difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
-        difficultyAdjustmentFactor.setStringConverter(Converters.DOUBLE_STRING_CONVERTER);
+        difficultyAdjustmentFactor.setValidators(model.getDifficultyAdjustmentFactorValidator());
         ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
 
         VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
@@ -75,8 +60,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
 
         totalMaxBackupSizeInMB = new MaterialTextField(Res.get("settings.backup.totalMaxBackupSizeInMB.description"));
         totalMaxBackupSizeInMB.setMaxWidth(TEXT_FIELD_WIDTH);
-        totalMaxBackupSizeInMB.setValidators(TOTAL_MAX_BACKUP_SIZE_VALIDATOR);
-        totalMaxBackupSizeInMB.setStringConverter(Converters.DOUBLE_STRING_CONVERTER);
+        totalMaxBackupSizeInMB.setValidators(model.getTotalMaxBackupSizeValidator());
         totalMaxBackupSizeInMB.setIcon(AwesomeIcon.INFO_SIGN);
         totalMaxBackupSizeInMB.setIconTooltip(Res.get("settings.backup.totalMaxBackupSizeInMB.info.tooltip"));
 
@@ -91,23 +75,16 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
     @Override
     protected void onViewAttached() {
         ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
+
         Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
-                Converters.DOUBLE_STRING_CONVERTER);
+                model.getDifficultyAdjustmentFactorConverter());
+        difficultyAdjustmentFactor.validate();
         difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
         difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
 
         Bindings.bindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB(),
-                new DoubleStringConverter() {
-                    @Override
-                    public Number fromString(String value) {
-                        double result = MathUtils.parseToDouble(value);
-                        if(TOTAL_MAX_BACKUP_SIZE_VALIDATOR.validateAndGet()){
-                            return result;
-                        }else{
-                            return BackupService.TOTAL_MAX_BACKUP_SIZE_IN_MB;
-                        }
-                    }
-                });
+                model.getTotalMaxBackupSizeConverter());
+        totalMaxBackupSizeInMB.validate();
 
         ignoreDiffAdjustFromSecManagerSwitchPin = EasyBind.subscribe(
                 ignoreDiffAdjustFromSecManagerSwitch.selectedProperty(), s -> difficultyAdjustmentFactor.validate());
@@ -116,14 +93,15 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
     @Override
     protected void onViewDetached() {
         ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
+
         Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
+        difficultyAdjustmentFactor.resetValidation();
         difficultyAdjustmentFactor.getTextInputControl().editableProperty().unbind();
         difficultyAdjustmentFactor.descriptionProperty().unbind();
 
         Bindings.unbindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB());
+        totalMaxBackupSizeInMB.resetValidation();
 
         ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
-        difficultyAdjustmentFactor.resetValidation();
-        totalMaxBackupSizeInMB.resetValidation();
     }
 }
