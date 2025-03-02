@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.chat.message_container.components;
 
 import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -82,9 +81,7 @@ public class CitationBlock {
         private final View view;
         private final UserProfileService userProfileService;
 
-
         private Controller(ServiceProvider serviceProvider) {
-            ChatService chatService = serviceProvider.getChatService();
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             model = new Model();
             view = new View(model, this);
@@ -138,6 +135,7 @@ public class CitationBlock {
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
+
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setStyle("-fx-background-color: -bisq-dark-grey-10;");
