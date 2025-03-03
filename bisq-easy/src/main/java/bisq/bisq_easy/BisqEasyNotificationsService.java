@@ -94,7 +94,6 @@ public class BisqEasyNotificationsService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        chatNotificationService.getChangedNotification().removeObserver(this::handleNotification);
         settingsService.getCookieChanged().removeObserver(cookieChanged -> updateBisqEasyOfferbookPredicate());
         return CompletableFuture.completedFuture(true);
     }
