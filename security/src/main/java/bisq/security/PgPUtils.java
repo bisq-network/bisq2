@@ -32,16 +32,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class PgPUtils {
 
-    public static boolean isSignatureValid(File pubKeyFile, File sigFile, File jarFileName) {
+    public static boolean isSignatureValid(File pubKeyFile, File sigFile, File dataFile) {
         try {
             PGPPublicKeyRing pgpPublicKeyRing = readPgpPublicKeyRing(pubKeyFile);
             PGPSignature pgpSignature = readPgpSignature(sigFile);
             long keyIdFromSignature = pgpSignature.getKeyID();
             PGPPublicKey publicKey = checkNotNull(pgpPublicKeyRing.getPublicKey(keyIdFromSignature), "No public key found for key ID from signature");
-            return isSignatureValid(pgpSignature, publicKey, jarFileName);
+            return isSignatureValid(pgpSignature, publicKey, dataFile);
         } catch (PGPException | IOException | SignatureException e) {
-            log.error("Signature verification failed. \npubKeyFile={} \nsigFile={} \njarFileName={}.",
-                    pubKeyFile, sigFile, jarFileName, e);
+            log.error("Signature verification failed. \npubKeyFile={} \nsigFile={} \ndataFile={}.",
+                    pubKeyFile, sigFile, dataFile, e);
             return false;
         }
     }
