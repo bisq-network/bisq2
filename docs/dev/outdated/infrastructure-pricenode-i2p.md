@@ -1,9 +1,9 @@
 _Note: This document is partially outdated_
 
-## Expose a pricenode via I2P
+## Expose a price node via I2P
 
-This documents how to create a tunnel between an I2P address and an existing public pricenode. The outcome in this
-example will be an I2P destination which points to https://price.bisq.wiz.biz .
+This documents how to create a tunnel between an I2P address and an existing public price node. The outcome in this
+example will be an I2P destination which points to http://172.86.75.7:8080 .
 
 A similar approach can be used to expose a local pricenode (e.g. if pricenode running on localhost) on the I2P network.
 
@@ -12,13 +12,13 @@ A similar approach can be used to expose a local pricenode (e.g. if pricenode ru
 Prerequisites
 
 - an I2P installation
-- a running pricenode, reachable via clearnet (in this example: https://price.bisq.wiz.biz)
+- a running price node, reachable via clearnet (in this example: http://172.86.75.7:8080)
 
 Steps
 
 - Open the I2P Hidden Services Manager (http://127.0.0.1:7657/i2ptunnelmgr)
 - Create a new I2P Hidden Service with
-    - Name: I2P Pricenode Proxy
+    - Name: I2P Price node Proxy
     - Settings under the Description section
         - Automatically start tunnel when router starts: yes
     - Settings under the Target section
