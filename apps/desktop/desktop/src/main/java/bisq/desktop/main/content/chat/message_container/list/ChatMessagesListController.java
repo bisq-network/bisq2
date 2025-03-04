@@ -646,7 +646,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         resendMessageService,
                         authorizedBondedRolesService))
                 .collect(Collectors.toSet()));
-        addChatRulesWarningChatMessageListItemInPrivateChats(channel);
+        addChatRulesWarningMessageListItemInPrivateChats(channel);
 
         model.getChatMessageIds().clear();
         model.getChatMessageIds().addAll(model.getChatMessages().stream()
@@ -754,7 +754,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
     }
 
-    private <M extends ChatMessage, C extends ChatChannel<M>> void addChatRulesWarningChatMessageListItemInPrivateChats(C channel) {
+    private <M extends ChatMessage, C extends ChatChannel<M>> void addChatRulesWarningMessageListItemInPrivateChats(C channel) {
         if (channel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
             TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = createChatRulesWarningMessage(twoPartyPrivateChatChannel);
             model.getChatMessages().add(createChatMessageListItem(twoPartyPrivateChatMessage, twoPartyPrivateChatChannel));
