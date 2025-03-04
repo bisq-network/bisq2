@@ -87,7 +87,17 @@ public class MediatorController implements Controller {
         model = new MediatorModel();
         view = new MediatorView(model, this, mediationCaseHeader.getRoot(), chatMessageContainerController.getView().getRoot());
 
-        itemListener = observable -> update();
+        itemListener = observable -> {
+            // We need to set predicate when a new item gets added.
+            // Delaying it a render frame as otherwise the list shows an empty row for unclear reasons.
+            UIThread.runOnNextRenderFrame(() -> {
+                model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
+                update();
+                if (model.getListItems().getFilteredList().size() == 1) {
+                    selectionService.selectChannel(model.getListItems().getFilteredList().get(0).getChannel());
+                }
+            });
+        };
     }
 
     @Override
