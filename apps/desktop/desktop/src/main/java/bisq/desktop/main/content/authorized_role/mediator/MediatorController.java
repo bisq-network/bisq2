@@ -92,7 +92,7 @@ public class MediatorController implements Controller {
             // Delaying it a render frame as otherwise the list shows an empty row for unclear reasons.
             UIThread.runOnNextRenderFrame(() -> {
                 model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
-                update();
+                updateEmpytState();
                 if (model.getListItems().getFilteredList().size() == 1) {
                     selectionService.selectChannel(model.getListItems().getFilteredList().get(0).getChannel());
                 }
@@ -147,7 +147,7 @@ public class MediatorController implements Controller {
         searchPredicatePin = EasyBind.subscribe(model.getSearchPredicate(), searchPredicate -> updatePredicate());
         closedCasesPredicatePin = EasyBind.subscribe(model.getClosedCasesPredicate(), closedCasesPredicate -> updatePredicate());
         maybeSelectFirst();
-        update();
+        updateEmpytState();
 
         model.getListItems().addListener(itemListener);
     }
@@ -214,7 +214,7 @@ public class MediatorController implements Controller {
                 mediationCaseHeader.setMediationCaseListItem(null);
                 mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
                 maybeSelectFirst();
-                update();
+                updateEmpytState();
             } else if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
                 model.getListItems().stream()
                         .filter(item -> item.getChannel().getId().equals(tradeChannel.getId()))
@@ -239,7 +239,7 @@ public class MediatorController implements Controller {
     private void updatePredicate() {
         model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
         maybeSelectFirst();
-        update();
+        updateEmpytState();
     }
 
     private void applyFilteredListPredicate(boolean showClosedCases) {
@@ -250,7 +250,7 @@ public class MediatorController implements Controller {
         }
     }
 
-    private void update() {
+    private void updateEmpytState() {
         // The sortedList is already sorted by date (triggered by the usage of the dateColumn)
         SortedList<MediationCaseListItem> sortedList = model.getListItems().getSortedList();
         boolean isEmpty = sortedList.isEmpty();
