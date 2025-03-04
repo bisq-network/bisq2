@@ -31,14 +31,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-public final class ExchangeInfoWarningMessageBox extends MessageBox {
+public final class ChatRulesWarningMessageBox extends MessageBox {
     private final Hyperlink learnMoreLink;
 
-    public ExchangeInfoWarningMessageBox(
+    public ChatRulesWarningMessageBox(
             ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
             ChatMessagesListController controller) {
 
-        Label warningHeadline = new Label(Res.get("chat.private.systemMessage.exchangeInfoWarning.headline"), ImageUtil.getImageViewById("undelivered-message-grey"));
+        Label warningHeadline = new Label(Res.get("chat.private.chatRulesWarningMessage.headline"), ImageUtil.getImageViewById("undelivered-message-grey"));
         warningHeadline.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
         warningHeadline.setGraphicTextGap(10);
         warningHeadline.setPadding(new Insets(0, 0, 10, 0));
@@ -49,9 +49,9 @@ public final class ExchangeInfoWarningMessageBox extends MessageBox {
         message.setAlignment(Pos.CENTER);
         message.setWrapText(true);
 
-        Label warningMessage = new Label(Res.get("chat.private.systemMessage.exchangeInfoWarning.text2"));
+        Label warningMessage = new Label(Res.get("chat.private.chatRulesWarningMessage.text2"));
         warningMessage.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
-        learnMoreLink = new Hyperlink(Res.get("chat.private.systemMessage.exchangeInfoWarning.learnMore"));
+        learnMoreLink = new Hyperlink(Res.get("chat.private.chatRulesWarningMessage.learnMore"));
         learnMoreLink.getStyleClass().addAll("text-fill-green", "font-light", "medium-text");
         learnMoreLink.setOnAction(e -> controller.onLearnMoreAboutChatRules());
         HBox warningMessageAndLinkBox = new HBox(5, warningMessage, learnMoreLink);

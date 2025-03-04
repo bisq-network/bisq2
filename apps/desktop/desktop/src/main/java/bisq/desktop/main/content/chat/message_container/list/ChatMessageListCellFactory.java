@@ -133,8 +133,8 @@ final class ChatMessageListCellFactory
             }
         }
 
-        if (item.isExchangeInfoWarningMessage()) {
-            return new ExchangeInfoWarningMessageBox(item, controller);
+        if (item.isChatRulesWarningMessage()) {
+            return new ChatRulesWarningMessageBox(item, controller);
         }
 
         if (item.isMyMessage()) {
