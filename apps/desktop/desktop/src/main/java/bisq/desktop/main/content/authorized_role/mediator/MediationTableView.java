@@ -139,7 +139,6 @@ class MediationTableView extends VBox {
                 });
         noOpenCasesPin = EasyBind.subscribe(model.getNoOpenCases(), noOpenCases -> {
             if (noOpenCases) {
-                tableView.removeListeners();
                 tableView.getStyleClass().add("empty-table");
                 tableView.setPlaceholderText(model.getShowClosedCases().get() ?
                         Res.get("authorizedRole.mediator.noClosedCases") :
