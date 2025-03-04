@@ -179,6 +179,10 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     private void processAckRequestingMessage(AckRequestingMessage message) {
+        if (!message.allFieldsValid()) {
+            return;
+        }
+
         if (ackedMessageIds.contains(message.getId())) {
             log.warn("We received already that AckRequestingMessage and sent the AckMessage");
             return;

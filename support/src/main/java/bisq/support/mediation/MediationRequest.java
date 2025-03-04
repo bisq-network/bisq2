@@ -22,7 +22,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
@@ -34,17 +36,17 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MediationRequest implements MailboxMessage, ExternalNetworkMessage {
+public final class MediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final BisqEasyContract contract;
@@ -56,17 +58,21 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
     private final UserProfile peer;
     @EqualsAndHashCode.Exclude
     private final List<BisqEasyOpenTradeMessage> chatMessages;
+    @EqualsAndHashCode.Exclude
+    private final Optional<NetworkId> mediatorNetworkId;
 
     public MediationRequest(String tradeId,
                             BisqEasyContract contract,
                             UserProfile requester,
                             UserProfile peer,
-                            List<BisqEasyOpenTradeMessage> chatMessages) {
+                            List<BisqEasyOpenTradeMessage> chatMessages,
+                            Optional<NetworkId> mediatorNetworkId) {
         this.tradeId = tradeId;
         this.contract = contract;
         this.requester = requester;
         this.peer = peer;
         this.chatMessages = maybePrune(chatMessages);
+        this.mediatorNetworkId = mediatorNetworkId;
 
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.chatMessages);
@@ -79,9 +85,10 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
         NetworkDataValidation.validateTradeId(tradeId);
         checkArgument(chatMessages.size() < 1000);
     }
+
     @Override
     public bisq.support.protobuf.MediationRequest.Builder getValueBuilder(boolean serializeForHash) {
-        return bisq.support.protobuf.MediationRequest.newBuilder()
+        bisq.support.protobuf.MediationRequest.Builder builder = bisq.support.protobuf.MediationRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setContract(contract.toProto(serializeForHash))
                 .setRequester(requester.toProto(serializeForHash))
@@ -89,6 +96,8 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
                 .addAllChatMessages(chatMessages.stream()
                         .map(e -> e.toValueProto(serializeForHash))
                         .collect(Collectors.toList()));
+        mediatorNetworkId.ifPresent(mediatorNetworkId -> builder.setMediatorNetworkId(mediatorNetworkId.toProto(serializeForHash)));
+        return builder;
     }
 
     @Override
@@ -103,7 +112,36 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
                 UserProfile.fromProto(proto.getPeer()),
                 proto.getChatMessagesList().stream()
                         .map(BisqEasyOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()),
+                proto.hasMediatorNetworkId()
+                        ? Optional.of(NetworkId.fromProto(proto.getMediatorNetworkId()))
+                        : Optional.empty());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // AckRequestingMessage implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public String getId() {
+        return getClass().getSimpleName() + tradeId + requester.getId();
+    }
+
+    @Override
+    public NetworkId getSender() {
+        return requester.getNetworkId();
+    }
+
+    @Override
+    public NetworkId getReceiver() {
+        // We access it only after checking with allFieldsValid
+        return mediatorNetworkId.orElseThrow();
+    }
+
+    @Override
+    public boolean allFieldsValid() {
+        return mediatorNetworkId.isPresent();
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

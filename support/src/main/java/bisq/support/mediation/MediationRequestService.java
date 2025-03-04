@@ -28,6 +28,7 @@ import bisq.common.application.Service;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.security.DigestUtil;
@@ -116,13 +117,15 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
 
         UserProfile peer = channel.getPeer();
         UserProfile mediator = channel.getMediator().orElseThrow();
+        NetworkId mediatorNetworkId = mediator.getNetworkId();
         MediationRequest networkMessage = new MediationRequest(channel.getTradeId(),
                 contract,
                 myUserIdentity.getUserProfile(),
                 peer,
-                new ArrayList<>(channel.getChatMessages()));
+                new ArrayList<>(channel.getChatMessages()),
+                Optional.of(mediatorNetworkId));
         networkService.confidentialSend(networkMessage,
-                mediator.getNetworkId(),
+                mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
     }
 
@@ -137,7 +140,9 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
 
     // This method can be used for verification when taker provides mediators list.
     // If mediator list was not matching the expected one present in the network it might have been a manipulation attempt.
-    public Optional<UserProfile> selectMediator(Set<AuthorizedBondedRole> mediators, String makersProfileId, String takersProfileId) {
+    public Optional<UserProfile> selectMediator(Set<AuthorizedBondedRole> mediators,
+                                                String makersProfileId,
+                                                String takersProfileId) {
         if (mediators.isEmpty()) {
             return Optional.empty();
         }
