@@ -756,19 +756,11 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     private <M extends ChatMessage, C extends ChatChannel<M>> void addExchangeInfoWarningChatMessageListItemInPrivateChats(C channel) {
         if (channel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
-            TwoPartyPrivateChatMessage message = createExchangeInfoWarningMessage(twoPartyPrivateChatChannel);
-            ChatMessageListItem<TwoPartyPrivateChatMessage, TwoPartyPrivateChatChannel> item =
-                    new ChatMessageListItem<>(message,
-                            twoPartyPrivateChatChannel,
-                            marketPriceService,
-                            userProfileService,
-                            reputationService,
-                            bisqEasyTradeService,
-                            userIdentityService,
-                            networkService,
-                            Optional.empty(),
-                            authorizedBondedRolesService);
-            model.getChatMessages().add(item);
+            TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = createExchangeInfoWarningMessage(twoPartyPrivateChatChannel);
+            model.getChatMessages().add(createChatMessageListItem(twoPartyPrivateChatMessage, twoPartyPrivateChatChannel));
+        } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = createExchangeInfoWarningMessage(bisqEasyOpenTradeChannel);
+            model.getChatMessages().add(createChatMessageListItem(bisqEasyOpenTradeMessage, bisqEasyOpenTradeChannel));
         }
     }
 
@@ -788,5 +780,38 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 false,
                 ChatMessageType.EXCHANGE_INFO_WARNING,
                 new HashSet<>());
+    }
+
+    private BisqEasyOpenTradeMessage createExchangeInfoWarningMessage(BisqEasyOpenTradeChannel channel) {
+        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
+        UserProfile senderUserProfile = channel.getPeer();
+        String text = Res.get("chat.private.systemMessage.exchangeInfoWarning.text1");
+        return new BisqEasyOpenTradeMessage(channel.getTradeId(),
+                StringUtils.createUid(),
+                channel.getId(),
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                text,
+                Optional.empty(),
+                0L,
+                false,
+                channel.getMediator(),
+                ChatMessageType.EXCHANGE_INFO_WARNING,
+                Optional.empty(),
+                new HashSet<>());
+    }
+
+    private <M extends ChatMessage, C extends ChatChannel<M>> ChatMessageListItem<M, C> createChatMessageListItem(M message, C channel) {
+        return new ChatMessageListItem<>(message,
+                        channel,
+                        marketPriceService,
+                        userProfileService,
+                        reputationService,
+                        bisqEasyTradeService,
+                        userIdentityService,
+                        networkService,
+                        Optional.empty(),
+                        authorizedBondedRolesService);
     }
 }
