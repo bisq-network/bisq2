@@ -49,17 +49,13 @@ public final class ChatRulesWarningMessageBox extends MessageBox {
         message.setAlignment(Pos.CENTER);
         message.setWrapText(true);
 
-        Label warningMessage = new Label(Res.get("chat.private.chatRulesWarningMessage.text2"));
-        warningMessage.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
         learnMoreLink = new Hyperlink(Res.get("chat.private.chatRulesWarningMessage.learnMore"));
         learnMoreLink.getStyleClass().addAll("text-fill-green", "font-light", "medium-text");
         learnMoreLink.setOnAction(e -> controller.onLearnMoreAboutChatRules());
-        HBox warningMessageAndLinkBox = new HBox(5, warningMessage, learnMoreLink);
-        warningMessageAndLinkBox.setAlignment(Pos.BASELINE_LEFT);
 
         VBox messageBg = new VBox();
         messageBg.setSpacing(5);
-        messageBg.getChildren().addAll(warningHeadline, message, warningMessageAndLinkBox);
+        messageBg.getChildren().addAll(warningHeadline, message, learnMoreLink);
         messageBg.setFillWidth(true);
         messageBg.setAlignment(Pos.CENTER_LEFT);
         messageBg.getStyleClass().add("system-message-background");

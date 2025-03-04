@@ -767,7 +767,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private TwoPartyPrivateChatMessage createChatRulesWarningMessage(TwoPartyPrivateChatChannel channel) {
         UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
         UserProfile senderUserProfile = channel.getPeer();
-        String text = Res.get("chat.private.chatRulesWarningMessage.text1");
+        String text = Res.get("chat.private.chatRulesWarningMessage.text");
         return new TwoPartyPrivateChatMessage(StringUtils.createUid(),
                 channel.getChatChannelDomain(),
                 channel.getId(),
@@ -785,7 +785,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private BisqEasyOpenTradeMessage createChatRulesWarningMessage(BisqEasyOpenTradeChannel channel) {
         UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
         UserProfile senderUserProfile = channel.getPeer();
-        String text = Res.get("chat.private.chatRulesWarningMessage.text1");
+        String text = Res.get("chat.private.chatRulesWarningMessage.text");
         return new BisqEasyOpenTradeMessage(channel.getTradeId(),
                 StringUtils.createUid(),
                 channel.getId(),
