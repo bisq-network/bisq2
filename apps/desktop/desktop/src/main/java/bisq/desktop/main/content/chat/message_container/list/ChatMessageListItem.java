@@ -234,6 +234,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return chatMessage.getChatMessageType() == LEAVE;
     }
 
+    public boolean isExchangeInfoWarningMessage() {
+        return chatMessage.getChatMessageType() == EXCHANGE_INFO_WARNING;
+    }
+
     public String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage) {
         String result = getSupportedLanguageCodes(chatMessage, ", ", LanguageRepository::getDisplayLanguage);
         return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + " " + StringUtils.truncate(result, 100);
