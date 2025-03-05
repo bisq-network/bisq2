@@ -180,7 +180,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
                     if (channel.getChatMessages().isEmpty() && isReportingUser) {
                         return twoPartyPrivateChatChannelService.sendTextMessage(Res.get("authorizedRole.moderator.replyMsg"),
-                                citationMessage.map(msg -> new Citation(userProfile.getId(), msg)),
+                                citationMessage.map(msg -> new Citation(userProfile.getId(), msg, "")),
                                 channel);
                     } else {
                         return CompletableFuture.completedFuture(new SendMessageResult());

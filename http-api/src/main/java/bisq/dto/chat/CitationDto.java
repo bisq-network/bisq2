@@ -17,5 +17,5 @@
 
 package bisq.dto.chat;
 
-public record CitationDto(String authorUserProfileId, String text) {
+public record CitationDto(String authorUserProfileId, String text, String chatMessageId) {
 }

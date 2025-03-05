@@ -72,7 +72,8 @@ public class CitationBlock {
         }
 
         String truncated = StringUtils.truncate(text, Citation.MAX_TEXT_LENGTH);
-        return Optional.of(new Citation(userProfile.getId(), truncated));
+        String chatMessageId = controller.model.chatMessageId;
+        return Optional.of(new Citation(userProfile.getId(), truncated, chatMessageId));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -88,6 +89,7 @@ public class CitationBlock {
         }
 
         private void reply(ChatMessage chatMessage) {
+            model.chatMessageId = chatMessage.getId();
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getUserName());
@@ -114,11 +116,13 @@ public class CitationBlock {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        static final double CAT_HASH_IMAGE_SIZE = 25;
+        private static final double CAT_HASH_IMAGE_SIZE = 25;
+
         private final BooleanProperty visible = new SimpleBooleanProperty();
         private final StringProperty citation = new SimpleStringProperty("");
         private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
+        private String chatMessageId;
         private UserProfile author;
 
         private Model() {

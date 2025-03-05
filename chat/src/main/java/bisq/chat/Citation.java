@@ -29,12 +29,12 @@ import lombok.ToString;
 public final class Citation implements NetworkProto {
     public static final int MAX_TEXT_LENGTH = 1000;
 
-    private final String authorUserProfileId;
-    private final String text;
+    private final String authorUserProfileId, text, chatMessageId;
 
-    public Citation(String authorUserProfileId, String text) {
+    public Citation(String authorUserProfileId, String text, String chatMessageId) {
         this.authorUserProfileId = authorUserProfileId;
         this.text = text;
+        this.chatMessageId = chatMessageId;
 
         verify();
     }
@@ -49,7 +49,8 @@ public final class Citation implements NetworkProto {
     public bisq.chat.protobuf.Citation.Builder getBuilder(boolean serializeForHash) {
         return bisq.chat.protobuf.Citation.newBuilder()
                 .setAuthorUserProfileId(authorUserProfileId)
-                .setText(text);
+                .setText(text)
+                .setChatMessageId(chatMessageId);
     }
 
     @Override
@@ -59,11 +60,12 @@ public final class Citation implements NetworkProto {
 
     public static Citation fromProto(bisq.chat.protobuf.Citation proto) {
         return new Citation(proto.getAuthorUserProfileId(),
-                proto.getText());
+                proto.getText(), proto.getChatMessageId());
     }
 
     public boolean isValid() {
-        return authorUserProfileId != null && !authorUserProfileId.isEmpty() &&
-                text != null && !text.isEmpty();
+        return authorUserProfileId != null && !authorUserProfileId.isEmpty()
+                && text != null && !text.isEmpty()
+                && chatMessageId != null && !chatMessageId.isEmpty();
     }
 }
