@@ -463,7 +463,7 @@
 
 .system-message-background {
     -fx-background-color: rgba(36, 36, 36, 0.4); /* -bisq-dark-grey-30 */
-    -fx-padding: 25 0 25 0;
+    -fx-padding: 25 25 25 25;
 }
 
 .system-message-background .leave-chat-message,

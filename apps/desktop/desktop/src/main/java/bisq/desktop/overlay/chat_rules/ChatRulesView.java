@@ -41,7 +41,7 @@ public class ChatRulesView extends View<VBox, ChatRulesModel, ChatRulesControlle
 
         root.setAlignment(Pos.TOP_LEFT);
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(470);
+        root.setPrefHeight(490);
 
         root.setPadding(new Insets(30, 60, 30, 60));
 

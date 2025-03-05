@@ -133,6 +133,10 @@ final class ChatMessageListCellFactory
             }
         }
 
+        if (item.isChatRulesWarningMessage()) {
+            return new ChatRulesWarningMessageBox(item, controller);
+        }
+
         if (item.isMyMessage()) {
             if (item.isProtocolLogMessage()) {
                 return new MyProtocolLogMessageBox(item, controller);
