@@ -540,6 +540,17 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         Navigation.navigateTo(NavigationTarget.CHAT_RULES);
     }
 
+    public void onClickQuoteMessage(String chatMessageId) {
+        model.getChatMessages()
+                .forEach(item -> {
+                    boolean shouldHighlightMessage = item.getChatMessage().getId().equals(chatMessageId);
+                    item.getShowHighlighted().set(shouldHighlightMessage);
+                    if (shouldHighlightMessage) {
+                        view.scrollToChatMessage(item);
+                    }
+                });
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Scrolling
