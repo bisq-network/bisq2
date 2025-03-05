@@ -162,7 +162,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         if (selectionService.getSelectedChannel().get() == null &&
                 !channelService.getChannels().isEmpty() &&
                 !model.getSortedList().isEmpty()) {
-            selectionService.selectChannel(model.getSortedList().get(0).getChannel());
+            selectionService.selectChannel(model.getSortedList().getFirst().getChannel());
         }
     }
 

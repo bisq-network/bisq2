@@ -164,14 +164,16 @@ public class DtoMappings {
         public static Citation toBisq2Model(CitationDto value) {
             return new Citation(
                     value.authorUserProfileId(),
-                    value.text()
+                    value.text(),
+                    value.chatMessageId()
             );
         }
 
         public static CitationDto fromBisq2Model(Citation value) {
             return new CitationDto(
                     value.getAuthorUserProfileId(),
-                    value.getText()
+                    value.getText(),
+                    value.getChatMessageId()
             );
         }
     }

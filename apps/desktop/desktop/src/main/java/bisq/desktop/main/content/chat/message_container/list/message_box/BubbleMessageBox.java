@@ -211,6 +211,8 @@ public abstract class BubbleMessageBox extends MessageBox {
         if (messageBgHBox != null) {
             messageBgHBox.setEffect(null);
         }
+
+        quotedMessageVBox.setOnMouseClicked(null);
     }
 
     private void showDateTimeAndActionsMenu(boolean shouldShow) {
@@ -303,11 +305,14 @@ public abstract class BubbleMessageBox extends MessageBox {
                 userName.getStyleClass().add("font-medium");
                 userName.setStyle("-fx-text-fill: -bisq-mid-grey-30");
                 quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
+                quotedMessageVBox.setOnMouseClicked(e -> controller.onClickQuoteMessage(citation.getChatMessageId()));
+                quotedMessageVBox.getStyleClass().add("hand-cursor");
             }
         } else {
             quotedMessageVBox.getChildren().clear();
             quotedMessageVBox.setVisible(false);
             quotedMessageVBox.setManaged(false);
+            quotedMessageVBox.setOnMouseClicked(null);
         }
     }
 
