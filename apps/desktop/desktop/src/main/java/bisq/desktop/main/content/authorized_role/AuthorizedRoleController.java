@@ -102,6 +102,12 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     private void onBondedRolesChanged() {
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
+
+            model.getBannedAuthorizedBondedRoles().clear();
+            model.getBannedAuthorizedBondedRoles().addAll(authorizedBondedRolesService.getBannedAuthorizedBondedRoleStream()
+                    .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
+                    .map(AuthorizedBondedRole::getBondedRoleType)
+                    .collect(Collectors.toSet()));
             // If we got banned we still want to show the admin UI
             model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
                     .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))

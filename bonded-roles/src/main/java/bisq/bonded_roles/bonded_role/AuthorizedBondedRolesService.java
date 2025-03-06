@@ -246,6 +246,12 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 .map(BondedRole::getAuthorizedBondedRole);
     }
 
+    public Stream<AuthorizedBondedRole> getBannedAuthorizedBondedRoleStream() {
+        return bondedRoles.stream()
+                .filter(BondedRole::isBanned)
+                .map(BondedRole::getAuthorizedBondedRole);
+    }
+
     public boolean hasAuthorizedPubKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data.staticPublicKeysProvided()) {
