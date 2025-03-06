@@ -237,8 +237,12 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     /* --------------------------------------------------------------------- */
 
     public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream() {
+        return getAuthorizedBondedRoleStream(false);
+    }
+
+    public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream(boolean ignoreBannedState) {
         return bondedRoles.stream()
-                .filter(bondedRole -> ignoreSecurityManager || bondedRole.isNotBanned())
+                .filter(bondedRole -> ignoreSecurityManager || ignoreBannedState || bondedRole.isNotBanned())
                 .map(BondedRole::getAuthorizedBondedRole);
     }
 

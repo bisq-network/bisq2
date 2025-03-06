@@ -189,7 +189,9 @@ public class LeftNavController implements Controller {
     private void onBondedRolesChanged() {
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-            boolean authorizedRoleVisible = authorizedBondedRolesService.getAuthorizedBondedRoleStream().anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
+            // If we got banned we still want to show the admin UI
+            boolean authorizedRoleVisible = authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
+                    .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()));
             if (model.getAuthorizedRoleVisible().get() && !authorizedRoleVisible &&
                     model.getSelectedNavigationTarget().get() == NavigationTarget.AUTHORIZED_ROLE) {
                 UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
