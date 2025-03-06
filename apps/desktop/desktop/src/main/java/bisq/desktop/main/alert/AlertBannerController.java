@@ -49,8 +49,11 @@ public class AlertBannerController implements Controller {
     @Override
     public void onActivate() {
         unconsumedAlertsPin = alertNotificationsService.getUnconsumedAlerts().addObserver(this::showAlertBanner);
-        isBisqEasyNotificationVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(isVisible ->
-                updateIsBisqEasyNotificationVisible(isVisible != null ? isVisible : false));
+        isBisqEasyNotificationVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(isVisible -> {
+            if (isVisible != null) {
+                updateIsBisqEasyNotificationVisible(isVisible);
+            }
+        });
     }
 
     @Override
