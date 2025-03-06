@@ -73,7 +73,7 @@ public class CitationBlock {
 
         String truncated = StringUtils.truncate(text, Citation.MAX_TEXT_LENGTH);
         String chatMessageId = controller.model.chatMessageId;
-        return Optional.of(new Citation(userProfile.getId(), truncated, chatMessageId));
+        return Optional.of(new Citation(userProfile.getId(), truncated, Optional.of(chatMessageId)));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {

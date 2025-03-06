@@ -115,6 +115,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DtoMappings {
@@ -165,7 +166,7 @@ public class DtoMappings {
             return new Citation(
                     value.authorUserProfileId(),
                     value.text(),
-                    value.chatMessageId()
+                    Optional.of(value.chatMessageId())
             );
         }
 
