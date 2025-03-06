@@ -96,7 +96,7 @@ public class AlertNotificationsService implements Service {
     }
 
     private boolean shouldProcessAlert(AuthorizedAlertData authorizedAlertData) {
-        return authorizedAlertData.getAlertType() != AlertType.BAN
+        return AlertType.isMessageAlert(authorizedAlertData.getAlertType())
                 && !settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())
                 && authorizedAlertData.getMessage().isPresent();
     }
