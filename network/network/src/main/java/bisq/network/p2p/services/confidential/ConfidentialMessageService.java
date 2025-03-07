@@ -311,7 +311,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private void handleResult(EnvelopePayloadMessage envelopePayloadMessage, SendConfidentialMessageResult result) {
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             messageDeliveryStatusService.ifPresent(service -> {
-                String messageId = ((AckRequestingMessage) envelopePayloadMessage).getId();
+                String messageId = ((AckRequestingMessage) envelopePayloadMessage).getAckRequestingMessageId();
                 service.applyMessageDeliveryStatus(messageId, result.getMessageDeliveryStatus());
 
                 // If we tried to store in mailbox we check if at least one successful broadcast happened

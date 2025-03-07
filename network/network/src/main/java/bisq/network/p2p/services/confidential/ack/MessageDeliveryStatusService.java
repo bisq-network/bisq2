@@ -183,19 +183,19 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
             return;
         }
 
-        if (ackedMessageIds.contains(message.getId())) {
+        if (ackedMessageIds.contains(message.getAckRequestingMessageId())) {
             log.warn("We received already that AckRequestingMessage and sent the AckMessage");
             return;
         }
 
-        AckMessage ackMessage = new AckMessage(message.getId());
+        AckMessage ackMessage = new AckMessage(message.getAckRequestingMessageId());
         NetworkId networkId = message.getReceiver();
         keyBundleService.findKeyPair(networkId.getPubKey().getKeyId())
                 .ifPresent(keyPair -> {
-                    log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getId());
+                    log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getAckRequestingMessageId());
                     NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(networkId, keyPair);
                     networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair);
-                    ackedMessageIds.add(message.getId());
+                    ackedMessageIds.add(message.getAckRequestingMessageId());
                 });
     }
 

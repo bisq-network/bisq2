@@ -129,7 +129,7 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
     /* --------------------------------------------------------------------- */
 
     @Override
-    public String getId() {
+    public String getAckRequestingMessageId() {
         return createMessageId(tradeId);
     }
 
