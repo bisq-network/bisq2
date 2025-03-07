@@ -38,6 +38,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.SplitPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import lombok.Getter;
@@ -48,14 +49,18 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 import static bisq.bisq_easy.BisqEasyMarketFilter.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
-    private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
     public static final double COLLAPSED_LIST_WIDTH = 40;
     public static final double LIST_CELL_HEIGHT = 53;
+    public static final long ANIMATION_DURATION = 200;
+    private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
 
     private final ListChangeListener<MarketChannelItem> favouriteChannelItemsChangeListener;
+    private final VBox offerbookList;
+    private final SplitPane splitPane;
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
     private VBox marketSelectionList, collapsedMarketSelectionList;
@@ -79,11 +84,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                                  BisqEasyOfferbookController controller,
                                  VBox chatMessagesComponent,
                                  Pane channelSidebar,
-                                 Pane offerbookList) {
+                                 VBox offerbookList) {
         super(model, controller, chatMessagesComponent, channelSidebar);
 
-        containerHBox.getChildren().add(3, offerbookList);
-
+        this.offerbookList = offerbookList;
+        splitPane = new SplitPane(centerVBox, offerbookList);
+        containerHBox.getChildren().setAll(marketSelectionList, collapsedMarketSelectionList, splitPane, sideBar);
+        HBox.setHgrow(splitPane, Priority.ALWAYS);
         favouriteChannelItemsChangeListener = change -> selectedMarketChannelItemChanged(getModel().getSelectedMarketChannelItem().get());
     }
 
@@ -116,13 +123,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         addMarketSelectionList();
         addCollapsedMarketSelectionList();
         addChatBox();
-    }
-
-    @Override
-    protected void configContainerHBox() {
-        super.configContainerHBox();
-
-        containerHBox.getChildren().setAll(marketSelectionList, collapsedMarketSelectionList, centerVBox, sideBar);
     }
 
     @Override
@@ -165,8 +165,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         shouldShowAppliedFiltersPin = EasyBind.subscribe(getModel().getShouldShowAppliedFilters(),
                 this::updateAppliedFiltersSectionStyles);
 
-        showOfferListExpandedPin = EasyBind.subscribe(getModel().getShowOfferListExpanded(),
-                showOfferListExpanded -> updateChatContainerStyleClass());
+        showOfferListExpandedPin = EasyBind.subscribe(getModel().getShowOfferListExpanded(), showOfferListExpanded -> {
+            if (showOfferListExpanded != null) {
+                updateOfferList(showOfferListExpanded);
+            }
+        });
 
         showMarketSelectionListCollapsedPin = EasyBind.subscribe(getModel().getShowMarketSelectionListCollapsed(),
                 showMarketSelectionListCollapsed -> updateChatContainerStyleClass());
@@ -204,14 +207,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.setOnMouseExited(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterDefaultIcon));
 
         marketSelectionListTitle.setOnMouseClicked(e ->
-                Transitions.expansionAnimation(marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
-                        COLLAPSED_LIST_WIDTH, () -> getController().toggleMarketSelectionList()));
+                Transitions.animateWidth(marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
+                        COLLAPSED_LIST_WIDTH, ANIMATION_DURATION, () -> getController().toggleMarketSelectionList()));
         marketSelectionListTitle.setOnMouseEntered(e -> marketSelectionListTitle.setGraphic(marketsWhiteIcon));
         marketSelectionListTitle.setOnMouseExited(e -> marketSelectionListTitle.setGraphic(marketsGreenIcon));
 
         collapsedMarketSelectionListTitle.setOnMouseClicked(e -> {
             getController().toggleMarketSelectionList();
-            Transitions.expansionAnimation(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH);
+            Transitions.animateWidth(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH, ANIMATION_DURATION);
         });
         collapsedMarketSelectionListTitle.setOnMouseEntered(e -> collapsedMarketSelectionListTitle.setGraphic(marketsWhiteIcon));
         collapsedMarketSelectionListTitle.setOnMouseExited(e -> collapsedMarketSelectionListTitle.setGraphic(marketsGreyIcon));
@@ -293,6 +296,20 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.setMinHeight(height);
         favouritesTableView.setPrefHeight(height);
         favouritesTableView.setMaxHeight(height);
+    }
+
+    private void updateOfferList(boolean showOfferListExpanded) {
+        checkArgument(splitPane.getDividers().size() == 1, "Must have exactly one divider");
+
+        SplitPane.Divider divider = splitPane.getDividers().get(0);
+        // TODO: Calculate exact final position according to current width
+        if (showOfferListExpanded) {
+            Transitions.animateDividerPosition(divider, divider.getPosition(), 0.71, ANIMATION_DURATION);
+        } else {
+            Transitions.animateDividerPosition(divider, divider.getPosition(), 0.92, ANIMATION_DURATION);
+        }
+        SplitPane.setResizableWithParent(centerVBox, showOfferListExpanded);
+        SplitPane.setResizableWithParent(offerbookList, showOfferListExpanded);
     }
 
     private void updateChatContainerStyleClass() {
@@ -481,7 +498,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
     private void addChatBox() {
         centerVBox.setSpacing(0);
-        centerVBox.setFillWidth(true);
+//        centerVBox.setFillWidth(true);
+//        centerVBox.setMaxWidth(Double.MAX_VALUE);
 
         searchBox.getStyleClass().add("offerbook-search-box");
         messageTypeFilterMenu = createAndGetMessageTypeFilterMenu();

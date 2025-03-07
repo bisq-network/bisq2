@@ -428,7 +428,7 @@ public class MaterialTextField extends Pane {
                 resetValidation();
                 selectionLine.setPrefWidth(0);
                 selectionLine.setOpacity(1);
-                Transitions.animateWidth(selectionLine, getWidth());
+                Transitions.animatePrefWidth(selectionLine, getWidth());
             } else {
                 Transitions.fadeOut(selectionLine, 200);
                 stringConverter.ifPresent(stringConverter -> {
