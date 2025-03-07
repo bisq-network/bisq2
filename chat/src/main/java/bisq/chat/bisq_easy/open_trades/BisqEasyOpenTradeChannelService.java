@@ -176,10 +176,13 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         String shortUid = StringUtils.createUid();
         long date = new Date().getTime();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
+            String senderId = channel.getMyUserIdentity().getId();
             List<CompletableFuture<SendMessageResult>> futures = channel.getTraders().stream()
+                    .filter(peer -> !peer.getId().equals(senderId))
                     .map(peer -> sendMessage(shortUid, text, citation, channel, peer, chatMessageType, date))
                     .collect(Collectors.toList());
             channel.getMediator()
+                    .filter(mediator -> !mediator.getId().equals(senderId))
                     .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, chatMessageType, date))
                     .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
