@@ -402,6 +402,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 messageDeliveryStatusTooltip = Res.get("chat.message.deliveryState." + status.name());
                 log.info("updateMessageStatus status={}, messageId={}, peersProfileId={}", status, messageId, peersProfileId);
             }
+            messageDeliveryStatus.set(status);
             if (status == MessageDeliveryStatus.FAILED) {
                 canManuallyResendMessage.set(resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false));
             } else {
