@@ -26,6 +26,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
+import bisq.common.util.DateUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -41,6 +42,7 @@ import bisq.user.profile.UserProfileService;
 import com.google.common.primitives.Ints;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -54,6 +56,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class MediationRequestService implements Service, ConfidentialMessageService.Listener {
+    public final static Date MEDIATION_SELECTION_V1_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.JUNE, 1);
+
     private final NetworkService networkService;
     private final UserProfileService userProfileService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
@@ -134,34 +138,67 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
                 myUserIdentity.getNetworkIdWithKeyPair());
     }
 
-    public Optional<UserProfile> selectMediator(String makersUserProfileId, String takersUserProfileId) {
+    public Optional<UserProfile> selectMediator(String makersUserProfileId,
+                                                String takersUserProfileId,
+                                                String offerId) {
         Set<AuthorizedBondedRole> mediators = authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                 .filter(role -> role.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .filter(role -> !role.getProfileId().equals(makersUserProfileId) &&
                         !role.getProfileId().equals(takersUserProfileId))
                 .collect(Collectors.toSet());
-        return selectMediator(mediators, makersUserProfileId, takersUserProfileId);
+        return selectMediator(mediators, makersUserProfileId, takersUserProfileId, offerId);
     }
 
     // This method can be used for verification when taker provides mediators list.
     // If mediator list was not matching the expected one present in the network it might have been a manipulation attempt.
     public Optional<UserProfile> selectMediator(Set<AuthorizedBondedRole> mediators,
                                                 String makersProfileId,
-                                                String takersProfileId) {
+                                                String takersProfileId,
+                                                String offerId) {
         if (mediators.isEmpty()) {
             return Optional.empty();
         }
-        int index;
+
         if (mediators.size() == 1) {
-            index = 0;
-        } else {
-            String combined = makersProfileId + takersProfileId;
-            int space = Math.abs(Ints.fromByteArray(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))));
-            index = space % mediators.size();
+            return userProfileService.findUserProfile(mediators.iterator().next().getProfileId());
         }
+
+        int index = new Date().after(MEDIATION_SELECTION_V1_ACTIVATION_DATE)
+                ? getDeterministicIndex_V1(mediators, makersProfileId, takersProfileId, offerId)
+                : getDeterministicIndex_V0(mediators, makersProfileId, takersProfileId);
+
         ArrayList<AuthorizedBondedRole> list = new ArrayList<>(mediators);
         list.sort(Comparator.comparing(AuthorizedBondedRole::getProfileId));
         return userProfileService.findUserProfile(list.get(index).getProfileId());
+    }
+
+    private int getDeterministicIndex_V0(Set<AuthorizedBondedRole> mediators,
+                                         String makersProfileId,
+                                         String takersProfileId) {
+        try {
+            String combined = makersProfileId + takersProfileId;
+            int space = Math.abs(Ints.fromByteArray(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))));
+            return space % mediators.size();
+        } catch (Exception e) {
+            log.error("getDeterministicIndex_V0 failed", e);
+            return 0;
+        }
+    }
+
+    private int getDeterministicIndex_V1(Set<AuthorizedBondedRole> mediators,
+                                         String makersProfileId,
+                                         String takersProfileId,
+                                         String offerId) {
+        String input = makersProfileId + takersProfileId + offerId;
+        byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8)); // returns 20 bytes
+        // XOR multiple 4-byte chunks to use more of the hash
+        ByteBuffer buffer = ByteBuffer.wrap(hash);
+        int space = buffer.getInt(); // First 4 bytes
+        space ^= buffer.getInt();    // XOR with next 4 bytes
+        space ^= buffer.getInt();    // XOR with next 4 bytes
+        space ^= buffer.getInt();    // XOR with next 4 bytes
+        space ^= buffer.getInt();    // XOR with last 4 bytes (20 bytes total)
+        return Math.floorMod(space, mediators.size());
     }
 
 
