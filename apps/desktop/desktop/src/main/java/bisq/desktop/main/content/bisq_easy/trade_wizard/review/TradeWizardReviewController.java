@@ -423,7 +423,9 @@ public class TradeWizardReviewController implements Controller {
             // If taker is banned we don't need to show them a popup
             return;
         }
-        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
+        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
+                takerIdentity.getId(),
+                bisqEasyOffer.getId());
         if (!DevMode.isDevMode() && mediator.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))

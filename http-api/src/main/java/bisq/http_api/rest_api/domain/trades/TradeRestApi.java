@@ -141,7 +141,9 @@ public class TradeRestApi extends RestApiBase {
             BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = new BitcoinPaymentMethodSpec(bitcoinPaymentMethod);
             FiatPaymentMethod fiatPaymentMethod = PaymentMethodSpecUtil.getFiatPaymentMethod(request.fiatPaymentMethod());
             FiatPaymentMethodSpec fiatPaymentMethodSpec = new FiatPaymentMethodSpec(fiatPaymentMethod);
-            Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
+            Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
+                    takerIdentity.getId(),
+                    bisqEasyOffer.getId());
             PriceSpec makersPriceSpec = bisqEasyOffer.getPriceSpec();
             long marketPrice = marketPriceService.findMarketPrice(bisqEasyOffer.getMarket())
                     .map(e -> e.getPriceQuote().getValue())

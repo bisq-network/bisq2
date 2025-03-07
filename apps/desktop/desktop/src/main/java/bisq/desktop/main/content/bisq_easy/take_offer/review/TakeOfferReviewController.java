@@ -171,7 +171,9 @@ public class TakeOfferReviewController implements Controller {
             onCancelHandler.run();
             return;
         }
-        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
+        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
+                takerIdentity.getId(),
+                bisqEasyOffer.getId());
         if (!DevMode.isDevMode() && mediator.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
@@ -204,11 +206,11 @@ public class TakeOfferReviewController implements Controller {
         log.info("Selected mediator for trade {}: {}", bisqEasyTrade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
         model.setBisqEasyTrade(bisqEasyTrade);
         errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
-            if (errorMessage != null) {
-                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                errorMessage,
-                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
-                        .show());
+                    if (errorMessage != null) {
+                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
+                                        errorMessage,
+                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
+                                .show());
                     }
                 }
         );

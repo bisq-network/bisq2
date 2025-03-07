@@ -11,7 +11,7 @@ public interface AckRequestingMessage extends Request {
     /**
      * @return The message ID
      */
-    String getId();
+    String getAckRequestingMessageId();
 
     /**
      * @return The NetworkId of the sender of that message.
@@ -30,6 +30,6 @@ public interface AckRequestingMessage extends Request {
     }
 
     default String getRequestId() {
-        return getId();
+        return getAckRequestingMessageId();
     }
 }

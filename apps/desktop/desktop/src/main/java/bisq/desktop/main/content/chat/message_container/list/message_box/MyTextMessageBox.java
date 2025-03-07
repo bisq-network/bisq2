@@ -34,24 +34,21 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
+    private MessageDeliveryStatusBox messageDeliveryStatusBox;
 
-    private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
-    private final BisqMenuItem tryAgainMenuItem = item.getTryAgainMenuItem();
-    private final HBox deliveryStateHBox = new HBox();
     private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
-    private HBox messageStatusHbox, editButtonsHBox;
+    private HBox editButtonsHBox;
 
     public MyTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
                             ChatMessagesListController controller) {
         super(item, list, controller);
+
 
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");
         setUpEditFunctionality();
@@ -69,28 +66,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
-        // Message delivery status
-        messageStatusHbox.getChildren().addAll(tryAgainMenuItem, deliveryStateHBox);
-        messageStatusHbox.setAlignment(Pos.CENTER);
-        deliveryStateHBox.setAlignment(Pos.CENTER);
-
-        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliveryStatusNode(), node -> {
-            messageStatusHbox.setManaged(node != null);
-            messageStatusHbox.setVisible(node != null);
-            if (node != null) {
-                deliveryStateHBox.getChildren().setAll(node);
-            }
-        });
-
-        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShowTryAgain(), showTryAgain -> {
-            tryAgainMenuItem.setVisible(showTryAgain);
-            tryAgainMenuItem.setManaged(showTryAgain);
-            if (showTryAgain) {
-                tryAgainMenuItem.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
-            } else {
-                tryAgainMenuItem.setOnMouseClicked(null);
-            }
-        });
 
         activeReactionsDisplayHBox.getStyleClass().add("my-text-message-box-active-reactions");
         editInputField.maxWidthProperty().bind(message.widthProperty());
@@ -102,8 +77,9 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     protected void setUpUserNameAndDateTime() {
         super.setUpUserNameAndDateTime();
 
-        messageStatusHbox = new HBox(5);
-        userNameAndDateHBox = new HBox(10, dateTime, messageStatusHbox, item.getBondedRoleBadge(), userName);
+        messageDeliveryStatusBox = new MessageDeliveryStatusBox(item, controller);
+
+        userNameAndDateHBox = new HBox(10, dateTime, messageDeliveryStatusBox, item.getBondedRoleBadge(), userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
         setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
     }
@@ -234,12 +210,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editInputField.setOnKeyPressed(null);
         userProfileIcon.dispose();
 
-        if (shouldShowTryAgainPin != null) {
-            shouldShowTryAgainPin.unsubscribe();
-        }
-
-        if (messageDeliveryStatusNodePin != null) {
-            messageDeliveryStatusNodePin.unsubscribe();
-        }
+        messageDeliveryStatusBox.dispose();
     }
 }
