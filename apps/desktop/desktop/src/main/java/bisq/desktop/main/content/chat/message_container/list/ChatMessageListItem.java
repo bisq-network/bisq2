@@ -36,6 +36,7 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.currency.Market;
 import bisq.common.data.Pair;
+import bisq.common.data.Triple;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -108,8 +109,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final ReputationScore reputationScore;
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean offerAlreadyTaken;
-    @Nullable
-    private String messageId;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
@@ -117,9 +116,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     // Delivery status
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
-    private final BooleanProperty canManuallyResendMessage = new SimpleBooleanProperty();
-    private final SimpleObjectProperty<MessageDeliveryStatus> messageDeliveryStatus = new SimpleObjectProperty<>();
-    private String messageDeliveryStatusTooltip;
+    private final SimpleObjectProperty<Map<String, Triple<MessageDeliveryStatus, String, Boolean>>> messageDeliveryStatusByPeerProfileId = new SimpleObjectProperty<>();
     private final Optional<ResendMessageService> resendMessageService;
     private ImageView successfulDeliveryIcon, connectingDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
     private BisqMenuItem tryAgainMenuItem;
@@ -350,10 +347,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private void addSubscriptionToMessageDeliveryStatus(NetworkService networkService) {
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
-            public void put(String id, Observable<MessageDeliveryStatus> value) {
+            public void put(String ackRequestingMessageId, Observable<MessageDeliveryStatus> value) {
                 if (chatMessage instanceof AckRequestingMessage ackRequestingMessage) {
-                    String messageId = id;
-                    String ackRequestingMessageId = ackRequestingMessage.getAckRequestingMessageId();
+                    String messageId = ackRequestingMessageId;
+                    String chatMessageId = ackRequestingMessage.getAckRequestingMessageId();
                     String peersProfileId = null;
                     String separator = BisqEasyOpenTradeMessage.ACK_REQUESTING_MESSAGE_ID_SEPARATOR;
                     if (chatMessage instanceof BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage) {
@@ -365,14 +362,14 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                             messageId = parts[0];
                             peersProfileId = parts[1];
                         }
-                        if (ackRequestingMessageId.contains(separator)) {
-                            String[] parts = ackRequestingMessageId.split(separator);
-                            ackRequestingMessageId = parts[0];
+                        if (chatMessageId.contains(separator)) {
+                            String[] parts = chatMessageId.split(separator);
+                            chatMessageId = parts[0];
                         }
                     }
 
-                    if (messageId.equals(ackRequestingMessageId)) {
-                        updateMessageStatus(messageId, value, peersProfileId);
+                    if (messageId.equals(chatMessageId)) {
+                        updateMessageStatus(ackRequestingMessageId, value, peersProfileId);
                     }
                 }
             }
@@ -392,22 +389,20 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         }));
     }
 
-    private void updateMessageStatus(String messageId,
+    private void updateMessageStatus(String ackRequestingMessageId,
                                      Observable<MessageDeliveryStatus> value,
                                      @Nullable String peersProfileId) {
         // Delay to avoid ConcurrentModificationException
         UIThread.runOnNextRenderFrame(() -> statusPins.add(value.addObserver(status -> UIThread.run(() -> {
-            ChatMessageListItem.this.messageId = messageId;
-            if (status != null) {
-                messageDeliveryStatusTooltip = Res.get("chat.message.deliveryState." + status.name());
-                log.info("updateMessageStatus status={}, messageId={}, peersProfileId={}", status, messageId, peersProfileId);
+            Map<String, Triple<MessageDeliveryStatus, String, Boolean>> map = messageDeliveryStatusByPeerProfileId.get();
+            if (map == null) {
+                map = new HashMap<>();
             }
-            messageDeliveryStatus.set(status);
-            if (status == MessageDeliveryStatus.FAILED) {
-                canManuallyResendMessage.set(resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false));
-            } else {
-                canManuallyResendMessage.set(false);
-            }
+            boolean canManuallyResendMessage = status == MessageDeliveryStatus.FAILED &&
+                    resendMessageService.map(service -> service.canManuallyResendMessage(ackRequestingMessageId)).orElse(false);
+            map.put(peersProfileId, new Triple<>(status, ackRequestingMessageId, canManuallyResendMessage));
+            messageDeliveryStatusByPeerProfileId.set(null); // trigger update by setting it to null
+            messageDeliveryStatusByPeerProfileId.set(map);
         }))));
     }
 
