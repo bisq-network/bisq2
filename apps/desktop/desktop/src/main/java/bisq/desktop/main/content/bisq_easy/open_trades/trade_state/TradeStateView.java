@@ -224,7 +224,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
         rejectPriceButton.setOnAction(e -> controller.onRejectPrice());
-        reportToMediatorButton.setOnAction(e -> controller.onReportToMediator());
+        reportToMediatorButton.setOnAction(e -> controller.onRequestMediation());
         acceptSellersPriceButton.setOnAction(e -> controller.onAcceptSellersPriceButton());
         tryAgainMenuItem.setOnAction(e -> controller.onResendMediationRequest());
     }

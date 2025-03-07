@@ -316,8 +316,8 @@ public class TradeStateController implements Controller {
         OpenTradesUtils.exportTrade(model.getBisqEasyTrade().get(), getView().getRoot().getScene());
     }
 
-    void onReportToMediator() {
-        OpenTradesUtils.reportToMediator(model.getChannel().get(),
+    void onRequestMediation() {
+        OpenTradesUtils.requestMediation(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
                 mediationRequestService, channelService);
     }

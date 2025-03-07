@@ -225,12 +225,6 @@ class TradePhaseBox {
             Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
 
-        void onReportToMediator() {
-            OpenTradesUtils.reportToMediator(model.getSelectedChannel(),
-                    model.getBisqEasyTrade().getContract(),
-                    mediationRequestService, channelService);
-        }
-
         void onRequestMediation() {
             OpenTradesUtils.requestMediation(model.getSelectedChannel(),
                     model.getBisqEasyTrade().getContract(),
@@ -339,7 +333,7 @@ class TradePhaseBox {
             requestMediationButton.disableProperty().bind(model.getIsInMediation());
 
             requestMediationButton.setOnAction(e -> controller.onRequestMediation());
-            reportToMediator.setOnAction(e -> controller.onReportToMediator());
+            reportToMediator.setOnAction(e -> controller.onRequestMediation());
             openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
             walletHelp.setOnAction(e -> controller.onOpenWalletHelp());
             phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), this::phaseIndexChanged);
