@@ -368,7 +368,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             public void clear() {
             }
         }));
-
     }
 
     private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value) {

@@ -136,7 +136,8 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
     }
 
     public Stream<UserIdentity> findMyMediatorUserIdentities() {
-        return authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+        // If we got banned we still want to show the admin UI
+        return authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream());
     }

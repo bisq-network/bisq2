@@ -48,7 +48,7 @@ public class BisqEasyNotificationsService implements Service {
     private final SettingsService settingsService;
 
     @Getter
-    private final Observable<Boolean> isNotificationPanelVisible = new Observable<>();
+    private final Observable<Boolean> isNotificationPanelVisible = new Observable<>(false);
     @Getter
     private final ObservableSet<ChatNotification> tradeNotifications = new ObservableSet<>();
     // We do not persist the state of a closed notification panel as we prefer to show the panel again at restart.
