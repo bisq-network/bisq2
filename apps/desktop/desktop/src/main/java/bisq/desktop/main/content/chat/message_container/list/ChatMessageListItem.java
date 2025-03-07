@@ -75,8 +75,6 @@ import com.google.common.base.Joiner;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -120,7 +118,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
-    private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<MessageDeliveryStatus> messageDeliveryStatus = new SimpleObjectProperty<>();
+    private String messageDeliveryStatusTooltip;
     private final Optional<ResendMessageService> resendMessageService;
     private ImageView successfulDeliveryIcon, connectingDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
     private BisqMenuItem tryAgainMenuItem;
@@ -393,42 +392,21 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         }));
     }
 
-    private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value, @Nullable String peersProfileId) {
+    private void updateMessageStatus(String messageId,
+                                     Observable<MessageDeliveryStatus> value,
+                                     @Nullable String peersProfileId) {
         // Delay to avoid ConcurrentModificationException
         UIThread.runOnNextRenderFrame(() -> statusPins.add(value.addObserver(status -> UIThread.run(() -> {
             ChatMessageListItem.this.messageId = messageId;
-            boolean shouldShowTryAgain = false;
             if (status != null) {
-                Label statusLabel = new Label();
-                String deliveryState = Res.get("chat.message.deliveryState." + status.name());
-                statusLabel.setTooltip(new BisqTooltip(deliveryState));
-
+                messageDeliveryStatusTooltip = Res.get("chat.message.deliveryState." + status.name());
                 log.info("updateMessageStatus status={}, messageId={}, peersProfileId={}", status, messageId, peersProfileId);
-                switch (status) {
-                    // Successful delivery
-                    case ACK_RECEIVED:
-                    case MAILBOX_MSG_RECEIVED:
-                        statusLabel.setGraphic(successfulDeliveryIcon);
-                        break;
-                    // Pending delivery
-                    case CONNECTING:
-                        statusLabel.setGraphic(connectingDeliveryIcon);
-                        break;
-                    case SENT:
-                    case TRY_ADD_TO_MAILBOX:
-                        statusLabel.setGraphic(pendingDeliveryIcon);
-                        break;
-                    case ADDED_TO_MAILBOX:
-                        statusLabel.setGraphic(addedToMailboxIcon);
-                        break;
-                    case FAILED:
-                        statusLabel.setGraphic(failedDeliveryIcon);
-                        shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
-                        break;
-                }
-                messageDeliveryStatusNode.set(statusLabel);
             }
-            this.shouldShowTryAgain.set(shouldShowTryAgain);
+            if (status == MessageDeliveryStatus.FAILED) {
+                this.shouldShowTryAgain.set(resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false));
+            } else {
+                this.shouldShowTryAgain.set(false);
+            }
         }))));
     }
 
