@@ -110,7 +110,7 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     /* --------------------------------------------------------------------- */
 
     public void requestMediation(BisqEasyOpenTradeChannel channel,
-                                 BisqEasyContract contract) {
+                                   BisqEasyContract contract) {
         checkArgument(channel.getBisqEasyOffer().equals(contract.getOffer()));
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
@@ -118,13 +118,13 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
         UserProfile peer = channel.getPeer();
         UserProfile mediator = channel.getMediator().orElseThrow();
         NetworkId mediatorNetworkId = mediator.getNetworkId();
-        MediationRequest networkMessage = new MediationRequest(channel.getTradeId(),
+        MediationRequest mediationRequest = new MediationRequest(channel.getTradeId(),
                 contract,
                 myUserIdentity.getUserProfile(),
                 peer,
                 new ArrayList<>(channel.getChatMessages()),
                 Optional.of(mediatorNetworkId));
-        networkService.confidentialSend(networkMessage,
+        networkService.confidentialSend(mediationRequest,
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
     }

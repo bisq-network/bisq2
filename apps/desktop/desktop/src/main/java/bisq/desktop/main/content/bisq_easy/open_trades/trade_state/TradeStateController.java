@@ -24,7 +24,9 @@ import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.contract.Role;
 import bisq.desktop.ServiceProvider;
@@ -36,9 +38,13 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
+import bisq.network.NetworkService;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.settings.DontShowAgainService;
+import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -50,6 +56,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -63,17 +70,21 @@ public class TradeStateController implements Controller {
     private final ServiceProvider serviceProvider;
     private final TradePhaseBox tradePhaseBox;
     private final TradeDataHeader tradeDataHeader;
+    private final NetworkService networkService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasyOpenTradeChannelService channelService;
     private final MediationRequestService mediationRequestService;
     private final DontShowAgainService dontShowAgainService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final UserIdentityService userIdentityService;
-    private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin;
+    private final Optional<ResendMessageService> resendMessageService;
+    private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
+            requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin;
     private Subscription channelPin, hasBuyerAcceptedPriceSpecPin;
 
     public TradeStateController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
+        networkService = serviceProvider.getNetworkService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         ChatService chatService = serviceProvider.getChatService();
         channelService = chatService.getBisqEasyOpenTradeChannelService();
@@ -81,6 +92,7 @@ public class TradeStateController implements Controller {
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
 
         tradePhaseBox = new TradePhaseBox(serviceProvider);
         tradeDataHeader = new TradeDataHeader(serviceProvider, Res.get("bisqEasy.tradeState.header.peer").toUpperCase());
@@ -169,6 +181,26 @@ public class TradeStateController implements Controller {
             model.getSellerPriceDescriptionApprovalOverlay().set(
                     Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
                             PriceSpecFormatter.getFormattedPriceSpec(bisqEasyTrade.getContract().getPriceSpec())));
+
+            messageDeliveryStatusByMessageIdPin = networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
+                @Override
+                public void put(String messageId, Observable<MessageDeliveryStatus> value) {
+                    handleNewMessageDeliveryStatus(messageId, value);
+                }
+
+                @Override
+                public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
+                    map.forEach(this::put);
+                }
+
+                @Override
+                public void remove(Object key) {
+                }
+
+                @Override
+                public void clear() {
+                }
+            });
         });
     }
 
@@ -194,6 +226,11 @@ public class TradeStateController implements Controller {
         if (hasBuyerAcceptedPriceSpecPin != null) {
             hasBuyerAcceptedPriceSpecPin.unsubscribe();
             hasBuyerAcceptedPriceSpecPin = null;
+        }
+        messageDeliveryStatusByMessageIdPin.unbind();
+        if (requestMediationDeliveryStatusPin != null) {
+            requestMediationDeliveryStatusPin.unbind();
+            requestMediationDeliveryStatusPin = null;
         }
         model.resetAll();
     }
@@ -285,8 +322,45 @@ public class TradeStateController implements Controller {
                 mediationRequestService, channelService);
     }
 
+    public void onResendMediationRequest() {
+        BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade().get();
+        if (bisqEasyTrade != null) {
+            String mediationRequestId = MediationRequest.createMessageId(bisqEasyTrade.getId());
+            resendMessageService.ifPresent(service -> service.manuallyResendMessage(mediationRequestId));
+        }
+    }
+
+    public boolean canManuallyResendMessage(String messageId) {
+        return resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
+    }
+
     void onAcceptSellersPriceButton() {
         model.getHasBuyerAcceptedSellersPriceSpec().set(true);
+    }
+
+    private void handleNewMessageDeliveryStatus(String messageId, Observable<MessageDeliveryStatus> observableStatus) {
+        BisqEasyTrade bisqEasyTrade = model.getBisqEasyTrade().get();
+        if (bisqEasyTrade == null) {
+            return;
+        }
+        String mediationRequestId = MediationRequest.createMessageId(bisqEasyTrade.getId());
+        if (!mediationRequestId.equals(messageId)) {
+            return;
+        }
+        if (requestMediationDeliveryStatusPin != null) {
+            requestMediationDeliveryStatusPin.unbind();
+        }
+        requestMediationDeliveryStatusPin = observableStatus.addObserver(status -> UIThread.run(() -> {
+            model.getRequestMediationDeliveryStatus().set(status);
+
+            if (status == MessageDeliveryStatus.FAILED) {
+                model.getShouldShowTryRequestMediationAgain().set(resendMessageService
+                        .map(service -> service.canManuallyResendMessage(messageId))
+                        .orElse(false));
+            } else {
+                model.getShouldShowTryRequestMediationAgain().set(false);
+            }
+        }));
     }
 
     private void applyStateInfoVBox(@Nullable BisqEasyTradeState state) {

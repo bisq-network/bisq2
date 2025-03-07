@@ -1166,6 +1166,10 @@
     -fx-image: url("/images/chat/message-status/try-again-green.png");
 }
 
+#try-again-dark {
+    -fx-image: url("/images/chat/message-status/try-again-dark.png");
+}
+
 #try-again-grey {
     -fx-image: url("/images/chat/message-status/try-again-grey.png");
 }

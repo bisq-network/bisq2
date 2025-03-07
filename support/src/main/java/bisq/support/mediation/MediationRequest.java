@@ -47,6 +47,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class MediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
+    public static String createMessageId(String tradeId) {
+        return MediationRequest.class.getSimpleName() + "." + tradeId;
+    }
+
+
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final BisqEasyContract contract;
@@ -125,7 +130,7 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
 
     @Override
     public String getId() {
-        return getClass().getSimpleName() + tradeId + requester.getId();
+        return createMessageId(tradeId);
     }
 
     @Override
