@@ -38,12 +38,12 @@ public final class Citation implements NetworkProto {
     // Added with v2.1.7
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
-    private final String chatMessageId;
+    private final Optional<String> chatMessageId;
 
     public Citation(String authorUserProfileId, String text, Optional<String> chatMessageId) {
         this.authorUserProfileId = authorUserProfileId;
         this.text = text;
-        this.chatMessageId = chatMessageId.orElse("");
+        this.chatMessageId = chatMessageId;
 
         verify();
     }
@@ -56,10 +56,11 @@ public final class Citation implements NetworkProto {
 
     @Override
     public bisq.chat.protobuf.Citation.Builder getBuilder(boolean serializeForHash) {
-        return bisq.chat.protobuf.Citation.newBuilder()
+        bisq.chat.protobuf.Citation.Builder builder = bisq.chat.protobuf.Citation.newBuilder()
                 .setAuthorUserProfileId(authorUserProfileId)
-                .setText(text)
-                .setChatMessageId(chatMessageId);
+                .setText(text);
+        chatMessageId.ifPresent(builder::setChatMessageId);
+        return builder;
     }
 
     @Override
@@ -69,12 +70,12 @@ public final class Citation implements NetworkProto {
 
     public static Citation fromProto(bisq.chat.protobuf.Citation proto) {
         return new Citation(proto.getAuthorUserProfileId(),
-                proto.getText(), Optional.of(proto.getChatMessageId()));
+                proto.getText(),
+                proto.hasChatMessageId() ? Optional.of(proto.getChatMessageId()) : Optional.empty());
     }
 
     public boolean isValid() {
         return authorUserProfileId != null && !authorUserProfileId.isEmpty()
-                && text != null && !text.isEmpty()
-                && chatMessageId != null;
+                && text != null && !text.isEmpty();
     }
 }

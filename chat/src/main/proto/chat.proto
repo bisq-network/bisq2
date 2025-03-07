@@ -56,7 +56,7 @@ enum ChatChannelDomain {
 message Citation {
   string authorUserProfileId = 1;
   string text = 2;
-  string chatMessageId = 3;
+  optional string chatMessageId = 3;
 }
 
 message ChatMessage {
