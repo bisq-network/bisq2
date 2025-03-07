@@ -31,17 +31,18 @@ public class UpdaterUtils {
     public static final String GITHUB_DOWNLOAD_URL = "https://github.com/bisq-network/bisq2/releases/download/v";
     public static final String PUB_KEYS_URL = "https://bisq.network/pubkey/";
     public static final String FROM_BISQ_WEBPAGE_PREFIX = "from_bisq_webpage_";
+    public static final String FROM_RESOURCES_PREFIX = "from_resources_";
     public static final String SIGNING_KEY_FILE = "signingkey.asc";
     public static final String VERSION_FILE_NAME = "version.txt";
     public static final String UPDATES_DIR = "updates";
-    public static final String EXTENSION = ".asc";
+    public static final String ASC_EXTENSION = ".asc";
 
     public static String getSigningKeyId(String directory) throws IOException {
         return FileUtils.readStringFromFile(Path.of(directory, SIGNING_KEY_FILE).toFile());
     }
 
     public static String getSigningKey(String directory, String signingKeyId) throws IOException {
-        return FileUtils.readStringFromFile(Path.of(directory, signingKeyId + EXTENSION).toFile());
+        return FileUtils.readStringFromFile(Path.of(directory, signingKeyId + ASC_EXTENSION).toFile());
     }
 
     public static String getDownloadFileName(String version, boolean isLauncherUpdate) {
