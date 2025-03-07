@@ -29,6 +29,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
@@ -50,6 +51,7 @@ import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.Direction;
@@ -349,9 +351,30 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private void addSubscriptionToMessageDeliveryStatus(NetworkService networkService) {
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
-            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
-                if (messageId.equals(chatMessage.getId())) {
-                    updateMessageStatus(messageId, value);
+            public void put(String id, Observable<MessageDeliveryStatus> value) {
+                if (chatMessage instanceof AckRequestingMessage ackRequestingMessage) {
+                    String messageId = id;
+                    String ackRequestingMessageId = ackRequestingMessage.getAckRequestingMessageId();
+                    String peersProfileId = null;
+                    String separator = BisqEasyOpenTradeMessage.ACK_REQUESTING_MESSAGE_ID_SEPARATOR;
+                    if (chatMessage instanceof BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage) {
+                        // In case of a bisqEasyOpenTradeMessage we use the message id and receiver id separated with a '_'.
+                        // This allows us to handle the ACK messages separately to know when the message was received by
+                        // both the peer and the mediator (in case of mediation).
+                        if (messageId.contains(separator)) {
+                            String[] parts = messageId.split(separator);
+                            messageId = parts[0];
+                            peersProfileId = parts[1];
+                        }
+                        if (ackRequestingMessageId.contains(separator)) {
+                            String[] parts = ackRequestingMessageId.split(separator);
+                            ackRequestingMessageId = parts[0];
+                        }
+                    }
+
+                    if (messageId.equals(ackRequestingMessageId)) {
+                        updateMessageStatus(messageId, value, peersProfileId);
+                    }
                 }
             }
 
@@ -370,14 +393,17 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         }));
     }
 
-    private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value) {
+    private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value, @Nullable String peersProfileId) {
         // Delay to avoid ConcurrentModificationException
         UIThread.runOnNextRenderFrame(() -> statusPins.add(value.addObserver(status -> UIThread.run(() -> {
             ChatMessageListItem.this.messageId = messageId;
             boolean shouldShowTryAgain = false;
             if (status != null) {
                 Label statusLabel = new Label();
-                statusLabel.setTooltip(new BisqTooltip(Res.get("chat.message.deliveryState." + status.name())));
+                String deliveryState = Res.get("chat.message.deliveryState." + status.name());
+                statusLabel.setTooltip(new BisqTooltip(deliveryState));
+
+                log.info("updateMessageStatus status={}, messageId={}, peersProfileId={}", status, messageId, peersProfileId);
                 switch (status) {
                     // Successful delivery
                     case ACK_RECEIVED:
