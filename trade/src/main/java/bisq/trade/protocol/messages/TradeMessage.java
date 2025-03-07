@@ -67,6 +67,11 @@ public abstract class TradeMessage implements MailboxMessage, ExternalNetworkMes
                 .setReceiver(receiver.toProto(serializeForHash));
     }
 
+    @Override
+    public String getAckRequestingMessageId() {
+        return id;
+    }
+
     abstract public bisq.trade.protobuf.TradeMessage.Builder getValueBuilder(boolean serializeForHash);
 
     public static TradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

@@ -130,6 +130,11 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
         return receiverNetworkId;
     }
 
+    @Override
+    public String getAckRequestingMessageId() {
+        return id;
+    }
+
     public boolean addPrivateChatMessageReaction(R newReaction) {
         Optional<R> existingReaction = getChatMessageReactions().stream()
                 .filter(privateChatReaction -> privateChatReaction.matches(newReaction))
