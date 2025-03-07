@@ -117,7 +117,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     // Delivery status
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
-    private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
+    private final BooleanProperty canManuallyResendMessage = new SimpleBooleanProperty();
     private final SimpleObjectProperty<MessageDeliveryStatus> messageDeliveryStatus = new SimpleObjectProperty<>();
     private String messageDeliveryStatusTooltip;
     private final Optional<ResendMessageService> resendMessageService;
@@ -403,9 +403,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 log.info("updateMessageStatus status={}, messageId={}, peersProfileId={}", status, messageId, peersProfileId);
             }
             if (status == MessageDeliveryStatus.FAILED) {
-                this.shouldShowTryAgain.set(resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false));
+                canManuallyResendMessage.set(resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false));
             } else {
-                this.shouldShowTryAgain.set(false);
+                canManuallyResendMessage.set(false);
             }
         }))));
     }

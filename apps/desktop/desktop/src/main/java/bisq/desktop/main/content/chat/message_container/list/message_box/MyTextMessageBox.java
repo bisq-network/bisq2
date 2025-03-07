@@ -114,7 +114,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
-        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShowTryAgain(), showTryAgain -> {
+        shouldShowTryAgainPin = EasyBind.subscribe(item.getCanManuallyResendMessage(), showTryAgain -> {
             tryAgainMenuItem.setVisible(showTryAgain);
             tryAgainMenuItem.setManaged(showTryAgain);
             if (showTryAgain) {

@@ -82,7 +82,7 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
             }
         });
 
-        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShowTryAgain(), showTryAgain -> {
+        shouldShowTryAgainPin = EasyBind.subscribe(item.getCanManuallyResendMessage(), showTryAgain -> {
             tryAgainMenuItem.setVisible(showTryAgain);
             tryAgainMenuItem.setManaged(showTryAgain);
             if (showTryAgain) {
