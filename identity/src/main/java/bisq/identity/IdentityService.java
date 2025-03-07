@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -97,9 +96,15 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                 // After each successful initialisation of the default node on a transport we start to
                 // initialize the active identities for that transport using a blocking call.
                 // This will delay app startup until all identities are ready on the network side.
-                initializeActiveIdentities(transportType);
-                if (!resultFuture.isDone()) {
-                    resultFuture.complete(true);
+                try {
+                    initializeActiveIdentities(transportType);
+                    if (!resultFuture.isDone()) {
+                        resultFuture.complete(true);
+                    }
+                } catch (Exception e) {
+                    if (!resultFuture.isDone()) {
+                        resultFuture.completeExceptionally(e);
+                    }
                 }
             } else if (!resultFuture.isDone()) {
                 if (failures.incrementAndGet() == map.size()) {
@@ -209,8 +214,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // Private
     /* --------------------------------------------------------------------- */
 
-    private boolean initializeActiveIdentities(TransportType transportType) {
-        AtomicBoolean hadFailure = new AtomicBoolean();
+    private void initializeActiveIdentities(TransportType transportType) {
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
                 .forEach(identity -> {
@@ -219,11 +223,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                         // We use a blocking call
                         networkService.supplyInitializedNode(transportType, identity.getNetworkId()).get();
                     } catch (InterruptedException | ExecutionException e) {
-                        log.error("supplyInitializedNode failed for identity with tag {}", identity.getTag(), e);
-                        hadFailure.set(true);
+                        log.error("Initializing node failed for identity with tag {}", identity.getTag(), e);
+                        throw new RuntimeException("Initializing node failed for identity with tag " + identity.getTag(), e);
                     }
                 });
-        return hadFailure.get();
     }
 
     private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag, Identity identity) {
