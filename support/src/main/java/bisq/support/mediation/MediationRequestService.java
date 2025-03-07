@@ -25,6 +25,7 @@ import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -41,11 +42,9 @@ import com.google.common.primitives.Ints;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -60,6 +59,8 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
+    private final Set<MediatorsResponse> pendingMediatorsResponseMessages = new CopyOnWriteArraySet<>();
+    private Pin channeldPin;
 
     public MediationRequestService(NetworkService networkService,
                                    ChatService chatService,
@@ -89,6 +90,10 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeConfidentialMessageListener(this);
+        if (channeldPin != null) {
+            channeldPin.unbind();
+            channeldPin = null;
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -110,7 +115,7 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     /* --------------------------------------------------------------------- */
 
     public void requestMediation(BisqEasyOpenTradeChannel channel,
-                                   BisqEasyContract contract) {
+                                 BisqEasyContract contract) {
         checkArgument(channel.getBisqEasyOffer().equals(contract.getOffer()));
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
@@ -166,18 +171,34 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
 
     private void processMediationResponse(MediatorsResponse mediatorsResponse) {
         bisqEasyOpenTradeChannelService.findChannelByTradeId(mediatorsResponse.getTradeId())
-                .ifPresent(channel -> {
-                    // Requester had it activated at request time
-                    if (channel.isInMediation()) {
-                        bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toRequester"));
-                    } else {
-                        bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
-                        bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toNonRequester"));
+                .ifPresentOrElse(channel -> {
+                            // Requester had it activated at request time
+                            if (channel.isInMediation()) {
+                                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toRequester"));
+                            } else {
+                                bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
+                                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toNonRequester"));
 
-                        //todo (Critical) - check if we do sent from both peers
-                        // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
-                    }
-                });
+                                //todo (Critical) - check if we do sent from both peers
+                                // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
+                            }
+                            pendingMediatorsResponseMessages.remove(mediatorsResponse);
+                        },
+                        () -> {
+                            // This handles an edge case that the MediatorsResponse arrives before the take offer request was
+                            // processed (in case we are the maker and have been offline at take offer).
+                            log.warn("We received a MediatorsResponse but did not find a matching bisqEasyOpenTradeChannel for trade ID {}.\n" +
+                                            "We add it to the pendingMediatorsResponseMessages set and reprocess it once a new trade channel has been added.",
+                                    mediatorsResponse.getTradeId());
+                            pendingMediatorsResponseMessages.add(mediatorsResponse);
+                            if (channeldPin == null) {
+                                channeldPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(this::maybeProcessPendingMediatorsResponseMessages);
+                            }
+                        });
+    }
+
+    private void maybeProcessPendingMediatorsResponseMessages() {
+        new HashSet<>(pendingMediatorsResponseMessages).forEach(this::processMediationResponse);
     }
 }
 
