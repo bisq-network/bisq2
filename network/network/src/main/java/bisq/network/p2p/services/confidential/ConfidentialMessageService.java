@@ -311,8 +311,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private void handleResult(EnvelopePayloadMessage envelopePayloadMessage, SendConfidentialMessageResult result) {
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             messageDeliveryStatusService.ifPresent(service -> {
-                String messageId = ((AckRequestingMessage) envelopePayloadMessage).getAckRequestingMessageId();
-                service.applyMessageDeliveryStatus(messageId, result.getMessageDeliveryStatus());
+                String ackRequestingMessageId = ((AckRequestingMessage) envelopePayloadMessage).getAckRequestingMessageId();
+                service.applyMessageDeliveryStatus(ackRequestingMessageId, result.getMessageDeliveryStatus());
 
                 // If we tried to store in mailbox we check if at least one successful broadcast happened
                 if (result.getMessageDeliveryStatus() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX) {
@@ -320,10 +320,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             .whenComplete((broadcastResult, throwable) -> {
                                 if (throwable != null || broadcastResult.getNumSuccess() == 0) {
                                     log.warn("mailboxFuture completed and resulted in MessageDeliveryStatus.FAILED");
-                                    service.applyMessageDeliveryStatus(messageId, MessageDeliveryStatus.FAILED);
+                                    service.applyMessageDeliveryStatus(ackRequestingMessageId, MessageDeliveryStatus.FAILED);
                                 } else {
                                     log.info("mailboxFuture completed and resulted in MessageDeliveryStatus.ADDED_TO_MAILBOX");
-                                    service.applyMessageDeliveryStatus(messageId, MessageDeliveryStatus.ADDED_TO_MAILBOX);
+                                    service.applyMessageDeliveryStatus(ackRequestingMessageId, MessageDeliveryStatus.ADDED_TO_MAILBOX);
                                 }
                             });
                 }
