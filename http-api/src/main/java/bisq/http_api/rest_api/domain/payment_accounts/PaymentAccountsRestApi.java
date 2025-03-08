@@ -21,25 +21,9 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.*;
-import bisq.bisq_easy.BisqEasyServiceUtil;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.currency.Market;
-import bisq.common.observable.collection.ObservableSet;
-import bisq.dto.DtoMappings;
 import bisq.dto.account.UserDefinedFiatAccountDto;
 import bisq.dto.account.UserDefinedFiatAccountPayloadDto;
-import bisq.dto.settings.SettingsDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
-import bisq.http_api.rest_api.domain.offers.CreateOfferRequest;
-import bisq.http_api.rest_api.domain.offers.CreateOfferResponse;
-import bisq.http_api.rest_api.domain.settings.SettingsChangeRequest;
-import bisq.offer.Direction;
-import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.spec.PriceSpec;
-import bisq.user.identity.UserIdentity;
-import bisq.user.profile.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -55,15 +39,13 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Path("/payment_accounts")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Tag(name = "Payment Accounts API", description = "API for managing user payment accounts")
+@Tag(name = "Payment Accounts API", description = "API for managing user payment accounts. Right now UserDefinedFiatAccount")
 public class PaymentAccountsRestApi extends RestApiBase {
     private final AccountService accountService;
 
@@ -73,24 +55,22 @@ public class PaymentAccountsRestApi extends RestApiBase {
 
     @GET
     @Operation(
-            summary = "Get user payment accounts",
-            description = "Retrieve the payment accounts",
+            summary = "Get payment accounts",
+            description = "Retrieve all the payment accounts",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Payment accounts retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = SettingsDto.class))),
+                            content = @Content(schema = @Schema(implementation = UserDefinedFiatAccountDto.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
     public Response getPaymentAccounts() {
         try {
             Map<String, Account<?, ? extends PaymentMethod<?>>> accountByNameMap = accountService.getAccountByNameMap();
-
             List<Account<?, ? extends PaymentMethod<?>>> accountsList = new ArrayList<>(accountByNameMap.values());
 
             List<UserDefinedFiatAccountDto> userAccounts = new ArrayList<>();
             for (Account<?, ? extends PaymentMethod<?>> account : accountsList) {
-                if (account instanceof UserDefinedFiatAccount) {
-                    UserDefinedFiatAccount castedAccount = (UserDefinedFiatAccount) account;
+                if (account instanceof UserDefinedFiatAccount castedAccount) {
                     userAccounts.add(
                             new UserDefinedFiatAccountDto(
                                     castedAccount.getAccountName(),
@@ -109,10 +89,34 @@ public class PaymentAccountsRestApi extends RestApiBase {
         }
     }
 
+    @GET
+    @Operation(
+            summary = "Get selected payment account",
+            description = "Get selected payment account",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Selected payment account retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = UserDefinedFiatAccountDto.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    @Path("/selected")
+    public Response getSelectedPaymentAccount() {
+        try {
+            if (accountService.getSelectedAccount().isPresent()) {
+                return buildOkResponse(accountService.getSelectedAccount().get());
+            }
+
+            return buildResponse(Response.Status.NO_CONTENT, "");
+        } catch (Exception e) {
+            log.error("Failed to retrieve payment accounts", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
     @POST
     @Operation(
-            summary = "Add new user payment account",
-            description = "Add new user payment account",
+            summary = "Add new payment account",
+            description = "Add new payment account",
             requestBody = @RequestBody(
                     description = "",
                     content = @Content(schema = @Schema(implementation = AddAccountRequest.class))
@@ -163,6 +167,40 @@ public class PaymentAccountsRestApi extends RestApiBase {
             asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @PATCH
+    @Operation(
+            summary = "Update selected payment account",
+            description = "Update selected payment account",
+            requestBody = @RequestBody(
+                    description = "The setting key and value to be updated",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = PaymentAccountChangeRequest.class))
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Selected payment account set successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input data"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    @Path("/selected")
+    public Response setSelectedPaymentAccount(@Valid PaymentAccountChangeRequest request) {
+        try {
+            UserDefinedFiatAccountDto account = request.selectedAccount();
+            if (account != null) {
+                accountService.setSelectedAccount(new UserDefinedFiatAccount(
+                        account.accountName(),
+                        account.accountPayload().accountData()
+                ));
+            }
+
+            log.info("Updated selected payment account from request: {}", request);
+            return Response.noContent().build();
+        } catch (Exception e) {
+            log.error("Error updating select payment account", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
     }
 }

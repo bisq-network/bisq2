@@ -17,13 +17,8 @@
 
 package bisq.http_api.rest_api.domain.payment_accounts;
 
-import bisq.dto.common.currency.MarketDto;
-import bisq.dto.offer.DirectionDto;
-import bisq.dto.offer.amount.spec.AmountSpecDto;
-import bisq.dto.offer.price.spec.PriceSpecDto;
-
 import java.util.Set;
 
-public record AddAccountRequest(String accountName,
-                                String accountData) {
-}
+public record AddAccountRequest(
+        String accountName,
+        String accountData) { }

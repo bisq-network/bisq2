@@ -17,4 +17,11 @@
 
 package bisq.http_api.rest_api.domain.payment_accounts;
 
-public record AddAccountResponse(String accountName) { }
+import bisq.dto.account.UserDefinedFiatAccountDto;
+
+import javax.annotation.Nullable;
+
+public record PaymentAccountChangeRequest(
+        @Nullable UserDefinedFiatAccountDto selectedAccount
+) {
+}
