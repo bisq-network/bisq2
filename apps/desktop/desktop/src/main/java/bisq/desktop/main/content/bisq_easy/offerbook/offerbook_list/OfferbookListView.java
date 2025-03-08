@@ -46,10 +46,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +72,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
     private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
     private final CheckBox showOnlyMyMessages;
+    private final VBox content;
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
     private Label offerDirectionFilterLabel, paymentsFilterLabel;
     private Subscription showOfferListExpandedPin, showBuyFromOffersPin, showMyOffersOnlyPin,
@@ -82,8 +80,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
-
-//        root.setFillWidth(true);
 
         offerListGreenIcon = ImageUtil.getImageViewById("list-view-green");
         offerListGreyIcon = ImageUtil.getImageViewById("list-view-grey");
@@ -120,10 +116,13 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         tableView.hideHorizontalScrollbar();
         tableView.setFixedCellSize(LIST_CELL_HEIGHT);
         tableView.setPlaceholder(new Label());
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         configOffersTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        root.getChildren().addAll(header, Layout.hLine(), subheader, tableView);
+        content = new VBox(header, Layout.hLine(), subheader, tableView);
+        VBox.setVgrow(content, Priority.ALWAYS);
+        root.getChildren().add(content);
     }
 
     @Override
@@ -232,12 +231,13 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         UIScheduler.run(() -> {
             header.setAlignment(Pos.CENTER);
             header.setPadding(new Insets(4, 0, 0, 0));
-            root.setMaxWidth(COLLAPSED_LIST_WIDTH);
-            root.setPrefWidth(COLLAPSED_LIST_WIDTH);
-            root.setMinWidth(COLLAPSED_LIST_WIDTH);
-            HBox.setMargin(root, new Insets(0, 0, 0, -9));
-            root.getStyleClass().remove("chat-container");
-            root.getStyleClass().add("collapsed-offer-list-container");
+            // +2 to accommodate for the margin
+            root.setMaxWidth(COLLAPSED_LIST_WIDTH + 2);
+            root.setPrefWidth(COLLAPSED_LIST_WIDTH + 2);
+            root.setMinWidth(COLLAPSED_LIST_WIDTH + 2);
+            VBox.setMargin(content, new Insets(0, 0, 0, 2));
+            content.getStyleClass().remove("chat-container");
+            content.getStyleClass().add("collapsed-offer-list-container");
             title.setText("");
             titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip"));
             title.setGraphic(offerListGreyIcon);
@@ -249,9 +249,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(4, 0, 0, 15));
         root.setMaxWidth(Double.MAX_VALUE);
-        HBox.setMargin(root, new Insets(0, 0, 0, 0));
-        root.getStyleClass().remove("collapsed-offer-list-container");
-        root.getStyleClass().add("chat-container");
+        content.getStyleClass().remove("collapsed-offer-list-container");
+        content.getStyleClass().add("chat-container");
+        VBox.setMargin(content, new Insets(0, 0, 0, 4.5));
         title.setText(Res.get("bisqEasy.offerbook.offerList"));
         titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip"));
         title.setOnMouseExited(e -> title.setGraphic(offerListGreenIcon));

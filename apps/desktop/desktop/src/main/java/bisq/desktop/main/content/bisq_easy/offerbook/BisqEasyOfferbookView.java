@@ -63,7 +63,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private final SplitPane splitPane;
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
-    private VBox marketSelectionList, collapsedMarketSelectionList;
+    private VBox marketSelectionList, collapsedMarketSelectionList, chatVBox;
     private Subscription marketsTableViewSelectionPin, selectedMarketChannelItemPin, selectedMarketFilterPin,
             selectedMarketSortTypePin, marketSelectorSearchPin, favouritesTableViewHeightChangedPin,
             favouritesTableViewSelectionPin, shouldShowAppliedFiltersPin,
@@ -310,23 +310,31 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         }
         SplitPane.setResizableWithParent(centerVBox, showOfferListExpanded);
         SplitPane.setResizableWithParent(offerbookList, showOfferListExpanded);
+
+        updateChatContainerStyleClass();
     }
 
     private void updateChatContainerStyleClass() {
-        centerVBox.getStyleClass().clear();
+        chatVBox.getStyleClass().clear();
         String styleClass;
         boolean showMarketSelectionListCollapsed = getModel().getShowMarketSelectionListCollapsed().get();
         boolean showOfferListCollapsed = !getModel().getShowOfferListExpanded().get();
+        Insets offerListCollapsedInsets = new Insets(0, 0, 0, 0);
+        Insets offerListExpandedInsets = new Insets(0, 4.5, 0, 0);
         if (showOfferListCollapsed && showMarketSelectionListCollapsed) {
             styleClass = "chat-container-with-both-lists-collapsed";
+            VBox.setMargin(chatVBox, offerListCollapsedInsets);
         } else if (showOfferListCollapsed) {
             styleClass = "chat-container-with-offer-list-collapsed";
+            VBox.setMargin(chatVBox, offerListCollapsedInsets);
         } else if (showMarketSelectionListCollapsed) {
             styleClass = "chat-container-with-market-selection-list-collapsed";
+            VBox.setMargin(chatVBox, offerListExpandedInsets);
         } else { // both are expanded
             styleClass = "bisq-easy-container";
+            VBox.setMargin(chatVBox, offerListExpandedInsets);
         }
-        centerVBox.getStyleClass().add(styleClass);
+        chatVBox.getStyleClass().add(styleClass);
     }
 
     private BisqEasyOfferbookModel getModel() {
@@ -498,8 +506,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
     private void addChatBox() {
         centerVBox.setSpacing(0);
-//        centerVBox.setFillWidth(true);
-//        centerVBox.setMaxWidth(Double.MAX_VALUE);
 
         searchBox.getStyleClass().add("offerbook-search-box");
         messageTypeFilterMenu = createAndGetMessageTypeFilterMenu();
@@ -514,7 +520,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         chatMessagesComponent.setMinWidth(700);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
+        chatVBox = new VBox(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
+        VBox.setVgrow(chatVBox, Priority.ALWAYS);
+        centerVBox.getChildren().add(chatVBox);
         centerVBox.setAlignment(Pos.CENTER);
     }
 
