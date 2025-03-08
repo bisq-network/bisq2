@@ -36,6 +36,10 @@ public class BisqEasyTradeFormatter {
         return AmountFormatter.formatQuoteAmount(BisqEasyTradeUtils.getQuoteSideMonetary(trade));
     }
 
+    public static String formatQuoteSideAmount(BisqEasyContract contract) {
+        return AmountFormatter.formatQuoteAmount(BisqEasyTradeUtils.getQuoteSideMonetary(contract));
+    }
+
     public static String formatQuoteSideAmountWithCode(BisqEasyTrade trade) {
         return formatQuoteSideAmountWithCode(trade.getContract());
     }
