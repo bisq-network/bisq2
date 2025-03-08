@@ -77,7 +77,7 @@ public class TorControlProtocol implements AutoCloseable {
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
 
-        if (reply.equals("250 OK")) {
+        if (isSuccessReply(reply)) {
             return;
         }
 
@@ -92,7 +92,7 @@ public class TorControlProtocol implements AutoCloseable {
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
 
-        if (reply.equals("250 OK")) {
+        if (isSuccessReply(reply)) {
             return;
         }
 
@@ -121,7 +121,7 @@ public class TorControlProtocol implements AutoCloseable {
         String command = "HSFETCH " + hsAddress + "\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
-        if (!reply.equals("250 OK")) {
+        if (!isSuccessReply(reply)) {
             throw new ControlCommandFailedException("Couldn't initiate HSFETCH for : " + hsAddress);
         }
     }
@@ -130,7 +130,7 @@ public class TorControlProtocol implements AutoCloseable {
         String command = "RESETCONF " + configName + "\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
-        if (!reply.equals("250 OK")) {
+        if (!isSuccessReply(reply)) {
             throw new ControlCommandFailedException("Couldn't reset config: " + configName);
         }
     }
@@ -139,7 +139,7 @@ public class TorControlProtocol implements AutoCloseable {
         String command = "SETCONF " + configName + "=" + configValue + "\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
-        if (!reply.equals("250 OK")) {
+        if (!isSuccessReply(reply)) {
             throw new ControlCommandFailedException("Couldn't set config: " + configName + "=" + configValue);
         }
     }
@@ -148,7 +148,7 @@ public class TorControlProtocol implements AutoCloseable {
         String command = "TAKEOWNERSHIP\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
-        if (!reply.equals("250 OK")) {
+        if (!isSuccessReply(reply)) {
             throw new ControlCommandFailedException("Couldn't take ownership");
         }
     }
@@ -242,7 +242,7 @@ public class TorControlProtocol implements AutoCloseable {
         String command = stringBuilder.toString();
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
-        if (!reply.equals("250 OK")) {
+        if (!isSuccessReply(reply)) {
             throw new ControlCommandFailedException("Couldn't set events: " + events);
         }
     }
@@ -340,5 +340,9 @@ public class TorControlProtocol implements AutoCloseable {
         }
 
         return firstLine;*/
+    }
+
+    private boolean isSuccessReply(String reply) {
+        return reply.equals("250 OK");
     }
 }
