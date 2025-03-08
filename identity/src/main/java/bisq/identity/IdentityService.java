@@ -21,6 +21,7 @@ package bisq.identity;
 import bisq.common.application.Service;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkIdService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -36,11 +37,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -84,35 +85,36 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         // Create default identity
         getOrCreateDefaultIdentity();
 
-        Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport();
-        if (map.isEmpty()) {
+        Map<TransportType, CompletableFuture<Node>> defaultNodeResultByTransport = networkService.getInitializedDefaultNodeByTransport();
+        if (defaultNodeResultByTransport.isEmpty()) {
             return CompletableFuture.failedFuture(new RuntimeException("networkService.getInitializedDefaultNodeByTransport returns an empty map"));
         }
 
         CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
         AtomicInteger failures = new AtomicInteger();
-        map.forEach((transportType, future) -> future.whenComplete((node, throwable) -> {
-            if (throwable == null && node != null) {
-                // After each successful initialisation of the default node on a transport we start to
-                // initialize the active identities for that transport using a blocking call.
-                // This will delay app startup until all identities are ready on the network side.
-                try {
-                    initializeActiveIdentities(transportType);
-                    if (!resultFuture.isDone()) {
-                        resultFuture.complete(true);
+        defaultNodeResultByTransport.forEach((transportType, future) -> future
+                .whenComplete((defaultNode, throwable) -> {
+                    if (throwable == null && defaultNode != null) {
+                        // After each successful initialisation of the default node on a transport we start to
+                        // initialize the active identities for that transport using a blocking call.
+                        // This will delay app startup until all identities are ready on the network side.
+                        try {
+                            initializeAllActiveIdentities(transportType).get();
+                            if (!resultFuture.isDone()) {
+                                resultFuture.complete(true);
+                            }
+                        } catch (Exception e) {
+                            if (!resultFuture.isDone()) {
+                                resultFuture.completeExceptionally(e);
+                            }
+                        }
+                    } else if (!resultFuture.isDone()) {
+                        if (failures.incrementAndGet() == defaultNodeResultByTransport.size()) {
+                            // All failed
+                            resultFuture.completeExceptionally(new RuntimeException("Default node initialization on all transports failed"));
+                        }
                     }
-                } catch (Exception e) {
-                    if (!resultFuture.isDone()) {
-                        resultFuture.completeExceptionally(e);
-                    }
-                }
-            } else if (!resultFuture.isDone()) {
-                if (failures.incrementAndGet() == map.size()) {
-                    // All failed
-                    resultFuture.completeExceptionally(new RuntimeException("Default node initialization on all transports failed"));
-                }
-            }
-        }));
+                }));
         return resultFuture;
     }
 
@@ -214,19 +216,14 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void initializeActiveIdentities(TransportType transportType) {
-        getActiveIdentityByTag().values().stream()
+    private CompletableFuture<List<Node>> initializeAllActiveIdentities(TransportType transportType) {
+        Stream<CompletableFuture<Node>> futures = getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
-                .forEach(identity -> {
+                .map(identity -> {
                     maybeRecoverNetworkId(identity);
-                    try {
-                        // We use a blocking call
-                        networkService.supplyInitializedNode(transportType, identity.getNetworkId()).get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        log.error("Initializing node failed for identity with tag {}", identity.getTag(), e);
-                        throw new RuntimeException("Initializing node failed for identity with tag " + identity.getTag(), e);
-                    }
+                    return networkService.supplyInitializedNode(transportType, identity.getNetworkId());
                 });
+        return CompletableFutureUtils.allOf(futures);
     }
 
     private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag, Identity identity) {
