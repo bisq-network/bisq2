@@ -194,7 +194,7 @@ public class TorService implements Service {
             var localServerSocket = new ServerSocket(RANDOM_PORT, 50, bindAddress);
 
             String onionAddress = torKeyPair.getOnionAddress();
-            log.info("Publish onion service for onion address={}:{}", onionAddress, port);
+            log.info("Publish onion service for onion address {}:{}", onionAddress, port);
             if (!publishedOnionServices.contains(onionAddress)) {
                 int localPort = localServerSocket.getLocalPort();
                 torController.publish(torKeyPair, port, localPort);

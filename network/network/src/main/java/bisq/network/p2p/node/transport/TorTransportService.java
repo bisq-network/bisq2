@@ -73,7 +73,9 @@ public class TorTransportService implements TransportService {
     @Override
     public void initialize() {
         log.info("Initialize Tor");
+        long ts = System.currentTimeMillis();
         torService.initialize().join();
+        log.info("Initializing Tor took {} ms", System.currentTimeMillis() - ts);
     }
 
     @Override
