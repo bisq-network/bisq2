@@ -102,7 +102,6 @@ public class MediatorController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getListItems().onActivate();
         applyFilteredListPredicate(model.getShowClosedCases().get());
 
         mediationCaseListItemPin = FxBindings.<MediationCase, MediationCaseListItem>bind(model.getListItems())

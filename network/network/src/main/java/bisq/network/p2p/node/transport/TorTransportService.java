@@ -73,7 +73,9 @@ public class TorTransportService implements TransportService {
     @Override
     public void initialize() {
         log.info("Initialize Tor");
+        long ts = System.currentTimeMillis();
         torService.initialize().join();
+        log.info("Initializing Tor took {} ms", System.currentTimeMillis() - ts);
     }
 
     @Override
@@ -93,7 +95,7 @@ public class TorTransportService implements TransportService {
             bootstrapInfo.getBootstrapDetails().set("Create Onion service for node ID '" + networkId + "'");
 
             TorKeyPair torKeyPair = keyBundle.getTorKeyPair();
-            ServerSocket serverSocket = torService.createOnionService(port, torKeyPair)
+            ServerSocket serverSocket = torService.publishOnionService(port, torKeyPair)
                     .get(2, TimeUnit.MINUTES);
 
             bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
