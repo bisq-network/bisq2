@@ -119,6 +119,11 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
         persist();
     }
 
+    public void removeMediationCase(MediationCase mediationCase) {
+        getMediationCases().remove(mediationCase);
+        persist();
+    }
+
     public void reOpenMediationCase(MediationCase mediationCase) {
         mediationCase.setClosed(false);
         persist();

@@ -74,7 +74,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -658,7 +661,16 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         resendMessageService,
                         authorizedBondedRolesService))
                 .collect(Collectors.toSet()));
-        addChatRulesWarningMessageListItemInPrivateChats(channel);
+
+        boolean isMediator = false;
+        if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            if (bisqEasyOpenTradeChannel.isMediator()) {
+                isMediator = true;
+            }
+        }
+        if (!isMediator) {
+            addChatRulesWarningMessageListItemInPrivateChats(channel);
+        }
 
         model.getChatMessageIds().clear();
         model.getChatMessageIds().addAll(model.getChatMessages().stream()
@@ -814,16 +826,17 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 new HashSet<>());
     }
 
-    private <M extends ChatMessage, C extends ChatChannel<M>> ChatMessageListItem<M, C> createChatMessageListItem(M message, C channel) {
+    private <M extends ChatMessage, C extends ChatChannel<M>> ChatMessageListItem<M, C> createChatMessageListItem(M message,
+                                                                                                                  C channel) {
         return new ChatMessageListItem<>(message,
-                        channel,
-                        marketPriceService,
-                        userProfileService,
-                        reputationService,
-                        bisqEasyTradeService,
-                        userIdentityService,
-                        networkService,
-                        Optional.empty(),
-                        authorizedBondedRolesService);
+                channel,
+                marketPriceService,
+                userProfileService,
+                reputationService,
+                bisqEasyTradeService,
+                userIdentityService,
+                networkService,
+                Optional.empty(),
+                authorizedBondedRolesService);
     }
 }
