@@ -108,6 +108,8 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
         quoteAmount = contract.getQuoteSideAmount();
         quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(contract);
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
+
+        onActivate();
     }
 
     @Override
