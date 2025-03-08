@@ -17,6 +17,7 @@
 
 package bisq.dto;
 
+import bisq.account.AccountService;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
@@ -38,6 +39,7 @@ import bisq.contract.ContractSignatureData;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.dto.account.UserDefinedFiatAccountDto;
 import bisq.dto.account.protocol_type.TradeProtocolTypeDto;
 import bisq.dto.chat.ChatMessageTypeDto;
 import bisq.dto.chat.CitationDto;
@@ -982,7 +984,6 @@ public class DtoMappings {
             );
         }
     }
-
 
     // trade
 
