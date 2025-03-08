@@ -55,6 +55,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -131,6 +132,35 @@ public class PaymentAccountsRestApi extends RestApiBase {
         try {
             accountService.addPaymentAccount(new UserDefinedFiatAccount(request.accountName(), request.accountData()));
             asyncResponse.resume(buildResponse(Response.Status.CREATED, new AddAccountResponse(request.accountName())));
+        } catch (Exception e) {
+            asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+
+    @DELETE
+    @Operation(
+            summary = "Delete Payment account",
+            description = "Delete Payment account",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Offer successfully deleted"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "404", description = "Offer or user identity not found"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error"),
+                    @ApiResponse(responseCode = "503", description = "Request timed out")
+            }
+    )
+    @Path("/{accountName}")
+    public void removeAccount(@PathParam("accountName") String accountName, @Suspended AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response -> {
+            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
+        });
+        try {
+            UserDefinedFiatAccount account = new UserDefinedFiatAccount(
+                    accountName, ""
+            );
+            accountService.removePaymentAccount(account);
+            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
