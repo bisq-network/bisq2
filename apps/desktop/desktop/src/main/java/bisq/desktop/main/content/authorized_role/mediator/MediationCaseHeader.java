@@ -17,14 +17,17 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.authorized_role.mediator.details.MediationCaseDetailsController;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
@@ -150,6 +153,11 @@ public class MediationCaseHeader {
             }
         }
 
+        void onShowDetails() {
+            MediationCaseListItem item = model.getMediationCaseListItem().get();
+            Navigation.navigateTo(NavigationTarget.MEDIATION_CASE_DETAILS, new MediationCaseDetailsController.InitData(item));
+        }
+
         private void deRemoveCase() {
             MediationCaseListItem listItem = model.getMediationCaseListItem().get();
             if (listItem != null) {
@@ -208,7 +216,7 @@ public class MediationCaseHeader {
         private final Triple<Text, Text, VBox> tradeId;
         private final UserProfileDisplay makerProfileDisplay, takerProfileDisplay;
         private final Label directionalTitle;
-        private final Button openCloseButton, leaveButton, removeButton;
+        private final Button openCloseButton, leaveButton, removeButton, detailsButton;
         private Subscription mediationCaseListItemPin, showClosedCasesPin;
 
         private View(Model model, Controller controller) {
@@ -247,14 +255,19 @@ public class MediationCaseHeader {
             removeButton.setMinWidth(120);
             removeButton.setStyle("-fx-padding: 5 16 5 16");
 
+            detailsButton = new Button(Res.get("authorizedRole.mediator.mediationCaseDetails.show"));
+            detailsButton.getStyleClass().addAll("grey-transparent-outlined-button");
+            detailsButton.setMinWidth(160);
+
             Region spacer = Spacer.fillHBox();
             HBox.setMargin(spacer, new Insets(0, -50, 0, 0));
             HBox.setMargin(directionalTitle, new Insets(10, -20, 0, -20));
             HBox.setMargin(leaveButton, new Insets(0, -20, 0, 0));
             HBox.setMargin(removeButton, new Insets(0, -20, 0, 0));
+            HBox.setMargin(detailsButton, new Insets(0, -20, 0, 0));
             HBox.setMargin(openCloseButton, new Insets(0, -20, 0, 0));
             root.getChildren().addAll(maker.getThird(), directionalTitle, taker.getThird(), tradeId.getThird(), spacer,
-                    removeButton, leaveButton, openCloseButton);
+                    detailsButton, removeButton, leaveButton, openCloseButton);
         }
 
         @Override
@@ -306,6 +319,7 @@ public class MediationCaseHeader {
             openCloseButton.setOnAction(e -> controller.onToggleOpenClose());
             leaveButton.setOnAction(e -> controller.onLeaveChannel());
             removeButton.setOnAction(e -> controller.onRemoveCase());
+            detailsButton.setOnAction(e -> controller.onShowDetails());
         }
 
         @Override
@@ -315,6 +329,7 @@ public class MediationCaseHeader {
             openCloseButton.setOnAction(null);
             leaveButton.setOnAction(null);
             removeButton.setOnAction(null);
+            detailsButton.setOnAction(null);
 
             makerProfileDisplay.dispose();
             takerProfileDisplay.dispose();
