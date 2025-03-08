@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.authorized_role.mediator;
 
 import bisq.chat.ChatService;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.data.Triple;
@@ -26,6 +27,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
+import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediatorService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -75,6 +77,7 @@ public class MediationCaseHeader {
         private final Runnable onCloseHandler;
         private final Runnable onReOpenHandler;
         private final LeavePrivateChatManager leavePrivateChatManager;
+        private final DontShowAgainService dontShowAgainService;
 
         private Controller(ServiceProvider serviceProvider, Runnable onCloseHandler, Runnable onReOpenHandler) {
             this.onCloseHandler = onCloseHandler;
@@ -83,6 +86,7 @@ public class MediationCaseHeader {
             channelService = chatService.getBisqEasyOpenTradeChannelService();
             leavePrivateChatManager = chatService.getLeavePrivateChatManager();
             mediatorService = serviceProvider.getSupportService().getMediatorService();
+            dontShowAgainService = serviceProvider.getDontShowAgainService();
 
             model = new Model();
             view = new View(model, this);
@@ -104,38 +108,89 @@ public class MediationCaseHeader {
             if (model.getShowClosedCases().get()) {
                 doReOpen();
             } else {
-                new Popup().warning(Res.get("authorizedRole.mediator.close.warning"))
-                        .actionButtonText(Res.get("confirmation.yes"))
-                        .onAction(this::doClose)
-                        .closeButtonText(Res.get("confirmation.no"))
-                        .show();
+                String key = "mediator.close.warning";
+                if (dontShowAgainService.showAgain(key)) {
+                    new Popup().warning(Res.get("authorizedRole.mediator.close.warning"))
+                            .dontShowAgainId(key)
+                            .actionButtonText(Res.get("confirmation.yes"))
+                            .onAction(this::doClose)
+                            .closeButtonText(Res.get("confirmation.no"))
+                            .show();
+                } else {
+                    doClose();
+                }
             }
         }
 
         void onLeaveChannel() {
-            new Popup().warning(Res.get("authorizedRole.mediator.leaveChannel.warning"))
-                    .actionButtonText(Res.get("confirmation.yes"))
-                    .onAction(this::doLeave)
-                    .closeButtonText(Res.get("confirmation.no"))
-                    .show();
+            String key = "mediator.leaveChannel.warning";
+            if (dontShowAgainService.showAgain(key)) {
+                new Popup().warning(Res.get("authorizedRole.mediator.leaveChannel.warning"))
+                        .dontShowAgainId(key)
+                        .actionButtonText(Res.get("confirmation.yes"))
+                        .onAction(this::doLeave)
+                        .closeButtonText(Res.get("confirmation.no"))
+                        .show();
+            } else {
+                doLeave();
+            }
+        }
+
+        void onRemoveCase() {
+            String key = "mediator.removeCase.warning";
+            if (dontShowAgainService.showAgain(key)) {
+                new Popup().warning(Res.get("authorizedRole.mediator.removeCase.warning"))
+                        .dontShowAgainId(key)
+                        .actionButtonText(Res.get("confirmation.yes"))
+                        .onAction(this::deRemoveCase)
+                        .closeButtonText(Res.get("confirmation.no"))
+                        .show();
+            } else {
+                deRemoveCase();
+            }
+        }
+
+        private void deRemoveCase() {
+            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            if (listItem != null) {
+                doClose();
+                doLeave();
+                mediatorService.removeMediationCase(listItem.getMediationCase());
+            }
         }
 
         private void doLeave() {
-            leavePrivateChatManager.leaveChannel(model.getMediationCaseListItem().get().getChannel());
+            MediationCaseListItem listItem = model.getMediationCaseListItem().get();
+            if (listItem != null) {
+                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                if (channel != null) {
+                    leavePrivateChatManager.leaveChannel(channel);
+                }
+            }
         }
 
         private void doClose() {
             MediationCaseListItem listItem = model.getMediationCaseListItem().get();
-            channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), listItem.getChannel());
-            mediatorService.closeMediationCase(listItem.getMediationCase());
-            onCloseHandler.run();
+            if (listItem != null) {
+                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                if (channel != null) {
+                    channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), channel);
+                }
+                mediatorService.closeMediationCase(listItem.getMediationCase());
+                onCloseHandler.run();
+            }
         }
 
         private void doReOpen() {
             MediationCaseListItem listItem = model.getMediationCaseListItem().get();
-            channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), listItem.getChannel());
-            mediatorService.reOpenMediationCase(listItem.getMediationCase());
-            onReOpenHandler.run();
+            if (listItem != null) {
+                BisqEasyOpenTradeChannel channel = listItem.getChannel();
+                if (channel != null) {
+                    channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), channel);
+                }
+                mediatorService.reOpenMediationCase(listItem.getMediationCase());
+                onReOpenHandler.run();
+            }
         }
     }
 
@@ -153,7 +208,7 @@ public class MediationCaseHeader {
         private final Triple<Text, Text, VBox> tradeId;
         private final UserProfileDisplay makerProfileDisplay, takerProfileDisplay;
         private final Label directionalTitle;
-        private final Button openCloseButton, leaveButton;
+        private final Button openCloseButton, leaveButton, removeButton;
         private Subscription mediationCaseListItemPin, showClosedCasesPin;
 
         private View(Model model, Controller controller) {
@@ -188,12 +243,18 @@ public class MediationCaseHeader {
             leaveButton.setMinWidth(120);
             leaveButton.setStyle("-fx-padding: 5 16 5 16");
 
+            removeButton = new Button(Res.get("authorizedRole.mediator.remove"));
+            removeButton.setMinWidth(120);
+            removeButton.setStyle("-fx-padding: 5 16 5 16");
+
             Region spacer = Spacer.fillHBox();
             HBox.setMargin(spacer, new Insets(0, -50, 0, 0));
             HBox.setMargin(directionalTitle, new Insets(10, -20, 0, -20));
             HBox.setMargin(leaveButton, new Insets(0, -20, 0, 0));
+            HBox.setMargin(removeButton, new Insets(0, -20, 0, 0));
             HBox.setMargin(openCloseButton, new Insets(0, -20, 0, 0));
-            root.getChildren().addAll(maker.getThird(), directionalTitle, taker.getThird(), tradeId.getThird(), spacer, leaveButton, openCloseButton);
+            root.getChildren().addAll(maker.getThird(), directionalTitle, taker.getThird(), tradeId.getThird(), spacer,
+                    removeButton, leaveButton, openCloseButton);
         }
 
         @Override
@@ -244,6 +305,7 @@ public class MediationCaseHeader {
                     });
             openCloseButton.setOnAction(e -> controller.onToggleOpenClose());
             leaveButton.setOnAction(e -> controller.onLeaveChannel());
+            removeButton.setOnAction(e -> controller.onRemoveCase());
         }
 
         @Override
@@ -252,6 +314,7 @@ public class MediationCaseHeader {
             showClosedCasesPin.unsubscribe();
             openCloseButton.setOnAction(null);
             leaveButton.setOnAction(null);
+            removeButton.setOnAction(null);
 
             makerProfileDisplay.dispose();
             takerProfileDisplay.dispose();
