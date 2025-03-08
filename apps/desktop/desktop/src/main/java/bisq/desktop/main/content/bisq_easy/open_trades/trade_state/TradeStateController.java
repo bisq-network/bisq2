@@ -256,7 +256,7 @@ public class TradeStateController implements Controller {
                 .show();
     }
 
-    void onViewTradeDetails() {
+    void onShowTradeDetails() {
         BisqEasyOpenTradeChannel channel = model.getChannel().get();
         Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService,
                 bisqEasyTradeService,

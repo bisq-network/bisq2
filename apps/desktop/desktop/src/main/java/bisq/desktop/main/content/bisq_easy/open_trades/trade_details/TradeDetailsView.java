@@ -40,7 +40,7 @@ import java.util.Optional;
 @Slf4j
 public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, TradeDetailsController> {
     private final Button closeButton;
-    private final Label headline, tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
+    private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
             fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
             settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressTitleLabel,
             btcPaymentAddressDetailsLabel, paymentProofTitleLabel, paymentProofDetailsLabel,
@@ -57,7 +57,7 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
         closeButtonRow.setPadding(new Insets(15, 15, 0, 0));
 
-        headline = new Label();
+        Label headline = new Label(Res.get("bisqEasy.openTrades.tradeDetails.headline"));
         headline.getStyleClass().add("bisq-text-17");
         headline.setAlignment(Pos.CENTER);
         headline.setMaxWidth(Double.MAX_VALUE);
@@ -217,7 +217,6 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
 
     @Override
     protected void onViewAttached() {
-        headline.setText(Res.get("bisqEasy.openTrades.tradeDetails.headline"));
         tradeDateLabel.setText(model.getTradeDate());
 
         tradeDurationBox.setVisible(model.getTradeDuration().isPresent());
