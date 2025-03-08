@@ -343,6 +343,6 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private boolean isSuccessReply(String reply) {
-        return reply.equals("250 OK");
+        return reply.startsWith("250");
     }
 }
