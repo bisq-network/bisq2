@@ -24,7 +24,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.application.State;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.splash.temp.BootstrapStateDisplay;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.common.network.TransportType;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.splash.temp;
+package bisq.desktop.splash;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
