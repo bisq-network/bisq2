@@ -17,11 +17,14 @@
 
 package bisq.chat;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import java.util.Optional;
 
 @Getter
 @ToString
@@ -32,9 +35,15 @@ public final class Citation implements NetworkProto {
     private final String authorUserProfileId;
     private final String text;
 
-    public Citation(String authorUserProfileId, String text) {
+    // Added with v2.1.7
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final Optional<String> chatMessageId;
+
+    public Citation(String authorUserProfileId, String text, Optional<String> chatMessageId) {
         this.authorUserProfileId = authorUserProfileId;
         this.text = text;
+        this.chatMessageId = chatMessageId;
 
         verify();
     }
@@ -47,9 +56,11 @@ public final class Citation implements NetworkProto {
 
     @Override
     public bisq.chat.protobuf.Citation.Builder getBuilder(boolean serializeForHash) {
-        return bisq.chat.protobuf.Citation.newBuilder()
+        bisq.chat.protobuf.Citation.Builder builder = bisq.chat.protobuf.Citation.newBuilder()
                 .setAuthorUserProfileId(authorUserProfileId)
                 .setText(text);
+        chatMessageId.ifPresent(builder::setChatMessageId);
+        return builder;
     }
 
     @Override
@@ -59,11 +70,12 @@ public final class Citation implements NetworkProto {
 
     public static Citation fromProto(bisq.chat.protobuf.Citation proto) {
         return new Citation(proto.getAuthorUserProfileId(),
-                proto.getText());
+                proto.getText(),
+                proto.hasChatMessageId() ? Optional.of(proto.getChatMessageId()) : Optional.empty());
     }
 
     public boolean isValid() {
-        return authorUserProfileId != null && !authorUserProfileId.isEmpty() &&
-                text != null && !text.isEmpty();
+        return authorUserProfileId != null && !authorUserProfileId.isEmpty()
+                && text != null && !text.isEmpty();
     }
 }

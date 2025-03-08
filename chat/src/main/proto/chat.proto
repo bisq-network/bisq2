@@ -32,6 +32,7 @@ enum ChatMessageType {
   CHATMESSAGETYPE_LEAVE = 2;
   CHATMESSAGETYPE_TAKE_BISQ_EASY_OFFER = 3;
   CHATMESSAGETYPE_PROTOCOL_LOG_MESSAGE = 4;
+  CHATMESSAGETYPE_CHAT_RULES_WARNING = 5;
 }
 
 enum ChatChannelNotificationType {
@@ -55,6 +56,7 @@ enum ChatChannelDomain {
 message Citation {
   string authorUserProfileId = 1;
   string text = 2;
+  optional string chatMessageId = 3;
 }
 
 message ChatMessage {

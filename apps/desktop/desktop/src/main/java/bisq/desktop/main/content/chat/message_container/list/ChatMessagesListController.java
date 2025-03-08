@@ -42,6 +42,7 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -535,6 +536,22 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         return resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
     }
 
+    public void onLearnMoreAboutChatRules() {
+        Navigation.navigateTo(NavigationTarget.CHAT_RULES);
+    }
+
+    public void onClickQuoteMessage(Optional<String> chatMessageId) {
+        chatMessageId.ifPresent(messageId -> {
+            model.getChatMessages().forEach(item -> {
+                boolean shouldHighlightMessage = item.getChatMessage().getId().equals(messageId);
+                item.getShowHighlighted().set(shouldHighlightMessage);
+                if (shouldHighlightMessage) {
+                    view.scrollToChatMessage(item);
+                }
+            });
+        });
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Scrolling
@@ -641,6 +658,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         resendMessageService,
                         authorizedBondedRolesService))
                 .collect(Collectors.toSet()));
+        addChatRulesWarningMessageListItemInPrivateChats(channel);
+
         model.getChatMessageIds().clear();
         model.getChatMessageIds().addAll(model.getChatMessages().stream()
                 .map(e -> e.getChatMessage().getId())
@@ -745,5 +764,66 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             chatService.getBisqEasyOfferbookChannelService()
                     .deleteChatMessageReaction((BisqEasyOfferbookMessageReaction) messageReaction, userIdentity.getNetworkIdWithKeyPair());
         }
+    }
+
+    private <M extends ChatMessage, C extends ChatChannel<M>> void addChatRulesWarningMessageListItemInPrivateChats(C channel) {
+        if (channel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
+            TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = createChatRulesWarningMessage(twoPartyPrivateChatChannel);
+            model.getChatMessages().add(createChatMessageListItem(twoPartyPrivateChatMessage, twoPartyPrivateChatChannel));
+        } else if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = createChatRulesWarningMessage(bisqEasyOpenTradeChannel);
+            model.getChatMessages().add(createChatMessageListItem(bisqEasyOpenTradeMessage, bisqEasyOpenTradeChannel));
+        }
+    }
+
+    private TwoPartyPrivateChatMessage createChatRulesWarningMessage(TwoPartyPrivateChatChannel channel) {
+        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
+        UserProfile senderUserProfile = channel.getPeer();
+        String text = Res.get("chat.private.chatRulesWarningMessage.text");
+        return new TwoPartyPrivateChatMessage(StringUtils.createUid(),
+                channel.getChatChannelDomain(),
+                channel.getId(),
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                text,
+                Optional.empty(),
+                0L,
+                false,
+                ChatMessageType.CHAT_RULES_WARNING,
+                new HashSet<>());
+    }
+
+    private BisqEasyOpenTradeMessage createChatRulesWarningMessage(BisqEasyOpenTradeChannel channel) {
+        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
+        UserProfile senderUserProfile = channel.getPeer();
+        String text = Res.get("chat.private.chatRulesWarningMessage.text");
+        return new BisqEasyOpenTradeMessage(channel.getTradeId(),
+                StringUtils.createUid(),
+                channel.getId(),
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                text,
+                Optional.empty(),
+                0L,
+                false,
+                channel.getMediator(),
+                ChatMessageType.CHAT_RULES_WARNING,
+                Optional.empty(),
+                new HashSet<>());
+    }
+
+    private <M extends ChatMessage, C extends ChatChannel<M>> ChatMessageListItem<M, C> createChatMessageListItem(M message, C channel) {
+        return new ChatMessageListItem<>(message,
+                        channel,
+                        marketPriceService,
+                        userProfileService,
+                        reputationService,
+                        bisqEasyTradeService,
+                        userIdentityService,
+                        networkService,
+                        Optional.empty(),
+                        authorizedBondedRolesService);
     }
 }
