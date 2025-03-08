@@ -17,10 +17,10 @@
 
 package bisq.network.p2p.services.confidential;
 
+import bisq.common.network.Address;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -347,6 +347,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
         // TODO (refactor, low prio) async for creating the stores, could be made blocking
         BroadcastResult mailboxFuture = dataService.get().addMailboxData(mailboxData, senderKeyPair, publicKey).join();
+        log.info("Try to store confidentialMessage to mailbox. ReceiverKeyId={}", confidentialMessage.getReceiverKeyId());
         return new SendConfidentialMessageResult(MessageDeliveryStatus.TRY_ADD_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 
@@ -366,7 +367,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         return keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId())
                 .map(receiversKeyPair -> supplyAsync(() -> {
                     try {
-                        log.info("Found a matching key for processing confidentialMessage");
+                        log.info("Found a matching key for processing confidentialMessage. ReceiverKeyId={}", confidentialMessage.getReceiverKeyId());
                         ConfidentialData confidentialData = confidentialMessage.getConfidentialData();
                         byte[] decryptedBytes = HybridEncryption.decryptAndVerify(confidentialData, receiversKeyPair);
                         bisq.network.protobuf.EnvelopePayloadMessage decryptedProto = bisq.network.protobuf.EnvelopePayloadMessage.parseFrom(decryptedBytes);
@@ -378,7 +379,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         boolean wasNotPresent = processedEnvelopePayloadMessages.add(decryptedEnvelopePayloadMessage);
                         if (wasNotPresent) {
                             PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
-                            log.info("Decrypted confidentialMessage");
+                            log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", decryptedEnvelopePayloadMessage.getClass().getSimpleName());
                             runAsync(() -> listeners.forEach(listener -> {
                                 try {
                                     listener.onMessage(decryptedEnvelopePayloadMessage);
