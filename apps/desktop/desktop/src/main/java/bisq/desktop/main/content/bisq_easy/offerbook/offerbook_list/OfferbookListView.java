@@ -228,21 +228,28 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     }
 
     private void collapseListView() {
-        UIScheduler.run(() -> {
-            header.setAlignment(Pos.CENTER);
-            header.setPadding(new Insets(4, 0, 0, 0));
-            // +2 to accommodate for the margin
-            root.setMaxWidth(COLLAPSED_LIST_WIDTH + 2);
-            root.setPrefWidth(COLLAPSED_LIST_WIDTH + 2);
-            root.setMinWidth(COLLAPSED_LIST_WIDTH + 2);
-            VBox.setMargin(content, new Insets(0, 0, 0, 2));
-            content.getStyleClass().remove("chat-container");
-            content.getStyleClass().add("collapsed-offer-list-container");
-            title.setText("");
-            titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip"));
-            title.setGraphic(offerListGreyIcon);
-            title.setOnMouseExited(e -> title.setGraphic(offerListGreyIcon));
-        }).after(BisqEasyOfferbookView.ANIMATION_DURATION);
+        boolean useAnimations = controller.getUseAnimations();
+        if (useAnimations) {
+            UIScheduler.run(this::applyCollapsedViewChanges).after(BisqEasyOfferbookView.ANIMATION_DURATION);
+        } else {
+            applyCollapsedViewChanges();
+        }
+    }
+
+    private void applyCollapsedViewChanges() {
+        header.setAlignment(Pos.CENTER);
+        header.setPadding(new Insets(4, 0, 0, 0));
+        // +2 to accommodate for the margin
+        root.setMaxWidth(COLLAPSED_LIST_WIDTH + 2);
+        root.setPrefWidth(COLLAPSED_LIST_WIDTH + 2);
+        root.setMinWidth(COLLAPSED_LIST_WIDTH + 2);
+        VBox.setMargin(content, new Insets(0, 0, 0, 2));
+        content.getStyleClass().remove("chat-container");
+        content.getStyleClass().add("collapsed-offer-list-container");
+        title.setText("");
+        titleTooltip.setText(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip"));
+        title.setGraphic(offerListGreyIcon);
+        title.setOnMouseExited(e -> title.setGraphic(offerListGreyIcon));
     }
 
     private void expandListView() {

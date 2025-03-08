@@ -176,6 +176,10 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         });
     }
 
+    boolean getUseAnimations() {
+        return settingsService.getUseAnimations().get();
+    }
+
     void toggleOfferList() {
         model.getShowOfferListExpanded().set(!model.getShowOfferListExpanded().get());
     }
