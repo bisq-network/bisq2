@@ -85,36 +85,33 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         // Create default identity
         getOrCreateDefaultIdentity();
 
-        Map<TransportType, CompletableFuture<Node>> defaultNodeResultByTransport = networkService.getInitializedDefaultNodeByTransport();
-        if (defaultNodeResultByTransport.isEmpty()) {
-            return CompletableFuture.failedFuture(new RuntimeException("networkService.getInitializedDefaultNodeByTransport returns an empty map"));
+        if (getActiveIdentityByTag().isEmpty()) {
+            return CompletableFuture.completedFuture(true);
         }
 
         CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
-        AtomicInteger failures = new AtomicInteger();
-        defaultNodeResultByTransport.forEach((transportType, future) -> future
-                .whenComplete((defaultNode, throwable) -> {
-                    if (throwable == null && defaultNode != null) {
-                        // After each successful initialisation of the default node on a transport we start to
-                        // initialize the active identities for that transport using a blocking call.
-                        // This will delay app startup until all identities are ready on the network side.
-                        try {
-                            initializeAllActiveIdentities(transportType).get();
-                            if (!resultFuture.isDone()) {
-                                resultFuture.complete(true);
-                            }
-                        } catch (Exception e) {
-                            if (!resultFuture.isDone()) {
-                                resultFuture.completeExceptionally(e);
-                            }
-                        }
-                    } else if (!resultFuture.isDone()) {
-                        if (failures.incrementAndGet() == defaultNodeResultByTransport.size()) {
-                            // All failed
-                            resultFuture.completeExceptionally(new RuntimeException("Default node initialization on all transports failed"));
-                        }
-                    }
-                }));
+        AtomicInteger numFailures = new AtomicInteger();
+        // We get called after networkService with the default node is already initialized.
+        // We publish now all onion services of our active identities.
+        networkService.getSupportedTransportTypes()
+                .forEach(transportType -> {
+                    initializeAllActiveIdentities(transportType)
+                            .whenComplete((list, throwable) -> {
+                                if (throwable == null) {
+                                    // We complete if one transport has published all identities
+                                    if (!resultFuture.isDone()) {
+                                        resultFuture.complete(true);
+                                    }
+                                } else {
+                                    numFailures.incrementAndGet();
+                                    // If all transports fail we let the result fail.
+                                    if (!resultFuture.isDone() && numFailures.get() >= networkService.getSupportedTransportTypes().size()) {
+                                        resultFuture.completeExceptionally(throwable);
+                                    }
+                                }
+                            });
+                });
+
         return resultFuture;
     }
 
