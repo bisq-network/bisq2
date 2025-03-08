@@ -151,7 +151,7 @@ public class MediationCaseListItem implements ActivatableTableItem, DateTableIte
 
     @Getter
     @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    static class Trader {
+    public static class Trader {
         @EqualsAndHashCode.Include
         private final UserProfile userProfile;
         private final String userName;
