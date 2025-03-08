@@ -93,7 +93,7 @@ public class TorTransportService implements TransportService {
             bootstrapInfo.getBootstrapDetails().set("Create Onion service for node ID '" + networkId + "'");
 
             TorKeyPair torKeyPair = keyBundle.getTorKeyPair();
-            ServerSocket serverSocket = torService.createOnionService(port, torKeyPair)
+            ServerSocket serverSocket = torService.publishOnionService(port, torKeyPair)
                     .get(2, TimeUnit.MINUTES);
 
             bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);

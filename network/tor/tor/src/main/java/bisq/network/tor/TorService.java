@@ -186,8 +186,7 @@ public class TorService implements Service {
         });
     }
 
-    public CompletableFuture<ServerSocket> createOnionService(int port, TorKeyPair torKeyPair) {
-        log.info("Start hidden service with port {}", port);
+    public CompletableFuture<ServerSocket> publishOnionService(int port, TorKeyPair torKeyPair) {
         long ts = System.currentTimeMillis();
         try {
             InetAddress bindAddress = !LinuxDistribution.isWhonix() ? Inet4Address.getLoopbackAddress()
@@ -195,14 +194,15 @@ public class TorService implements Service {
             var localServerSocket = new ServerSocket(RANDOM_PORT, 50, bindAddress);
 
             String onionAddress = torKeyPair.getOnionAddress();
+            log.info("Publish onion service for onion address={}:{}", onionAddress, port);
             if (!publishedOnionServices.contains(onionAddress)) {
                 int localPort = localServerSocket.getLocalPort();
                 torController.publish(torKeyPair, port, localPort);
                 publishedOnionServices.add(onionAddress);
             }
 
-            log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
-                    System.currentTimeMillis() - ts, onionAddress);
+            log.info("Tor onion service Ready. Took {} ms. Onion address={}:{}",
+                    System.currentTimeMillis() - ts, onionAddress, port);
 
             return CompletableFuture.completedFuture(localServerSocket);
 
