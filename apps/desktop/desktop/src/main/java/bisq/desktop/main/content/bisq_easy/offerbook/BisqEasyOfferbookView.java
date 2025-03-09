@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
@@ -60,7 +61,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
 
     private final ListChangeListener<MarketChannelItem> favouriteChannelItemsChangeListener;
-    private final VBox offerbookList;
     private final SplitPane splitPane;
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
@@ -88,7 +88,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                                  VBox offerbookList) {
         super(model, controller, chatMessagesComponent, channelSidebar);
 
-        this.offerbookList = offerbookList;
         splitPane = new SplitPane(centerVBox, offerbookList);
         containerHBox.getChildren().setAll(marketSelectionList, collapsedMarketSelectionList, splitPane, sideBar);
         HBox.setHgrow(splitPane, Priority.ALWAYS);
@@ -168,7 +167,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         showOfferListExpandedPin = EasyBind.subscribe(getModel().getShowOfferListExpanded(), showOfferListExpanded -> {
             if (showOfferListExpanded != null) {
-                updateOfferList(showOfferListExpanded);
+                UIThread.runOnNextRenderFrame(() -> updateOfferList(showOfferListExpanded));
             }
         });
 
@@ -306,8 +305,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         double initialPosition = divider.getPosition();
         double finalPosition = calculateNormalizedPosition(showOfferListExpanded);
         Transitions.animateDividerPosition(divider, initialPosition, finalPosition, SPLITPANE_ANIMATION_DURATION);
-        SplitPane.setResizableWithParent(centerVBox, showOfferListExpanded);
-        SplitPane.setResizableWithParent(offerbookList, showOfferListExpanded);
         updateChatContainerStyleClass();
     }
 
@@ -414,6 +411,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectionList.setMinWidth(EXPANDED_MARKET_SELECTION_LIST_WIDTH);
         marketSelectionList.setFillWidth(true);
         marketSelectionList.getStyleClass().add("chat-container");
+        HBox.setMargin(marketSelectionList, new Insets(1, 0, 0, 0));
     }
 
     private void addCollapsedMarketSelectionList() {
@@ -436,7 +434,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         collapsedMarketSelectionList.setMinWidth(COLLAPSED_LIST_WIDTH);
         collapsedMarketSelectionList.setFillWidth(true);
         collapsedMarketSelectionList.getStyleClass().add("collapsed-market-selection-list-container");
-        HBox.setMargin(collapsedMarketSelectionList, new Insets(0, -9, 0, 0));
+        HBox.setMargin(collapsedMarketSelectionList, new Insets(1, -9, 0, 0));
     }
 
     private Label createAndGetRemoveFilterLabel(ImageView defaultCloseIcon) {

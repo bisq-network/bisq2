@@ -120,7 +120,6 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         tableView.setPlaceholder(new Label());
         VBox.setVgrow(tableView, Priority.ALWAYS);
         configOffersTableView();
-        VBox.setVgrow(tableView, Priority.ALWAYS);
 
         content = new VBox(header, Layout.hLine(), subheader, tableView);
         VBox.setVgrow(content, Priority.ALWAYS);
