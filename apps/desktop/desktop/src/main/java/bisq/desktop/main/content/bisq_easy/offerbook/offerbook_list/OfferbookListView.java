@@ -230,7 +230,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private void collapseListView() {
         boolean useAnimations = controller.getUseAnimations();
         if (useAnimations) {
-            UIScheduler.run(this::applyCollapsedViewChanges).after(BisqEasyOfferbookView.ANIMATION_DURATION);
+            UIScheduler.run(this::applyCollapsedViewChanges).after(BisqEasyOfferbookView.SPLITPANE_ANIMATION_DURATION);
         } else {
             applyCollapsedViewChanges();
         }

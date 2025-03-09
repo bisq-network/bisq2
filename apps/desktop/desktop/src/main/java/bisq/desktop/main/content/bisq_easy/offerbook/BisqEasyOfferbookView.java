@@ -53,9 +53,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
+    private static final double EXPANDED_OFFER_LIST_WIDTH = 545;
     public static final double COLLAPSED_LIST_WIDTH = 40;
     public static final double LIST_CELL_HEIGHT = 53;
-    public static final long ANIMATION_DURATION = 200;
+    public static final long SPLITPANE_ANIMATION_DURATION = 200;
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
 
     private final ListChangeListener<MarketChannelItem> favouriteChannelItemsChangeListener;
@@ -208,13 +209,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketSelectionListTitle.setOnMouseClicked(e ->
                 Transitions.animateWidth(marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
-                        COLLAPSED_LIST_WIDTH, ANIMATION_DURATION, () -> getController().toggleMarketSelectionList()));
+                        COLLAPSED_LIST_WIDTH, SPLITPANE_ANIMATION_DURATION, () -> getController().toggleMarketSelectionList()));
         marketSelectionListTitle.setOnMouseEntered(e -> marketSelectionListTitle.setGraphic(marketsWhiteIcon));
         marketSelectionListTitle.setOnMouseExited(e -> marketSelectionListTitle.setGraphic(marketsGreenIcon));
 
         collapsedMarketSelectionListTitle.setOnMouseClicked(e -> {
             getController().toggleMarketSelectionList();
-            Transitions.animateWidth(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH, ANIMATION_DURATION);
+            Transitions.animateWidth(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH, SPLITPANE_ANIMATION_DURATION);
         });
         collapsedMarketSelectionListTitle.setOnMouseEntered(e -> collapsedMarketSelectionListTitle.setGraphic(marketsWhiteIcon));
         collapsedMarketSelectionListTitle.setOnMouseExited(e -> collapsedMarketSelectionListTitle.setGraphic(marketsGreyIcon));
@@ -302,16 +303,24 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         checkArgument(splitPane.getDividers().size() == 1, "Must have exactly one divider");
 
         SplitPane.Divider divider = splitPane.getDividers().get(0);
-        // TODO: Calculate exact final position according to current width
         if (showOfferListExpanded) {
-            Transitions.animateDividerPosition(divider, divider.getPosition(), 0.71, ANIMATION_DURATION);
+            Transitions.animateDividerPosition(divider, divider.getPosition(), calculateNormalizedPosition(true),
+                    SPLITPANE_ANIMATION_DURATION);
         } else {
-            Transitions.animateDividerPosition(divider, divider.getPosition(), 0.92, ANIMATION_DURATION);
+            Transitions.animateDividerPosition(divider, divider.getPosition(), calculateNormalizedPosition(false),
+                    SPLITPANE_ANIMATION_DURATION);
         }
         SplitPane.setResizableWithParent(centerVBox, showOfferListExpanded);
         SplitPane.setResizableWithParent(offerbookList, showOfferListExpanded);
 
         updateChatContainerStyleClass();
+    }
+
+    private double calculateNormalizedPosition(boolean showOfferListExpanded) {
+        double totalWidth = splitPane.getWidth();
+        double offerListWidth = showOfferListExpanded ? EXPANDED_OFFER_LIST_WIDTH : COLLAPSED_LIST_WIDTH;
+        double chatWidth = totalWidth - offerListWidth;
+        return chatWidth / totalWidth;
     }
 
     private void updateChatContainerStyleClass() {
