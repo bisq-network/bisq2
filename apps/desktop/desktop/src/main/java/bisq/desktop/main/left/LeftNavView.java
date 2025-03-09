@@ -81,6 +81,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-bisq-easy",
                 NavigationTarget.BISQ_EASY, false);
 
+        LeftNavButton bisqMusig = createNavigationButton(Res.get("navigation.bisqMusig"),
+                "nav-bisq-musig",
+                NavigationTarget.BISQ_MUSIG, false);
+
         LeftNavButton reputation = createNavigationButton(Res.get("navigation.reputation"),
                 "nav-reputation",
                 NavigationTarget.REPUTATION, false);
@@ -153,7 +157,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, reputation, protocols,
+        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, bisqMusig, reputation, protocols,
                 learn, chat, support, user, network, settings, authorizedRole);
         if (model.isWalletEnabled()) {
             mainMenuItems.getChildren().add(3, wallet);
