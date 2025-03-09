@@ -303,20 +303,19 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         checkArgument(splitPane.getDividers().size() == 1, "Must have exactly one divider");
 
         SplitPane.Divider divider = splitPane.getDividers().get(0);
-        if (showOfferListExpanded) {
-            Transitions.animateDividerPosition(divider, divider.getPosition(), calculateNormalizedPosition(true),
-                    SPLITPANE_ANIMATION_DURATION);
-        } else {
-            Transitions.animateDividerPosition(divider, divider.getPosition(), calculateNormalizedPosition(false),
-                    SPLITPANE_ANIMATION_DURATION);
-        }
+        double initialPosition = divider.getPosition();
+        double finalPosition = calculateNormalizedPosition(showOfferListExpanded);
+        Transitions.animateDividerPosition(divider, initialPosition, finalPosition, SPLITPANE_ANIMATION_DURATION);
         SplitPane.setResizableWithParent(centerVBox, showOfferListExpanded);
         SplitPane.setResizableWithParent(offerbookList, showOfferListExpanded);
-
         updateChatContainerStyleClass();
     }
 
     private double calculateNormalizedPosition(boolean showOfferListExpanded) {
+        if (splitPane.getWidth() <= 0) {
+            return showOfferListExpanded ? 0.71 : 0.92;
+        }
+
         double totalWidth = splitPane.getWidth();
         double offerListWidth = showOfferListExpanded ? EXPANDED_OFFER_LIST_WIDTH : COLLAPSED_LIST_WIDTH;
         double chatWidth = totalWidth - offerListWidth;

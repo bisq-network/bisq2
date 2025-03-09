@@ -58,9 +58,10 @@ import java.util.Optional;
 
 @Slf4j
 public class OfferbookListView extends bisq.desktop.common.view.View<VBox, OfferbookListModel, OfferbookListController> {
-    private static final double COLLAPSED_LIST_WIDTH = BisqEasyOfferbookView.COLLAPSED_LIST_WIDTH;
+    private static final double COLLAPSED_LIST_WIDTH = BisqEasyOfferbookView.COLLAPSED_LIST_WIDTH + 2; // +2 for the margin
     private static final double HEADER_HEIGHT = BaseChatView.HEADER_HEIGHT;
     private static final double LIST_CELL_HEIGHT = BisqEasyOfferbookView.LIST_CELL_HEIGHT;
+    private static final long SPLITPANE_ANIMATION_DURATION = BisqEasyOfferbookView.SPLITPANE_ANIMATION_DURATION;
     private static final String ACTIVE_FILTER_CLASS = "active-filter";
 
     private final Label title, showMyOffersOnlyLabel;
@@ -76,7 +77,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private DropdownBisqMenuItem buyFromOffers, sellToOffers;
     private Label offerDirectionFilterLabel, paymentsFilterLabel;
     private Subscription showOfferListExpandedPin, showBuyFromOffersPin, showMyOffersOnlyPin,
-            offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin;
+            offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin,
+            widthPropertyListener;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
@@ -188,6 +190,14 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             }
         });
 
+        widthPropertyListener = EasyBind.subscribe(root.widthProperty(), widthProperty -> {
+            if (widthProperty != null && model.getShowOfferListExpanded() != null) {
+                if (widthProperty.intValue() == COLLAPSED_LIST_WIDTH && model.getShowOfferListExpanded().get()) {
+                    controller.toggleOfferList();
+                }
+            }
+        });
+
         model.getAvailableMarketPayments().addListener(availablePaymentsChangeListener);
         updateMarketPaymentFilters();
         model.getSelectedMarketPayments().addListener(selectedPaymentsChangeListener);
@@ -212,6 +222,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         activeMarketPaymentsCountPin.unsubscribe();
         isCustomPaymentsSelectedPin.unsubscribe();
         showMyOffersOnlyPin.unsubscribe();
+        widthPropertyListener.unsubscribe();
 
         model.getAvailableMarketPayments().removeListener(availablePaymentsChangeListener);
         model.getSelectedMarketPayments().removeListener(selectedPaymentsChangeListener);
@@ -230,7 +241,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private void collapseListView() {
         boolean useAnimations = controller.getUseAnimations();
         if (useAnimations) {
-            UIScheduler.run(this::applyCollapsedViewChanges).after(BisqEasyOfferbookView.SPLITPANE_ANIMATION_DURATION);
+            UIScheduler.run(this::applyCollapsedViewChanges).after(SPLITPANE_ANIMATION_DURATION);
         } else {
             applyCollapsedViewChanges();
         }
@@ -239,10 +250,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private void applyCollapsedViewChanges() {
         header.setAlignment(Pos.CENTER);
         header.setPadding(new Insets(4, 0, 0, 0));
-        // +2 to accommodate for the margin
-        root.setMaxWidth(COLLAPSED_LIST_WIDTH + 2);
-        root.setPrefWidth(COLLAPSED_LIST_WIDTH + 2);
-        root.setMinWidth(COLLAPSED_LIST_WIDTH + 2);
+        root.setMaxWidth(COLLAPSED_LIST_WIDTH);
+        root.setPrefWidth(COLLAPSED_LIST_WIDTH);
+        root.setMinWidth(COLLAPSED_LIST_WIDTH);
         VBox.setMargin(content, new Insets(0, 0, 0, 2));
         content.getStyleClass().remove("chat-container");
         content.getStyleClass().add("collapsed-offer-list-container");
@@ -256,6 +266,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(4, 0, 0, 15));
         root.setMaxWidth(Double.MAX_VALUE);
+        root.setMinWidth(COLLAPSED_LIST_WIDTH);
         content.getStyleClass().remove("collapsed-offer-list-container");
         content.getStyleClass().add("chat-container");
         VBox.setMargin(content, new Insets(0, 0, 0, 4.5));
