@@ -9,7 +9,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
-import bisq.network.tor.controller.events.events.BootstrapEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -48,7 +48,7 @@ public class TorTransportService implements TransportService {
 
             torService.getBootstrapEvent().addObserver(bootstrapEvent -> {
                 if (bootstrapEvent != null) {
-                    if (bootstrapEvent.equals(BootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED)) {
+                    if (bootstrapEvent.equals(TorBootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED)) {
                         stopScheduler();
 
                         bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTION_TO_EXTERNAL_TOR_COMPLETED);

@@ -29,7 +29,7 @@ import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.network.tor.controller.TorControlAuthenticationFailed;
 import bisq.network.tor.controller.TorController;
-import bisq.network.tor.controller.events.events.BootstrapEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.installer.TorInstaller;
 import bisq.network.tor.process.EmbeddedTorProcess;
 import bisq.network.tor.process.control_port.ControlPortFilePoller;
@@ -66,7 +66,7 @@ public class TorService implements Service {
     private TorController torController;
     private final Set<String> publishedOnionServices = new CopyOnWriteArraySet<>();
     @Getter
-    private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
+    private final Observable<TorBootstrapEvent> bootstrapEvent = new Observable<>();
     @Getter
     private final Observable<Boolean> useExternalTor = new Observable<>();
     private final AtomicBoolean isRunning = new AtomicBoolean();
@@ -93,7 +93,7 @@ public class TorService implements Service {
 
         useExternalTor.set(evaluateUseExternalTor());
         if (useExternalTor.get()) {
-            bootstrapEvent.set(BootstrapEvent.CONNECT_TO_EXTERNAL_TOR);
+            bootstrapEvent.set(TorBootstrapEvent.CONNECT_TO_EXTERNAL_TOR);
 
             if (connectedToExternalTor(externalTorConfigMap)) {
                 log.info("External Tor will be used");
@@ -289,7 +289,7 @@ public class TorService implements Service {
 
         // We do not call torController.bootstrap as we do not need to bootstrap Tor. Instead, we set the event to
         // trigger the application state update.
-        bootstrapEvent.set(BootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
+        bootstrapEvent.set(TorBootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
 
         int port = torController.getSocksPort();
         log.info("Tor control provided SOCKS port: {}", port);
