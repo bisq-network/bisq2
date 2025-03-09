@@ -82,8 +82,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 NavigationTarget.BISQ_EASY, false);
 
         LeftNavButton bisqMusig = createNavigationButton(Res.get("navigation.bisqMusig"),
-                "nav-bisq-musig",
-                NavigationTarget.BISQ_EASY, false);
+                "nav-bisq-easy",
+                NavigationTarget.BISQ_MUSIG, false);
 
         LeftNavButton reputation = createNavigationButton(Res.get("navigation.reputation"),
                 "nav-reputation",
