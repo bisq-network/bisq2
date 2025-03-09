@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig.onboarding;
+package bisq.desktop.main.content.bisq_musig;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
+import bisq.desktop.main.content.bisq_musig.onboarding.BisqMusigOnboardingController;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -47,6 +48,9 @@ public class BisqMusigController extends ContentTabController<BisqMusigModel> {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return Optional.empty();
+        return switch (navigationTarget) {
+            case BISQ_MUSIG_ONBOARDING -> Optional.of(new BisqMusigOnboardingController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

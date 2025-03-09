@@ -15,16 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_musig.onboarding;
+package bisq.desktop.main.content.bisq_musig;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.desktop.main.content.ContentTabModel;
-import lombok.Getter;
+import bisq.desktop.main.content.ContentTabView;
+import bisq.i18n.Res;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-public class BisqMusigModel extends ContentTabModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_MUSIG_ONBOARDING;
+@Slf4j
+public class BisqMusigView extends ContentTabView<BisqMusigModel, BisqMusigController> {
+    public BisqMusigView(BisqMusigModel model, BisqMusigController controller) {
+        super(model, controller);
+
+        addTab(Res.get("bisqMusig.dashboard"), NavigationTarget.BISQ_MUSIG_ONBOARDING);
     }
 }
