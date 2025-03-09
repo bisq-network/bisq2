@@ -496,6 +496,18 @@
     -fx-image: url("/images/navigation/nav-list-hover.png");
 }
 
+#nav-bisq-musig {
+    -fx-image: url("/images/navigation/nav-bisq-musig.png");
+}
+
+#nav-bisq-musig-active {
+    -fx-image: url("/images/navigation/nav-bisq-musig-active.png");
+}
+
+#nav-bisq-musig-hover {
+    -fx-image: url("/images/navigation/nav-bisq-musig-hover.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Onboarding */
