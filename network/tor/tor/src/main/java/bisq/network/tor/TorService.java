@@ -147,7 +147,7 @@ public class TorService implements Service {
                     int port = torController.getSocksPort();
                     torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
                 })
-                .thenApply(unused -> true);
+                .thenApply(nil -> true);
     }
 
     private boolean evaluateUseExternalTor() {

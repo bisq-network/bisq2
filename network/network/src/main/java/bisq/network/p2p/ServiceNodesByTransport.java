@@ -303,7 +303,7 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
     }
 
-    public Collection<ServiceNode> getAllServices() {
+    public Collection<ServiceNode> getAllServiceNodes() {
         return map.values();
     }
 

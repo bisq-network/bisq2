@@ -106,7 +106,6 @@ public class TorTransportService implements TransportService {
 
             Address address = new Address(onionAddress, port);
             return new ServerSocketResult(serverSocket, address);
-
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             e.printStackTrace();
             throw new ConnectionException(e);

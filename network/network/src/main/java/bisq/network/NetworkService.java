@@ -447,7 +447,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public Set<NetworkLoadService> getNetworkLoadServices() {
-        return serviceNodesByTransport.getAllServices().stream()
+        return serviceNodesByTransport.getAllServiceNodes().stream()
                 .flatMap(serviceNode -> serviceNode.getNetworkLoadService().stream())
                 .collect(Collectors.toSet());
     }
@@ -514,7 +514,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public Set<ConfidentialMessageService> getConfidentialMessageServices() {
-        return serviceNodesByTransport.getAllServices().stream()
+        return serviceNodesByTransport.getAllServiceNodes().stream()
                 .filter(serviceNode -> serviceNode.getConfidentialMessageService().isPresent())
                 .map(serviceNode -> serviceNode.getConfidentialMessageService().get())
                 .collect(Collectors.toSet());
