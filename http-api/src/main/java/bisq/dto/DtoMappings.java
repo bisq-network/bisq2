@@ -18,6 +18,7 @@
 package bisq.dto;
 
 import bisq.account.AccountService;
+import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
@@ -40,6 +41,7 @@ import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.dto.account.UserDefinedFiatAccountDto;
+import bisq.dto.account.UserDefinedFiatAccountPayloadDto;
 import bisq.dto.account.protocol_type.TradeProtocolTypeDto;
 import bisq.dto.chat.ChatMessageTypeDto;
 import bisq.dto.chat.CitationDto;
@@ -981,6 +983,20 @@ public class DtoMappings {
                     MarketMapping.fromBisq2Model(settingsService.getSelectedMarket().get()),
                     settingsService.getNumDaysAfterRedactingTradeData().get(),
                     settingsService.getUseAnimations().get()
+            );
+        }
+    }
+
+    // paymentaccount
+    public static class UserDefinedFiatAccountMapping {
+        // toBisq2Model method not implemented, as we get accountName, accountData props for account creation calls
+
+        public static UserDefinedFiatAccountDto fromBisq2Model(UserDefinedFiatAccount account) {
+            return new UserDefinedFiatAccountDto(
+                    account.getAccountName(),
+                    new UserDefinedFiatAccountPayloadDto(
+                            account.getAccountPayload().getAccountData()
+                    )
             );
         }
     }

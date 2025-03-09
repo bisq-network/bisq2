@@ -21,8 +21,8 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.*;
+import bisq.dto.DtoMappings;
 import bisq.dto.account.UserDefinedFiatAccountDto;
-import bisq.dto.account.UserDefinedFiatAccountPayloadDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -71,14 +71,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
             List<UserDefinedFiatAccountDto> userAccounts = new ArrayList<>();
             for (Account<?, ? extends PaymentMethod<?>> account : accountsList) {
                 if (account instanceof UserDefinedFiatAccount castedAccount) {
-                    userAccounts.add(
-                            new UserDefinedFiatAccountDto(
-                                    castedAccount.getAccountName(),
-                                    new UserDefinedFiatAccountPayloadDto(
-                                            castedAccount.getAccountPayload().getAccountData()
-                                    )
-                            )
-                    );
+                    userAccounts.add(DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount));
                 }
             }
 
@@ -103,7 +96,13 @@ public class PaymentAccountsRestApi extends RestApiBase {
     public Response getSelectedPaymentAccount() {
         try {
             if (accountService.getSelectedAccount().isPresent()) {
-                return buildOkResponse(accountService.getSelectedAccount().get());
+                Account<?, ? extends PaymentMethod<?>> account = accountService.getSelectedAccount().get();
+                    if (account instanceof UserDefinedFiatAccount castedAccount) {
+                        UserDefinedFiatAccountDto userAccount = DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount);
+                        return buildOkResponse(userAccount);
+                    } else {
+                        return buildResponse(Response.Status.NO_CONTENT, "");
+                    }
             }
 
             return buildResponse(Response.Status.NO_CONTENT, "");
@@ -160,11 +159,16 @@ public class PaymentAccountsRestApi extends RestApiBase {
             response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
         });
         try {
-            UserDefinedFiatAccount account = new UserDefinedFiatAccount(
-                    accountName, ""
-            );
-            accountService.removePaymentAccount(account);
-            asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+            Optional<Account<?, ? extends PaymentMethod<?>>> result = accountService.findAccount(accountName);
+            if (result.isPresent()) {
+                UserDefinedFiatAccount account = new UserDefinedFiatAccount(
+                        accountName, ""
+                );
+                accountService.removePaymentAccount(account);
+                asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
+            } else {
+                asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found"));
+            }
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
@@ -190,10 +194,17 @@ public class PaymentAccountsRestApi extends RestApiBase {
         try {
             UserDefinedFiatAccountDto account = request.selectedAccount();
             if (account != null) {
-                accountService.setSelectedAccount(new UserDefinedFiatAccount(
-                        account.accountName(),
-                        account.accountPayload().accountData()
-                ));
+                Optional<Account<?, ? extends PaymentMethod<?>>> result = accountService.findAccount(account.accountName());
+                if (result.isPresent()) {
+                    Account<?, ? extends PaymentMethod<?>> foundAccount = result.get();
+                    if (foundAccount instanceof UserDefinedFiatAccount castedAccount) {
+                        accountService.setSelectedAccount(castedAccount);
+                    } else {
+                        return buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found");
+                    }
+                } else {
+                    return buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found");
+                }
             }
 
             log.info("Updated selected payment account from request: {}", request);
