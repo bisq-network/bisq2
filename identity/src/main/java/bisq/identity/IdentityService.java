@@ -208,6 +208,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
+    public Map<String, Identity> getActiveIdentityByTag() {
+        return persistableStore.getActiveIdentityByTag();
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Private
@@ -238,10 +242,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         KeyBundle keyBundle = keyBundleService.getOrCreateKeyBundle(keyId);
         NetworkId networkId = networkIdService.getOrCreateNetworkId(keyBundle, identityTag);
         return new Identity(identityTag, networkId, keyBundle);
-    }
-
-    private Map<String, Identity> getActiveIdentityByTag() {
-        return persistableStore.getActiveIdentityByTag();
     }
 
     private Set<Identity> getRetired() {
