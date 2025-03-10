@@ -159,11 +159,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         SendConfidentialMessageResult result;
         String receiverAddress = receiverNetworkId.getAddresses();
         long start = System.currentTimeMillis();
-
-        // Node gets initialized at higher level services
-        nodesById.assertNodeIsInitialized(senderNetworkId);
-
         try {
+            // Node gets initialized at higher level services.
+            // In case it is not yet initialized, we let it fail and send the message as mailbox messsage
+            nodesById.assertNodeIsInitialized(senderNetworkId);
+
             CountDownLatch countDownLatch = new CountDownLatch(1);
             AtomicBoolean peerDetectedOffline = new AtomicBoolean();
             runAsync(() -> {

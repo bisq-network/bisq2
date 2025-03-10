@@ -42,7 +42,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -89,30 +88,13 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             return CompletableFuture.completedFuture(true);
         }
 
-        CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
-        AtomicInteger numFailures = new AtomicInteger();
         // We get called after networkService with the default node is already initialized.
         // We publish now all onion services of our active identities.
-        networkService.getSupportedTransportTypes()
-                .forEach(transportType -> {
-                    initializeAllActiveIdentities(transportType)
-                            .whenComplete((list, throwable) -> {
-                                if (throwable == null) {
-                                    // We complete if one transport has published all identities
-                                    if (!resultFuture.isDone()) {
-                                        resultFuture.complete(true);
-                                    }
-                                } else {
-                                    numFailures.incrementAndGet();
-                                    // If all transports fail we let the result fail.
-                                    if (!resultFuture.isDone() && numFailures.get() >= networkService.getSupportedTransportTypes().size()) {
-                                        resultFuture.completeExceptionally(throwable);
-                                    }
-                                }
-                            });
-                });
+        // We do not wait for them to be completed as with many identities and in case tor is slow that could
+        // trigger startup timeouts.
+        networkService.getSupportedTransportTypes().forEach(this::initializeAllActiveIdentities);
 
-        return resultFuture;
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
