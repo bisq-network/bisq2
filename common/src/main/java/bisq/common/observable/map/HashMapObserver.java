@@ -22,9 +22,13 @@ import java.util.Map;
 public interface HashMapObserver<K, V> {
     void put(K key, V value);
 
-    void putAll(Map<? extends K, ? extends V> map);
+    default void putAll(Map<? extends K, ? extends V> map) {
+        map.forEach(this::put);
+    }
 
-    void remove(Object key);
+    default void remove(Object key) {
+    }
 
-    void clear();
+    default void clear() {
+    }
 }
