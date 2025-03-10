@@ -32,9 +32,12 @@ import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 class OfferbookListModel implements bisq.desktop.common.view.Model {
+    @Setter
+    private boolean useAnimations;
     private final ObservableList<OfferbookListItem> offerbookListItems = FXCollections.observableArrayList();
     private final FilteredList<OfferbookListItem> filteredOfferbookListItems = new FilteredList<>(offerbookListItems);
     private final SortedList<OfferbookListItem> sortedOfferbookListItems = new SortedList<>(filteredOfferbookListItems);
