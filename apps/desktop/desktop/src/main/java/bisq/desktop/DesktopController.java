@@ -25,6 +25,7 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.standby.PreventStandbyModeService;
+import bisq.desktop.common.threading.UIClock;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -123,6 +124,7 @@ public class DesktopController extends NavigationController {
         Navigation.init(settingsService);
         Overlay.init(serviceProvider, viewRoot);
         serviceProvider.getShutDownHandler().addShutDownHook(this::onShutdown);
+        UIClock.initialize();
 
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
@@ -182,6 +184,7 @@ public class DesktopController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        UIClock.shutdown();
     }
 
     public void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
