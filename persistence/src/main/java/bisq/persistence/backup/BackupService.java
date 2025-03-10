@@ -139,6 +139,7 @@ public class BackupService {
             return;
         }
 
+        // TODO Consider to let that run in a background thread
         accumulatedFileSize = 0;
         Set<String> fileNames = FileUtils.listFiles(dirPath);
         List<BackupFileInfo> backupFileInfoList = createBackupFileInfo(fileName, fileNames);
@@ -254,8 +255,6 @@ public class BackupService {
         // We don't use `resolve` as we use it in unit test which need to be OS independent.
         return Paths.get(dataDir.toString() + relativeBackupDir);
     }
-
-
 
     @VisibleForTesting
     static String getRelativePath(Path dataDir, Path filePath, boolean isWindowsPath) {
