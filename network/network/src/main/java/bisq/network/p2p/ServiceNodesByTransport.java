@@ -35,7 +35,6 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
@@ -269,12 +268,6 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDefaultNode().getObservableState()));
     }
 
-    public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {
-        return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> entry.getValue().getTransportService().getBootstrapInfo()));
-    }
-
     public Optional<ServiceNode> findServiceNode(TransportType transport) {
         return Optional.ofNullable(map.get(transport));
     }
@@ -305,6 +298,9 @@ public class ServiceNodesByTransport {
 
     public Collection<ServiceNode> getAllServiceNodes() {
         return map.values();
+    }
+    public Map<TransportType, ServiceNode> getServiceNodesByTransport() {
+        return map;
     }
 
     public CompletableFuture<Report> requestReport(Address address) {

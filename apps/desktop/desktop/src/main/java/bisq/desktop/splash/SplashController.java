@@ -17,18 +17,24 @@
 
 package bisq.desktop.splash;
 
+import bisq.application.State;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileUtils;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.util.MathUtils;
 import bisq.desktop.ServiceProvider;
-import bisq.application.State;
+import bisq.desktop.common.threading.UIClock;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.common.network.TransportType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class SplashController implements Controller {
@@ -44,6 +50,7 @@ public class SplashController implements Controller {
         this.applicationServiceState = applicationServiceState;
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
+
         model = new SplashModel(ApplicationVersion.getVersion());
         view = new SplashView(model, this);
     }
@@ -55,40 +62,52 @@ public class SplashController implements Controller {
         );
 
         if (networkService.getSupportedTransportTypes().contains(TransportType.CLEAR)) {
-            model.getBootstrapStateDisplays().add(new BootstrapStateDisplay(TransportType.CLEAR, serviceProvider));
-            networkService.getBootstrapInfoByTransportType().get(TransportType.CLEAR).getBootstrapProgress().addObserver(progress ->
-                    UIThread.run(() -> applyMaxProgress(progress)));
+            BootstrapElementsPerTransport bootstrapElementsPerTransport = new BootstrapElementsPerTransport(TransportType.CLEAR, serviceProvider);
+            model.getBootstrapElementsPerTransports().add(bootstrapElementsPerTransport);
         }
         if (networkService.getSupportedTransportTypes().contains(TransportType.TOR)) {
-            model.getBootstrapStateDisplays().add(new BootstrapStateDisplay(TransportType.TOR, serviceProvider));
-            networkService.getBootstrapInfoByTransportType().get(TransportType.TOR).getBootstrapProgress().addObserver(progress ->
-                    UIThread.run(() -> applyMaxProgress(progress)));
+            BootstrapElementsPerTransport bootstrapElementsPerTransport = new BootstrapElementsPerTransport(TransportType.TOR, serviceProvider);
+            model.getBootstrapElementsPerTransports().add(bootstrapElementsPerTransport);
         }
         if (networkService.getSupportedTransportTypes().contains(TransportType.I2P)) {
-            model.getBootstrapStateDisplays().add(new BootstrapStateDisplay(TransportType.I2P, serviceProvider));
-            networkService.getBootstrapInfoByTransportType().get(TransportType.I2P).getBootstrapProgress().addObserver(progress ->
-                    UIThread.run(() -> applyMaxProgress(progress)));
+            BootstrapElementsPerTransport bootstrapElementsPerTransport = new BootstrapElementsPerTransport(TransportType.I2P, serviceProvider);
+            model.getBootstrapElementsPerTransports().add(bootstrapElementsPerTransport);
         }
+
+        long startTime = System.currentTimeMillis();
+        long maxExpectedStartupTime = TimeUnit.SECONDS.toMillis(model.getMaxExpectedStartupTime());
+        UIClock.addOnSecondTickListener(() -> {
+            double passed = System.currentTimeMillis() - startTime;
+            if (passed > maxExpectedStartupTime) {
+                model.getIsSlowStartup().set(true);
+            }
+            double progress = Math.min(1, passed / maxExpectedStartupTime);
+            model.getProgress().set(progress);
+            model.getDuration().set(MathUtils.roundDoubleToInt(passed / 1000d) + " sec.");
+        });
     }
 
     @Override
     public void onDeactivate() {
         applicationServiceStatePin.unbind();
-        model.getBootstrapStateDisplays().clear();
+        model.getBootstrapElementsPerTransports().clear();
         model.getProgress().set(0);
     }
 
     public void startAnimation() {
-        applyMaxProgress(-1);
+        model.getProgress().set(-1);
     }
 
     public void stopAnimation() {
-        applyMaxProgress(0);
+        model.getProgress().set(1);
     }
 
-    private void applyMaxProgress(double progress) {
-        if (model.getProgress().get() < progress) {
-            model.getProgress().set(progress);
+    public void onDeleteTor() {
+        var conf = serviceProvider.getConfig();
+        File torDir = conf.getBaseDir().resolve("tor").toFile();
+        if (torDir.exists()) {
+            FileUtils.deleteOnExit(torDir);
+            serviceProvider.getShutDownHandler().shutdown();
         }
     }
 }

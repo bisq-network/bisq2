@@ -17,10 +17,11 @@
 
 package bisq.network.p2p.services.peer_group;
 
+import bisq.common.network.Address;
+import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -40,7 +41,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -51,8 +51,8 @@ import static java.util.concurrent.TimeUnit.*;
 public class PeerGroupManager implements Node.Listener {
     public enum State {
         NEW,
-        STARTING,
-        RUNNING,
+        INITIALIZING,
+        INITIALIZED,
         STOPPING,
         TERMINATED
     }
@@ -128,7 +128,8 @@ public class PeerGroupManager implements Node.Listener {
     private Optional<Scheduler> maybeCreateConnectionsScheduler = Optional.empty();
 
     @Getter
-    public final AtomicReference<PeerGroupManager.State> state = new AtomicReference<>(PeerGroupManager.State.NEW);
+    public final Observable<PeerGroupManager.State> state = new Observable<>(PeerGroupManager.State.NEW);
+
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     private final RetryPolicy<Boolean> retryPolicy;
@@ -150,7 +151,7 @@ public class PeerGroupManager implements Node.Listener {
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)
-                .handleResultIf(result -> state.get() == State.STARTING)
+                .handleResultIf(result -> state.get() == State.INITIALIZING)
                 .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(20))
                 .withJitter(0.25)
                 .withMaxDuration(Duration.ofMinutes(5))
@@ -206,7 +207,7 @@ public class PeerGroupManager implements Node.Listener {
         State state = getState().get();
         switch (state) {
             case NEW:
-                setState(PeerGroupManager.State.STARTING);
+                setState(PeerGroupManager.State.INITIALIZING);
                 // blocking
                 peerExchangeService.startInitialPeerExchange();
                 log.info("Completed startInitialPeerExchange. Start periodic tasks with interval: {} sec",
@@ -217,10 +218,10 @@ public class PeerGroupManager implements Node.Listener {
                         .periodically(config.getHouseKeepingInterval() / 4, config.getHouseKeepingInterval(), MILLISECONDS));
                 keepAliveService.initialize();
                 networkLoadExchangeService.initialize();
-                setState(State.RUNNING);
+                setState(State.INITIALIZED);
                 break;
-            case STARTING:
-            case RUNNING:
+            case INITIALIZING:
+            case INITIALIZED:
             case STOPPING:
             case TERMINATED:
                 log.warn("Got called at an invalid state. We ignore that call. State={}", state);

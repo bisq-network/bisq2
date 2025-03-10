@@ -8,22 +8,36 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
-.splash-bootstrap-state {
+.splash-application-duration {
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq2-green;
+}
+
+
+.splash-initializing-info {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -fx-light-text-color;
 }
 
-.splash-bootstrap-details {
+.splash-initializing-duration {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq2-green;
+}
+
+
+.splash-initialized-info {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-mid-grey-20;
 }
 
-.splash-bootstrap-progress {
+.splash-initialized-duration {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq2-green;
+    -fx-text-fill: -bisq-mid-grey-20;
 }
 
 
@@ -190,6 +204,7 @@
 .notification-hyperlink:visited:hover {
     -fx-text-fill: -bisq-white-dim;
 }
+
 .notification-hyperlink:visited,
 .notification-hyperlink:armed:visited,
 .notification-hyperlink:hover:armed {

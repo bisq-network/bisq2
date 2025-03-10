@@ -19,15 +19,15 @@ package bisq.network;
 
 
 import bisq.common.application.Service;
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.network.Address;
-import bisq.common.network.AddressByTransportTypeMap;
-import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientsByTransport;
 import bisq.network.identity.NetworkId;
@@ -39,7 +39,6 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
-import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
@@ -431,10 +430,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {
         return serviceNodesByTransport.getDefaultNodeStateByTransportType();
-    }
-
-    public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {
-        return serviceNodesByTransport.getBootstrapInfoByTransportType();
     }
 
     public boolean isTransportTypeSupported(TransportType transportType) {

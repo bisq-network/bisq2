@@ -19,10 +19,7 @@ package bisq.desktop.splash;
 
 import bisq.common.platform.Version;
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -33,7 +30,10 @@ public class SplashModel implements Model {
     private final StringProperty applicationServiceState = new SimpleStringProperty();
     private final String version;
     private final DoubleProperty progress = new SimpleDoubleProperty();
-    private final List<BootstrapStateDisplay> bootstrapStateDisplays = new ArrayList<>();
+    private final StringProperty duration = new SimpleStringProperty();
+    private final BooleanProperty isSlowStartup = new SimpleBooleanProperty();
+    private final List<BootstrapElementsPerTransport> bootstrapElementsPerTransports = new ArrayList<>();
+    private final int maxExpectedStartupTime = 120;
 
     public SplashModel(Version version) {
         this.version = "v" + version.getVersionAsString();

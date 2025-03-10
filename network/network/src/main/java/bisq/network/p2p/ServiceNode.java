@@ -18,11 +18,11 @@
 package bisq.network.p2p;
 
 
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.MemoryReportService;
 import bisq.network.NetworkService;
-import bisq.common.network.Address;
-import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
