@@ -138,7 +138,11 @@ class InventoryHandler implements Connection.Listener {
                 : "All data received from peer";
         String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
         String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
-        log.info("\n##########################################################################################\nReceived {} of inventory data from: {} after {}; \n{}\n##########################################################################################\n{}\n##########################################################################################", size, connection.getPeerAddress().getFullAddress(), passed, maxSizeReached, report);
+        log.info("\n##########################################################################################\n" +
+                "Received {} of inventory data from: {} after {}; \n{}" +
+                "\n##########################################################################################\n{}" +
+                "\n##########################################################################################",
+                size, connection.getPeerAddress().getFullAddress(), passed, maxSizeReached, report);
     }
 
     @Override
