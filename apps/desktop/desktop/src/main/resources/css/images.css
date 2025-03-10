@@ -35,6 +35,14 @@
     -fx-image: url("/images/i2p.png");
 }
 
+#rocket {
+    -fx-image: url("/images/icons/rocket.png");
+}
+
+#peer-group {
+    -fx-image: url("/images/icons/peer-group.png");
+}
+
 #info {
     -fx-image: url("/images/info.png");
 }
