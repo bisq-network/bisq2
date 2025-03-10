@@ -233,6 +233,22 @@
 }
 
 
+.yellow-outlined-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq2-yellow;
+    -fx-text-fill: -bisq2-yellow;
+}
+
+.yellow-outlined-button:hover {
+    -fx-border-color: derive(-bisq2-yellow, 10%);
+    -fx-text-fill: derive(-bisq2-yellow, 10%);
+}
+
+.yellow-outlined-button:pressed {
+    -fx-border-color: derive(-bisq2-yellow, -10%);
+    -fx-text-fill: derive(-bisq2-yellow, -10%);
+}
+
 .red-outlined-button {
     -fx-background-color: transparent;
     -fx-border-color: -bisq2-red;
