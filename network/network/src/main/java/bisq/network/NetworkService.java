@@ -74,6 +74,8 @@ import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -281,7 +283,24 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                     senderKeyPair,
                                     senderNetworkId);
                         },
-                        NETWORK_IO_POOL));
+                        NETWORK_IO_POOL))
+                .orTimeout(2, TimeUnit.SECONDS)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        if (throwable instanceof TimeoutException) {
+                            log.warn("TimeoutException at confidentialSend. Node for give networkId is not initialized. " +
+                                    "We send the message as mailbox message");
+                            supplyAsync(() -> {
+                                        ThreadName.set(this, "confidentialSend");
+                                        return serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
+                                                receiverNetworkId,
+                                                senderKeyPair,
+                                                senderNetworkId);
+                                    },
+                                    NETWORK_IO_POOL);
+                        }
+                    }
+                });
     }
 
     // TODO (low prio): Not used. Consider to remove it so it wont get used accidentally.
