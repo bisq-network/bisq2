@@ -78,7 +78,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private Label offerDirectionFilterLabel, paymentsFilterLabel;
     private Subscription showOfferListExpandedPin, showBuyFromOffersPin, showMyOffersOnlyPin,
             offerListTableViewSelectionPin, activeMarketPaymentsCountPin, isCustomPaymentsSelectedPin,
-            widthPropertyListener;
+            widthPropertyPin;
 
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
@@ -189,7 +189,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
             }
         });
 
-        widthPropertyListener = EasyBind.subscribe(root.widthProperty(), widthProperty -> {
+        widthPropertyPin = EasyBind.subscribe(root.widthProperty(), widthProperty -> {
             if (widthProperty != null && model.getShowOfferListExpanded() != null) {
                 if (widthProperty.intValue() == COLLAPSED_LIST_WIDTH && model.getShowOfferListExpanded().get()) {
                     controller.toggleOfferList();
@@ -221,7 +221,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         activeMarketPaymentsCountPin.unsubscribe();
         isCustomPaymentsSelectedPin.unsubscribe();
         showMyOffersOnlyPin.unsubscribe();
-        widthPropertyListener.unsubscribe();
+        widthPropertyPin.unsubscribe();
 
         model.getAvailableMarketPayments().removeListener(availablePaymentsChangeListener);
         model.getSelectedMarketPayments().removeListener(selectedPaymentsChangeListener);
@@ -238,8 +238,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     }
 
     private void collapseListView() {
-        boolean useAnimations = controller.getUseAnimations();
-        if (useAnimations) {
+        if (model.isUseAnimations()) {
             UIScheduler.run(this::applyCollapsedViewChanges).after(SPLITPANE_ANIMATION_DURATION);
         } else {
             applyCollapsedViewChanges();

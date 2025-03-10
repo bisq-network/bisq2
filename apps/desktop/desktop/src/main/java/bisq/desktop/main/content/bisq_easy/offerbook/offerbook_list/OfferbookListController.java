@@ -85,6 +85,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
 
     @Override
     public void onActivate() {
+        model.setUseAnimations(settingsService.getUseAnimations().get());
         showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers())
                 .to(settingsService.getShowBuyOffers(), settingsService::setShowBuyOffers);
         showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded())
@@ -174,10 +175,6 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                 });
             }
         });
-    }
-
-    boolean getUseAnimations() {
-        return settingsService.getUseAnimations().get();
     }
 
     void toggleOfferList() {
