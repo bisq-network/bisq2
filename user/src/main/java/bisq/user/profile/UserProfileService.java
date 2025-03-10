@@ -62,7 +62,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(ds -> ds.getAuthenticatedData().forEach(this::onAuthenticatedDataAdded));
+        networkService.getDataService().ifPresent(ds -> ds.getAuthenticatedData().forEach(authenticatedData -> {
+            if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
+                processUserProfileAddedOrRefreshed(userProfile, true);
+                persist();
+            }
+        }));
         return CompletableFuture.completedFuture(true);
     }
 
@@ -152,6 +157,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     private void processUserProfileAddedOrRefreshed(UserProfile userProfile) {
+        processUserProfileAddedOrRefreshed(userProfile, false);
+    }
+
+    private void processUserProfileAddedOrRefreshed(UserProfile userProfile, boolean fromBatchProcessing) {
         Optional<UserProfile> existingUserProfile = findUserProfile(userProfile.getId());
         // ApplicationVersion is excluded in equals check, so we check manually for it.
         if (existingUserProfile.isEmpty() ||
@@ -169,7 +178,10 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         } else {
             if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
                 existingUserProfile.get().setPublishDate(userProfile.getPublishDate());
-                persist();
+                if (!fromBatchProcessing) {
+                    // At initial batch processing we call persist at the end, to avoid many multiple persist calls
+                    persist();
+                }
             }
         }
     }

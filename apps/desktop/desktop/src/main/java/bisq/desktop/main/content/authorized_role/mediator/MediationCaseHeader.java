@@ -256,7 +256,7 @@ public class MediationCaseHeader {
             removeButton.setStyle("-fx-padding: 5 16 5 16");
 
             detailsButton = new Button(Res.get("authorizedRole.mediator.mediationCaseDetails.show"));
-            detailsButton.getStyleClass().addAll("grey-transparent-outlined-button");
+            detailsButton.getStyleClass().add("grey-transparent-outlined-button");
             detailsButton.setMinWidth(160);
 
             Region spacer = Spacer.fillHBox();

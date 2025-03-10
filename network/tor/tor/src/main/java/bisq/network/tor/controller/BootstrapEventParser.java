@@ -1,15 +1,15 @@
 package bisq.network.tor.controller;
 
-import bisq.network.tor.controller.events.events.BootstrapEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 
 import java.util.Optional;
 
 public class BootstrapEventParser {
-    public static Optional<BootstrapEvent> tryParse(String[] parts) {
+    public static Optional<TorBootstrapEvent> tryParse(String[] parts) {
         // 650 STATUS_CLIENT NOTICE BOOTSTRAP PROGRESS=50 TAG=loading_descriptors SUMMARY="Loading relay descriptors"
         if (isBootstrapEvent(parts)) {
-            BootstrapEvent bootstrapEvent = parseBootstrapEvent(parts);
-            return Optional.of(bootstrapEvent);
+            TorBootstrapEvent torBootstrapEvent = parseBootstrapEvent(parts);
+            return Optional.of(torBootstrapEvent);
         }
 
         return Optional.empty();
@@ -21,13 +21,13 @@ public class BootstrapEventParser {
     }
 
 
-    private static BootstrapEvent parseBootstrapEvent(String[] parts) {
+    private static TorBootstrapEvent parseBootstrapEvent(String[] parts) {
         String progress = parts[4].replace("PROGRESS=", "");
         String tag = parts[5].replace("TAG=", "");
         String summary = parseBootstrapSummary(parts);
 
         int progressInt = Integer.parseInt(progress);
-        return new BootstrapEvent(progressInt, tag, summary);
+        return new TorBootstrapEvent(progressInt, tag, summary);
     }
 
     private static String parseBootstrapSummary(String[] parts) {

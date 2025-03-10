@@ -17,12 +17,11 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.common.observable.Observable;
-import lombok.Getter;
-
-@Getter
-public class BootstrapInfo {
-    private final Observable<Double> bootstrapProgress = new Observable<>(0d);
-    private final Observable<String> bootstrapDetails = new Observable<>("");
-    private final Observable<BootstrapState> bootstrapState = new Observable<>(BootstrapState.BOOTSTRAP_TO_NETWORK);
+public enum TransportBootstrapState {
+    BOOTSTRAP_TO_NETWORK,
+    CONNECT_TO_EXTERNAL_TOR,
+    CONNECTION_TO_EXTERNAL_TOR_COMPLETED,
+    START_PUBLISH_SERVICE,
+    SERVICE_PUBLISHED,
+    CONNECTED_TO_PEERS
 }

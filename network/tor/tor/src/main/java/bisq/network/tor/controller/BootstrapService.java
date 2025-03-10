@@ -18,7 +18,7 @@
 package bisq.network.tor.controller;
 
 import bisq.common.observable.Observable;
-import bisq.network.tor.controller.events.events.BootstrapEvent;
+import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
@@ -41,13 +41,13 @@ public class BootstrapService extends BootstrapEventListener {
     private final TorControlProtocol torControlProtocol;
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
     private final long timeout;
-    private final Observable<BootstrapEvent> bootstrapEvent;
+    private final Observable<TorBootstrapEvent> bootstrapEvent;
     @Getter
     private Optional<CompletableFuture<Void>> future = Optional.empty();
 
     public BootstrapService(TorControlProtocol torControlProtocol,
                             long timeout,
-                            Observable<BootstrapEvent> bootstrapEvent) {
+                            Observable<TorBootstrapEvent> bootstrapEvent) {
         super(EventType.STATUS_CLIENT);
         this.torControlProtocol = torControlProtocol;
         this.timeout = timeout;
@@ -84,18 +84,18 @@ public class BootstrapService extends BootstrapEventListener {
     }
 
     @Override
-    public void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent) {
-        log.info("Tor bootstrap event: {}", bootstrapEvent);
-        this.bootstrapEvent.set(bootstrapEvent);
-        if (bootstrapEvent.isDoneEvent()) {
+    public void onBootstrapStatusEvent(TorBootstrapEvent torBootstrapEvent) {
+        log.info("Tor bootstrap event: {}", torBootstrapEvent);
+        this.bootstrapEvent.set(torBootstrapEvent);
+        if (torBootstrapEvent.isDoneEvent()) {
             countDownLatch.countDown();
         }
     }
 
     //todo Why do we check for the last timestamp at timeouts?
     private boolean isBootstrapTimeoutTriggered() {
-        BootstrapEvent bootstrapEvent = this.bootstrapEvent.get();
-        Instant timestamp = bootstrapEvent.getTimestamp();
+        TorBootstrapEvent torBootstrapEvent = this.bootstrapEvent.get();
+        Instant timestamp = torBootstrapEvent.getTimestamp();
         Instant bootstrapTimeoutAgo = Instant.now().minus(timeout, ChronoUnit.MILLIS);
         return bootstrapTimeoutAgo.isAfter(timestamp);
     }

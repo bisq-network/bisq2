@@ -28,10 +28,10 @@ import java.time.Instant;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class BootstrapEvent {
+public class TorBootstrapEvent {
     private static final String DONE_TAG = "done";
-    public static final BootstrapEvent CONNECT_TO_EXTERNAL_TOR = new BootstrapEvent(0, "", "Connect to external Tor");
-    public static final BootstrapEvent CONNECTION_TO_EXTERNAL_TOR_COMPLETED = new BootstrapEvent(20, "", "Connection to external Tor completed");
+    public static final TorBootstrapEvent CONNECT_TO_EXTERNAL_TOR = new TorBootstrapEvent(0, "", "Connect to external Tor");
+    public static final TorBootstrapEvent CONNECTION_TO_EXTERNAL_TOR_COMPLETED = new TorBootstrapEvent(20, "", "Connection to external Tor completed");
 
     private final int progress;
     private final String tag;
@@ -39,7 +39,7 @@ public class BootstrapEvent {
 
     private final Instant timestamp = Instant.now();
 
-    public BootstrapEvent(int progress, String tag, String summary) {
+    public TorBootstrapEvent(int progress, String tag, String summary) {
         if (progress < 0 || summary.isEmpty()) {
             throw new IllegalArgumentException("Invalid bootstrap event: " + progress + " " + tag + " " + summary);
         }
@@ -57,7 +57,7 @@ public class BootstrapEvent {
         return type.equals(EventType.STATUS_CLIENT.name()) && message.contains("BOOTSTRAP");
     }
 
-    public static BootstrapEvent fromEventMessage(String message) {
+    public static TorBootstrapEvent fromEventMessage(String message) {
         String[] keyValuePairs = message.split(" ");
 
         int progress = -1;
@@ -89,6 +89,6 @@ public class BootstrapEvent {
             }
         }
 
-        return new BootstrapEvent(progress, tag, summary);
+        return new TorBootstrapEvent(progress, tag, summary);
     }
 }
