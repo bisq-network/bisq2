@@ -26,6 +26,8 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.timer.Scheduler;
 import bisq.common.util.DateUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
@@ -65,6 +67,7 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
     private final BannedUserService bannedUserService;
     private final Set<MediatorsResponse> pendingMediatorsResponseMessages = new CopyOnWriteArraySet<>();
     private Pin channeldPin;
+    private Scheduler throttleUpdatesScheduler;
 
     public MediationRequestService(NetworkService networkService,
                                    ChatService chatService,
@@ -97,6 +100,10 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
         if (channeldPin != null) {
             channeldPin.unbind();
             channeldPin = null;
+        }
+        if (throttleUpdatesScheduler != null) {
+            throttleUpdatesScheduler.stop();
+            throttleUpdatesScheduler = null;
         }
         return CompletableFuture.completedFuture(true);
     }
@@ -229,7 +236,27 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
                                     mediatorsResponse.getTradeId());
                             pendingMediatorsResponseMessages.add(mediatorsResponse);
                             if (channeldPin == null) {
-                                channeldPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(this::maybeProcessPendingMediatorsResponseMessages);
+                                channeldPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
+                                    @Override
+                                    public void add(BisqEasyOpenTradeChannel element) {
+                                        // Delay and ignore too frequent updates
+                                        if (throttleUpdatesScheduler == null) {
+                                            throttleUpdatesScheduler = Scheduler.run(() -> {
+                                                        maybeProcessPendingMediatorsResponseMessages();
+                                                        throttleUpdatesScheduler = null;
+                                                    })
+                                                    .after(1000);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void remove(Object element) {
+                                    }
+
+                                    @Override
+                                    public void clear() {
+                                    }
+                                });
                             }
                         });
     }
