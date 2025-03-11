@@ -160,18 +160,32 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         String receiverAddress = receiverNetworkId.getAddresses();
         long start = System.currentTimeMillis();
         try {
-            // In case node is not yet initialized, we let it fail and send the message as mailbox messsage for
-            // faster delivery. We call getConnection to trigger the creation of the connection but ignore if
-            // it fails (e.g. if peer is offline).
+            // In case the node is not yet initialized, we send the message as mailbox messsage for
+            // faster delivery. We do not try to create the connection here, as we would expect the node to be
+            // initialized first.
             if (!nodesById.isNodeInitialized(senderNetworkId)) {
-                try {
-                    nodesById.getConnection(senderNetworkId, address);
-                } catch (Exception ignore) {
-                }
                 return storeInMailbox(envelopePayloadMessage,
                         receiverPubKey,
                         senderKeyPair,
                         "Node is not initialized yet.",
+                        receiverAddress,
+                        start);
+            }
+
+            // In case the connection is not yet created, we send the message as mailbox messsage for
+            // faster delivery. We call getConnection to trigger the creation of the connection but ignore
+            // exceptions (e.g. if peer is offline).
+            if (!nodesById.findNode(senderNetworkId).orElseThrow().hasConnection(address)) {
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        nodesById.getConnection(senderNetworkId, address);
+                    } catch (Exception ignore) {
+                    }
+                }, NETWORK_IO_POOL);
+                return storeInMailbox(envelopePayloadMessage,
+                        receiverPubKey,
+                        senderKeyPair,
+                        "Connection is not created yet.",
                         receiverAddress,
                         start);
             }
