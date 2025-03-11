@@ -160,9 +160,21 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         String receiverAddress = receiverNetworkId.getAddresses();
         long start = System.currentTimeMillis();
         try {
-            // Node gets initialized at higher level services.
-            // In case it is not yet initialized, we let it fail and send the message as mailbox messsage
-            nodesById.assertNodeIsInitialized(senderNetworkId);
+            // In case node is not yet initialized, we let it fail and send the message as mailbox messsage for
+            // faster delivery. We call getConnection to trigger the creation of the connection but ignore if
+            // it fails (e.g. if peer is offline).
+            if (!nodesById.isNodeInitialized(senderNetworkId)) {
+                try {
+                    nodesById.getConnection(senderNetworkId, address);
+                } catch (Exception ignore) {
+                }
+                return storeInMailbox(envelopePayloadMessage,
+                        receiverPubKey,
+                        senderKeyPair,
+                        "Node is not initialized yet.",
+                        receiverAddress,
+                        start);
+            }
 
             CountDownLatch countDownLatch = new CountDownLatch(1);
             AtomicBoolean peerDetectedOffline = new AtomicBoolean();
@@ -207,7 +219,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             altResult.set(new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED));
                         }
                         if (countDownLatch.getCount() == 1) {
-                            SendConfidentialMessageResult storeMailBoxMessageResult = storeInMailbox(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
+                            SendConfidentialMessageResult storeMailBoxMessageResult = storeInMailbox(envelopePayloadMessage,
+                                    receiverPubKey,
+                                    senderKeyPair,
+                                    exception.getMessage(),
+                                    confidentialMessage);
                             log.info("Stored message to mailbox {} after {} ms", receiverAddress, System.currentTimeMillis() - start);
                             altResult.set(storeMailBoxMessageResult);
                         } else {
@@ -230,9 +246,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             checkArgument(notTimedOut, "Neither isPeerOffline resulted in a true result nor we got a connection created in 150 seconds. receiverAddress=" + receiverAddress);
 
             if (peerDetectedOffline.get()) {
-                // We got the result that the peer's onionservice is not published in the tor network, thus it is likely that the peer is offline.
+                // We got the result that the peer's onion service is not published in the tor network, thus it is likely that the peer is offline.
                 // It could be though the case that the connection creation running in parallel succeeds, and even we continue with sending a mailbox message
-                // the normal message sending succeeded. The peer would then get the message receive 2 times, which does not cause harm.
+                // the normal message sending succeeded. The peer would then get the message received 2 times, which does not cause harm.
                 // The result we return to the caller though contains the mailbox result. When the peer gets the ACK message the delivery state gets cleaned up.
                 throw new RuntimeException("peerDetectedOffline. receiverAddress=" + receiverAddress);
             } else if (altResult.get() != null) {
@@ -242,20 +258,16 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             } else {
                 throw new RuntimeException("Could not create connection. receiverAddress=" + receiverAddress);
             }
+            handleResult(envelopePayloadMessage, result);
+            return result;
         } catch (Exception exception) {
-            if (isShutdownInProgress) {
-                // We have stored in mailbox when shutdown started. The pending message can be ignored.
-                return new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED);
-            }
-            // If peer is detected offline, or we got a ConnectionException we store in mailbox
-            ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
-            result = storeInMailbox(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
-            log.info("Stored message to {} in mailbox after {} ms", receiverAddress, System.currentTimeMillis() - start);
+            return storeInMailbox(envelopePayloadMessage,
+                    receiverPubKey,
+                    senderKeyPair,
+                    exception.getMessage(),
+                    receiverAddress,
+                    start);
         }
-
-        handleResult(envelopePayloadMessage, result);
-        return result;
-
     }
 
     public Optional<SendConfidentialMessageResult> flushPendingMessagesToMailboxAtShutdown(ResendMessageData pendingMessage,
@@ -289,7 +301,26 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private SendConfidentialMessageResult storeInMailbox(EnvelopePayloadMessage envelopePayloadMessage,
                                                          PubKey receiverPubKey,
                                                          KeyPair senderKeyPair,
-                                                         Exception exception,
+                                                         String reason,
+                                                         String receiverAddress,
+                                                         long start) {
+        if (isShutdownInProgress) {
+            // We have stored in mailbox when shutdown started. The pending message can be ignored.
+            return new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED);
+        }
+        // If peer is detected offline, or we got a ConnectionException we store in mailbox
+        ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+        SendConfidentialMessageResult result = storeInMailbox(envelopePayloadMessage, receiverPubKey, senderKeyPair, reason, confidentialMessage);
+        log.info("Stored message to {} in mailbox after {} ms", receiverAddress, System.currentTimeMillis() - start);
+
+        handleResult(envelopePayloadMessage, result);
+        return result;
+    }
+
+    private SendConfidentialMessageResult storeInMailbox(EnvelopePayloadMessage envelopePayloadMessage,
+                                                         PubKey receiverPubKey,
+                                                         KeyPair senderKeyPair,
+                                                         String reason,
                                                          ConfidentialMessage confidentialMessage) {
         SendConfidentialMessageResult result;
         if (isShutdownInProgress) {
@@ -298,12 +329,12 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
         if (envelopePayloadMessage instanceof MailboxMessage) {
             log.info("Message could not be sent because of {}.\n" +
-                    "We send the message as mailbox message.", exception.getMessage());
+                    "We send the message as mailbox message.", reason);
             result = storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
                     confidentialMessage, receiverPubKey, senderKeyPair);
         } else {
             log.warn("Sending message failed and message is not type of MailboxMessage. message={}", envelopePayloadMessage);
-            result = new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + exception);
+            result = new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("Sending message failed and message is not type of MailboxMessage. Reason=" + reason);
         }
         return result;
     }
