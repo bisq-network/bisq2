@@ -75,16 +75,14 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private final BannedUserService bannedUserService;
     private final AlertService alertService;
 
-    @Getter
     private final Persistence<BisqEasyTradeStore> persistence;
-    @Getter
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
 
     // We don't persist the protocol, only the model.
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
     private boolean haltTrading;
     private boolean requireVersionForTrading;
-    private Optional<String> minVersion = Optional.empty();
+    private Optional<String> minRequiredVersionForTrading = Optional.empty();
 
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
@@ -123,7 +121,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                     }
                     if (authorizedAlertData.isRequireVersionForTrading()) {
                         requireVersionForTrading = true;
-                        minVersion = authorizedAlertData.getMinVersion();
+                        minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
                     }
                 }
             }
@@ -137,7 +135,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                         }
                         if (authorizedAlertData.isRequireVersionForTrading()) {
                             requireVersionForTrading = false;
-                            minVersion = Optional.empty();
+                            minRequiredVersionForTrading = Optional.empty();
                         }
                     }
                 }
@@ -147,7 +145,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             public void clear() {
                 haltTrading = false;
                 requireVersionForTrading = false;
-                minVersion = Optional.empty();
+                minRequiredVersionForTrading = Optional.empty();
             }
         });
 
@@ -402,9 +400,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minVersion.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minVersion.get())),
-                    "For trading you need to have version " + minVersion.get() + " installed. " +
+        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
+            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
+                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
                             "The Bisq security manager has published an emergency alert with a min. version required for trading.");
         }
     }

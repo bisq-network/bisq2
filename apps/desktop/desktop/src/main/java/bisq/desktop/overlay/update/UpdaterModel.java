@@ -27,12 +27,17 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Optional;
 
 @Getter
 public class UpdaterModel implements Model {
-    private final BooleanProperty tableVisible = new SimpleBooleanProperty();
+    private final BooleanProperty downloadStarted = new SimpleBooleanProperty();
     private final BooleanProperty isLauncherUpdate = new SimpleBooleanProperty();
     private final BooleanProperty downloadAndVerifyCompleted = new SimpleBooleanProperty();
+    private final BooleanProperty ignoreVersion = new SimpleBooleanProperty();
+    private final BooleanProperty ignoreVersionSwitchVisible = new SimpleBooleanProperty();
     private final StringProperty headline = new SimpleStringProperty();
     private final StringProperty version = new SimpleStringProperty();
     private final StringProperty releaseNotes = new SimpleStringProperty();
@@ -44,4 +49,9 @@ public class UpdaterModel implements Model {
     private final ObservableList<UpdaterView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<UpdaterView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<UpdaterView.ListItem> sortedList = new SortedList<>(filteredList);
+
+    @Setter
+    private boolean requireVersionForTrading;
+    @Setter
+    private Optional<String> minRequiredVersionForTrading = Optional.empty();
 }

@@ -34,9 +34,9 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
 import bisq.http_api.HttpApiService;
-import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.web_socket.WebSocketService;
+import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
@@ -176,7 +176,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         tradeService = new TradeService(networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService);
 
-        updaterService = new UpdaterService(getConfig(), settingsService, bondedRolesService.getReleaseNotificationsService());
+        updaterService = new UpdaterService(getConfig(),
+                settingsService,
+                bondedRolesService.getReleaseNotificationsService(),
+                bondedRolesService.getAlertService());
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,
@@ -225,7 +228,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 dontShowAgainService,
                 webcamAppService);
 
-        openTradeItemsService = new OpenTradeItemsService( chatService, tradeService, userService);
+        openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
 
         var restApiConfig = RestApiService.Config.from(getConfig("restApi"));
         var websocketConfig = WebSocketService.Config.from(getConfig("websocket"));
