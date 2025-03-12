@@ -40,7 +40,7 @@ import java.util.UUID;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements PersistableProto {
-    public static String createId(String offerId, String takerPubKeyHash) {
+    public static String createId_V0(String offerId, String takerPubKeyHash) {
         String combined = offerId + takerPubKeyHash;
         return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
     }
@@ -80,7 +80,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                  P maker) {
         this(contract,
                 state,
-                createId(offer.getId(), taker.getNetworkId().getId()),
+                createId_V0(offer.getId(), taker.getNetworkId().getId()),
                 createRole(isBuyer, isTaker),
                 myIdentity,
                 taker,

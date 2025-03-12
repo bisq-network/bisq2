@@ -345,7 +345,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     public boolean wasOfferAlreadyTaken(BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId) {
-        String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
+        String tradeId = Trade.createId_V0(bisqEasyOffer.getId(), takerNetworkId.getId());
         return tradeExists(tradeId);
     }
 
