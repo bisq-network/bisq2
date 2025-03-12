@@ -266,7 +266,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             }
         });
 
-        newVersionAvailablePin = EasyBind.subscribe(model.getNewVersionAvailable(),
+        newVersionAvailablePin = EasyBind.subscribe(model.getIsNewReleaseAvailable(),
                 newVersionAvailable -> {
                     if (newVersionAvailable) {
                         version.getStyleClass().remove("bisq-smaller-dimmed-label");

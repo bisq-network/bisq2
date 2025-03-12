@@ -30,9 +30,9 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.evolution.updater.UpdaterService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
-import bisq.evolution.updater.UpdaterService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -53,7 +53,7 @@ public class LeftNavController implements Controller {
     private final UpdaterService updaterService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final SettingsService settingsService;
-    private Pin bondedRolesPin, selectedUserIdentityPin, releaseNotificationPin;
+    private Pin bondedRolesPin, selectedUserIdentityPin, isNewReleaseAvailablePin;
     private Pin changedChatNotificationPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
@@ -75,8 +75,14 @@ public class LeftNavController implements Controller {
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
 
-        releaseNotificationPin = updaterService.getReleaseNotification().addObserver(releaseNotification ->
-                UIThread.run(() -> model.getNewVersionAvailable().set(releaseNotification != null)));
+        isNewReleaseAvailablePin = updaterService.getIsNewReleaseAvailable().addObserver(isNewReleaseAvailable -> {
+            UIThread.run(() -> {
+                if (isNewReleaseAvailable == null) {
+                    return;
+                }
+                model.getIsNewReleaseAvailable().set(isNewReleaseAvailable && updaterService.getReleaseNotification().get() != null);
+            });
+        });
 
         model.getMenuHorizontalExpanded().set(settingsService.getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
     }
@@ -85,7 +91,7 @@ public class LeftNavController implements Controller {
     public void onDeactivate() {
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
-        releaseNotificationPin.unbind();
+        isNewReleaseAvailablePin.unbind();
         changedChatNotificationPin.unbind();
     }
 
