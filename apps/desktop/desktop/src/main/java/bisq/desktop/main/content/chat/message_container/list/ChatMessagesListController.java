@@ -58,6 +58,7 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -74,10 +75,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -107,6 +105,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final LeavePrivateChatManager leavePrivateChatManager;
+    private final DontShowAgainService dontShowAgainService;
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
@@ -130,6 +129,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
 
         this.mentionUserHandler = mentionUserHandler;
         this.showChatUserDetailsHandler = showChatUserDetailsHandler;
@@ -321,16 +321,34 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         checkArgument(!model.isMyMessage(bisqEasyOfferbookMessage), "tradeChatMessage must not be mine");
 
         UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-
-        if (bannedUserService.isUserProfileBanned(bisqEasyOfferbookMessage.getAuthorUserProfileId()) ||
-                bannedUserService.isUserProfileBanned(userProfile)) {
-            return;
-        }
-
         NetworkId takerNetworkId = userProfile.getNetworkId();
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
         if (bisqEasyTradeService.wasOfferAlreadyTaken(bisqEasyOffer, takerNetworkId)) {
-            new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.warn")).show();
+            if (new Date().after(Trade.TRADE_ID_V1_ACTIVATION_DATE)) {
+                String key = "offerAlreadyTaken.warn";
+                if (dontShowAgainService.showAgain(key)) {
+                    new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.info"))
+                            .dontShowAgainId(key)
+                            .actionButtonText(Res.get("confirmation.yes"))
+                            .onAction(() -> doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer))
+                            .closeButtonText(Res.get("confirmation.no"))
+                            .show();
+                } else {
+                    doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer);
+                }
+            } else {
+                new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.warn")).show();
+            }
+        } else {
+            doTakeOffer(bisqEasyOfferbookMessage, userProfile, bisqEasyOffer);
+        }
+    }
+
+    private void doTakeOffer(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
+                             UserProfile userProfile,
+                             BisqEasyOffer bisqEasyOffer) {
+        if (bannedUserService.isUserProfileBanned(bisqEasyOfferbookMessage.getAuthorUserProfileId()) ||
+                bannedUserService.isUserProfileBanned(userProfile)) {
             return;
         }
 

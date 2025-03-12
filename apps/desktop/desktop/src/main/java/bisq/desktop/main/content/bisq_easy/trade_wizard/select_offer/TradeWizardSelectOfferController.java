@@ -54,10 +54,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -273,7 +270,7 @@ public class TradeWizardSelectOfferController implements Controller {
 
                 UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId myNetworkId = myUserProfile.getNetworkId();
-                if (bisqEasyTradeService.wasOfferAlreadyTaken(peersOffer, myNetworkId)) {
+                if (new Date().before(Trade.TRADE_ID_V1_ACTIVATION_DATE) && bisqEasyTradeService.wasOfferAlreadyTaken(peersOffer, myNetworkId)) {
                     return false;
                 }
 
