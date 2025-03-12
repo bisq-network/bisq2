@@ -17,11 +17,13 @@
 
 package bisq.bonded_roles.security_manager.alert;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.platform.Version;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -96,9 +98,15 @@ public class AlertNotificationsService implements Service {
     }
 
     private boolean shouldProcessAlert(AuthorizedAlertData authorizedAlertData) {
+        boolean minVersionNotRequiredOrAboveApplicationVersion = true;
+        if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getMinVersion().isPresent()) {
+            Version minRequiredVersion = new Version(authorizedAlertData.getMinVersion().get());
+            minVersionNotRequiredOrAboveApplicationVersion = ApplicationVersion.getVersion().below(minRequiredVersion);
+        }
         return AlertType.isMessageAlert(authorizedAlertData.getAlertType())
                 && !settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())
-                && authorizedAlertData.getMessage().isPresent();
+                && authorizedAlertData.getMessage().isPresent()
+                && minVersionNotRequiredOrAboveApplicationVersion;
     }
 
     private void updateIsNotificationBannerVisible() {

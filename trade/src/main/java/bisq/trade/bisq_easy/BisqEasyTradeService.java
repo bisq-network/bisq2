@@ -75,9 +75,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private final BannedUserService bannedUserService;
     private final AlertService alertService;
 
-    @Getter
     private final Persistence<BisqEasyTradeStore> persistence;
-    @Getter
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
 
     // We don't persist the protocol, only the model.
