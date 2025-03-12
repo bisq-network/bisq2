@@ -329,8 +329,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
         NetworkId takerNetworkId = userProfile.getNetworkId();
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
-        String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-        if (bisqEasyTradeService.tradeExists(tradeId)) {
+        if (bisqEasyTradeService.wasOfferAlreadyTaken(bisqEasyOffer, takerNetworkId)) {
             new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.warn")).show();
             return;
         }

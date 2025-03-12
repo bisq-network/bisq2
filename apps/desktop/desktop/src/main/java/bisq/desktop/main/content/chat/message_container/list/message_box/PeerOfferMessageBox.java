@@ -116,7 +116,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         button.getStyleClass().addAll("take-offer-button", "medium-text", "font-default");
         button.getStyleClass().add(isBuy ? "sell-btc-button" : "buy-btc-button");
         button.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
-        button.setDefaultButton(!item.isOfferAlreadyTaken());
+        button.setDefaultButton(!item.isWasOfferAlreadyTaken());
 
         return new Pair<>(messageTitleBox, button);
     }

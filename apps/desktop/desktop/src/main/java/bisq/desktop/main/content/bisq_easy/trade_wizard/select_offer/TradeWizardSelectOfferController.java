@@ -273,8 +273,7 @@ public class TradeWizardSelectOfferController implements Controller {
 
                 UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId myNetworkId = myUserProfile.getNetworkId();
-                String tradeId = Trade.createId(peersOffer.getId(), myNetworkId.getId());
-                if (bisqEasyTradeService.tradeExists(tradeId)) {
+                if (bisqEasyTradeService.wasOfferAlreadyTaken(peersOffer, myNetworkId)) {
                     return false;
                 }
 

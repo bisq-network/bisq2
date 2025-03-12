@@ -46,6 +46,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
+import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
@@ -343,6 +344,11 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return persistableStore.tradeExists(tradeId);
     }
 
+    public boolean wasOfferAlreadyTaken(BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId) {
+        String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
+        return tradeExists(tradeId);
+    }
+
     public ObservableSet<BisqEasyTrade> getTrades() {
         return persistableStore.getTrades();
     }
@@ -436,5 +442,4 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             persist();
         }
     }
-
 }
