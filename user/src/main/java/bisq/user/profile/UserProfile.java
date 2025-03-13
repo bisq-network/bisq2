@@ -48,6 +48,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 /**
  * Publicly shared user profile (from other peers or mine).
+ * Data size about 300 bytes
  */
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
