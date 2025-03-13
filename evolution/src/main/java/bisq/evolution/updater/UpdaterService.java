@@ -228,7 +228,7 @@ public class UpdaterService implements Service {
         }
 
         Version newVersion = newReleaseNotification.getReleaseVersion();
-        boolean isNewRelease = ApplicationVersion.getVersion().belowOrEqual(newVersion);
+        boolean isNewRelease = ApplicationVersion.getVersion().below(newVersion);
         if (isNewRelease) {
             boolean notifyForPreRelease = settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false);
             if (newReleaseNotification.isPreRelease()) {
