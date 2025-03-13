@@ -39,6 +39,7 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 // Data size about 200-250 bytes
 @Getter
@@ -206,7 +207,10 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > getMetaData().getTtl();
+        // As the remove messages are only relevant to avoid race conditions when add and remove data arrive out of
+        // order, we can reduce the TTL by half for remove messages to lower memory usage and data storage
+        long ttl = Math.max(TimeUnit.DAYS.toMillis(2), getMetaData().getTtl() / 2);
+        return (System.currentTimeMillis() - created) > ttl;
     }
 
     @Override
