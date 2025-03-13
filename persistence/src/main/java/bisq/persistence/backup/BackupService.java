@@ -149,7 +149,7 @@ public class BackupService {
             try {
                 String fileNameWithDate = backupFileInfo.getFileNameWithDate();
                 FileUtils.deleteFile(dirPath.resolve(fileNameWithDate).toFile());
-                log.info("Deleted outdated backup {}", fileNameWithDate);
+                log.debug("Deleted outdated backup {}", fileNameWithDate);
             } catch (Exception e) {
                 log.error("Failed to prune backups", e);
             }

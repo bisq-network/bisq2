@@ -40,13 +40,16 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
+// Data size about 200-250 bytes
 @Getter
 @EqualsAndHashCode
 @Slf4j
 public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
     private static final int VERSION = 1;
 
-    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
+    public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
+                                                      AuthenticatedData authenticatedData,
+                                                      KeyPair keyPair)
             throws GeneralSecurityException {
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());

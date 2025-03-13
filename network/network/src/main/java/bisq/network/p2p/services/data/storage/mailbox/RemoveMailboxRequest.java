@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
+// Data size about 200-250 bytes
 @Slf4j
 @EqualsAndHashCode
 @Getter

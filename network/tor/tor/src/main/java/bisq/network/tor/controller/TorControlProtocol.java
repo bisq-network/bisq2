@@ -269,6 +269,9 @@ public class TorControlProtocol implements AutoCloseable {
             String commandToLog = command.contains("AUTHENTICATE")
                     ? command.split(" ")[0] + " [authentication data hidden in logs]"
                     : command;
+            if (commandToLog.endsWith("\r\n")) {
+                commandToLog = commandToLog.substring(0, commandToLog.length() - 2);
+            }
             log.info("Send Tor control command: {}", commandToLog);
             @SuppressWarnings("resource") OutputStream outputStream = this.outputStream.orElseThrow();
             byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
