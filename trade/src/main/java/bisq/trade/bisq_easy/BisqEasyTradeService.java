@@ -46,6 +46,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
+import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
@@ -55,6 +56,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -343,6 +345,22 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return persistableStore.tradeExists(tradeId);
     }
 
+    public boolean wasOfferAlreadyTaken(BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId) {
+        if (new Date().after(Trade.TRADE_ID_V1_ACTIVATION_DATE)) {
+            // We do only check if we have a trade with same offer and takerNetworkId.
+            // As we include after TRADE_ID_V1_ACTIVATION_DATE the takeOffer date in the trade ID we might have
+            // multiple trades with the same offer and takerNetworkId combination.
+            // To verify that we do not have the same trade we need to use the tradeExists method.
+            return getTrades().stream().anyMatch(trade ->
+                    trade.getOffer().getId().equals(bisqEasyOffer.getId()) &&
+                            trade.getTaker().getNetworkId().getId().equals(takerNetworkId.getId())
+            );
+        } else {
+            String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
+            return tradeExists(tradeId);
+        }
+    }
+
     public ObservableSet<BisqEasyTrade> getTrades() {
         return persistableStore.getTrades();
     }
@@ -436,5 +454,4 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
             persist();
         }
     }
-
 }

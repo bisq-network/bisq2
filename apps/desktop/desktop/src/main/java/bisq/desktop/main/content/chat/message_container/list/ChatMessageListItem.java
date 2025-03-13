@@ -65,7 +65,6 @@ import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -108,7 +107,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final String nickName;
     private final ReputationScore reputationScore;
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-    private final boolean offerAlreadyTaken;
+    private final boolean wasOfferAlreadyTaken;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
@@ -169,16 +168,15 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId takerNetworkId = userProfile.getNetworkId();
                 BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
-                String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-                offerAlreadyTaken = bisqEasyTradeService.tradeExists(tradeId);
+                wasOfferAlreadyTaken = bisqEasyTradeService.wasOfferAlreadyTaken(bisqEasyOffer, takerNetworkId);
             } else {
-                offerAlreadyTaken = false;
+                wasOfferAlreadyTaken = false;
             }
         } else {
             // Normal chat message or BisqEasyOfferbookMessage without offer
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getTextOrNA() + editPostFix;
-            offerAlreadyTaken = false;
+            wasOfferAlreadyTaken = false;
         }
 
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::onUserIdentity));

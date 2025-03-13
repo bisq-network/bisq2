@@ -21,11 +21,9 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
-import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
@@ -34,11 +32,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
-import bisq.trade.Trade;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
-import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -73,18 +67,6 @@ public class BisqEasyServiceUtil {
 
     public static boolean isMaker(UserIdentityService userIdentityService, BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
-    }
-
-    public static Optional<BisqEasyTrade> findTradeFromChannel(UserIdentityService userIdentityService,
-                                                               BisqEasyTradeService bisqEasyTradeService,
-                                                               BisqEasyOpenTradeChannel channel) {
-        UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
-        boolean maker = isMaker(userIdentityService, bisqEasyOffer);
-        UserProfile peerUserProfile = channel.getPeer();
-        NetworkId takerNetworkId = maker ? peerUserProfile.getNetworkId() : myUserIdentity.getUserProfile().getNetworkId();
-        String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-        return bisqEasyTradeService.findTrade(tradeId);
     }
 
     public static String createBasicOfferBookMessage(MarketPriceService marketPriceService,

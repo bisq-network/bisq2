@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
@@ -121,7 +120,7 @@ public class TradeStateController implements Controller {
                 return;
             }
 
-            Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService, bisqEasyTradeService, channel);
+            Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(channel.getTradeId());
             if (optionalBisqEasyTrade.isEmpty()) {
                 model.resetAll();
                 return;
@@ -258,9 +257,7 @@ public class TradeStateController implements Controller {
 
     void onShowTradeDetails() {
         BisqEasyOpenTradeChannel channel = model.getChannel().get();
-        Optional<BisqEasyTrade> optionalBisqEasyTrade = BisqEasyServiceUtil.findTradeFromChannel(userIdentityService,
-                bisqEasyTradeService,
-                channel);
+        Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(channel.getTradeId());
         if (optionalBisqEasyTrade.isEmpty()) {
             model.resetAll();
             return;
