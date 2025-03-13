@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
+import bisq.common.formatter.DataSizeFormatter;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.*;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -384,6 +385,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     // Useful for debugging state of the store
     private void maybeLogMapState(String methodName, DataStore<AuthenticatedDataRequest> dataStore) {
         if (DevMode.isDevMode() || methodName.equals("onPersistedApplied")) {
+            var dataSize = dataStore.getMap().values().stream()
+                    .mapToLong(authenticatedDataRequest -> authenticatedDataRequest.serializeForHash().length)
+                    .sum();
             var added = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
@@ -396,8 +400,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     .collect(Collectors.toList());
             var className = Stream.concat(added.stream(), removed.stream())
                     .findAny().orElse(persistence.getFileName().replace("Store", "")); // Remove trailing Store postfix
-            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
-                    methodName, className, added.size(), removed.size(), dataStore.getMap().size());
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}",
+                    methodName, className, added.size(), removed.size(), dataStore.getMap().size(), DataSizeFormatter.format(dataSize));
         }
     }
 }
