@@ -32,7 +32,9 @@ import bisq.offer.Offer;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
+import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import bisq.user.profile.UserProfile;
@@ -109,11 +111,37 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 .filter(offer -> offer.equals(takersOffer))
                 .findAny();
         if (matchingOfferInChannel.isEmpty()) {
-            log.error("Could not find matching offer in BisqEasyOfferbookChannel.\n" +
-                            "takersOffer={}\n" +
-                            "myOffers={}",
-                    takersOffer, myOffers);
-            throw new RuntimeException("Could not find matching offer in BisqEasyOfferbookChannel");
+            BisqEasyTradeService bisqEasyTradeService = (BisqEasyTradeService) serviceProvider;
+            // After TRADE_ID_V1_ACTIVATION_DATE we might have trades in the open trades list which have an id created
+            // with the createId_V0 method, thus we need to check for both.
+            String v0_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId());
+            String v1_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId(), takersContract.getTakeOfferDate());
+            boolean hasTradeWithSameTradeId = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
+                    trade.getId().equals(v0_tradeId) || trade.getId().equals(v1_tradeId));
+            if (hasTradeWithSameTradeId) {
+                String errorMessage = String.format("A trade with the same tradeId already exist.\n" +
+                                "takersOffer=%s; takerNetworkId=%s; v1_tradeId=%s; v0_tradeId=%s",
+                        takersOffer, takersContract.getTaker().getNetworkId(), v0_tradeId, v1_tradeId);
+                log.error(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
+
+            boolean hasOfferInTrades = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
+                    trade.getOffer().getId().equals(takersOffer.getId()));
+            boolean closeMyOfferWhenTaken = serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get();
+            if (hasOfferInTrades) {
+                log.info("The offer has not been found in open offers, but we found another trade with the same offer.\n" +
+                                "We accept the take offer request as it might be from processing mailbox messages " +
+                                "where multiple takers took the same offer.\n" +
+                                "closeMyOfferWhenTaken={}; takersOffer={}",
+                        closeMyOfferWhenTaken, takersOffer);
+            } else {
+                String errorMessage = String.format("Could not find matching offer in BisqEasyOfferbookChannel and no " +
+                        "trade with that offer was found.\n" +
+                        "closeMyOfferWhenTaken=%s; takersOffer=%s", closeMyOfferWhenTaken, takersOffer);
+                log.error(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
         }
 
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
