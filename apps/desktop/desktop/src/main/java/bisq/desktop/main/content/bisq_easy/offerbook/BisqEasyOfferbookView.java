@@ -523,7 +523,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.getStyleClass().add("offerbook-subheader");
         subheader.setAlignment(Pos.CENTER);
 
-        chatMessagesComponent.setMinWidth(700);
+        chatMessagesComponent.setMinWidth(505);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatVBox = new VBox(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
