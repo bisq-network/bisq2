@@ -381,6 +381,10 @@
     -fx-background-color: -bisq-dark-grey-20;
 }
 
+.split-pane-w-offerlist-collapsed:horizontal > .split-pane-divider {
+    -fx-cursor: default;
+}
+
 .create-offer-button {
     -fx-background-color: -fx-default-button;
     -fx-text-fill: -fx-light-text-color;

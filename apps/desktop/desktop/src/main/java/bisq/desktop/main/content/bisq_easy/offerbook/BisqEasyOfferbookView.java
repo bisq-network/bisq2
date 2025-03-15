@@ -306,6 +306,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         double finalPosition = calculateNormalizedPosition(showOfferListExpanded);
         Transitions.animateDividerPosition(divider, initialPosition, finalPosition, SPLITPANE_ANIMATION_DURATION);
         updateChatContainerStyleClass();
+        updateSplitPaneStyleClass(showOfferListExpanded);
     }
 
     private double calculateNormalizedPosition(boolean showOfferListExpanded) {
@@ -340,6 +341,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             VBox.setMargin(chatVBox, offerListExpandedInsets);
         }
         chatVBox.getStyleClass().add(styleClass);
+    }
+
+    private void updateSplitPaneStyleClass(boolean showOfferListExpanded) {
+        String collapsedOfferlistStyle = "split-pane-w-offerlist-collapsed";
+        splitPane.getStyleClass().remove(collapsedOfferlistStyle);
+        if (!showOfferListExpanded) {
+            splitPane.getStyleClass().add(collapsedOfferlistStyle);
+        }
     }
 
     private BisqEasyOfferbookModel getModel() {
