@@ -262,7 +262,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
     private void expandListView() {
         header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(4, 0, 0, 15));
+        header.setPadding(new Insets(4, 0, 0, 7));
         root.setMaxWidth(Double.MAX_VALUE);
         root.setMinWidth(COLLAPSED_LIST_WIDTH);
         content.getStyleClass().remove("collapsed-offer-list-container");

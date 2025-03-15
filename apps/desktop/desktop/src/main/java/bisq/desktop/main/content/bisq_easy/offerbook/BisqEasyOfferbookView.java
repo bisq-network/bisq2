@@ -362,7 +362,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(4, 0, 0, 15));
+        header.setPadding(new Insets(4, 0, 0, 7));
         header.getStyleClass().add("chat-header-title");
 
         marketSelectorSearchBox = new SearchBox();
