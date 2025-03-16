@@ -306,6 +306,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         double finalPosition = calculateNormalizedPosition(showOfferListExpanded);
         Transitions.animateDividerPosition(divider, initialPosition, finalPosition, SPLITPANE_ANIMATION_DURATION);
         updateChatContainerStyleClass();
+        updateSplitPaneStyleClass(showOfferListExpanded);
     }
 
     private double calculateNormalizedPosition(boolean showOfferListExpanded) {
@@ -342,6 +343,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         chatVBox.getStyleClass().add(styleClass);
     }
 
+    private void updateSplitPaneStyleClass(boolean showOfferListExpanded) {
+        String collapsedOfferlistStyle = "split-pane-w-offerlist-collapsed";
+        splitPane.getStyleClass().remove(collapsedOfferlistStyle);
+        if (!showOfferListExpanded) {
+            splitPane.getStyleClass().add(collapsedOfferlistStyle);
+        }
+    }
+
     private BisqEasyOfferbookModel getModel() {
         return (BisqEasyOfferbookModel) model;
     }
@@ -362,7 +371,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(4, 0, 0, 15));
+        header.setPadding(new Insets(4, 0, 0, 7));
         header.getStyleClass().add("chat-header-title");
 
         marketSelectorSearchBox = new SearchBox();
@@ -523,7 +532,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.getStyleClass().add("offerbook-subheader");
         subheader.setAlignment(Pos.CENTER);
 
-        chatMessagesComponent.setMinWidth(700);
+        chatMessagesComponent.setMinWidth(505);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatVBox = new VBox(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
