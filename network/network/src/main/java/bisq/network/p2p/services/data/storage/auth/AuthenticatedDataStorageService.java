@@ -207,12 +207,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // different versions and metaData has changed between those versions.
             // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
             MetaData metaDataFromDistributedData = addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData();
-            if (!request.getMetaDataFromProto().equals(metaDataFromDistributedData)) {
+            if (!request.getFallbackMetaData().equals(metaDataFromDistributedData)) {
                 request.setMetaDataFromDistributedData(Optional.of(metaDataFromDistributedData));
                 log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
                                 "metadata with the one we have from the associated distributed data." +
                                 "{} vs. {}",
-                        request.getMetaDataFromProto(),
+                        request.getFallbackMetaData(),
                         metaDataFromDistributedData);
             }
 

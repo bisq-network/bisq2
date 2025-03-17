@@ -51,6 +51,7 @@ public final class ConfidentialData implements NetworkProto {
             verify();
         } catch (Exception e) {
             log.error("ConfidentialData verification failed", e);
+            throw e;
         }
     }
 
