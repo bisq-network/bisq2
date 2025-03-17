@@ -168,7 +168,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         }
     }
 
-    public MetaData getMetaDataFromProto() {
+    public MetaData getFallbackMetaData() {
         return metaData;
     }
 
