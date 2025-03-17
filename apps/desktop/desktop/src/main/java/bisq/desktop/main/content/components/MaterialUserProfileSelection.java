@@ -23,9 +23,12 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
@@ -34,13 +37,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 
 @Slf4j
 public class MaterialUserProfileSelection extends Pane {
     protected final Region bg = new Region();
     protected final Region line = new Region();
     protected final Region selectionLine = new Region();
+    @Getter
     protected final Label descriptionLabel = new Label();
     protected final Pane userProfileSelectionRoot;
     @Getter
@@ -48,13 +51,34 @@ public class MaterialUserProfileSelection extends Pane {
     @Getter
     private final BisqIconButton iconButton = new BisqIconButton();
     private final UserProfileSelection userProfileSelection;
-    private ChangeListener<Number> iconButtonHeightListener;
+
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> {
+        onWidthChanged((double) newValue);
+        layoutIconButton();
+    };
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> userProfileSelectionFocusedListener = (observable, oldValue, newValue) -> onUserProfileSelectionFocus(newValue);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener descriptionLabelTextListener = (observable) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener helpListener = (observable) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakInvalidationListener
+    private final InvalidationListener disabledListener = (observable) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> iconButtonHeightListener = (observable, oldValue, newValue) -> {
+        if (newValue.doubleValue() > 0) {
+            layoutIconButton();
+        }
+    };
 
     public MaterialUserProfileSelection(UserProfileSelection userProfileSelection, String description) {
         this(userProfileSelection, description, null);
     }
 
-    public MaterialUserProfileSelection(UserProfileSelection userProfileSelection, String description, @Nullable String help) {
+    public MaterialUserProfileSelection(UserProfileSelection userProfileSelection,
+                                        String description,
+                                        @Nullable String help) {
         this.userProfileSelection = userProfileSelection;
 
         bg.getStyleClass().add("material-text-field-bg");
@@ -75,7 +99,6 @@ public class MaterialUserProfileSelection extends Pane {
             descriptionLabel.setText(description);
         }
 
-
         userProfileSelectionRoot = userProfileSelection.getRoot();
         userProfileSelectionRoot.setLayoutX(6.5);
         userProfileSelectionRoot.getStyleClass().add("material-text-field");
@@ -95,20 +118,11 @@ public class MaterialUserProfileSelection extends Pane {
 
         getChildren().addAll(bg, line, selectionLine, descriptionLabel, userProfileSelectionRoot, iconButton, helpLabel);
 
-        widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                onWidthChanged((double) newValue)).get());
-
-        userProfileSelection.focusedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                onUserProfileSelectionFocus(newValue)).get());
-        descriptionLabel.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
-
-        helpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
-        disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                update()).get());
-        widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                layoutIconButton()).get());
+        widthProperty().addListener(new WeakChangeListener<>(widthListener));
+        userProfileSelection.focusedProperty().addListener(new WeakChangeListener<>(userProfileSelectionFocusedListener));
+        descriptionLabel.textProperty().addListener(new WeakInvalidationListener(descriptionLabelTextListener));
+        helpProperty().addListener(new WeakInvalidationListener(helpListener));
+        disabledProperty().addListener(new WeakInvalidationListener(disabledListener));
 
         bg.setOnMouseEntered(e -> onMouseEntered());
         bg.setOnMouseExited(e -> onMouseExited());
@@ -122,9 +136,9 @@ public class MaterialUserProfileSelection extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Description
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public String getDescription() {
         return descriptionLabel.getText();
@@ -138,14 +152,10 @@ public class MaterialUserProfileSelection extends Pane {
         return descriptionLabel.textProperty();
     }
 
-    public Label getDescriptionLabel() {
-        return descriptionLabel;
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Help
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public String getHelpText() {
         return helpLabel.getText();
@@ -160,9 +170,9 @@ public class MaterialUserProfileSelection extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Icon
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void setIcon(AwesomeIcon icon) {
         iconButton.setIcon(icon);
@@ -191,9 +201,9 @@ public class MaterialUserProfileSelection extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Focus
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public ReadOnlyBooleanProperty userProfileSelectionFocusedProperty() {
         return userProfileSelection.focusedProperty();
@@ -207,9 +217,9 @@ public class MaterialUserProfileSelection extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Event handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     protected void onMouseEntered() {
         removeBgStyles();
@@ -233,7 +243,7 @@ public class MaterialUserProfileSelection extends Pane {
         if (focus) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
-            Transitions.animateWidth(selectionLine, getWidth());
+            Transitions.animatePrefWidth(selectionLine, getWidth());
         } else {
             Transitions.fadeOut(selectionLine, 200);
         }
@@ -255,9 +265,9 @@ public class MaterialUserProfileSelection extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Layout
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     protected void doLayout() {
         bg.setMinHeight(getBgHeight());
@@ -281,13 +291,7 @@ public class MaterialUserProfileSelection extends Pane {
                 iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12 + iconButton.getPadding().getLeft());
             }
         } else {
-            iconButtonHeightListener = (observable, oldValue, newValue) -> {
-                if (newValue.doubleValue() > 0) {
-                    layoutIconButton();
-                    UIThread.runOnNextRenderFrame(() -> iconButton.heightProperty().removeListener(iconButtonHeightListener));
-                }
-            };
-            iconButton.heightProperty().addListener(iconButtonHeightListener);
+            iconButton.heightProperty().addListener(new WeakChangeListener<>(iconButtonHeightListener));
         }
     }
 

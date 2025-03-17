@@ -1,0 +1,50 @@
+name: Transifex
+
+on:
+  workflow_run:
+    workflows: [ Build Bisq 2 ]
+    types: [ completed ]
+
+jobs:
+  if_merged:
+    name: Push translation source files to Transifex
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch all history so we can check commits properly
+          fetch-depth: 0
+
+      - name: Check if the commit is in the main branch
+        id: check_commit
+        run: |
+          git fetch origin main
+          if git merge-base --is-ancestor ${{ github.event.workflow_run.head_sha }} origin/main; then
+            echo "commit_in_main=true" >> $GITHUB_OUTPUT
+          else
+            echo "commit_in_main=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "Check if TX_TOKEN secret exists"
+        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        env:
+          transifex_secret: ${{ secrets.TX_TOKEN }}
+        run: |
+          if [ -z "$transifex_secret" ]; then
+            echo "The secret \"TX_TOKEN\" has not been set; please go to \"settings > secrets and variables\" to create it"
+            exit 1
+          fi
+
+      - name: Checkout at the specific commit
+        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Push source files using Transifex client
+        if: "steps.check_commit.outputs.commit_in_main == 'true'"
+        uses: transifex/cli-action@v2
+        with:
+          token: ${{ secrets.TX_TOKEN }}
+          args: push -s

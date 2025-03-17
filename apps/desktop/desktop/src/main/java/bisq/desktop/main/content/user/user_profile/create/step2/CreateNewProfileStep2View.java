@@ -26,6 +26,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -34,12 +35,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2Model, CreateNewProfileStep2Controller> {
-    private final ImageView catIconView;
+    private final ImageView catHashImageView;
     private final MaterialTextField statement;
     private final MaterialTextArea terms;
     private final Button saveButton, cancelButton;
-    private final Label nickName, nym;
-    protected final Label headlineLabel;
+    private final Label nickName;
+    private final Label nym;
+    private final Label feedbackLabel;
+    protected final ProgressIndicator createProfileIndicator;
 
     public CreateNewProfileStep2View(CreateNewProfileStep2Model model, CreateNewProfileStep2Controller controller) {
         super(new VBox(25), model, controller);
@@ -49,7 +52,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-        headlineLabel = new Label(Res.get("user.userProfile.new.step2.headline"));
+        Label headlineLabel = new Label(Res.get("user.userProfile.new.step2.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("user.userProfile.new.step2.subTitle"));
@@ -62,16 +65,16 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
         nickName.setAlignment(Pos.TOP_CENTER);
 
-        catIconView = new ImageView();
-        catIconView.setFitWidth(128);
-        catIconView.setFitHeight(128);
+        catHashImageView = new ImageView();
+        catHashImageView.setFitWidth(CreateNewProfileStep2Model.CAT_HASH_IMAGE_SIZE);
+        catHashImageView.setFitHeight(catHashImageView.getFitWidth());
 
         nym = new Label();
         nym.getStyleClass().addAll("bisq-text-7");
         nym.setAlignment(Pos.TOP_CENTER);
 
         int width = 250;
-        VBox catVBox = new VBox(8, nickName, catIconView, nym);
+        VBox catVBox = new VBox(8, nickName, catHashImageView, nym);
         catVBox.setAlignment(Pos.TOP_CENTER);
         catVBox.setPrefWidth(width);
         catVBox.setPrefHeight(200);
@@ -97,7 +100,20 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
 
-        HBox buttons = new HBox(20, cancelButton, saveButton);
+        createProfileIndicator = new ProgressIndicator();
+        createProfileIndicator.setProgress(0);
+        createProfileIndicator.setMaxWidth(24);
+        createProfileIndicator.setMaxHeight(24);
+        createProfileIndicator.setManaged(false);
+        createProfileIndicator.setVisible(false);
+
+        feedbackLabel = new Label(Res.get("onboarding.createProfile.createProfile.busy"));
+        feedbackLabel.setManaged(false);
+        feedbackLabel.setVisible(false);
+        feedbackLabel.getStyleClass().add("bisq-text-18");
+
+        HBox.setMargin(feedbackLabel, new Insets(0, 0, 0, -10));
+        HBox buttons = new HBox(20, cancelButton, saveButton, createProfileIndicator, feedbackLabel);
         buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(40, 0, 0, 0));
@@ -112,22 +128,36 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
 
     @Override
     protected void onViewAttached() {
-        catIconView.imageProperty().bind(model.getCatHashImage());
+        catHashImageView.imageProperty().bind(model.getCatHashImage());
         nickName.textProperty().bind(model.getNickName());
         nym.textProperty().bind(model.getNym());
         terms.textProperty().bindBidirectional(model.getTerms());
         statement.textProperty().bindBidirectional(model.getStatement());
+        saveButton.disableProperty().bind(model.getSaveButtonDisabled());
+        createProfileIndicator.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        createProfileIndicator.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        createProfileIndicator.progressProperty().bind(model.getCreateProfileProgress());
+        feedbackLabel.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        feedbackLabel.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
+
         saveButton.setOnAction((event) -> controller.onSave());
         cancelButton.setOnAction((event) -> controller.onCancel());
     }
 
     @Override
     protected void onViewDetached() {
-        catIconView.imageProperty().unbind();
+        catHashImageView.imageProperty().unbind();
         nickName.textProperty().unbind();
         nym.textProperty().unbind();
         terms.textProperty().unbindBidirectional(model.getTerms());
         statement.textProperty().unbindBidirectional(model.getStatement());
+        createProfileIndicator.managedProperty().unbind();
+        createProfileIndicator.visibleProperty().unbind();
+        createProfileIndicator.progressProperty().unbind();
+        feedbackLabel.managedProperty().unbind();
+        feedbackLabel.visibleProperty().unbind();
+
+        saveButton.disableProperty().unbind();
         saveButton.setOnAction(null);
         cancelButton.setOnAction(null);
     }

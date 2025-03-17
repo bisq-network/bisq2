@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Coin extends Monetary {
 
     public static Coin parse(String string, String code) {
-        return parse(string, code, deriveExponent(code));
+        return parse(string, code, derivePrecision(code));
     }
 
     public static Coin parse(String string, String code, int precision) {
@@ -65,8 +65,8 @@ public final class Coin extends Monetary {
         if (tokens.length == 2) {
             String code = tokens[1];
             if (TradeCurrency.isMaybeCrypto(code)) {
-                int exponent = deriveExponent(code);
-                return parse(tokens[0], code, exponent);
+                int precision = derivePrecision(code);
+                return parse(tokens[0], code, precision);
             }
         }
         throw new IllegalArgumentException("input could not be parsed. Expected: number value + space + currency code (e.g. 234.12 USD)");
@@ -119,15 +119,15 @@ public final class Coin extends Monetary {
      * @param value Value as smallest unit the Coin object can represent.
      */
     public static Coin fromValue(long value, String code) {
-        return new Coin(value, code, deriveExponent(code));
+        return new Coin(value, code, derivePrecision(code));
     }
 
     /**
      * @param faceValue Coin value as face value. E.g. 1.12345678 BTC
      */
     public static Coin fromFaceValue(double faceValue, String code) {
-        int exponent = deriveExponent(code);
-        return new Coin(faceValue, code, exponent);
+        int precision = derivePrecision(code);
+        return new Coin(faceValue, code, precision);
     }
 
     /**
@@ -151,7 +151,7 @@ public final class Coin extends Monetary {
         super(code + " [crypto]", faceValue, code, precision, code.equals("BSQ") ? 2 : 4);
     }
 
-    private Coin(String id, long value, String code, int precision, int lowPrecision) {
+    public Coin(String id, long value, String code, int precision, int lowPrecision) {
         super(id, value, code, precision, lowPrecision);
     }
 
@@ -191,12 +191,7 @@ public final class Coin extends Monetary {
         return new Coin(this.value / divisor, this.code, this.precision);
     }
 
-    @Override
-    public double toDouble(long value) {
-        return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
-    }
-
-    private static int deriveExponent(String code) {
+    private static int derivePrecision(String code) {
         if (code.equals("XMR")) return 12;
         if (code.equals("BSQ")) return 2;
         return 8;
@@ -204,7 +199,7 @@ public final class Coin extends Monetary {
 
     public Coin round(int roundPrecision) {
         //todo (low prio) add tests
-        double rounded = MathUtils.roundDouble(toDouble(value), roundPrecision);
+        double rounded = MathUtils.roundDouble(asDouble(), roundPrecision);
         long shifted = BigDecimal.valueOf(rounded).movePointRight(precision).longValue();
         return Coin.fromValue(shifted, code, precision);
     }

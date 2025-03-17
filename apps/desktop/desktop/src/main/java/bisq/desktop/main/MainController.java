@@ -19,7 +19,10 @@ package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
 import bisq.bisq_easy.NavigationTarget;
-import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
+import bisq.bonded_roles.release.ReleaseNotification;
+import bisq.common.application.ApplicationVersion;
+import bisq.common.observable.Observable;
+import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -31,8 +34,8 @@ import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
 import bisq.desktop.main.top.TopPanelController;
-import bisq.updater.UpdaterService;
-import bisq.updater.UpdaterUtils;
+import bisq.evolution.updater.UpdaterService;
+import bisq.evolution.updater.UpdaterUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -77,8 +80,9 @@ public class MainController extends NavigationController {
             String baseDirPath = config.getBaseDir().toAbsolutePath().toString();
             Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(baseDirPath);
             if (versionFromVersionFile.isPresent()) {
-                if (!config.getVersion().toString().equals(versionFromVersionFile.get())) {
-                    String errorMsg = "Version of application (v" + config.getVersion() +
+                Version version = ApplicationVersion.getVersion();
+                if (!version.toString().equals(versionFromVersionFile.get())) {
+                    String errorMsg = "Version of application (v" + version +
                             ") does not match version from version file in data directory (v" + versionFromVersionFile.get() + ")";
                     new Popup().warning(errorMsg)
                             .useShutDownButton()
@@ -89,12 +93,8 @@ public class MainController extends NavigationController {
             }
         }
 
-        updaterService.getReleaseNotification().addObserver(releaseNotification -> {
-            if (releaseNotification == null) {
-                return;
-            }
-            UIThread.run(() -> Navigation.navigateTo(NavigationTarget.UPDATER));
-        });
+        updaterService.getIsNewReleaseAvailable().addObserver(isNewReleaseAvailable -> UIThread.run(this::maybeShowUpdatePopup));
+        updaterService.getIgnoreNewRelease().addObserver(isNewReleaseAvailable -> UIThread.run(this::maybeShowUpdatePopup));
     }
 
     @Override
@@ -104,18 +104,28 @@ public class MainController extends NavigationController {
     @SuppressWarnings("SwitchStatementWithTooFewBranches")
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case CONTENT: {
-                return Optional.of(new ContentController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case CONTENT -> Optional.of(new ContentController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     @Override
     public void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         leftNavController.setNavigationTarget(navigationTarget);
+    }
+
+    private void maybeShowUpdatePopup() {
+        Boolean isNewReleaseAvailable = updaterService.getIsNewReleaseAvailable().get();
+        Observable<Boolean> ignoreNewRelease = updaterService.getIgnoreNewRelease();
+        ReleaseNotification releaseNotification = updaterService.getReleaseNotification().get();
+        if (isNewReleaseAvailable == null ||
+                !isNewReleaseAvailable ||
+                releaseNotification == null ||
+                ignoreNewRelease == null ||
+                ignoreNewRelease.get()) {
+            return;
+        }
+        Navigation.navigateTo(NavigationTarget.UPDATER);
     }
 }

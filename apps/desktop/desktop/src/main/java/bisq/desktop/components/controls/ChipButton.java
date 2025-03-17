@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -31,16 +32,26 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 
 @Slf4j
 public class ChipButton extends HBox {
     private final ToggleButton toggleButton;
     @Nullable
     private Runnable onActionHandler;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> toggleButtonSelectedListener = (observable, oldValue, newValue) -> {
+        removeStyles();
+        if (newValue) {
+            getStyleClass().add("chips-button-selected");
+        }
+        if (onActionHandler != null) {
+            onActionHandler.run();
+        }
+    };
 
     public ChipButton(String text) {
         setAlignment(Pos.CENTER_LEFT);
@@ -51,17 +62,10 @@ public class ChipButton extends HBox {
         toggleButton.setText(text);
         toggleButton.setMouseTransparent(true);
         toggleButton.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(toggleButton, Priority.ALWAYS);
         getChildren().add(toggleButton);
 
-        toggleButton.selectedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> {
-            removeStyles();
-            if (newValue) {
-                getStyleClass().add("chips-button-selected");
-            }
-            if (onActionHandler != null) {
-                onActionHandler.run();
-            }
-        }).get());
+        toggleButton.selectedProperty().addListener(new WeakChangeListener<>(toggleButtonSelectedListener));
 
         setOnMousePressed(e -> {
             removeStyles();
@@ -86,7 +90,6 @@ public class ChipButton extends HBox {
                 getStyleClass().add("chips-button-selected");
             }
         });
-
     }
 
     private void removeStyles() {
@@ -121,14 +124,13 @@ public class ChipButton extends HBox {
     public ImageView setRightIcon(String iconId) {
         ImageView imageView = ImageUtil.getImageViewById(iconId);
         imageView.setCursor(Cursor.HAND);
-        HBox.setMargin(imageView, new Insets(0, -5, 0, 20));
+        HBox.setMargin(imageView, new Insets(0, 5, 0, 0));
         getChildren().addAll(Spacer.fillHBox(), imageView);
         return imageView;
     }
 
     public void setSelected(boolean value) {
         toggleButton.setSelected(value);
-
     }
 
     public boolean isSelected() {

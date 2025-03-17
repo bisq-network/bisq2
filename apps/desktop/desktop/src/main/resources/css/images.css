@@ -6,6 +6,15 @@
     -fx-image: url("/images/bisq-easy.png");
 }
 
+#bisq-31 {
+    -fx-image: url("/images/bisq-31.png");
+}
+
+#support-31 {
+    -fx-image: url("/images/support-31.png");
+}
+
+
 #bullet-point {
     -fx-image: url("/images/bullet-point.png");
 }
@@ -18,12 +27,20 @@
     -fx-image: url("/images/tor.png");
 }
 
+#tor_green {
+    -fx-image: url("/images/tor_green.png");
+}
+
 #i2p {
     -fx-image: url("/images/i2p.png");
 }
 
-#inventory-completed {
-    -fx-image: url("/images/icons/check-white.png");
+#rocket {
+    -fx-image: url("/images/icons/rocket.png");
+}
+
+#peer-group {
+    -fx-image: url("/images/icons/peer-group.png");
 }
 
 #info {
@@ -122,6 +139,10 @@
     -fx-image: url("/images/field-add-white.png");
 }
 
+#clear-notifications {
+    -fx-image: url("/images/clear-notifications.png");
+}
+
 #remove {
     -fx-image: url("/images/field-remove.png");
 }
@@ -178,6 +199,14 @@
     -fx-image: url("/images/waitingstates/bitcoin-confirmation.png");
 }
 
+#scan-with-camera {
+    -fx-image: url("/images/waitingstates/scan-with-camera.png");
+}
+
+#complete-trade {
+    -fx-image: url("/images/waitingstates/complete-trade.png");
+}
+
 #video {
     -fx-image: url("/images/video.png");
 }
@@ -214,6 +243,10 @@
     -fx-image: url("/images/icons/check-grey.png");
 }
 
+#check-green {
+    -fx-image: url("/images/icons/check-green.png");
+}
+
 #bisq-broadcast-white {
     -fx-image: url("/images/icons/bisq-broadcast-white.png");
 }
@@ -246,6 +279,34 @@
     -fx-image: url("/images/icons/close-mini-green.png");
 }
 
+#link-white {
+    -fx-image: url("/images/icons/link-white.png");
+}
+
+#link-grey {
+    -fx-image: url("/images/icons/link-grey.png");
+}
+
+#link-green {
+    -fx-image: url("/images/icons/link-green.png");
+}
+
+#open-link-white {
+    -fx-image: url("/images/icons/open-link-white.png");
+}
+
+#open-link-grey {
+    -fx-image: url("/images/icons/open-link-grey.png");
+}
+
+#open-link-green {
+    -fx-image: url("/images/icons/open-link-green.png");
+}
+
+#new-badge {
+    -fx-image: url("/images/new.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */
@@ -275,6 +336,18 @@
     -fx-image: url("/images/navigation/nav-bisq-easy-hover.png");
 }
 
+#nav-reputation {
+    -fx-image: url("/images/navigation/nav-reputation.png");
+}
+
+#nav-reputation-active {
+    -fx-image: url("/images/navigation/nav-reputation-active.png");
+}
+
+#nav-reputation-hover {
+    -fx-image: url("/images/navigation/nav-reputation-hover.png");
+}
+
 #nav-community {
     -fx-image: url("/images/navigation/nav-community.png");
 }
@@ -285,18 +358,6 @@
 
 #nav-community-hover {
     -fx-image: url("/images/navigation/nav-community-hover.png");
-}
-
-#nav-events {
-    -fx-image: url("/images/navigation/nav-events.png");
-}
-
-#nav-events-active {
-    -fx-image: url("/images/navigation/nav-events-active.png");
-}
-
-#nav-events-hover {
-    -fx-image: url("/images/navigation/nav-events-hover.png");
 }
 
 #nav-learn {
@@ -321,6 +382,18 @@
 
 #nav-markets-hover {
     -fx-image: url("/images/navigation/nav-markets-hover.png");
+}
+
+#nav-network {
+    -fx-image: url("/images/navigation/nav-network.png");
+}
+
+#nav-network-active {
+    -fx-image: url("/images/navigation/nav-network-active.png");
+}
+
+#nav-network-hover {
+    -fx-image: url("/images/navigation/nav-network-hover.png");
 }
 
 #nav-settings {
@@ -452,6 +525,10 @@
     -fx-image: url("/images/onboarding/learn.png");
 }
 
+#reputation-ribbon {
+    -fx-image: url("/images/onboarding/reputation-ribbon.png");
+}
+
 #dollar-btc {
     -fx-image: url("/images/onboarding/dollar-btc.png");
 }
@@ -521,91 +598,143 @@
 }
 
 
-/* Payment */
+/* Fiat payment methods based on enum names from FiatPaymentRailUtil */
 
 #SEPA {
-    -fx-image: url("/images/payment/SEPA.png");
+    -fx-image: url("/images/payment/sepa-.png");
 }
 
 #SEPA_INSTANT {
-    -fx-image: url("/images/payment/SEPA.png");
+    -fx-image: url("/images/payment/sepa-instant.png");
 }
 
 #ZELLE {
-    -fx-image: url("/images/payment/Zelle.png");
+    -fx-image: url("/images/payment/zelle-.png");
 }
 
 #REVOLUT {
-    -fx-image: url("/images/payment/Revolut.png");
+    -fx-image: url("/images/payment/revolut-.png");
 }
 
 #WISE {
-    -fx-image: url("/images/payment/Wise.png");
+    -fx-image: url("/images/payment/wise-.png");
 }
 
 #NATIONAL_BANK {
-    -fx-image: url("/images/payment/NationalBankTransfer.png");
+    -fx-image: url("/images/payment/national-bank-transfer.png");
 }
 
 #SWIFT {
-    -fx-image: url("/images/payment/NationalBankTransfer.png");
+    -fx-image: url("/images/payment/swift.png");
 }
 
 #F2F {
-    -fx-image: url("/images/payment/F2F.png");
+    -fx-image: url("/images/payment/f2f-.png");
 }
 
 #ACH_TRANSFER {
-    -fx-image: url("/images/payment/ACH.png");
+    -fx-image: url("/images/payment/ach-.png");
 }
 
 #PIX {
-    -fx-image: url("/images/payment/Pix.png");
+    -fx-image: url("/images/payment/pix-.png");
 }
 
 #FASTER_PAYMENTS {
-    -fx-image: url("/images/payment/FasterPayments.png");
+    -fx-image: url("/images/payment/faster-payments.png");
 }
 
 #PAY_ID {
-    -fx-image: url("/images/payment/PayID.png");
+    -fx-image: url("/images/payment/pay-id.png");
 }
 
 #US_POSTAL_MONEY_ORDER {
-    -fx-image: url("/images/payment/USPostalMoneyOrder.png");
+    -fx-image: url("/images/payment/uspmo.png");
 }
 
 #CASH_BY_MAIL {
-    -fx-image: url("/images/payment/CashByMail.png");
+    -fx-image: url("/images/payment/cash-by-mail.png");
 }
 
 #STRIKE {
-    -fx-image: url("/images/payment/Strike.png");
+    -fx-image: url("/images/payment/strike-.png");
 }
 
 #INTERAC_E_TRANSFER {
-    -fx-image: url("/images/payment/InteracETransfer.png");
+    -fx-image: url("/images/payment/interac-etransfer.png");
 }
 
 #AMAZON_GIFT_CARD {
-    -fx-image: url("/images/payment/Amazon.png");
+    -fx-image: url("/images/payment/amazon-.png");
 }
 
 #CASH_DEPOSIT {
-    -fx-image: url("/images/payment/CashDeposit.png");
+    -fx-image: url("/images/payment/cash-deposit.png");
 }
 
 #UPI {
-    -fx-image: url("/images/payment/Upi.png");
+    -fx-image: url("/images/payment/upi-.png");
 }
 
 #BIZUM {
-    -fx-image: url("/images/payment/Bizum.png");
+    -fx-image: url("/images/payment/bizum-.png");
 }
 
 #CASH_APP {
-    -fx-image: url("/images/payment/CashApp.png");
+    -fx-image: url("/images/payment/cashapp-.png");
 }
+
+#CUSTOM_PAYMENT_1 {
+    -fx-image: url("/images/payment/custom-payment-1.png");
+}
+
+#CUSTOM_PAYMENT_2 {
+    -fx-image: url("/images/payment/custom-payment-2.png");
+}
+
+#CUSTOM_PAYMENT_3 {
+    -fx-image: url("/images/payment/custom-payment-3.png");
+}
+
+#CUSTOM_PAYMENT_4 {
+    -fx-image: url("/images/payment/custom-payment-4.png");
+}
+
+#CUSTOM_PAYMENT_5 {
+    -fx-image: url("/images/payment/custom-payment-5.png");
+}
+
+#CUSTOM_PAYMENT_6 {
+    -fx-image: url("/images/payment/custom-payment-6.png");
+}
+
+#add-custom-green {
+    -fx-image: url("/images/payment/add-custom-green.png");
+}
+
+#add-custom-grey {
+    -fx-image: url("/images/payment/add-custom-grey.png");
+}
+
+
+/* Bitcoin settlement method icons based on enum names from BitcoinPaymentRail */
+
+#MAIN_CHAIN {
+    -fx-image: url("/images/bitcoin_rails/bitcoin.png");
+}
+
+#LN {
+    -fx-image: url("/images/bitcoin_rails/ln.png");
+}
+
+#LBTC {
+    -fx-image: url("/images/bitcoin_rails/liquid.png");
+}
+
+#RBTC {
+    -fx-image: url("/images/bitcoin_rails/rsk.png");
+}
+
 
 /* Onboarding icons*/
 #info-circle-solid {
@@ -622,16 +751,16 @@
     -fx-image: url("/images/protocols/protocol-bisq-easy.png");
 }
 
-#protocol-multisig {
-    -fx-image: url("/images/protocols/protocol-multisig.png");
+#protocol-bisq-mu-sig {
+    -fx-image: url("/images/protocols/protocol-bisq-mu-sig.png");
 }
 
 #protocol-submarine {
     -fx-image: url("/images/protocols/protocol-submarine.png");
 }
 
-#protocol-liquid-multisig {
-    -fx-image: url("/images/protocols/protocol-liquid-multisig.png");
+#protocol-liquid-mu-sig {
+    -fx-image: url("/images/protocols/protocol-liquid-mu-sig.png");
 }
 
 #protocol-bisq-lightning {
@@ -660,8 +789,16 @@
 /* Icons */
 /* ------------------------------------------------------------------------------------ */
 
-#icon-bell {
-    -fx-image: url("/images/icons/icon-bell.png");
+#icon-bell-grey {
+    -fx-image: url("/images/icons/icon-bell-grey.png");
+}
+
+#icon-bell-white {
+    -fx-image: url("/images/icons/icon-bell-white.png");
+}
+
+#icon-bell-green {
+    -fx-image: url("/images/icons/icon-bell-green.png");
 }
 
 #icon-info-white {
@@ -670,6 +807,10 @@
 
 #icon-info-grey {
     -fx-image: url("/images/icons/icon-info-grey.png");
+}
+
+#icon-info-green {
+    -fx-image: url("/images/icons/icon-info-green.png");
 }
 
 #icon-help-white {
@@ -686,6 +827,22 @@
 
 #icon-wallet {
     -fx-image: url("/images/icons/icon-wallet.png");
+}
+
+#icon-wallet-white {
+    -fx-image: url("/images/icons/icon-wallet-white.png");
+}
+
+#trade-guide-grey {
+    -fx-image: url("/images/icons/trade-guide-grey.png");
+}
+
+#trade-guide-white {
+    -fx-image: url("/images/icons/trade-guide-white.png");
+}
+
+#trade-guide-green {
+    -fx-image: url("/images/icons/trade-guide-green.png");
 }
 
 #icon-report {
@@ -794,6 +951,50 @@
 
 #language-white {
     -fx-image: url("/images/icons/language/language_white.png");
+}
+
+#maximize {
+    -fx-image: url("/images/icons/maximize.png");
+}
+
+#minimize {
+    -fx-image: url("/images/icons/minimize.png");
+}
+
+#scan-qr-code {
+    -fx-image: url("/images/icons/scan-qr-code.png");
+}
+
+#scan-qr-code-green {
+    -fx-image: url("/images/icons/scan-qr-code-green.png");
+}
+
+#webcam-state-image-recognized {
+    -fx-image: url("/images/icons/webcam-state-image-recognized.png");
+}
+
+#webcam-state-connecting {
+    -fx-image: url("/images/icons/webcam-state-connecting.png");
+}
+
+#interchangeable-grey {
+    -fx-image: url("/images/icons/interchangeable-grey.png");
+}
+
+#interchangeable-white {
+    -fx-image: url("/images/icons/interchangeable-white.png");
+}
+
+#interchangeable-green {
+    -fx-image: url("/images/icons/interchangeable-green.png");
+}
+
+#moderator-badge {
+    -fx-image: url("/images/icons/moderator-badge.png");
+}
+
+#moderator-badge-large {
+    -fx-image: url("/images/icons/moderator-badge-large.png");
 }
 
 
@@ -915,6 +1116,231 @@
 
 #private-chat-white {
     -fx-image: url("/images/chat/private-chat/private-chat-white.png");
+}
+
+#laugh {
+    -fx-image: url("/images/chat/reactions/laugh-20.png");
+}
+
+#happy {
+    -fx-image: url("/images/chat/reactions/happy-20.png");
+}
+
+#heart {
+    -fx-image: url("/images/chat/reactions/heart-20.png");
+}
+
+#thumbsdown {
+    -fx-image: url("/images/chat/reactions/thumbs-down-20.png");
+}
+
+#thumbsup {
+    -fx-image: url("/images/chat/reactions/thumbs-up-20.png");
+}
+
+#party {
+    -fx-image: url("/images/chat/reactions/party-20.png");
+}
+
+#connecting-grey {
+    -fx-image: url("/images/chat/message-status/connecting-grey.png");
+}
+
+#received-check-green {
+    -fx-image: url("/images/chat/message-status/received-check-green.png");
+}
+
+#received-check-grey {
+    -fx-image: url("/images/chat/message-status/received-check-grey.png");
+}
+
+#received-check-white {
+    -fx-image: url("/images/chat/message-status/received-check-white.png");
+}
+
+#sent-message-green {
+    -fx-image: url("/images/chat/message-status/sent-message-green.png");
+}
+
+#sent-message-grey {
+    -fx-image: url("/images/chat/message-status/sent-message-grey.png");
+}
+
+#sent-message-white {
+    -fx-image: url("/images/chat/message-status/sent-message-white.png");
+}
+
+#try-again-green {
+    -fx-image: url("/images/chat/message-status/try-again-green.png");
+}
+
+#try-again-dark {
+    -fx-image: url("/images/chat/message-status/try-again-dark.png");
+}
+
+#try-again-grey {
+    -fx-image: url("/images/chat/message-status/try-again-grey.png");
+}
+
+#try-again-white {
+    -fx-image: url("/images/chat/message-status/try-again-white.png");
+}
+
+#undelivered-message-yellow {
+    -fx-image: url("/images/chat/message-status/undelivered-message-yellow.png");
+}
+
+#undelivered-message-grey {
+    -fx-image: url("/images/chat/message-status/undelivered-message-grey.png");
+}
+
+#undelivered-message-white {
+    -fx-image: url("/images/chat/message-status/undelivered-message-white.png");
+}
+
+#mailbox-green {
+    -fx-image: url("/images/chat/message-status/mailbox-green.png");
+}
+
+#mailbox-grey {
+    -fx-image: url("/images/chat/message-status/mailbox-grey.png");
+}
+
+#mailbox-white {
+    -fx-image: url("/images/chat/message-status/mailbox-white.png");
+}
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Chat Message Actions */
+/* ------------------------------------------------------------------------------------ */
+
+#react-green {
+    -fx-image: url("/images/chat/message-actions/react/react-green.png");
+}
+
+#react-grey {
+    -fx-image: url("/images/chat/message-actions/react/react-grey.png");
+}
+
+#react-white {
+    -fx-image: url("/images/chat/message-actions/react/react-white.png");
+}
+
+#react-laugh {
+    -fx-image: url("/images/chat/message-actions/react-menu/laugh-18.png");
+}
+
+#react-happy {
+    -fx-image: url("/images/chat/message-actions/react-menu/happy-18.png");
+}
+
+#react-thumbsdown {
+    -fx-image: url("/images/chat/message-actions/react-menu/thumbs-down-18.png");
+}
+
+#react-thumbsup {
+    -fx-image: url("/images/chat/message-actions/react-menu/thumbs-up-18.png");
+}
+
+#react-party {
+    -fx-image: url("/images/chat/message-actions/react-menu/party-18.png");
+}
+
+#react-heart {
+    -fx-image: url("/images/chat/message-actions/react-menu/heart-18.png");
+}
+
+#more-actions-green {
+    -fx-image: url("/images/chat/message-actions/ellipsis/ellipsis18-green.png");
+}
+
+#more-actions-grey {
+    -fx-image: url("/images/chat/message-actions/ellipsis/ellipsis18-grey.png");
+}
+
+#more-actions-white {
+    -fx-image: url("/images/chat/message-actions/ellipsis/ellipsis18-white.png");
+}
+
+#copy-green {
+    -fx-image: url("/images/chat/message-actions/copy/copy-green.png");
+}
+
+#copy-grey {
+    -fx-image: url("/images/chat/message-actions/copy/copy-grey.png");
+}
+
+#copy-white {
+    -fx-image: url("/images/chat/message-actions/copy/copy-white.png");
+}
+
+#reply-green {
+    -fx-image: url("/images/chat/message-actions/reply/reply-green.png");
+}
+
+#reply-grey {
+    -fx-image: url("/images/chat/message-actions/reply/reply-grey.png");
+}
+
+#reply-white {
+    -fx-image: url("/images/chat/message-actions/reply/reply-white.png");
+}
+
+#open-p-chat-green {
+    -fx-image: url("/images/chat/message-actions/open-p-chat/open-p-chat-green.png");
+}
+
+#open-p-chat-grey {
+    -fx-image: url("/images/chat/message-actions/open-p-chat/open-p-chat-grey.png");
+}
+
+#open-p-chat-white {
+    -fx-image: url("/images/chat/message-actions/open-p-chat/open-p-chat-white.png");
+}
+
+#edit-green {
+    -fx-image: url("/images/chat/message-actions/edit/edit-green.png");
+}
+
+#edit-grey {
+    -fx-image: url("/images/chat/message-actions/edit/edit-grey.png");
+}
+
+#edit-white {
+    -fx-image: url("/images/chat/message-actions/edit/edit-white.png");
+}
+
+#delete-x-green {
+    -fx-image: url("/images/chat/message-actions/delete-x/delete-x-green.png");
+}
+
+#delete-x-grey {
+    -fx-image: url("/images/chat/message-actions/delete-x/delete-x-grey.png");
+}
+
+#delete-x-white {
+    -fx-image: url("/images/chat/message-actions/delete-x/delete-x-white.png");
+}
+
+#delete-x-red {
+    -fx-image: url("/images/chat/message-actions/delete-x/delete-x-red.png");
+}
+
+#delete-t-green {
+    -fx-image: url("/images/chat/message-actions/delete-trash/delete-trash-green.png");
+}
+
+#delete-t-grey {
+    -fx-image: url("/images/chat/message-actions/delete-trash/delete-trash-grey.png");
+}
+
+#delete-t-white {
+    -fx-image: url("/images/chat/message-actions/delete-trash/delete-trash-white.png");
+}
+
+#delete-t-red {
+    -fx-image: url("/images/chat/message-actions/delete-trash/delete-trash-red.png");
 }
 
 
@@ -1205,4 +1631,17 @@
 
 #sound-off {
     -fx-image: url("/images/video/sound_off.png");
+}
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Reputation */
+/* ------------------------------------------------------------------------------------ */
+
+#offer-reputation {
+    -fx-image: url("/images/reputation/offer-rep-score.png");
+}
+
+#stars-reputation-table {
+    -fx-image: url("/images/reputation/rep-table.png");
 }

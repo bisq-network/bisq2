@@ -3,7 +3,6 @@ package bonded_roles;
 option java_package = "bisq.bonded_roles.protobuf";
 option java_multiple_files = true;
 import "common.proto";
-import "network_common.proto";
 import "network_identity.proto";
 
 enum BondedRoleType {
@@ -25,6 +24,7 @@ message AuthorizedOracleNode {
   string bondUserName = 4;
   string signatureBase64 = 5;
   bool staticPublicKeysProvided = 6;
+  sint32 version = 7;
 }
 
 message BondedRoleRegistrationRequest {
@@ -33,7 +33,7 @@ message BondedRoleRegistrationRequest {
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
   string signatureBase64 = 5;
-  optional network.common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
+  optional common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
   network.identity.NetworkId networkId = 7;
   bool isCancellationRequest = 8;
 }
@@ -44,10 +44,11 @@ message AuthorizedBondedRole {
   BondedRoleType bondedRoleType = 3;
   string bondUserName = 4;
   string signatureBase64 = 5;
-  optional network.common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
+  optional common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
   network.identity.NetworkId networkId = 7;
   optional AuthorizedOracleNode authorizingOracleNode = 8;
   bool staticPublicKeysProvided = 9;
+  sint32 version = 10;
 }
 
 enum AlertType {
@@ -56,6 +57,7 @@ enum AlertType {
   ALERTTYPE_WARN = 2;
   ALERTTYPE_EMERGENCY = 3;
   ALERTTYPE_BAN = 4;
+  ALERTTYPE_BANNED_ACCOUNT_DATA = 5;
 }
 
 message AuthorizedAlertData {
@@ -70,6 +72,8 @@ message AuthorizedAlertData {
   string securityManagerProfileId = 9;
   bool staticPublicKeysProvided = 10;
   optional string headline = 11;
+  sint32 version = 12;
+  optional string bannedAccountData = 13;
 }
 
 message ReleaseNotification {
@@ -81,6 +85,7 @@ message ReleaseNotification {
   string versionString = 6;
   string releaseManagerProfileId = 7;
   bool staticPublicKeysProvided = 8;
+  sint32 version = 9;
 }
 
 message AuthorizedDifficultyAdjustmentData {
@@ -88,13 +93,17 @@ message AuthorizedDifficultyAdjustmentData {
   double difficultyAdjustmentFactor = 2;
   string securityManagerProfileId = 3;
   bool staticPublicKeysProvided = 4;
+  sint32 version = 5;
 }
 
+// Not used anymore since 2.1.1
 message AuthorizedMinRequiredReputationScoreData {
+  option deprecated = true;
   sint64 date = 1;
   sint64 minRequiredReputationScore = 2;
   string securityManagerProfileId = 3;
   bool staticPublicKeysProvided = 4;
+  sint32 version = 5;
 }
 
 enum MarketPriceProvider {
@@ -115,6 +124,7 @@ message MarketPrice {
 message AuthorizedMarketPriceData {
   map<string, MarketPrice> marketPriceByCurrencyMap = 1;
   bool staticPublicKeysProvided = 2;
+  sint32 version = 3;
 }
 
 message MarketPriceStore {

@@ -19,11 +19,7 @@ package bisq.desktop.common.utils;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.image.*;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -32,12 +28,11 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.InputStream;
+import java.io.*;
 import java.util.Objects;
 
 @Slf4j
 public class ImageUtil {
-
     // Does not resolve the @2x automatically
     public static Image getImageByPath(String path) {
         try (InputStream resourceAsStream = ImageUtil.class.getClassLoader().getResourceAsStream(path)) {
@@ -87,29 +82,6 @@ public class ImageUtil {
         stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_16.png"));
     }
 
-    public static Image composeImage(String[] paths, int width, int height) {
-        Canvas canvas = new Canvas();
-        canvas.setWidth(width);
-        canvas.setHeight(height);
-        GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-
-        double radius = Math.min(height, width) / 2d;
-        double x = width / 2d;
-        double y = height / 2d;
-        graphicsContext2D.beginPath();
-        graphicsContext2D.moveTo(x - radius, y);
-        graphicsContext2D.arc(x, y, radius, radius, 180, 360);
-        graphicsContext2D.closePath();
-        graphicsContext2D.clip();
-
-        for (String path : paths) {
-            graphicsContext2D.drawImage(new Image("images/cathash/" + path), 0, 0, width, height);
-        }
-        SnapshotParameters snapshotParameters = new SnapshotParameters();
-        snapshotParameters.setFill(Color.TRANSPARENT);
-        return canvas.snapshot(snapshotParameters, null);
-    }
-
     /**
      * @param size
      * @param cssStrokeColor E.g. -bisq2-green
@@ -126,4 +98,37 @@ public class ImageUtil {
         circle.setStyle("-fx-stroke: " + cssStrokeColor);
         return pane;
     }
+
+    public static StackPane getOverlappedIconsPane(String leftIconId, String rightIconId) {
+        return getOverlappedIconsPane(leftIconId, rightIconId, 20, "overlapped-icons");
+    }
+
+    public static StackPane getOverlappedIconsPane(String leftIconId,
+                                                   String rightIconId,
+                                                   double size,
+                                                   String circleStyle) {
+        StackPane pane = new StackPane();
+        double paneWidth = size * 2 + 1;
+        pane.setMinWidth(paneWidth);
+        pane.setMaxWidth(paneWidth);
+
+        Node leftIcon = ImageUtil.getImageViewById(leftIconId);
+
+        Node rightIcon = ImageUtil.getImageViewById(rightIconId);
+        double radius = size / 2 + 3;
+        Circle circle = new Circle(radius);
+        circle.getStyleClass().add(circleStyle);
+        StackPane rightIconWithRing = new StackPane();
+        rightIconWithRing.setMinWidth(radius * 2);
+        rightIconWithRing.setMaxWidth(radius * 2);
+        StackPane.setAlignment(circle, Pos.CENTER);
+        StackPane.setAlignment(rightIcon, Pos.CENTER);
+        rightIconWithRing.getChildren().addAll(circle, rightIcon);
+
+        StackPane.setAlignment(leftIcon, Pos.CENTER_LEFT);
+        StackPane.setAlignment(rightIconWithRing, Pos.CENTER_RIGHT);
+        pane.getChildren().addAll(leftIcon, rightIconWithRing);
+        return pane;
+    }
+
 }

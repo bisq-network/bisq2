@@ -26,7 +26,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
-import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
@@ -48,15 +47,14 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-import static bisq.user.profile.UserProfile.MAX_LENGTH_STATEMENT;
-import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
+import static bisq.user.profile.UserProfile.*;
 
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
 
-    private static final ValidatorBase TERMS_MAX_LENGTH_VALIDATOR =
+    private static final TextMaxLengthValidator TERMS_MAX_LENGTH_VALIDATOR =
             new TextMaxLengthValidator(MAX_LENGTH_TERMS, Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS));
-    private static final ValidatorBase STATEMENT_MAX_LENGTH_VALIDATOR =
+    private static final TextMaxLengthValidator STATEMENT_MAX_LENGTH_VALIDATOR =
             new TextMaxLengthValidator(MAX_LENGTH_STATEMENT, Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT));
 
     private static final String STATEMENT_PROMPT = Res.get("user.userProfile.statement.prompt");
@@ -64,8 +62,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
-    private final MaterialTextField nymId, profileId, profileAge, lastSeen, reputationScoreField, statement;
-    private final ImageView catIconImageView;
+    private final MaterialTextField nymId, profileId, profileAge, livenessState, reputationScoreField, statement;
+    private final ImageView catHashImageView;
     private final MaterialTextArea terms;
     private final VBox formVBox;
     private final AutoCompleteComboBox<UserIdentity> comboBox;
@@ -74,19 +72,25 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     private Subscription reputationScorePin, useDeleteTooltipPin, selectedChatUserIdentityPin, isValidSelectionPin;
 
     public UserProfileView(UserProfileModel model, UserProfileController controller) {
-        super(new HBox(20), model, controller);
+        super(new HBox(), model, controller);
 
-        root.setAlignment(Pos.TOP_LEFT);
-        root.setPadding(new Insets(20, 40, 40, 40));
+        HBox contentBox = new HBox(20);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        contentBox.setPadding(new Insets(0, 40, 20, 40));
+        HBox.setHgrow(contentBox, Priority.ALWAYS);
 
-        catIconImageView = new ImageView();
-        catIconImageView.setFitWidth(125);
-        catIconImageView.setFitHeight(125);
-        root.getChildren().add(catIconImageView);
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
+
+        catHashImageView = new ImageView();
+        catHashImageView.setFitWidth(UserProfileModel.CAT_HASH_IMAGE_SIZE);
+        catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+        catHashImageView.getStyleClass().add("hand-cursor");
+        contentBox.getChildren().add(catHashImageView);
 
         formVBox = new VBox(25);
         HBox.setHgrow(formVBox, Priority.ALWAYS);
-        root.getChildren().add(formVBox);
+        contentBox.getChildren().add(formVBox);
 
         createNewProfileButton = new Button(Res.get("user.userProfile.createNewProfile"));
         createNewProfileButton.getStyleClass().addAll("outlined-button");
@@ -122,8 +126,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         profileAge = addField(Res.get("user.userProfile.profileAge"));
         profileAge.setIconTooltip(Res.get("user.userProfile.profileAge.tooltip"));
 
-        lastSeen = addField(Res.get("user.userProfile.lastSeen"));
-        lastSeen.setIconTooltip(Res.get("user.userProfile.lastSeen.tooltip"));
+        livenessState = addField(Res.get("user.userProfile.livenessState.description"));
+        livenessState.setIconTooltip(Res.get("user.userProfile.livenessState.tooltip"));
 
         reputationScoreField = addField(Res.get("user.userProfile.reputation"));
 
@@ -144,8 +148,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         deleteButton = new Button(Res.get("user.userProfile.deleteProfile"));
         deleteWrapper = new SplitPane(deleteButton);
-        deleteTooltip = new BisqTooltip(Res.get("user.userProfile.deleteProfile.cannotDelete"));
-        deleteTooltip.getStyleClass().add("medium-dark-tooltip");
+        deleteTooltip = new BisqTooltip(Res.get("user.userProfile.deleteProfile.cannotDelete"), BisqTooltip.Style.MEDIUM_DARK);
 
         HBox buttonsHBox = new HBox(20, saveButton, deleteWrapper);
         formVBox.getChildren().add(buttonsHBox);
@@ -156,11 +159,11 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         nymId.textProperty().bind(model.getNymId());
         profileId.textProperty().bind(model.getProfileId());
         profileAge.textProperty().bind(model.getProfileAge());
-        lastSeen.textProperty().bind(model.getLastSeen());
+        livenessState.textProperty().bind(model.getLivenessState());
         reputationScoreField.textProperty().bind(model.getReputationScoreValue());
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
-        catIconImageView.imageProperty().bind(model.getCatHash());
+        catHashImageView.imageProperty().bind(model.getCatHashImage());
 
         useDeleteTooltipPin = EasyBind.subscribe(model.getUseDeleteTooltip(), useDeleteTooltip ->
                 deleteWrapper.setTooltip(useDeleteTooltip ? deleteTooltip : null));
@@ -182,6 +185,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             controller.onSelected(comboBox.getSelectionModel().getSelectedItem());
         });
         comboBox.validateOnNoItemSelectedWithMessage(Res.get("user.bondedRoles.userProfile.select.invalid"));
+        catHashImageView.setOnMouseClicked(e -> controller.onOpenProfileCard());
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
                 userIdentity -> comboBox.getSelectionModel().select(userIdentity));
@@ -201,11 +205,11 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         nymId.textProperty().unbind();
         profileId.textProperty().unbind();
         profileAge.textProperty().unbind();
-        lastSeen.textProperty().unbind();
+        livenessState.textProperty().unbind();
         reputationScoreField.textProperty().unbind();
         statement.textProperty().unbindBidirectional(model.getStatement());
         terms.textProperty().unbindBidirectional(model.getTerms());
-        catIconImageView.imageProperty().unbind();
+        catHashImageView.imageProperty().unbind();
         saveButton.disableProperty().unbind();
         deleteButton.disableProperty().unbind();
         deleteWrapper.tooltipProperty().unbind();
@@ -221,10 +225,12 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         learnMore.setOnAction(null);
         comboBox.setOnChangeConfirmed(null);
         comboBox.getIsValidSelection().set(true);
+        catHashImageView.setOnMouseClicked(null);
 
         comboBox.resetValidation();
         statement.resetValidation();
         terms.resetValidation();
+        catHashImageView.setImage(null);
     }
 
     private void disableEditableTextBoxes() {
@@ -284,9 +290,10 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         return field;
     }
 
-    @EqualsAndHashCode
     @Getter
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     public static class ListItem {
+        @EqualsAndHashCode.Include
         private final UserIdentity userIdentity;
 
         public ListItem(UserIdentity userIdentity) {

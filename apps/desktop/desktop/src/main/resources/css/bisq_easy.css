@@ -144,6 +144,10 @@
     -fx-padding: 0 12 0 7;
 }
 
+.market-badge.bisq-badge .badge-pane {
+    -fx-background-color: -bisq-mid-grey-30;
+}
+
 .offerbook-search-box {
     -fx-background-radius: 0;
     -fx-background-color: -bisq-dark-grey-30;
@@ -199,6 +203,15 @@
     -fx-padding: 0 10 0 10;
 }
 
+.offerbook-peer-name {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-padding: 1 7;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-border-width: 1px;
+    -fx-border-color: -bisq-dark-grey-50;
+}
+
 /* Drop down sort & filter menu */
 .dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content .menu-item-icon,
 .dropdown-menu-popup .dropdown-menu-item:hover .dropdown-menu-item-content .menu-item-icon {
@@ -210,7 +223,7 @@
     -fx-opacity: 1;
 }
 
-.dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content:selected .label {
+.dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content:selected {
     -fx-text-fill: -fx-light-text-color;
 }
 
@@ -310,26 +323,33 @@
     -fx-label-padding: 0 7;
 }
 
+/* OFFER LIST FILTERS */
+.dropdown-offer-list-direction-filter-menu,
+.dropdown-offer-list-payment-filter-menu {
+    -fx-max-height: 20;
+}
+
 /* BUY FROM */
 .dropdown-offer-list-direction-filter-menu .buy-from-offers {
-    -fx-label-padding: 0 0 0 5;
     -fx-text-fill: -bisq2-green;
 }
 
 .dropdown-offer-list-direction-filter-menu:hover .buy-from-offers {
-    -fx-label-padding: 0 0 0 5;
     -fx-text-fill: -bisq2-green-lit-20;
 }
 
 /* SELL TO */
 .dropdown-offer-list-direction-filter-menu .sell-to-offers {
-    -fx-label-padding: 0 0 0 5;
     -fx-text-fill: -bisq2-red-lit-20;
 }
 
 .dropdown-offer-list-direction-filter-menu:hover .sell-to-offers {
-    -fx-label-padding: 0 0 0 5;
     -fx-text-fill: -bisq2-red-lit-40;
+}
+
+/* PAYMENT METHODS FILTER */
+.active-filter {
+    -fx-text-fill: -fx-light-text-color !important;
 }
 
 /* COLLAPSE AND EXPAND COLUMNS */
@@ -361,6 +381,10 @@
     -fx-background-color: -bisq-dark-grey-20;
 }
 
+.split-pane-w-offerlist-collapsed:horizontal > .split-pane-divider {
+    -fx-cursor: default;
+}
+
 .create-offer-button {
     -fx-background-color: -fx-default-button;
     -fx-text-fill: -fx-light-text-color;
@@ -389,6 +413,7 @@
     -fx-background-color: -bisq2-yellow;
 }
 
+/* label style is not getting applied. We use a method in Badge for setting the color. Default is white */
 .open-trades-badge.bisq-badge .badge-pane .label {
     -fx-font-size: 0.85em !important;
     -fx-text-fill: black !important;
@@ -549,21 +574,39 @@
  * Trade state phase (left side box)                                           *
  ******************************************************************************/
 
+.outlined-button.request-mediation-button {
+    -fx-padding: 5 24 5 24 !important;
+    -fx-border-color: -bisq-mid-grey-20 !important;
+    -fx-text-fill: -bisq-mid-grey-20 !important;
+}
+
+.outlined-button.request-mediation-button:hover {
+    -fx-border-color: -bisq2-yellow !important;
+    -fx-text-fill: -bisq2-yellow !important;
+}
+
 .bisq-easy-trade-state-phase {
     -fx-font-size: 0.93em;
 }
 
-.bisq-easy-trade-state-phase-inactive {
+.bisq-easy-trade-state-phase-completed {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.bisq-easy-trade-state-phase-current {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.bisq-easy-trade-state-phase-open {
     -fx-fill: -bisq-mid-grey-20;
     -fx-text-fill: -bisq-mid-grey-20;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-phase-active {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans";
-}
 
 .bisq-easy-trade-state-phase-badge {
     -fx-padding: 0 0 0 0;
@@ -575,28 +618,42 @@
     -fx-pref-height: 25;
 }
 
-.bisq-easy-trade-state-phase-badge-inactive .badge-pane {
-    -fx-background-color: -bisq-dark-grey-50;
+.bisq-easy-trade-state-phase-badge-completed .badge-pane {
+    -fx-background-color: -bisq2-green;
 }
 
-.bisq-easy-trade-state-phase-badge-active .badge-pane {
+.bisq-easy-trade-state-phase-badge-current .badge-pane {
     -fx-background-color: -bisq2-green;
+    -fx-background-insets: 2;
+    -fx-border-radius: 25;
+    -fx-border-width: 1;
+    -fx-border-color: -bisq2-green;
+}
+
+.bisq-easy-trade-state-phase-badge-open .badge-pane {
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .bisq-easy-trade-state-phase-badge .badge-pane .label {
     -fx-font-size: 0.93em;
 }
 
-.bisq-easy-trade-state-phase-badge-inactive .badge-pane .label {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.bisq-easy-trade-state-phase-badge-active .badge-pane .label {
+.bisq-easy-trade-state-phase-badge-completed .badge-pane .label {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.bisq-easy-trade-state-phase-badge-current .badge-pane .label {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.bisq-easy-trade-state-phase-badge-open .badge-pane .label {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 
@@ -626,35 +683,438 @@
 }
 
 
+.bisq-easy-trade-state-webcam-state-box {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 4 4 0 0;
+}
+
+.bisq-easy-trade-state-webcam-state-label {
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
+/*******************************************************************************
+ * Trade completed                                                             *
+ ******************************************************************************/
+
+.trade-completed-title {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 2.3em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-completed-table-title {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Trade wizard                                                                *
  *                                                                             *
  ******************************************************************************/
 
-.bisq-easy-trade-wizard-price-step .price-content {
+.amount-and-price-step {
+    -fx-alignment: top-center;
+    -fx-spacing: 50;
+}
+
+.amount-and-price-step .amount-and-price-box {
+    -fx-alignment: top-center;
+}
+
+.amount-and-price-step .content-box {
+    -fx-padding: 40 0 0 0;
+    -fx-alignment: top-center;
+}
+
+.amount-and-price-step .amount-at-price-symbol {
+    -fx-padding: 93 0 0 0;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 3.5em;
+    -fx-font-family: "IBM Plex Sans Thin";
     -fx-alignment: center;
 }
 
-.bisq-easy-trade-wizard-price-step .pricing-models {
-    -fx-alignment: center;
-    -fx-padding: 10 0 10 0;
+.amount-selection .description,
+.amount-selection .description-focused {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-wrap-text: true;
 }
 
-.bisq-easy-trade-wizard-price-step .pricing-models .price-item-box {
-    -fx-max-width: 300;
-    -fx-min-width: 300;
-    -fx-pref-width: 300;
-}
-
-.bisq-easy-trade-wizard-price-step .pricing-models .price-item-box .price-item {
-    -fx-padding: 5;
-    -fx-background-color: transparent;
+.amount-selection .description {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
 }
 
-.bisq-easy-trade-wizard-price-step .selected-price-model {
+.amount-selection .description-focused {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
+}
+
+.description-and-amount-box {
+    -fx-padding: 8 20 8 20;
+}
+
+.range-amount .quote-separator {
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-pref-height: 40;
+    -fx-max-height: 40;
+    -fx-min-height: 40;
+}
+
+.range-amount .base-separator {
+    -fx-alignment: center;
+    -fx-min-width: 10;
+    -fx-padding: 0 0 3 0;
+}
+
+.range-amount .base-amount {
+    -fx-alignment: center-right;
+    -fx-padding: 0 20 0 0;
+}
+
+.range-amount .base-amount .max-or-fixed-base-amount {
+    -fx-max-width: 145;
+    -fx-min-width: 145;
+    -fx-padding: 0 0 0 4;
+}
+
+.fixed-amount .quote-amount .big-amount-input .text-input,
+.range-amount .quote-amount .min-quote-amount .text-input {
+    -fx-alignment: bottom-right;
+}
+
+.range-amount .quote-amount .max-or-fixed-quote-amount .text-input {
+    -fx-alignment: bottom-left;
+}
+
+.quote-amount .big-amount-input .text-input {
+    -fx-padding: 0;
+    -fx-min-height: 70;
+}
+
+.quote-amount .big-amount-input .currency-code {
+    -fx-min-width: 30;
+    -fx-max-width: 30;
+    -fx-min-height: 70;
+    -fx-padding: 0 0 10 0;
+    -fx-alignment: bottom-left;
+}
+
+.quote-amount {
+    -fx-alignment: center-right;
+}
+
+.quote-amount .text-input,
+.quote-separator {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+/******** ALL SIZES ********/
+.input-text-9 .text-input,
+.input-text-9 .quote-separator {
+    -fx-font-size: 3.99em !important;
+}
+
+.input-text-10 .text-input,
+.input-text-10 .quote-separator {
+    -fx-font-size: 3.55em !important;
+}
+
+.input-text-11 .text-input,
+.input-text-11 .quote-separator {
+    -fx-font-size: 3.20em !important;
+}
+
+.input-text-12 .text-input,
+.input-text-12 .quote-separator {
+    -fx-font-size: 2.90em !important;
+}
+
+.input-text-13 .text-input,
+.input-text-13 .quote-separator {
+    -fx-font-size: 2.65em !important;
+}
+
+.input-text-14 .text-input,
+.input-text-14 .quote-separator {
+    -fx-font-size: 2.45em !important;
+}
+
+.input-text-15 .text-input,
+.input-text-15 .quote-separator {
+    -fx-font-size: 2.30em !important;
+}
+
+.input-text-16 .text-input,
+.input-text-16 .quote-separator {
+    -fx-font-size: 2.15em !important;
+}
+
+.input-text-17 .text-input,
+.input-text-17 .quote-separator {
+    -fx-font-size: 2em !important;
+}
+
+.input-text-18 .text-input,
+.input-text-18 .quote-separator {
+    -fx-font-size: 1.90em !important;
+}
+
+.input-text-19 .text-input,
+.input-text-19 .quote-separator {
+    -fx-font-size: 1.80em !important;
+}
+/***************************/
+
+/******** PADDINGS *********/
+.input-text-9 .text-input {
+    -fx-padding: 0 0 -1 0 !important;
+}
+
+.input-text-10 .text-input {
+    -fx-padding: 0 0 1 0 !important;
+}
+
+.input-text-11 .text-input {
+    -fx-padding: 0 0 2 0 !important;
+}
+
+.input-text-12 .text-input {
+    -fx-padding: 0 0 3 0 !important;
+}
+
+.input-text-13 .text-input {
+    -fx-padding: 0 0 4 0 !important;
+}
+
+.input-text-14 .text-input {
+    -fx-padding: 0 0 5 0 !important;
+}
+
+.input-text-15 .text-input,
+.input-text-16 .text-input,
+.input-text-17 .text-input {
+    -fx-padding: 0 0 6 0 !important;
+}
+
+.input-text-18 .text-input {
+    -fx-padding: 0 0 7 0 !important;
+}
+
+.input-text-19 .text-input {
+    -fx-padding: 0 0 8 0 !important;
+}
+
+.input-text-9 .quote-separator {
+    -fx-padding: -16 0 0 0 !important;
+}
+
+.input-text-10 .quote-separator {
+    -fx-padding: -9 0 0 0 !important;
+}
+
+.input-text-11 .quote-separator {
+    -fx-padding: -5 0 0 0 !important;
+}
+
+.input-text-12 .quote-separator {
+    -fx-padding: 0 0 0 0 !important;
+}
+
+.input-text-13 .quote-separator {
+    -fx-padding: 2 0 -2 0 !important;
+}
+
+.input-text-14 .quote-separator {
+    -fx-padding: 6 0 -6 0 !important;
+}
+
+.input-text-15 .quote-separator {
+    -fx-padding: 7 0 -7 0 !important;
+}
+
+.input-text-16 .quote-separator {
+    -fx-padding: 9 0 -9 0 !important;
+}
+
+.input-text-17 .quote-separator {
+    -fx-padding: 10 0 -10 0 !important;
+}
+
+.input-text-18 .quote-separator {
+    -fx-padding: 11 0 -11 0 !important;
+}
+
+.input-text-19 .quote-separator {
+    -fx-padding: 12 0 -12 0 !important;
+}
+/***************************/
+
+.base-amount-box .base-amount-label,
+.base-amount-box .currency-code,
+.base-separator {
+    -fx-fill: -fx-mid-text-color !important;
+    -fx-text-fill: -fx-mid-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.base-amount-box .base-amount-label,
+.base-separator {
+    -fx-font-size: 1.25em !important;
+}
+
+.base-amount-box .base-amount-label {
+    -fx-alignment: baseline-right;
+}
+
+.base-amount-box .currency-code {
+    -fx-font-size: 0.95em !important;
+    -fx-alignment: baseline-left;
+}
+
+.base-amount-box .base-amount-info-icon {
+    -fx-padding: 0 0 5 0;
+}
+
+.slider.price-slider .thumb,
+.slider.max-or-fixed-amount-slider .thumb {
+    -fx-background-color: -bisq-white;
+    -fx-background-insets: 2.5;
+    -fx-shape: "M 0 0 h 7 l -3.5 4 z";
+    -fx-translate-y: -8;
+}
+
+.slider.min-amount-slider .thumb {
+    -fx-background-color: -bisq-white;
+    -fx-background-insets: 2.5;
+    -fx-shape: "M 0 4 h 7 l -3.5 -4 z";
+    -fx-translate-y: -9;
+}
+
+.slider.min-amount-slider .track {
+    -fx-min-height: 0;
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+}
+
+.slider.price-slider {
+    -track-color: -bisq-dark-grey-50;
+}
+
+.amount-selection .range-value,
+.amount-selection .range-code,
+.bisq-easy-trade-wizard-price-step .range-value {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-mid-grey-20;
+}
+
+.amount-selection .range-value,
+.bisq-easy-trade-wizard-price-step .range-value {
+    -fx-font-size: 1.1em;
+}
+
+.amount-selection .range-code {
+    -fx-font-size: 0.7em;
+}
+
+.bisq-easy-trade-wizard-amount-step,
+.bisq-easy-trade-wizard-price-step {
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-pref-width: 340;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box {
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-max-height: 70;
+    -fx-min-height: 70;
+    -fx-alignment: center-right;
+    -fx-padding: 0 0 0 8;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input,
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input-symbol {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input {
+    -fx-alignment: bottom-right;
+    -fx-padding: 0;
+    -fx-min-height: 70;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .text-input-and-units-box .text-input-symbol {
+    -fx-min-width: 80;
+    -fx-max-width: 80;
+    -fx-min-height: 70;
+    -fx-padding: 0 0 10 0;
+    -fx-alignment: bottom-left;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box {
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-alignment: baseline-center;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box .conversion-price,
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box .conversion-price-symbol {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box .conversion-price {
+    -fx-font-size: 1.25em !important;
+    -fx-alignment: baseline-right;
+}
+
+.bisq-easy-trade-wizard-price-step .price-input-box .conversion-price-box .conversion-price-symbol {
+    -fx-font-size: 0.95em !important;
+    -fx-alignment: baseline-left;
+}
+
+.bisq-easy-trade-wizard-price-step .selection-models,
+.bisq-easy-trade-wizard-amount-step .selection-models {
+    -fx-alignment: center;
+    -fx-padding: 10 0 10 0;
+    -fx-max-width: 340;
+    -fx-min-width: 340;
+    -fx-pref-width: 340;
+}
+
+.bisq-easy-trade-wizard-price-step .selection-models .model-selection-item-box .model-selection-item,
+.bisq-easy-trade-wizard-amount-step .selection-models .model-selection-item-box .model-selection-item {
+    -fx-padding: 5;
+    -fx-background-color: transparent;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 0.9em;
+}
+
+.bisq-easy-trade-wizard-price-step .selected-model,
+.bisq-easy-trade-wizard-amount-step .selected-model {
     -fx-fill: -bisq2-green !important;
     -fx-text-fill: -bisq2-green !important;
 }
@@ -692,7 +1152,7 @@
     -fx-padding: 0 0 15 0;
 }
 
-.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-text {
+.learn-why-text {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.15em;
@@ -709,6 +1169,51 @@
 
 .bisq-easy-trade-wizard-price-step .learn-why-overlay .unordered-list {
     -fx-padding: 0 0 15 0;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .check-box {
+    -fx-scale-x: 0.6;
+    -fx-scale-y: 0.6;
+    -fx-cursor: hand;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .label {
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .ln-checkbox .check-box > .box {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: -fx-light-text-color;
+    -fx-border-width: 2;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .fiat-methods-grid-pane {
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .bitcoin-methods-grid-pane {
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box {
+    -fx-alignment: center-left;
+    -fx-background-color: -bisq-dark-grey-50;
+    -fx-background-radius: 9;
+    -fx-padding: 5 5 5 6;
+    -fx-spacing: 7;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box .custom-payment-method-button {
+    -fx-background-color: none;
+    -fx-padding: 0;
+}
+
+.bisq-easy-trade-wizard-payment-methods-step .add-custom-payment-method-box .custom-payment-method-text-field {
+    -fx-background-color: none;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-prompt-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 .bisq-easy-trade-wizard-review-header-description {
@@ -820,6 +1325,41 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.trade-wizard-amount-limit-info {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-wrap-text: true;
+}
+
+.trade-wizard-amount-limit-info-overlay-link.hyperlink {
+    -fx-padding: 0.166667em 0 0.166667em 0; /* 2 0 2 0 */
+    -fx-cursor: hand;
+    -fx-content-display: LEFT;
+    -fx-border-color: transparent;
+    -fx-border-width: 1px;
+    -fx-text-fill: -bisq2-green;
+    -fx-underline: true;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+.trade-wizard-amount-limit-info-overlay-link.hyperlink:hover,
+.trade-wizard-amount-limit-info-overlay-link.hyperlink:hover:visited {
+    -fx-text-fill: -bisq2-green;
+}
+
+.trade-wizard-amount-limit-info-overlay-link.hyperlink:visited {
+    -fx-text-fill: -bisq2-green;
+}
+
+.trade-wizard-amount-limit-info-overlay-link.hyperlink:disabled {
+    -fx-opacity: 1;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-underline: false;
+    -fx-cursor: none;
+}
+
 .trade-wizard-review-details-headline {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
@@ -866,6 +1406,18 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.trade-wizard-review-payment-combo-box > .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled {
+    -fx-background-color: -bisq-dark-grey-50;
+}
+
+.trade-wizard-review-payment-combo-box > .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
+    -fx-background-color: -bisq-mid-grey-10;
+}
+
+.trade-wizard-review-payment-combo-box > .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
 .trade-wizard-take-offer-send-message-headline {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
@@ -892,45 +1444,62 @@
  * TradeWizardMarketView.tableView                                             *
  ******************************************************************************/
 
-.markets-table-container {
-    -fx-background-color: -bisq-dark-grey-20;
-    -fx-border-width: 0 0 5px 0;
-    -fx-border-color: -bisq-dark-grey-20;
-}
-
-.bisq-easy-trade-wizard-market.table-view.table-view {
-    -fx-background-insets: 0;
+.bisq-easy-trade-wizard-direction-step .bisq-popup {
+    -fx-background-radius: 6;
     -fx-padding: 0;
+    -fx-border-color: -bisq-dark-grey-50;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-effect: none;
 }
 
-.bisq-easy-trade-wizard-market.table-view.table-view .column-header {
-    -fx-pref-height: 40px;
-}
-
-.bisq-easy-trade-wizard-market.table-view.table-view .column-header .label {
-    -fx-alignment: center;
-}
-
-.bisq-easy-trade-wizard-market.table-view.table-view .table-row-cell:hover {
+.bisq-easy-trade-wizard-direction-step .bisq-popup .table-view .table-row-cell:hover {
     -fx-cursor: hand;
 }
 
-.bisq-easy-trade-wizard-market.table-view.table-view .table-row-cell {
-    -fx-pref-height: 55px;
-    -fx-border-width: 0;
+.bisq-easy-trade-wizard-direction-step .bisq-popup .table-view .market-name,
+.bisq-easy-trade-wizard-direction-step .bisq-popup .table-view .market-name-tooltip {
+    -fx-font-size: 1.5em;
 }
 
-.bisq-easy-trade-wizard-market.table-view.table-view .table-cell {
-    -fx-padding: 0;
+.bisq-easy-trade-wizard-direction-step .bisq-popup .table-view .market-name-tooltip {
+    -fx-padding: 10px;
 }
 
-.bisq-easy-trade-wizard-market-search {
+.bisq-easy-trade-wizard-direction-step .bisq-popup .table-view .column-header .label {
+    -fx-font-size: 0.83em;
+}
+
+.bisq-easy-trade-wizard-direction-step .bisq-popup .table-view .table-row-cell {
+    -fx-font-size: 0.75em;
+}
+
+.bisq-easy-trade-wizard-direction-step .bisq-popup .table-view {
+    -fx-font-size: 0.85em;
+}
+
+.bisq-easy-trade-wizard-direction-step .bisq-easy-trade-wizard-market-search {
     -fx-background-color: -bisq-dark-grey-20;
 }
 
-.bisq-easy-trade-wizard-market-search .search-text-field {
+.bisq-easy-trade-wizard-direction-step .bisq-easy-trade-wizard-market-search .search-text-field {
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 0.9em;
+    -fx-font-size: 0.95em;
+}
+
+.bisq-easy-trade-wizard-direction-step .bisq-easy-trade-wizard-quote-currency {
+    -fx-text-fill: -bisq2-green;
+    -fx-cursor: hand;
+}
+
+.bisq-easy-trade-wizard-direction-step .currency-label-box {
+    -fx-padding: 0 0 -1 0;
+}
+
+.bisq-easy-trade-wizard-direction-step .currency-label-box:hover,
+.bisq-easy-trade-wizard-direction-step .active-popup {
+    -fx-border-width: 0 0 1px 0;
+    -fx-border-color: -bisq2-green;
 }
 
 
@@ -1068,6 +1637,13 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.bisq-easy-custom-payment-icon .text {
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Bold";
+    -fx-text-fill: -fx-dark-text-color !important;
+    -fx-fill: -fx-dark-text-color !important;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -1078,6 +1654,7 @@
 .bisq-easy-private-chats-table-view {
     -fx-background-color: -bisq-dark-grey-20;
 }
+
 
 /*******************************************************************************
  *                                                                             *

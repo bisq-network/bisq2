@@ -21,6 +21,7 @@ import bisq.common.util.MathUtils;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +45,7 @@ public class ConnectionThrottle {
     private static final long MAX_LOG_FREQUENCY = TimeUnit.SECONDS.toMillis(30);
 
     // We apply the log throttle globally, so we use static fields
-    private static AtomicLong lastLoggedTs = new AtomicLong();
+    private static final AtomicLong lastLoggedTs = new AtomicLong();
     private static final List<String> LAST_LOGS = new CopyOnWriteArrayList<>();
 
     private final NetworkLoadSnapshot peersNetworkLoadSnapshot;
@@ -93,8 +94,11 @@ public class ConnectionThrottle {
                         log.info(logMessage);
                     } else {
                         LAST_LOGS.add(logMessage);
+                        List<String> temp = new ArrayList<>(LAST_LOGS);
+                        int size = temp.size();
+                        List<String> subList = temp.subList(0, Math.min(5, size));
                         log.info("{} accumulated log messages in the past {} sec. Log message (max 5 displayed): {}",
-                                LAST_LOGS.size(), passedSinceLastLog / 1000, LAST_LOGS.subList(0, Math.min(5, LAST_LOGS.size())));
+                                size, passedSinceLastLog / 1000, subList);
                         LAST_LOGS.clear();
                     }
                     lastLoggedTs.set(now);

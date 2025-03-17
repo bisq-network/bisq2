@@ -158,7 +158,10 @@ public class CreateProfileController implements Controller {
                         model.setProofOfWork(Optional.of(proofOfWork));
                         byte[] powSolution = proofOfWork.getSolution();
                         String nym = NymIdGenerator.generate(pubKeyHash, powSolution);
-                        Image image = CatHash.getImage(pubKeyHash, powSolution, CURRENT_AVATARS_VERSION);
+                        Image image = CatHash.getImage(pubKeyHash,
+                                powSolution,
+                                CURRENT_AVATARS_VERSION,
+                                CreateProfileModel.CAT_HASH_IMAGE_SIZE);
                         model.getNym().set(nym);
                         model.getCatHashImage().set(image);
                         model.getPowProgress().set(0);

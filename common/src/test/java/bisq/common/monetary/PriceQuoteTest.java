@@ -20,8 +20,7 @@ package bisq.common.monetary;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 public class PriceQuoteTest {
@@ -30,7 +29,7 @@ public class PriceQuoteTest {
         Coin btc = Coin.asBtcFromFaceValue(1.0);
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary quoteSideMonetary = priceQuote.toQuoteSideMonetary(btc);
-        assertTrue(quoteSideMonetary instanceof Fiat);
+        assertInstanceOf(Fiat.class, quoteSideMonetary);
         assertEquals(500000000, quoteSideMonetary.value);
 
         btc = Coin.asBtcFromFaceValue(2.0);

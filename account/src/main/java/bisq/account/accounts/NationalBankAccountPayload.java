@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
+
+import static bisq.common.util.OptionalUtils.toOptional;
 
 @Getter
 @Slf4j
@@ -14,16 +16,23 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true)
 public class NationalBankAccountPayload extends BankAccountPayload {
 
-    protected NationalBankAccountPayload(String id, String paymentMethodName, String countryCode,
-                                         String holderName, @Nullable String bankName, @Nullable String branchId,
-                                         @Nullable String accountNr, @Nullable String accountType,
-                                         @Nullable String holderTaxId, @Nullable String bankId,
-                                         @Nullable String nationalAccountId) {
+    protected NationalBankAccountPayload(String id,
+                                         String paymentMethodName,
+                                         String countryCode,
+                                         Optional<String> holderName,
+                                         Optional<String> bankName,
+                                         Optional<String> branchId,
+                                         Optional<String> accountNr,
+                                         Optional<String> accountType,
+                                         Optional<String> holderTaxId,
+                                         Optional<String> bankId,
+                                         Optional<String> nationalAccountId) {
         super(id, paymentMethodName, countryCode,
                 holderName, bankName, branchId,
                 accountNr, accountType, holderTaxId,
                 bankId, nationalAccountId);
     }
+
     @Override
     protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
         return super.getBankAccountPayloadBuilder(serializeForHash).setNationalBankAccountPayload(
@@ -45,13 +54,13 @@ public class NationalBankAccountPayload extends BankAccountPayload {
                 proto.getId(),
                 proto.getPaymentMethodName(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                bankAccountPayload.getHolderName(),
-                bankAccountPayload.getBankName().isEmpty() ? null : bankAccountPayload.getBankName(),
-                bankAccountPayload.getBranchId().isEmpty() ? null : bankAccountPayload.getBranchId(),
-                bankAccountPayload.getAccountNr().isEmpty() ? null : bankAccountPayload.getAccountNr(),
-                bankAccountPayload.getAccountType().isEmpty() ? null : bankAccountPayload.getAccountType(),
-                bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
-                bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
-                bankAccountPayload.getNationalAccountId().isEmpty() ? null : bankAccountPayload.getNationalAccountId());
+                toOptional(bankAccountPayload.getHolderName()),
+                toOptional(bankAccountPayload.getBankName()),
+                toOptional(bankAccountPayload.getBranchId()),
+                toOptional(bankAccountPayload.getAccountNr()),
+                toOptional(bankAccountPayload.getAccountType()),
+                toOptional(bankAccountPayload.getHolderTaxId()),
+                toOptional(bankAccountPayload.getBankId()),
+                toOptional(bankAccountPayload.getNationalAccountId()));
     }
 }

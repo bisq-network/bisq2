@@ -14,10 +14,8 @@ import java.util.Optional;
  */
 @Slf4j
 public class EquiHashTokenService extends AuthorizationTokenService<EquiHashToken> {
-    private final EquihashProofOfWorkService proofOfWorkService;
 
     public EquiHashTokenService(EquihashProofOfWorkService proofOfWorkService) {
-        this.proofOfWorkService = proofOfWorkService;
     }
 
     @Override

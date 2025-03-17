@@ -4,12 +4,19 @@ plugins {
     id("bisq.java-integration-tests")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
 dependencies {
     implementation("bisq:persistence")
 
-    implementation(project(":core"))
-    implementation(project(":bitcoind"))
-    implementation(project(":json-rpc"))
+    implementation("bitcoind:core")
+    implementation("bitcoind:bitcoind")
+    implementation("bitcoind:json-rpc")
+    implementation("wallets:wallet")
 
-    integrationTestImplementation(project(":regtest"))
+    integrationTestImplementation("bitcoind:regtest")
 }

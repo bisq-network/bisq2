@@ -18,6 +18,8 @@
 package bisq.common.observable.collection;
 
 import bisq.common.observable.Pin;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -27,10 +29,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+@Slf4j
+@EqualsAndHashCode
 public abstract class ObservableCollection<S> implements Collection<S> {
     protected final Collection<S> collection = createCollection();
 
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
+    @EqualsAndHashCode.Exclude
     protected final List<CollectionObserver<S>> observers = new CopyOnWriteArrayList<>();
 
     protected ObservableCollection() {
@@ -44,7 +49,11 @@ public abstract class ObservableCollection<S> implements Collection<S> {
 
     public Pin addObserver(CollectionObserver<S> observer) {
         observers.add(observer);
-        observer.addAll(collection);
+        try {
+            observer.addAll(collection);
+        } catch (Exception e) {
+            log.error("Observer {} caused an exception at handling update.", observer, e);
+        }
         return () -> observers.remove(observer);
     }
 
@@ -70,7 +79,13 @@ public abstract class ObservableCollection<S> implements Collection<S> {
     public boolean add(S element) {
         boolean changed = collection.add(element);
         if (changed) {
-            observers.forEach(observer -> observer.add(element));
+            observers.forEach(observer -> {
+                try {
+                    observer.add(element);
+                } catch (Exception e) {
+                    log.error("Observer {} caused an exception at handling update.", observer, e);
+                }
+            });
         }
         return changed;
     }
@@ -79,7 +94,13 @@ public abstract class ObservableCollection<S> implements Collection<S> {
     public boolean addAll(@NotNull Collection<? extends S> values) {
         boolean changed = collection.addAll(values);
         if (changed) {
-            observers.forEach(observer -> observer.addAll(values));
+            observers.forEach(observer -> {
+                try {
+                    observer.addAll(values);
+                } catch (Exception e) {
+                    log.error("Observer {} caused an exception at handling update.", observer, e);
+                }
+            });
         }
         return changed;
     }
@@ -87,14 +108,26 @@ public abstract class ObservableCollection<S> implements Collection<S> {
     public void setAll(@NotNull Collection<? extends S> values) {
         collection.clear();
         collection.addAll(values);
-        observers.forEach(observer -> observer.setAll(values));
+        observers.forEach(observer -> {
+            try {
+                observer.setAll(values);
+            } catch (Exception e) {
+                log.error("Observer {} caused an exception at handling update.", observer, e);
+            }
+        });
     }
 
     @Override
     public boolean remove(Object element) {
         boolean changed = collection.remove(element);
         if (changed) {
-            observers.forEach(observer -> observer.remove(element));
+            observers.forEach(observer -> {
+                try {
+                    observer.remove(element);
+                } catch (Exception e) {
+                    log.error("Observer {} caused an exception at handling update.", observer, e);
+                }
+            });
         }
         return changed;
     }
@@ -103,7 +136,13 @@ public abstract class ObservableCollection<S> implements Collection<S> {
     public boolean removeAll(@NotNull Collection<?> values) {
         boolean changed = collection.removeAll(values);
         if (changed) {
-            observers.forEach(observer -> observer.removeAll(values));
+            observers.forEach(observer -> {
+                try {
+                    observer.removeAll(values);
+                } catch (Exception e) {
+                    log.error("Observer {} caused an exception at handling update.", observer, e);
+                }
+            });
         }
         return changed;
     }
@@ -111,7 +150,13 @@ public abstract class ObservableCollection<S> implements Collection<S> {
     @Override
     public void clear() {
         collection.clear();
-        observers.forEach(CollectionObserver::clear);
+        observers.forEach(observer -> {
+            try {
+                observer.clear();
+            } catch (Exception e) {
+                log.error("Observer {} caused an exception at handling update.", observer, e);
+            }
+        });
     }
 
     @Override

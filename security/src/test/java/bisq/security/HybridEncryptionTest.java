@@ -58,12 +58,13 @@ public class HybridEncryptionTest {
         KeyPair fakeKeyPair = KeyGeneration.generateKeyPair();
         byte[] fakeSignature = SignatureUtil.sign(cypherText, fakeKeyPair.getPrivate());
         ConfidentialData withFakeSigAndPubKey = new ConfidentialData(encodedSenderPublicKey, iv, cypherText, fakeSignature);
+        //noinspection CatchMayIgnoreException
         try {
             // Expect to fail as pub key in method call not matching the one in sealed data
             HybridEncryption.decryptAndVerify(withFakeSigAndPubKey, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof IllegalArgumentException);
+            assertInstanceOf(IllegalArgumentException.class, e);
         }
     }
 
@@ -76,6 +77,7 @@ public class HybridEncryptionTest {
         byte[] iv = confidentialData.getIv();
         byte[] cypherText = confidentialData.getCipherText();
 
+        //noinspection CatchMayIgnoreException
         try {
             // In the ConfidentialData constructor we call NetworkDataValidation.validateECSignature which expects 
             // a 71-73 bytes long sig, that's why we test with that long string to not trigger the exception for the length check.
@@ -84,7 +86,7 @@ public class HybridEncryptionTest {
             HybridEncryption.decryptAndVerify(withFakeSig, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof SignatureException);
+            assertInstanceOf(SignatureException.class, e);
         }
     }
 
@@ -98,12 +100,13 @@ public class HybridEncryptionTest {
         byte[] signature = confidentialData.getSignature();
 
         // fake iv
+        //noinspection CatchMayIgnoreException
         try {
             ConfidentialData withFakeIv = new ConfidentialData(encodedSenderPublicKey, "iv".getBytes(), cypherText, signature);
             HybridEncryption.decryptAndVerify(withFakeIv, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof AEADBadTagException);
+            assertInstanceOf(AEADBadTagException.class, e);
         }
     }
 
@@ -120,12 +123,13 @@ public class HybridEncryptionTest {
 
         cipherText[2] = (byte) (~cipherText[2] & 0xff);
 
+        //noinspection CatchMayIgnoreException
         try {
             ConfidentialData withFakeHmac = new ConfidentialData(encodedSenderPublicKey, iv, cipherText, signature);
             HybridEncryption.decryptAndVerify(withFakeHmac, keyPairReceiver);
             fail();
         } catch (Throwable e) {
-            assertTrue(e instanceof IllegalArgumentException);
+            assertInstanceOf(IllegalArgumentException.class, e);
         }
     }
 }

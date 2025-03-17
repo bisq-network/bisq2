@@ -18,10 +18,11 @@
 package bisq.desktop.main.content.dashboard;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -34,7 +35,9 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.ref.WeakReference;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class DashboardController implements Controller {
@@ -45,15 +48,17 @@ public class DashboardController implements Controller {
     private final UserProfileService userProfileService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin;
+    private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
-    private Pin isNotificationVisiblePin;
 
     public DashboardController(ServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
+        bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
 
         model = new DashboardModel();
         view = new DashboardView(model, this);
@@ -67,9 +72,9 @@ public class DashboardController implements Controller {
         getNumUserProfilesPin = userProfileService.getNumUserProfiles().addObserver(numUserProfiles ->
                 UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
 
-        // We listen on all channels, also hidden ones and use a weak reference listener
-        bisqEasyOfferbookChannelService.getChannels().forEach(publicTradeChannel ->
-                publicTradeChannel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateOffersOnline).get()));
+        channelsPins.addAll(bisqEasyOfferbookChannelService.getChannels().stream()
+                .map(channel -> channel.getChatMessages().addObserver(this::updateOffersOnline))
+                .collect(Collectors.toSet()));
 
         // We trigger a call of updateOffersOnline for each channel when registering our observer. But we only want one call, 
         // so we block execution of the code inside updateOffersOnline to only call it once.
@@ -86,10 +91,12 @@ public class DashboardController implements Controller {
         marketPricePin.unbind();
         getNumUserProfilesPin.unbind();
         isNotificationVisiblePin.unbind();
+        channelsPins.forEach(Pin::unbind);
+        channelsPins.clear();
     }
 
-    public void onLearn() {
-        Navigation.navigateTo(NavigationTarget.ACADEMY);
+    public void onBuildReputation() {
+        Navigation.navigateTo(NavigationTarget.BUILD_REPUTATION);
     }
 
     public void onOpenTradeOverview() {
@@ -104,20 +111,20 @@ public class DashboardController implements Controller {
         Market selectedMarket = marketPriceService.getSelectedMarket().get();
         if (selectedMarket != null) {
             marketPriceService.findMarketPrice(selectedMarket)
-                    .ifPresent(marketPrice -> {
-                        UIThread.run(() -> {
-                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true));
-                            model.getMarketCode().set(marketPrice.getMarket().getMarketCodes());
-                        });
-                    });
+                    .ifPresent(marketPrice -> UIThread.run(() -> {
+                        model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true));
+                        model.getMarketCode().set(marketPrice.getMarket().getMarketCodes());
+                    }));
         }
     }
 
     private void updateOffersOnline() {
         if (allowUpdateOffersOnline) {
             UIThread.run(() ->
-                    model.getOffersOnline().set(String.valueOf(bisqEasyOfferbookChannelService.getChannels().stream().flatMap(channel -> channel.getChatMessages().stream())
+                    model.getOffersOnline().set(String.valueOf(bisqEasyOfferbookChannelService.getChannels().stream()
+                            .flatMap(channel -> channel.getChatMessages().stream())
                             .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                            .filter(bisqEasySellersReputationBasedTradeAmountService::hasSellerSufficientReputation)
                             .count())));
         }
     }

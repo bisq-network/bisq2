@@ -19,6 +19,7 @@ package bisq.bonded_roles.security_manager.alert;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -36,18 +37,22 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @ToString
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedAlertData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public final static int MAX_MESSAGE_LENGTH = 1000;
+    public final static int MAX_BANNED_ACCOUNT_DATA_LENGTH = 10_000;
 
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
-    private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final String id;
     private final long date;
     private final AlertType alertType;
@@ -58,8 +63,17 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     private final Optional<String> minVersion;
     private final Optional<AuthorizedBondedRole> bannedRole;
     private final String securityManagerProfileId;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
+
+    // Added in version 2.1.6
+    private final Optional<String> bannedAccountData;
 
     public AuthorizedAlertData(String id,
                                long date,
@@ -71,7 +85,37 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                                Optional<String> minVersion,
                                Optional<AuthorizedBondedRole> bannedRole,
                                String securityManagerProfileId,
-                               boolean staticPublicKeysProvided) {
+                               boolean staticPublicKeysProvided,
+                               Optional<String> bannedAccountData) {
+        this(VERSION,
+                id,
+                date,
+                alertType,
+                headline,
+                message,
+                haltTrading,
+                requireVersionForTrading,
+                minVersion,
+                bannedRole,
+                securityManagerProfileId,
+                staticPublicKeysProvided,
+                bannedAccountData);
+    }
+
+    private AuthorizedAlertData(int version,
+                                String id,
+                                long date,
+                                AlertType alertType,
+                                Optional<String> headline,
+                                Optional<String> message,
+                                boolean haltTrading,
+                                boolean requireVersionForTrading,
+                                Optional<String> minVersion,
+                                Optional<AuthorizedBondedRole> bannedRole,
+                                String securityManagerProfileId,
+                                boolean staticPublicKeysProvided,
+                                Optional<String> bannedAccountData) {
+        this.version = version;
         this.id = id;
         this.date = date;
         this.alertType = alertType;
@@ -83,6 +127,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.bannedRole = bannedRole;
         this.securityManagerProfileId = securityManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+        this.bannedAccountData = bannedAccountData;
 
         verify();
     }
@@ -94,6 +139,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         NetworkDataValidation.validateText(message, MAX_MESSAGE_LENGTH);
         minVersion.ifPresent(NetworkDataValidation::validateVersion);
         NetworkDataValidation.validateProfileId(securityManagerProfileId);
+        NetworkDataValidation.validateText(bannedAccountData, MAX_BANNED_ACCOUNT_DATA_LENGTH);
     }
 
     @Override
@@ -105,7 +151,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 .setHaltTrading(haltTrading)
                 .setRequireVersionForTrading(requireVersionForTrading)
                 .setSecurityManagerProfileId(securityManagerProfileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
         message.ifPresent(builder::setMessage);
         headline.ifPresent(headline -> {
             // We only set the headline if defaultHeadline is present (not AlertType.BAN) and
@@ -119,6 +166,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         });
         minVersion.ifPresent(builder::setMinVersion);
         bannedRole.ifPresent(authorizedBondedRole -> builder.setBannedRole(authorizedBondedRole.toProto(serializeForHash)));
+        bannedAccountData.ifPresent(builder::setBannedAccountData);
         return builder;
     }
 
@@ -129,7 +177,9 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
 
     public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto) {
         AlertType alertType = AlertType.fromProto(proto.getAlertType());
-        return new AuthorizedAlertData(proto.getId(),
+        return new AuthorizedAlertData(
+                proto.getVersion(),
+                proto.getId(),
                 proto.getDate(),
                 alertType,
                 proto.hasHeadline() ? Optional.of(proto.getHeadline()) : getDefaultHeadline(alertType),
@@ -139,15 +189,16 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
                 proto.hasBannedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getBannedRole())) : Optional.empty(),
                 proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided()
+                proto.getStaticPublicKeysProvided(),
+                proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty()
         );
     }
 
     private static Optional<String> getDefaultHeadline(AlertType alertType) {
-        if (alertType == AlertType.BAN) {
-            return Optional.empty();
-        } else {
+        if (AlertType.isMessageAlert(alertType)) {
             return Optional.of(Res.get("authorizedRole.securityManager.alertType." + alertType.name()));
+        } else {
+            return Optional.empty();
         }
     }
 

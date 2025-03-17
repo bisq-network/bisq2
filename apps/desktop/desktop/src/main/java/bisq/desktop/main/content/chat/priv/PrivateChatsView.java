@@ -22,7 +22,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
-import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
@@ -30,8 +30,11 @@ import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -60,7 +63,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,
             myUserProfilePin;
     private UserProfileDisplay chatPeerUserProfileDisplay, chatMyUserProfileDisplay;
-    private DropdownMenuItem leaveChatButton;
+    private DropdownBisqMenuItem leaveChatButton;
 
     public PrivateChatsView(PrivateChatsModel model,
                             PrivateChatsController controller,
@@ -90,9 +93,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         PrivateChatsModel model = getModel();
 
-        selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected -> {
-            tableView.getSelectionModel().select(selected);
-        });
+        selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected -> tableView.getSelectionModel().select(selected));
 
         tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
@@ -109,21 +110,22 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), userProfile -> {
             if (userProfile != null) {
-                chatPeerUserProfileDisplay.applyData(userProfile, model.getPeerLastSeenAsString(), model.getPeerLastSeen());
+                chatPeerUserProfileDisplay.setUserProfile(userProfile);
                 chatPeerUserProfileDisplay.setReputationScore(model.getPeersReputationScore());
             }
         });
 
         myUserProfilePin = EasyBind.subscribe(model.getMyUserProfile(), userProfile -> {
             if (userProfile != null) {
-                chatMyUserProfileDisplay.applyData(userProfile, model.getMyselfLastSeenAsString(), model.getMyselfLastSeen());
+                chatMyUserProfileDisplay.setUserProfile(userProfile);
                 chatMyUserProfileDisplay.setReputationScore(model.getMyUserReputationScore());
             }
         });
 
         leaveChatButton.setOnAction(e -> getController().onLeaveChat());
-        headerDropdownMenu.visibleProperty().bind(model.getNoOpenChats().not());
-        headerDropdownMenu.managedProperty().bind(model.getNoOpenChats().not());
+
+        ellipsisMenu.visibleProperty().bind(model.getNoOpenChats().not());
+        ellipsisMenu.managedProperty().bind(model.getNoOpenChats().not());
 
         tableView.visibleProperty().bind(model.getNoOpenChats().not());
         tableView.managedProperty().bind(model.getNoOpenChats().not());
@@ -142,11 +144,20 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         myUserProfilePin.unsubscribe();
 
         leaveChatButton.setOnAction(null);
-        headerDropdownMenu.visibleProperty().unbind();
-        headerDropdownMenu.managedProperty().unbind();
+        ellipsisMenu.visibleProperty().unbind();
+        ellipsisMenu.managedProperty().unbind();
 
         tableView.visibleProperty().unbind();
         tableView.managedProperty().unbind();
+
+        if (chatMyUserProfileDisplay != null) {
+            chatMyUserProfileDisplay.dispose();
+            chatMyUserProfileDisplay = null;
+        }
+        if (chatPeerUserProfileDisplay != null) {
+            chatPeerUserProfileDisplay.dispose();
+            chatPeerUserProfileDisplay = null;
+        }
     }
 
     @Override
@@ -156,14 +167,14 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         chatHeaderVBox = new VBox(0);
         HBox.setHgrow(chatHeaderVBox, Priority.ALWAYS);
 
-        leaveChatButton = new DropdownMenuItem("leave-chat-red-lit-10", "leave-chat-red",
+        leaveChatButton = new DropdownBisqMenuItem("leave-chat-red-lit-10", "leave-chat-red",
                 Res.get("bisqEasy.privateChats.leave"));
         leaveChatButton.getStyleClass().add("red-menu-item");
 
-        headerDropdownMenu.clearMenuItems();
-        headerDropdownMenu.addMenuItems(helpButton, leaveChatButton);
+        ellipsisMenu.clearMenuItems();
+        ellipsisMenu.addMenuItems(helpButton, leaveChatButton);
 
-        titleHBox.getChildren().setAll(chatHeaderVBox, searchBox, headerDropdownMenu);
+        titleHBox.getChildren().setAll(chatHeaderVBox, searchBox, ellipsisMenu);
     }
 
     private void addOpenChatsSelectionList() {
@@ -211,20 +222,28 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
+            private final UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
             private final HBox hBox = new HBox(5);
+            private final Badge badge = new Badge(Pos.CENTER_RIGHT);
+
+            {
+                getStyleClass().add("user-profile-table-cell");
+                hBox.getChildren().setAll(userProfileDisplay, Spacer.fillHBox(), badge);
+            }
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
+                    userProfileDisplay.setUserProfile(item.getPeersUserProfile(), false);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
-                    getStyleClass().add("user-profile-table-cell");
-                    hBox.getChildren().setAll(userProfileDisplay, Spacer.fillHBox(), item.getNumMessagesBadge());
+                    badge.textProperty().bind(item.getNumNotificationsString());
 
                     setGraphic(hBox);
                 } else {
+                    badge.textProperty().unbind();
+                    userProfileDisplay.dispose();
                     setGraphic(null);
                 }
             }
@@ -275,38 +294,41 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
     @Getter
     @ToString
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     static class ListItem {
+        @EqualsAndHashCode.Include
         private final TwoPartyPrivateChatChannel channel;
+
+        private final UserProfile peersUserProfile;
         private final String peersUserName, myUserName;
         private final long totalReputationScore, profileAge;
         private final String totalReputationScoreString, profileAgeString;
         private final ReputationScore reputationScore;
-        @EqualsAndHashCode.Exclude
-        private final Badge numMessagesBadge;
+        private final StringProperty numNotificationsString = new SimpleStringProperty();
 
-        public ListItem(TwoPartyPrivateChatChannel channel, ReputationService reputationService) {
+        public ListItem(TwoPartyPrivateChatChannel channel,
+                        ReputationService reputationService,
+                        UserProfileService userProfileService) {
             this.channel = channel;
 
-            UserProfile userProfile = channel.getPeer();
-            peersUserName = userProfile.getUserName();
+            peersUserProfile = userProfileService.getManagedUserProfile(channel.getPeer());
+
+            peersUserName = peersUserProfile.getUserName();
             myUserName = channel.getMyUserIdentity().getUserName();
 
-            reputationScore = reputationService.getReputationScore(userProfile);
+            reputationScore = reputationService.getReputationScore(peersUserProfile);
             totalReputationScore = reputationScore.getTotalScore();
             totalReputationScoreString = String.valueOf(totalReputationScore);
 
-            Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(userProfile);
+            Optional<Long> optionalProfileAge = reputationService.getProfileAgeService().getProfileAge(peersUserProfile);
             profileAge = optionalProfileAge.orElse(0L);
             profileAgeString = optionalProfileAge
-                    .map(TimeFormatter::formatAgeInDays)
+                    .map(TimeFormatter::formatAgeInDaysAndYears)
                     .orElse(Res.get("data.na"));
-
-            numMessagesBadge = new Badge(null, Pos.CENTER_RIGHT);
         }
 
         public void setNumNotifications(long numNotifications) {
-            numMessagesBadge.setText(numNotifications == 0 ? "" : String.valueOf(numNotifications));
+            numNotificationsString.set(numNotifications == 0 ? "" : String.valueOf(numNotifications));
         }
     }
 }

@@ -20,6 +20,7 @@ package bisq.desktop.main.content.authorized_role;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.desktop.common.view.*;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.desktop.main.content.authorized_role.mediator.MediatorView;
 import bisq.i18n.Res;
@@ -27,6 +28,7 @@ import javafx.collections.ListChangeListener;
 import javafx.scene.Parent;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +36,8 @@ import java.util.Map;
 public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, AuthorizedRoleController> {
     private final Map<BondedRoleType, TabButton> tabButtonByBondedRoleType = new HashMap<>();
     private final ListChangeListener<BondedRoleType> listener;
+    @Nullable
+    private BisqTooltip isBannedTooltip;
 
     public AuthorizedRoleView(AuthorizedRoleModel model, AuthorizedRoleController controller) {
         super(model, controller);
@@ -48,17 +52,7 @@ public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, Auth
                 case MODERATOR:
                     tabButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
                     break;
-                case SECURITY_MANAGER:
-                    break;
-                case RELEASE_MANAGER:
-                    break;
-                case SEED_NODE:
-                    break;
-                case ORACLE_NODE:
-                    break;
-                case EXPLORER_NODE:
-                    break;
-                case MARKET_PRICE_NODE:
+                case SECURITY_MANAGER, MARKET_PRICE_NODE, EXPLORER_NODE, ORACLE_NODE, SEED_NODE, RELEASE_MANAGER:
                     break;
             }
         });
@@ -84,8 +78,20 @@ public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, Auth
     private void updateVisibility() {
         tabButtonByBondedRoleType.forEach((bondedRoleType, tabButton) -> {
             boolean isVisible = model.getAuthorizedBondedRoles().contains(bondedRoleType);
+            boolean isBanned = model.getBannedAuthorizedBondedRoles().contains(bondedRoleType);
             tabButton.setVisible(isVisible);
             tabButton.setManaged(isVisible);
+
+            if (isBanned) {
+                tabButton.getLabel().getStyleClass().add("bisq-text-error");
+                if (isBannedTooltip == null) {
+                    isBannedTooltip = new BisqTooltip(Res.get("authorizedRole.roleInfo.isBanned"));
+                }
+                BisqTooltip.install(tabButton, isBannedTooltip);
+            } else if (isBannedTooltip != null) {
+                tabButton.getLabel().getStyleClass().remove("bisq-text-error");
+                BisqTooltip.uninstall(tabButton, isBannedTooltip);
+            }
 
             if (isVisible) {
                 model.getSelectedTabButton().set(tabButton);

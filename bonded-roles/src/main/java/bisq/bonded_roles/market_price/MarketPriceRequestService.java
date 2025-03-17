@@ -17,6 +17,7 @@
 
 package bisq.bonded_roles.market_price;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.currency.TradeCurrency;
@@ -24,13 +25,13 @@ import bisq.common.data.Pair;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
-import bisq.common.util.Version;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
+import bisq.common.network.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.utils.HttpException;
 import com.google.gson.Gson;
@@ -55,7 +56,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class MarketPriceRequestService {
-    private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceService.pool", 3);
+    private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPrice", 3);
 
     @Getter
     @ToString
@@ -144,11 +145,10 @@ public class MarketPriceRequestService {
     private volatile boolean shutdownStarted;
 
     public MarketPriceRequestService(Config conf,
-                                     Version version,
                                      NetworkService networkService) {
         this.conf = conf;
         this.networkService = networkService;
-        userAgent = "bisq-v2/" + version.toString();
+        userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
 
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         conf.providers.stream()
@@ -192,20 +192,25 @@ public class MarketPriceRequestService {
             scheduler.stop();
             scheduler = null;
         }
-        scheduler = Scheduler.run(() -> {
-            request().whenComplete((result, throwable) -> {
-                if (throwable != null) {
-                    if (scheduler != null) {
-                        scheduler.stop();
-                        scheduler = null;
-                    }
-                    // Increase delay (up to 30 sec.) for retry each time it fails by 5 sec.
-                    initialDelay += 5;
-                    initialDelay = Math.min(30, initialDelay);
-                    startRequesting();
+        scheduler = Scheduler.run(this::periodicRequest)
+                .host(this)
+                .runnableName("periodicRequest")
+                .periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
+    }
+
+    private void periodicRequest() {
+        request().whenComplete((result, throwable) -> {
+            if (throwable != null) {
+                if (scheduler != null) {
+                    scheduler.stop();
+                    scheduler = null;
                 }
-            });
-        }).periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
+                // Increase delay (up to 30 sec.) for retry each time it fails by 5 sec.
+                initialDelay += 5;
+                initialDelay = Math.min(30, initialDelay);
+                startRequesting();
+            }
+        });
     }
 
     private CompletableFuture<Void> request() {
@@ -225,6 +230,7 @@ public class MarketPriceRequestService {
         }
 
         return CompletableFuture.runAsync(() -> {
+                    ThreadName.set(this, "request");
                     Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
                     BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
                     httpClient = Optional.of(client);
@@ -246,8 +252,14 @@ public class MarketPriceRequestService {
                     log.info("Request market price from {}", client.getBaseUrl() + "/" + param);
                     try {
                         String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                        log.info("Received market price from {} after {} ms", client.getBaseUrl() + param, System.currentTimeMillis() - ts);
+                        log.info("Received market price from {} after {} ms", client.getBaseUrl() + "/" + param, System.currentTimeMillis() - ts);
                         Map<Market, MarketPrice> map = parseResponse(json);
+
+                        if (map.isEmpty()) {
+                            log.warn("Provider {} returned an empty or invalid response, switching provider.", client.getBaseUrl());
+                            throw new IllegalStateException("Provider is responsive but not returning any market prices");
+                        }
+
                         long now = System.currentTimeMillis();
                         String sinceLastResponse = timeSinceLastResponse == 0 ? "" : "Time since last response: " + (now - timeSinceLastResponse) / 1000 + " sec";
                         log.info("Market price request from {} resulted in {} items took {} ms. {}",
@@ -276,8 +288,7 @@ public class MarketPriceRequestService {
                         failedProviders.add(provider);
                         selectedProvider.set(selectNextProvider());
 
-                        if (rootCause instanceof HttpException) {
-                            HttpException httpException = (HttpException) rootCause;
+                        if (rootCause instanceof HttpException httpException) {
                             int responseCode = httpException.getResponseCode();
                             // If not server error we pass the error to the client
                             if (responseCode < 500) {
@@ -320,9 +331,11 @@ public class MarketPriceRequestService {
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
+                    MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromName(provider);
+                    MarketPriceProviderInfo marketPriceProviderInfo = new MarketPriceProviderInfo(marketPriceProvider, marketPriceProvider.getDisplayName().orElse(provider));
                     MarketPrice marketPrice = new MarketPrice(priceQuote,
                             timestamp,
-                            MarketPriceProvider.fromName(provider));
+                            marketPriceProviderInfo);
                     if (marketPrice.isValidDate()) {
                         marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
                         map.put(priceQuote.getMarket(), marketPrice);

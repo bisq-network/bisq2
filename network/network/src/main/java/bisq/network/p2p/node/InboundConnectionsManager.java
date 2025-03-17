@@ -18,7 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.common.data.Pair;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
@@ -85,8 +85,7 @@ public class InboundConnectionsManager {
 
     public void acceptNewConnection(SelectionKey selectionKey) {
         SocketChannel newConnectionSocketChannel = null;
-        try {
-            ServerSocketChannel nextReadySocketChannel = (ServerSocketChannel) selectionKey.channel();
+        try (ServerSocketChannel nextReadySocketChannel = (ServerSocketChannel) selectionKey.channel()) {
             newConnectionSocketChannel = nextReadySocketChannel.accept();
             log.info("Accepted new inbound connection with peer: {}", newConnectionSocketChannel.getRemoteAddress());
 

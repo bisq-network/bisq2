@@ -1,6 +1,7 @@
 package bisq.application;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
+import bisq.common.threading.ThreadName;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -19,13 +20,22 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         // Using sun.misc.Signal to handle SIGINT events is not recommended as it is an
         // internal API and adds OS specific dependencies.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            ThreadName.set(this, "shutdownHook");
             if (!shutDownStarted) {
                 shutdown();
             }
         }));
 
         applicationService = createApplicationService(args);
+
+        long ts = System.currentTimeMillis();
+        applicationService.pruneAllBackups().join();
+        log.info("pruneAllBackups took {} ms", System.currentTimeMillis() - ts);
+
+        ts = System.currentTimeMillis();
         applicationService.readAllPersisted().join();
+        log.info("readAllPersisted took {} ms", System.currentTimeMillis() - ts);
+
         launchApplication(args);
     }
 
@@ -59,7 +69,7 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
 
     protected void exitJvm() {
         log.info("Exiting JVM");
-        System.exit(OsUtils.EXIT_SUCCESS);
+        System.exit(PlatformUtils.EXIT_SUCCESS);
     }
 
     @Override

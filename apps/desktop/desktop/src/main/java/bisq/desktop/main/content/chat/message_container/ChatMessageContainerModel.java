@@ -22,9 +22,6 @@ public class ChatMessageContainerModel implements bisq.desktop.common.view.Model
     private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
     private final BooleanProperty chatDialogEnabled = new SimpleBooleanProperty(true);
     private final IntegerProperty caretPosition = new SimpleIntegerProperty();
-    @Nullable
-    @Setter
-    private ChatMessage selectedChatMessage;
 
     public ChatMessageContainerModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;

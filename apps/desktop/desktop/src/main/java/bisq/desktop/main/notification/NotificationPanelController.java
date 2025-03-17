@@ -33,7 +33,7 @@ import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -69,13 +69,13 @@ public class NotificationPanelController implements Controller {
     }
 
     void onClose() {
-        bisqEasyNotificationsService.getIsNotificationPanelDismissed().set(true);
+        UIThread.run(bisqEasyNotificationsService::dismissNotification);
     }
 
     void onNavigateToTarget() {
-        Navigation.navigateTo(model.isMediationNotification() ?
-                NavigationTarget.MEDIATOR :
-                NavigationTarget.BISQ_EASY_OPEN_TRADES);
+        Navigation.navigateTo(model.isMediationNotification()
+                ? NavigationTarget.MEDIATOR
+                : NavigationTarget.BISQ_EASY_OPEN_TRADES);
     }
 
     private void handleNotification(ChatNotification notification) {
@@ -86,10 +86,11 @@ public class NotificationPanelController implements Controller {
         UIThread.run(() -> {
             boolean hasMediatorNotConsumedNotifications = bisqEasyNotificationsService.hasMediatorNotConsumedNotifications();
             model.setMediationNotification(hasMediatorNotConsumedNotifications);
-            List<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeIdsOfNotifications().stream()
-                    .map(e -> e.substring(0, 8)).collect(Collectors.toList());
+            Set<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeNotifications().stream()
+                    .flatMap(tradeNotification -> tradeNotification.getTradeId().stream())
+                    .map(e -> e.substring(0, 8)).collect(Collectors.toSet());
             if (tradeIdsOfNotifications.size() == 1) {
-                String tradeId = tradeIdsOfNotifications.get(0);
+                String tradeId = tradeIdsOfNotifications.iterator().next();
                 if (hasMediatorNotConsumedNotifications) {
                     model.getHeadline().set(Res.get("notificationPanel.mediationCases.headline.single", tradeId));
                     model.getButtonText().set(Res.get("notificationPanel.mediationCases.button"));

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
@@ -87,17 +87,18 @@ public class SellerState2b extends BaseState {
             super(model, controller);
 
             headline = FormUtils.getHeadline();
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase2b.info"));
             fiatReceivedButton = new Button();
             fiatReceivedButton.setDefaultButton(true);
             VBox.setMargin(fiatReceivedButton, new Insets(5, 0, 10, 0));
-            root.getChildren().addAll(headline, fiatReceivedButton);
+            root.getChildren().addAll(headline, info, fiatReceivedButton);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount()));
+            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.headline", model.getFormattedQuoteAmount(), model.getBisqEasyTrade().getShortId()));
             fiatReceivedButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase2b.fiatReceivedButton", model.getFormattedQuoteAmount()));
             fiatReceivedButton.setOnAction(e -> controller.onConfirmFiatReceipt());
         }

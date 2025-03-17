@@ -24,7 +24,7 @@ import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.elementsd.ElementsdConfig;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.json_rpc.JsonRpcClient;
-import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.regtest.process.ProcessConfig;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestProcess;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +37,7 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
     private final ElementsdConfig elementsdConfig;
 
     public ElementsdRegtestProcess(ElementsdConfig elementsdConfig, Path dataDir) {
-        super(elementsdConfig.elementsdRpcConfig(), dataDir);
+        super(null, NetworkUtils.findFreeSystemPort(), elementsdConfig.elementsdRpcConfig(), dataDir);
         this.elementsdConfig = elementsdConfig;
     }
 
@@ -52,7 +52,7 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
                         "-datadir=" + dataDir.toAbsolutePath(),
                         "-debug=1",
 
-                        "-bind=127.0.0.1:" + NetworkUtils.findFreeSystemPort(),
+                        "-bind=127.0.0.1:" + p2pPort,
                         "-whitelist=127.0.0.1",
 
                         "-rpcbind=127.0.0.1:" + rpcConfig.getPort(),

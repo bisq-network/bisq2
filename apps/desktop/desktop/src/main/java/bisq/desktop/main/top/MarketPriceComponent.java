@@ -33,12 +33,11 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ComboBoxWithSearch;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.i18n.Res;
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.identity.NetworkId;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.user.profile.UserProfileService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -81,12 +80,10 @@ public class MarketPriceComponent {
         @Getter
         private final View view;
         private final MarketPriceService marketPriceService;
-        private final UserProfileService userProfileService;
         private Pin selectedMarketPin, marketPricePin;
 
         private Controller(ServiceProvider serviceProvider) {
             marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-            userProfileService = serviceProvider.getUserService().getUserProfileService();
 
             model = new Model();
             view = new View(model, this);
@@ -98,7 +95,7 @@ public class MarketPriceComponent {
                     UIThread.run(() -> {
                         List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
                                 .flatMap(market -> marketPriceService.findMarketPrice(market).stream())
-                                .map(marketPrice -> new ListItem(marketPrice, marketPriceService, userProfileService))
+                                .map(marketPrice -> new ListItem(marketPrice, marketPriceService))
                                 .collect(Collectors.toList());
                         model.items.setAll(list);
 
@@ -288,13 +285,7 @@ public class MarketPriceComponent {
                         boolean isStale = item.isStale();
                         staleIcon.setManaged(isStale);
                         staleIcon.setVisible(isStale);
-                        String isStalePostFix = isStale ? Res.get("component.marketPrice.tooltip.isStale") : "";
-                        String tooltipText = Res.get("component.marketPrice.tooltip",
-                                item.getSource(),
-                                item.getAgeInSeconds(),
-                                item.date,
-                                isStalePostFix);
-                        tooltip.setText(tooltipText);
+                        tooltip.setText(item.getTooltipText());
                         Tooltip.install(hBox, tooltip);
                         setGraphic(hBox);
                     } else {
@@ -307,24 +298,24 @@ public class MarketPriceComponent {
     }
 
     @Slf4j
-    @EqualsAndHashCode
+    @Getter
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     private static class ListItem {
+        @EqualsAndHashCode.Include
         private final MarketPrice marketPrice;
+
         private final String price;
         private final String codes;
-        private final String provider;
         private final String date;
         private final MarketPriceService marketPriceService;
-        private final UserProfileService userProfileService;
 
-        private ListItem(MarketPrice marketPrice, MarketPriceService marketPriceService, UserProfileService userProfileService) {
+        private ListItem(MarketPrice marketPrice, MarketPriceService marketPriceService) {
             this.marketPrice = marketPrice;
+            this.marketPriceService = marketPriceService;
+
             codes = marketPrice.getMarket().getMarketCodes();
             price = PriceFormatter.format(marketPrice.getPriceQuote(), true);
-            provider = marketPrice.getProviderName();
             date = DateFormatter.formatDateTime(marketPrice.getTimestamp());
-            this.marketPriceService = marketPriceService;
-            this.userProfileService = userProfileService;
         }
 
         public boolean isStale() {
@@ -333,6 +324,15 @@ public class MarketPriceComponent {
 
         public String getAgeInSeconds() {
             return TimeFormatter.getAgeInSeconds(marketPrice.getAge());
+        }
+
+        public String getTooltipText() {
+            String isStalePostFix = isStale() ? Res.get("component.marketPrice.tooltip.isStale") : "";
+            return Res.get("component.marketPrice.tooltip",
+                    getSource(),
+                    getAgeInSeconds(),
+                    date,
+                    isStalePostFix);
         }
 
         public String getProviderUrl() {
@@ -352,16 +352,12 @@ public class MarketPriceComponent {
 
         public String getSource() {
             MarketPrice.Source source = marketPrice.getSource();
-            switch (source) {
-                case PERSISTED:
-                    return Res.get("component.marketPrice.source." + source);
-                case PROPAGATED_IN_NETWORK:
-                    return Res.get("component.marketPrice.source." + source, getMarketPriceProvidingOracle());
-                case REQUESTED_FROM_PRICE_NODE:
-                    return Res.get("component.marketPrice.source." + source, getProviderUrl());
-                default:
-                    throw new RuntimeException("Unsupported source: " + source.name());
-            }
+            return switch (source) {
+                case PERSISTED -> Res.get("component.marketPrice.source." + source);
+                case PROPAGATED_IN_NETWORK ->
+                        Res.get("component.marketPrice.source." + source, getMarketPriceProvidingOracle());
+                case REQUESTED_FROM_PRICE_NODE -> Res.get("component.marketPrice.source." + source, getProviderUrl());
+            };
         }
 
         @Override

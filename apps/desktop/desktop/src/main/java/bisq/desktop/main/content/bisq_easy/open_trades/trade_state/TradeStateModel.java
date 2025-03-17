@@ -17,15 +17,11 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.view.Model;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,8 +42,8 @@ public class TradeStateModel implements Model {
     private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
     private final StringProperty interruptTradeButtonText = new SimpleStringProperty();
-    private final BooleanProperty cancelButtonVisible = new SimpleBooleanProperty(true);
-    private final BooleanProperty cancelled = new SimpleBooleanProperty();
+    private final BooleanProperty interruptTradeButtonVisible = new SimpleBooleanProperty(true);
+    private final BooleanProperty interruptedTradeInfo = new SimpleBooleanProperty();
     private final BooleanProperty error = new SimpleBooleanProperty();
     private final BooleanProperty phaseAndInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty isInMediation = new SimpleBooleanProperty();
@@ -56,7 +52,11 @@ public class TradeStateModel implements Model {
     private final StringProperty errorMessage = new SimpleStringProperty();
     private final BooleanProperty shouldShowSellerPriceApprovalOverlay = new SimpleBooleanProperty();
     private final BooleanProperty hasBuyerAcceptedSellersPriceSpec = new SimpleBooleanProperty();
-    private final ObjectProperty<VBox> sellerPriceApprovalContent = new SimpleObjectProperty<>();
+    private final StringProperty buyerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
+    private final StringProperty sellerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
+    private final BooleanProperty isTradeCompleted = new SimpleBooleanProperty();
+    private final ObjectProperty<MessageDeliveryStatus> requestMediationDeliveryStatus = new SimpleObjectProperty<>();
+    private final BooleanProperty shouldShowTryRequestMediationAgain = new SimpleBooleanProperty();
 
     void resetAll() {
         reset();
@@ -68,13 +68,20 @@ public class TradeStateModel implements Model {
         bisqEasyTrade.set(null);
         stateInfoVBox.set(null);
         interruptTradeButtonText.set(null);
-        cancelButtonVisible.set(true);
-        cancelled.set(false);
+        interruptTradeButtonVisible.set(true);
+        interruptedTradeInfo.set(false);
         error.set(false);
+        phaseAndInfoVisible.set(false);
+        isInMediation.set(false);
         showReportToMediatorButton.set(false);
         tradeInterruptedInfo.set(null);
+        errorMessage.set(null);
         shouldShowSellerPriceApprovalOverlay.set(false);
         hasBuyerAcceptedSellersPriceSpec.set(false);
-        sellerPriceApprovalContent.set(null);
+        buyerPriceDescriptionApprovalOverlay.set(null);
+        sellerPriceDescriptionApprovalOverlay.set(null);
+        isTradeCompleted.set(false);
+        requestMediationDeliveryStatus.set(null);
+        shouldShowTryRequestMediationAgain.set(false);
     }
 }

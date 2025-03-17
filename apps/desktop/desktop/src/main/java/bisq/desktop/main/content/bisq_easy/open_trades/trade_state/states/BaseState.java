@@ -20,9 +20,9 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
@@ -53,15 +53,17 @@ public abstract class BaseState {
         protected final AccountService accountService;
         protected final UserIdentityService userIdentityService;
         protected final BisqEasyOpenTradeChannelService channelService;
-        protected final BisqEasyOpenTradeSelectionService selectionService;
+        protected final LeavePrivateChatManager leavePrivateChatManager;
 
-        protected Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        protected Controller(ServiceProvider serviceProvider,
+                             BisqEasyTrade bisqEasyTrade,
+                             BisqEasyOpenTradeChannel channel) {
             chatService = serviceProvider.getChatService();
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             accountService = serviceProvider.getAccountService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
-            selectionService = serviceProvider.getChatService().getBisqEasyOpenTradesSelectionService();
+            leavePrivateChatManager = chatService.getLeavePrivateChatManager();
 
             model = createModel(bisqEasyTrade, channel);
             view = createView();
@@ -78,10 +80,10 @@ public abstract class BaseState {
 
             long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
             long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
-            model.setBaseAmount(AmountFormatter.formatAmount(Coin.asBtcFromValue(baseSideAmount), false));
-            model.setFormattedBaseAmount(AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount), false));
-            model.setQuoteAmount(AmountFormatter.formatAmount(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
-            model.setFormattedQuoteAmount(AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
+            model.setBaseAmount(AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(baseSideAmount)));
+            model.setFormattedBaseAmount(AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
+            model.setQuoteAmount(AmountFormatter.formatQuoteAmount(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
+            model.setFormattedQuoteAmount(AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
         }
 
         @Override
@@ -89,9 +91,10 @@ public abstract class BaseState {
         }
 
         protected Optional<String> findUsersAccountData() {
-            return Optional.ofNullable(accountService.getSelectedAccount()).stream()
-                    .filter(account -> account instanceof UserDefinedFiatAccount)
-                    .map(account -> (UserDefinedFiatAccount) account)
+            return accountService
+                    .getSelectedAccount().stream()
+                    .filter(UserDefinedFiatAccount.class::isInstance)
+                    .map(UserDefinedFiatAccount.class::cast)
                     .map(account -> account.getAccountPayload().getAccountData())
                     .findFirst();
         }
@@ -146,9 +149,7 @@ public abstract class BaseState {
             VBox text = new VBox(headline, info);
             text.setAlignment(Pos.CENTER_LEFT);
             text.setSpacing(10);
-            HBox waitingInfo = new HBox(animation, text);
-            waitingInfo.setSpacing(20);
-            return waitingInfo;
+            return new HBox(20, animation, text);
         }
     }
 }

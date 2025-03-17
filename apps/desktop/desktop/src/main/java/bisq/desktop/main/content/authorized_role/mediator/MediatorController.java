@@ -17,11 +17,12 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
-import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
@@ -37,12 +38,16 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
-import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
+import static bisq.chat.ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -57,40 +62,49 @@ public class MediatorController implements Controller {
     protected final UserProfileService userProfileService;
     protected final ChatMessageContainerController chatMessageContainerController;
 
-    private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationCaseHeader mediationCaseHeader;
     private final MediatorService mediatorService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final InvalidationListener itemListener;
     private Pin mediationCaseListItemPin, selectedChannelPin;
+    private Subscription searchPredicatePin, closedCasesPredicatePin;
 
     public MediatorController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         chatService = serviceProvider.getChatService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        channelService = chatService.getBisqEasyOpenTradeChannelService();
+        BisqEasyOpenTradeChannelService channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesSelectionService();
         mediatorService = serviceProvider.getSupportService().getMediatorService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
 
-        chatMessageContainerController = new ChatMessageContainerController(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, e -> {
+        chatMessageContainerController = new ChatMessageContainerController(serviceProvider, BISQ_EASY_OPEN_TRADES, e -> {
         });
-        mediationCaseHeader = new MediationCaseHeader(serviceProvider, this::updateFilteredList, this::updateFilteredList);
+        mediationCaseHeader = new MediationCaseHeader(serviceProvider, this::closeCaseHandler, this::reOpenCaseHandler);
 
         model = new MediatorModel();
         view = new MediatorView(model, this, mediationCaseHeader.getRoot(), chatMessageContainerController.getView().getRoot());
 
-        itemListener = observable -> update();
+        itemListener = observable -> {
+            // We need to set predicate when a new item gets added.
+            // Delaying it a render frame as otherwise the list shows an empty row for unclear reasons.
+            UIThread.runOnNextRenderFrame(() -> {
+                model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
+                updateEmpytState();
+                if (model.getListItems().getFilteredList().size() == 1) {
+                    selectionService.selectChannel(model.getListItems().getFilteredList().get(0).getChannel());
+                }
+            });
+        };
     }
 
     @Override
     public void onActivate() {
-        model.getListItems().onActivate();
         applyFilteredListPredicate(model.getShowClosedCases().get());
 
-        mediationCaseListItemPin = FxBindings.<MediationCase, MediatorView.ListItem>bind(model.getListItems())
+        mediationCaseListItemPin = FxBindings.<MediationCase, MediationCaseListItem>bind(model.getListItems())
                 .filter(mediationCase -> {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
                     BisqEasyContract contract = mediationRequest.getContract();
@@ -123,47 +137,35 @@ public class MediatorController implements Controller {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
                     UserIdentity myUserIdentity = mediatorService.findMyMediatorUserIdentity(mediationRequest.getContract().getMediator()).orElseThrow();
                     BisqEasyOpenTradeChannel channel = findOrCreateChannel(mediationRequest, myUserIdentity);
-                    return new MediatorView.ListItem(serviceProvider, mediationCase, channel);
+                    return new MediationCaseListItem(serviceProvider, mediationCase, channel);
                 })
                 .to(mediatorService.getMediationCases());
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(chatChannel -> {
-            UIThread.run(() -> {
-                if (chatChannel == null) {
-                    model.getSelectedItem().set(null);
-                    mediationCaseHeader.setMediationCaseListItem(null);
-                    mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                    model.getSelectedChannel().set(null);
-                    update();
-                } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
-                    model.getSelectedChannel().set(chatChannel);
-                    BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
-                    model.getListItems().stream()
-                            .filter(item -> item.getChannel().equals(channel))
-                            .findAny()
-                            .ifPresent(item -> {
-                                model.getSelectedItem().set(item);
-                                mediationCaseHeader.setMediationCaseListItem(item);
-                                mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                            });
-                }
-            });
-        });
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
-        update();
+        searchPredicatePin = EasyBind.subscribe(model.getSearchPredicate(), searchPredicate -> updatePredicate());
+        closedCasesPredicatePin = EasyBind.subscribe(model.getClosedCasesPredicate(), closedCasesPredicate -> updatePredicate());
+        maybeSelectFirst();
+        updateEmpytState();
 
         model.getListItems().addListener(itemListener);
     }
 
     @Override
     public void onDeactivate() {
+        doCloseChatWindow();
+
         model.getListItems().removeListener(itemListener);
         model.getListItems().onDeactivate();
+        model.reset();
+
         mediationCaseListItemPin.unbind();
         selectedChannelPin.unbind();
+        searchPredicatePin.unsubscribe();
+        closedCasesPredicatePin.unsubscribe();
     }
 
-    void onSelectItem(MediatorView.ListItem item) {
+    void onSelectItem(MediationCaseListItem item) {
         if (item == null) {
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
@@ -173,36 +175,103 @@ public class MediatorController implements Controller {
 
     void onToggleClosedCases() {
         model.getShowClosedCases().set(!model.getShowClosedCases().get());
-        applyFilteredListPredicate(model.getShowClosedCases().get());
+        applyShowClosedCasesChange();
+    }
+
+
+    void onToggleChatWindow() {
+        if (model.getChatWindow().get() == null) {
+            model.getChatWindow().set(new Stage());
+        } else {
+            doCloseChatWindow();
+        }
+    }
+
+    void onCloseChatWindow() {
+        doCloseChatWindow();
+    }
+
+    private void doCloseChatWindow() {
+        if (model.getChatWindow().get() != null) {
+            model.getChatWindow().get().hide();
+        }
+        model.getChatWindow().set(null);
+    }
+
+    private void closeCaseHandler() {
+        applyShowClosedCasesChange();
+    }
+
+    private void reOpenCaseHandler() {
+        applyShowClosedCasesChange();
+    }
+
+    private void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+        UIThread.run(() -> {
+            if (chatChannel == null) {
+                model.getSelectedItem().set(null);
+                mediationCaseHeader.setMediationCaseListItem(null);
+                mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+                maybeSelectFirst();
+                updateEmpytState();
+            } else if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
+                model.getListItems().stream()
+                        .filter(item -> item.getChannel().getId().equals(tradeChannel.getId()))
+                        .findAny()
+                        .ifPresent(item -> {
+                            model.getSelectedItem().set(item);
+                            mediationCaseHeader.setMediationCaseListItem(item);
+                            mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+                        });
+            }
+        });
+    }
+
+    private void applyShowClosedCasesChange() {
         mediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+        // Need a predicate change to trigger a list update
+        applyFilteredListPredicate(!model.getShowClosedCases().get());
+        applyFilteredListPredicate(model.getShowClosedCases().get());
+        maybeSelectFirst();
+    }
+
+    private void updatePredicate() {
+        model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
+        maybeSelectFirst();
+        updateEmpytState();
     }
 
     private void applyFilteredListPredicate(boolean showClosedCases) {
         if (showClosedCases) {
-            model.getListItems().setPredicate(item -> item.getMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> item.getMediationCase().getIsClosed().get());
         } else {
-            model.getListItems().setPredicate(item -> !item.getMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> !item.getMediationCase().getIsClosed().get());
         }
-        update();
     }
 
-    private void update() {
-        FilteredList<MediatorView.ListItem> filteredList = model.getListItems().getFilteredList();
-        boolean isEmpty = filteredList.isEmpty();
+    private void updateEmpytState() {
+        // The sortedList is already sorted by date (triggered by the usage of the dateColumn)
+        SortedList<MediationCaseListItem> sortedList = model.getListItems().getSortedList();
+        boolean isEmpty = sortedList.isEmpty();
         model.getNoOpenCases().set(isEmpty);
-        if (selectionService.getSelectedChannel().get() == null &&
-                !channelService.getChannels().isEmpty() &&
-                !filteredList.isEmpty()) {
-            selectionService.getSelectedChannel().set(filteredList.get(0).getChannel());
-        }
         if (isEmpty) {
+            selectionService.getSelectedChannel().set(null);
             mediationCaseHeader.setMediationCaseListItem(null);
         } else {
             mediationCaseHeader.setMediationCaseListItem(model.getSelectedItem().get());
         }
     }
 
-    private BisqEasyOpenTradeChannel findOrCreateChannel(MediationRequest mediationRequest, UserIdentity myUserIdentity) {
+    private void maybeSelectFirst() {
+        UIThread.runOnNextRenderFrame(() -> {
+            if (!model.getListItems().getFilteredList().isEmpty()) {
+                selectionService.selectChannel(model.getListItems().getSortedList().get(0).getChannel());
+            }
+        });
+    }
+
+    private BisqEasyOpenTradeChannel findOrCreateChannel(MediationRequest mediationRequest,
+                                                         UserIdentity myUserIdentity) {
         BisqEasyContract contract = mediationRequest.getContract();
         return bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
                 mediationRequest.getTradeId(),
@@ -210,11 +279,5 @@ public class MediatorController implements Controller {
                 myUserIdentity,
                 mediationRequest.getRequester(),
                 mediationRequest.getPeer());
-    }
-
-    // The filtered list predicate does not get evaluated until the predicate gets changed.
-    private void updateFilteredList() {
-        model.getListItems().setPredicate(e -> true);
-        applyFilteredListPredicate(model.getShowClosedCases().get());
     }
 }

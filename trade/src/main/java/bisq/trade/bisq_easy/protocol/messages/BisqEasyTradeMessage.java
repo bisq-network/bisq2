@@ -26,16 +26,15 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class BisqEasyTradeMessage extends TradeMessage {
-    @EqualsAndHashCode.Exclude
-    protected final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
 
     protected BisqEasyTradeMessage(String id, String tradeId, String protocolVersion, NetworkId sender, NetworkId receiver) {
         super(id, tradeId, protocolVersion, sender, receiver);
@@ -55,42 +54,18 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
     abstract protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash);
 
     public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        switch (proto.getBisqEasyTradeMessage().getMessageCase()) {
-            case BISQEASYTAKEOFFERREQUEST: {
-                return BisqEasyTakeOfferRequest.fromProto(proto);
-            }
-            case BISQEASYTAKEOFFERRESPONSE: {
-                return BisqEasyTakeOfferResponse.fromProto(proto);
-            }
-            case BISQEASYACCOUNTDATAMESSAGE: {
-                return BisqEasyAccountDataMessage.fromProto(proto);
-            }
-            case BISQEASYCONFIRMFIATSENTMESSAGE: {
-                return BisqEasyConfirmFiatSentMessage.fromProto(proto);
-            }
-            case BISQEASYBTCADDRESSMESSAGE: {
-                return BisqEasyBtcAddressMessage.fromProto(proto);
-            }
-            case BISQEASYCONFIRMBTCSENTMESSAGE: {
-                return BisqEasyConfirmBtcSentMessage.fromProto(proto);
-            }
-            case BISQEASYCONFIRMFIATRECEIPTMESSAGE: {
-                return BisqEasyConfirmFiatReceiptMessage.fromProto(proto);
-            }
-            case BISQEASYREJECTTRADEMESSAGE: {
-                return BisqEasyRejectTradeMessage.fromProto(proto);
-            }
-            case BISQEASYCANCELTRADEMESSAGE: {
-                return BisqEasyCancelTradeMessage.fromProto(proto);
-            }
-            case BISQEASYREPORTERRORMESSAGE: {
-                return BisqEasyReportErrorMessage.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getBisqEasyTradeMessage().getMessageCase()) {
+            case BISQEASYTAKEOFFERREQUEST -> BisqEasyTakeOfferRequest.fromProto(proto);
+            case BISQEASYTAKEOFFERRESPONSE -> BisqEasyTakeOfferResponse.fromProto(proto);
+            case BISQEASYACCOUNTDATAMESSAGE -> BisqEasyAccountDataMessage.fromProto(proto);
+            case BISQEASYCONFIRMFIATSENTMESSAGE -> BisqEasyConfirmFiatSentMessage.fromProto(proto);
+            case BISQEASYBTCADDRESSMESSAGE -> BisqEasyBtcAddressMessage.fromProto(proto);
+            case BISQEASYCONFIRMBTCSENTMESSAGE -> BisqEasyConfirmBtcSentMessage.fromProto(proto);
+            case BISQEASYCONFIRMFIATRECEIPTMESSAGE -> BisqEasyConfirmFiatReceiptMessage.fromProto(proto);
+            case BISQEASYREJECTTRADEMESSAGE -> BisqEasyRejectTradeMessage.fromProto(proto);
+            case BISQEASYCANCELTRADEMESSAGE -> BisqEasyCancelTradeMessage.fromProto(proto);
+            case BISQEASYREPORTERRORMESSAGE -> BisqEasyReportErrorMessage.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
     }
 }

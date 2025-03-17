@@ -49,7 +49,7 @@ use-case will get developed further for production or if it will be dropped.
 
 ### Offer, Contract, Protocol modules
 
-These modules are implemented for some demo trade protocols (2-of-2 multisig, BSQ bond-based, LN-based) but there is no
+These modules are implemented for some demo trade protocols (MuSig, BSQ bond-based, LN-based) but there is no
 integration yet with real wallets (ubut note that the network integration works already, so the demo protocols send real
 messages between the trade peers). It is all still in a very preliminary state and will require much more work to get
 closer to some production-level version.

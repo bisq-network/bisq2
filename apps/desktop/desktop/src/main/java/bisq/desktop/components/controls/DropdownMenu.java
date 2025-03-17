@@ -18,14 +18,16 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.containers.Spacer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -33,6 +35,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.stage.PopupWindow;
+import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,15 +50,21 @@ public class DropdownMenu extends HBox {
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
     private final ContextMenu contextMenu = new ContextMenu();
     @Getter
-    private Label label = new Label();
+    private final HBox hBox = new HBox();
     private ImageView buttonIcon;
-    // We need to pin it as used in a WeakChangeListener
-    private ChangeListener<Number> widthPropertyChangeListener;
     private boolean isFirstRun = false;
     @Setter
     private boolean openUpwards = false;
     @Setter
     private boolean openToTheRight = false;
+    private Double prefWidth = null;
+
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Window> windowListener;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> widthPropertyChangeListener;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Scene> sceneListener;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -63,7 +72,9 @@ public class DropdownMenu extends HBox {
 
         buttonIcon = defaultIcon;
 
-        getChildren().addAll(label, buttonIcon);
+        getChildren().addAll(hBox, buttonIcon);
+        hBox.getStyleClass().add("dropdown-menu-content-hbox");
+        hBox.setAlignment(Pos.BASELINE_LEFT);
 
         getStyleClass().add("dropdown-menu");
         contextMenu.getStyleClass().add("dropdown-menu-popup");
@@ -76,20 +87,44 @@ public class DropdownMenu extends HBox {
             setAlignment(Pos.CENTER);
         } else {
             setSpacing(5);
-            setAlignment(Pos.CENTER_RIGHT);
-            setPadding(new Insets(0, 5, 0, 0));
+            setAlignment(Pos.BASELINE_LEFT);
         }
+
+        widthPropertyChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue.doubleValue() > INITIAL_WIDTH && !isFirstRun) {
+                isFirstRun = true;
+                // Once the contextMenu has calculated the width on the first render time we update the items
+                // so that they all have the same size.
+                prefWidth = contextMenu.getWidth() - 18; // Remove margins
+                updateMenuItemWidth();
+            }
+        };
+        windowListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                newValue.addEventHandler(WindowEvent.WINDOW_HIDING, e -> contextMenu.hide());
+            }
+        };
+        sceneListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                newValue.windowProperty().addListener(new WeakChangeListener<>(windowListener));
+            }
+        };
 
         attachListeners();
     }
 
-    public void setLabel(String text) {
-        label.setText(text);
+    public void setLabelAsContent(String text) {
+        Label label = new Label(text);
+        label.setAlignment(Pos.BASELINE_LEFT);
+        setContent(label);
     }
 
-    public void setLabel(Label label) {
-        this.label = label;
-        getChildren().set(0, label);
+    public void setContent(Node content) {
+        hBox.getChildren().setAll(content);
+    }
+
+    public void useSpaceBetweenContentAndIcon() {
+        getChildren().setAll(hBox, Spacer.fillHBox(), buttonIcon);
     }
 
     private void toggleContextMenu() {
@@ -137,20 +172,14 @@ public class DropdownMenu extends HBox {
         setOnMouseExited(e -> updateIcon(contextMenu.isShowing() ? activeIcon : defaultIcon));
         setOnMouseEntered(e -> updateIcon(activeIcon));
 
-        sceneProperty().addListener(new WeakChangeListener<>((observable, oldScene, newScene) -> {
-            if (newScene != null) {
-                newScene.windowProperty().addListener(new WeakChangeListener<>((obs, oldWindow, newWindow) -> {
-                    if (newWindow != null) {
-                        newWindow.addEventHandler(WindowEvent.WINDOW_HIDING, e -> contextMenu.hide());
-                    }
-                }));
-            }
-        }));
-
         contextMenu.setOnShowing(e -> {
             getStyleClass().add("dropdown-menu-active");
             updateIcon(activeIcon);
             isMenuShowing.setValue(true);
+            if (prefWidth != null && !contextMenu.getItems().isEmpty()
+                    && contextMenu.getItems().getFirst() instanceof DropdownMenuItem) {
+                updateMenuItemWidth();
+            }
         });
         contextMenu.setOnHidden(e -> {
             getStyleClass().remove("dropdown-menu-active");
@@ -158,20 +187,19 @@ public class DropdownMenu extends HBox {
             isMenuShowing.setValue(false);
         });
 
-        widthPropertyChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue.doubleValue() > INITIAL_WIDTH && !isFirstRun) {
-                isFirstRun = true;
-                // Once the contextMenu has calculated the width on the first render time we update the items
-                // so that they all have the same size.
-                for (MenuItem item : contextMenu.getItems()) {
-                    if (item instanceof DropdownMenuItem) {
-                        DropdownMenuItem dropdownMenuItem = (DropdownMenuItem) item;
-                        dropdownMenuItem.updateWidth(contextMenu.getWidth() - 18); // Remove margins
-                    }
-                }
-            }
-        };
+        sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
         contextMenu.widthProperty().addListener(new WeakChangeListener<>(widthPropertyChangeListener));
+    }
+
+    private void updateMenuItemWidth() {
+        for (MenuItem item : contextMenu.getItems()) {
+            if (item instanceof DropdownBisqMenuItem dropdownBisqMenuItem) {
+                dropdownBisqMenuItem.updateWidth(prefWidth);
+            }
+            if (item instanceof DropdownMenuItem dropdownMenuItem) {
+                dropdownMenuItem.updateWidth(prefWidth);
+            }
+        }
     }
 
     private void updateIcon(ImageView newIcon) {

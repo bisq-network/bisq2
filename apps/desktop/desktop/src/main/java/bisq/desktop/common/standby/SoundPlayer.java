@@ -17,8 +17,8 @@
 
 package bisq.desktop.common.standby;
 
+import bisq.common.file.FileUtils;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.FileUtils;
 import bisq.desktop.ServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 

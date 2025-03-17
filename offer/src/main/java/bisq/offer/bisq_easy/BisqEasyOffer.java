@@ -1,6 +1,23 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.offer.bisq_easy;
 
-
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
@@ -39,10 +56,13 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          Market market,
                          AmountSpec amountSpec,
                          PriceSpec priceSpec,
+                         List<BitcoinPaymentMethod> bitcoinPaymentMethods,
                          List<FiatPaymentMethod> fiatPaymentMethods,
                          String makersTradeTerms,
-                         long requiredTotalReputationScore,
                          List<String> supportedLanguageCodes) {
+        // We use the default SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE (as we don't have the dependency
+        // to settings we use the plain value) so that offers from makers on 2.1.1 can only be taken by v2.1.0 takers with
+        // 30k reputation score.
         this(StringUtils.createUid(),
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -51,14 +71,14 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 amountSpec,
                 priceSpec,
                 List.of(TradeProtocolType.BISQ_EASY),
-                PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
+                PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(bitcoinPaymentMethods),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
-                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
+                OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, 30_000),
                 supportedLanguageCodes
         );
     }
 
-    private BisqEasyOffer(String id,
+    public BisqEasyOffer(String id,
                           long date,
                           NetworkId makerNetworkId,
                           Direction direction,
@@ -81,7 +101,9 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
-        this.supportedLanguageCodes = supportedLanguageCodes;
+
+        // We might get an immutable list, but we need to sort it, so wrap it into an ArrayList
+        this.supportedLanguageCodes = new ArrayList<>(supportedLanguageCodes);
         Collections.sort(this.supportedLanguageCodes);
 
         verify();

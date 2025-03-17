@@ -36,6 +36,14 @@ public class OfferOptionUtil {
         return offerOptions;
     }
 
+    public static List<OfferOption> fromTradeTerms(String makersTradeTerms) {
+        List<OfferOption> offerOptions = new ArrayList<>();
+        if (makersTradeTerms != null && !makersTradeTerms.isEmpty()) {
+            offerOptions.add(new TradeTermsOption(makersTradeTerms));
+        }
+        return offerOptions;
+    }
+
     public static Optional<TradeTermsOption> findTradeTermsOption(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
                 .filter(option -> option instanceof TradeTermsOption)
@@ -74,10 +82,5 @@ public class OfferOptionUtil {
     public static Optional<String> findMakersTradeTerms(Offer<?, ?> offer) {
         return OfferOptionUtil.findTradeTermsOption(offer.getOfferOptions()).stream().findAny()
                 .map(TradeTermsOption::getMakersTradeTerms);
-    }
-
-    public static Optional<Long> findRequiredTotalReputationScore(Offer<?, ?> offer) {
-        return OfferOptionUtil.findReputationOption(offer.getOfferOptions()).stream().findAny()
-                .map(ReputationOption::getRequiredTotalReputationScore);
     }
 }

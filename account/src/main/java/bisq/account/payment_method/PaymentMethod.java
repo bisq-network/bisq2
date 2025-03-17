@@ -43,15 +43,13 @@ import java.util.List;
 public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, NetworkProto {
     public final static int MAX_NAME_LENGTH = 50;
 
-    // Only name is used for protobuf, thus we do not need to mark the other fields with ExcludeForHash.
+    // Only name is used for protobuf, thus other fields are transient.
     protected final String name;
 
     // We do not persist the paymentRail but still include it in EqualsAndHashCode.
     protected transient final R paymentRail;
 
-    @EqualsAndHashCode.Exclude
     protected transient final String displayString;
-    @EqualsAndHashCode.Exclude
     protected transient final String shortDisplayString;
 
     /**
@@ -105,22 +103,12 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     }
 
     public static PaymentMethod<? extends PaymentRail> fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        switch (proto.getMessageCase()) {
-            case FIATPAYMENTMETHOD: {
-                return FiatPaymentMethod.fromProto(proto);
-            }
-            case BITCOINPAYMENTMETHOD: {
-                return BitcoinPaymentMethod.fromProto(proto);
-            }
-            case CRYPTOPAYMENTMETHOD: {
-                return CryptoPaymentMethod.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case FIATPAYMENTMETHOD -> FiatPaymentMethod.fromProto(proto);
+            case BITCOINPAYMENTMETHOD -> BitcoinPaymentMethod.fromProto(proto);
+            case CRYPTOPAYMENTMETHOD -> CryptoPaymentMethod.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
     }
 
     protected abstract R getCustomPaymentRail();

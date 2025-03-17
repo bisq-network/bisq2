@@ -32,6 +32,7 @@ import javafx.scene.Camera;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.PerspectiveCamera;
+import javafx.scene.control.SplitPane;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.Effect;
 import javafx.scene.effect.GaussianBlur;
@@ -86,8 +87,8 @@ public class Transitions {
     private static final Interpolator DEFAULT_INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
     @Setter
     private static SettingsService settingsService;
-    private static Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
-    private static Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
+    private static final Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
+    private static final Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
 
     public static FadeTransition fadeIn(Node node) {
         return fadeIn(node, DEFAULT_DURATION);
@@ -334,13 +335,12 @@ public class Transitions {
         if (node != null) {
             node.setMouseTransparent(false);
             Effect effect = node.getEffect();
-            if (effect instanceof GaussianBlur) {
+            if (effect instanceof GaussianBlur gaussianBlur) {
                 if (node.getId() == null) {
                     node.setId(StringUtils.createUid());
                 }
                 Timeline timeline = new Timeline();
                 removeEffectTimeLineByNodeId.put(node.getId(), timeline);
-                GaussianBlur gaussianBlur = (GaussianBlur) effect;
                 KeyValue kv1 = new KeyValue(gaussianBlur.radiusProperty(), 0.0);
                 KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
                 timeline.getKeyFrames().add(kf1);
@@ -410,8 +410,7 @@ public class Transitions {
         slideOutRight(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
-                if (parent instanceof Pane) {
-                    Pane pane = (Pane) parent;
+                if (parent instanceof Pane pane) {
                     pane.getChildren().remove(nodeOut);
                 }
             }
@@ -425,8 +424,7 @@ public class Transitions {
         slideOutLeft(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
-                if (parent instanceof Pane) {
-                    Pane pane = (Pane) parent;
+                if (parent instanceof Pane pane) {
                     pane.getChildren().remove(nodeOut);
                 }
             }
@@ -467,8 +465,7 @@ public class Transitions {
                 }
                 Parent parent = nodeOut.getParent();
                 if (parent != null) {
-                    if (parent instanceof Pane) {
-                        Pane pane = (Pane) parent;
+                    if (parent instanceof Pane pane) {
                         pane.getChildren().remove(nodeOut);
                     }
                 }
@@ -905,11 +902,11 @@ public class Transitions {
         return timeline;
     }
 
-    public static void animateWidth(Region node, double targetWidth) {
-        animateWidth(node, targetWidth, getDuration(DEFAULT_DURATION / 2), null);
+    public static void animatePrefWidth(Region node, double targetWidth) {
+        animatePrefWidth(node, targetWidth, getDuration(DEFAULT_DURATION / 2), null);
     }
 
-    public static void animateWidth(Region node, double targetWidth, double duration, @Nullable Runnable finishedHandler) {
+    public static void animatePrefWidth(Region node, double targetWidth, double duration, @Nullable Runnable finishedHandler) {
         if (getUseAnimations()) {
             double startWidth = node.getPrefWidth();
             Timeline timeline = new Timeline();
@@ -994,32 +991,54 @@ public class Transitions {
         return settingsService.getUseAnimations().get();
     }
 
-    public static void expansionAnimation(Pane pane, double initialWidth, double finalWidth) {
-        expansionAnimation(pane, initialWidth, finalWidth, null);
+    public static void animateWidth(Pane pane, double initialWidth, double finalWidth, long duration) {
+        animateWidth(pane, initialWidth, finalWidth, duration, null);
     }
 
-    public static void expansionAnimation(Pane pane, double initialWidth, double finalWidth, @Nullable Runnable finishedHandler) {
+    public static void animateWidth(Pane pane, double initialWidth, double finalWidth, long duration, @Nullable Runnable finishedHandler) {
         if (getUseAnimations()) {
-            Timeline widthExpansion = new Timeline(
+            Timeline timeline = new Timeline(
                     new KeyFrame(Duration.millis(0),
                             new KeyValue(pane.prefWidthProperty(), initialWidth, Interpolator.LINEAR),
                             new KeyValue(pane.minWidthProperty(), initialWidth, Interpolator.LINEAR),
                             new KeyValue(pane.maxWidthProperty(), initialWidth, Interpolator.LINEAR)
                     ),
-                    new KeyFrame(Duration.millis(200),
+                    new KeyFrame(Duration.millis(duration),
                             new KeyValue(pane.prefWidthProperty(), finalWidth, Interpolator.EASE_OUT),
                             new KeyValue(pane.minWidthProperty(), finalWidth, Interpolator.EASE_OUT),
                             new KeyValue(pane.maxWidthProperty(), finalWidth, Interpolator.EASE_OUT)
                     )
             );
-            widthExpansion.play();
+            timeline.play();
             if (finishedHandler != null) {
-                widthExpansion.setOnFinished(actionEvent -> finishedHandler.run());
+                timeline.setOnFinished(actionEvent -> finishedHandler.run());
             }
         } else {
             pane.setPrefWidth(finalWidth);
             pane.setMinWidth(finalWidth);
             pane.setMaxWidth(finalWidth);
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
+        }
+    }
+
+    public static void animateDividerPosition(SplitPane.Divider splitPaneDivider, double initialPosition, double finalPosition, long duration) {
+        animateDividerPosition(splitPaneDivider, initialPosition, finalPosition, duration, null);
+    }
+
+    public static void animateDividerPosition(SplitPane.Divider splitPaneDivider, double initialPosition, double finalPosition, long duration, @Nullable Runnable finishedHandler) {
+        if (getUseAnimations()) {
+            Timeline timeline = new Timeline(
+                    new KeyFrame(Duration.millis(0), new KeyValue(splitPaneDivider.positionProperty(), initialPosition, Interpolator.LINEAR)),
+                    new KeyFrame(Duration.millis(duration), new KeyValue(splitPaneDivider.positionProperty(), finalPosition, Interpolator.EASE_OUT))
+            );
+            timeline.play();
+            if (finishedHandler != null) {
+                timeline.setOnFinished(actionEvent -> finishedHandler.run());
+            }
+        } else {
+            splitPaneDivider.setPosition(finalPosition);
             if (finishedHandler != null) {
                 finishedHandler.run();
             }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
@@ -81,7 +81,9 @@ public class BuyerState3a extends BaseState {
 
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_PAYMENT);
             WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info"));
+            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+            String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info", bitcoinPaymentData));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
             root.getChildren().add(waitingInfo);
         }

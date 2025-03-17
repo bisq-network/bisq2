@@ -51,8 +51,9 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
                 bisq.wallets.protobuf.LiquidWalletStore.newBuilder()
                         .addAllWalletAddresses(walletAddresses);
 
-        rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto(serializeForHash)));
-        return builder;
+        throw new UnsupportedOperationException("Not implemented.");
+        /* rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto(serializeForHash)));
+        return builder; */
     }
 
     @Override
@@ -61,9 +62,10 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
     }
 
     public static LiquidWalletStore fromProto(bisq.wallets.protobuf.LiquidWalletStore proto) {
-        Optional<RpcConfig> rpcConfig = proto.hasRpcConfig() ? Optional.of(RpcConfig.fromProto(proto.getRpcConfig()))
+        throw new UnsupportedOperationException("Not implemented.");
+        /* Optional<RpcConfig> rpcConfig = proto.hasRpcConfig() ? Optional.of(RpcConfig.fromProto(proto.getRpcConfig()))
                 : Optional.empty();
-        return new LiquidWalletStore(rpcConfig, new ArrayList<>(proto.getWalletAddressesList()));
+        return new LiquidWalletStore(rpcConfig, new ArrayList<>(proto.getWalletAddressesList())); */
     }
 
     @Override

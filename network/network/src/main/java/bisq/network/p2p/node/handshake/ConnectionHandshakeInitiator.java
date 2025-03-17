@@ -17,13 +17,14 @@
 
 package bisq.network.p2p.node.handshake;
 
+import bisq.common.network.Address;
+import bisq.common.network.AddressOwnershipProof;
+import bisq.common.network.AddressOwnershipProofGenerator;
 import bisq.common.util.StringUtils;
-import bisq.network.common.Address;
-import bisq.network.common.AddressOwnershipProof;
-import bisq.network.common.AddressOwnershipProofGenerator;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.OutboundConnection;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -33,13 +34,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
-import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.*;
 
 @Slf4j
 public class ConnectionHandshakeInitiator {
@@ -77,7 +76,7 @@ public class ConnectionHandshakeInitiator {
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 peerAddress.getFullAddress(),
                 0,
-                new ArrayList<>());
+                Feature.DEFAULT_FEATURES);
         return new NetworkEnvelope(token, request);
     }
 
@@ -93,11 +92,10 @@ public class ConnectionHandshakeInitiator {
         NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.get(0);
         responseNetworkEnvelope.verifyVersion();
 
-        if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response)) {
+        if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response response)) {
             throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                     responseNetworkEnvelope);
         }
-        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
         Address address = response.getCapability().getAddress();
         if (banList.isBanned(address)) {
             throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);

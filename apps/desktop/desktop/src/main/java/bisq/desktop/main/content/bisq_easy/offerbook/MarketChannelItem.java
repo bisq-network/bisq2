@@ -17,73 +17,101 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.currency.Market;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.settings.FavouriteMarketsService;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
+import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.scene.CacheHint;
-import javafx.scene.Node;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.effect.ColorAdjust;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.lang.ref.WeakReference;
-
-@EqualsAndHashCode
+@Slf4j
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-class MarketChannelItem {
-    private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
-    private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
+public class MarketChannelItem {
+    public static final ColorAdjust DIMMED = new ColorAdjust(0, -0.2, -0.4, -0.1);
+    public static final ColorAdjust SELECTED = new ColorAdjust(0, 0, -0.1, 0);
+    @SuppressWarnings("UnnecessaryUnicodeEscape")
+    public static final String ASTERISK_SYMBOL = "\u002A"; // Unicode for "＊"
 
+    @EqualsAndHashCode.Include
     private final BisqEasyOfferbookChannel channel;
+
     private final FavouriteMarketsService favouriteMarketsService;
+    private final ChatNotificationService chatNotificationService;
     private final Market market;
-    private final Node marketLogo;
-    private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
-    private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
+    private final MarketPriceService marketPriceService;
+    private final UserProfileService userProfileService;
+    private final ReputationService reputationService;
+    private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private final SimpleIntegerProperty numOffers = new SimpleIntegerProperty(0);
+    private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
+    private final SimpleStringProperty numMarketNotifications = new SimpleStringProperty();
+    private Pin channelPin;
 
-    MarketChannelItem(BisqEasyOfferbookChannel channel, FavouriteMarketsService favouriteMarketsService) {
+    MarketChannelItem(BisqEasyOfferbookChannel channel,
+                      FavouriteMarketsService favouriteMarketsService,
+                      ChatNotificationService chatNotificationService,
+                      MarketPriceService marketPriceService,
+                      UserProfileService userProfileService,
+                      ReputationService reputationService,
+                      BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService) {
         this.channel = channel;
+
         this.favouriteMarketsService = favouriteMarketsService;
+        this.chatNotificationService = chatNotificationService;
         market = channel.getMarket();
-        marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
-        marketLogo.setCache(true);
-        marketLogo.setCacheHint(CacheHint.SPEED);
+        this.marketPriceService = marketPriceService;
+        this.userProfileService = userProfileService;
+        this.reputationService = reputationService;
+        this.bisqEasySellersReputationBasedTradeAmountService = bisqEasySellersReputationBasedTradeAmountService;
 
-        setUpColorAdjustments();
-        marketLogo.setEffect(DEFAULT_COLOR_ADJUST);
-
-        channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
-        updateNumOffers();
+        refreshNotifications();
+        initialize();
     }
 
-    private void setUpColorAdjustments() {
-        DEFAULT_COLOR_ADJUST.setBrightness(-0.4);
-        DEFAULT_COLOR_ADJUST.setSaturation(-0.2);
-        DEFAULT_COLOR_ADJUST.setContrast(-0.1);
+    private void initialize() {
+        channelPin = channel.getChatMessages().addObserver(this::updateNumOffers);
+    }
 
-        SELECTED_COLOR_ADJUST.setBrightness(-0.1);
+    public void dispose() {
+        channelPin.unbind();
+    }
+
+    void refreshNotifications() {
+        long numNotifications = chatNotificationService.getNumNotifications(channel);
+        String value = "";
+        if (numNotifications > 9) {
+            // We don't have enough space for 2-digit numbers, so we show an asterix. Standard asterix would not be
+            // centered, thus we use the `full width asterisk` taken from https://www.piliapp.com/symbol/asterisk/
+            value = ASTERISK_SYMBOL;
+        } else if (numNotifications > 0) {
+            value = String.valueOf(numNotifications);
+        }
+        numMarketNotifications.set(value);
     }
 
     private void updateNumOffers() {
         UIThread.run(() -> {
             int numOffers = (int) channel.getChatMessages().stream()
                     .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                    .filter(bisqEasySellersReputationBasedTradeAmountService::hasSellerSufficientReputation)
                     .count();
             getNumOffers().set(numOffers);
         });
-    }
-
-    void updateMarketLogoEffect(boolean isSelectedMarket) {
-        getMarketLogo().setEffect(isSelectedMarket ? SELECTED_COLOR_ADJUST : DEFAULT_COLOR_ADJUST);
     }
 
     @Override

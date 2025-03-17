@@ -28,6 +28,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Objects;
@@ -41,13 +43,16 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     @Getter
     public static class Config {
         private final Optional<String> defaultTorPrivateKey;
+        private final boolean writeDefaultTorPrivateKeyToFile;
 
-        public Config(String defaultTorPrivateKey) {
+        public Config(String defaultTorPrivateKey, boolean writeDefaultTorPrivateKeyToFile) {
             this.defaultTorPrivateKey = Optional.ofNullable(Strings.emptyToNull(defaultTorPrivateKey));
+            this.writeDefaultTorPrivateKeyToFile = writeDefaultTorPrivateKeyToFile;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(config.getString("defaultTorPrivateKey"));
+            return new Config(config.getString("defaultTorPrivateKey"),
+                    config.getBoolean("writeDefaultTorPrivateKeyToFile"));
         }
     }
 
@@ -57,10 +62,12 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     private final Persistence<KeyBundleStore> persistence;
     private final String baseDir;
     private final Optional<String> defaultTorPrivateKey;
+    private final boolean writeDefaultTorPrivateKeyToFile;
 
     public KeyBundleService(PersistenceService persistenceService, Config config) {
         persistableStore = new KeyBundleStore();
         defaultTorPrivateKey = config.getDefaultTorPrivateKey();
+        writeDefaultTorPrivateKeyToFile = config.isWriteDefaultTorPrivateKeyToFile();
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
 
         baseDir = persistenceService.getBaseDir();
@@ -72,9 +79,16 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
 
     public CompletableFuture<Boolean> initialize() {
         String defaultKeyId = getDefaultKeyId();
+        String tag = "default";
+        Path storagePath = Paths.get(baseDir, "db", "private", "tor");
         if (defaultTorPrivateKey.isEmpty()) {
             return getOrCreateKeyBundleAsync(defaultKeyId)
-                    .thenApply(Objects::nonNull);
+                    .thenApply(keyBundle -> {
+                        if (keyBundle != null && writeDefaultTorPrivateKeyToFile) {
+                            TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), storagePath, tag);
+                        }
+                        return keyBundle != null;
+                    });
         } else {
             // If we get a tor private key passed from the config we always use that and override existing tor keys.
             return CompletableFuture.supplyAsync(() -> {
@@ -87,8 +101,9 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
 
                         // We write the key to the tor directory. This is used only for the default key, as that is the
                         // only supported use case (seed nodes, oracle nodes,...)
-                        TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), baseDir, "default");
-
+                        if (writeDefaultTorPrivateKeyToFile) {
+                            TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), storagePath, tag);
+                        }
                         return keyBundle;
                     })
                     .thenApply(Objects::nonNull);

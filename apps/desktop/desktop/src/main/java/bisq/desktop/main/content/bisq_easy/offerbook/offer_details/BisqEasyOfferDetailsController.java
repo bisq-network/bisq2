@@ -88,17 +88,17 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
             Monetary maxBaseSideAmount = OfferAmountUtil.findBaseSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             Monetary minQuoteSideAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
             Monetary maxQuoteSideAmount = OfferAmountUtil.findQuoteSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
-            String formattedMinQuoteAmount = AmountFormatter.formatAmount(minQuoteSideAmount, true);
-            String formattedMinBaseAmount = AmountFormatter.formatAmount(minBaseSideAmount, false);
-            String formattedMaxQuoteAmount = AmountFormatter.formatAmount(maxQuoteSideAmount, true);
-            String formattedMaxBaseAmount = AmountFormatter.formatAmount(maxBaseSideAmount, false);
+            String formattedMinQuoteAmount = AmountFormatter.formatQuoteAmount(minQuoteSideAmount);
+            String formattedMinBaseAmount = AmountFormatter.formatBaseAmount(minBaseSideAmount);
+            String formattedMaxQuoteAmount = AmountFormatter.formatQuoteAmount(maxQuoteSideAmount);
+            String formattedMaxBaseAmount = AmountFormatter.formatBaseAmount(maxBaseSideAmount);
             model.getBaseSideAmount().set(formattedMinBaseAmount + " – " + formattedMaxBaseAmount);
             model.getQuoteSideAmount().set(formattedMinQuoteAmount + " – " + formattedMaxQuoteAmount);
         } else {
             Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
-            String formattedBaseAmount = AmountFormatter.formatAmount(fixBaseSideAmount, false);
+            String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
             Monetary fixQuoteSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
-            String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount, true);
+            String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
             model.getBaseSideAmount().set(formattedBaseAmount);
             model.getQuoteSideAmount().set(formattedQuoteAmount);
         }
@@ -122,11 +122,6 @@ public class BisqEasyOfferDetailsController implements InitWithDataController<Bi
         model.getMakersTradeTermsVisible().set(tradeTerms.isPresent());
         tradeTerms.ifPresent(makersTradeTerms ->
                 model.getMakersTradeTerms().set(makersTradeTerms));
-
-        Optional<Long> reputationScore = OfferOptionUtil.findRequiredTotalReputationScore(bisqEasyOffer);
-        model.getRequiredTotalReputationScoreVisible().set(reputationScore.isPresent());
-        reputationScore.ifPresent(requiredTotalReputationScore ->
-                model.getRequiredTotalReputationScore().set(String.valueOf(requiredTotalReputationScore)));
     }
 
     @Override

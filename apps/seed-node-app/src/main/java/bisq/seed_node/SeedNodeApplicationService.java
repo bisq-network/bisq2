@@ -17,9 +17,9 @@
 
 package bisq.seed_node;
 
-import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.identity.IdentityService;
+import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -41,7 +41,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Getter
 @Slf4j
-public class SeedNodeApplicationService extends ApplicationService {
+public class SeedNodeApplicationService extends JavaSeApplicationService {
     protected final NetworkService networkService;
     protected final IdentityService identityService;
     protected final SecurityService securityService;
@@ -59,14 +59,14 @@ public class SeedNodeApplicationService extends ApplicationService {
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
-                securityService.getEquihashProofOfWorkService());
+                securityService.getEquihashProofOfWorkService(),
+                memoryReportService);
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                config.getVersion(),
                 persistenceService,
                 networkService);
 
@@ -76,7 +76,8 @@ public class SeedNodeApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return securityService.initialize()
+        return memoryReportService.initialize()
+                .thenCompose(result -> securityService.initialize())
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> bondedRolesService.initialize())
@@ -84,9 +85,8 @@ public class SeedNodeApplicationService extends ApplicationService {
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
-                        bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> {
-                            networkService.getNetworkLoadService().ifPresent(service -> service.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
-                        });
+                        bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
                         log.info("SeedNodeApplicationService initialized");
                     } else {
                         log.error("Initializing SeedNodeApplicationService failed", throwable);
@@ -103,6 +103,7 @@ public class SeedNodeApplicationService extends ApplicationService {
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
+                .thenCompose(result -> memoryReportService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable != null) {

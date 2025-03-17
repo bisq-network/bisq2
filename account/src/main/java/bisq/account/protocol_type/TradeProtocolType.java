@@ -17,13 +17,13 @@
 
 package bisq.account.protocol_type;
 
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum TradeProtocolType implements ProtocolType {
     BISQ_EASY,
-    MULTISIG,
+    BISQ_MU_SIG,
     SUBMARINE,
-    LIQUID_MULTISIG,
+    LIQUID_MU_SIG,
     BISQ_LIGHTNING,
     LIQUID_SWAP,
     BSQ_SWAP,

@@ -29,7 +29,6 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
-import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.DbSubDirectory;
@@ -65,21 +64,18 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     private Optional<AuthorizedBondedRole> marketPriceProvidingOracle = Optional.empty();
 
     public MarketPriceService(com.typesafe.config.Config marketPrice,
-                              Version version,
                               PersistenceService persistenceService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.authorizedBondedRolesService = authorizedBondedRolesService;
-        marketPriceRequestService = new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice),
-                version,
-                networkService);
+        marketPriceRequestService = new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService);
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
@@ -103,9 +99,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
@@ -126,9 +122,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void setSelectedMarket(Market market) {
         getSelectedMarket().set(market);
@@ -152,9 +148,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private boolean isAuthorized(AuthorizedData authorizedData) {
         // The oracle node runs the MarketPricePropagationService. The BondedRoleType.MARKET_PRICE_NODE runs

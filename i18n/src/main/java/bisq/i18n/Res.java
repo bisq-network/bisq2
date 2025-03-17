@@ -36,15 +36,18 @@ public class Res {
     private static final List<String> BUNDLE_NAMES = List.of(
             "default",
             "application",
-            "chat",
-            "trade_apps",
             "bisq_easy",
+            "reputation",
+            "trade_apps",
             "academy",
+            "chat",
+            "support",
             "user",
-            "authorized_role",
-            "payment_method",
+            "network",
+            "settings",
             "wallet",
-            "settings"
+            "authorized_role",
+            "payment_method"
     );
 
     private static final List<ResourceBundle> bundles = new ArrayList<>();
@@ -54,6 +57,7 @@ public class Res {
 
         bundles.clear();
 
+        // use collectors to avoid Samsung devices crashes (not fully supporting Java 16+ APIs
         bundles.addAll(
                 BUNDLE_NAMES.stream()
                         .map(bundleName -> ResourceBundle.getBundle(bundleName, locale))
@@ -81,35 +85,27 @@ public class Res {
                         }
                     });
         } catch (MissingResourceException e) {
-            log.warn("Missing resource for key: " + key, e);
+            log.warn("Missing resource for key: {}", key, e);
             return "[" + key + "!!!]";
         }
     }
 
-    // Convenience method for supporting format `{0} get(key)` where key is expected to support singular and plural
-    // cases where the plural key adds a `s` to the singular key. Argument is expected to be integer or long
-
     /**
-     * @param key   Key which supports singular and plural. By convention, we expect the plural key to have
-     *              a `s` as postfix to the singular key.
-     * @param value The long value
-     * @return The value separated with a space to the postfix which is either singular or plural form
+     * Expecting to have i18n keys with '.1' and '.*' postfix for singular and plural handling.
+     * Additionally, a '.0' postfix handles 0 values.
      */
-    public static String getAsSingularOrPlural(String key, long value) {
-        if (Math.abs(value) != 1) {
-            key = key + "s";
+    public static String getPluralization(String key, double number) {
+        String pluralKey;
+        if (number == 1) {
+            pluralKey = key + ".1";
+        } else {
+            if (number == 0 && has(key + ".0")) {
+                pluralKey = key + ".0";
+            } else {
+                pluralKey = key + ".*";
+            }
         }
-        return value + " " + get(key);
-    }
-
-    /**
-     * @param key   Key which supports singular and plural. By convention, we expect the plural key to have
-     *              a `s` as postfix to the singular key.
-     * @param value The integer value
-     * @return The value separated with a space to the postfix which is either singular or plural form
-     */
-    public static String getAsSingularOrPlural(String key, int value) {
-        return getAsSingularOrPlural(key, (long) value);
+        return get(pluralKey, number);
     }
 
     public static boolean has(String key) {
@@ -129,7 +125,12 @@ public class Res {
     public static String decode(String encoded) {
         String separator = String.valueOf(Res.PARAM_SEPARATOR);
         if (!encoded.contains(separator)) {
-            return Res.get(encoded);
+            if (Res.has(encoded)) {
+                return Res.get(encoded);
+            } else {
+                // If we get a log message from an old node we get the resolved string
+                return encoded;
+            }
         }
 
         String[] tokens = encoded.split(separator);

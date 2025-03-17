@@ -32,6 +32,7 @@ import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController
 import bisq.desktop.main.content.bisq_easy.onboarding.BisqEasyOnboardingController;
 import bisq.desktop.main.content.bisq_easy.open_trades.BisqEasyOpenTradesController;
 import bisq.desktop.main.content.bisq_easy.private_chats.BisqEasyPrivateChatsController;
+import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,6 +58,9 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     @Override
     public void onActivate() {
         super.onActivate();
+        findTabButton(NavigationTarget.BISQ_EASY_OFFERBOOK).ifPresent(tabButton ->
+                tabButton.showClearButton(Res.get("bisqEasy.offerbook.clearNotifications"),
+                        () -> chatNotificationService.consume(ChatChannelDomain.BISQ_EASY_OFFERBOOK)));
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
@@ -66,28 +70,20 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     public void onDeactivate() {
         super.onDeactivate();
 
+        findTabButton(NavigationTarget.BISQ_EASY_OFFERBOOK).ifPresent(TabButton::disposeClearButton);
+
         changedChatNotificationPin.unbind();
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case BISQ_EASY_ONBOARDING: {
-                return Optional.of(new BisqEasyOnboardingController(serviceProvider));
-            }
-            case BISQ_EASY_OFFERBOOK: {
-                return Optional.of(new BisqEasyOfferbookController(serviceProvider));
-            }
-            case BISQ_EASY_OPEN_TRADES: {
-                return Optional.of(new BisqEasyOpenTradesController(serviceProvider));
-            }
-            case BISQ_EASY_PRIVATE_CHAT: {
-                return Optional.of(new BisqEasyPrivateChatsController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case BISQ_EASY_ONBOARDING -> Optional.of(new BisqEasyOnboardingController(serviceProvider));
+            case BISQ_EASY_OFFERBOOK -> Optional.of(new BisqEasyOfferbookController(serviceProvider));
+            case BISQ_EASY_OPEN_TRADES -> Optional.of(new BisqEasyOpenTradesController(serviceProvider));
+            case BISQ_EASY_PRIVATE_CHAT -> Optional.of(new BisqEasyPrivateChatsController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     private void handleNotification(ChatNotification notification) {
@@ -121,15 +117,11 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     }
 
     private Optional<NavigationTarget> findNavigationTarget(ChatChannelDomain chatChannelDomain) {
-        switch (chatChannelDomain) {
-            case BISQ_EASY_OFFERBOOK:
-                return Optional.of(NavigationTarget.BISQ_EASY_OFFERBOOK);
-            case BISQ_EASY_OPEN_TRADES:
-                return Optional.of(NavigationTarget.BISQ_EASY_OPEN_TRADES);
-            case BISQ_EASY_PRIVATE_CHAT:
-                return Optional.of(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
-            default:
-                return Optional.empty();
-        }
+        return switch (chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK -> Optional.of(NavigationTarget.BISQ_EASY_OFFERBOOK);
+            case BISQ_EASY_OPEN_TRADES -> Optional.of(NavigationTarget.BISQ_EASY_OPEN_TRADES);
+            case BISQ_EASY_PRIVATE_CHAT -> Optional.of(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+            default -> Optional.empty();
+        };
     }
 }

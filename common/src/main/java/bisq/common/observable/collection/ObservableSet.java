@@ -17,10 +17,13 @@
 
 package bisq.common.observable.collection;
 
+import lombok.EqualsAndHashCode;
+
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+@EqualsAndHashCode(callSuper = true)
 public class ObservableSet<S> extends ObservableCollection<S> implements Set<S> {
     public ObservableSet() {
         super();

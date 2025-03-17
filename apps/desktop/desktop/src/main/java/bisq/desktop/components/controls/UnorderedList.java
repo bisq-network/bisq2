@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public class UnorderedList extends TextList {
     public static final String REGEX = "- ";
+    @SuppressWarnings("UnnecessaryUnicodeEscape")
     public static final String BULLET_SYMBOL = "\u2022"; // Unicode for "•"
     private static final String STYLE_CLASS = "unordered-list";
 

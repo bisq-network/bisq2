@@ -7,25 +7,70 @@
    cd bisq2
    ```
 
-2. **Build Bisq**
+2. **Install Dependencies:**
+   Bisq requires JDK 22. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+
+3. **Setup bitcoind git submodule:**
+   At project setup run first:
+   ```sh
+   git submodule init
+   git submodule update
+   ```
+
+   In case the submodule has changed after a project update, run:
+   ```sh
+   git submodule update
+   ```
+
+4. **Build Bisq**
 
    On macOS and Linux, execute:
    ```sh
-   ./gradlew build
+   ./gradlew clean build
    ```
 
    On Windows:
    ```cmd
-   gradlew.bat build
+   gradlew.bat clean build
    ```
 
    If you prefer to skip tests to speed up the building process, just append `-x test` to the previous commands.
+
+
+5. **Generate Seed Node & Desktop App Binaries**
+
+   Seed Node:
+   ```sh
+   ./gradlew :apps:seed-node-app:clean :apps:seed-node-app:installDist
+   ```
+   Desktop:
+   ```sh
+   ./gradlew :apps:desktop:desktop-app:clean :apps:desktop:desktop-app:installDist
+   ```
+
+   **For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
+
+
+6. **Generate Installers**
+
+   ```sh
+   ./gradlew :apps:desktop:desktop-app-launcher:clean :apps:desktop:desktop-app-launcher:generateInstallers
+   ```
+
+7. **Other useful dev gradle commands**
+
+For a quick full cleanup/rebuild you can use
+
+   ```sh
+   ./gradlew cleanAll buildAll
+   ```
+
 
 ### Important notes
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
 
-2. Bisq requires JDK 17. You can find out which
+2. Bisq requires JDK 22. You can find out which
    version you have with:
 
    ```sh
@@ -43,7 +88,7 @@
 To run the Bisq 2 desktop app with Gradle and the default settings (using the Tor network) use:
 
 ```sh
-./gradlew desktop:desktop-app:run
+./gradlew apps:desktop:desktop-app:run
 ```
 
 In that configuration the desktop app connects to the public seed nodes via the Tor network.
@@ -66,7 +111,7 @@ as `JAVA_OPTS` to gradle sh installer scripts:
 ```sh
 JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
     -Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
-    -Dapplication.network.supportedTransportTypes.0=CLEAR \
+    -Dapplication.network.supportedTransportTypes.0=CLEAR" \
     apps/seed-node-app/build/install/seed-node-app/bin/seed-node-app
 ```
 
@@ -82,7 +127,7 @@ space (`Bisq\ 2`)._
 
 ### Supported program arguments
 
-Aditionally to the JVM options we support 2 program arguments:
+Additionally, to the JVM options we support 2 program arguments:
 
 `--app-name` and `--data-dir`. Option name and value is seperated with `=`.
 
@@ -146,7 +191,7 @@ JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
 Optionally you can run a second seed node at port 8001:
 
 ```sh
-JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
+JAVA_OPTS="-Dapplication.appName=bisq2_seed2 \
     -Dapplication.network.configByTransportType.clear.defaultNodePort=8001 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
@@ -157,7 +202,7 @@ JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
 ### Running a development desktop application with *JVM arguments*:
 
 First create the gradle installer script for the desktop-app:
-`./gradlew :desktop:desktop-app:installDist`
+`./gradlew :apps:desktop:desktop-app:installDist`
 
 Pass the JVM arguments to the installer script:
 ```sh
@@ -169,7 +214,9 @@ JAVA_OPTS="-Dapplication.appName=bisq2_Alice_clear \
 ```
 
 Optionally you can pass that data directory as *program argument* as follows:
-`apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=bisq2_Alice_clear`
+`apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=bisq2_Alice_tor`
+
+Note, that in that case it runs with the default config (using Tor).
 
 You likely want to run a second desktop application for testing the trade use case with 2 traders (e.g. Alice and Bob).
 Just change the `-Dapplication.appName` to something like `bisq2_Bob_clear` in the above configuration.

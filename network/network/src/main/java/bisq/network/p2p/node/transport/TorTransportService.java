@@ -1,15 +1,16 @@
 package bisq.network.p2p.node.transport;
 
-import bisq.common.timer.Scheduler;
-import bisq.network.common.Address;
-import bisq.network.common.TransportConfig;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
+import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.tor.TorService;
+import bisq.network.tor.TorTransportConfig;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
-import bisq.tor.TorService;
-import bisq.tor.TorTransportConfig;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +22,6 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 
 @Slf4j
@@ -30,72 +29,52 @@ public class TorTransportService implements TransportService {
     private static TorService torService;
 
     @Getter
-    private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
-    private Scheduler startBootstrapProgressUpdater;
-    private int numSocketsCreated = 0;
+    public final Observable<TransportState> transportState = new Observable<>(TransportState.NEW);
+    @Getter
+    public final ObservableHashMap<TransportState, Long> timestampByTransportState = new ObservableHashMap<>();
+    @Getter
+    public final ObservableHashMap<NetworkId, Long> initializeServerSocketTimestampByNetworkId = new ObservableHashMap<>();
+    @Getter
+    public final ObservableHashMap<NetworkId, Long> initializedServerSocketTimestampByNetworkId = new ObservableHashMap<>();
 
     public TorTransportService(TransportConfig config) {
         if (torService == null) {
+            setTransportState(TransportState.NEW);
             torService = new TorService((TorTransportConfig) config);
-            bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
-            startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo)).periodically(1000);
-            bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
-            torService.getBootstrapEvent().addObserver(bootstrapEvent -> {
-                if (bootstrapEvent != null) {
-                    int bootstrapEventProgress = bootstrapEvent.getProgress();
-                    // First 25% we attribute to the bootstrap to the Tor network. Takes usually about 3 sec.
-                    if (bootstrapInfo.getBootstrapProgress().get() < 0.25) {
-                        if (startBootstrapProgressUpdater != null) {
-                            startBootstrapProgressUpdater.stop();
-                            startBootstrapProgressUpdater = null;
-                        }
-                        bootstrapInfo.getBootstrapProgress().set(bootstrapEventProgress / 400d);
-                        bootstrapInfo.getBootstrapDetails().set("Tor bootstrap event: " + bootstrapEvent.getTag());
-                    }
-                }
-            });
         }
     }
 
     @Override
     public void initialize() {
         log.info("Initialize Tor");
+        long ts = System.currentTimeMillis();
+        setTransportState(TransportState.INITIALIZE);
         torService.initialize().join();
+        setTransportState(TransportState.INITIALIZED);
+        log.info("Initializing Tor took {} ms", System.currentTimeMillis() - ts);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        if (startBootstrapProgressUpdater != null) {
-            startBootstrapProgressUpdater.stop();
-            startBootstrapProgressUpdater = null;
-        }
-        return torService.shutdown();
+        setTransportState(TransportState.STOPPING);
+        return torService.shutdown()
+                .whenComplete((result, throwable) -> setTransportState(TransportState.TERMINATED));
     }
 
     @Override
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
         try {
             int port = networkId.getAddressByTransportTypeMap().get(TransportType.TOR).getPort();
-            bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
-            // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
-            bootstrapInfo.getBootstrapProgress().set(0.25);
-            bootstrapInfo.getBootstrapDetails().set("Create Onion service for node ID '" + networkId + "'");
+            initializeServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
 
             TorKeyPair torKeyPair = keyBundle.getTorKeyPair();
-            ServerSocket serverSocket = torService.createOnionService(port, torKeyPair)
-                    .get(2, TimeUnit.MINUTES);
-
-            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
-            bootstrapInfo.getBootstrapProgress().set(0.5);
-
             String onionAddress = torKeyPair.getOnionAddress();
-            bootstrapInfo.getBootstrapDetails().set("My Onion service address: " + onionAddress);
-
-            Address address = new Address(onionAddress);
+            Address address = new Address(onionAddress, port);
+            ServerSocket serverSocket = torService.publishOnionService(port, torKeyPair).get();
+            initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
-
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             throw new ConnectionException(e);
         }
@@ -107,11 +86,12 @@ public class TorTransportService implements TransportService {
         log.info("Start creating tor socket to {}", address);
         Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
         InetSocketAddress inetSocketAddress = InetSocketAddress.createUnresolved(address.getHost(), address.getPort());
-        socket.connect(inetSocketAddress);
-        numSocketsCreated++;
-        bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
-        bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
-        bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peer(s)");
+        try {
+            socket.connect(inetSocketAddress);
+        } catch (IOException e) {
+            socket.close();
+            throw e;
+        }
         log.info("Tor socket creation to {} took {} ms", address, System.currentTimeMillis() - ts);
         return socket;
     }
@@ -123,5 +103,9 @@ public class TorTransportService implements TransportService {
 
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.of(torService.getSocks5Proxy(null));
+    }
+
+    public Observable<Boolean> getUseExternalTor() {
+        return torService.getUseExternalTor();
     }
 }

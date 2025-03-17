@@ -3,6 +3,7 @@ package bisq.desktop.main.left;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -12,30 +13,38 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.network.p2p.services.data.inventory.InventoryRequestService;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -59,8 +68,10 @@ public class NetworkInfo {
         private final NetworkService networkService;
         private Pin numPendingRequestsPin, allDataReceivedPin;
         private UIScheduler inventoryRequestAnimation;
+        private Optional<Pin> useExternalTorPin = Optional.empty();
 
-        public Controller(ServiceProvider serviceProvider, Consumer<NavigationTarget> onNavigationTargetSelectedHandler) {
+        public Controller(ServiceProvider serviceProvider,
+                          Consumer<NavigationTarget> onNavigationTargetSelectedHandler) {
             this.onNavigationTargetSelectedHandler = onNavigationTargetSelectedHandler;
             networkService = serviceProvider.getNetworkService();
             model = new Model();
@@ -73,89 +84,95 @@ public class NetworkInfo {
             model.setTorEnabled(networkService.isTransportTypeSupported(TransportType.TOR));
             model.setI2pEnabled(networkService.isTransportTypeSupported(TransportType.I2P));
 
+            useExternalTorPin = networkService.getServiceNodesByTransport()
+                    .findServiceNode(TransportType.TOR)
+                    .map(serviceNode -> (TorTransportService) serviceNode.getTransportService())
+                    .map(TorTransportService::getUseExternalTor)
+                    .map(useExternalTor -> useExternalTor.addObserver(model.getUseExternalTor()::set));
+
             networkService.getSupportedTransportTypes().forEach(type ->
-                    networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
-                        serviceNode.getPeerGroupManager().ifPresent(peerGroupManager -> {
-                            PeerGroupService peerGroupService = peerGroupManager.getPeerGroupService();
-                            Node node = peerGroupManager.getNode();
-                            String numTargetConnections = String.valueOf(peerGroupService.getTargetNumConnectedPeers());
-                            switch (type) {
-                                case CLEAR:
-                                    model.setClearNetNumTargetConnections(numTargetConnections);
-                                    break;
-                                case TOR:
-                                    model.setTorNumTargetConnections(numTargetConnections);
-                                    break;
-                                case I2P:
-                                    model.setI2pNumTargetConnections(numTargetConnections);
-                                    break;
+                    networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> serviceNode.getPeerGroupManager().ifPresent(peerGroupManager -> {
+                        PeerGroupService peerGroupService = peerGroupManager.getPeerGroupService();
+                        Node node = peerGroupManager.getNode();
+                        String numTargetConnections = String.valueOf(peerGroupService.getTargetNumConnectedPeers());
+                        switch (type) {
+                            case CLEAR:
+                                model.setClearNetNumTargetConnections(numTargetConnections);
+                                break;
+                            case TOR:
+                                model.setTorNumTargetConnections(numTargetConnections);
+                                break;
+                            case I2P:
+                                model.setI2pNumTargetConnections(numTargetConnections);
+                                break;
+                        }
+
+                        serviceNode.getInventoryService().ifPresent(inventoryService -> {
+                            InventoryRequestService inventoryRequestService = inventoryService.getInventoryRequestService();
+                            numPendingRequestsPin = inventoryRequestService.getNumPendingRequests().addObserver(numPendingRequests -> {
+                                        if (numPendingRequests != null) {
+                                            UIThread.run(() -> {
+                                                model.setPendingInventoryRequests(String.valueOf(numPendingRequests));
+                                                model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                                            });
+                                        }
+                                    }
+                            );
+                            allDataReceivedPin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
+                                if (allDataReceived != null) {
+                                    UIThread.run(() -> {
+                                        model.getAllInventoryDataReceived().set(allDataReceived);
+
+                                        if (allDataReceived) {
+                                            if (inventoryRequestAnimation != null) {
+                                                inventoryRequestAnimation.stop();
+                                            }
+
+                                            model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.completed"));
+                                        }
+                                        model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                                    });
+                                }
+                            });
+                            inventoryRequestAnimation = UIScheduler.run(() -> {
+                                                StringBuilder dots = new StringBuilder();
+                                                long numDots = inventoryRequestAnimation.getCounter() % 6;
+                                                for (long l = 0; l < numDots; l++) {
+                                                    dots.append(".");
+                                                }
+                                                if (!inventoryRequestService.getAllDataReceived().get()) {
+                                                    model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);
+                                                    model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                                                }
+                                            }
+                                    )
+                                    .periodically(250);
+                            model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequestsAtStartup()));
+
+                            model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
+                        });
+
+                        Node defaultNode = serviceNode.getDefaultNode();
+                        defaultNode.addListener(new Node.Listener() {
+                            @Override
+                            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                                  Connection connection,
+                                                  NetworkId networkId) {
                             }
 
-                            serviceNode.getInventoryService().ifPresent(inventoryService -> {
-                                InventoryRequestService inventoryRequestService = inventoryService.getInventoryRequestService();
-                                numPendingRequestsPin = inventoryRequestService.getNumPendingRequests().addObserver(numPendingRequests -> {
-                                            if (numPendingRequests != null) {
-                                                UIThread.run(() -> {
-                                                    model.setPendingInventoryRequests(String.valueOf(numPendingRequests));
-                                                    model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                                                });
-                                            }
-                                        }
-                                );
-                                allDataReceivedPin = inventoryRequestService.getAllDataReceived().addObserver(allDataReceived -> {
-                                    if (allDataReceived != null) {
-                                        UIThread.run(() -> {
-                                            model.setAllInventoryDataReceived(allDataReceived);
+                            @Override
+                            public void onConnection(Connection connection) {
+                                onNumConnectionsChanged(type, node);
+                            }
 
-                                            if (allDataReceived) {
-                                                if (inventoryRequestAnimation != null) {
-                                                    inventoryRequestAnimation.stop();
-                                                }
-
-                                                model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.completed"));
-                                            }
-                                            model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                                        });
-                                    }
-                                });
-                                inventoryRequestAnimation = UIScheduler.run(() -> {
-                                                    String dots = "";
-                                                    long numDots = inventoryRequestAnimation.getCounter() % 6;
-                                                    for (long l = 0; l < numDots; l++) {
-                                                        dots += ".";
-                                                    }
-                                                    if (!inventoryRequestService.getAllDataReceived().get()) {
-                                                        model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.requesting") + dots);
-                                                        model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                                                    }
-                                                }
-                                        )
-                                        .periodically(250);
-                                model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequestsAtStartup()));
-
-                                model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
-                            });
-
-                            Node defaultNode = serviceNode.getDefaultNode();
-                            defaultNode.addListener(new Node.Listener() {
-                                @Override
-                                public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-                                }
-
-                                @Override
-                                public void onConnection(Connection connection) {
-                                    onNumConnectionsChanged(type, node);
-                                }
-
-                                @Override
-                                public void onDisconnect(Connection connection, CloseReason closeReason) {
-                                    onNumConnectionsChanged(type, node);
-                                }
-                            });
-
-                            onNumConnectionsChanged(type, node);
+                            @Override
+                            public void onDisconnect(Connection connection, CloseReason closeReason) {
+                                onNumConnectionsChanged(type, node);
+                            }
                         });
-                    })
+
+                        onNumConnectionsChanged(type, node);
+                    }))
             );
         }
 
@@ -172,10 +189,12 @@ public class NetworkInfo {
                 inventoryRequestAnimation.stop();
             }
 
+            useExternalTorPin.ifPresent(Pin::unbind);
+            useExternalTorPin = Optional.empty();
         }
 
         private void onNavigateToNetworkInfo() {
-            onNavigationTargetSelectedHandler.accept(NavigationTarget.NETWORK_INFO);
+            onNavigationTargetSelectedHandler.accept(NavigationTarget.MY_NETWORK_NODE);
         }
 
         private void onNumConnectionsChanged(TransportType transportType, Node node) {
@@ -216,12 +235,12 @@ public class NetworkInfo {
         private String inventoryRequestsInfo;
         @Setter
         private String maxInventoryRequests;
-        @Setter
-        private boolean allInventoryDataReceived;
         private final StringProperty clearNetNumConnections = new SimpleStringProperty("0");
         private final StringProperty torNumConnections = new SimpleStringProperty("0");
         private final StringProperty i2pNumConnections = new SimpleStringProperty("0");
         private final BooleanProperty inventoryDataChangeFlag = new SimpleBooleanProperty();
+        private final BooleanProperty allInventoryDataReceived = new SimpleBooleanProperty();
+        private final BooleanProperty useExternalTor = new SimpleBooleanProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
@@ -229,7 +248,8 @@ public class NetworkInfo {
         private final Triple<Label, Label, ImageView> clearNetTriple, torTriple, i2pTriple;
         private final Pair<Label, ImageView> inventoryRequestsPair;
         private final BisqTooltip clearNetTooltip, torTooltip, i2pTooltip, inventoryRequestsTooltip;
-        private Subscription clearNetNumConnectionsPin, torNumConnectionsPin, i2pNumConnectionsPin, inventoryDataChangeFlagPin;
+        private Subscription clearNetNumConnectionsPin, torNumConnectionsPin, useExternalTorPin,
+                i2pNumConnectionsPin, allInventoryDataReceivedPin, inventoryDataChangeFlagPin;
 
         public View(Model model, Controller controller) {
             super(new VBox(8), model, controller);
@@ -277,7 +297,8 @@ public class NetworkInfo {
             i2pHBox.setManaged(model.isI2pEnabled());
             i2pTriple.getSecond().setText(model.getI2pNumTargetConnections());
 
-            inventoryRequestsPair.getFirst().setText(model.getMaxInventoryRequests());
+            Label inventoryRequestsLabel = inventoryRequestsPair.getFirst();
+            inventoryRequestsLabel.setText(model.getMaxInventoryRequests());
 
             clearNetNumConnectionsPin = EasyBind.subscribe(model.getClearNetNumConnections(), numConnections -> {
                 if (numConnections != null) {
@@ -290,8 +311,24 @@ public class NetworkInfo {
             torNumConnectionsPin = EasyBind.subscribe(model.getTorNumConnections(), numConnections -> {
                 if (numConnections != null) {
                     torTriple.getFirst().setText(numConnections);
+                    String torInfo = Res.get("navigation.network.info.tor");
+                    String postFixInfo = model.useExternalTor.get() ? Res.get("navigation.network.info.externalTor") : "";
                     torTooltip.setText(Res.get("navigation.network.info.tooltip",
-                            Res.get("navigation.network.info.tor"), numConnections, model.getTorNumTargetConnections()));
+                            torInfo, numConnections, model.getTorNumTargetConnections(), postFixInfo));
+                }
+            });
+
+            useExternalTorPin = EasyBind.subscribe(model.getUseExternalTor(), useExternalTor -> {
+                if (useExternalTor != null) {
+                    if (useExternalTor) {
+                        torHBox.getChildren().stream()
+                                .filter(node -> node instanceof ImageView)
+                                .map(node -> (ImageView) node)
+                                .forEach(imageView -> {
+                                    imageView.setId("tor_green");
+                                    imageView.setOpacity(0.75);
+                                });
+                    }
                 }
             });
 
@@ -303,18 +340,52 @@ public class NetworkInfo {
                 }
             });
 
+            allInventoryDataReceivedPin = EasyBind.subscribe(model.getAllInventoryDataReceived(), allInventoryDataReceived -> {
+                if (allInventoryDataReceived) {
+                    inventoryRequestsLabel.getStyleClass().remove("bisq-text-yellow-dim");
+                    inventoryRequestsLabel.getStyleClass().add("bisq-text-green");
+
+                    ImageView inventoryRequestsIcon = inventoryRequestsPair.getSecond();
+                    inventoryRequestsIcon.setId("check-green");
+
+                    // We use the parent hBox
+                    Parent node = inventoryRequestsIcon.getParent();
+                    node.setOpacity(1);
+                    Timeline fadeIn = new Timeline();
+                    ObservableList<KeyFrame> fadeInKeyFrames = fadeIn.getKeyFrames();
+                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(4000), new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR)));
+                    fadeInKeyFrames.add(new KeyFrame(Duration.millis(5000), new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT)));
+                    fadeIn.setOnFinished(e -> {
+                        inventoryRequestsLabel.getStyleClass().remove("bisq-text-green");
+                        inventoryRequestsLabel.getStyleClass().add("bisq-text-grey-9");
+                        inventoryRequestsIcon.setId("check-grey");
+
+                        Timeline fadeOut = new Timeline();
+                        ObservableList<KeyFrame> fadeOutKeyFrames = fadeOut.getKeyFrames();
+                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(1000), new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR)));
+                        fadeOutKeyFrames.add(new KeyFrame(Duration.millis(3000), new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT)));
+                        fadeOut.play();
+                    });
+                    fadeIn.play();
+                } else {
+                    inventoryRequestsLabel.getStyleClass().add("bisq-text-yellow-dim");
+                }
+            });
             inventoryDataChangeFlagPin = EasyBind.subscribe(model.getInventoryDataChangeFlag(), inventoryDataChangeFlag -> {
                 if (inventoryDataChangeFlag != null) {
-                    inventoryRequestsPair.getFirst().setText(model.getInventoryRequestsInfo());
-                    boolean allInventoryDataReceived = model.isAllInventoryDataReceived();
+                    inventoryRequestsLabel.setText(model.getInventoryRequestsInfo());
+                    boolean allInventoryDataReceived = model.getAllInventoryDataReceived().get();
                     String allReceived = allInventoryDataReceived ? Res.get("confirmation.yes") : Res.get("confirmation.no");
                     inventoryRequestsTooltip.setText(
                             Res.get("navigation.network.info.inventoryRequests.tooltip",
                                     model.getPendingInventoryRequests(),
                                     model.getMaxInventoryRequests(),
                                     allReceived));
-                    inventoryRequestsPair.getSecond().setVisible(allInventoryDataReceived);
-                    inventoryRequestsPair.getSecond().setManaged(allInventoryDataReceived);
+                    ImageView inventoryRequestsIcon = inventoryRequestsPair.getSecond();
+                    inventoryRequestsIcon.setVisible(allInventoryDataReceived);
+                    inventoryRequestsIcon.setManaged(allInventoryDataReceived);
                 }
             });
 
@@ -325,8 +396,10 @@ public class NetworkInfo {
         protected void onViewDetached() {
             clearNetNumConnectionsPin.unsubscribe();
             torNumConnectionsPin.unsubscribe();
+            useExternalTorPin.unsubscribe();
             i2pNumConnectionsPin.unsubscribe();
             inventoryDataChangeFlagPin.unsubscribe();
+            allInventoryDataReceivedPin.unsubscribe();
 
             root.setOnMouseClicked(null);
         }
@@ -359,7 +432,7 @@ public class NetworkInfo {
             Label info = new Label();
             info.getStyleClass().add("bisq-smaller-dimmed-label");
 
-            ImageView icon = ImageUtil.getImageViewById("inventory-completed");
+            ImageView icon = ImageUtil.getImageViewById("check-white");
             HBox.setMargin(icon, new Insets(0, 0, 0, 2));
 
             HBox hBox = new HBox(5, info, icon);

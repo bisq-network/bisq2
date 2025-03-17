@@ -23,18 +23,21 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.main.content.authorized_role.mediator.details.MediationCaseDetailsController;
 import bisq.desktop.main.content.bisq_easy.offerbook.offer_details.BisqEasyOfferDetailsController;
 import bisq.desktop.main.content.bisq_easy.onboarding.video.BisqEasyVideoController;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.bisq_easy.trade_guide.BisqEasyGuideController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.bisq_easy.wallet_guide.WalletGuideController;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
+import bisq.desktop.main.content.reputation.build_reputation.accountAge.AccountAgeController;
+import bisq.desktop.main.content.reputation.build_reputation.bond.BondedReputationController;
+import bisq.desktop.main.content.reputation.build_reputation.burn.BurnBsqController;
+import bisq.desktop.main.content.reputation.build_reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.main.content.user.accounts.create.CreatePaymentAccountController;
-import bisq.desktop.main.content.user.reputation.accountAge.AccountAgeController;
-import bisq.desktop.main.content.user.reputation.bond.BondedReputationController;
-import bisq.desktop.main.content.user.reputation.burn.BurnBsqController;
-import bisq.desktop.main.content.user.reputation.signedAccount.SignedWitnessController;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.desktop.main.content.user.user_profile.create.CreateUserProfileController;
 import bisq.desktop.overlay.chat_rules.ChatRulesController;
 import bisq.desktop.overlay.onboarding.OnboardingController;
@@ -110,9 +113,9 @@ public class OverlayController extends NavigationController {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     //  Controller implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onActivate() {
@@ -125,65 +128,30 @@ public class OverlayController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case UNLOCK: {
-                return Optional.of(new UnlockController(serviceProvider));
-            }
-            case TAC: {
-                return Optional.of(new TacController(serviceProvider));
-            }
-            case UPDATER: {
-                return Optional.of(new UpdaterController(serviceProvider));
-            }
-            case ONBOARDING: {
-                return Optional.of(new OnboardingController(serviceProvider));
-            }
-            case TRADE_WIZARD: {
-                return Optional.of(new TradeWizardController(serviceProvider));
-            }
-            case TAKE_OFFER: {
-                return Optional.of(new TakeOfferController(serviceProvider));
-            }
-            case BISQ_EASY_VIDEO: {
-                return Optional.of(new BisqEasyVideoController(serviceProvider));
-            }
-            case BISQ_EASY_GUIDE: {
-                return Optional.of(new BisqEasyGuideController(serviceProvider));
-            }
-            case WALLET_GUIDE: {
-                return Optional.of(new WalletGuideController(serviceProvider));
-            }
-            case BISQ_EASY_OFFER_DETAILS: {
-                return Optional.of(new BisqEasyOfferDetailsController(serviceProvider));
-            }
-            case CHAT_RULES: {
-                return Optional.of(new ChatRulesController(serviceProvider));
-            }
-            case CREATE_PROFILE: {
-                return Optional.of(new CreateUserProfileController(serviceProvider));
-            }
-            case CREATE_BISQ_EASY_PAYMENT_ACCOUNT: {
-                return Optional.of(new CreatePaymentAccountController(serviceProvider));
-            }
-            case BURN_BSQ: {
-                return Optional.of(new BurnBsqController(serviceProvider));
-            }
-            case BSQ_BOND: {
-                return Optional.of(new BondedReputationController(serviceProvider));
-            }
-            case ACCOUNT_AGE: {
-                return Optional.of(new AccountAgeController(serviceProvider));
-            }
-            case SIGNED_WITNESS: {
-                return Optional.of(new SignedWitnessController(serviceProvider));
-            }
-            case REPORT_TO_MODERATOR: {
-                return Optional.of(new ReportToModeratorWindow(serviceProvider).getController());
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case UNLOCK -> Optional.of(new UnlockController(serviceProvider));
+            case TAC -> Optional.of(new TacController(serviceProvider));
+            case UPDATER -> Optional.of(new UpdaterController(serviceProvider));
+            case ONBOARDING -> Optional.of(new OnboardingController(serviceProvider));
+            case TRADE_WIZARD -> Optional.of(new TradeWizardController(serviceProvider));
+            case TAKE_OFFER -> Optional.of(new TakeOfferController(serviceProvider));
+            case BISQ_EASY_VIDEO -> Optional.of(new BisqEasyVideoController(serviceProvider));
+            case BISQ_EASY_GUIDE -> Optional.of(new BisqEasyGuideController(serviceProvider));
+            case WALLET_GUIDE -> Optional.of(new WalletGuideController(serviceProvider));
+            case BISQ_EASY_TRADE_DETAILS -> Optional.of(new TradeDetailsController(serviceProvider));
+            case MEDIATION_CASE_DETAILS -> Optional.of(new MediationCaseDetailsController(serviceProvider));
+            case BISQ_EASY_OFFER_DETAILS -> Optional.of(new BisqEasyOfferDetailsController(serviceProvider));
+            case CHAT_RULES -> Optional.of(new ChatRulesController(serviceProvider));
+            case CREATE_PROFILE -> Optional.of(new CreateUserProfileController(serviceProvider));
+            case CREATE_BISQ_EASY_PAYMENT_ACCOUNT -> Optional.of(new CreatePaymentAccountController(serviceProvider));
+            case BURN_BSQ -> Optional.of(new BurnBsqController(serviceProvider));
+            case BSQ_BOND -> Optional.of(new BondedReputationController(serviceProvider));
+            case ACCOUNT_AGE -> Optional.of(new AccountAgeController(serviceProvider));
+            case SIGNED_WITNESS -> Optional.of(new SignedWitnessController(serviceProvider));
+            case REPORT_TO_MODERATOR -> Optional.of(new ReportToModeratorWindow(serviceProvider).getController());
+            case PROFILE_CARD -> Optional.of(new ProfileCardController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     void onKeyPressed(KeyEvent keyEvent) {

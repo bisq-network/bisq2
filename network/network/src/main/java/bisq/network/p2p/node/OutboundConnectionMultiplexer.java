@@ -17,7 +17,8 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.common.Address;
+import bisq.common.threading.ThreadName;
+import bisq.common.network.Address;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -48,7 +49,10 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
     public void start() {
         outboundConnectionManager.registerListener(this);
 
-        var thread = new Thread(this::workerLoop);
+        var thread = new Thread(() -> {
+            ThreadName.set(this, "workerLoop");
+            workerLoop();
+        });
         workerThread = Optional.of(thread);
         thread.start();
     }

@@ -18,11 +18,35 @@
 package bisq.desktop.common.converters;
 
 import bisq.common.util.MathUtils;
+import bisq.presentation.formatters.DefaultNumberFormatter;
+import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class LongStringConverter extends DoubleStringConverter {
+public class LongStringConverter extends StringConverter<Number> {
+    private final long defaultValue;
+
+    public LongStringConverter() {
+        this.defaultValue = 0;
+    }
+
+    public LongStringConverter(long defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+
     public Number fromString(String value) {
-        return MathUtils.roundDoubleToLong(super.fromString(value).doubleValue());
+        try {
+            return MathUtils.roundDoubleToLong(MathUtils.parseToDouble(value));
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    public String toString(Number numberValue) {
+        if (numberValue == null) {
+            return "";
+        }
+
+        return DefaultNumberFormatter.format(numberValue);
     }
 }

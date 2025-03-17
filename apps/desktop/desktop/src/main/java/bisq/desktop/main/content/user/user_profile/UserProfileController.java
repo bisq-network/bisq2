@@ -18,15 +18,18 @@
 package bisq.desktop.main.content.user.user_profile;
 
 import bisq.bisq_easy.BisqEasyService;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.presentation.formatters.TimeFormatter;
@@ -34,7 +37,6 @@ import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ProfileAgeService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -42,6 +44,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.bisq_easy.NavigationTarget.CREATE_PROFILE_STEP1;
 
@@ -54,14 +57,13 @@ public class UserProfileController implements Controller {
     private final ReputationService reputationService;
     private final ProfileAgeService profileAgeService;
     private final BisqEasyService bisqEasyService;
-    private final UserProfileService userProfileService;
     private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
+    private UIScheduler livenessUpdateScheduler;
 
     public UserProfileController(ServiceProvider serviceProvider) {
         UserService userService = serviceProvider.getUserService();
         userIdentityService = userService.getUserIdentityService();
         reputationService = userService.getReputationService();
-        userProfileService = userService.getUserProfileService();
         profileAgeService = reputationService.getProfileAgeService();
         bisqEasyService = serviceProvider.getBisqEasyService();
 
@@ -86,19 +88,34 @@ public class UserProfileController implements Controller {
                         model.getNickName().set(userProfile.getNickName());
                         model.getNymId().set(userProfile.getNym());
                         model.getProfileId().set(userProfile.getId());
-                        model.getCatHash().set(CatHash.getImage(userProfile));
+                        model.getCatHashImage().set(CatHash.getImage(userProfile, UserProfileModel.CAT_HASH_IMAGE_SIZE));
                         model.getStatement().set(userProfile.getStatement());
                         model.getTerms().set(userProfile.getTerms());
 
                         model.getProfileAge().set(profileAgeService.getProfileAge(userIdentity.getUserProfile())
-                                .map(TimeFormatter::formatAgeInDays)
+                                .map(TimeFormatter::formatAgeInDaysAndYears)
                                 .orElse(Res.get("data.na")));
 
-                        model.getLastSeen().set(TimeFormatter.formatAge(userProfileService.getLastSeen(userProfile)));
+                        if (livenessUpdateScheduler != null) {
+                            livenessUpdateScheduler.stop();
+                            livenessUpdateScheduler = null;
+                        }
+                        livenessUpdateScheduler = UIScheduler.run(() -> {
+                                    long publishDate = userProfile.getPublishDate();
+                                    if (publishDate == 0) {
+                                        model.getLivenessState().set(Res.get("data.na"));
+                                    } else {
+                                        long age = Math.max(0, System.currentTimeMillis() - publishDate);
+                                        String formattedAge = TimeFormatter.formatAge(age);
+                                        model.getLivenessState().set(Res.get("user.userProfile.livenessState.ageDisplay", formattedAge));
+                                    }
+                                })
+                                .periodically(0, 1, TimeUnit.SECONDS);
+
                     });
                 }
         );
-        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
+        reputationChangedPin = reputationService.getUserProfileIdWithScoreChange().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
     }
 
     @Override
@@ -107,6 +124,11 @@ public class UserProfileController implements Controller {
         selectedUserProfilePin.unbind();
         reputationChangedPin.unbind();
         model.getSelectedUserIdentity().set(null);
+        if (livenessUpdateScheduler != null) {
+            livenessUpdateScheduler.stop();
+            livenessUpdateScheduler = null;
+        }
+        model.getCatHashImage().set(null);
     }
 
     public void onSelected(UserIdentity userIdentity) {
@@ -121,7 +143,7 @@ public class UserProfileController implements Controller {
         model.getNickName().set("");
         model.getNymId().set("");
         model.getProfileId().set("");
-        model.getCatHash().set(null);
+        model.getCatHashImage().set(null);
         model.getStatement().set("");
         model.getTerms().set("");
         model.getProfileAge().set("");
@@ -149,12 +171,15 @@ public class UserProfileController implements Controller {
             return;
         }
         userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
-                .thenAccept(result -> {
-                    UIThread.runOnNextRenderFrame(() -> {
-                        UserIdentity value = userIdentityService.getSelectedUserIdentity();
-                        model.getSelectedUserIdentity().set(value);
-                    });
-                });
+                .thenAccept(result -> UIThread.runOnNextRenderFrame(() -> {
+                    UserIdentity value = userIdentityService.getSelectedUserIdentity();
+                    model.getSelectedUserIdentity().set(value);
+                }));
+    }
+
+    void onOpenProfileCard() {
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                new ProfileCardController.InitData(model.getSelectedUserIdentity().get().getUserProfile()));
     }
 
     private boolean noNewChangesToBeSaved(UserIdentity userIdentity) {

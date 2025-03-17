@@ -17,21 +17,19 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.chat.ChatChannelDomain;
-import bisq.common.currency.Market;
 import bisq.desktop.main.content.chat.ChatModel;
-import javafx.beans.Observable;
+import bisq.settings.ChatMessageType;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
@@ -45,24 +43,21 @@ import java.util.function.Predicate;
 public final class BisqEasyOfferbookModel extends ChatModel {
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowAppliedFilters = new SimpleBooleanProperty();
-    private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList(p -> new Observable[]{p.getNumOffers()});
+    private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
     private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
+    private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
     private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
-    private final ObjectProperty<MarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
+    private final ObjectProperty<BisqEasyMarketFilter> selectedMarketsFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
     private final StringProperty marketPrice = new SimpleStringProperty();
-    private final ObservableSet<Market> favouriteMarkets = FXCollections.observableSet();
-    private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
-    private final ObservableList<OfferMessageItem> offerMessageItems = FXCollections.observableArrayList();
-    private final FilteredList<OfferMessageItem> filteredOfferMessageItems = new FilteredList<>(offerMessageItems);
-    private final SortedList<OfferMessageItem> sortedOfferMessageItems = new SortedList<>(filteredOfferMessageItems);
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
-    private final BooleanProperty showBuyOffers = new SimpleBooleanProperty();
-    private final BooleanProperty showOfferListExpanded = new SimpleBooleanProperty();
     private final BooleanProperty showMarketSelectionListCollapsed = new SimpleBooleanProperty();
+    private final ObjectProperty<ChatMessageType> messageTypeFilter = new SimpleObjectProperty<>(ChatMessageType.ALL);
 
+    @Setter
+    private ReadOnlyBooleanProperty showOfferListExpanded;
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;
     @Setter
@@ -70,7 +65,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     @Setter
     private Predicate<MarketChannelItem> marketFilterPredicate = marketChannelItem -> true;
     @Setter
-    private DoubleProperty favouritesTableViewHeight = new SimpleDoubleProperty(0);
+    private BooleanProperty favouritesTableViewHeightChanged = new SimpleBooleanProperty();
 
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

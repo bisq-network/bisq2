@@ -84,19 +84,19 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
                 // We delay a bit to mitigate potential race conditions
                 if (initialDataScheduler == null) {
-                    initialDataScheduler = Scheduler.run(() -> {
-                        networkService.removeDataServiceListener(initialDataServiceListener);
-                        applyInitialData();
-                    }).after(1000);
+                    initialDataScheduler = Scheduler.run(() -> delayedApplyInitialData())
+                            .host(this)
+                            .runnableName("delayedApplyInitialData")
+                            .after(1000);
                 }
             }
         };
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -139,49 +139,48 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         return CompletableFuture.completedFuture(true);
     }
 
+    private void delayedApplyInitialData() {
+        networkService.removeDataServiceListener(initialDataServiceListener);
+        applyInitialData();
+        initialDataScheduler.stop();
+        initialDataScheduler = null;
+    }
+
     private void applyInitialData() {
         // Start with the AuthorizedOracleNode
         networkService.getDataService()
-                .ifPresent(dataService -> {
-                    dataService.getAuthorizedData()
-                            .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode)
-                            .forEach(this::onAuthorizedDataAdded);
-                });
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode)
+                        .forEach(this::onAuthorizedDataAdded));
 
         // Then we process the AuthorizedBondedRole of type ORACLE_NODE
         networkService.getDataService()
-                .ifPresent(dataService -> {
-                    dataService.getAuthorizedData()
-                            .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                            .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() == BondedRoleType.ORACLE_NODE)
-                            .forEach(this::onAuthorizedDataAdded);
-                });
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
+                        .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() == BondedRoleType.ORACLE_NODE)
+                        .forEach(this::onAuthorizedDataAdded));
 
         // Then we process the other AuthorizedBondedRoles
         networkService.getDataService()
-                .ifPresent(dataService -> {
-                    dataService.getAuthorizedData()
-                            .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                            .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() != BondedRoleType.ORACLE_NODE)
-                            .forEach(this::onAuthorizedDataAdded);
-                });
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
+                        .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() != BondedRoleType.ORACLE_NODE)
+                        .forEach(this::onAuthorizedDataAdded));
 
         // Now we can apply other data
         networkService.getDataService()
-                .ifPresent(dataService -> {
-                    dataService.getAuthorizedData()
-                            .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode))
-                            .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole))
-                            .forEach(this::onAuthorizedDataAdded);
-                });
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode))
+                        .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole))
+                        .forEach(this::onAuthorizedDataAdded));
 
         networkService.addDataServiceListener(this);
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
@@ -233,13 +232,23 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream() {
+        return getAuthorizedBondedRoleStream(false);
+    }
+
+    public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream(boolean ignoreBannedState) {
         return bondedRoles.stream()
-                .filter(bondedRole -> ignoreSecurityManager || bondedRole.isNotBanned())
+                .filter(bondedRole -> ignoreSecurityManager || ignoreBannedState || bondedRole.isNotBanned())
+                .map(BondedRole::getAuthorizedBondedRole);
+    }
+
+    public Stream<AuthorizedBondedRole> getBannedAuthorizedBondedRoleStream() {
+        return bondedRoles.stream()
+                .filter(BondedRole::isBanned)
                 .map(BondedRole::getAuthorizedBondedRole);
     }
 
@@ -316,16 +325,22 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         // Reprocess AuthorizedData which previously failed due potential out-of-order issues
         // We delay to avoid getting too many data queued up
         if (reprocessScheduler == null) {
-            reprocessScheduler = Scheduler.run(() -> {
-                Set<AuthorizedData> clone = new HashSet<>(failedAuthorizedData);
-                clone.forEach(this::onAuthorizedDataAdded);
-                reprocessScheduler = null;
-            }).after(1000);
+            reprocessScheduler = Scheduler.run(this::reprocess)
+                    .host(this)
+                    .runnableName("reprocess")
+                    .after(1000);
         }
     }
 
+    private void reprocess() {
+        Set<AuthorizedData> clone = new HashSet<>(failedAuthorizedData);
+        clone.forEach(this::onAuthorizedDataAdded);
+        reprocessScheduler.stop();
+        reprocessScheduler = null;
+    }
 
-    private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData, AuthorizedBondedRole authorizedBondedRole) {
+    private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData,
+                                                              AuthorizedBondedRole authorizedBondedRole) {
         // AuthorizedBondedRoles are published only by an oracle node. The oracle node use either a hard coded pubKey
         // or has been authorized by another already authorized oracle node. There need to be at least one root node 
         // with a hard coded pubKey.

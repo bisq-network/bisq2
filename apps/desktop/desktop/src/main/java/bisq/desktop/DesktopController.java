@@ -17,6 +17,7 @@
 
 package bisq.desktop;
 
+import bisq.application.State;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
@@ -24,10 +25,13 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.standby.PreventStandbyModeService;
+import bisq.desktop.common.threading.UIClock;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.cathash.JavaFxCatHashService;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.MainController;
@@ -35,12 +39,17 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
 import bisq.desktop.splash.SplashController;
+import bisq.identity.IdentityService;
 import bisq.settings.Cookie;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import bisq.user.RepublishUserProfileService;
 import bisq.user.identity.UserIdentityService;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Screen;
 import lombok.Getter;
@@ -72,7 +81,9 @@ public class DesktopController extends NavigationController {
     private final ChatNotificationService chatNotificationService;
     private final ServiceProvider serviceProvider;
     private final DontShowAgainService dontShowAgainService;
-    private PreventStandbyModeService preventStandbyModeService;
+    private final PreventStandbyModeService preventStandbyModeService;
+    private final RepublishUserProfileService republishUserProfileService;
+    private final IdentityService identityService;
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
@@ -92,6 +103,9 @@ public class DesktopController extends NavigationController {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
+        preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
+        republishUserProfileService = serviceProvider.getUserService().getRepublishUserProfileService();
+        identityService = serviceProvider.getIdentityService();
     }
 
     public void init() {
@@ -104,16 +118,24 @@ public class DesktopController extends NavigationController {
         Browser.initialize(applicationJavaFxApplicationData.getHostServices(), settingsService, dontShowAgainService);
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
-        preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
+
+        CatHash.setDelegate(new JavaFxCatHashService(serviceProvider.getConfig().getBaseDir()));
 
         Navigation.init(settingsService);
         Overlay.init(serviceProvider, viewRoot);
         serviceProvider.getShutDownHandler().addShutDownHook(this::onShutdown);
+        UIClock.initialize();
 
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
 
         new OverlayController(serviceProvider, viewRoot);
+
+        identityService.getFatalException().addObserver(exception -> {
+            if (exception != null) {
+                UIThread.run(() -> new Popup().error(exception).hideCloseButton().useShutDownButton().show());
+            }
+        });
 
         EasyBind.subscribe(viewRoot.getScene().getWindow().focusedProperty(), chatNotificationService::setApplicationFocussed);
     }
@@ -133,17 +155,11 @@ public class DesktopController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case SPLASH: {
-                return Optional.of(splashController);
-            }
-            case MAIN: {
-                return Optional.of(new MainController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case SPLASH -> Optional.of(splashController);
+            case MAIN -> Optional.of(new MainController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 
     @Override
@@ -159,11 +175,16 @@ public class DesktopController extends NavigationController {
             maybeShowLockScreen();
         }
 
+        Scene scene = view.getRoot().getScene();
+        scene.addEventFilter(MouseEvent.MOUSE_MOVED, e -> republishUserProfileService.userActivityDetected());
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> republishUserProfileService.userActivityDetected());
+
         onActivatedHandler.run();
     }
 
     @Override
     public void onDeactivate() {
+        UIClock.shutdown();
     }
 
     public void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
@@ -188,6 +209,16 @@ public class DesktopController extends NavigationController {
     public void onUncaughtException(Thread thread, Throwable throwable) {
         log.error("Uncaught exception from thread {}", thread);
         log.error("Uncaught exception:", throwable);
+        if (throwable instanceof UnsupportedOperationException &&
+                throwable.getMessage() != null &&
+                throwable.getMessage().contains("system tray")) {
+            // User with Ubuntu 24.04.1 LTS / Wayland reported an UnsupportedOperationException, despite we use the
+            // SystemTray only in AwtNotificationService which is used only for Windows and the usage there is covered
+            // by a try/catch. It is unclear from where it gets called as the stacktrace does not expose the path to a
+            // Bisq source code caller.
+            // See https://github.com/bisq-network/bisq2/issues/2832
+            return;
+        }
         UIThread.run(() -> new Popup().error(throwable).show());
     }
 

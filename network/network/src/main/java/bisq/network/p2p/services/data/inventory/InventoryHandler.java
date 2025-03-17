@@ -17,7 +17,8 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.common.util.ByteUnit;
+import bisq.common.data.ByteUnit;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -64,7 +65,10 @@ class InventoryHandler implements Connection.Listener {
         requestTs = System.currentTimeMillis();
         log.info("Send InventoryRequest to {} with {}", connection.getPeerAddress(), inventoryFilter.getDetails());
         InventoryRequest inventoryRequest = new InventoryRequest(inventoryFilter, nonce);
-        runAsync(() -> node.send(inventoryRequest, connection), NetworkService.NETWORK_IO_POOL)
+        runAsync(() -> {
+            ThreadName.set(this, "request");
+            node.send(inventoryRequest, connection);
+        }, NetworkService.NETWORK_IO_POOL)
                 .whenComplete((connection, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);
@@ -76,8 +80,7 @@ class InventoryHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof InventoryResponse) {
-            InventoryResponse response = (InventoryResponse) envelopePayloadMessage;
+        if (envelopePayloadMessage instanceof InventoryResponse response) {
             if (response.getRequestNonce() == nonce) {
                 printReceivedInventory(response);
                 removeListeners();
@@ -97,23 +100,17 @@ class InventoryHandler implements Connection.Listener {
                 .forEach(dataRequest -> {
                     String dataRequestName = dataRequest.getClass().getSimpleName();
                     String payloadName = dataRequest.getClass().getSimpleName();
-                    if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                        AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                        payloadName = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
-                    } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                        RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                    if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
+                        payloadName = addRequest.getDistributedData().getClass().getSimpleName();
+                    } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
                         payloadName = removeRequest.getClassName();
-                    } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
-                        RefreshAuthenticatedDataRequest request = (RefreshAuthenticatedDataRequest) dataRequest;
+                    } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
                         payloadName = request.getClassName();
-                    } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
-                        AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
+                    } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
                         payloadName = addRequest.getAppendOnlyData().getClass().getSimpleName();
-                    } else if (dataRequest instanceof AddMailboxRequest) {
-                        AddMailboxRequest addRequest = (AddMailboxRequest) dataRequest;
+                    } else if (dataRequest instanceof AddMailboxRequest addRequest) {
                         payloadName = addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                    } else if (dataRequest instanceof RemoveMailboxRequest) {
-                        RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) dataRequest;
+                    } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
                         payloadName = removeRequest.getClassName();
                     }
                     dataRequestMap.putIfAbsent(dataRequestName, new HashMap<>());
@@ -142,12 +139,10 @@ class InventoryHandler implements Connection.Listener {
         String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
         String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
         log.info("\n##########################################################################################\n" +
-                "Received " + size + " of inventory data from: " + connection.getPeerAddress().getFullAddress() +
-                " after " + passed + "; \n" +
-                maxSizeReached +
-                "\n##########################################################################################\n" +
-                report +
-                "\n##########################################################################################");
+                "Received {} of inventory data from: {} after {}; \n{}" +
+                "\n##########################################################################################\n{}" +
+                "\n##########################################################################################",
+                size, connection.getPeerAddress().getFullAddress(), passed, maxSizeReached, report);
     }
 
     @Override

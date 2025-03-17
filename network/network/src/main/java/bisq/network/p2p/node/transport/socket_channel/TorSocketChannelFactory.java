@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.node.transport.socket_channel;
 
-import bisq.network.common.Address;
-import bisq.tor.nio.TorSocketChannel;
-import bisq.tor.nio.TorSocksConnectionData;
+import bisq.common.network.Address;
+import bisq.network.tor.nio.TorSocketChannel;
+import bisq.network.tor.nio.TorSocksConnectionData;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

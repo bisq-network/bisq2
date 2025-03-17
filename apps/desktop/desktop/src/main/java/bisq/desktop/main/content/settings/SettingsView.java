@@ -25,8 +25,10 @@ public class SettingsView extends ContentTabView<SettingsModel, SettingsControll
     public SettingsView(SettingsModel model, SettingsController controller) {
         super(model, controller);
 
-        addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-        addTab(Res.get("settings.utils"), NavigationTarget.UTILS);
+        addTab(Res.get("settings.language"), NavigationTarget.LANGUAGE_SETTINGS);
+        addTab(Res.get("settings.notifications"), NavigationTarget.NOTIFICATION_SETTINGS);
+        addTab(Res.get("settings.trade"), NavigationTarget.TRADE_SETTINGS);
+        addTab(Res.get("settings.display"), NavigationTarget.DISPLAY_SETTINGS);
+        addTab(Res.get("settings.misc"), NavigationTarget.MISC_SETTINGS);
     }
 }

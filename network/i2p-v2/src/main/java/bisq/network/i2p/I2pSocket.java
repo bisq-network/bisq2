@@ -17,7 +17,7 @@
 
 package bisq.network.i2p;
 
-import bisq.network.common.PeerSocket;
+import bisq.common.network.PeerSocket;
 import lombok.Getter;
 import net.i2p.client.streaming.I2PSocket;
 

@@ -20,7 +20,7 @@ package bisq.chat.notifications;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
 import bisq.presentation.notifications.Notification;

@@ -1,17 +1,31 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.components;
 
 import bisq.common.currency.FiatCurrencyRepository;
-import bisq.common.currency.TradeCurrency;
-import bisq.common.data.Pair;
+import bisq.common.currency.Market;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.security.DigestUtil;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.effect.ColorAdjust;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -20,7 +34,10 @@ import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -40,70 +57,23 @@ public class MarketImageComposition {
                     "tmt", "tnd", "top", "try", "ttd", "twd", "tzs", "uah", "ugx", "usd", "uyu", "uzs", "ves", "vnd", "vuv",
                     "wst", "xaf", "yer", "zar", "zmw", "zwl")
             .collect(Collectors.toUnmodifiableSet());
+    private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
 
-    public static Pair<StackPane, List<ImageView>> imageBoxForMarket(String baseCurrencyCode, String quoteCurrencyCode) {
-        StackPane pane = new StackPane();
+    public static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache) {
+        String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase();
+        String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase();
+        String key = baseCurrencyCode + "." + quoteCurrencyCode;
 
-        pane.setPrefHeight(34);
-        pane.setPrefWidth(30);
-
-        Stream<String> stream = baseCurrencyCode.equals("btc")
-                ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
-                : Stream.of(quoteCurrencyCode, baseCurrencyCode);
-
-        List<ImageView> imageViews = stream.map(code -> {
-            Pos alignment = quoteCurrencyCode.equals(code) ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT;
-            ImageView imageView = new ImageView();
-
-          /*  ColorAdjust monochrome = new ColorAdjust();
-            monochrome.setSaturation(-0.5);
-            monochrome.setBrightness(-0.5);
-            imageView.setEffect(monochrome);*/
-
-
-            StackPane.setAlignment(imageView, alignment);
-            pane.getChildren().add(imageView);
-
-            if (CRYPTO_MARKETS_WITH_LOGO.contains(code) || FIAT_MARKETS_WITH_LOGO.contains(code)) {
-                imageView.setId("market-" + code);
-            } else {
-                boolean isFiat = TradeCurrency.isFiat(code.toUpperCase());
-                if (code.length() > 4) {
-                    code = code.toUpperCase().substring(0, 4);
-                }
-                Label label = new Label(code.toUpperCase());
-                StackPane.setAlignment(label, alignment);
-                if (isFiat) {
-                    imageView.setId("market-fiat");
-                    label.setPadding(new Insets(0, 1, 0, 0));
-                    label.getStyleClass().setAll("market-fiat-label");
-                    // When used in a list, the list style overwrites icon label style, so we need to 
-                    // use !important. Using style class or id did not work ;-(
-                    label.setStyle("-fx-text-fill: -fx-dark-text-color !important;");
-                } else {
-                    imageView.setId("market-crypto");
-                    label.setPadding(new Insets(0, 0, 0, 2));
-                    label.getStyleClass().setAll("market-crypto-label");
-                    // list style overwrites icon label style, so we need to use !important
-                    label.setStyle("-fx-text-fill: -fx-light-text-color !important;");
-                }
-                if (code.length() > 3) {
-                    label.setStyle("-fx-font-size: 6");
-                    if (isFiat) {
-                        label.setPadding(new Insets(0, 0, 0, 0));
-                    } else {
-                        label.setPadding(new Insets(0, 0, 0, 1));
-                    }
-                }
-                pane.getChildren().add(label);
+        if (dedicatedCache.isPresent()) {
+            if (dedicatedCache.get().containsKey(key)) {
+                return dedicatedCache.get().get(key);
             }
-            return imageView;
-        }).collect(Collectors.toList());
+        } else {
+            if (MARKET_IMAGE_CACHE.containsKey(key)) {
+                return MARKET_IMAGE_CACHE.get(key);
+            }
+        }
 
-        return new Pair<>(pane, imageViews);
-    }
-
-    public static StackPane imageBoxForMarkets(String baseCurrencyCode, String quoteCurrencyCode) {
         StackPane pane = new StackPane();
         pane.setPrefWidth(61);
 
@@ -121,7 +91,7 @@ public class MarketImageComposition {
                 StackPane.setAlignment(node, Pos.CENTER);
 
                 StackPane quoteLogo = new StackPane();
-                quoteLogo.setMaxWidth(radius*2);
+                quoteLogo.setMaxWidth(radius * 2);
                 quoteLogo.getChildren().addAll(circle, node);
                 StackPane.setAlignment(quoteLogo, Pos.CENTER_RIGHT);
                 pane.getChildren().add(quoteLogo);
@@ -131,6 +101,12 @@ public class MarketImageComposition {
                 pane.getChildren().add(node);
             }
         });
+
+        if (dedicatedCache.isPresent()) {
+            dedicatedCache.get().put(key, pane);
+        } else {
+            MARKET_IMAGE_CACHE.put(key, pane);
+        }
         return pane;
     }
 

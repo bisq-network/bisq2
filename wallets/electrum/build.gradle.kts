@@ -5,6 +5,12 @@ plugins {
     id("bisq.java-integration-tests")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
 electrum {
     version.set("4.2.2")
 }
@@ -18,15 +24,16 @@ sourceSets {
 }
 
 dependencies {
-    api(project(":core"))
+    api("bitcoind:core")
+    implementation("bitcoind:json-rpc")
+    implementation("bitcoind:regtest")
+    implementation("bisq:java-se")
+    implementation("wallets:wallet")
 
-    implementation("bisq:persistence")
-    implementation(project(":json-rpc"))
     implementation(project(":process"))
-    
     implementation(libs.typesafe.config)
     implementation(libs.bundles.glassfish.jersey)
 
-    integrationTestImplementation(project(":bitcoind"))
-    integrationTestImplementation(project(":regtest"))
+    integrationTestImplementation("bitcoind:bitcoind")
+    integrationTestImplementation("bitcoind:regtest")
 }

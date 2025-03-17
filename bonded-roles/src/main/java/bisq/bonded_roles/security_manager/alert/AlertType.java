@@ -18,13 +18,14 @@
 package bisq.bonded_roles.security_manager.alert;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum AlertType implements ProtoEnum {
     INFO,
     WARN,
     EMERGENCY,
-    BAN;
+    BAN,
+    BANNED_ACCOUNT_DATA;
 
     @Override
     public bisq.bonded_roles.protobuf.AlertType toProtoEnum() {
@@ -33,5 +34,11 @@ public enum AlertType implements ProtoEnum {
 
     public static AlertType fromProto(bisq.bonded_roles.protobuf.AlertType proto) {
         return ProtobufUtils.enumFromProto(AlertType.class, proto.name(), INFO);
+    }
+
+    public static boolean isMessageAlert(AlertType alertType) {
+        return alertType == AlertType.INFO ||
+                alertType == AlertType.WARN ||
+                alertType == AlertType.EMERGENCY;
     }
 }

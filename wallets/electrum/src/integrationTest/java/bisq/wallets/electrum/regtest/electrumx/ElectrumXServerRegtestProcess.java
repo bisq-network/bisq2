@@ -17,11 +17,11 @@
 
 package bisq.wallets.electrum.regtest.electrumx;
 
-import bisq.common.scanner.InputStreamScanner;
-import bisq.common.scanner.LogScanner;
+import bisq.wallets.regtest.InputStreamScanner;
+import bisq.wallets.regtest.LogScanner;
 import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.process.DaemonProcess;
-import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.regtest.process.DaemonProcess;
+import bisq.wallets.regtest.process.ProcessConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -58,6 +58,7 @@ public class ElectrumXServerRegtestProcess extends DaemonProcess {
         envMap.put("NET", "regtest");
 
         RpcConfig bitcoindRpcConfig = serverConfig.getBitcoindRpcConfig();
+        //noinspection HttpUrlsUsage
         envMap.put("DAEMON_URL",
                 "http://" + bitcoindRpcConfig.getUser() + ":" + bitcoindRpcConfig.getPassword() +
                         "@" + bitcoindRpcConfig.getHostname() + ":" + bitcoindRpcConfig.getPort());

@@ -17,14 +17,15 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.review;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.application.DevMode;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -33,6 +34,7 @@ import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -43,6 +45,7 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -63,6 +66,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 // TODO (refactor, low prio) Consider to use a base class to avoid code duplication with TradeWizardReviewController
@@ -84,6 +88,7 @@ public class TakeOfferReviewController implements Controller {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final MediationRequestService mediationRequestService;
     private Pin errorMessagePin, peersErrorMessagePin;
+    private UIScheduler timeoutScheduler;
 
     public TakeOfferReviewController(ServiceProvider serviceProvider,
                                      Consumer<Boolean> mainButtonsVisibleHandler,
@@ -120,23 +125,11 @@ public class TakeOfferReviewController implements Controller {
                     .ifPresent(model::setTakersQuoteSideAmount);
         }
 
-        Direction direction = bisqEasyOffer.getTakersDirection();
-        PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
-        model.setSellersPriceSpec(priceSpec);
-
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
         priceQuote.ifPresent(priceInput::setQuote);
 
         applyPriceQuote(priceQuote);
-        applyPriceDetails(priceSpec, market);
-
-        model.setFee(direction.isBuy()
-                ? Res.get("bisqEasy.takeOffer.review.fee.buyer")
-                : Res.get("bisqEasy.takeOffer.review.fee.seller"));
-
-        model.setFeeDetails(direction.isBuy()
-                ? Res.get("bisqEasy.takeOffer.review.feeDetails.buyer")
-                : Res.get("bisqEasy.takeOffer.review.feeDetails.seller"));
+        applyPriceDetails(bisqEasyOffer.getPriceSpec(), market);
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {
@@ -151,11 +144,17 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
+    public void setBitcoinPaymentMethodSpec(BitcoinPaymentMethodSpec spec) {
+        if (spec != null) {
+            model.setBitcoinPaymentMethodSpec(spec);
+            model.setBitcoinPaymentMethod(spec.getShortDisplayString());
+        }
+    }
+
     public void setFiatPaymentMethodSpec(FiatPaymentMethodSpec spec) {
         if (spec != null) {
             model.setFiatPaymentMethodSpec(spec);
-            String displayString = spec.getDisplayString();
-            model.setPaymentMethod(displayString);
+            model.setFiatPaymentMethod(spec.getShortDisplayString());
         }
     }
 
@@ -172,7 +171,9 @@ public class TakeOfferReviewController implements Controller {
             onCancelHandler.run();
             return;
         }
-        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
+        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
+                takerIdentity.getId(),
+                bisqEasyOffer.getId());
         if (!DevMode.isDevMode() && mediator.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
@@ -188,26 +189,28 @@ public class TakeOfferReviewController implements Controller {
     private void doTakeOffer(BisqEasyOffer bisqEasyOffer, UserIdentity takerIdentity, Optional<UserProfile> mediator) {
         Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
+        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
-        PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
+        PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
                 bisqEasyOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
-                bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
+                bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
-                sellersPriceSpec,
+                priceSpec,
                 marketPrice);
         BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
+        log.info("Selected mediator for trade {}: {}", bisqEasyTrade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
         model.setBisqEasyTrade(bisqEasyTrade);
         errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
-            if (errorMessage != null) {
-                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
-                                errorMessage,
-                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
-                        .show());
+                    if (errorMessage != null) {
+                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
+                                        errorMessage,
+                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
+                                .show());
                     }
                 }
         );
@@ -228,8 +231,18 @@ public class TakeOfferReviewController implements Controller {
 
         mainButtonsVisibleHandler.accept(false);
         String tradeId = bisqEasyTrade.getId();
+        if (timeoutScheduler != null) {
+            timeoutScheduler.stop();
+        }
+        timeoutScheduler = UIScheduler.run(() -> {
+                    closeAndNavigateToHandler.accept(NavigationTarget.BISQ_EASY);
+                    throw new RuntimeException("Take offer message sending did not succeed after 2 minutes.");
+                })
+                .after(150, TimeUnit.SECONDS); // We have 120 seconds socket timeout, so we should never get triggered here, as the message will be sent as mailbox message
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
+                    timeoutScheduler.stop();
+
                     // In case the user has switched to another market we want to select that market in the offer book
                     ChatChannelSelectionService chatChannelSelectionService =
                             chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
@@ -251,16 +264,25 @@ public class TakeOfferReviewController implements Controller {
         String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
         Monetary fixBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary fixQuoteSideAmount = model.getTakersQuoteSideAmount();
-        String formattedBaseAmount = AmountFormatter.formatAmount(fixBaseSideAmount, false);
-        String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount);
-        Direction direction = model.getBisqEasyOffer().getTakersDirection();
-        if (direction.isSell()) {
+        String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
+        String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
+        Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
+        boolean isMainChain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
+        model.setFeeDetailsVisible(isMainChain);
+        if (takersDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
             toSendAmount = formattedBaseAmount;
             toSendCode = fixBaseSideAmount.getCode();
             toReceiveAmount = formattedQuoteAmount;
             toReceiveCode = fixQuoteSideAmount.getCode();
+
+            if (isMainChain) {
+                model.setFee(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFee"));
+                model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.noTradeFeesLong"));
+            } else {
+                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
+            }
         } else {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
@@ -268,17 +290,26 @@ public class TakeOfferReviewController implements Controller {
             toSendCode = fixQuoteSideAmount.getCode();
             toReceiveAmount = formattedBaseAmount;
             toReceiveCode = fixBaseSideAmount.getCode();
+
+            if (isMainChain) {
+                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
+                model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFeeLong"));
+            } else {
+                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
+            }
         }
 
-        reviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction", Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
+        reviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction",
+                Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
         reviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
         reviewDataDisplay.setToSendAmount(toSendAmount);
         reviewDataDisplay.setToSendCode(toSendCode);
         reviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
         reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
-        reviewDataDisplay.setPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription").toUpperCase());
-        reviewDataDisplay.setPaymentMethod(model.getPaymentMethod());
+        reviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
+        reviewDataDisplay.setBitcoinPaymentMethod(model.getBitcoinPaymentMethod());
+        reviewDataDisplay.setFiatPaymentMethod(model.getFiatPaymentMethod());
     }
 
     @Override
@@ -288,6 +319,9 @@ public class TakeOfferReviewController implements Controller {
         }
         if (peersErrorMessagePin != null) {
             peersErrorMessagePin.unbind();
+        }
+        if (timeoutScheduler != null) {
+            timeoutScheduler.stop();
         }
     }
 
@@ -300,8 +334,7 @@ public class TakeOfferReviewController implements Controller {
         marketPrice.ifPresent(price -> model.setMarketPrice(price.getPriceQuote().getValue()));
         Optional<PriceQuote> marketPriceQuote = marketPrice.map(MarketPrice::getPriceQuote);
         String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElse(Res.get("data.na"));
-        Optional<Double> percentFromMarketPrice;
-        percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
+        Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
         double percent = percentFromMarketPrice.orElse(0d);
         if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
             model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails", marketPriceAsString));

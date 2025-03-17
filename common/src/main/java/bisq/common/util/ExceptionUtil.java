@@ -69,7 +69,7 @@ public class ExceptionUtil {
         List<String> traceClasses = Arrays.stream(rootCause.getStackTrace())
                 .map(StackTraceElement::toString)
                 .collect(Collectors.toList());
-        traceClasses.add(0, rootCause.getClass().getName());
+        traceClasses.add(0,rootCause.getClass().getName());
         return Joiner.on("\n    at ").join(traceClasses);
     }
 

@@ -19,7 +19,14 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +39,8 @@ import java.util.List;
 public class TradeWizardModel extends NavigationModel {
     @Setter
     private boolean isCreateOfferMode;
+    @Setter
+    private String amountAtPriceString;
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
@@ -39,7 +48,6 @@ public class TradeWizardModel extends NavigationModel {
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
-    private final BooleanProperty priceProgressItemVisible = new SimpleBooleanProperty(true);
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter
@@ -51,10 +59,12 @@ public class TradeWizardModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_WIZARD_DIRECTION;
+        return NavigationTarget.TRADE_WIZARD_DIRECTION_AND_MARKET;
     }
 
     public void reset() {
+        isCreateOfferMode = false;
+        amountAtPriceString = "";
         currentIndex.set(0);
         nextButtonText.set(null);
         backButtonText.set(null);
@@ -62,7 +72,6 @@ public class TradeWizardModel extends NavigationModel {
         nextButtonVisible.set(true);
         nextButtonDisabled.set(true);
         backButtonVisible.set(true);
-        priceProgressItemVisible.set(true);
         childTargets.clear();
         selectedChildTarget.set(null);
         animateRightOut = true;

@@ -17,19 +17,18 @@
 
 package bisq.security;
 
+import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-@ToString
 @EqualsAndHashCode
 public final class ConfidentialData implements NetworkProto {
     private static final int MAX_SIZE_CIPHERTEXT = 20_000;
@@ -48,13 +47,17 @@ public final class ConfidentialData implements NetworkProto {
         this.cipherText = cipherText;
         this.signature = signature;
 
-        verify();
+        try {
+            verify();
+        } catch (Exception e) {
+            log.error("ConfidentialData verification failed", e);
+        }
     }
 
     @Override
     public void verify() {
         checkArgument(iv.length <= 20);
-        checkArgument(cipherText.length <= MAX_SIZE_CIPHERTEXT);
+        checkArgument(cipherText.length <= MAX_SIZE_CIPHERTEXT, "cipherText size must not exceed 20 000 bytes");
         NetworkDataValidation.validateECPubKey(senderPublicKey);
         NetworkDataValidation.validateECSignature(signature);
     }
@@ -82,5 +85,15 @@ public final class ConfidentialData implements NetworkProto {
 
     public double getCostFactor() {
         return cipherText.length / (double) MAX_SIZE_CIPHERTEXT;
+    }
+
+    @Override
+    public String toString() {
+        return "ConfidentialData{" +
+                "senderPublicKey=" + Hex.encode(senderPublicKey) +
+                ", iv=" + Hex.encode(iv) +
+                ", cipherText=" + Hex.encode(cipherText) +
+                ", signature=" + Hex.encode(signature) +
+                '}';
     }
 }

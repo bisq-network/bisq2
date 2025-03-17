@@ -35,10 +35,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
+import java.util.NoSuchElementException;
 
 import static bisq.bisq_easy.NavigationTarget.CREATE_BISQ_EASY_PAYMENT_ACCOUNT;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 @Slf4j
 public class PaymentAccountsController implements Controller {
@@ -61,17 +61,15 @@ public class PaymentAccountsController implements Controller {
     public void onActivate() {
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-        accountsPin = accountService.getAccounts().addObserver(() -> {
-            UIThread.run(() -> {
-                model.setAllAccounts(accountService.getAccounts());
-                maybeSelectFirstAccount();
-                model.getNoAccountsSetup().set(!accountService.hasAccounts());
-                model.getHeadline().set(accountService.hasAccounts() ?
-                        Res.get("user.paymentAccounts.headline") :
-                        Res.get("user.paymentAccounts.noAccounts.headline")
-                );
-            });
-        });
+        accountsPin = accountService.getAccounts().addObserver(() -> UIThread.run(() -> {
+            model.setAllAccounts(accountService.getAccounts());
+            maybeSelectFirstAccount();
+            model.getNoAccountsSetup().set(!accountService.hasAccounts());
+            model.getHeadline().set(accountService.hasAccounts() ?
+                    Res.get("user.paymentAccounts.headline") :
+                    Res.get("user.paymentAccounts.noAccounts.headline")
+            );
+        }));
 
         selectedAccountPin = FxBindings.bind(model.selectedAccountProperty())
                 .to(accountService.selectedAccountAsObservable());
@@ -110,37 +108,38 @@ public class PaymentAccountsController implements Controller {
     }
 
     void onSaveAccount() {
-        checkNotNull(model.getSelectedAccount());
-        String accountName = model.getSelectedAccount().getAccountName();
-        String accountData = model.getAccountData();
-        if (accountData != null) {
+        var selectedAccount = this.getSelectedAccount();
+        String accountName = selectedAccount.getAccountName();
+        model.getAccountData().ifPresent(accountData -> {
             checkArgument(accountData.length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH, "Account data must not be longer than 1000 characters");
             UserDefinedFiatAccount newAccount = new UserDefinedFiatAccount(accountName, accountData);
-            accountService.removePaymentAccount(model.getSelectedAccount());
+            accountService.removePaymentAccount(selectedAccount);
             accountService.addPaymentAccount(newAccount);
             accountService.setSelectedAccount(newAccount);
-        }
+        });
     }
 
     void onDeleteAccount() {
-        checkNotNull(model.getSelectedAccount());
-        accountService.removePaymentAccount(model.getSelectedAccount());
+        accountService.removePaymentAccount(this.getSelectedAccount());
         maybeSelectFirstAccount();
     }
 
     private void updateButtonStates() {
-        model.setSaveButtonDisabled(model.getSelectedAccount() == null
-                || model.getAccountData() == null
+        model.setSaveButtonDisabled(model.getSelectedAccount().isEmpty()
                 || model.getAccountData().isEmpty()
-                || model.getSelectedAccount() == null
-                || ((UserDefinedFiatAccount) model.getSelectedAccount()).getAccountPayload().getAccountData().equals(model.getAccountData()));
+                || ((UserDefinedFiatAccount) model.getSelectedAccount().get()).getAccountPayload().getAccountData()
+                .equals(model.getAccountData().get()));
 
-        model.setDeleteButtonDisabled(model.getSelectedAccount() == null);
+        model.setDeleteButtonDisabled(model.getSelectedAccount().isEmpty());
     }
 
     private void maybeSelectFirstAccount() {
-        if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount() == null) {
+        if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount().isEmpty()) {
             accountService.setSelectedAccount(model.getSortedAccounts().get(0));
         }
+    }
+
+    private Account<?, ? extends PaymentMethod<?>> getSelectedAccount() throws NoSuchElementException {
+        return model.getSelectedAccount().orElseThrow(() -> new NoSuchElementException("There is no account selected."));
     }
 }

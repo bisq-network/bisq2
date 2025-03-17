@@ -27,7 +27,7 @@ public class CollectionUtil {
     @Nullable
     public static <T> T getRandomElement(Collection<T> collection) {
         // Got a weird exception with size = -1 (Hashset), so we use the size check instead of isEmpty.
-        return collection.size() < 1 ?
+        return collection.isEmpty() ?
                 null :
                 new ArrayList<>(collection).get(new Random().nextInt(collection.size()));
     }
@@ -43,5 +43,9 @@ public class CollectionUtil {
 
     public static <T> List<T> toShuffledList(Set<T> set) {
         return toShuffledList(set.stream());
+    }
+
+    public static Stream<String> streamFromCsv(String addresses) {
+        return Stream.of(addresses.split(",")).filter(Objects::nonNull).map(String::trim);
     }
 }

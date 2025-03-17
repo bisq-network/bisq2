@@ -17,11 +17,7 @@
 
 package bisq.desktop.components.controls.validator;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
@@ -55,9 +51,9 @@ public abstract class ValidatorBase {
 
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Methods
-    ///////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     /**
      * Will validate the source control.
@@ -88,19 +84,27 @@ public abstract class ValidatorBase {
     protected void onEval() {
         Node control = getSrcControl();
         boolean invalid = hasErrors.get();
-        control.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, invalid);
+        if (control != null) {
+            control.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, invalid);
+        }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    public boolean validateAndGet() {
+        validate();
+        return !isHasErrors();
+    }
+
+
+    /* --------------------------------------------------------------------- */
     // Properties
-    ///////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     /**
      * The {@link Control}/{@link Node} that the validator is checking the value of.
      * <p>
      * Supports {@link Node}s because not all things that need validating are {@link Control}s.
      */
-    protected SimpleObjectProperty<Node> srcControl = new SimpleObjectProperty<>();
+    protected final SimpleObjectProperty<Node> srcControl = new SimpleObjectProperty<>();
 
     /**
      * @see #srcControl
@@ -123,6 +127,7 @@ public abstract class ValidatorBase {
         return this.srcControl;
     }
 
+
     /**
      * Tells whether the validator is "passing" or not.
      * <p>
@@ -132,19 +137,24 @@ public abstract class ValidatorBase {
      * When <em>hasErrors</em> is true, the validator will automatically apply the {@link #PSEUDO_CLASS_ERROR :error}
      * pseudoclass to the {@link #srcControl}.
      */
-    protected ReadOnlyBooleanWrapper hasErrors = new ReadOnlyBooleanWrapper(false);
+    protected final ReadOnlyBooleanWrapper hasErrors = new ReadOnlyBooleanWrapper(false);
 
-    /**
-     * @see #hasErrors
-     */
+    public ReadOnlyBooleanWrapper hasErrorsProperty() {
+        return hasErrors;
+    }
+
     public boolean getHasErrors() {
+        return hasErrors.get();
+    }
+
+    public boolean isHasErrors() {
         return hasErrors.get();
     }
 
     /**
      * The error message to display when the validator is <em>not</em> "passing."
      */
-    protected SimpleStringProperty message = new SimpleStringProperty();
+    protected final SimpleStringProperty message = new SimpleStringProperty();
 
     /**
      * @see #message
@@ -169,7 +179,7 @@ public abstract class ValidatorBase {
 
 
     /***** Icon *****/
-    protected SimpleObjectProperty<Supplier<Node>> iconSupplier = new SimpleObjectProperty<Supplier<Node>>();
+    protected final SimpleObjectProperty<Supplier<Node>> iconSupplier = new SimpleObjectProperty<>();
 
     public void setIconSupplier(Supplier<Node> icon) {
         this.iconSupplier.set(icon);

@@ -19,13 +19,11 @@ package bisq.security.keys;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.crypto.digests.SHA3Digest;
-import org.bouncycastle.crypto.digests.SHA512Digest;
 import org.bouncycastle.math.ec.rfc8032.Ed25519;
 import org.bouncycastle.util.encoders.Base32;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 @Slf4j
 public class TorKeyGeneration {
@@ -66,14 +64,6 @@ public class TorKeyGeneration {
 
         return base32String.toLowerCase() + ".onion";
     }
-
-
-    public static byte[] getPublicKeyFromOnionAddress(String onionAddress) {
-        onionAddress = onionAddress.substring(0, onionAddress.length() - ".onion".length());
-        byte[] decodedOnionAddress = Base32.decode(onionAddress.toUpperCase());
-        return Arrays.copyOfRange(decodedOnionAddress, 0, 32);
-    }
-
 
     private static byte[] computeOnionAddressChecksum(byte[] publicKey) {
         ByteBuffer byteBuffer = ByteBuffer.allocate(15 + 32 + 1);

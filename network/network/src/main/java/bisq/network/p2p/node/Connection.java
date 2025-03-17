@@ -17,12 +17,13 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.threading.ThreadName;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.common.Address;
-import bisq.network.common.DefaultPeerSocket;
-import bisq.network.common.PeerSocket;
+import bisq.common.network.Address;
+import bisq.common.network.DefaultPeerSocket;
+import bisq.common.network.PeerSocket;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -117,41 +118,49 @@ public abstract class Connection {
             PeerSocket peerSocket = new DefaultPeerSocket(socket);
             this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
         } catch (IOException exception) {
-            log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
+            log.error("Could not create objectOutputStream/objectInputStream for socket {}", socket, exception);
             errorHandler.accept(this, exception);
             shutdown(CloseReason.EXCEPTION.exception(exception));
             return;
         }
 
         inputHandlerFuture = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName("Connection.read-" + getThreadNameId());
+            ThreadName.set(this, "read-" + getThreadNameId());
             try {
                 while (isInputStreamActive()) {
                     var proto = networkEnvelopeSocket.receiveNextEnvelope();
                     // parsing might need some time wo we check again if connection is still active
-                    if (isInputStreamActive()) {
-                        checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
-
-                        connectionThrottle.throttleReceiveMessage();
-
-                        long ts = System.currentTimeMillis();
-                        NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
-                        long deserializeTime = System.currentTimeMillis() - ts;
-                        networkEnvelope.verifyVersion();
-                        connectionMetrics.onReceived(networkEnvelope, deserializeTime);
-
-                        EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
-                        log.debug("Received message: {} at: {}",
-                                StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-                        requestResponseManager.onReceived(envelopePayloadMessage);
-                        NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(envelopePayloadMessage,
-                                networkEnvelope.getAuthorizationToken(),
-                                this));
+                    if (!isInputStreamActive()) {
+                        return;
                     }
+                    checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
+
+                    connectionThrottle.throttleReceiveMessage();
+                    // ThrottleReceiveMessage can cause a delay by Thread.sleep
+                    if (!isInputStreamActive()) {
+                        return;
+                    }
+                    long ts = System.currentTimeMillis();
+                    NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
+                    long deserializeTime = System.currentTimeMillis() - ts;
+                    networkEnvelope.verifyVersion();
+                    connectionMetrics.onReceived(networkEnvelope, deserializeTime);
+
+                    EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
+                    log.debug("Received message: {} at: {}",
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
+                    requestResponseManager.onReceived(envelopePayloadMessage);
+                    NetworkService.DISPATCHER.submit(() -> {
+                        if (isInputStreamActive()) {
+                            handler.handleNetworkMessage(envelopePayloadMessage,
+                                    networkEnvelope.getAuthorizationToken(),
+                                    this);
+                        }
+                    });
                 }
             } catch (Exception exception) {
                 //todo (deferred) StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
-                if (isInputStreamActive()) {
+                if (!shutdownStarted) {
                     log.debug("Exception at input handler on {}", this, exception);
                     shutdown(CloseReason.EXCEPTION.exception(exception));
 
@@ -164,9 +173,9 @@ public abstract class Connection {
         });
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
 
     public void addListener(Listener listener) {
@@ -208,9 +217,9 @@ public abstract class Connection {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Package scope API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     Connection send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
         if (isStopped()) {
@@ -226,21 +235,21 @@ public abstract class Connection {
 
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
-            boolean sent = false;
+            boolean success = false;
             long ts = System.currentTimeMillis();
             synchronized (writeLock) {
                 try {
                     networkEnvelopeSocket.send(networkEnvelope);
-                    sent = true;
+                    success = true;
                 } catch (Exception exception) {
                     if (isRunning()) {
                         throw exception;
                     } else {
-                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
+                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
                     }
                 }
             }
-            if (sent) {
+            if (success) {
                 connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
                 if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}",
@@ -253,7 +262,7 @@ public abstract class Connection {
             return this;
         } catch (IOException exception) {
             if (isRunning()) {
-                log.warn("Send message at {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
+                log.warn("Send message at {} failed with {}", this, ExceptionUtil.getRootCauseMessage(exception));
                 shutdown(CloseReason.EXCEPTION.exception(exception));
             }
             // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
@@ -272,7 +281,8 @@ public abstract class Connection {
         }
         log.info("Close {}; \ncloseReason: {}", this, closeReason);
         shutdownStarted = true;
-        requestResponseManager.onClosed();
+        requestResponseManager.dispose();
+        connectionMetrics.clear();
         if (inputHandlerFuture != null) {
             inputHandlerFuture.cancel(true);
         }
@@ -312,9 +322,9 @@ public abstract class Connection {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private String getThreadNameId() {
         return StringUtils.truncate(getPeerAddress().toString() + "-" + id.substring(0, 8));

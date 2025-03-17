@@ -27,7 +27,10 @@ import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
 import bisq.desktop.main.content.bisq_easy.BisqEasyController;
 import bisq.desktop.main.content.chat.common.CommonChatTabController;
 import bisq.desktop.main.content.dashboard.DashboardController;
+import bisq.desktop.main.content.network.NetworkController;
+import bisq.desktop.main.content.reputation.ReputationController;
 import bisq.desktop.main.content.settings.SettingsController;
+import bisq.desktop.main.content.support.SupportController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;
 import bisq.desktop.main.content.user.UserController;
 import bisq.desktop.main.content.wallet.WalletController;
@@ -65,43 +68,21 @@ public class ContentController extends NavigationController {
         if (navigationTarget == NavigationTarget.WALLET && !model.isWalletEnabled()) {
             navigationTarget = NavigationTarget.DASHBOARD;
         }
-        switch (navigationTarget) {
-            case DASHBOARD: {
-                return Optional.of(new DashboardController(serviceProvider));
-            }
-            case DISCUSSION: {
-                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.DISCUSSION, NavigationTarget.DISCUSSION));
-            }
-            case ACADEMY: {
-                return Optional.of(new AcademyController(serviceProvider));
-            }
-            case EVENTS: {
-                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.EVENTS, NavigationTarget.EVENTS));
-            }
-            case SUPPORT: {
-                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.SUPPORT, NavigationTarget.SUPPORT));
-            }
-            case TRADE_PROTOCOLS: {
-                return Optional.of(new TradeAppsController(serviceProvider));
-            }
-            case BISQ_EASY: {
-                return Optional.of(new BisqEasyController(serviceProvider));
-            }
-            case USER: {
-                return Optional.of(new UserController(serviceProvider));
-            }
-            case SETTINGS: {
-                return Optional.of(new SettingsController(serviceProvider));
-            }
-            case WALLET: {
-                return Optional.of(new WalletController(serviceProvider));
-            }
-            case AUTHORIZED_ROLE: {
-                return Optional.of(new AuthorizedRoleController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case DASHBOARD -> Optional.of(new DashboardController(serviceProvider));
+            case BISQ_EASY -> Optional.of(new BisqEasyController(serviceProvider));
+            case REPUTATION -> Optional.of(new ReputationController(serviceProvider));
+            case TRADE_PROTOCOLS -> Optional.of(new TradeAppsController(serviceProvider));
+            case ACADEMY -> Optional.of(new AcademyController(serviceProvider));
+            case CHAT ->
+                    Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.DISCUSSION, NavigationTarget.CHAT));
+            case SUPPORT -> Optional.of(new SupportController(serviceProvider));
+            case USER -> Optional.of(new UserController(serviceProvider));
+            case NETWORK -> Optional.of(new NetworkController(serviceProvider));
+            case SETTINGS -> Optional.of(new SettingsController(serviceProvider));
+            case WALLET -> Optional.of(new WalletController(serviceProvider));
+            case AUTHORIZED_ROLE -> Optional.of(new AuthorizedRoleController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.common.utils;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.PlatformUtils;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.scene.Scene;
@@ -31,6 +31,10 @@ import java.util.Optional;
 
 @Slf4j
 public class FileChooserUtil {
+
+    private static final boolean IS_DIRECTORY_CHOOSER = true;
+    private static final boolean IS_FILE_CHOOSER = false;
+
     public static Optional<File> openFile(Scene scene) {
         return openFile(scene, Optional.empty());
     }
@@ -42,7 +46,7 @@ public class FileChooserUtil {
     private static Optional<File> openFile(Scene scene, Optional<String> initialFileName) {
         FileChooser fileChooser = getFileChooser(initialFileName);
         Optional<File> result = Optional.ofNullable(fileChooser.showOpenDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFielChooserDirectory);
+        result.ifPresent(file -> persistFileChooserDirectory(file, IS_FILE_CHOOSER));
         return result;
     }
 
@@ -57,7 +61,7 @@ public class FileChooserUtil {
     private static Optional<File> saveFile(Scene scene, Optional<String> initialFileName) {
         FileChooser fileChooser = getFileChooser(initialFileName);
         Optional<File> result = Optional.ofNullable(fileChooser.showSaveDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFielChooserDirectory);
+        result.ifPresent(file -> persistFileChooserDirectory(file, IS_FILE_CHOOSER));
         return result;
     }
 
@@ -73,14 +77,14 @@ public class FileChooserUtil {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         String directory = initialDirectory
                 .orElse(SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
-                        .orElse(OsUtils.getDownloadOfHomeDir()));
+                        .orElse(PlatformUtils.getDownloadOfHomeDir()));
         File initDir = new File(directory);
         if (initDir.isDirectory()) {
             directoryChooser.setInitialDirectory(initDir);
         }
         directoryChooser.setTitle(title);
         Optional<File> result = Optional.ofNullable(directoryChooser.showDialog(scene.getWindow()));
-        result.ifPresent(FileChooserUtil::persistFielChooserDirectory);
+        result.ifPresent(file -> persistFileChooserDirectory(file, IS_DIRECTORY_CHOOSER));
         return result;
     }
 
@@ -88,7 +92,7 @@ public class FileChooserUtil {
         FileChooser fileChooser = new FileChooser();
         initialFileName.ifPresent(fileChooser::setInitialFileName);
         String initialDirectory = SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
-                .orElse(OsUtils.getDownloadOfHomeDir());
+                .orElse(PlatformUtils.getDownloadOfHomeDir());
         File initDir = new File(initialDirectory);
         if (initDir.isDirectory()) {
             fileChooser.setInitialDirectory(initDir);
@@ -96,7 +100,8 @@ public class FileChooserUtil {
         return fileChooser;
     }
 
-    private static void persistFielChooserDirectory(File file) {
-        SettingsService.getInstance().setCookie(CookieKey.FILE_CHOOSER_DIR, Paths.get(file.getAbsolutePath()).getParent().toString());
+    private static void persistFileChooserDirectory(File file, boolean isDirectoryChooser) {
+        String directoryToPersist = isDirectoryChooser ? file.getAbsolutePath() : Paths.get(file.getAbsolutePath()).getParent().toString();
+        SettingsService.getInstance().setCookie(CookieKey.FILE_CHOOSER_DIR, directoryToPersist);
     }
 }

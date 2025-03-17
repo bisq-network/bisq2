@@ -17,15 +17,15 @@
 
 package bisq.chat;
 
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -42,7 +42,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     protected final ChatChannelDomain chatChannelDomain;
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     @Getter
-    protected final transient ObservableSet<String> userProfileIdsOfParticipants = new ObservableSet<>();
+    protected final transient ObservableSet<String> userProfileIdsOfActiveParticipants = new ObservableSet<>();
     protected final transient Map<String, AtomicInteger> numMessagesByAuthorId = new HashMap<>();
     @Getter
     protected final transient Set<String> userProfileIdsOfSendingLeaveMessage = new HashSet<>();
@@ -68,31 +68,23 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     }
 
     public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
-        switch (proto.getMessageCase()) {
-            case TWOPARTYPRIVATECHATCHANNEL: {
-                return TwoPartyPrivateChatChannel.fromProto(proto, proto.getTwoPartyPrivateChatChannel());
-            }
-            case BISQEASYOPENTRADECHANNEL: {
-                return BisqEasyOpenTradeChannel.fromProto(proto, proto.getBisqEasyOpenTradeChannel());
-            }
-            case BISQEASYOFFERBOOKCHANNEL: {
-                return BisqEasyOfferbookChannel.fromProto(proto, proto.getBisqEasyOfferbookChannel());
-            }
-            case COMMONPUBLICCHATCHANNEL: {
-                return CommonPublicChatChannel.fromProto(proto, proto.getCommonPublicChatChannel());
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case TWOPARTYPRIVATECHATCHANNEL ->
+                    TwoPartyPrivateChatChannel.fromProto(proto, proto.getTwoPartyPrivateChatChannel());
+            case BISQEASYOPENTRADECHANNEL ->
+                    BisqEasyOpenTradeChannel.fromProto(proto, proto.getBisqEasyOpenTradeChannel());
+            case BISQEASYOFFERBOOKCHANNEL ->
+                    BisqEasyOfferbookChannel.fromProto(proto, proto.getBisqEasyOfferbookChannel());
+            case COMMONPUBLICCHATCHANNEL ->
+                    CommonPublicChatChannel.fromProto(proto, proto.getCommonPublicChatChannel());
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+        };
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public boolean addChatMessage(M chatMessage) {
         boolean changed = getChatMessages().add(chatMessage);
@@ -112,7 +104,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
                 AtomicInteger numMessages = numMessagesByAuthorId.get(authorUserProfileId);
                 if (numMessages.get() > 0 && numMessages.decrementAndGet() == 0) {
                     // If no more messages of that user exist we remove them from userProfileIdsOfParticipants
-                    userProfileIdsOfParticipants.remove(chatMessage.getAuthorUserProfileId());
+                    userProfileIdsOfActiveParticipants.remove(chatMessage.getAuthorUserProfileId());
                 }
             }
         }
@@ -126,8 +118,4 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     public abstract String getDisplayString();
 
     public abstract ObservableSet<M> getChatMessages();
-
-    public boolean isParticipant(UserProfile userProfile) {
-        return userProfileIdsOfParticipants.contains(userProfile.getId());
-    }
 }

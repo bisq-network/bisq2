@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -56,6 +57,21 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     }
 
     @Override
+    protected boolean isDataValid(AuthorizedBondedReputationData data) {
+        // We added fields in AuthorizedBondedReputationData in v2.1.0 and increased version in AuthorizedBondedReputationData to 1.
+        // We had published both version 0 and 1 data, and old version 0 had no txId and blockHeight set.
+        // Version 0 data with txId and blockHeight do not cause any conflict as the hashcode is the same as a version 1 data.
+        // Though version 0 data without txId and blockHeight would have a diff. hashcode and would cause duplication
+        // in the score calculations.
+        // With 2.1.6 we do not publish version 0 data anymore, but as they have a TTL of 100 days,
+        // they will be present still a while. From June 2025 on there should not no version 0 data anymore in the network
+        // and this check can be removed.
+        // In case we would get old protobuf data where txId and blockHeight are not present, we would get an empty string
+        // and 0 as values (default values for missing fields).
+        return data.getTxId().length() == 64 && data.getBlockHeight() > 0;
+    }
+
+    @Override
     protected ByteArray getDataKey(AuthorizedBondedReputationData data) {
         return new ByteArray(data.getHash());
     }
@@ -68,11 +84,14 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     @Override
     public long calculateScore(AuthorizedBondedReputationData data) {
         checkArgument(data.getLockTime() >= LOCK_TIME);
-        return doCalculateScore(data.getAmount());
+        return doCalculateScore(data.getAmount(), data.getBlockTime());
     }
 
-    public static long doCalculateScore(long amount) {
+    public static long doCalculateScore(long amount, long blockTime) {
         checkArgument(amount >= 0);
-        return MathUtils.roundDoubleToLong(amount / 100d * WEIGHT);
+        checkArgument(blockTime < System.currentTimeMillis() + TimeUnit.HOURS.toMillis(4),
+                "blockTime must not be more then 4 hours in future");
+        double ageBoostFactor = getAgeBoostFactor(blockTime);
+        return MathUtils.roundDoubleToLong(amount / 100d * WEIGHT * ageBoostFactor);
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.network_load;
 
+import bisq.common.threading.ThreadName;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -39,8 +40,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class NetworkLoadExchangeService implements Node.Listener {
     private static final long TIMEOUT_SEC = 120;
-    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(10);
-    private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
+    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toMillis(10);
+    private static final long INTERVAL = TimeUnit.MINUTES.toMillis(3);
     private static final long MAX_IDLE = TimeUnit.MINUTES.toMillis(5);
 
     private final Node node;
@@ -54,8 +55,9 @@ public class NetworkLoadExchangeService implements Node.Listener {
 
     public void initialize() {
         scheduler = Optional.of(Scheduler.run(this::requestFromAll)
-                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
-                .name("NetworkLoadExchangeService.scheduler"));
+                .host(this)
+                .runnableName("requestFromAll")
+                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.MILLISECONDS));
     }
 
     public void shutdown() {
@@ -88,18 +90,19 @@ public class NetworkLoadExchangeService implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        if (envelopePayloadMessage instanceof NetworkLoadExchangeRequest) {
-            NetworkLoadExchangeRequest request = (NetworkLoadExchangeRequest) envelopePayloadMessage;
+        if (envelopePayloadMessage instanceof NetworkLoadExchangeRequest request) {
             NetworkLoad peersNetworkLoad = request.getNetworkLoad();
-            log.info("Received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
+            log.debug("Received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
                     request.getNonce(), peersNetworkLoad, connection.getPeerAddress());
             connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
             NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
             NetworkLoadExchangeResponse response = new NetworkLoadExchangeResponse(request.getNonce(),
                     myNetworkLoad);
-            NetworkService.NETWORK_IO_POOL.submit(() ->
-                    node.send(response, connection));
-            log.info("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
+            NetworkService.NETWORK_IO_POOL.submit(() -> {
+                ThreadName.set(this, "response");
+                node.send(response, connection);
+            });
+            log.debug("Sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
                     request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
         }
     }

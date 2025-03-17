@@ -1,3 +1,12 @@
+import java.util.Properties
+
+// Function to read properties from a file - TODO find a way to reuse this code instead of copying when needed
+fun readPropertiesFile(filePath: String): Properties {
+    val properties = Properties()
+    file(filePath).inputStream().use { properties.load(it) }
+    return properties
+}
+
 plugins {
     id("bisq.java-library")
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
@@ -6,19 +15,39 @@ plugins {
     alias(libs.plugins.openjfx)
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
+}
+
+
 application {
     mainClass.set("bisq.desktop_app_launcher.DesktopAppLauncher")
 }
 
+
+packaging {
+    name.set("Bisq2")
+    val properties = readPropertiesFile("../../../gradle.properties")
+    val rootVersion = properties.getProperty("version", "unspecified")
+    version.set(rootVersion.toString())
+    // println("version is ${version.get()}")
+}
+
 javafx {
-    version = "17.0.1"
+    version = "22.0.1"
     modules = listOf("javafx.controls", "javafx.media")
 }
 
 dependencies {
     implementation("bisq:common")
     implementation("bisq:security")
+    implementation("bisq:java-se")
     implementation("bisq:application")
+    implementation("bisq:evolution")
 
     implementation(project(":desktop-app"))
 }

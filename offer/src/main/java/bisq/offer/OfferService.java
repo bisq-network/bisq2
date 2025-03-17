@@ -35,13 +35,13 @@ public class OfferService implements Service {
 
     public OfferService(NetworkService networkService, IdentityService identityService, PersistenceService persistenceService) {
         // offerMessageService = new OfferMessageService(networkService, identityService);
-        // multisigOfferService = new MultisigOfferService(persistenceService, offerMessageService);
+        // bisqMuSigOfferService = new BisqMuSigOfferService(persistenceService, offerMessageService);
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         return CompletableFuture.completedFuture(true);

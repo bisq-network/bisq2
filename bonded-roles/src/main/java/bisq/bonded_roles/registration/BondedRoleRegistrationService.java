@@ -24,7 +24,7 @@ import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
-import bisq.network.common.AddressByTransportTypeMap;
+import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.security.DigestUtil;
@@ -46,9 +46,9 @@ public class BondedRoleRegistrationService implements Service {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -62,9 +62,9 @@ public class BondedRoleRegistrationService implements Service {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public boolean requestBondedRoleRegistration(String profileId,
                                                  String authorizedPublicKey,
@@ -91,8 +91,7 @@ public class BondedRoleRegistrationService implements Service {
                 addressByTransportTypeMap,
                 networkId,
                 isCancellationRequest);
-        authorizedOracleNodes.forEach(oracleNode ->
-        {
+        authorizedOracleNodes.forEach(oracleNode -> {
             NetworkId oracleNodeNetworkId = oracleNode.getNetworkId();
             log.info("Send BondedRoleRegistrationRequest to oracleNode {}.\nBondedRoleRegistrationRequest={}", oracleNodeNetworkId, request);
             networkService.confidentialSend(request, oracleNodeNetworkId, senderNetworkIdWithKeyPair);

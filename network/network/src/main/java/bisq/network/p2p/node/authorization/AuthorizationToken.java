@@ -21,6 +21,7 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashToken;
 import bisq.network.p2p.node.authorization.token.hash_cash.HashCashToken;
+import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2Token;
 import lombok.Getter;
 
 public abstract class AuthorizationToken implements NetworkProto {
@@ -46,6 +47,9 @@ public abstract class AuthorizationToken implements NetworkProto {
             }
             case EQUIHASHTOKEN: {
                 return EquiHashToken.fromProto(proto);
+            }
+            case HASHCASHV2TOKEN: {
+                return HashCashV2Token.fromProto(proto);
             }
         }
         throw new UnresolvableProtobufMessageException(proto);

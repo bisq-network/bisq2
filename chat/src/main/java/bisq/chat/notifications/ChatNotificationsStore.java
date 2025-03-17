@@ -86,7 +86,7 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
 
     Optional<ChatNotification> findNotification(String id) {
         return chatNotifications.stream()
-                .filter(e -> e.getId().equals(id))
+                .filter(chatNotification -> chatNotification.getId().equals(id))
                 .findAny();
     }
 

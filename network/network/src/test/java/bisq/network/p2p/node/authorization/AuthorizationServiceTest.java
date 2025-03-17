@@ -18,9 +18,8 @@ public class AuthorizationServiceTest {
         AuthorizationTokenType result;
 
         // Empty myPreferredAuthorizationTokenTypes not allowed
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            AuthorizationService.selectAuthorizationTokenType(new ArrayList<>(), new ArrayList<>());
-        });
+        Assertions.assertThrows(IllegalArgumentException.class, () ->
+                AuthorizationService.selectAuthorizationTokenType(new ArrayList<>(), new ArrayList<>()));
 
         // Empty peersFeatures, we use first myPreferredAuthorizationTokenTypes item as default
         myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
@@ -91,6 +90,20 @@ public class AuthorizationServiceTest {
         result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
         assertEquals(AuthorizationTokenType.EQUI_HASH, result);
 
+        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH);
+        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH_V2);
+        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
+        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
+
+        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_HASH_CASH_V2);
+        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH_V2);
+        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
+        assertEquals(AuthorizationTokenType.HASH_CASH_V2, result);
+
+        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH_V2);
+        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
+        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
+        assertEquals(AuthorizationTokenType.HASH_CASH_V2, result);
 
         // Multiple myPreferredAuthorizationTokenTypes and peersFeatures
         peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_EQUI_HASH);

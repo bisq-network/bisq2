@@ -17,9 +17,11 @@
 
 package bisq.network.p2p;
 
-import bisq.common.util.FileUtils;
-import bisq.network.common.Address;
-import bisq.network.common.TransportType;
+import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileUtils;
+import bisq.common.network.Address;
+import bisq.common.network.DefaultLocalhostFacade;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.Feature;
@@ -110,12 +112,16 @@ public class ProtoBufMessageLengthTests {
     }
 
     private bisq.network.protobuf.NetworkEnvelope createValidRequest() {
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
+        Capability peerCapability = createCapability(DefaultLocalhostFacade.toLocalHostAddress(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
-                Address.localHost(1234).getFullAddress(),
+                DefaultLocalhostFacade.toLocalHostAddress(1234).getFullAddress(),
                 0, new ArrayList<>());
         return new NetworkEnvelope(token, request).completeProto();
+    }
+
+    private static Capability createCapability(Address address, List<TransportType> supportedTransportTypes) {
+        return new Capability(Capability.VERSION, address, supportedTransportTypes, new ArrayList<>(), ApplicationVersion.getVersion().getVersionAsString());
     }
 }

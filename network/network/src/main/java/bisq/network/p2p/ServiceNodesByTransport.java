@@ -19,21 +19,22 @@ package bisq.network.p2p;
 
 
 import bisq.common.data.Pair;
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.platform.MemoryReportService;
+import bisq.common.threading.ThreadName;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.StringUtils;
 import bisq.network.SendMessageResult;
-import bisq.network.common.Address;
-import bisq.network.common.AddressByTransportTypeMap;
-import bisq.network.common.TransportConfig;
-import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
-import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
@@ -41,11 +42,13 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
+import bisq.network.p2p.services.reporting.Report;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -68,6 +71,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class ServiceNodesByTransport {
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<TransportType> supportedTransportTypes;
+    @Getter
     private final AuthorizationService authorizationService;
 
     public ServiceNodesByTransport(Map<TransportType, TransportConfig> configByTransportType,
@@ -85,7 +89,7 @@ public class ServiceNodesByTransport {
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                                    Optional<ResendMessageService> resendMessageService,
-                                   NetworkLoadSnapshot networkLoadSnapshot) {
+                                   MemoryReportService memoryReportService) {
         this.supportedTransportTypes = supportedTransportTypes;
 
         authorizationService = new AuthorizationService(authorizationServiceConfig,
@@ -112,28 +116,31 @@ public class ServiceNodesByTransport {
                     nodeConfig,
                     peerGroupServiceConfig,
                     inventoryServiceConfig,
+                    keyBundleService,
+                    persistenceService,
                     dataService,
                     messageDeliveryStatusService,
                     resendMessageService,
-                    keyBundleService,
-                    persistenceService,
                     authorizationService,
                     seedAddresses,
                     transportType,
-                    networkLoadSnapshot);
+                    memoryReportService);
             map.put(transportType, serviceNode);
         });
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() -> entry.getValue().getInitializedDefaultNode(defaultNetworkId),
+                        entry -> supplyAsync(() -> {
+                                    ThreadName.set(this, "getInitializedDefaultNode-" + entry.getKey().name());
+                                    return entry.getValue().getInitializedDefaultNode(defaultNetworkId);
+                                },
                                 NETWORK_IO_POOL)));
     }
 
@@ -158,6 +165,7 @@ public class ServiceNodesByTransport {
 
     public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
         return supplyAsync(() -> {
+            ThreadName.set(this, "supplyInitializedNode-" + StringUtils.truncate(networkId.getAddresses(), 10));
             ServiceNode serviceNode = map.get(transportType);
             if (serviceNode.isNodeInitialized(networkId)) {
                 return serviceNode.findNode(networkId).orElseThrow();
@@ -177,8 +185,12 @@ public class ServiceNodesByTransport {
     }
 
     public void addSeedNode(AddressByTransportTypeMap seedNodeMap) {
-        supportedTransportTypes.forEach(transportType ->
-                map.get(transportType).addSeedNodeAddress(seedNodeMap.get(transportType)));
+        supportedTransportTypes.forEach(transportType -> {
+            if (seedNodeMap.containsKey(transportType)) {
+                Address seedNodeAddress = seedNodeMap.get(transportType);
+                map.get(transportType).addSeedNodeAddress(seedNodeAddress);
+            }
+        });
     }
 
     public void removeSeedNode(AddressByTransportTypeMap seedNode) {
@@ -256,12 +268,6 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDefaultNode().getObservableState()));
     }
 
-    public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {
-        return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> entry.getValue().getTransportService().getBootstrapInfo()));
-    }
-
     public Optional<ServiceNode> findServiceNode(TransportType transport) {
         return Optional.ofNullable(map.get(transport));
     }
@@ -277,7 +283,27 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toSet());
     }
 
-    public Collection<ServiceNode> getAllServices() {
+    public Map<TransportType, Boolean> isPeerOnline(NetworkId networkId, AddressByTransportTypeMap peer) {
+        return peer.entrySet().stream().map(entry -> {
+                    TransportType transportType = entry.getKey();
+                    if (map.containsKey(transportType)) {
+                        return new Pair<>(transportType, map.get(transportType).isPeerOnline(networkId, entry.getValue()));
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
+    }
+
+    public Collection<ServiceNode> getAllServiceNodes() {
         return map.values();
+    }
+    public Map<TransportType, ServiceNode> getServiceNodesByTransport() {
+        return map;
+    }
+
+    public CompletableFuture<Report> requestReport(Address address) {
+        return map.get(address.getTransportType()).requestReport(address);
     }
 }

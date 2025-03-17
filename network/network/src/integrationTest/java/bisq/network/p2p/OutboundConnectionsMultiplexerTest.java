@@ -17,10 +17,12 @@
 
 package bisq.network.p2p;
 
-import bisq.common.util.FileUtils;
+import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileUtils;
+import bisq.common.network.DefaultLocalhostFacade;
 import bisq.common.util.NetworkUtils;
-import bisq.network.common.Address;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationTokenType;
@@ -42,8 +44,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 @Slf4j
@@ -59,8 +60,8 @@ public class OutboundConnectionsMultiplexerTest {
         ArrayList<TransportType> supportedTransportTypes = new ArrayList<>();
         supportedTransportTypes.add(TransportType.CLEAR);
 
-        Address serverAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
-        Capability serverCapability = new Capability(serverAddress, supportedTransportTypes, new ArrayList<>());
+        Address serverAddress = DefaultLocalhostFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
+        Capability serverCapability = createCapability(serverAddress, supportedTransportTypes);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
                 new NetworkLoad(),
@@ -83,8 +84,8 @@ public class OutboundConnectionsMultiplexerTest {
                 }
 
                 AuthorizationService authorizationService = createAuthorizationService();
-                Address outboundAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
-                Capability outboundCapability = new Capability(outboundAddress, supportedTransportTypes, new ArrayList<>());
+                Address outboundAddress = DefaultLocalhostFacade.toLocalHostAddress(NetworkUtils.findFreeSystemPort());
+                Capability outboundCapability = createCapability(outboundAddress, supportedTransportTypes);
                 Selector selector = SelectorProvider.provider().openSelector();
 
                 var outboundConnectionManager = new OutboundConnectionManager(
@@ -132,5 +133,9 @@ public class OutboundConnectionsMultiplexerTest {
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),
                 Set.of(Feature.AUTHORIZATION_HASH_CASH));
+    }
+
+    private static Capability createCapability(Address address, List<TransportType> supportedTransportTypes) {
+        return new Capability(Capability.VERSION, address, supportedTransportTypes, new ArrayList<>(), ApplicationVersion.getVersion().getVersionAsString());
     }
 }

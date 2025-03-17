@@ -19,10 +19,12 @@ package bisq.persistence;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
+import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -31,8 +33,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
     public static final String EXTENSION = ".protobuf";
-
-    private static final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("Persistence-io-pool");
+    private static final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("Persistence");
 
     @Getter
     private final Path storePath;
@@ -41,11 +42,11 @@ public class Persistence<T extends PersistableStore<T>> {
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
-    public Persistence(String directory, String fileName) {
+    public Persistence(String directory, String fileName, MaxBackupSize maxBackupSize) {
         this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
-        storePath = Path.of(directory, storageFileName + EXTENSION);
-        var storeFileManager = new PersistableStoreFileManager(storePath);
+        storePath = Paths.get(directory, storageFileName + EXTENSION);
+        var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }
 
@@ -58,17 +59,14 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
-        return CompletableFuture.runAsync(() -> {
-            Thread.currentThread().setName("Persistence.persist-" + fileName);
-            persist(serializable);
-        }, executorService);
-    }
-
-    public CompletableFuture<Void> flush() {
-        return CompletableFuture.runAsync(() -> Thread.currentThread().setName("Flush-Persistence.persist-" + storePath), executorService);
+        return CompletableFuture.runAsync(() -> persist(serializable), executorService);
     }
 
     protected void persist(T persistableStore) {
         persistableStoreReaderWriter.write(persistableStore);
+    }
+
+    public CompletableFuture<Void> pruneBackups() {
+        return CompletableFuture.runAsync(persistableStoreReaderWriter::pruneBackups, executorService);
     }
 }

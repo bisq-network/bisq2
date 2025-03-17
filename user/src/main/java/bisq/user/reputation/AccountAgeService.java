@@ -19,6 +19,7 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
+import bisq.common.data.Pair;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
@@ -55,7 +56,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @Slf4j
 public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore>, AuthorizedBondedRolesService.Listener {
-    public static final long WEIGHT = 2;
+    public static final long WEIGHT = 4;
     public static final long MAX_DAYS_AGE_SCORE = 2000;
 
     // Has to be in sync with Bisq1 class
@@ -98,7 +99,10 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     @Override
     public CompletableFuture<Boolean> initialize() {
         // We delay a bit to ensure the network is well established
-        Scheduler.run(this::maybeRequestAgain).after(3, TimeUnit.SECONDS);
+        Scheduler.run(this::maybeRequestAgain)
+                .host(this)
+                .runnableName("maybeRequestAgain")
+                .after(3, TimeUnit.SECONDS);
         return super.initialize();
     }
 
@@ -113,7 +117,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
                         .ifPresent(dataSetByHash::remove);
                 if (scoreByUserProfileId.containsKey(userProfileId)) {
                     scoreByUserProfileId.remove(userProfileId);
-                    userProfileIdOfUpdatedScore.set(userProfileId);
+                    userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
                 }
             }
         }
@@ -193,6 +197,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         if (now - persistableStore.getLastRequested() > AuthorizedAccountAgeData.TTL / 2) {
             persistableStore.getJsonRequests().forEach(this::doRequestAuthorization);
             persistableStore.setLastRequested(now);
+            persist();
         }
     }
 }

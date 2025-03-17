@@ -87,3 +87,124 @@
     -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
+
+/*******************************************************************************
+ * User Profile Controller                                                     *
+ ******************************************************************************/
+
+.user-profile-selection .dropdown-menu {
+    -fx-alignment: center;
+    -fx-min-height: 45;
+}
+
+.user-profile-selection .dropdown-menu .dropdown-menu-content-hbox,
+.user-profile-selection-material-design .dropdown-menu .dropdown-menu-content-hbox {
+    -fx-alignment: center;
+}
+
+.user-profile-selection-material-design .dropdown-menu,
+.user-profile-selection-material-design .dropdown-menu:hover {
+    -fx-background-color: none;
+}
+
+.user-profile-selection .single-user-profile {
+    -fx-min-height: 45;
+    -fx-padding: 0 5 0 5;
+    -fx-alignment: center;
+}
+
+.user-profile-selection-material-design .user-profile-display-name {
+    -fx-font-size: 0.8em !important;
+}
+
+.user-profile-selection-material-design .dropdown-menu,
+.user-profile-selection-material-design .single-user-profile {
+    -fx-padding: 0 10 !important;
+    -fx-min-height: 35;
+    -fx-alignment: center;
+}
+
+/*******************************************************************************
+ * Profile Card                                                                *
+ ******************************************************************************/
+
+.profile-card .header-content {
+    -fx-max-height: 100;
+    -fx-pref-height: 100;
+    -fx-min-height: 100;
+    -fx-padding: 0 0 2 0;
+}
+
+.profile-card .total-score,
+.profile-card .ranking {
+    -fx-font-size: 1.2em;
+}
+
+.profile-card .total-score-box,
+.profile-card .ranking-box {
+    -fx-alignment: baseline-left;
+    -fx-padding: 0 0 -3 0;
+}
+
+.profile-card .overview .metric {
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.profile-card .bisq-common-bg {
+    -fx-padding: 35 !important;
+}
+
+.profile-card .profile-card-table-header {
+    -fx-pref-height: 8;
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.profile-card .profile-card-table.table-view {
+    -fx-pref-height: 300;
+    -fx-background-radius: 0 0 8 8;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+
+.profile-card .profile-card-table.table-view .table-cell .text {
+    -fx-font-size: 0.9em;
+    -fx-padding: 0;
+}
+
+.profile-card .profile-card-table.table-view .column-header {
+    -fx-pref-height: 25;
+}
+
+.profile-card .profile-card-table.table-view .column-header .label {
+    -fx-alignment: center;
+}
+
+.profile-card .profile-card-table.table-view .column-header-background {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-padding: 0 0 3 0;
+}
+
+.profile-card .profile-card-table.table-view .table-row-cell {
+    -fx-border-width: 0;
+}
+
+.profile-card .message-list-bg {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8;
+}
+
+.profile-card .message-bg {
+    -fx-background-color: -bisq-dark-grey-50;
+    -fx-background-radius: 8;
+}
+
+.profile-card .no-messages-placeholder-label {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.3em;
+    -fx-padding: 130 0 0 0;
+}

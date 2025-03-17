@@ -18,10 +18,11 @@
 package bisq.bonded_roles.release;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
+import bisq.common.platform.Version;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.Version;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -34,18 +35,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @ToString
 @EqualsAndHashCode
 @Getter
 public final class ReleaseNotification implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    private final int version;
     private final String id;
     private final long date;
     private final boolean isPreRelease;
@@ -53,10 +57,17 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private final String releaseNotes;
     private final String versionString;
     private final String releaseManagerProfileId;
+
+    // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
+    // We add version 2 and 3 for extra safety...
+    // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
+    // and use default `@ExcludeForHash` instead.
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
-    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
-    private transient final Version version;
+
+    // transient fields are excluded by default for EqualsAndHashCode
+    private transient final Version releaseVersion;
 
     public ReleaseNotification(String id,
                                long date,
@@ -66,6 +77,27 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                                String versionString,
                                String releaseManagerProfileId,
                                boolean staticPublicKeysProvided) {
+        this(VERSION,
+                id,
+                date,
+                isPreRelease,
+                isLauncherUpdate,
+                releaseNotes,
+                versionString,
+                releaseManagerProfileId,
+                staticPublicKeysProvided);
+    }
+
+    private ReleaseNotification(int version,
+                                String id,
+                                long date,
+                                boolean isPreRelease,
+                                boolean isLauncherUpdate,
+                                String releaseNotes,
+                                String versionString,
+                                String releaseManagerProfileId,
+                                boolean staticPublicKeysProvided) {
+        this.version = version;
         this.id = id;
         this.date = date;
         this.isPreRelease = isPreRelease;
@@ -75,7 +107,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         this.releaseManagerProfileId = releaseManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
-        version = new Version(versionString);
+        releaseVersion = new Version(versionString);
 
         verify();
     }
@@ -99,7 +131,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 .setReleaseNotes(releaseNotes)
                 .setVersionString(versionString)
                 .setReleaseManagerProfileId(releaseManagerProfileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+                .setStaticPublicKeysProvided(staticPublicKeysProvided)
+                .setVersion(version);
     }
 
     @Override
@@ -108,14 +141,17 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     }
 
     public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto) {
-        return new ReleaseNotification(proto.getId(),
+        return new ReleaseNotification(
+                proto.getVersion(),
+                proto.getId(),
                 proto.getDate(),
                 proto.getIsPreRelease(),
                 proto.getIsLauncherUpdate(),
                 proto.getReleaseNotes(),
                 proto.getVersionString(),
                 proto.getReleaseManagerProfileId(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

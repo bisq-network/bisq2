@@ -17,10 +17,10 @@
 
 package bisq.network.p2p.services.peer_group;
 
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.StringUtils;
-import bisq.network.common.Address;
-import bisq.network.common.TransportType;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.DbSubDirectory;
@@ -101,9 +101,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
                 persistableStore);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Persisted peers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Map<Address, Peer> getPersistedPeersByAddress() {
         return persistableStore.getPersistedPeersByAddress();
@@ -158,10 +158,15 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         }
     }
 
+    public void clearPersistedPeers() {
+        getPersistedPeersByAddress().clear();
+        persist();
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* --------------------------------------------------------------------- */
     // Reported peers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Set<Peer> getReportedPeers() {
         return new HashSet<>(reportedPeersByAddress.values());
@@ -185,10 +190,14 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         peers.forEach(peer -> reportedPeersByAddress.remove(peer.getAddress()));
     }
 
+    public void clearReportedPeers() {
+        reportedPeersByAddress.clear();
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* --------------------------------------------------------------------- */
     // Connections
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public boolean isSeed(Connection connection) {
         return seedNodeAddresses.stream().anyMatch(seedAddress -> seedAddress.equals(connection.getPeerAddress()));
@@ -203,9 +212,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Peers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Stream<Peer> getAllConnectedPeers(Node node) {
         return node.getAllActiveConnections().map(connection -> {
@@ -254,12 +263,14 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Address
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void addSeedNodeAddress(Address seedNodeAddress) {
-        this.seedNodeAddresses.add(seedNodeAddress);
+        if (seedNodeAddress != null) {
+            this.seedNodeAddresses.add(seedNodeAddress);
+        }
     }
 
     public void removeSeedNodeAddress(Address seedNodeAddress) {
@@ -280,9 +291,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void maybePrintReportedPeers(Map<Address, Peer> map, String info) {
         if (System.currentTimeMillis() - lastReportTs < MIN_PRINT_INTERVAL) {
@@ -291,7 +302,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         lastReportTs = System.currentTimeMillis();
         List<Peer> sortedList = map.values().stream()
                 .sorted()
-                .collect(Collectors.toList());
+                .toList();
         long liveAge = TimeUnit.MINUTES.toMillis(10);
         long numPeers = sortedList.size();
         long numLivePeers = sortedList.stream().filter(peer -> peer.getAge() < liveAge).count();
@@ -299,28 +310,11 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         String range = StringUtils.formatTime(sortedList.get(0).getAge()) +
                 " to " +
                 StringUtils.formatTime(sortedList.get(sortedList.size() - 1).getAge());
-        log.info("\n##########################################################################################\n" +
-                        info + " peers\n" +
-                        "##########################################################################################\n" +
-                        "Number of peers: {}\n" +
-                        "Number of peers with age < 10 min: {}\n" +
-                        "Number of peers with age >= 10 min {}\n" +
-                        "Age range from {}\n" +
-                        "##########################################################################################",
-                numPeers, numLivePeers, numNonLivePeers, range);
+        log.info("\n##########################################################################################\n{} peers\n##########################################################################################\nNumber of peers: {}\nNumber of peers with age < 10 min: {}\nNumber of peers with age >= 10 min {}\nAge range from {}\n##########################################################################################", info, numPeers, numLivePeers, numNonLivePeers, range);
 
         String peerAddressesByAge = Joiner.on("\n").join(sortedList.stream()
                 .map(peer -> "Age: " + StringUtils.formatTime(peer.getAge()) + "; Address: " + peer.getAddress().getFullAddress())
                 .collect(Collectors.toList()));
-        log.debug("\n##########################################################################################\n" +
-                        info + " peers\n" +
-                        "##########################################################################################\n" +
-                        "Number of peers: {}\n" +
-                        "Number of peers with age < 10 min: {}\n" +
-                        "Number of peers with age >= 10 min {}\n" +
-                        "Age range from {}\n" +
-                        "Peer addressesByAge:\n{}\n" +
-                        "##########################################################################################",
-                numPeers, numLivePeers, numNonLivePeers, range, peerAddressesByAge);
+        log.debug("\n##########################################################################################\n{} peers\n##########################################################################################\nNumber of peers: {}\nNumber of peers with age < 10 min: {}\nNumber of peers with age >= 10 min {}\nAge range from {}\nPeer addressesByAge:\n{}\n##########################################################################################", info, numPeers, numLivePeers, numNonLivePeers, range, peerAddressesByAge);
     }
 }

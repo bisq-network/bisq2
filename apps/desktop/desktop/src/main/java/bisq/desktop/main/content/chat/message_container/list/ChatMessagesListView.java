@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
@@ -66,7 +83,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         super(new CustomStackPane(), model, controller);
 
         listView = new ListView<>(model.getSortedChatMessages());
-        listView.getStyleClass().add("chat-messages-list-view");
+        listView.getStyleClass().addAll("chat-messages-list-view", "force-hide-horizontal-scrollbar");
 
         VBox placeholder = ChatUtil.createEmptyChatPlaceholder(placeholderTitle, placeholderDescription);
         listView.setPlaceholder(placeholder);
@@ -104,7 +121,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
 
     @Override
     protected void onViewAttached() {
-        ListViewUtil.findScrollbarAsync(listView, Orientation.VERTICAL, 1000).whenComplete((scrollBar, throwable) -> {
+        ListViewUtil.findScrollbarAsync(listView, Orientation.VERTICAL, 3000).whenComplete((scrollBar, throwable) -> {
             if (throwable != null) {
                 log.error("Find scrollbar failed", throwable);
                 return;
@@ -123,8 +140,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         scrollDownBackground.managedProperty().bind(model.getShowScrolledDownButton());
 
         scrollDownBadge.textProperty().bind(model.getNumUnReadMessages());
-
         scrollDownBadge.setOpacity(0);
+
         showScrolledDownButtonPin = EasyBind.subscribe(model.getShowScrolledDownButton(), showScrolledDownButton -> {
             if (showScrolledDownButton == null) {
                 return;

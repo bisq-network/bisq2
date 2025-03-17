@@ -30,17 +30,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class UserProfileModel implements Model {
+    static final double CAT_HASH_IMAGE_SIZE = 125;
     private final ObjectProperty<UserIdentity> selectedUserIdentity = new SimpleObjectProperty<>();
     private final ObservableList<UserIdentity> userIdentities = FXCollections.observableArrayList();
     private final StringProperty nickName = new SimpleStringProperty();
     private final StringProperty nymId = new SimpleStringProperty();
     private final StringProperty profileId = new SimpleStringProperty();
-    private final ObjectProperty<Image> catHash = new SimpleObjectProperty<>();
+    private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
     private final StringProperty statement = new SimpleStringProperty("");
     private final StringProperty terms = new SimpleStringProperty("");
     private final StringProperty reputationScoreValue = new SimpleStringProperty();
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final StringProperty profileAge = new SimpleStringProperty();
-    private final StringProperty lastSeen = new SimpleStringProperty();
+    private final StringProperty livenessState = new SimpleStringProperty();
     private final BooleanProperty useDeleteTooltip = new SimpleBooleanProperty();
 }

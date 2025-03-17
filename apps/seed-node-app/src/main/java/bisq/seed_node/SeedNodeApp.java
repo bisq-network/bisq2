@@ -18,8 +18,9 @@
 package bisq.seed_node;
 
 import bisq.application.Executable;
-import bisq.common.util.FileUtils;
-import bisq.network.common.AddressByTransportTypeMap;
+import bisq.common.file.FileUtils;
+import bisq.common.threading.ThreadName;
+import bisq.common.network.AddressByTransportTypeMap;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +30,7 @@ import java.nio.file.Path;
 @Slf4j
 public class SeedNodeApp extends Executable<SeedNodeApplicationService> {
     public static void main(String[] args) {
+        ThreadName.set(SeedNodeApp.class, "main");
         new SeedNodeApp(args);
     }
 

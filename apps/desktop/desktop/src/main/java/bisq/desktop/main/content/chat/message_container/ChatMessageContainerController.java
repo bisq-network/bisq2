@@ -1,14 +1,26 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.chat.message_container;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelSelectionService;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
-import bisq.chat.Citation;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.*;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
@@ -22,6 +34,7 @@ import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
+import bisq.settings.ChatMessageType;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -29,7 +42,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 
-import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +53,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     private final ChatMessageContainerModel model;
     @Getter
     private final ChatMessageContainerView view;
-    private final Consumer<UserProfile> openUserProfileSidebarHandler;
+    private final Consumer<UserProfile> openProfileCardHandler;
     private final UserIdentityService userIdentityService;
     private final CitationBlock citationBlock;
     private final ChatMessagesListController chatMessagesListController;
@@ -52,8 +64,8 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
     public ChatMessageContainerController(ServiceProvider serviceProvider,
                                           ChatChannelDomain chatChannelDomain,
-                                          Consumer<UserProfile> openUserProfileSidebarHandler) {
-        this.openUserProfileSidebarHandler = openUserProfileSidebarHandler;
+                                          Consumer<UserProfile> openProfileCardHandler) {
+        this.openProfileCardHandler = openProfileCardHandler;
 
         chatService = serviceProvider.getChatService();
         settingsService = serviceProvider.getSettingsService();
@@ -78,13 +90,9 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public void resetSelectedChatMessage() {
-        model.setSelectedChatMessage(null);
-    }
+    /* --------------------------------------------------------------------- */
 
     public void refreshMessages() {
         chatMessagesListController.refreshMessages();
@@ -92,15 +100,6 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
     public void mentionUser(UserProfile userProfile) {
         mentionUserHandler(userProfile);
-    }
-
-    public void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
-        chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer)
-                .ifPresent(channel -> {
-                    if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
-                        Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
-                    }
-                });
     }
 
     public void enableChatDialog(boolean isEnabled) {
@@ -111,19 +110,14 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         chatMessagesListController.setSearchPredicate(predicate);
     }
 
-    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
-        chatMessagesListController.highlightOfferChatMessage(message);
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Controller
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onActivate() {
         model.getMentionableUsers().setAll(userProfileService.getUserProfiles());
-        Optional.ofNullable(model.getSelectedChatMessage()).ifPresent(this::showChatUserDetailsHandler);
 
         getUserIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::applyUserProfileOrChannelChange));
 
@@ -149,9 +143,9 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Handlers passed to list view component
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void replyHandler(ChatMessage chatMessage) {
         if (!chatMessage.isMyMessage(userIdentityService)) {
@@ -164,9 +158,8 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
     private void showChatUserDetailsHandler(ChatMessage chatMessage) {
-        model.setSelectedChatMessage(chatMessage);
         userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
-                .ifPresent(openUserProfileSidebarHandler);
+                .ifPresent(openProfileCardHandler);
     }
 
     private void mentionUserHandler(UserProfile userProfile) {
@@ -178,9 +171,9 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     void onSendMessage(String text) {
         if (text == null || text.isEmpty()) {
@@ -212,9 +205,9 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void applyUserProfileOrChannelChange() {
         boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
@@ -254,6 +247,16 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         }
 
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
+            String dontShowAgainId = "sendMsgOfferOnlyWarn";
+            boolean hasShowOnlyOffersFilter = settingsService.getBisqEasyOfferbookMessageTypeFilter().get() == ChatMessageType.OFFER;
+            if (hasShowOnlyOffersFilter) {
+                new Popup().information(Res.get("chat.message.send.offerOnly.warn"))
+                        .actionButtonText(Res.get("confirmation.yes"))
+                        .onAction(() -> settingsService.setBisqEasyOfferbookMessageTypeFilter(ChatMessageType.ALL))
+                        .closeButtonText(Res.get("confirmation.no"))
+                        .dontShowAgainId(dontShowAgainId)
+                        .show();
+            }
             chatService.getBisqEasyOfferbookChannelService().publishChatMessage(text, citation, (BisqEasyOfferbookChannel) chatChannel, userIdentity);
         } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
             if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyOpenTradeChannel) chatChannel).isMediator()) {
@@ -264,22 +267,28 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                         .onAction(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE))
                         .show();
             }
-        } else if (chatChannel instanceof CommonPublicChatChannel) {
-            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain()).publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
-        } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-            chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
+        } else {
+            ChatChannelDomain chatChannelDomain = model.getChatChannelDomain();
+            if (chatChannel instanceof CommonPublicChatChannel) {
+                chatService.getCommonPublicChatChannelServices().get(chatChannelDomain).publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
+            } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+                chatService.findTwoPartyPrivateChatChannelService(chatChannelDomain).ifPresent(service ->
+                        service.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel));
+            }
         }
 
         citationBlock.close();
     }
 
     private void maybeSwitchUserProfile() {
-        if (model.getUserProfileSelectionVisible().get()) {
-            List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
-            if (!myUserProfilesInChannel.isEmpty()) {
-                userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
+        UIThread.run(() -> {
+            if (model.getUserProfileSelectionVisible().get()) {
+                List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
+                if (!myUserProfilesInChannel.isEmpty()) {
+                    userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
+                }
             }
-        }
+        });
     }
 
     private List<UserIdentity> getMyUserProfilesInChannel() {

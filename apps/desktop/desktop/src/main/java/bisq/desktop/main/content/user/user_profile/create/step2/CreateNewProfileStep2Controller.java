@@ -67,11 +67,9 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     @Getter
     protected final CreateNewProfileStep2View view;
     protected final UserIdentityService userIdentityService;
-    private final ServiceProvider serviceProvider;
 
     public CreateNewProfileStep2Controller(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        this.serviceProvider = serviceProvider;
 
         model = createModel();
         view = createView();
@@ -92,7 +90,10 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         model.setProofOfWork(data.getProofOfWork());
         model.getNickName().set(data.getNickName());
         model.getNym().set(data.getNym());
-        model.getCatHashImage().set(CatHash.getImage(data.getPubKeyHash(), data.getProofOfWork().getSolution(), CURRENT_AVATARS_VERSION));
+        model.getCatHashImage().set(CatHash.getImage(data.getPubKeyHash(),
+                data.getProofOfWork().getSolution(),
+                CURRENT_AVATARS_VERSION,
+                CreateNewProfileStep2Model.CAT_HASH_IMAGE_SIZE));
     }
 
     @Override
@@ -130,6 +131,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
             return;
         }
 
+        model.getSaveButtonDisabled().set(true);
         userIdentityService.createAndPublishNewUserProfile(
                         nickName,
                         model.getKeyPair(),
@@ -143,6 +145,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
                         model.getCreateProfileProgress().set(0);
                         close();
                     } else {
+                        model.getSaveButtonDisabled().set(false);
                         new Popup().error(throwable).show();
                     }
                 }));

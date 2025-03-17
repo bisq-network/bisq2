@@ -19,7 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.currency.Market;
 import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
@@ -32,7 +32,9 @@ import bisq.offer.Offer;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
+import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import bisq.trade.protocol.events.TradeMessageSender;
 import bisq.user.profile.UserProfile;
@@ -43,8 +45,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 @Slf4j
 public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyTakeOfferRequest> implements TradeMessageSender<BisqEasyTrade> {
@@ -84,7 +85,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                                     if (throwable == null) {
                                         log.info("Offer with ID {} removed", chatMessage.getBisqEasyOffer().map(Offer::getId).orElse("N/A"));
                                     } else {
-                                        log.error("We got an error at doDeleteMessage: " + throwable);
+                                        log.error("We got an error at doDeleteMessage", throwable);
                                     }
                                 }));
             }
@@ -110,11 +111,37 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 .filter(offer -> offer.equals(takersOffer))
                 .findAny();
         if (matchingOfferInChannel.isEmpty()) {
-            log.error("Could not find matching offer in BisqEasyOfferbookChannel.\n" +
-                            "takersOffer={}\n" +
-                            "myOffers={}",
-                    takersOffer, myOffers);
-            throw new RuntimeException("Could not find matching offer in BisqEasyOfferbookChannel");
+            BisqEasyTradeService bisqEasyTradeService = (BisqEasyTradeService) serviceProvider;
+            // After TRADE_ID_V1_ACTIVATION_DATE we might have trades in the open trades list which have an id created
+            // with the createId_V0 method, thus we need to check for both.
+            String v0_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId());
+            String v1_tradeId = Trade.createId(takersOffer.getId(), takersContract.getTaker().getNetworkId().getId(), takersContract.getTakeOfferDate());
+            boolean hasTradeWithSameTradeId = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
+                    trade.getId().equals(v0_tradeId) || trade.getId().equals(v1_tradeId));
+            if (hasTradeWithSameTradeId) {
+                String errorMessage = String.format("A trade with the same tradeId already exist.\n" +
+                                "takersOffer=%s; takerNetworkId=%s; v1_tradeId=%s; v0_tradeId=%s",
+                        takersOffer, takersContract.getTaker().getNetworkId(), v0_tradeId, v1_tradeId);
+                log.error(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
+
+            boolean hasOfferInTrades = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
+                    trade.getOffer().getId().equals(takersOffer.getId()));
+            boolean closeMyOfferWhenTaken = serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get();
+            if (hasOfferInTrades) {
+                log.info("The offer has not been found in open offers, but we found another trade with the same offer.\n" +
+                                "We accept the take offer request as it might be from processing mailbox messages " +
+                                "where multiple takers took the same offer.\n" +
+                                "closeMyOfferWhenTaken={}; takersOffer={}",
+                        closeMyOfferWhenTaken, takersOffer);
+            } else {
+                String errorMessage = String.format("Could not find matching offer in BisqEasyOfferbookChannel and no " +
+                        "trade with that offer was found.\n" +
+                        "closeMyOfferWhenTaken=%s; takersOffer=%s", closeMyOfferWhenTaken, takersOffer);
+                log.error(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
         }
 
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
@@ -125,10 +152,14 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()));
 
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
-                .selectMediator(takersOffer.getMakersUserProfileId(), trade.getTaker().getNetworkId().getId());
-        checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match. " +
-                "mediator=" + mediator + ", takersContract.getMediator()=" +
-                takersContract.getMediator());
+                .selectMediator(takersOffer.getMakersUserProfileId(),
+                        trade.getTaker().getNetworkId().getId(),
+                        trade.getOffer().getId());
+        checkArgument(mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId)), "Mediators do not match. " +
+                "\nmediator=" + mediator +
+                "\ntakersContract.getMediator()=" + takersContract.getMediator());
+
+        log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         try {
@@ -138,7 +169,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         }
     }
 
-    private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
+    private void commitToModel(ContractSignatureData takersContractSignatureData,
+                               ContractSignatureData makersContractSignatureData) {
         trade.getTaker().getContractSignatureData().set(takersContractSignatureData);
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }
@@ -148,7 +180,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         Market market = takersOffer.getMarket();
         MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(market);
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService,
-                takersContract.getAgreedPriceSpec(), market);
+                takersContract.getPriceSpec(), market);
         Optional<Monetary> amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
                 market.getQuoteCurrencyCode())));
 
@@ -205,10 +237,10 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L) + "\n" +
                 "takersContract=" + takersContract;
         if (throwException) {
-            log.error(message + details);
+            log.error("message={}, details={}", message, details);
             throw new IllegalArgumentException(message);
         } else if (showWaring) {
-            log.warn(message + details);
+            log.warn("message={}, details={}", message, details);
         } else if (myAmount != takersAmount) {
             log.info("My amount and the amount set by the taker are not the same. This is expected if the offer used a " +
                     "market based price and the taker had a different market price.\n" +

@@ -47,9 +47,9 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
         this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -64,9 +64,9 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
         return CompletableFuture.completedFuture(true);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // AuthorizedBondedRolesService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {

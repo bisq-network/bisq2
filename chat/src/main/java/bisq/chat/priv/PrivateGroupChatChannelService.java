@@ -18,6 +18,7 @@
 package bisq.chat.priv;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.reactions.PrivateChatMessageReaction;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.PersistableStore;
@@ -26,11 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class PrivateGroupChatChannelService<
-        M extends PrivateChatMessage,
+        R extends PrivateChatMessageReaction,
+        M extends PrivateChatMessage<R>,
         C extends PrivateGroupChatChannel<M>,
         S extends PersistableStore<S>
         >
-        extends PrivateChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
+        extends PrivateChatChannelService<R, M, C, S> implements ConfidentialMessageService.Listener {
 
     public PrivateGroupChatChannelService(NetworkService networkService,
                                           UserService userService,

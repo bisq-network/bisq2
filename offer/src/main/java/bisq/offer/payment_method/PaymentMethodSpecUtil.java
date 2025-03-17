@@ -17,25 +17,30 @@
 
 package bisq.offer.payment_method;
 
-import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.*;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class PaymentMethodSpecUtil {
-    public static List<BitcoinPaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPaymentRail> bitcoinPaymentRails) {
-        return bitcoinPaymentRails.stream()
-                .map(BitcoinPaymentMethod::fromPaymentRail)
+    public static BitcoinPaymentMethod getBitcoinPaymentMethod(String paymentMethod) {
+        return BitcoinPaymentMethodUtil.getPaymentMethod(paymentMethod);
+    }
+
+    public static FiatPaymentMethod getFiatPaymentMethod(String paymentMethod) {
+        return FiatPaymentMethodUtil.getPaymentMethod(paymentMethod);
+    }
+
+
+    public static List<BitcoinPaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPaymentMethod> paymentMethods) {
+        return paymentMethods.stream()
                 .map(BitcoinPaymentMethodSpec::new)
                 .collect(Collectors.toList());
     }
 
     public static List<BitcoinPaymentMethodSpec> createBitcoinMainChainPaymentMethodSpec() {
-        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentRail.MAIN_CHAIN));
+        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)));
     }
 
     public static List<FiatPaymentMethodSpec> createFiatPaymentMethodSpecs(List<FiatPaymentMethod> paymentMethods) {

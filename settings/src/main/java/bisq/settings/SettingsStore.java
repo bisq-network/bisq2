@@ -22,9 +22,9 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.OsUtils;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -34,13 +34,17 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static bisq.settings.SettingsService.*;
+
 @Slf4j
 public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();
     final Observable<Market> selectedMarket = new Observable<>();
-    final Observable<Long> minRequiredReputationScore = new Observable<>();
+    @Deprecated(since = "2.1.1")
+    private final Observable<Long> minRequiredReputationScore = new Observable<>();
+    @Deprecated(since = "2.1.2")
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>();
@@ -53,19 +57,24 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
     final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
+    @Deprecated(since = "2.1.1")
     final Observable<Boolean> ignoreMinRequiredReputationScoreFromSecManager = new Observable<>();
     final Observable<Double> maxTradePriceDeviation = new Observable<>();
     final Observable<Boolean> showBuyOffers = new Observable<>();
     final Observable<Boolean> showOfferListExpanded = new Observable<>();
     final Observable<Boolean> showMarketSelectionListCollapsed = new Observable<>();
     final Observable<String> backupLocation = new Observable<>();
+    final Observable<Boolean> showMyOffersOnly = new Observable<>();
+    final Observable<Double> totalMaxBackupSizeInMB = new Observable<>();
+    final Observable<ChatMessageType> bisqEasyOfferbookMessageTypeFilter = new Observable<>();
+    final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
                 new HashMap<>(),
                 true,
                 MarketRepository.getDefault(),
-                SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
+                DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
                 false,
                 false,
                 ChatNotificationType.ALL,
@@ -79,11 +88,15 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 new HashSet<>(),
                 false,
-                SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION,
+                DEFAULT_MAX_TRADE_PRICE_DEVIATION,
                 false,
                 false,
                 false,
-                OsUtils.getHomeDirectory());
+                PlatformUtils.getHomeDirectory(),
+                false,
+                DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB,
+                ChatMessageType.ALL,
+                DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
     }
 
     public SettingsStore(Cookie cookie,
@@ -108,7 +121,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean showBuyOffers,
                          boolean showOfferListExpanded,
                          boolean showMarketSelectionListCollapsed,
-                         String backupLocation) {
+                         String backupLocation,
+                         boolean showMyOffersOnly,
+                         double totalMaxBackupSizeInMB,
+                         ChatMessageType bisqEasyOfferbookMessageTypeFilter,
+                         int numDaysAfterRedactingTradeData) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -132,6 +149,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.showOfferListExpanded.set(showOfferListExpanded);
         this.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
         this.backupLocation.set(backupLocation);
+        this.showMyOffersOnly.set(showMyOffersOnly);
+        this.totalMaxBackupSizeInMB.set(totalMaxBackupSizeInMB);
+        this.bisqEasyOfferbookMessageTypeFilter.set(bisqEasyOfferbookMessageTypeFilter);
+        this.numDaysAfterRedactingTradeData.set(numDaysAfterRedactingTradeData);
     }
 
     @Override
@@ -159,7 +180,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setShowBuyOffers(showBuyOffers.get())
                 .setShowOfferListExpanded(showOfferListExpanded.get())
                 .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get())
-                .setBackupLocation(backupLocation.get());
+                .setBackupLocation(backupLocation.get())
+                .setShowMyOffersOnly(showMyOffersOnly.get())
+                .setTotalMaxBackupSizeInMB(totalMaxBackupSizeInMB.get())
+                .setBisqEasyOfferbookMessageTypeFilter(bisqEasyOfferbookMessageTypeFilter.get().toProtoEnum())
+                .setNumDaysAfterRedactingTradeData(numDaysAfterRedactingTradeData.get());
     }
 
     @Override
@@ -168,13 +193,23 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
-        // When users update from 2.0.2 the default value is 0. We require anyway a 1% as min. value so we use the
-        // fact that 0 is invalid to convert to the default value at updates.
-        // Can be removed once it's not expected anymore that users update from v2.0.2.
         double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
-        if (maxTradePriceDeviation == 0) {
-            maxTradePriceDeviation = SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+        if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||
+                maxTradePriceDeviation > MAX_TRADE_PRICE_DEVIATION) {
+            maxTradePriceDeviation = DEFAULT_MAX_TRADE_PRICE_DEVIATION;
         }
+
+        double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
+        if (totalMaxBackupSizeInMB == 0) {
+            totalMaxBackupSizeInMB = DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
+        }
+
+        int numDaysAfterRedactingTradeData = proto.getNumDaysAfterRedactingTradeData();
+        if (numDaysAfterRedactingTradeData < MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
+                numDaysAfterRedactingTradeData > MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
+            numDaysAfterRedactingTradeData = DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+        }
+
         return new SettingsStore(Cookie.fromProto(proto.getCookie()),
                 proto.getDontShowAgainMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
@@ -199,7 +234,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getShowBuyOffers(),
                 proto.getShowOfferListExpanded(),
                 proto.getShowMarketSelectionListCollapsed(),
-                proto.getBackupLocation());
+                proto.getBackupLocation(),
+                proto.getShowMyOffersOnly(),
+                totalMaxBackupSizeInMB,
+                ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
+                numDaysAfterRedactingTradeData);
     }
 
     @Override
@@ -237,7 +276,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 showBuyOffers.get(),
                 showOfferListExpanded.get(),
                 showMarketSelectionListCollapsed.get(),
-                backupLocation.get());
+                backupLocation.get(),
+                showMyOffersOnly.get(),
+                totalMaxBackupSizeInMB.get(),
+                bisqEasyOfferbookMessageTypeFilter.get(),
+                numDaysAfterRedactingTradeData.get());
     }
 
     @Override
@@ -266,6 +309,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             showOfferListExpanded.set(persisted.showOfferListExpanded.get());
             showMarketSelectionListCollapsed.set(persisted.showMarketSelectionListCollapsed.get());
             backupLocation.set(persisted.backupLocation.get());
+            showMyOffersOnly.set(persisted.showMyOffersOnly.get());
+            totalMaxBackupSizeInMB.set(persisted.totalMaxBackupSizeInMB.get());
+            bisqEasyOfferbookMessageTypeFilter.set(persisted.bisqEasyOfferbookMessageTypeFilter.get());
+            numDaysAfterRedactingTradeData.set(persisted.numDaysAfterRedactingTradeData.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

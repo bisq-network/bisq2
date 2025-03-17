@@ -18,14 +18,15 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.encoding.Hex;
+import bisq.common.network.Address;
+import bisq.common.network.DefaultPeerSocket;
+import bisq.common.network.PeerSocket;
 import bisq.common.util.StringUtils;
-import bisq.network.common.Address;
-import bisq.network.common.DefaultPeerSocket;
-import bisq.network.common.PeerSocket;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
@@ -41,8 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Set;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.*;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -175,12 +176,12 @@ public final class ConnectionHandshake {
     @ToString
     @EqualsAndHashCode
     public static final class Result {
-        private final Capability capability;
+        private final Capability peersCapability;
         private final NetworkLoad peersNetworkLoad;
         private final ConnectionMetrics connectionMetrics;
 
-        Result(Capability capability, NetworkLoad peersNetworkLoad, ConnectionMetrics connectionMetrics) {
-            this.capability = capability;
+        Result(Capability peersCapability, NetworkLoad peersNetworkLoad, ConnectionMetrics connectionMetrics) {
+            this.peersCapability = peersCapability;
             this.peersNetworkLoad = peersNetworkLoad;
             this.connectionMetrics = connectionMetrics;
         }
@@ -219,12 +220,18 @@ public final class ConnectionHandshake {
             Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myKeyBundle.getTorKeyPair().getPrivateKey());
 
             Request request = new Request(capability, signature, myNetworkLoad, signatureDate);
-            // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
+
+            // As we do not know the peers networkLoad yet, we use the NetworkLoad.INITIAL_LOAD.
+            NetworkLoad initialNetworkLoad = NetworkLoad.INITIAL_NETWORK_LOAD;
+
+            // As we do not know the peers features yet, we use a set of minimal default features.
+            Set<Feature> peersFeatures = Feature.DEFAULT_FEATURES;
+
             AuthorizationToken token = authorizationService.createToken(request,
-                    NetworkLoad.INITIAL_NETWORK_LOAD,
+                    initialNetworkLoad,
                     peerAddress.getFullAddress(),
                     0,
-                    new ArrayList<>());
+                    peersFeatures);
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
             networkEnvelopeSocket.send(requestNetworkEnvelope);
@@ -241,11 +248,10 @@ public final class ConnectionHandshake {
             long deserializeTime = System.currentTimeMillis() - startDeserializeTs;
 
             responseNetworkEnvelope.verifyVersion();
-            if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof Response)) {
+            if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof Response response)) {
                 throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                         responseNetworkEnvelope);
             }
-            Response response = (Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
             Address address = response.getCapability().getAddress();
             if (banList.isBanned(address)) {
                 throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
@@ -296,11 +302,10 @@ public final class ConnectionHandshake {
 
             requestNetworkEnvelope.verifyVersion();
 
-            if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof Request)) {
+            if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof Request request)) {
                 throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                         requestNetworkEnvelope);
             }
-            Request request = (Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
             Capability requestersCapability = request.getCapability();
             Address peerAddress = requestersCapability.getAddress();
             if (banList.isBanned(peerAddress)) {
@@ -327,7 +332,9 @@ public final class ConnectionHandshake {
             log.debug("Clients capability {}, load={}", requestersCapability, request.getNetworkLoad());
             connectionMetrics.onReceived(requestNetworkEnvelope, deserializeTime);
 
-            Response response = new Response(capability, myNetworkLoad);
+            // We reply with the same version as the peer has to avoid pow hash check failures
+            Capability responseCapability = Capability.withVersion(capability, requestersCapability.getVersion());
+            Response response = new Response(responseCapability, myNetworkLoad);
             AuthorizationToken token = authorizationService.createToken(response,
                     request.getNetworkLoad(),
                     peerAddress.getFullAddress(),

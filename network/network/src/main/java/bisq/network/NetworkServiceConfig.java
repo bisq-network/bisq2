@@ -17,10 +17,10 @@
 
 package bisq.network;
 
-import bisq.common.util.ConfigUtil;
-import bisq.network.common.Address;
-import bisq.network.common.TransportConfig;
-import bisq.network.common.TransportType;
+import bisq.common.application.ConfigUtil;
+import bisq.common.network.Address;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -31,7 +31,7 @@ import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import bisq.network.p2p.services.peer_group.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
-import bisq.tor.TorTransportConfig;
+import bisq.network.tor.TorTransportConfig;
 import com.typesafe.config.Config;
 import lombok.Getter;
 
@@ -135,42 +135,34 @@ public final class NetworkServiceConfig {
     private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path baseDir) {
         Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase());
         Path dataDir;
-        switch (transportType) {
-            case TOR:
+        return switch (transportType) {
+            case TOR -> {
                 dataDir = baseDir.resolve("tor");
-                return TorTransportConfig.from(dataDir, transportConfig);
-            case I2P:
+                yield TorTransportConfig.from(dataDir, transportConfig);
+            }
+            case I2P -> {
                 dataDir = baseDir.resolve("i2p");
-                return I2PTransportService.Config.from(dataDir, transportConfig);
-            case CLEAR:
+                yield I2PTransportService.Config.from(dataDir, transportConfig);
+            }
+            case CLEAR -> {
                 dataDir = baseDir;
-                return ClearNetTransportService.Config.from(dataDir, transportConfig);
-            default:
-                throw new RuntimeException("Unhandled case. type=" + transportType);
-        }
+                yield ClearNetTransportService.Config.from(dataDir, transportConfig);
+            }
+        };
     }
 
     private static Set<Address> getSeedAddresses(TransportType transportType, Config config) {
-        switch (transportType) {
-            case TOR: {
-                return ConfigUtil.getStringList(config, "tor").stream()
-                        .map(Address::new).
-                        collect(Collectors.toSet());
-            }
-            case I2P: {
-                return ConfigUtil.getStringList(config, "i2p").stream()
-                        .map(Address::new)
-                        .collect(Collectors.toSet());
-            }
-            case CLEAR: {
-                return ConfigUtil.getStringList(config, "clear").stream()
-                        .map(Address::new)
-                        .collect(Collectors.toSet());
-            }
-            default: {
-                throw new RuntimeException("Unhandled case. transportType=" + transportType);
-            }
-        }
+        return switch (transportType) {
+            case TOR -> ConfigUtil.getStringList(config, "tor").stream()
+                    .map(Address::fromFullAddress).
+                    collect(Collectors.toSet());
+            case I2P -> ConfigUtil.getStringList(config, "i2p").stream()
+                    .map(Address::fromFullAddress)
+                    .collect(Collectors.toSet());
+            case CLEAR -> ConfigUtil.getStringList(config, "clear").stream()
+                    .map(Address::fromFullAddress)
+                    .collect(Collectors.toSet());
+        };
     }
 
     private final String baseDir;

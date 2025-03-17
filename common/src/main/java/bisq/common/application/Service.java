@@ -20,7 +20,11 @@ package bisq.common.application;
 import java.util.concurrent.CompletableFuture;
 
 public interface Service {
-    CompletableFuture<Boolean> initialize();
+    default CompletableFuture<Boolean> initialize() {
+        return CompletableFuture.completedFuture(true);
+    }
 
-    CompletableFuture<Boolean> shutdown();
+    default CompletableFuture<Boolean> shutdown() {
+        return CompletableFuture.completedFuture(true);
+    }
 }

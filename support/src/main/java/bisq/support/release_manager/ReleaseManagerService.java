@@ -52,7 +52,6 @@ public class ReleaseManagerService implements Service {
     private final NetworkService networkService;
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
-    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
     private final boolean staticPublicKeysProvided;
 
@@ -62,14 +61,15 @@ public class ReleaseManagerService implements Service {
                                  BondedRolesService bondedRolesService) {
         userIdentityService = userService.getUserIdentityService();
         this.networkService = networkService;
-        authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
+        AuthorizedBondedRolesService authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         staticPublicKeysProvided = config.isStaticPublicKeysProvided();
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -82,16 +82,17 @@ public class ReleaseManagerService implements Service {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> publishReleaseNotification(boolean isPreRelease,
                                                                  boolean isLauncherUpdate,
                                                                  String releaseNotes,
                                                                  String version) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String releaseManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         ReleaseNotification releaseNotification = new ReleaseNotification(StringUtils.createUid(),
                 new Date().getTime(),
@@ -99,13 +100,20 @@ public class ReleaseManagerService implements Service {
                 isLauncherUpdate,
                 releaseNotes,
                 version,
-                profileId,
+                releaseManagerProfileId,
                 staticPublicKeysProvided);
         return networkService.publishAuthorizedData(releaseNotification, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
-    public CompletableFuture<Boolean> removeReleaseNotification(ReleaseNotification releaseNotification, KeyPair ownerKeyPair) {
+    public CompletableFuture<Boolean> republishReleaseNotification(ReleaseNotification releaseNotification,
+                                                                   KeyPair ownerKeyPair) {
+        return networkService.publishAuthorizedData(releaseNotification, ownerKeyPair)
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    public CompletableFuture<Boolean> removeReleaseNotification(ReleaseNotification releaseNotification,
+                                                                KeyPair ownerKeyPair) {
         return networkService.removeAuthorizedData(releaseNotification,
                         ownerKeyPair,
                         ownerKeyPair.getPublic())

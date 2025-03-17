@@ -18,7 +18,9 @@
 package bisq.network.p2p.node.network_load;
 
 import bisq.common.util.ClassUtils;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +41,10 @@ public class ConnectionMetrics {
     private final TreeMap<Integer, AtomicLong> deserializeTimePerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> numMessagesReceivedPerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> receivedBytesPerMinute = new TreeMap<>();
-    private final Map<String, AtomicLong> numSentMessagesByMessageClassName = new HashMap<>();
-    private final Map<String, AtomicLong> numReceivedMessagesByMessageClassName = new HashMap<>();
+    private final Map<String, AtomicLong> numSentMessagesByClassName = new HashMap<>();
+    private final Map<String, AtomicLong> numReceivedMessagesByClassName = new HashMap<>();
+    private final Map<String, AtomicLong> numSentDistributedDataByClassName = new HashMap<>();
+    private final Map<String, AtomicLong> numReceivedDistributedDataByClassName = new HashMap<>();
 
     private final AtomicLong numMessagesReceived = new AtomicLong();
     private final List<Long> rrtList = new CopyOnWriteArrayList<>();
@@ -62,18 +66,25 @@ public class ConnectionMetrics {
         lastUpdate.set(now);
 
         int ageInMinutes = getAgeInMinutes(now);
-        sentBytesPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        sentBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.getSerializedSize());
+        sentBytesPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .addAndGet(networkEnvelope.getSerializedSize());
 
-        numMessagesSentPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        numMessagesSentPerMinute.get(ageInMinutes).incrementAndGet();
+        numMessagesSentPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .incrementAndGet();
 
-        spentSendMessageTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        spentSendMessageTimePerMinute.get(ageInMinutes).getAndAdd(spentTime);
+        spentSendMessageTimePerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .addAndGet(spentTime);
 
-        String name = ClassUtils.getClassName(networkEnvelope.getEnvelopePayloadMessage().getClass());
-        numSentMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
-        numSentMessagesByMessageClassName.get(name).getAndIncrement();
+        EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
+        String name = ClassUtils.getClassName(envelopePayloadMessage.getClass());
+        numSentMessagesByClassName.computeIfAbsent(name, key -> new AtomicLong())
+                .incrementAndGet();
+
+        if (envelopePayloadMessage instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+            String distributedDataName = addAuthenticatedDataRequest.getDistributedData().getClassName();
+            numSentDistributedDataByClassName.computeIfAbsent(distributedDataName, key -> new AtomicLong())
+                    .incrementAndGet();
+        }
     }
 
     public void onReceived(NetworkEnvelope networkEnvelope, long deserializeTime) {
@@ -81,18 +92,25 @@ public class ConnectionMetrics {
         lastUpdate.set(now);
 
         int ageInMinutes = getAgeInMinutes(now);
-        receivedBytesPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        receivedBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.getSerializedSize());
+        receivedBytesPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .addAndGet(networkEnvelope.getSerializedSize());
 
-        numMessagesReceivedPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        numMessagesReceivedPerMinute.get(ageInMinutes).incrementAndGet();
+        numMessagesReceivedPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .incrementAndGet();
 
-        deserializeTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        deserializeTimePerMinute.get(ageInMinutes).getAndAdd(deserializeTime);
+        deserializeTimePerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
+                .addAndGet(deserializeTime);
 
-        String name = ClassUtils.getClassName(networkEnvelope.getEnvelopePayloadMessage().getClass());
-        numReceivedMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
-        numReceivedMessagesByMessageClassName.get(name).getAndIncrement();
+        EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
+        String name = ClassUtils.getClassName(envelopePayloadMessage.getClass());
+        numReceivedMessagesByClassName.computeIfAbsent(name, key -> new AtomicLong())
+                .incrementAndGet();
+
+        if (envelopePayloadMessage instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+            String distributedDataName = addAuthenticatedDataRequest.getDistributedData().getClassName();
+            numReceivedDistributedDataByClassName.computeIfAbsent(distributedDataName, key -> new AtomicLong())
+                    .incrementAndGet();
+        }
     }
 
     public void addRtt(long value) {
@@ -173,6 +191,20 @@ public class ConnectionMetrics {
 
     public long getDeserializeTimeOfLastMinutes(int lastMinutes) {
         return sumOfLastMinute(deserializeTimePerMinute, lastMinutes);
+    }
+
+    public void clear() {
+        numMessagesSentPerMinute.clear();
+        sentBytesPerMinute.clear();
+        spentSendMessageTimePerMinute.clear();
+        deserializeTimePerMinute.clear();
+        numMessagesReceivedPerMinute.clear();
+        receivedBytesPerMinute.clear();
+        numSentMessagesByClassName.clear();
+        numReceivedMessagesByClassName.clear();
+        numSentDistributedDataByClassName.clear();
+        numReceivedDistributedDataByClassName.clear();
+        rrtList.clear();
     }
 
     private long sumOf(TreeMap<Integer, AtomicLong> treeMap) {

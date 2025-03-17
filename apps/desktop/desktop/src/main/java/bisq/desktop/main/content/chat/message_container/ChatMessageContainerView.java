@@ -1,6 +1,23 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.chat.message_container;
 
-import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -8,6 +25,7 @@ import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -18,18 +36,20 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.stream.Collectors;
 
+import static javafx.scene.input.KeyEvent.KEY_PRESSED;
+
 @Slf4j
 public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox, ChatMessageContainerModel, ChatMessageContainerController> {
     private final static double CHAT_BOX_MAX_WIDTH = 1200;
     public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
     private final BisqTextArea inputField = new BisqTextArea();
+    private final EventHandler<KeyEvent> enterKeyPressedHandler = this::processEnterKeyPressed;
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
@@ -71,17 +91,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
 
-        inputField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
-            if (keyEvent.getCode() == KeyCode.ENTER) {
-                keyEvent.consume();
-                if (keyEvent.isShiftDown()) {
-                    inputField.appendText(System.getProperty("line.separator"));
-                } else if (!inputField.getText().isEmpty()) {
-                    controller.onSendMessage(inputField.getText().trim());
-                    inputField.clear();
-                }
-            }
-        });
+        inputField.addEventFilter(KEY_PRESSED, enterKeyPressedHandler);
 
         sendButton.setOnAction(event -> {
             controller.onSendMessage(inputField.getText().trim());
@@ -100,6 +110,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
         userMentionPopup.init();
+
+        UIThread.runOnNextRenderFrame(inputField::requestFocus);
     }
 
     @Override
@@ -112,6 +124,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         removeChatDialogEnabledSubscription();
 
         inputField.setOnKeyPressed(null);
+        inputField.removeEventFilter(KEY_PRESSED, enterKeyPressedHandler);
         sendButton.setOnAction(null);
         userMentionPopup.cleanup();
     }
@@ -144,7 +157,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         HBox.setMargin(sendButton, new Insets(0, 0, 5, 0));
         sendButton.setMinWidth(30);
         sendButton.setMaxWidth(30);
-        sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), true));
+        sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), BisqTooltip.Style.DARK));
 
         HBox sendMessageBox = new HBox(inputField, sendButton);
         sendMessageBox.getStyleClass().add("chat-send-message-box");
@@ -158,24 +171,14 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     }
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
-        userProfileSelection.setMaxComboBoxWidth(165);
-        userProfileSelection.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(UserProfileSelection.ListItem item) {
-                return item != null ? StringUtils.truncate(item.getUserIdentity().getUserName(), 10) : "";
-            }
-
-            @Override
-            public UserProfileSelection.ListItem fromString(String string) {
-                return null;
-            }
-        });
+        userProfileSelection.setMaxWidth(165);
+        userProfileSelection.openMenuUpwards();
+        userProfileSelection.openMenuToTheRight();
         userProfileSelectionRoot = userProfileSelection.getRoot();
-        userProfileSelectionRoot.setMaxHeight(44);
+        userProfileSelectionRoot.setMaxHeight(45);
         userProfileSelectionRoot.setMaxWidth(165);
         userProfileSelectionRoot.setMinWidth(165);
-        userProfileSelectionRoot.setId("chat-user-profile-bg");
-        HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -8));
+        userProfileSelectionRoot.getStyleClass().add("chat-user-profile-bg");
     }
 
     private void createChatDialogEnabledSubscription() {
@@ -196,5 +199,19 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         messagesListView.visibleProperty().unbind();
         messagesListView.managedProperty().unbind();
         userProfileSelectionRoot.disableProperty().unbind();
+    }
+
+    private void processEnterKeyPressed(KeyEvent keyEvent) {
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            keyEvent.consume();
+            if (keyEvent.isShiftDown()) {
+                int caretPosition = inputField.getCaretPosition();
+                inputField.insertText(caretPosition, System.lineSeparator());
+                inputField.positionCaret(caretPosition + System.lineSeparator().length());
+            } else if (!inputField.getText().isEmpty()) {
+                controller.onSendMessage(inputField.getText().trim());
+                inputField.clear();
+            }
+        }
     }
 }

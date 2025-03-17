@@ -18,44 +18,31 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.*;
 import bisq.chat.common.CommonPublicChatChannel;
-import bisq.chat.priv.PrivateChatChannel;
-import bisq.chat.two_party.TwoPartyPrivateChatChannel;
+import bisq.chat.notifications.ChatChannelNotificationType;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.components.cathash.CatHash;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
-import bisq.desktop.main.content.chat.sidebar.ChannelSidebar;
-import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
+import bisq.desktop.main.content.chat.message_container.sidebar.ChannelSidebar;
+import bisq.desktop.main.content.user.profile_card.ProfileCardController;
 import bisq.i18n.Res;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class BaseChatController<V extends BaseChatView, M extends BaseChatModel> extends NavigationController {
@@ -65,29 +52,35 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final V view;
     protected final ServiceProvider serviceProvider;
     protected final ChatService chatService;
+    protected final ChatChannelSelectionService selectionService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
     protected final ChannelSidebar channelSidebar;
     protected final ChatMessageContainerController chatMessageContainerController;
+    protected final BisqEasyTradeService bisqEasyTradeService;
+    protected final ReputationService reputationService;
     protected Subscription searchTextPin;
+    protected Pin selectedChannelPin, selectedNotificationSettingPin;
 
-    public BaseChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+    public BaseChatController(ServiceProvider serviceProvider,
+                              ChatChannelDomain chatChannelDomain,
+                              NavigationTarget host) {
         super(host);
 
         this.serviceProvider = serviceProvider;
         chatService = serviceProvider.getChatService();
+        selectionService = chatService.getChatChannelSelectionService(chatChannelDomain);
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-
+        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+        reputationService = serviceProvider.getUserService().getReputationService();
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider,
                 chatChannelDomain,
-                this::openUserProfileSidebar);
+                this::openProfileCard);
+
         channelSidebar = new ChannelSidebar(serviceProvider,
-                () -> {
-                    doCloseSideBar();
-                    chatMessageContainerController.resetSelectedChatMessage();
-                },
-                this::openUserProfileSidebar);
+                this::doCloseSideBar,
+                this::openProfileCard);
 
         createDependencies(chatChannelDomain);
 
@@ -95,29 +88,42 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         view = createAndGetView();
     }
 
-    public abstract void createDependencies(ChatChannelDomain chatChannelDomain);
+    @Override
+    public void onActivate() {
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
+        model.getSearchText().set("");
+        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
+            if (searchText == null || searchText.isEmpty()) {
+                chatMessageContainerController.setSearchPredicate(item -> true);
+            } else {
+                chatMessageContainerController.setSearchPredicate(item -> item.match(searchText));
+            }
+        });
+    }
+
+    @Override
+    public void onDeactivate() {
+        selectedChannelPin.unbind();
+        searchTextPin.unsubscribe();
+        if (selectedNotificationSettingPin != null) {
+            selectedNotificationSettingPin.unbind();
+        }
+    }
+
+    public void createDependencies(ChatChannelDomain chatChannelDomain) {
+    }
 
     public abstract M createAndGetModel(ChatChannelDomain chatChannelDomain);
 
     public abstract V createAndGetView();
 
-    protected void openUserProfileSidebar(UserProfile userProfile) {
-        doCloseSideBar();
-        model.getSideBarVisible().set(true);
+    protected void openProfileCard(UserProfile userProfile) {
+        cleanupChannelInfo();
 
-        UserProfileSidebar userProfileSidebar = new UserProfileSidebar(serviceProvider,
-                userProfile,
-                model.getSelectedChannel(),
-                () -> {
-                    doCloseSideBar();
-                    chatMessageContainerController.resetSelectedChatMessage();
-                });
-        model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
-        userProfileSidebar.setOnSendPrivateMessageHandler(chatMessageContainerController::createAndSelectTwoPartyPrivateChatChannel);
-        userProfileSidebar.setIgnoreUserStateHandler(chatMessageContainerController::refreshMessages);
-        userProfileSidebar.setOnMentionUserHandler(chatMessageContainerController::mentionUser);
-        model.setChatUserDetails(Optional.of(userProfileSidebar));
-        model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
+        Navigation.navigateTo(NavigationTarget.PROFILE_CARD,
+                new ProfileCardController.InitData(
+                        userProfile,
+                        chatMessageContainerController::refreshMessages));
     }
 
     protected void selectedChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
@@ -140,64 +146,16 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 if (chatChannel instanceof CommonPublicChatChannel) {
                     model.getChannelDescription().set(((CommonPublicChatChannel) chatChannel).getDescription());
                 }
+
+                selectedNotificationSettingPin = FxBindings.bind(model.getSelectedNotificationSetting())
+                        .to(chatChannel.getChatChannelNotificationType());
             }
         });
-    }
-
-    protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
-        if (privateChatChannel instanceof TwoPartyPrivateChatChannel) {
-            TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
-            Image image = CatHash.getImage(twoPartyPrivateChatChannel.getPeer());
-            ImageView imageView = new ImageView(image);
-            imageView.setFitWidth(35);
-            imageView.setFitHeight(35);
-            Button iconButton = BisqIconButton.createIconButton(imageView);
-            model.getChannelIconNode().set(iconButton);
-        } else if (privateChatChannel instanceof BisqEasyOpenTradeChannel) {
-            BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel = (BisqEasyOpenTradeChannel) privateChatChannel;
-            if (bisqEasyOpenTradeChannel.isInMediation() && bisqEasyOpenTradeChannel.getMediator().isPresent()) {
-                UserProfile left;
-                UserProfile right;
-                if (bisqEasyOpenTradeChannel.isMediator()) {
-                    List<UserProfile> traders = new ArrayList<>(bisqEasyOpenTradeChannel.getTraders());
-                    checkArgument(traders.size() == 2);
-                    left = traders.get(0);
-                    right = traders.get(1);
-                } else {
-                    left = bisqEasyOpenTradeChannel.getPeer();
-                    right = bisqEasyOpenTradeChannel.getMediator().get();
-                }
-                ImageView leftImageView = new ImageView(CatHash.getImage(left));
-                leftImageView.setFitWidth(35);
-                leftImageView.setFitHeight(35);
-                Button leftIconButton = BisqIconButton.createIconButton(leftImageView);
-                leftIconButton.setMouseTransparent(true);
-
-                ImageView rightImageView = new ImageView(CatHash.getImage(right));
-                rightImageView.setFitWidth(35);
-                rightImageView.setFitHeight(35);
-                Button rightIconButton = BisqIconButton.createIconButton(rightImageView);
-                rightIconButton.setMouseTransparent(true);
-                HBox.setMargin(rightIconButton, new Insets(0, 0, 0, -20));
-
-                HBox hBox = new HBox(10, leftIconButton, rightIconButton);
-                hBox.setAlignment(Pos.CENTER_LEFT);
-                model.getChannelIconNode().set(hBox);
-            } else {
-                Image image = CatHash.getImage(bisqEasyOpenTradeChannel.getPeer());
-                ImageView imageView = new ImageView(image);
-                imageView.setFitWidth(35);
-                imageView.setFitHeight(35);
-                Button iconButton = BisqIconButton.createIconButton(imageView);
-                model.getChannelIconNode().set(iconButton);
-            }
-        }
     }
 
     protected void onToggleChannelInfo() {
         boolean visible = !model.getChannelSidebarVisible().get();
         doCloseSideBar();
-        chatMessageContainerController.resetSelectedChatMessage();
         model.getChannelSidebarVisible().set(visible);
         model.getSideBarVisible().set(visible);
         if (visible) {
@@ -209,11 +167,9 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         switch (model.chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK:
             case BISQ_EASY_OPEN_TRADES:
-            case BISQ_EASY_PRIVATE_CHAT:
                 Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
                 break;
             case DISCUSSION:
-            case EVENTS:
             case SUPPORT:
                 Navigation.navigateTo(NavigationTarget.CHAT_RULES);
                 break;
@@ -221,17 +177,11 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     String getHelpButtonText() {
-        switch (model.chatChannelDomain) {
-            case BISQ_EASY_OFFERBOOK:
-            case BISQ_EASY_OPEN_TRADES:
-            case BISQ_EASY_PRIVATE_CHAT:
-                return Res.get("chat.dropdownMenu.tradeGuide");
-            case DISCUSSION:
-            case EVENTS:
-            case SUPPORT:
-            default:
-                return Res.get("chat.dropdownMenu.chatRules");
-        }
+        return switch (model.chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK,
+                 BISQ_EASY_OPEN_TRADES -> Res.get("chat.ellipsisMenu.tradeGuide");
+            default -> Res.get("chat.ellipsisMenu.chatRules");
+        };
     }
 
     private void doCloseSideBar() {
@@ -240,7 +190,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         model.getChannelSidebarVisible().set(false);
         model.getSideBarChanged().set(!model.getSideBarChanged().get());
 
-        cleanupChatUserDetails();
         cleanupChannelInfo();
     }
 
@@ -252,15 +201,16 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         });
     }
 
-    private void cleanupChatUserDetails() {
-        model.getChatUserDetails().ifPresent(e -> e.setOnMentionUserHandler(null));
-        model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessageHandler(null));
-        model.getChatUserDetails().ifPresent(e -> e.setIgnoreUserStateHandler(null));
-        model.setChatUserDetails(Optional.empty());
-        model.getChatUserDetailsRoot().set(null);
-    }
-
     private void cleanupChannelInfo() {
         channelSidebar.setOnUndoIgnoreChatUser(null);
+    }
+
+    void onSetNotificationType(ChatChannelNotificationType type) {
+        model.getSelectedNotificationSetting().set(type);
+        ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel();
+        if (chatChannel != null) {
+            chatService.findChatChannelService(chatChannel)
+                    .ifPresent(service -> service.setChatChannelNotificationType(chatChannel, type));
+        }
     }
 }

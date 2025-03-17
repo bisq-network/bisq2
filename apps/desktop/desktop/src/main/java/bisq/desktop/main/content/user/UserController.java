@@ -22,10 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.user.accounts.PaymentAccountsController;
-import bisq.desktop.main.content.user.bonded_roles.nodes.NodesController;
-import bisq.desktop.main.content.user.bonded_roles.roles.RolesController;
 import bisq.desktop.main.content.user.password.PasswordController;
-import bisq.desktop.main.content.user.reputation.ReputationController;
 import bisq.desktop.main.content.user.user_profile.UserProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,28 +41,11 @@ public class UserController extends ContentTabController<UserModel> {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case USER_PROFILE: {
-                return Optional.of(new UserProfileController(serviceProvider));
-            }
-            case PASSWORD: {
-                return Optional.of(new PasswordController(serviceProvider));
-            }
-            case BISQ_EASY_PAYMENT_ACCOUNTS: {
-                return Optional.of(new PaymentAccountsController(serviceProvider));
-            }
-            case REPUTATION: {
-                return Optional.of(new ReputationController(serviceProvider));
-            }
-            case ROLES: {
-                return Optional.of(new RolesController(serviceProvider));
-            }
-            case NODES: {
-                return Optional.of(new NodesController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case USER_PROFILE -> Optional.of(new UserProfileController(serviceProvider));
+            case PASSWORD -> Optional.of(new PasswordController(serviceProvider));
+            case BISQ_EASY_PAYMENT_ACCOUNTS -> Optional.of(new PaymentAccountsController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

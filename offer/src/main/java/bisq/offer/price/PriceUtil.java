@@ -34,9 +34,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class PriceUtil {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Market price
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     /**
      * A quote created from a market price quote and a percentage
@@ -62,11 +62,14 @@ public class PriceUtil {
         return MathUtils.roundDouble(priceQuote.getValue() / (double) marketPrice.getValue() - 1, 4);
     }
 
-    public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService,
+                                                              Offer<?, ?> offer) {
         return findPercentFromMarketPrice(marketPriceService, offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
+    public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService,
+                                                              PriceSpec priceSpec,
+                                                              Market market) {
         Optional<Double> percentage;
         if (priceSpec instanceof FixPriceSpec) {
             PriceQuote fixPrice = getFixPriceQuote((FixPriceSpec) priceSpec);
@@ -83,15 +86,17 @@ public class PriceUtil {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Quote
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
-    public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, Offer offer) {
+    public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, Offer<?, ?> offer) {
         return findQuote(marketPriceService, offer.getPriceSpec(), offer.getMarket());
     }
 
-    public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
+    public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService,
+                                                 PriceSpec priceSpec,
+                                                 Market market) {
         if (priceSpec instanceof FixPriceSpec) {
             return Optional.of(getFixPriceQuote((FixPriceSpec) priceSpec));
         } else if (priceSpec instanceof MarketPriceSpec) {
@@ -107,7 +112,9 @@ public class PriceUtil {
         return fixPriceSpec.getPriceQuote();
     }
 
-    public static Optional<PriceQuote> findFloatPriceQuote(MarketPriceService marketPriceService, FloatPriceSpec floatPriceSpec, Market market) {
+    public static Optional<PriceQuote> findFloatPriceQuote(MarketPriceService marketPriceService,
+                                                           FloatPriceSpec floatPriceSpec,
+                                                           Market market) {
         return findMarketPriceQuote(marketPriceService, market)
                 .map(marketQuote -> fromMarketPriceMarkup(marketQuote, floatPriceSpec.getPercentage()));
     }

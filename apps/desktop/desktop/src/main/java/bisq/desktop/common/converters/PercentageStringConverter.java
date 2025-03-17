@@ -24,11 +24,22 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PercentageStringConverter extends StringConverter<Number> {
+    private final double defaultValue;
+
     public PercentageStringConverter() {
+        defaultValue = 0;
+    }
+
+    public PercentageStringConverter(double defaultValue) {
+        this.defaultValue = defaultValue;
     }
 
     public Number fromString(String value) {
-        return PercentageParser.parse(value);
+        try {
+            return PercentageParser.parse(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 
     public String toString(Number numberValue) {

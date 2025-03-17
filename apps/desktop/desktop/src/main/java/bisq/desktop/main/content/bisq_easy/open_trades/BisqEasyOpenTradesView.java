@@ -17,11 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades;
 
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.notifications.ChatNotificationService;
-import bisq.common.data.Triple;
-import bisq.common.observable.Pin;
-import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.common.data.Quadruple;
 import bisq.desktop.CssConfig;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
@@ -30,40 +26,27 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.DateTableItem;
+import bisq.desktop.components.table.DateColumnUtil;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
-import bisq.desktop.main.content.chat.BaseChatView;
+import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.DateFormatter;
-import bisq.presentation.formatters.TimeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
-import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationScore;
-import bisq.user.reputation.ReputationService;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.InvalidationListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -71,12 +54,15 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 @Slf4j
-public final class BisqEasyOpenTradesView extends BaseChatView {
+public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesView, BisqEasyOpenTradesModel> {
     private final VBox tradeWelcomeViewRoot, tradeStateViewRoot, chatVBox;
-    private final BisqTableView<ListItem> tableView;
+    private final BisqTableView<OpenTradeListItem> tableView;
     private final Button toggleChatWindowButton;
+    private final AnchorPane tableViewAnchorPane;
     private Subscription noOpenTradesPin, tradeRulesAcceptedPin, tableViewSelectionPin,
-            selectedModelItemPin, chatWindowPin;
+            selectedModelItemPin, chatWindowPin, isAnyTradeInMediationPin;
+    private BisqTableColumn<OpenTradeListItem> mediatorColumn;
+    private final InvalidationListener listItemListener;
 
     public BisqEasyOpenTradesView(BisqEasyOpenTradesModel model,
                                   BisqEasyOpenTradesController controller,
@@ -85,21 +71,19 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                                   Pane channelSidebar,
                                   VBox tradeStateViewRoot,
                                   VBox tradeWelcomeViewRoot) {
-        super(model,
-                controller,
-                chatMessagesComponent,
-                channelSidebar);
+        super(model, controller, chatMessagesComponent, channelSidebar);
+
         this.tradeStateViewRoot = tradeStateViewRoot;
         this.tradeWelcomeViewRoot = tradeWelcomeViewRoot;
 
         // Table view
         tableView = new BisqTableView<>(getModel().getSortedList());
-        tableView.getStyleClass().addAll("bisq-easy-open-trades", "hide-horizontal-scrollbar");
+        tableView.getStyleClass().addAll("bisq-easy-open-trades");
         configTableView();
 
-        VBox.setMargin(tableView, new Insets(10, 0, 0, 0));
-        Triple<Label, HBox, VBox> triple = BisqEasyViewUtils.getContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
-        VBox tableViewVBox = triple.getThird();
+        Quadruple<Label, HBox, AnchorPane, VBox> quadruple = BisqEasyViewUtils.getTableViewContainer(Res.get("bisqEasy.openTrades.table.headline"), tableView);
+        tableViewAnchorPane = quadruple.getThird();
+        VBox tableViewVBox = quadruple.getForth();
 
         // ChatBox
         toggleChatWindowButton = new Button();
@@ -124,7 +108,10 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         VBox.setMargin(tradeStateViewRoot, new Insets(0, 0, 10, 0));
         VBox.setVgrow(tradeStateViewRoot, Priority.ALWAYS);
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
+        VBox.setVgrow(tableViewVBox, Priority.NEVER);
         centerVBox.getChildren().addAll(tradeWelcomeViewRoot, tableViewVBox, tradeStateViewRoot, chatVBox);
+
+        listItemListener = o -> numListItemsChanged();
     }
 
     @Override
@@ -133,31 +120,15 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
 
     @Override
     protected void configCenterVBox() {
-    }
-
-    @Override
-    protected void configSideBarVBox() {
-        sideBar.getChildren().add(channelSidebar);
-        sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
-        sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setFillWidth(true);
-    }
-
-    @Override
-    protected void configContainerHBox() {
-        containerHBox.setSpacing(10);
-        containerHBox.setFillHeight(true);
-        HBox.setHgrow(centerVBox, Priority.ALWAYS);
-        HBox.setHgrow(sideBar, Priority.NEVER);
-        containerHBox.getChildren().addAll(centerVBox, sideBar);
-        containerHBox.setPadding(new Insets(0, 40, 0, 40));
-
-        root.setContent(containerHBox);
+        centerVBox.setAlignment(Pos.TOP_CENTER);
+        centerVBox.setFillWidth(true);
     }
 
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
+
+        tableView.getItems().addListener(listItemListener);
 
         tableView.initialize();
 
@@ -194,19 +165,31 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                         tableView.removeListeners();
                         tableView.setPlaceholderText(Res.get("bisqEasy.openTrades.noTrades"));
                         tableView.allowVerticalScrollbar();
-                        tableView.setFixHeight(150);
+                        tableViewAnchorPane.setMinHeight(150);
+                        tableViewAnchorPane.setMaxHeight(150);
+                        tableView.setMinWidth(500);
                         tableView.getStyleClass().add("empty-table");
                     } else {
                         tableView.setPlaceholder(null);
-                        tableView.adjustHeightToNumRows();
-                        tableView.hideVerticalScrollbar();
                         tableView.getStyleClass().remove("empty-table");
                     }
                 });
 
         chatWindowPin = EasyBind.subscribe(model.getChatWindow(), this::chatWindowChanged);
 
+        isAnyTradeInMediationPin = EasyBind.subscribe(model.getIsAnyTradeInMediation(), isAnyTradeInMediation -> {
+            if (isAnyTradeInMediation == null) {
+                return;
+            }
+            if (isAnyTradeInMediation && !tableView.getColumns().contains(mediatorColumn)) {
+                tableView.getColumns().add(4, mediatorColumn);
+            } else {
+                tableView.getColumns().remove(mediatorColumn);
+            }
+        });
+
         toggleChatWindowButton.setOnAction(e -> getController().onToggleChatWindow());
+        numListItemsChanged();
     }
 
     @Override
@@ -216,6 +199,7 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         // TODO would be nice to keep it open or allow multiple windows... but for now keep it simple...
         getController().onCloseChatWindow();
 
+        tableView.getItems().removeListener(listItemListener);
         tableView.dispose();
 
         tradeWelcomeViewRoot.visibleProperty().unbind();
@@ -232,11 +216,26 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         noOpenTradesPin.unsubscribe();
         tradeRulesAcceptedPin.unsubscribe();
         chatWindowPin.unsubscribe();
+        isAnyTradeInMediationPin.unsubscribe();
 
         toggleChatWindowButton.setOnAction(null);
         tableView.setOnMouseClicked(null);
     }
 
+    private void numListItemsChanged() {
+        if (tableView.getItems().isEmpty()) {
+            return;
+        }
+        double height = tableView.calculateTableHeight(3);
+        tableViewAnchorPane.setMinHeight(height + 1);
+        tableViewAnchorPane.setMaxHeight(height + 1);
+        UIThread.runOnNextRenderFrame(() -> {
+            tableViewAnchorPane.setMinHeight(height);
+            tableViewAnchorPane.setMaxHeight(height);
+            // Delay call as otherwise the width does not take the scrollbar width correctly into account
+            UIThread.runOnNextRenderFrame(tableView::adjustMinWidth);
+        });
+    }
 
     private void chatWindowChanged(Stage chatWindow) {
         if (chatWindow == null) {
@@ -297,117 +296,232 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         }
     }
 
-
     private void configTableView() {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.me"))
                 .fixWidth(45)
                 .left()
-                .comparator(Comparator.comparing(ListItem::getMyUserName))
+                .comparator(Comparator.comparing(OpenTradeListItem::getMyUserName))
                 .setCellFactory(getMyUserCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .minWidth(95)
                 .left()
-                .comparator(Comparator.comparing(ListItem::getDirection))
-                .valueSupplier(ListItem::getDirection)
+                .comparator(Comparator.comparing(OpenTradeListItem::getDirectionalTitle))
+                .valueSupplier(OpenTradeListItem::getDirectionalTitle)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
                 .minWidth(110)
                 .left()
-                .comparator(Comparator.comparing(ListItem::getPeersUserName))
+                .comparator(Comparator.comparing(OpenTradeListItem::getPeersUserName))
                 .setCellFactory(getTradePeerCellFactory())
                 .build());
 
-        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
+        mediatorColumn = new BisqTableColumn.Builder<OpenTradeListItem>()
+                .title(Res.get("bisqEasy.openTrades.table.mediator"))
+                .minWidth(110)
+                .left()
+                .comparator(Comparator.comparing(OpenTradeListItem::getMediatorUserName))
+                .setCellFactory(getMediatorCellFactory())
+                .build();
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
                 .minWidth(85)
-                .comparator(Comparator.comparing(ListItem::getTradeId))
-                .valueSupplier(ListItem::getShortTradeId)
+                .comparator(Comparator.comparing(OpenTradeListItem::getTradeId))
+                .valueSupplier(OpenTradeListItem::getShortTradeId)
+                .tooltipSupplier(OpenTradeListItem::getTradeId)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
-                .fixWidth(95)
-                .comparator(Comparator.comparing(ListItem::getQuoteAmount))
-                .valueSupplier(ListItem::getQuoteAmountString)
+                .fixWidth(120)
+                .comparator(Comparator.comparing(OpenTradeListItem::getQuoteAmount))
+                .valueSupplier(OpenTradeListItem::getQuoteAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
-                .comparator(Comparator.comparing(ListItem::getBaseAmount))
-                .valueSupplier(ListItem::getBaseAmountString)
+                .comparator(Comparator.comparing(OpenTradeListItem::getBaseAmount))
+                .valueSupplier(OpenTradeListItem::getBaseAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
-                .fixWidth(135)
-                .comparator(Comparator.comparing(ListItem::getPrice))
-                .valueSupplier(ListItem::getPriceString)
+                .fixWidth(170)
+                .comparator(Comparator.comparing(OpenTradeListItem::getPrice))
+                .valueSupplier(OpenTradeListItem::getPriceString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.paymentMethod"))
-                .minWidth(130)
-                .comparator(Comparator.comparing(ListItem::getPaymentMethod))
-                .valueSupplier(ListItem::getPaymentMethod)
+                .minWidth(45)
+                .comparator(Comparator.comparing(OpenTradeListItem::getFiatPaymentMethod))
+                .setCellFactory(getPaymentMethodCellFactory())
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
+                .title(Res.get("bisqEasy.openTrades.table.settlementMethod"))
+                .minWidth(45)
+                .comparator(Comparator.comparing(OpenTradeListItem::getBitcoinSettlementMethod))
+                .setCellFactory(getSettlementMethodCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.makerTakerRole"))
-                .minWidth(80)
+                .minWidth(85)
                 .right()
-                .comparator(Comparator.comparing(ListItem::getMyRole))
-                .valueSupplier(ListItem::getMyRole)
+                .comparator(Comparator.comparing(OpenTradeListItem::getMyRole))
+                .valueSupplier(OpenTradeListItem::getMyRole)
                 .build());
     }
 
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMyUserCellFactory() {
+    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getMyUserCellFactory() {
         return column -> new TableCell<>() {
 
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon();
+            private final StackPane stackPane = new StackPane(userProfileIcon);
+
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(OpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    UserProfileIcon userProfileIcon = new UserProfileIcon();
-                    UserProfile userProfile = item.getChannel().getMyUserIdentity().getUserProfile();
-                    userProfileIcon.applyData(userProfile, item.getLastSeenAsString(), item.getLastSeen());
+                    userProfileIcon.setUserProfile(item.getMyUserProfile(), false);
                     // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
-                    setGraphic(new StackPane(userProfileIcon));
+                    setGraphic(stackPane);
                 } else {
+                    userProfileIcon.dispose();
                     setGraphic(null);
                 }
             }
         };
     }
 
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
+    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
+            private UserProfileDisplay userProfileDisplay;
             private Badge badge;
 
             @Override
-            public void updateItem(final ListItem item, boolean empty) {
+            protected void updateItem(OpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
+                    userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");
-                    badge.textProperty().bind(item.getNumTradeNotification());
+                    badge.setLabelColor("-bisq-black");
+                    badge.textProperty().bind(item.getPeerNumNotificationsProperty());
                     badge.setPosition(Pos.BOTTOM_LEFT);
                     badge.setBadgeInsets(new Insets(0, 0, 7.5, 20));
                     // Label color does not get applied from badge style when in a list cell even we use '!important' in the css.
                     badge.getLabel().setStyle("-fx-text-fill: black !important;");
                     setGraphic(badge);
                 } else {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
                     if (badge != null) {
                         badge.textProperty().unbind();
-                        badge.dispose();
                     }
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getMediatorCellFactory() {
+        return column -> new TableCell<>() {
+            private UserProfileDisplay userProfileDisplay;
+            private Badge badge;
+
+            @Override
+            protected void updateItem(OpenTradeListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
+                    UserProfile mediator = item.getChannel().getMediator().get();
+                    userProfileDisplay = new UserProfileDisplay(mediator, false);
+                    userProfileDisplay.setReputationScore(item.getReputationScore());
+
+                    badge = new Badge(userProfileDisplay);
+                    badge.getStyleClass().add("open-trades-badge");
+                    badge.textProperty().bind(item.getMediatorNumNotificationsProperty());
+                    badge.setPosition(Pos.BOTTOM_LEFT);
+                    badge.setBadgeInsets(new Insets(0, 0, 7.5, 20));
+                    // Label color does not get applied from badge style when in a list cell even we use '!important' in the css.
+                    badge.getLabel().setStyle("-fx-text-fill: black !important;");
+                    setGraphic(badge);
+                } else {
+                    if (userProfileDisplay != null) {
+                        userProfileDisplay.dispose();
+                        userProfileDisplay = null;
+                    }
+                    if (badge != null) {
+                        badge.textProperty().unbind();
+                    }
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getPaymentMethodCellFactory() {
+        return column -> new TableCell<>() {
+            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
+            private final StackPane pane = new StackPane();
+
+            @Override
+            protected void updateItem(OpenTradeListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    Node paymentMethodIcon = !item.isFiatPaymentMethodCustom()
+                            ? ImageUtil.getImageViewById(item.getFiatPaymentRail().name())
+                            : BisqEasyViewUtils.getCustomPaymentMethodIcon(item.getFiatPaymentMethod());
+                    pane.getChildren().add(paymentMethodIcon);
+                    tooltip.setText(Res.get("bisqEasy.openTrades.table.paymentMethod.tooltip",
+                            item.getFiatPaymentMethod()));
+                    Tooltip.install(pane, tooltip);
+                    setGraphic(pane);
+                } else {
+                    Tooltip.uninstall(pane, tooltip);
+                    pane.getChildren().clear();
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getSettlementMethodCellFactory() {
+        return column -> new TableCell<>() {
+            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.MEDIUM_DARK);
+            private final StackPane pane = new StackPane();
+            private final ColorAdjust colorAdjust = new ColorAdjust();
+
+            {
+                colorAdjust.setBrightness(-0.2);
+            }
+
+            @Override
+            protected void updateItem(OpenTradeListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    ImageView icon = ImageUtil.getImageViewById(item.getBitcoinPaymentRail().name());
+                    icon.setEffect(colorAdjust);
+                    pane.getChildren().add(icon);
+                    tooltip.setText(Res.get("bisqEasy.openTrades.table.settlementMethod.tooltip",
+                            item.getBitcoinSettlementMethod()));
+                    Tooltip.install(pane, tooltip);
+                    setGraphic(pane);
+                } else {
+                    Tooltip.uninstall(pane, tooltip);
+                    pane.getChildren().clear();
                     setGraphic(null);
                 }
             }
@@ -422,77 +536,4 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         return (BisqEasyOpenTradesController) controller;
     }
 
-    @Getter
-    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-    static class ListItem implements DateTableItem {
-        @EqualsAndHashCode.Include
-        private final BisqEasyOpenTradeChannel channel;
-        @EqualsAndHashCode.Include
-        private final BisqEasyTrade trade;
-        @EqualsAndHashCode.Include
-        private final UserProfile peersUserProfile;
-
-        private final String offerId, tradeId, shortTradeId, myUserName, direction, peersUserName, dateString, timeString,
-                market, priceString, baseAmountString, quoteAmountString, paymentMethod, myRole;
-        private final long date, price, baseAmount, quoteAmount;
-        private final ChatNotificationService chatNotificationService;
-        private final ReputationScore reputationScore;
-        private final StringProperty numTradeNotification = new SimpleStringProperty();
-        private final Pin changedChatNotificationPin;
-        private final long lastSeen;
-        private final String lastSeenAsString;
-
-        public ListItem(BisqEasyOpenTradeChannel channel,
-                        BisqEasyTrade trade,
-                        ReputationService reputationService,
-                        ChatNotificationService chatNotificationService,
-                        UserProfileService userProfileService) {
-            this.channel = channel;
-            this.trade = trade;
-
-            peersUserProfile = channel.getPeer();
-            this.chatNotificationService = chatNotificationService;
-            peersUserName = peersUserProfile.getUserName();
-            myUserName = channel.getMyUserIdentity().getUserName();
-            direction = BisqEasyTradeFormatter.getDirection(trade);
-            offerId = channel.getBisqEasyOffer().getId();
-            this.tradeId = trade.getId();
-            shortTradeId = trade.getShortId();
-
-            BisqEasyContract contract = trade.getContract();
-            date = contract.getTakeOfferDate();
-            dateString = DateFormatter.formatDate(date);
-            timeString = DateFormatter.formatTime(date);
-            market = trade.getOffer().getMarket().toString();
-            price = BisqEasyTradeUtils.getPriceQuote(trade).getValue();
-            priceString = BisqEasyTradeFormatter.formatPriceWithCode(trade);
-            baseAmount = contract.getBaseSideAmount();
-            baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);
-            quoteAmount = contract.getQuoteSideAmount();
-            quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
-            paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
-            myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
-            reputationScore = reputationService.getReputationScore(peersUserProfile);
-
-            lastSeen = userProfileService.getLastSeen(peersUserProfile);
-            lastSeenAsString = TimeFormatter.formatAge(lastSeen);
-
-            changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
-                if (notification == null ||
-                        !notification.getChatChannelId().equals(channel.getId())) {
-                    return;
-                }
-                UIThread.run(() -> {
-                    long numNotifications = chatNotificationService.getNumNotifications(channel.getId());
-                    numTradeNotification.set(numNotifications > 0 ?
-                            String.valueOf(numNotifications) :
-                            "");
-                });
-            });
-        }
-
-        public void dispose() {
-            changedChatNotificationPin.unbind();
-        }
-    }
 }

@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.support.mediation.MediationRequestService;
 import bisq.support.mediation.MediatorService;
+import bisq.support.moderator.ModerationRequestService;
 import bisq.support.moderator.ModeratorService;
 import bisq.support.release_manager.ReleaseManagerService;
 import bisq.support.security_manager.SecurityManagerService;
@@ -42,6 +43,7 @@ public class SupportService implements Service {
     private final ModeratorService moderatorService;
     private final ReleaseManagerService releaseManagerService;
     private final MediatorService mediatorService;
+    private final ModerationRequestService moderationRequestService;
 
     @Getter
     @ToString
@@ -94,18 +96,22 @@ public class SupportService implements Service {
                 userService,
                 bondedRolesService,
                 chatService);
+        moderationRequestService = new ModerationRequestService(networkService,
+                userService,
+                bondedRolesService);
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return mediationRequestService.initialize()
                 .thenCompose(result -> mediatorService.initialize())
+                .thenCompose(result -> moderationRequestService.initialize())
                 .thenCompose(result -> moderatorService.initialize())
                 .thenCompose(result -> releaseManagerService.initialize())
                 .thenCompose(result -> securityManagerService.initialize());
@@ -113,8 +119,10 @@ public class SupportService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return mediationRequestService.shutdown()
                 .thenCompose(result -> mediatorService.shutdown())
+                .thenCompose(result -> moderationRequestService.shutdown())
                 .thenCompose(result -> moderatorService.shutdown())
                 .thenCompose(result -> releaseManagerService.shutdown())
                 .thenCompose(result -> securityManagerService.shutdown());

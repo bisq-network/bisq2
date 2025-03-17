@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -25,7 +24,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
-import bisq.support.moderator.ModeratorService;
+import bisq.support.moderator.ModerationRequestService;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.BooleanProperty;
@@ -49,12 +48,10 @@ public class ReportToModeratorWindow {
     @EqualsAndHashCode
     @ToString
     public static class InitData {
-        private final ChatChannelDomain chatChannelDomain;
         private final UserProfile accusedUserProfile;
 
-        public InitData(UserProfile accusedUserProfile, ChatChannelDomain chatChannelDomain) {
+        public InitData(UserProfile accusedUserProfile) {
             this.accusedUserProfile = accusedUserProfile;
-            this.chatChannelDomain = chatChannelDomain;
         }
     }
 
@@ -70,11 +67,11 @@ public class ReportToModeratorWindow {
         @Getter
         private final View view;
         private final Model model;
-        private final ModeratorService moderatorService;
+        private final ModerationRequestService moderationRequestService;
         private final ServiceProvider serviceProvider;
 
         private Controller(ServiceProvider serviceProvider) {
-            moderatorService = serviceProvider.getSupportService().getModeratorService();
+            moderationRequestService = serviceProvider.getSupportService().getModerationRequestService();
             this.serviceProvider = serviceProvider;
             model = new Model();
             view = new View(model, this);
@@ -83,7 +80,6 @@ public class ReportToModeratorWindow {
         @Override
         public void initWithData(ReportToModeratorWindow.InitData initData) {
             model.setAccusedUserProfile(initData.getAccusedUserProfile());
-            model.setChatChannelDomain(initData.getChatChannelDomain());
         }
 
         @Override
@@ -105,7 +101,7 @@ public class ReportToModeratorWindow {
                 return;
             }
 
-            moderatorService.reportUserProfile(model.getAccusedUserProfile(), message, model.getChatChannelDomain());
+            moderationRequestService.reportUserProfile(model.getAccusedUserProfile(), message);
             onCancel();
         }
 
@@ -121,10 +117,8 @@ public class ReportToModeratorWindow {
     @Slf4j
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        public StringProperty message = new SimpleStringProperty("");
-        public BooleanProperty reportButtonDisabled = new SimpleBooleanProperty();
-        @Setter
-        private ChatChannelDomain chatChannelDomain;
+        public final StringProperty message = new SimpleStringProperty("");
+        public final BooleanProperty reportButtonDisabled = new SimpleBooleanProperty();
         @Setter
         private UserProfile accusedUserProfile;
     }

@@ -17,25 +17,25 @@
 
 package bisq.chat.two_party;
 
-import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
 public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPartyPrivateChatChannelStore> {
-    private final ObservableArray<TwoPartyPrivateChatChannel> channels = new ObservableArray<>();
+    private final ObservableSet<TwoPartyPrivateChatChannel> channels = new ObservableSet<>();
 
-    public TwoPartyPrivateChatChannelStore() {
+    TwoPartyPrivateChatChannelStore() {
     }
 
-    private TwoPartyPrivateChatChannelStore(List<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
+    TwoPartyPrivateChatChannelStore(Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
         setAll(twoPartyPrivateChatChannels);
     }
 
@@ -53,9 +53,9 @@ public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPart
     }
 
     public static TwoPartyPrivateChatChannelStore fromProto(bisq.chat.protobuf.TwoPartyPrivateChatChannelStore proto) {
-        List<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = proto.getChannelsList().stream()
+        Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = proto.getChannelsList().stream()
                 .map(e -> (TwoPartyPrivateChatChannel) TwoPartyPrivateChatChannel.fromProto(e))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
         return new TwoPartyPrivateChatChannelStore(twoPartyPrivateChatChannels);
     }
 
@@ -77,10 +77,10 @@ public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPart
 
     @Override
     public TwoPartyPrivateChatChannelStore getClone() {
-        return new TwoPartyPrivateChatChannelStore(new ArrayList<>(channels));
+        return new TwoPartyPrivateChatChannelStore(new HashSet<>(channels));
     }
 
-    public void setAll(List<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
+    public void setAll(Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
         this.channels.setAll(twoPartyPrivateChatChannels);
     }
 }

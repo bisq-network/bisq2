@@ -24,7 +24,7 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
+public abstract class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
     protected static final double SIDE_PADDING = 40;
 
     public ChatView(ChatModel model,
@@ -53,7 +53,8 @@ public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends Bas
         searchBox.setPrefHeight(searchBoxHeight);
 
         HBox.setMargin(channelIcon, new Insets(0, 0, -2, 5));
-        titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, headerDropdownMenu);
+        HBox.setMargin(notificationsSettingsMenu, new Insets(0, 0, 0, -5));
+        titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, ellipsisMenu, notificationsSettingsMenu);
     }
 
     @Override

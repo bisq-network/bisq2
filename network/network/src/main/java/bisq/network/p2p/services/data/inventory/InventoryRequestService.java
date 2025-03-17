@@ -66,6 +66,7 @@ public class InventoryRequestService implements Node.Listener {
     private final Observable<Boolean> allDataReceived = new Observable<>(false);
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private Optional<Scheduler> periodicRequestScheduler = Optional.empty();
+    private volatile boolean shutdownInProgress;
 
     public InventoryRequestService(Node node,
                                    PeerGroupManager peerGroupManager,
@@ -82,15 +83,16 @@ public class InventoryRequestService implements Node.Listener {
     }
 
     public void shutdown() {
+        shutdownInProgress = true;
         node.removeListener(this);
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
         periodicRequestScheduler.ifPresent(Scheduler::stop);
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Node.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -109,8 +111,10 @@ public class InventoryRequestService implements Node.Listener {
         requestInventory(connection)
                 .whenComplete((inventory, throwable) -> {
                     if (throwable != null) {
-                        log.error("Exception at inventory request to peer {}: {}",
-                                connection.getPeerAddress().getFullAddress(), ExceptionUtil.getMessageOrToString(throwable));
+                        if (!shutdownInProgress) {
+                            log.info("Exception at inventory request to peer {}: {}",
+                                    connection.getPeerAddress().getFullAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                        }
                     } else {
                         if (!allDataReceived.get()) {
                             if (inventory.allDataReceived()) {
@@ -146,9 +150,9 @@ public class InventoryRequestService implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Request inventory
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private CompletableFuture<Inventory> requestInventory(Connection connection) {
         return requestFromPeer(connection)
@@ -186,37 +190,39 @@ public class InventoryRequestService implements Node.Listener {
 
     private void startPeriodicRequests(long interval) {
         periodicRequestScheduler.ifPresent(Scheduler::stop);
-        periodicRequestScheduler = Optional.of(Scheduler.run(() -> {
-                    List<Connection> candidatesForPeriodicRequests = getCandidatesForPeriodicRequests();
-                    int numCandidates = candidatesForPeriodicRequests.size();
-                    AtomicBoolean allDataReceived = new AtomicBoolean();
-                    AtomicInteger numCompleted = new AtomicInteger();
-                    candidatesForPeriodicRequests.forEach(connection -> {
-                        requestInventory(connection)
-                                .whenComplete((inventory, throwable) -> {
-                                    if (throwable != null) {
-                                        log.info("Exception at periodic inventory request to peer {}: {}",
-                                                connection.getPeerAddress().getFullAddress(), ExceptionUtil.getMessageOrToString(throwable));
-                                    } else if (inventory.allDataReceived()) {
-                                        allDataReceived.set(true);
-                                    }
-                                    if (numCompleted.incrementAndGet() == numCandidates) {
-                                        if (allDataReceived.get()) {
-                                            long repeatRequestInterval = config.getRepeatRequestInterval();
-                                            log.info("We got {} requests completed and have all data received. " +
-                                                            "We repeat requests in {} seconds",
-                                                    numCandidates, repeatRequestInterval / 1000);
-                                            startPeriodicRequests(repeatRequestInterval);
-                                        } else {
-                                            log.info("We got {} requests completed but still data missing. " +
-                                                    "We repeat requests in 1 second", numCandidates);
-                                            startPeriodicRequests(1000);
-                                        }
-                                    }
-                                });
-                    });
-                })
+        periodicRequestScheduler = Optional.of(Scheduler.run(this::periodicRequest)
+                .host(this)
+                .runnableName("periodicRequest")
                 .after(interval));
+    }
+
+    private void periodicRequest() {
+        List<Connection> candidatesForPeriodicRequests = getCandidatesForPeriodicRequests();
+        int numCandidates = candidatesForPeriodicRequests.size();
+        AtomicBoolean allDataReceived = new AtomicBoolean();
+        AtomicInteger numCompleted = new AtomicInteger();
+        candidatesForPeriodicRequests.forEach(connection -> requestInventory(connection)
+                .whenComplete((inventory, throwable) -> {
+                    if (throwable != null) {
+                        log.info("Exception at periodic inventory request to peer {}: {}",
+                                connection.getPeerAddress().getFullAddress(), ExceptionUtil.getRootCauseMessage(throwable));
+                    } else if (inventory.allDataReceived()) {
+                        allDataReceived.set(true);
+                    }
+                    if (numCompleted.incrementAndGet() == numCandidates) {
+                        if (allDataReceived.get()) {
+                            long repeatRequestInterval = config.getRepeatRequestInterval();
+                            log.info("We got {} requests completed and have all data received. " +
+                                            "We repeat requests in {} seconds",
+                                    numCandidates, repeatRequestInterval / 1000);
+                            startPeriodicRequests(repeatRequestInterval);
+                        } else {
+                            log.info("We got {} requests completed but still data missing. " +
+                                    "We repeat requests in 1 second", numCandidates);
+                            startPeriodicRequests(1000);
+                        }
+                    }
+                }));
     }
 
     private List<Connection> getCandidatesForPeriodicRequests() {

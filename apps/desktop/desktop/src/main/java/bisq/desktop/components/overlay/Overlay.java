@@ -18,8 +18,12 @@
 package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
+import bisq.common.application.ApplicationVersion;
+import bisq.common.file.FileUtils;
 import bisq.common.locale.LanguageRepository;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.OS;
+import bisq.common.platform.Platform;
+import bisq.common.platform.PlatformUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -27,6 +31,7 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -44,7 +49,6 @@ import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
@@ -53,10 +57,7 @@ import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -71,6 +72,9 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.*;
 import java.util.*;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -93,9 +97,9 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Enum
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public enum AnimationType {
         FadeInAtCenter,
@@ -147,16 +151,15 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected BisqGridPane gridPane;
 
     protected double width = DEFAULT_WIDTH;
-    protected double buttonDistance = 20;
+    protected final double buttonDistance = 20;
 
     protected boolean showReportErrorButtons;
     private boolean showBusyAnimation;
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
-    protected boolean disableActionButton;
     protected boolean useBgEffect = true;
     @Getter
-    protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
+    protected final BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
 
     protected boolean useAnimation = true;
 
@@ -186,6 +189,12 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected AnimationType animationType;
     protected Transitions.Type transitionsType;
     protected int maxChar = 2200;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Scene> sceneListener = (observable, oldValue, newValue) -> {
+        if (oldValue != null && newValue == null) {
+            hide();
+        }
+    };
 
     public Overlay() {
         id = UUID.randomUUID().toString();
@@ -195,12 +204,14 @@ public abstract class Overlay<T extends Overlay<T>> {
             throw new RuntimeException("Subclass of Overlay<T> should be castable to T");
         }
         owner = primaryStageOwner;
+
+
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void show(boolean showAgainChecked) {
         if (dontShowAgainId == null || dontShowAgainService.showAgain(dontShowAgainId)) {
@@ -216,6 +227,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             }
 
             addContent();
+
             if (showReportErrorButtons) {
                 addReportErrorButtons();
             }
@@ -408,16 +420,31 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T error(Throwable throwable) {
-        return error(StringUtils.truncate(Throwables.getStackTraceAsString(throwable), 800));
+        return error(Throwables.getStackTraceAsString(throwable));
     }
 
     public T error(String message) {
         type = Type.ERROR;
         showReportErrorButtons();
         width = 800;
-        if (headline == null)
-            this.headline = Res.get("popup.headline.error");
-        processMessage(message);
+        if (headline == null) {
+            this.headline = Res.get("popup.reportBug");
+        }
+
+        processMessage(Res.get("popup.reportError"));
+
+        String version = Res.get("version.versionAndCommitHash", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
+        String platformDetails = Platform.getDetails();
+        String errorReport = Res.get("popup.reportBug.report", version, platformDetails, message);
+        TextArea errorReportTextArea = new TextArea(errorReport);
+        errorReportTextArea.setContextMenu(new ContextMenu());
+        errorReportTextArea.setEditable(false);
+        errorReportTextArea.setPrefWidth(width);
+        errorReportTextArea.setWrapText(true);
+        errorReportTextArea.getStyleClass().addAll("code-block", "error-log");
+
+        content(errorReportTextArea);
+
         return cast();
     }
 
@@ -529,15 +556,10 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
-    public T disableActionButton() {
-        this.disableActionButton = true;
-        return cast();
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     protected void createGridPane() {
         gridPane = new BisqGridPane();
@@ -558,14 +580,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public void display() {
         // Once our owner gets removed we also want to remove our overlay
-        owner.sceneProperty().addListener(new WeakChangeListener<Scene>(new ChangeListener<Scene>() {
-            @Override
-            public void changed(ObservableValue<? extends Scene> observable, Scene oldValue, Scene newValue) {
-                if (oldValue != null && newValue == null) {
-                    hide();
-                }
-            }
-        }));
+        owner.sceneProperty().addListener(new WeakChangeListener<>(sceneListener));
 
         Scene rootScene = owner.getScene();
         if (rootScene != null) {
@@ -776,7 +791,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             Window window = rootScene.getWindow();
             double titleBarHeight = window.getHeight() - rootScene.getHeight();
 
-            if (OsUtils.isWindows()) {
+            if (OS.isWindows()) {
                 titleBarHeight -= 9;
             }
             double leftDistance = (window.getWidth() - getRootContainer().getWidth()) / 2;
@@ -903,7 +918,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     // footer contains optional hyperlinks extracted from the message
     protected void addFooter() {
-        if (messageHyperlinks != null && messageHyperlinks.size() > 0) {
+        if (messageHyperlinks != null && !messageHyperlinks.isEmpty()) {
             VBox footerBox = new VBox();
             GridPane.setRowIndex(footerBox, gridPane.getRowCount());
             GridPane.setColumnSpan(footerBox, 2);
@@ -915,7 +930,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 Hyperlink link = new Hyperlink(messageHyperlinks.get(i));
                 link.getStyleClass().add("overlay-message");
                 link.setOnAction(event -> Browser.open(link.getText()));
-                String tooltipText = Browser.hyperLinksGetCopiesWithoutPopup()
+                String tooltipText = Browser.hyperLinksGetCopiedWithoutPopup()
                         ? Res.get("popup.hyperlink.copy.tooltip", link.getText())
                         : Res.get("popup.hyperlink.openInBrowser.tooltip", link.getText());
                 link.setTooltip(new BisqTooltip(tooltipText));
@@ -927,26 +942,68 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     private void addReportErrorButtons() {
-        messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
-
         Button logButton = new Button(Res.get("popup.reportError.log"));
-        GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
-        GridPane.setHalignment(logButton, HPos.LEFT);
-        GridPane.setRowIndex(logButton, gridPane.getRowCount());
-        gridPane.getChildren().add(logButton);
-        logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
+        logButton.setOnAction(event -> PlatformUtils.open(new File(baseDir, "bisq.log")));
+
+        Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
+        zipLogButton.setOnAction(event -> FileChooserUtil.chooseDirectory(getRootContainer().getScene(), baseDir, "")
+                .ifPresent(directory -> {
+                    // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
+                    // private data gets leaked in case the user used their real name as their OS user.
+                    Path debugLogPath = Path.of(baseDir + "/tor/").resolve("debug.log");
+                    File debugLogForZipFile = Path.of(baseDir + "/tor/").resolve("debug_for_zip.log").toFile();
+                    try {
+                        if (debugLogForZipFile.exists()) {
+                            debugLogForZipFile.delete();
+                        }
+                        FileUtils.copyFile(debugLogPath.toFile(), debugLogForZipFile);
+                        String logContent = FileUtils.readAsString(debugLogForZipFile.getAbsolutePath());
+                        logContent = StringUtils.maskHomeDirectory(logContent);
+                        FileUtils.writeToFile(logContent, debugLogForZipFile);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    String zipDirectory = directory.getAbsolutePath();
+                    URI uri = URI.create("jar:file:" + Paths.get(zipDirectory, "bisq2-logs.zip").toUri().getRawPath());
+                    Map<String, String> env = Map.of("create", "true");
+                    List<Path> logPaths = Arrays.asList(
+                            Path.of(baseDir).resolve("bisq.log"),
+                            debugLogForZipFile.toPath());
+                    try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
+                        logPaths.forEach(logPath -> {
+                            if (logPath.toFile().isFile()) {
+                                try {
+                                    Files.copy(logPath, zipFileSystem.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        });
+                        PlatformUtils.open(zipDirectory);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
 
         Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
-        GridPane.setHalignment(gitHubButton, HPos.RIGHT);
-        GridPane.setRowIndex(gitHubButton, gridPane.getRowCount());
-        gridPane.getChildren().add(gitHubButton);
         gitHubButton.setOnAction(event -> {
-            if (message != null) {
-                ClipboardUtil.copyToClipboard(message);
+            if (content instanceof TextArea errorReportTextArea) {
+                ClipboardUtil.copyToClipboard(errorReportTextArea.getText());
+                Browser.open("https://github.com/bisq-network/bisq2/issues");
             }
-            Browser.open("https://github.com/bisq-network/bisq2/issues");
             hide();
         });
+
+      /*  buttonBox.getChildren().add(0, Spacer.fillHBox());
+        buttonBox.getChildren().add(0, gitHubButton);
+        buttonBox.getChildren().add(0, zipLogButton);
+        buttonBox.getChildren().add(0, logButton);*/
+
+        HBox buttons = new HBox(10, gitHubButton, zipLogButton, logButton, Spacer.fillHBox());
+        GridPane.setHalignment(buttons, buttonAlignment);
+        GridPane.setMargin(buttons, new Insets(buttonDistance, 0, 0, 0));
+        gridPane.add(buttons, 0, gridPane.getRowCount(), 2, 1);
+
     }
 
     protected void addBusyAnimation() {
@@ -991,37 +1048,31 @@ public abstract class Overlay<T extends Overlay<T>> {
         GridPane.setMargin(buttonBox, new Insets(buttonDistance, 0, 0, 0));
         gridPane.add(buttonBox, 0, gridPane.getRowCount(), 2, 1);
 
-        if (actionHandlerOptional.isPresent() || actionButtonText != null) {
+        boolean useActionButton = actionHandlerOptional.isPresent() || actionButtonText != null;
+        if (useActionButton) {
             actionButton = new Button(actionButtonText == null ? Res.get("confirmation.ok") : actionButtonText);
-
-            if (!disableActionButton)
-                actionButton.setDefaultButton(true);
-            else
-                actionButton.setDisable(true);
 
             HBox.setHgrow(actionButton, Priority.SOMETIMES);
             actionButton.setDefaultButton(true);
 
-            if (!disableActionButton) {
-                actionButton.setOnAction(event -> {
-                    if (doCloseOnAction) {
-                        hide();
-                    }
-                    actionHandlerOptional.ifPresent(Runnable::run);
-                });
-            }
-
-            if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
-                secondaryActionButton = new Button(secondaryActionButtonText);
-                secondaryActionButton.setOnAction(event -> {
-                    if (doCloseOnSecondaryAction) {
-                        hide();
-                    }
-                    secondaryActionHandlerOptional.ifPresent(Runnable::run);
-                });
-            }
-
-        } else if (!hideCloseButton) {
+            actionButton.setOnAction(event -> {
+                if (doCloseOnAction) {
+                    hide();
+                }
+                actionHandlerOptional.ifPresent(Runnable::run);
+            });
+        }
+        boolean useSecondaryActionButton = secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent();
+        if (useSecondaryActionButton) {
+            secondaryActionButton = new Button(secondaryActionButtonText);
+            secondaryActionButton.setOnAction(event -> {
+                if (doCloseOnSecondaryAction) {
+                    hide();
+                }
+                secondaryActionHandlerOptional.ifPresent(Runnable::run);
+            });
+        }
+        if (!useActionButton && !useSecondaryActionButton && !hideCloseButton) {
             closeButton.setDefaultButton(true);
         }
 

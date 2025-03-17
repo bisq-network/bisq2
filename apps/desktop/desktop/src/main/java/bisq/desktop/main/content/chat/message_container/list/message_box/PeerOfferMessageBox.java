@@ -20,7 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.Navigation;
@@ -46,6 +46,8 @@ import javafx.scene.layout.VBox;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class PeerOfferMessageBox extends PeerTextMessageBox {
+    private static final double OFFER_MESSAGE_BOX_MIN_WIDTH = 310;
+
     private Button takeOfferButton;
     private Button moreInfoButton;
     private Label peerNickName;
@@ -55,26 +57,23 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
                                ChatMessagesListController controller) {
         super(item, list, controller);
 
-        HBox.setMargin(copyIcon, new Insets(4, 0, -4, 0));
-        HBox.setMargin(supportedLanguages, new Insets(5, 0, -5, 0));
-        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, supportedLanguages, moreOptionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, moreActionsMenu, Spacer.fillHBox());
 
         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
     }
 
     @Override
     protected void setUpPeerMessage() {
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
+        userProfileIconVbox.getChildren().addAll(item.getReputationScoreDisplay(), Spacer.fillVBox(), supportedLanguagesHBox);
+        supportedLanguagesHBox.setAlignment(Pos.CENTER);
+        userProfileIconVbox.setSpacing(10);
+        userProfileIconVbox.setAlignment(Pos.CENTER);
+        item.getReputationScoreDisplay().setScale(0.8);
+        item.getReputationScoreDisplay().setAlignment(Pos.CENTER);
 
-        // Reputation
-        Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
-        VBox reputationVBox = new VBox(4, reputationLabel, item.getReputationScoreDisplay());
-        reputationVBox.setAlignment(Pos.CENTER);
-        reputationVBox.getStyleClass().add("reputation");
-
-        // Take offer title and button
         Pair<HBox, Button> takeOfferLabelAndButton = createAndGetTakeOfferTitleBoxAndButton();
         HBox takeOfferTitle = takeOfferLabelAndButton.getFirst();
         takeOfferButton = takeOfferLabelAndButton.getSecond();
@@ -94,11 +93,17 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         // Offer content
         HBox buttonRow = new HBox(30, takeOfferButton, moreInfoButton);
         VBox offerMessage = new VBox(10, takeOfferTitle, message, buttonRow);
+        // Offer content
+        paymentAndSettlementMethodsBox.setPadding(new Insets(0, 0, 2, 0));
+        HBox methodsAndTakeOfferButtonBox = new HBox(10, paymentAndSettlementMethodsBox, Spacer.fillHBox(), takeOfferButton);
+        VBox offerMessage = new VBox(10, takeOfferTitle, amountAndPriceBox, Spacer.fillVBox(), methodsAndTakeOfferButtonBox);
+        offerMessage.setMinWidth(OFFER_MESSAGE_BOX_MIN_WIDTH);
+        VBox.setMargin(offerMessage, new Insets(0, 0, 0, 7));
+
         Region separator = new Region();
         separator.getStyleClass().add("take-offer-vLine");
-        HBox offerContent = new HBox(15, userProfileIconVbox, reputationVBox, separator, offerMessage);
-        userProfileIconVbox.setAlignment(Pos.CENTER);
-        reputationVBox.setAlignment(Pos.CENTER);
+        HBox offerContent = new HBox(15, userProfileIconVbox, separator, offerMessage);
+        userProfileIconVbox.setAlignment(Pos.TOP_CENTER);
         offerContent.setAlignment(Pos.CENTER);
 
         // Message background
@@ -121,9 +126,8 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
                 : Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessageTitle.buy");
         Label messageTitle = new Label(title);
         messageTitle.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
-        messageTitle.setPadding(new Insets(0, 0, 0, 7));
         peerNickName = new Label(StringUtils.truncate(item.getNickName(), 28));
-        peerNickName.getStyleClass().addAll("code-block", "hand-cursor");
+        peerNickName.getStyleClass().addAll("code-block", "offerbook-peer-name", "hand-cursor");
         peerNickName.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
         HBox messageTitleBox = new HBox(5, messageTitle, peerNickName);
         messageTitleBox.getStyleClass().add(isBuy ? "bisq-easy-offer-sell-btc-title" : "bisq-easy-offer-buy-btc-title");
@@ -133,16 +137,16 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         Button button = new Button(isBuy ? Res.get("offer.takeOffer.sell.button") : Res.get("offer.takeOffer.buy.button"));
         button.getStyleClass().addAll("take-offer-button", "medium-text", "font-default");
         button.getStyleClass().add(isBuy ? "sell-btc-button" : "buy-btc-button");
+
         button.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
-        button.setDefaultButton(!item.isOfferAlreadyTaken());
-        VBox.setMargin(button, new Insets(10, 0, 0, 7));
+        button.setOpacity(item.isWasOfferAlreadyTaken() ? 0.5 : 1);
 
         return new Pair<>(messageTitleBox, button);
     }
 
     @Override
-    public void cleanup() {
-        super.cleanup();
+    public void dispose() {
+        super.dispose();
 
         takeOfferButton.setOnAction(null);
         peerNickName.setOnMouseClicked(null);

@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,13 +47,18 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             return Optional.empty();
         }
 
+        // In case we do not have any backup file yet, we check if we have a legacy backup file (pre-v2.1.2) and move
+        // that to the new backup structure. As we only do the backup at write we would otherwise not have data which
+        // have been written only once like the user identity.
+        storeFileManager.maybeMigrateLegacyBackupFile();
+
         try {
             PersistableStore<?> persistableStore = readStoreFromFile();
             //noinspection unchecked,rawtypes
             return (Optional) Optional.of(persistableStore);
 
         } catch (Exception e) {
-            log.error("Couldn't read " + storeFilePath + " from file.", e);
+            log.error("Couldn't read {} from file.", storeFilePath, e);
             tryToBackupCorruptedStoreFile();
         }
 
@@ -62,19 +67,23 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
-
         try {
             writeStoreToTempFile(persistableStore);
-            storeFileManager.tryToBackupCurrentStoreFile();
+            boolean hasFileBeenBackedUp = storeFileManager.maybeBackup();
+            if (!hasFileBeenBackedUp) {
+                File storeFile = storeFilePath.toFile();
+                FileUtils.deleteFile(storeFile);
+            }
             storeFileManager.renameTempFileToCurrentFile();
-
         } catch (CouldNotSerializePersistableStore e) {
-            log.error("Couldn't serialize " + persistableStore, e);
-
+            log.error("Couldn't serialize {}", persistableStore, e);
         } catch (Exception e) {
-            log.error("Couldn't write persistable store to disk. Trying restore backup.", e);
-            storeFileManager.restoreBackupFileIfCurrentFileNotExisting();
+            log.error("Couldn't write persistable store to disk.", e);
         }
+    }
+
+    public void pruneBackups() {
+        storeFileManager.pruneBackups();
     }
 
     private PersistableStore<?> readStoreFromFile() throws IOException {
@@ -94,7 +103,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
                     "corruptedFilesAtRead"
             );
         } catch (IOException e) {
-            log.error("Error trying to backup corrupted file " + storeFilePath + ": " + e.getMessage(), e);
+            log.error("Error trying to backup corrupted file {}: {}", storeFilePath, e.getMessage(), e);
         }
     }
 

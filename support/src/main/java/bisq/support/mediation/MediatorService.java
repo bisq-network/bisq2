@@ -21,9 +21,9 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -78,12 +78,15 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        networkService.getConfidentialMessageServices().stream()
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                .forEach(this::onMessage);
         networkService.addConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -95,9 +98,9 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // MessageListener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
@@ -107,12 +110,17 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void closeMediationCase(MediationCase mediationCase) {
         mediationCase.setClosed(true);
+        persist();
+    }
+
+    public void removeMediationCase(MediationCase mediationCase) {
+        getMediationCases().remove(mediationCase);
         persist();
     }
 
@@ -133,15 +141,16 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
     }
 
     public Stream<UserIdentity> findMyMediatorUserIdentities() {
-        return authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+        // If we got banned we still want to show the admin UI
+        return authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
                 .filter(data -> data.getBondedRoleType() == BondedRoleType.MEDIATOR)
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getProfileId()).stream());
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private void processMediationRequest(MediationRequest mediationRequest) {
         UserProfile requester = mediationRequest.getRequester();

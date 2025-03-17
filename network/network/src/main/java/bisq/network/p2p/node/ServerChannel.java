@@ -17,7 +17,8 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.common.Address;
+import bisq.common.threading.ThreadName;
+import bisq.common.network.Address;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peer_group.BanList;
@@ -74,6 +75,7 @@ public class ServerChannel {
         log.debug("Create server: {}", myAddress);
 
         serverThread = new Thread(() -> {
+            ThreadName.set(this, "start");
             try {
                 InetSocketAddress socketAddress = new InetSocketAddress(
                         InetAddress.getLocalHost(),

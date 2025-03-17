@@ -233,29 +233,28 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
             public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
                 return new TableCell<>() {
                     private final Label userName = new Label();
-                    private final ImageView catIcon = new ImageView();
-                    private final HBox hBox;
+                    private final ImageView catHashImageView = new ImageView();
+                    private final HBox hBox = new HBox(10, catHashImageView, userName);
 
                     {
                         userName.setId("chat-user-name");
-                        int size = 30;
-                        catIcon.setFitWidth(size);
-                        catIcon.setFitHeight(size);
-                        //StackPane catIconWithRing = ImageUtil.addRingToNode(catIcon, size, 1.5, "-bisq-dark-grey-50");
-                        hBox = new HBox(10, catIcon, userName);
-                        hBox.setAlignment(Pos.CENTER);
+                        hBox.setAlignment(Pos.CENTER_LEFT);
+                        catHashImageView.setFitWidth(40);
+                        catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+                        HBox.setMargin(catHashImageView, new Insets(0, 0, 0, 5));
                     }
 
                     @Override
-                    public void updateItem(final ListItem item, boolean empty) {
+                    protected void updateItem(ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
                             userName.setText(item.getMakerUserName());
                             item.getAuthorUserProfile().ifPresent(userProfile ->
-                                    catIcon.setImage(CatHash.getImage(userProfile)));
+                                    catHashImageView.setImage(CatHash.getImage(userProfile, catHashImageView.getFitWidth())));
                             setGraphic(hBox);
                         } else {
+                            catHashImageView.setImage(null);
                             setGraphic(null);
                         }
                     }
@@ -277,10 +276,13 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                     }
 
                     @Override
-                    public void updateItem(final ListItem item, boolean empty) {
+                    protected void updateItem(ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
+                            if (tableRow != null) {
+                                tableRow.setOnMouseClicked(null);
+                            }
                             tableRow = getTableRow();
                             tableRow.setOnMouseClicked(e -> controller.onSelectRow(item));
                             reputationScoreDisplay.setReputationScore(item.getReputationScore());
@@ -299,16 +301,16 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
     }
 
     @ToString
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     static class ListItem {
+        @EqualsAndHashCode.Include
+        private final BisqEasyOffer bisqEasyOffer;
+
         private final Optional<UserProfile> authorUserProfile;
         private final String makerUserName, baseAmountDisplayString, priceDisplayString;
         private final long priceAsLong, baseAmountAsLong;
-        @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
-        private final BisqEasyOffer bisqEasyOffer;
-
 
         public ListItem(BisqEasyOffer bisqEasyOffer,
                         TradeWizardSelectOfferModel model,
@@ -316,6 +318,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         ReputationService reputationService,
                         MarketPriceService marketPriceService) {
             this.bisqEasyOffer = bisqEasyOffer;
+
             authorUserProfile = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId());
             makerUserName = authorUserProfile.map(UserProfile::getUserName).orElse("");
             priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(PriceQuote::getValue).orElse(0L);
@@ -324,9 +327,9 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                             model.getQuoteSideAmountSpec(),
                             bisqEasyOffer.getPriceSpec(),
                             bisqEasyOffer.getMarket())
-                    .orElse(Monetary.from(0, model.getMarket().getBaseCurrencyCode()));
+                    .orElseThrow();
             baseAmountAsLong = baseAmountAsMonetary.getValue();
-            baseAmountDisplayString = AmountFormatter.formatAmountWithCode(baseAmountAsMonetary, false);
+            baseAmountDisplayString = AmountFormatter.formatBaseAmountWithCode(baseAmountAsMonetary);
             reputationScore = authorUserProfile.flatMap(reputationService::findReputationScore)
                     .orElse(ReputationScore.NONE);
         }

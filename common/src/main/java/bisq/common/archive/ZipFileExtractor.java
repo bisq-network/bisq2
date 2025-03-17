@@ -17,7 +17,7 @@
 
 package bisq.common.archive;
 
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;

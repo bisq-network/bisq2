@@ -13,8 +13,8 @@ the [Bisq wiki](https://bisq.wiki/Bisq_2)
 For the initial release Bisq 2 will come with the [Bisq Easy](https://bisq.wiki/Bisq_Easy) protocol only. Work on the
 other protocols will start after Bisq 2 has been shipped.
 
-Bisq Easy is designed for novice Bitcoin users with a focus on ease to use and convenience. It does not require that the
-user has already Bitcoin and it is based on an easy-to-use chat interface. Security is based on reputation of the
+Bisq Easy is designed for novice Bitcoin users with a focus on ease of use and convenience. It does not require that the
+user already has Bitcoin and it is based on an easy-to-use chat interface. Security is based on reputation of the
 Bitcoin seller. It does not compete with the current Bisq v1 trade protocol but is complementary to it. It serves and
 targets a user group which we cannot reach with Bisq v1. You can read more about Bisq Easy
 in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
@@ -27,20 +27,35 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 1. **Clone Bisq 2:**
    ```bash
    git clone https://github.com/bisq-network/bisq2.git
+   cd bisq2
    ```
 
 2. **Install Dependencies:**
-   Bisq requires JDK 17. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+   Bisq requires JDK 22. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
 
-3. **Run desktop client:**
+3. **Setup bitcoind git submodule:**
+   At project setup run first:
    ```bash
-   ./gradlew desktop:desktop-app:run
+   git submodule init
+   git submodule update
    ```
 
-4. **Run desktop client with custom data directory:**
+   In case the submodule has changed after a project update, run:
+   ```bash
+   git submodule update
+   ```
+
+4. **Run desktop client:**
+   ```bash
+   ./gradlew apps:desktop:desktop-app:run
+   ```
+
+5. **Run desktop client with custom data directory:**
    ```bash
    apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>
    ```
+
+**For Windows environments**: replace ./gradlew with gradle.bat as the previous example shows
 
 ## Community and Contributions
 
@@ -53,7 +68,7 @@ If you are a developer check out the [dev guide](./docs/dev/dev-guide.md).
 **Why work on Bisq 2?**
 
 - Compensated Contributions: Unique in open-source, contributors are rewarded for their work.
-- Technological Edge: [P2P network](network.md), Bitcoin, Cryptography,...
+- Technological Edge: [P2P network](./docs/dev/network.md), Bitcoin, Cryptography,...
 - Complex, Rewarding Challenges: Dive into a sophisticated architecture that rewards ingenuity.
 
 
@@ -62,5 +77,3 @@ If you are a developer check out the [dev guide](./docs/dev/dev-guide.md).
 Bisq 2 is licensed under the [AGPL-3.0 license](LICENSE). All contributions are subject to this license.
 
 ![Actions Status](https://github.com/bisq-network/bisq2/actions/workflows/build.yml/badge.svg)
-
-

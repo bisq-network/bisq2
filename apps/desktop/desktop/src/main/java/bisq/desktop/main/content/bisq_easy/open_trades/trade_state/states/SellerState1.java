@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -97,8 +97,7 @@ public class SellerState1 extends BaseState {
                     }));
             selectedAccountPin = accountService.selectedAccountAsObservable().addObserver(account ->
                     UIThread.run(() -> {
-                        if (account instanceof UserDefinedFiatAccount) {
-                            UserDefinedFiatAccount userDefinedFiatAccount = (UserDefinedFiatAccount) account;
+                        if (account instanceof UserDefinedFiatAccount userDefinedFiatAccount) {
                             model.selectedAccountProperty().set(userDefinedFiatAccount);
                             model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());
                         }
@@ -135,8 +134,8 @@ public class SellerState1 extends BaseState {
         }
 
         private void maybeSelectFirstAccount() {
-            if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount() == null) {
-                accountService.setSelectedAccount(model.getSortedAccounts().get(0));
+            if (!model.getSortedAccounts().isEmpty() && accountService.getSelectedAccount().isEmpty()) {
+                accountService.setSelectedAccount(model.getSortedAccounts().getFirst());
             }
         }
     }

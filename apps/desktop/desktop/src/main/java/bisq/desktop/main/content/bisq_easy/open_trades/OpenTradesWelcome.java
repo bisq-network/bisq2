@@ -44,13 +44,12 @@ public class OpenTradesWelcome {
         return controller.getView();
     }
 
-    private static class Controller implements bisq.desktop.common.view.Controller {
-        private final Model model;
+    public static class Controller implements bisq.desktop.common.view.Controller {
         @Getter
         private final View view;
 
         private Controller() {
-            model = new Model();
+            Model model = new Model();
             view = new View(model, this);
         }
 
@@ -68,7 +67,7 @@ public class OpenTradesWelcome {
     }
 
     @Getter
-    private static class Model implements bisq.desktop.common.view.Model {
+    public static class Model implements bisq.desktop.common.view.Model {
     }
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
@@ -84,7 +83,7 @@ public class OpenTradesWelcome {
 
             Label headlineLabel = new Label(Res.get("bisqEasy.openTrades.welcome.headline"));
             headlineLabel.setWrapText(true);
-            headlineLabel.getStyleClass().add("bisq-text-headline-4");
+            headlineLabel.getStyleClass().add("bisq-text-headline-5");
 
             Label infoHeadline = new Label(Res.get("bisqEasy.openTrades.welcome.info"));
             infoHeadline.setWrapText(true);
@@ -98,7 +97,7 @@ public class OpenTradesWelcome {
 
             button = new Button(Res.get("bisqEasy.tradeGuide.open"));
             button.setDefaultButton(true);
-            button.getStyleClass().add("super-large-button");
+            button.getStyleClass().add("medium-large-button");
             button.setMaxWidth(Double.MAX_VALUE);
 
             VBox.setVgrow(infoHeadline, Priority.ALWAYS);

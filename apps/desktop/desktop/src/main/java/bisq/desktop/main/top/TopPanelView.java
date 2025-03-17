@@ -46,7 +46,6 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         HBox.setMargin(marketPriceComponent, new Insets(0, 10, 0, 0));
 
         Pane userProfileSelectionRoot = userProfileSelection.getRoot();
-        userProfileSelection.setIsLeftAligned(true);
         HBox.setMargin(userProfileSelectionRoot, new Insets(6.5, 15, 0, 0));
 
         Triple<HBox, Label, Label> balanceTriple = createBalanceBox();

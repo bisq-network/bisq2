@@ -35,9 +35,9 @@ public class BisqTextFieldWithCopyIcon extends AnchorPane {
     private boolean copyWithoutCurrencyPostFix;
     private boolean copyTextAfterDelimiter;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public BisqTextFieldWithCopyIcon(String text) {
         this(text, null);
@@ -51,7 +51,7 @@ public class BisqTextFieldWithCopyIcon extends AnchorPane {
         copyIcon.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
-            if (text != null && text.length() > 0) {
+            if (text != null && !text.isEmpty()) {
                 String copyText = text;
                 if (copyWithoutCurrencyPostFix) {
                     String[] strings = text.split(" ");
@@ -80,9 +80,9 @@ public class BisqTextFieldWithCopyIcon extends AnchorPane {
         textField.setPromptText(value);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Getter/Setter
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public String getTextProperty() {
         return textProperty.get();

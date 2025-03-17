@@ -1,24 +1,11 @@
 /*******************************************************************************
  *                                                                             *
- * Popup                                                                  *
+ * Popup                                                                       *
  *                                                                             *
  ******************************************************************************/
 
 .bisq-popup {
     -fx-background-color: -bisq-dark-grey-20;
-}
-
-/*******************************************************************************
- *                                                                             *
- * BisqPopupMenu                                                                  *
- *                                                                             *
- ******************************************************************************/
-
-.bisq-popup-menu {
-    -fx-background-color: -bisq-dark-grey-40;
-    -fx-background-radius: 6px;
-    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 5, 5);
 }
 
 
@@ -363,23 +350,37 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+
 /*******************************************************************************
  *                                                                             *
- * StandardTable                                                                  *
+ * RichTable                                                                   *
  *                                                                             *
  ******************************************************************************/
 
-.standard-table-headline {
+.rich-table-view-box {
+}
+
+.rich-table-view-box .dropdown-menu {
+    -fx-padding: 5;
+}
+
+.rich-table-headline {
     -fx-font-size: 1.8em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -fx-light-text-color;
 }
 
-.standard-table-view {
+.rich-table-view {
     -fx-background-color: -bisq-dark-grey-20;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
 }
 
-.standard-table-num-entries {
+.rich-table-view .column-header {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
+.rich-table-num-entries {
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-mid-grey-20;
@@ -424,6 +425,12 @@
 }
 
 .titled-pane > .content > .scroll-pane > .scroll-bar {
+}
+
+.titled-pane > *.content {
+    -fx-border-color: null;
+    -fx-border-insets: 0;
+    -fx-background-color: null;
 }
 
 
@@ -560,7 +567,7 @@
 }
 
 .bisq-dual-amount-bg {
-    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-color: rgba(255, 255, 255, 0.05);
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -588,6 +595,23 @@
     -fx-background-color: -bisq-content-bg-grey;
 }
 
+.bisq-common-bg {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8 8 8 8;
+    -fx-padding: 50;
+}
+
+.bisq-card-bg {
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-radius: 8 8 8 8;
+    -fx-padding: 40;
+}
+
+.common-line-spacing .label {
+    -fx-line-spacing: 5px;
+    -fx-wrap-text: true;
+}
+
 #chat-message-quote-box-peer-msg {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 0 8 8 0;
@@ -608,7 +632,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * Controlsfx Popover                                                                  *
+ * Controlsfx Popover                                                          *
  *                                                                             *
  ******************************************************************************/
 

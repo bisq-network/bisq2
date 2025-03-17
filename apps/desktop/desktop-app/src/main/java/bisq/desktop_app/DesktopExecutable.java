@@ -18,6 +18,7 @@
 package bisq.desktop_app;
 
 import bisq.application.Executable;
+import bisq.common.threading.ThreadName;
 import bisq.desktop.DesktopController;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -29,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.common.util.OsUtils.EXIT_FAILURE;
+import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
 
 @Slf4j
 public class DesktopExecutable extends Executable<DesktopApplicationService> {
@@ -50,7 +51,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Override
     protected void launchApplication(String[] args) {
         new Thread(() -> {
-            Thread.currentThread().setName("Java FX Application Launcher");
+            ThreadName.setName("DesktopExecutable.JavaFXApplication.launch");
             Application.launch(JavaFXApplication.class, args); //blocks until app is closed
         }).start();
 
@@ -120,15 +121,20 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Override
     protected void exitJvm() {
         if (applicationService != null && applicationService.getShutDownErrorMessage().get() == null) {
-            doExit();
+            exitJavaFXPlatform();
         }
         // If we have an error popup we leave it to the user to close it and shutdown the app by clicking the shutdown button
     }
 
-    private void doExit() {
-        log.info("Exiting JavaFX Platform");
-        Platform.exit();
-        super.exitJvm();
+    private void exitJavaFXPlatform() {
+        if (Platform.isFxApplicationThread()) {
+            // See https://openjfx.io/javadoc/19/javafx.graphics/javafx/application/Application.html
+            // Calling System.exit after Platform.exit causes exception
+            log.info("Exiting JavaFX Platform");
+            Platform.exit();
+        } else {
+            super.exitJvm();
+        }
     }
 
     private void setupStartupAndShutdownErrorHandlers() {
@@ -137,7 +143,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                 UIThread.run(() ->
                         new Popup().error(Res.get("popup.startup.error", errorMessage))
                                 .closeButtonText(Res.get("action.shutDown"))
-                                .onClose(this::doExit)
+                                .onClose(this::exitJavaFXPlatform)
                                 .show()
                 );
             }
@@ -152,7 +158,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                     Popup popup = new Popup();
                     popup.error(Res.get("popup.shutdown.error", errorMessage))
                             .closeButtonText(Res.get("action.shutDown"))
-                            .onClose(this::doExit)
+                            .onClose(this::exitJavaFXPlatform)
                             .show();
                     // The error popup allow to report to GH, in that case we get closed the error popup.
                     // We leave the app open and reset the shutDownStarted flag, so that at another

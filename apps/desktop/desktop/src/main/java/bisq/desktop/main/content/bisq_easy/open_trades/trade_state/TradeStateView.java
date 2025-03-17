@@ -22,17 +22,16 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -40,12 +39,15 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
     private final HBox phaseAndInfoHBox, cancelledHBox, interruptedHBox, errorHBox, isInMediationHBox;
-    private final Button cancelButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
-            rejectPriceButton;
-    private final Label cancelledInfo, errorMessage;
-    private final VBox sellerPriceApprovalOverlay;
+    private final Button interruptTradeButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
+            rejectPriceButton, tradeDetailsButton;
+    private final Label cancelledInfo, errorMessage, buyerPriceDescriptionApprovalOverlay,
+            sellerPriceDescriptionApprovalOverlay, mediationBannerLabel;
+    private final VBox tradePhaseBox, tradeDataHeaderBox, sellerPriceApprovalOverlay;
     private final Pane sellerPriceApprovalContent;
-    private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin, sellerPriceApprovalContentPin;
+    private final BisqMenuItem tryAgainMenuItem;
+    private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin, requestMediationDeliveryStatusPin,
+            shouldShowTryRequestMediationAgainPin;
 
     public TradeStateView(TradeStateModel model,
                           TradeStateController controller,
@@ -53,24 +55,34 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                           HBox tradeDataHeader) {
         super(new VBox(0), model, controller);
 
-        cancelButton = new Button();
-        cancelButton.setMinWidth(160);
-        cancelButton.getStyleClass().add("outlined-button");
+        this.tradePhaseBox = tradePhaseBox;
+        interruptTradeButton = new Button();
+        interruptTradeButton.setMinWidth(160);
+        interruptTradeButton.getStyleClass().add("outlined-button");
 
-        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), cancelButton);
+        tradeDetailsButton = new Button(Res.get("bisqEasy.openTrades.tradeDetails.button"));
+        tradeDetailsButton.getStyleClass().addAll("grey-transparent-outlined-button");
+        tradeDetailsButton.setMinWidth(160);
 
+        HBox.setMargin(tradeDetailsButton, new Insets(0, -20, 0, 0));
+        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), tradeDetailsButton, interruptTradeButton);
+        tradeDataHeaderBox = new VBox(tradeDataHeader, Layout.hLine());
 
         Label isInMediationIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
         isInMediationIcon.getStyleClass().add("bisq-easy-trade-isInMediation-headline");
 
-        Label isInMediationInfo = new Label(Res.get("bisqEasy.openTrades.inMediation.info"));
-        isInMediationInfo.getStyleClass().add("bisq-easy-trade-isInMediation-headline");
+        mediationBannerLabel = new Label();
+        mediationBannerLabel.getStyleClass().add("bisq-easy-trade-isInMediation-headline");
 
-        isInMediationHBox = new HBox(10, isInMediationIcon, isInMediationInfo);
+        tryAgainMenuItem = new BisqMenuItem("try-again-dark", "try-again-white");
+        tryAgainMenuItem.useIconOnly(22);
+        tryAgainMenuItem.setTooltip(new BisqTooltip(Res.get("bisqEasy.tradeState.requestMediation.resendRequest.tooltip")));
+        isInMediationIcon.getStyleClass().add("bisq-easy-trade-isInMediation-headline");
+
+        isInMediationHBox = new HBox(10, isInMediationIcon, mediationBannerLabel, tryAgainMenuItem);
         isInMediationHBox.setAlignment(Pos.CENTER_LEFT);
         isInMediationHBox.setPadding(new Insets(10));
         isInMediationHBox.getStyleClass().add("bisq-easy-trade-isInMediation-bg");
-
 
         Label tradeInterruptedIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
         tradeInterruptedIcon.getStyleClass().add("bisq-text-yellow");
@@ -109,11 +121,15 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         VBox.setMargin(isInMediationHBox, new Insets(20, 30, 0, 30));
         VBox.setMargin(interruptedHBox, new Insets(20, 30, 20, 30));
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
-        VBox content = new VBox(tradeDataHeader, Layout.hLine(), isInMediationHBox, interruptedHBox, phaseAndInfoHBox);
+        VBox content = new VBox(tradeDataHeaderBox, isInMediationHBox, interruptedHBox, phaseAndInfoHBox);
         content.getStyleClass().add("bisq-easy-container");
 
         // Accept seller's price overlay
-        sellerPriceApprovalContent = new Pane();
+        buyerPriceDescriptionApprovalOverlay = new Label();
+        sellerPriceDescriptionApprovalOverlay = new Label();
+        VBox priceDescriptionBox = new VBox(buyerPriceDescriptionApprovalOverlay, sellerPriceDescriptionApprovalOverlay);
+        priceDescriptionBox.getStyleClass().setAll("seller-price-approval-content");
+        sellerPriceApprovalContent = new Pane(priceDescriptionBox);
         acceptSellersPriceButton = new Button(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.button.accept"));
         acceptSellersPriceButton.getStyleClass().add("outlined-button");
         rejectPriceButton = new Button();
@@ -127,14 +143,18 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     @Override
     protected void onViewAttached() {
+        tradePhaseBox.visibleProperty().bind(model.getIsTradeCompleted().not());
+        tradePhaseBox.managedProperty().bind(model.getIsTradeCompleted().not());
+        tradeDataHeaderBox.visibleProperty().bind(model.getIsTradeCompleted().not());
+        tradeDataHeaderBox.managedProperty().bind(model.getIsTradeCompleted().not());
         reportToMediatorButton.visibleProperty().bind(model.getShowReportToMediatorButton());
         reportToMediatorButton.managedProperty().bind(model.getShowReportToMediatorButton());
         isInMediationHBox.visibleProperty().bind(model.getIsInMediation());
         isInMediationHBox.managedProperty().bind(model.getIsInMediation());
-        cancelledHBox.visibleProperty().bind(model.getCancelled());
-        cancelledHBox.managedProperty().bind(model.getCancelled());
-        interruptedHBox.visibleProperty().bind(model.getCancelled().or(model.getError()));
-        interruptedHBox.managedProperty().bind(model.getCancelled().or(model.getError()));
+        cancelledHBox.visibleProperty().bind(model.getInterruptedTradeInfo());
+        cancelledHBox.managedProperty().bind(model.getInterruptedTradeInfo());
+        interruptedHBox.visibleProperty().bind(model.getInterruptedTradeInfo().or(model.getError()));
+        interruptedHBox.managedProperty().bind(model.getInterruptedTradeInfo().or(model.getError()));
         errorHBox.visibleProperty().bind(model.getError());
         errorHBox.managedProperty().bind(model.getError());
         phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoVisible());
@@ -143,11 +163,13 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelledInfo.textProperty().bind(model.getTradeInterruptedInfo());
         errorMessage.textProperty().bind(model.getErrorMessage());
 
-        cancelButton.textProperty().bind(model.getInterruptTradeButtonText());
-        cancelButton.visibleProperty().bind(model.getCancelButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
-        cancelButton.managedProperty().bind(model.getCancelButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
+        interruptTradeButton.textProperty().bind(model.getInterruptTradeButtonText());
+        interruptTradeButton.visibleProperty().bind(model.getInterruptTradeButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
+        interruptTradeButton.managedProperty().bind(model.getInterruptTradeButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
 
         rejectPriceButton.textProperty().bind(model.getInterruptTradeButtonText());
+        buyerPriceDescriptionApprovalOverlay.textProperty().bind(model.getBuyerPriceDescriptionApprovalOverlay());
+        sellerPriceDescriptionApprovalOverlay.textProperty().bind(model.getSellerPriceDescriptionApprovalOverlay());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(), stateInfoVBox -> {
             if (phaseAndInfoHBox.getChildren().size() == 2) {
@@ -173,23 +195,46 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
             }
         });
 
-        sellerPriceApprovalContentPin = EasyBind.subscribe(model.getSellerPriceApprovalContent(), content -> {
-            if (content != null) {
-                content.getStyleClass().setAll("seller-price-approval-content");
-                sellerPriceApprovalContent.getChildren().setAll(content);
-            }
+        shouldShowTryRequestMediationAgainPin = EasyBind.subscribe(model.getShouldShowTryRequestMediationAgain(), showTryAgain -> {
+            tryAgainMenuItem.setVisible(showTryAgain);
+            tryAgainMenuItem.setManaged(showTryAgain);
         });
 
-        cancelButton.setOnAction(e -> controller.onInterruptTrade());
+        requestMediationDeliveryStatusPin = EasyBind.subscribe(model.getRequestMediationDeliveryStatus(),
+                status -> {
+                    // If the peer had sent the request we do not get any requestMediationDeliveryStatus status is null.
+                    if (status == null || status == MessageDeliveryStatus.ACK_RECEIVED || status == MessageDeliveryStatus.MAILBOX_MSG_RECEIVED) {
+                        mediationBannerLabel.setText(Res.get("bisqEasy.openTrades.inMediation.info"));
+                    } else {
+                        String resendRequest = model.getShouldShowTryRequestMediationAgain().get()
+                                ? Res.get("bisqEasy.tradeState.requestMediation.resendRequest")
+                                : "";
+                        String key = "bisqEasy.tradeState.requestMediation.deliveryState." + status.name();
+                        String deliveryStatus = Res.get(key, resendRequest);
+                        if (status == MessageDeliveryStatus.FAILED) {
+                            mediationBannerLabel.setText(deliveryStatus);
+                        } else {
+                            mediationBannerLabel.setText(Res.get("bisqEasy.openTrades.inMediation.requestSent", deliveryStatus));
+                        }
+                    }
+                });
+
+        interruptTradeButton.setOnAction(e -> controller.onInterruptTrade());
+        tradeDetailsButton.setOnAction(e -> controller.onShowTradeDetails());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
-        rejectPriceButton.setOnAction(e -> controller.doInterruptTrade());
-        reportToMediatorButton.setOnAction(e -> controller.onReportToMediator());
+        rejectPriceButton.setOnAction(e -> controller.onRejectPrice());
+        reportToMediatorButton.setOnAction(e -> controller.onRequestMediation());
         acceptSellersPriceButton.setOnAction(e -> controller.onAcceptSellersPriceButton());
+        tryAgainMenuItem.setOnAction(e -> controller.onResendMediationRequest());
     }
 
     @Override
     protected void onViewDetached() {
+        tradePhaseBox.visibleProperty().unbind();
+        tradePhaseBox.managedProperty().unbind();
+        tradeDataHeaderBox.visibleProperty().unbind();
+        tradeDataHeaderBox.managedProperty().unbind();
         reportToMediatorButton.visibleProperty().unbind();
         reportToMediatorButton.managedProperty().unbind();
         isInMediationHBox.visibleProperty().unbind();
@@ -206,22 +251,27 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelledInfo.textProperty().unbind();
         errorMessage.textProperty().unbind();
 
-        cancelButton.textProperty().unbind();
-        cancelButton.visibleProperty().unbind();
-        cancelButton.managedProperty().unbind();
+        interruptTradeButton.textProperty().unbind();
+        interruptTradeButton.visibleProperty().unbind();
+        interruptTradeButton.managedProperty().unbind();
 
         rejectPriceButton.textProperty().unbind();
+        buyerPriceDescriptionApprovalOverlay.textProperty().unbind();
+        sellerPriceDescriptionApprovalOverlay.textProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
         showSellersPriceApprovalOverlayPin.unsubscribe();
-        sellerPriceApprovalContentPin.unsubscribe();
+        requestMediationDeliveryStatusPin.unsubscribe();
+        shouldShowTryRequestMediationAgainPin.unsubscribe();
 
-        cancelButton.setOnAction(null);
+        interruptTradeButton.setOnAction(null);
+        tradeDetailsButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
         exportButton.setOnAction(null);
         rejectPriceButton.setOnAction(null);
         reportToMediatorButton.setOnAction(null);
         acceptSellersPriceButton.setOnAction(null);
+        tryAgainMenuItem.setOnAction(null);
 
         if (phaseAndInfoHBox.getChildren().size() == 2) {
             phaseAndInfoHBox.getChildren().remove(1);

@@ -59,7 +59,7 @@ To summarize:
 Platform-specific binaries and installers can be generated with
 
 ```
-./gradlew :desktop:desktop-app-launcher:generateInstallers
+./gradlew :apps:desktop:desktop-app-launcher:generateInstallers
 ```
 
 Optionally add the `--info` flag at the end for a more verbose output.

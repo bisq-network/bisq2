@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputControl;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,7 @@ public class MaterialTextArea extends MaterialTextField {
         super(description, prompt, help);
 
         ((TextArea) textInputControl).setWrapText(true);
+        textInputControl.setContextMenu(new ContextMenu());
         setFixedHeight(DEFAULT_HEIGHT);
     }
 

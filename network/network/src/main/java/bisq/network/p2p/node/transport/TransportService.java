@@ -17,9 +17,11 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.network.common.Address;
-import bisq.network.common.TransportConfig;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.TransportConfig;
+import bisq.common.network.TransportType;
+import bisq.common.observable.Observable;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyBundle;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -29,19 +31,23 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public interface TransportService {
+    enum TransportState {
+        NEW,
+        INITIALIZE,
+        INITIALIZED,
+        STOPPING,
+        TERMINATED
+    }
 
     static TransportService create(TransportType transportType, TransportConfig config) {
-        switch (transportType) {
-            case TOR:
-                return new TorTransportService(config);
-            case I2P:
-                return new I2PTransportService(config);
-            case CLEAR:
-                return new ClearNetTransportService(config);
-            default:
-                throw new RuntimeException("Unhandled transportType");
-        }
+        return switch (transportType) {
+            case TOR -> new TorTransportService(config);
+            case I2P -> new I2PTransportService(config);
+            case CLEAR -> new ClearNetTransportService(config);
+        };
     }
 
     void initialize();
@@ -56,12 +62,23 @@ public interface TransportService {
         return Optional.empty();
     }
 
-    BootstrapInfo getBootstrapInfo();
-
     boolean isPeerOnline(Address address);
 
-    default void updateStartBootstrapProgress(BootstrapInfo bootstrapInfo) {
-        double newValue = Math.min(0.24, bootstrapInfo.getBootstrapProgress().get() + 0.01);
-        bootstrapInfo.getBootstrapProgress().set(Math.max(0, newValue));
+    default void setTransportState(TransportState newTransportState) {
+        if (newTransportState == getTransportState().get()) {
+            return;
+        }
+        checkArgument(getTransportState().get().ordinal() < newTransportState.ordinal(),
+                "New getState() %s must have a higher ordinal as the current getState() %s", newTransportState, getTransportState().get());
+        getTransportState().set(newTransportState);
+        getTimestampByTransportState().put(newTransportState, System.currentTimeMillis());
     }
+
+    Observable<TransportState> getTransportState();
+
+    ObservableHashMap<TransportState, Long> getTimestampByTransportState();
+
+    ObservableHashMap<NetworkId, Long> getInitializeServerSocketTimestampByNetworkId();
+
+    ObservableHashMap<NetworkId, Long> getInitializedServerSocketTimestampByNetworkId();
 }

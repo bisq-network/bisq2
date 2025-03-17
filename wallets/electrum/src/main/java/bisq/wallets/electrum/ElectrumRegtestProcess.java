@@ -17,17 +17,17 @@
 
 package bisq.wallets.electrum;
 
-import bisq.common.FileCreationWatcher;
-import bisq.common.scanner.FileScanner;
-import bisq.common.scanner.LogScanner;
-import bisq.common.util.FileUtils;
+import bisq.common.file.FileUtils;
+import bisq.java_se.utils.FileCreationWatcher;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.process.DaemonProcess;
-import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.regtest.FileScanner;
+import bisq.wallets.regtest.LogScanner;
+import bisq.wallets.regtest.process.DaemonProcess;
+import bisq.wallets.regtest.process.ProcessConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +75,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
         logFilePath = findNewLogFile();
         super.start();
         rpcConfig = electrumProcessConfig.getElectrumConfig()
-                .toRpcConfig();
+                .toRpcConfig().toJsonRpcConfig();
     }
 
     public void stopOld() {
@@ -101,7 +101,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
             Process process = processBuilder.start();
             String input = new BufferedReader(new InputStreamReader(process.getInputStream()))
                     .lines().collect(Collectors.joining("\n"));
-            log.info("Trying to stop old process: " + input);
+            log.info("Trying to stop old process: {}", input);
         } catch (IOException e) {
             log.warn("Exception when stopping old wallet process", e);
         }
@@ -151,7 +151,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
     }
 
     private ElectrumDaemon createElectrumDaemon() {
-        RpcConfig rpcConfig = electrumProcessConfig.getElectrumConfig().toRpcConfig();
+        RpcConfig rpcConfig = electrumProcessConfig.getElectrumConfig().toRpcConfig().toJsonRpcConfig();
         JsonRpcClient jsonRpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         return new ElectrumDaemon(jsonRpcClient);
     }

@@ -21,9 +21,11 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.ContentTabController;
-import bisq.desktop.main.content.settings.network.NetworkInfoController;
-import bisq.desktop.main.content.settings.preferences.PreferencesController;
-import bisq.desktop.main.content.settings.utils.UtilsController;
+import bisq.desktop.main.content.settings.display.DisplaySettingsController;
+import bisq.desktop.main.content.settings.language.LanguageSettingsController;
+import bisq.desktop.main.content.settings.misc.MiscSettingsController;
+import bisq.desktop.main.content.settings.notifications.NotificationsSettingsController;
+import bisq.desktop.main.content.settings.trade.TradeSettingsController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,19 +43,13 @@ public class SettingsController extends ContentTabController<SettingsModel> {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case PREFERENCES: {
-                return Optional.of(new PreferencesController(serviceProvider));
-            }
-            case NETWORK_INFO: {
-                return Optional.of(new NetworkInfoController(serviceProvider));
-            }
-            case UTILS: {
-                return Optional.of(new UtilsController(serviceProvider));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
+        return switch (navigationTarget) {
+            case LANGUAGE_SETTINGS -> Optional.of(new LanguageSettingsController(serviceProvider));
+            case NOTIFICATION_SETTINGS -> Optional.of(new NotificationsSettingsController(serviceProvider));
+            case DISPLAY_SETTINGS -> Optional.of(new DisplaySettingsController(serviceProvider));
+            case TRADE_SETTINGS -> Optional.of(new TradeSettingsController(serviceProvider));
+            case MISC_SETTINGS -> Optional.of(new MiscSettingsController(serviceProvider));
+            default -> Optional.empty();
+        };
     }
 }

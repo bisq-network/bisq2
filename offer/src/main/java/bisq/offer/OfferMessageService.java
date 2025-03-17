@@ -49,9 +49,9 @@ public class OfferMessageService implements Service, DataService.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
         networkService.addDataServiceListener(this);
@@ -66,9 +66,9 @@ public class OfferMessageService implements Service, DataService.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
@@ -86,9 +86,9 @@ public class OfferMessageService implements Service, DataService.Listener {
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<BroadcastResult> addToNetwork(Offer<?, ?> offer) {
         return identityService.findActiveIdentity(offer.getMakerNetworkId())
@@ -103,9 +103,9 @@ public class OfferMessageService implements Service, DataService.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private boolean processAddedMessage(OfferMessage offerMessage) {
         return offers.add(offerMessage.getOffer());

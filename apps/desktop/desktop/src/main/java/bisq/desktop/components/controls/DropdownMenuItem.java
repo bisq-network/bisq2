@@ -18,25 +18,23 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.CustomMenuItem;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 
 public class DropdownMenuItem extends CustomMenuItem {
-    private static final String ICON_CSS_STYLE = "menu-item-icon";
+    public static final String ICON_CSS_STYLE = "menu-item-icon";
 
-    private final HBox content;
-    private final Label label;
+    private final HBox hBox;
     private ImageView defaultIcon, activeIcon, buttonIcon;
 
-    public DropdownMenuItem(String defaultIconId, String activeIconId, String text) {
-        label = new Label(text);
-        content = new HBox(8, label);
-        content.getStyleClass().add("dropdown-menu-item-content");
-        content.setAlignment(Pos.CENTER_LEFT);
-        setContent(content);
+    public DropdownMenuItem(String defaultIconId, String activeIconId, Node node) {
+        hBox = new HBox(10);
+        hBox.getStyleClass().add("dropdown-menu-item-content");
 
         if (defaultIconId != null && activeIconId != null) {
             defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -44,48 +42,39 @@ public class DropdownMenuItem extends CustomMenuItem {
             defaultIcon.getStyleClass().add(ICON_CSS_STYLE);
             activeIcon.getStyleClass().add(ICON_CSS_STYLE);
             buttonIcon = defaultIcon;
-            content.getChildren().add(0, buttonIcon);
+            hBox.getChildren().add(buttonIcon);
             attachListeners();
         }
+
+        if (node != null) {
+            hBox.getChildren().add(node);
+        }
+
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.getStyleClass().add("bisq-menu-item");
+        hBox.addEventFilter(ActionEvent.ANY, Event::consume);
+        setContent(hBox);
     }
 
-    public DropdownMenuItem(String text) {
-        this(null, null, text);
-    }
-
-    public DropdownMenuItem(String defaultIconId, String activeIconId) {
-        this(defaultIconId, activeIconId, "");
-    }
-
-    public void setLabelText(String text) {
-        label.setText(text);
-    }
-
-    public Double getWidth() {
-        return content.getWidth();
+    public DropdownMenuItem(Node node) {
+        this(null, null, node);
     }
 
     public void updateWidth(Double width) {
-        content.setPrefWidth(width);
-    }
-
-    public String getLabelText() {
-        return label.getText();
+        hBox.setPrefWidth(width);
     }
 
     private void attachListeners() {
-        content.setOnMouseEntered(e -> updateIcon(activeIcon));
-        content.setOnMouseExited(e -> updateIcon(defaultIcon));
-        content.setOnMouseClicked(e -> updateIcon(defaultIcon));
+        hBox.setOnMouseEntered(e -> updateIcon(activeIcon));
+        hBox.setOnMouseExited(e -> updateIcon(defaultIcon));
+        hBox.setOnMouseClicked(e -> updateIcon(defaultIcon));
     }
 
     private void updateIcon(ImageView newIcon) {
         if (buttonIcon != newIcon) {
-            content.getChildren().remove(buttonIcon);
             buttonIcon = newIcon;
-            if (buttonIcon != null) {
-                content.getChildren().add(0, buttonIcon);
-            }
+            hBox.getChildren().remove(0);
+            hBox.getChildren().add(0, buttonIcon);
         }
     }
 }

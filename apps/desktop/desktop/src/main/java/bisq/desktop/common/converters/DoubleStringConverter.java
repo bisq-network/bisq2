@@ -17,17 +17,29 @@
 
 package bisq.desktop.common.converters;
 
+import bisq.common.util.MathUtils;
 import bisq.presentation.formatters.DefaultNumberFormatter;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DoubleStringConverter extends StringConverter<Number> {
+    private final double defaultValue;
+
     public DoubleStringConverter() {
+        defaultValue = 0;
+    }
+
+    public DoubleStringConverter(double defaultValue) {
+        this.defaultValue = defaultValue;
     }
 
     public Number fromString(String value) {
-        return DefaultNumberFormatter.parse(value);
+        try {
+            return MathUtils.parseToDouble(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 
     public String toString(Number numberValue) {

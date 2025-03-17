@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.envelope;
 
-import bisq.network.common.PeerSocket;
+import bisq.common.network.PeerSocket;
 import bisq.network.p2p.message.NetworkEnvelope;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +32,7 @@ public class NetworkEnvelopeSocket implements Closeable {
     private final InputStream inputStream;
     private final OutputStream outputStream;
 
-    public NetworkEnvelopeSocket(PeerSocket socket) throws IOException {
+    public NetworkEnvelopeSocket(PeerSocket socket) {
         this.socket = socket;
         this.inputStream = socket.getInputStream();
         this.outputStream = socket.getOutputStream();

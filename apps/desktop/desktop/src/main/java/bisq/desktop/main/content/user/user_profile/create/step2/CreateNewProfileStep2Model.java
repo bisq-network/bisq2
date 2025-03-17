@@ -28,6 +28,7 @@ import java.security.KeyPair;
 
 @Getter
 public class CreateNewProfileStep2Model implements Model {
+    static final double CAT_HASH_IMAGE_SIZE = 128;
     @Setter
     private KeyPair keyPair;
     @Setter
@@ -42,4 +43,5 @@ public class CreateNewProfileStep2Model implements Model {
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
     private final BooleanProperty isEditable = new SimpleBooleanProperty();
+    private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
 }

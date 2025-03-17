@@ -57,8 +57,6 @@ public class PaymentMethodSpecFormatter {
     }
 
     private static List<String> toDisplayStrings(Collection<String> paymentMethodNames, boolean useShortDisplayString) {
-        //   String shortName = name + "_SHORT";
-        //        return Res.has(shortName) ? Res.get(shortName) : createDisplayString();
         return paymentMethodNames.stream()
                 .map(name -> {
                     String shortName = name + "_SHORT";

@@ -18,6 +18,8 @@
 package bisq.common.util;
 
 import bisq.common.data.Pair;
+import bisq.common.platform.OS;
+import bisq.common.platform.PlatformUtils;
 import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,8 +34,16 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class StringUtils {
+    public static String truncate(Object value) {
+        return truncate(value.toString());
+    }
+
     public static String truncate(String value) {
         return truncate(value, 32);
+    }
+
+    public static String truncate(Object value, int maxLength) {
+        return truncate(value.toString(), maxLength);
     }
 
     public static String truncate(String value, int maxLength) {
@@ -220,6 +230,22 @@ public class StringUtils {
         sec = sec % 60;
         long hours = min / 60;
         min = min % 60;
-        return String.format("%02d:%02d:%02.2f", hours, min, sec);
+        long days = hours / 24;
+        hours = hours % 24;
+        if (days == 0) {
+            return String.format("%02d:%02d:%02.2f", hours, min, sec);
+        } else if (days == 1) {
+            return String.format("1 day, %02d:%02d:%02.2f", hours, min, sec);
+        } else {
+            return String.format("%02d days, %02d:%02d:%02.2f", days, hours, min, sec);
+        }
+    }
+
+    public static String maskHomeDirectory(String string) {
+        // TODO: check out if we can reliably mask it on Android
+        if (OS.isAndroid()) {
+            return string;
+        }
+        return string.replace(PlatformUtils.getHomeDirectory(), "<HOME_DIR>");
     }
 }

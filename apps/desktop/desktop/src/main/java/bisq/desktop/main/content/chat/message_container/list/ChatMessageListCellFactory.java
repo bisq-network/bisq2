@@ -19,14 +19,10 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
-import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.LeaveChatMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.MyOfferMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.MyTextMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.PeerOfferMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.PeerTextMessageBox;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.desktop.main.content.bisq_easy.open_trades.message_box.MyProtocolLogMessageBox;
+import bisq.desktop.main.content.bisq_easy.open_trades.message_box.PeerProtocolLogMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -67,34 +63,36 @@ final class ChatMessageListCellFactory
             }
 
             @Override
-            public void updateItem(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+            protected void updateItem(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                    boolean empty) {
                 super.updateItem(item, empty);
 
-                if (item == null || empty) {
-                    cleanup();
-                    return;
-                }
+                if (item != null && !empty) {
+                    Node flow = getListView().lookup(".virtual-flow");
+                    if (flow != null && !flow.isVisible()) {
+                        cleanup();
+                        return;
+                    }
 
-                Node flow = this.getListView().lookup(".virtual-flow");
-                if (flow != null && !flow.isVisible()) {
+                    messageBox = createMessage(item, list);
+                    cellHBox.getChildren().setAll(messageBox);
+                    listWidthPropertyPin = EasyBind.subscribe(messageBox.widthProperty(), w -> updateMessageStyle());
+                    setGraphic(cellHBox);
+                } else {
                     cleanup();
-                    return;
                 }
-
-                messageBox = createMessage(item, list);
-                cellHBox.getChildren().setAll(messageBox);
-                listWidthPropertyPin = EasyBind.subscribe(messageBox.widthProperty(), w -> updateMessageStyle());
-                setGraphic(cellHBox);
             }
 
             private void cleanup() {
+                cellHBox.getChildren().clear();
                 if (messageBox != null) {
-                    messageBox.cleanup();
+                    messageBox.dispose();
+                    messageBox = null;
                 }
 
                 if (listWidthPropertyPin != null) {
                     listWidthPropertyPin.unsubscribe();
+                    listWidthPropertyPin = null;
                 }
 
                 setGraphic(null);
@@ -128,7 +126,15 @@ final class ChatMessageListCellFactory
     private MessageBox createMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                      ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         if (item.isLeaveChatMessage()) {
-            return new LeaveChatMessageBox(item, controller);
+            if (item.getChatMessage() instanceof BisqEasyOpenTradeMessage) {
+                return new TradePeerLeftMessageBox(item, controller);
+            } else {
+                return new PeerLeftMessageBox(item, controller);
+            }
+        }
+
+        if (item.isChatRulesWarningMessage()) {
+            return new ChatRulesWarningMessageBox(item, controller);
         }
 
         if (item.isMyMessage()) {

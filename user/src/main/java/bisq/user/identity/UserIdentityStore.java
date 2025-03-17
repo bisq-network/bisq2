@@ -20,10 +20,11 @@ package bisq.user.identity;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.ProtobufUtils;
 import bisq.persistence.PersistableStore;
 import bisq.security.*;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
@@ -51,49 +52,40 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     private Optional<EncryptedData> encryptedData = Optional.empty();
     private Optional<ScryptParameters> scryptParameters = Optional.empty();
 
-    // lastUserProfilePublishingDate will be stored in both cases unencrypted.
-    private long lastUserProfilePublishingDate;
-
     private transient Optional<AesSecretKey> aesSecretKey = Optional.empty();
 
     public UserIdentityStore() {
     }
 
     private UserIdentityStore(String selectedUserIdentityId,
-                              Set<UserIdentity> userIdentities,
-                              long lastUserProfilePublishingDate) {
+                              Set<UserIdentity> userIdentities) {
         this.userIdentities.setAll(userIdentities);
         setSelectedUserIdentityId(selectedUserIdentityId);
-        this.lastUserProfilePublishingDate = lastUserProfilePublishingDate;
     }
 
     private UserIdentityStore(EncryptedData encryptedData,
-                              ScryptParameters scryptParameters,
-                              long lastUserProfilePublishingDate) {
+                              ScryptParameters scryptParameters) {
         this.encryptedData = Optional.of(encryptedData);
         this.scryptParameters = Optional.of(scryptParameters);
-        this.lastUserProfilePublishingDate = lastUserProfilePublishingDate;
     }
 
     private UserIdentityStore(String selectedUserIdentityId,
                               Set<UserIdentity> userIdentities,
                               Optional<EncryptedData> encryptedData,
                               Optional<ScryptParameters> scryptParameters,
-                              Optional<AesSecretKey> aesSecretKey,
-                              long lastUserProfilePublishingDate) {
+                              Optional<AesSecretKey> aesSecretKey) {
         this.userIdentities.setAll(userIdentities);
         setSelectedUserIdentityId(selectedUserIdentityId);
 
         this.encryptedData = encryptedData;
         this.scryptParameters = scryptParameters;
         this.aesSecretKey = aesSecretKey;
-        this.lastUserProfilePublishingDate = lastUserProfilePublishingDate;
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Proto
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public bisq.user.protobuf.UserIdentityStore.Builder getBuilder(boolean serializeForHash) {
@@ -106,11 +98,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             checkArgument(scryptParameters.isPresent());
             return bisq.user.protobuf.UserIdentityStore.newBuilder()
                     .setEncryptedData(encryptedData.get().toProto(serializeForHash))
-                    .setScryptParameters(scryptParameters.get().toProto(serializeForHash))
-                    .setLastUserProfilePublishingDate(lastUserProfilePublishingDate);
+                    .setScryptParameters(scryptParameters.get().toProto(serializeForHash));
         } else {
-            return getPlainTextBuilder()
-                    .setLastUserProfilePublishingDate(lastUserProfilePublishingDate);
+            return getPlainTextBuilder();
         }
     }
 
@@ -129,13 +119,12 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
     public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {
-        long lastUserProfilePublishingDate = proto.getLastUserProfilePublishingDate();
         if (proto.hasEncryptedData() && proto.hasScryptParameters()) {
             checkArgument(!proto.hasSelectedUserIdentityId());
             checkArgument(proto.getUserIdentitiesList().isEmpty());
             EncryptedData encryptedData = EncryptedData.fromProto(proto.getEncryptedData());
             ScryptParameters scryptParameters = ScryptParameters.fromProto(proto.getScryptParameters());
-            return new UserIdentityStore(encryptedData, scryptParameters, lastUserProfilePublishingDate);
+            return new UserIdentityStore(encryptedData, scryptParameters);
         } else {
             checkArgument(!proto.hasEncryptedData());
             checkArgument(!proto.hasScryptParameters());
@@ -143,7 +132,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             Set<UserIdentity> userIdentitySet = proto.getUserIdentitiesList().stream()
                     .map(UserIdentity::fromProto)
                     .collect(Collectors.toSet());
-            return new UserIdentityStore(selectedUserIdentityId, userIdentitySet, lastUserProfilePublishingDate);
+            return new UserIdentityStore(selectedUserIdentityId, userIdentitySet);
         }
     }
 
@@ -159,9 +148,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // PersistableStore
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public UserIdentityStore getClone() {
@@ -169,16 +158,26 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
                 new HashSet<>(userIdentities),
                 encryptedData,
                 scryptParameters,
-                aesSecretKey,
-                lastUserProfilePublishingDate);
+                aesSecretKey);
     }
 
     @Override
     public void applyPersisted(UserIdentityStore persisted) {
-        userIdentities.setAll(persisted.getUserIdentities());
+        Set<UserIdentity> persistedUserIdentities = persisted.getUserIdentities().stream()
+                .map(userIdentity -> {
+                    // We update ApplicationVersion and version at our own user profiles
+                    UserProfile existingUserProfile = userIdentity.getUserProfile();
+                    UserProfile userProfile = UserProfile.createNew(existingUserProfile.getNickName(),
+                            existingUserProfile.getProofOfWork(),
+                            existingUserProfile.getAvatarVersion(),
+                            existingUserProfile.getNetworkId(),
+                            existingUserProfile.getTerms(),
+                            existingUserProfile.getStatement());
+                    return new UserIdentity(userIdentity.getIdentity(), userProfile);
+                }).collect(Collectors.toSet());
+        userIdentities.setAll(persistedUserIdentities);
         setSelectedUserIdentityId(persisted.getSelectedUserIdentityId());
 
-        lastUserProfilePublishingDate = persisted.getLastUserProfilePublishingDate();
         encryptedData = persisted.getEncryptedData();
         scryptParameters = persisted.scryptParameters;
 
@@ -193,9 +192,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Package scope API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     CompletableFuture<AesSecretKey> deriveKeyFromPassword(CharSequence password) {
         return CompletableFuture.supplyAsync(() -> {
@@ -278,9 +277,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Package scope Getter/Setter
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     Observable<UserIdentity> getSelectedUserIdentityObservable() {
         return selectedUserIdentityObservable;
@@ -328,17 +327,10 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         return aesSecretKey;
     }
 
-    long getLastUserProfilePublishingDate() {
-        return lastUserProfilePublishingDate;
-    }
 
-    void setLastUserProfilePublishingDate(long lastUserProfilePublishingDate) {
-        this.lastUserProfilePublishingDate = lastUserProfilePublishingDate;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     private String getSelectedUserIdentityId() {
         return getSelectedUserIdentity() != null ? getSelectedUserIdentity().getId() : null;

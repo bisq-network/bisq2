@@ -54,11 +54,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final Button horizontalExpandIcon, horizontalCollapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
-    private final VBox mainMenuItems;
+    private final VBox mainMenuItems, networkInfoRoot;
     private final int menuTop;
     private final LeftNavButton authorizedRole;
     private final Label version;
-    private final VBox networkInfoRoot;
     private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, newVersionAvailablePin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller, VBox networkInfoRoot) {
@@ -82,7 +81,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-bisq-easy",
                 NavigationTarget.BISQ_EASY, false);
 
-        LeftNavButton tradeAppsButton = createNavigationButton(Res.get("navigation.tradeApps"),
+        LeftNavButton reputation = createNavigationButton(Res.get("navigation.reputation"),
+                "nav-reputation",
+                NavigationTarget.REPUTATION, false);
+
+        LeftNavButton protocols = createNavigationButton(Res.get("navigation.tradeApps"),
                 "nav-trade",
                 NavigationTarget.TRADE_PROTOCOLS, false);
 
@@ -90,17 +93,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-wallet",
                 NavigationTarget.WALLET, false);
 
-        LeftNavButton learnButton = createNavigationButton(Res.get("navigation.academy"),
+        LeftNavButton learn = createNavigationButton(Res.get("navigation.academy"),
                 "nav-learn",
                 NavigationTarget.ACADEMY, false);
 
-        LeftNavButton chat = createNavigationButton(Res.get("navigation.discussion"),
+        LeftNavButton chat = createNavigationButton(Res.get("navigation.chat"),
                 "nav-chat",
-                NavigationTarget.DISCUSSION, false);
-
-        LeftNavButton events = createNavigationButton(Res.get("navigation.events"),
-                "nav-events",
-                NavigationTarget.EVENTS, false);
+                NavigationTarget.CHAT, false);
 
         LeftNavButton support = createNavigationButton(Res.get("navigation.support"),
                 "nav-support",
@@ -109,6 +108,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton user = createNavigationButton(Res.get("navigation.userOptions"),
                 "nav-user",
                 NavigationTarget.USER, false);
+
+        LeftNavButton network = createNavigationButton(Res.get("navigation.network"),
+                "nav-network",
+                NavigationTarget.NETWORK, false);
+
         LeftNavButton settings = createNavigationButton(Res.get("navigation.settings"),
                 "nav-settings",
                 NavigationTarget.SETTINGS, false);
@@ -149,10 +153,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, tradeAppsButton,
-                learnButton,
-                chat, events, support,
-                user, settings, authorizedRole);
+        mainMenuItems.getChildren().addAll(dashBoard, bisqEasy, reputation, protocols,
+                learn, chat, support, user, network, settings, authorizedRole);
         if (model.isWalletEnabled()) {
             mainMenuItems.getChildren().add(3, wallet);
         }
@@ -160,10 +162,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         mainMenuItems.setLayoutY(menuTop);
 
         version = new Label(model.getVersion());
-        version.setOpacity(0.5);
-        version.getStyleClass().add("bisq-smaller-dimmed-label");
         version.setLayoutX(91);
-        version.setLayoutY(26.5);
         Pane logoAndVersion = new Pane(logoExpanded, logoCollapsed, version);
 
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
@@ -267,17 +266,17 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             }
         });
 
-        newVersionAvailablePin = EasyBind.subscribe(model.getNewVersionAvailable(),
+        newVersionAvailablePin = EasyBind.subscribe(model.getIsNewReleaseAvailable(),
                 newVersionAvailable -> {
                     if (newVersionAvailable) {
-                        version.setOpacity(1);
                         version.getStyleClass().remove("bisq-smaller-dimmed-label");
                         version.getStyleClass().addAll("bisq-smaller-label", "text-underline", "hand-cursor");
+                        version.setLayoutY(26);
                         version.setOnMouseClicked(e -> controller.onOpenUpdateWindow());
                     } else {
-                        version.setOpacity(0.5);
                         version.getStyleClass().add("bisq-smaller-dimmed-label");
                         version.getStyleClass().removeAll("bisq-smaller-label", "text-underline", "hand-cursor");
+                        version.setLayoutY(25);
                         version.setOnMouseClicked(null);
                     }
                 });
@@ -311,7 +310,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         return button;
     }
 
-    private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget, LeftNavButton parentButton) {
+    private LeftNavSubButton createSubmenuNavigationButton(String title,
+                                                           NavigationTarget navigationTarget,
+                                                           LeftNavButton parentButton) {
         LeftNavSubButton button = new LeftNavSubButton(title, toggleGroup, navigationTarget, parentButton);
         setupButtonHandler(navigationTarget, button);
         VBox.setVgrow(button, Priority.ALWAYS);
@@ -352,8 +353,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         if (selectedLeftNavButton == null) return;
 
         LeftNavButton buttonForHeight;
-        if (selectedLeftNavButton instanceof LeftNavSubButton) {
-            LeftNavSubButton leftNavSubButton = (LeftNavSubButton) selectedLeftNavButton;
+        if (selectedLeftNavButton instanceof LeftNavSubButton leftNavSubButton) {
             LeftNavButton parentButton = leftNavSubButton.getParentButton();
             if (!parentButton.getIsSubMenuExpanded().get()) {
                 buttonForHeight = parentButton;
@@ -382,14 +382,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private double calculateTargetY() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
         double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
-        if (selectedLeftNavButton instanceof LeftNavSubButton) {
-            LeftNavSubButton leftNavSubButton = (LeftNavSubButton) selectedLeftNavButton;
+        if (selectedLeftNavButton instanceof LeftNavSubButton leftNavSubButton) {
             LeftNavButton parentButton = leftNavSubButton.getParentButton();
             if (parentButton.getIsSubMenuExpanded().get()) {
                 for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
                     Node item = mainMenuItems.getChildren().get(i);
-                    if (item instanceof VBox) {
-                        VBox submenu = (VBox) item;
+                    if (item instanceof VBox submenu) {
                         if (submenu.getChildren().contains(selectedLeftNavButton)) {
                             targetY += submenu.getLayoutY();
                             break;
@@ -407,8 +405,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
         for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
             Node item = mainMenuItems.getChildren().get(i);
-            if (item instanceof VBox) {
-                VBox submenu = (VBox) item;
+            if (item instanceof VBox submenu) {
                 LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
 
                 parentMenuItem.setHighlighted(submenu.getChildren().contains(selectedLeftNavButton));

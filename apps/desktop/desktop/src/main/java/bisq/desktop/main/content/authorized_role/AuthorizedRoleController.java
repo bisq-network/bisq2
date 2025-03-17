@@ -71,8 +71,8 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     public void onActivate() {
         super.onActivate();
 
-        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications);
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
@@ -88,39 +88,41 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case MEDIATOR:
-                return Optional.of(new MediatorController(serviceProvider));
-            case MODERATOR:
-                return Optional.of(new ModeratorController(serviceProvider));
-            case SECURITY_MANAGER:
-                return Optional.of(new SecurityManagerController(serviceProvider));
-            case RELEASE_MANAGER:
-                return Optional.of(new ReleaseManagerController(serviceProvider));
-            case SEED_NODE:
-            case ORACLE_NODE:
-            case EXPLORER_NODE:
-            case MARKET_PRICE_NODE:
-                return Optional.of(new RoleInfo(serviceProvider).getController());
-            default:
-                return Optional.empty();
-        }
+        return switch (navigationTarget) {
+            case MEDIATOR -> Optional.of(new MediatorController(serviceProvider));
+            case MODERATOR -> Optional.of(new ModeratorController(serviceProvider));
+            case SECURITY_MANAGER -> Optional.of(new SecurityManagerController(serviceProvider));
+            case RELEASE_MANAGER -> Optional.of(new ReleaseManagerController(serviceProvider));
+            case SEED_NODE, ORACLE_NODE, EXPLORER_NODE, MARKET_PRICE_NODE ->
+                    Optional.of(new RoleInfo(serviceProvider).getController());
+            default -> Optional.empty();
+        };
     }
 
     private void onBondedRolesChanged() {
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-            model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+
+            model.getBannedAuthorizedBondedRoles().clear();
+            model.getBannedAuthorizedBondedRoles().addAll(authorizedBondedRolesService.getBannedAuthorizedBondedRoleStream()
+                    .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
+                    .map(AuthorizedBondedRole::getBondedRoleType)
+                    .collect(Collectors.toSet()));
+            // If we got banned we still want to show the admin UI
+            model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleStream(true)
                     .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
                     .map(AuthorizedBondedRole::getBondedRoleType)
                     .collect(Collectors.toSet()));
         });
     }
 
-    private void handleNotifications(ChatNotification notification) {
+    private void handleNotification(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
         UIThread.run(() -> {
-            long numNotifications = notification != null && bisqEasyNotificationsService.isMediatorsNotification(notification) ?
-                    chatNotificationService.getNumNotifications(notification.getChatChannelId()) :
+            long numNotifications = bisqEasyNotificationsService.isMediatorsNotification(notification) ?
+                    bisqEasyNotificationsService.getMediatorsNotConsumedNotifications().count() :
                     0;
 
             findTabButton(NavigationTarget.MEDIATOR).ifPresent(tabButton ->

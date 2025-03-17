@@ -22,6 +22,7 @@ import bisq.common.fsm.State;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.util.DateUtils;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
@@ -32,18 +33,45 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Optional;
 import java.util.UUID;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements PersistableProto {
+    public final static Date TRADE_ID_V1_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.JUNE, 1);
+
     public static String createId(String offerId, String takerPubKeyHash) {
+        return createId(offerId, takerPubKeyHash, Optional.empty());
+    }
+
+    public static String createId(String offerId, String takerPubKeyHash, long takeOfferDate) {
+        if (new Date().after(TRADE_ID_V1_ACTIVATION_DATE)) {
+            return createId_V1(offerId, takerPubKeyHash, Optional.of(takeOfferDate));
+        } else {
+            return createId_V0(offerId, takerPubKeyHash);
+        }
+    }
+
+    private static String createId(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
+        if (new Date().after(TRADE_ID_V1_ACTIVATION_DATE)) {
+            return createId_V1(offerId, takerPubKeyHash, takeOfferDate);
+        } else {
+            return createId_V0(offerId, takerPubKeyHash);
+        }
+    }
+
+    private static String createId_V0(String offerId, String takerPubKeyHash) {
         String combined = offerId + takerPubKeyHash;
+        return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
+    }
+
+    private static String createId_V1(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
+        String combined = offerId + takerPubKeyHash + takeOfferDate.map(String::valueOf).orElse("");
         return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
     }
 
@@ -61,31 +89,36 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final Identity myIdentity;
     private final P taker;
     private final P maker;
-    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
+    // transient fields are excluded by default for EqualsAndHashCode
     private transient final TradeRole tradeRole;
-    private final Observable<C> contract = new Observable<>();
+    private final C contract;
     private final Observable<String> errorMessage = new Observable<>();
     private final Observable<String> errorStackTrace = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();
     private final Observable<String> peersErrorStackTrace = new Observable<>();
+
+    // Set at protocol creation and not updated later, thus no need to be observable
     private final Observable<String> protocolVersion = new Observable<>();
 
-    public Trade(State state,
+    public Trade(C contract,
+                 State state,
                  boolean isBuyer,
                  boolean isTaker,
                  Identity myIdentity,
                  T offer,
                  P taker,
                  P maker) {
-        this(state,
-                createId(offer.getId(), taker.getNetworkId().getId()),
+        this(contract,
+                state,
+                createId(offer.getId(), taker.getNetworkId().getId(), contract.getTakeOfferDate()),
                 createRole(isBuyer, isTaker),
                 myIdentity,
                 taker,
                 maker);
     }
 
-    protected Trade(State state,
+    protected Trade(C contract,
+                    State state,
                     String id,
                     TradeRole tradeRole,
                     Identity myIdentity,
@@ -93,6 +126,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     P maker) {
         super(state);
 
+        this.contract = contract;
         this.id = id;
         this.tradeRole = tradeRole;
         this.myIdentity = myIdentity;
@@ -102,13 +136,13 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder(boolean serializeForHash) {
         bisq.trade.protobuf.Trade.Builder builder = bisq.trade.protobuf.Trade.newBuilder()
+                .setContract(contract.toProto(serializeForHash))
                 .setId(id)
                 .setTradeRole(tradeRole.toProtoEnum())
                 .setMyIdentity(myIdentity.toProto(serializeForHash))
                 .setTaker(taker.toProto(serializeForHash))
                 .setMaker(maker.toProto(serializeForHash))
                 .setState(getState().name());
-        Optional.ofNullable(contract.get()).ifPresent(contract -> builder.setContract(contract.toProto(serializeForHash)));
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
@@ -116,25 +150,18 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return builder;
     }
 
-    public C getContract() {
-        return contract.get();
-    }
-
-    public void setContract(C contract) {
-        this.contract.set(contract);
-    }
-
     public void setErrorMessage(String errorMessage) {
         this.errorMessage.set(errorMessage);
+    }
+
+    public String getErrorMessage() {
+        return errorMessage.get();
     }
 
     public ReadOnlyObservable<String> errorMessageObservable() {
         return errorMessage;
     }
 
-    public String getErrorMessage() {
-        return errorMessage.get();
-    }
 
     public void setErrorStackTrace(String peersErrorStacktrace) {
         this.errorStackTrace.set(peersErrorStacktrace);
@@ -144,16 +171,21 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return errorStackTrace.get();
     }
 
+    public ReadOnlyObservable<String> errorStackTraceObservable() {
+        return errorStackTrace;
+    }
+
+
     public void setPeersErrorMessage(String errorMessage) {
         this.peersErrorMessage.set(errorMessage);
     }
 
-    public ReadOnlyObservable<String> peersErrorMessageObservable() {
-        return peersErrorMessage;
-    }
-
     public String getPeersErrorMessage() {
         return peersErrorMessage.get();
+    }
+
+    public ReadOnlyObservable<String> peersErrorMessageObservable() {
+        return peersErrorMessage;
     }
 
     public void setPeersErrorStackTrace(String peersErrorStackTrace) {
@@ -164,6 +196,11 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return peersErrorStackTrace.get();
     }
 
+    public ReadOnlyObservable<String> peersErrorStackTraceObservable() {
+        return peersErrorStackTrace;
+    }
+
+
     public void setProtocolVersion(String protocolVersion) {
         this.protocolVersion.set(protocolVersion);
     }
@@ -172,13 +209,13 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return this.protocolVersion.get();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* --------------------------------------------------------------------- */
     // Delegates
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public T getOffer() {
-        checkArgument(contract.get() != null, "Cannot get offer, since contract has not yet been set.");
-        return contract.get().getOffer();
+        return contract.getOffer();
     }
 
     public boolean isBuyer() {

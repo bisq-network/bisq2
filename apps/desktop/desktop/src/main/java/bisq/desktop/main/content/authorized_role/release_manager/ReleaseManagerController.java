@@ -20,7 +20,7 @@ package bisq.desktop.main.content.authorized_role.release_manager;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.observable.Pin;
-import bisq.common.util.Version;
+import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -35,13 +35,14 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
+
 @Slf4j
 public class ReleaseManagerController implements Controller {
     @Getter
     private final ReleaseManagerView view;
     private final ReleaseManagerModel model;
     private final UserIdentityService userIdentityService;
-    private final UserProfileService userProfileService;
     private final ReleaseNotificationsService releaseNotificationsService;
     private final ReleaseManagerService releaseManagerService;
     private Pin getReleaseNotificationsPin;
@@ -49,7 +50,7 @@ public class ReleaseManagerController implements Controller {
     public ReleaseManagerController(ServiceProvider serviceProvider) {
         releaseManagerService = serviceProvider.getSupportService().getReleaseManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
         releaseNotificationsService = serviceProvider.getBondedRolesService().getReleaseNotificationsService();
         RoleInfo roleInfo = new RoleInfo(serviceProvider);
         model = new ReleaseManagerModel();
@@ -58,11 +59,17 @@ public class ReleaseManagerController implements Controller {
 
     @Override
     public void onActivate() {
-        getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseManagerView.ReleaseNotificationListItem>bind(model.getListItems())
-                .map(ReleaseManagerView.ReleaseNotificationListItem::new)
+        model.getIsLauncherUpdate().set(true);
+        getReleaseNotificationsPin = FxBindings.<ReleaseNotification, ReleaseManagerView.ListItem>bind(model.getListItems())
+                .map(ReleaseManagerView.ListItem::new)
                 .to(releaseNotificationsService.getReleaseNotifications());
 
         model.getActionButtonDisabled().bind(model.getReleaseNotes().isEmpty().or(model.getVersion().isEmpty()));
+
+
+        KeyPair keyPair = userIdentityService.getSelectedUserIdentity().getIdentity().getKeyBundle().getKeyPair();
+        releaseNotificationsService.getReleaseNotifications().forEach(releaseNotification ->
+                releaseManagerService.republishReleaseNotification(releaseNotification, keyPair));
     }
 
     @Override
@@ -82,18 +89,16 @@ public class ReleaseManagerController implements Controller {
                         model.getIsLauncherUpdate().get(),
                         releaseNotes,
                         model.getVersion().get())
-                .whenComplete((result, throwable) -> {
-                    UIThread.run(() -> {
-                        if (throwable != null) {
-                            new Popup().error(throwable).show();
-                        } else {
-                            model.getIsPreRelease().set(false);
-                            model.getIsLauncherUpdate().set(false);
-                            model.getReleaseNotes().set(null);
-                            model.getVersion().set(null);
-                        }
-                    });
-                });
+                .whenComplete((result, throwable) -> UIThread.run(() -> {
+                    if (throwable != null) {
+                        new Popup().error(throwable).show();
+                    } else {
+                        model.getIsPreRelease().set(false);
+                        model.getIsLauncherUpdate().set(true);
+                        model.getReleaseNotes().set(null);
+                        model.getVersion().set(null);
+                    }
+                }));
     }
 
     void onRemoveReleaseNotification(ReleaseNotification releaseNotification) {

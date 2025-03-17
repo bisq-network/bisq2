@@ -47,7 +47,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
     private Subscription selectedAccountPin, noAccountsSetupPin;
 
     public PaymentAccountsView(PaymentAccountsModel model, PaymentAccountsController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(0), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
         root.setPadding(new Insets(0, 40, 40, 40));
@@ -107,7 +107,11 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         deletedButton = new Button(Res.get("user.paymentAccounts.deleteAccount"));
 
         buttonsHBox = new HBox(20, saveButton, deletedButton);
-        root.getChildren().addAll(headline, noAccountsVBox, largeCreateButton, selectionButtonHBox, accountData, buttonsHBox);
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(headline, noAccountsVBox, largeCreateButton, selectionButtonHBox, accountData, buttonsHBox);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        root.getChildren().add(contentBox);
+        root.setPadding(new Insets(0, 40, 20, 40));
     }
 
     @Override
@@ -124,7 +128,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
 
         accountSelection.setOnChangeConfirmed(e -> {
             if (accountSelection.getSelectionModel().getSelectedItem() == null) {
-                accountSelection.getSelectionModel().select(model.getSelectedAccount());
+                model.getSelectedAccount().ifPresent(accountSelection.getSelectionModel()::select);
                 return;
             }
             controller.onSelectAccount(accountSelection.getSelectionModel().getSelectedItem());
@@ -154,7 +158,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
     @Override
     protected void onViewDetached() {
         headline.textProperty().unbind();
-        accountData.textProperty().unbindBidirectional(model.getAccountData());
+        model.getAccountData().ifPresent(accountData.textProperty()::unbindBidirectional);
         saveButton.disableProperty().unbind();
         deletedButton.disableProperty().unbind();
 

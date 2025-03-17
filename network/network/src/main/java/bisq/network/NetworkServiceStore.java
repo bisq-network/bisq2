@@ -19,13 +19,16 @@ package bisq.network;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.common.AddressByTransportTypeMap;
+import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
@@ -33,6 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class NetworkServiceStore implements PersistableStore<NetworkServiceStore> {
     private final Set<AddressByTransportTypeMap> seedNodes = new CopyOnWriteArraySet<>();
+    @Deprecated(since = "2.1.0") // Moved to NetworkIdStore
     private final Map<String, NetworkId> networkIdByTag = new ConcurrentHashMap<>();
 
     public NetworkServiceStore() {
@@ -98,11 +102,8 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
         return seedNodes;
     }
 
+    @Deprecated(since = "2.1.0")
     Map<String, NetworkId> getNetworkIdByTag() {
         return networkIdByTag;
-    }
-
-    Optional<NetworkId> findNetworkId(String tag) {
-        return Optional.ofNullable(networkIdByTag.get(tag));
     }
 }

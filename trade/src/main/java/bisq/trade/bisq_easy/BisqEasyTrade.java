@@ -19,7 +19,7 @@ package bisq.trade.bisq_easy;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -31,6 +31,7 @@ import bisq.trade.TradeRole;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,23 +44,31 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     @Getter
     private final Observable<String> paymentAccountData = new Observable<>();
     @Getter
-    private final Observable<String> btcAddress = new Observable<>();
+    private final Observable<String> bitcoinPaymentData = new Observable<>(); // btc address in case of mainChain, or LN invoice if LN is used
+    // paymentProof can be null in Observable
     @Getter
-    private final Observable<String> txId = new Observable<>();
+    private final Observable<String> paymentProof = new Observable<>(); // txId in case of mainChain, or preimage if LN is used
 
     // The role who cancelled or rejected the trade
     @Getter
     private final Observable<Role> interruptTradeInitiator = new Observable<>();
 
+    // Wrapper for stateObservable which is not handled as generic in Fsm
     private final transient Observable<BisqEasyTradeState> tradeState = new Observable<>();
 
-    public BisqEasyTrade(boolean isBuyer,
+    @Setter
+    @Getter
+    private Optional<Long> tradeCompletedDate = Optional.empty();
+
+    public BisqEasyTrade(BisqEasyContract contract,
+                         boolean isBuyer,
                          boolean isTaker,
                          Identity myIdentity,
                          BisqEasyOffer offer,
                          NetworkId takerNetworkId,
                          NetworkId makerNetworkId) {
-        super(BisqEasyTradeState.INIT,
+        super(contract,
+                BisqEasyTradeState.INIT,
                 isBuyer,
                 isTaker,
                 myIdentity,
@@ -70,13 +79,14 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
 
-    private BisqEasyTrade(BisqEasyTradeState state,
-                          String id,
-                          TradeRole tradeRole,
-                          Identity myIdentity,
-                          BisqEasyTradeParty taker,
-                          BisqEasyTradeParty maker) {
-        super(state, id, tradeRole, myIdentity, taker, maker);
+    public BisqEasyTrade(BisqEasyContract contract,
+                         BisqEasyTradeState state,
+                         String id,
+                         TradeRole tradeRole,
+                         Identity myIdentity,
+                         BisqEasyTradeParty taker,
+                         BisqEasyTradeParty maker) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -98,22 +108,21 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     private bisq.trade.protobuf.BisqEasyTrade.Builder getBisqEasyTradeBuilder(boolean serializeForHash) {
         var builder = bisq.trade.protobuf.BisqEasyTrade.newBuilder();
         Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
-        Optional.ofNullable(btcAddress.get()).ifPresent(builder::setBtcAddress);
-        Optional.ofNullable(txId.get()).ifPresent(builder::setTxId);
+        Optional.ofNullable(bitcoinPaymentData.get()).ifPresent(builder::setBitcoinPaymentData);
+        Optional.ofNullable(paymentProof.get()).ifPresent(builder::setPaymentProof);
         Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProtoEnum()));
+        tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
         return builder;
     }
 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        BisqEasyTrade trade = new BisqEasyTrade(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
+        BisqEasyTrade trade = new BisqEasyTrade(BisqEasyContract.fromProto(proto.getContract()),
+                ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
-        if (proto.hasContract()) {
-            trade.setContract(BisqEasyContract.fromProto(proto.getContract()));
-        }
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }
@@ -131,15 +140,19 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         if (bisqEasyTradeProto.hasPaymentAccountData()) {
             trade.getPaymentAccountData().set(bisqEasyTradeProto.getPaymentAccountData());
         }
-        if (bisqEasyTradeProto.hasBtcAddress()) {
-            trade.getBtcAddress().set(bisqEasyTradeProto.getBtcAddress());
+        if (bisqEasyTradeProto.hasBitcoinPaymentData()) {
+            trade.getBitcoinPaymentData().set(bisqEasyTradeProto.getBitcoinPaymentData());
         }
-        if (bisqEasyTradeProto.hasTxId()) {
-            trade.getTxId().set(bisqEasyTradeProto.getTxId());
+        if (bisqEasyTradeProto.hasPaymentProof()) {
+            trade.getPaymentProof().set(bisqEasyTradeProto.getPaymentProof());
         }
         if (bisqEasyTradeProto.hasInterruptTradeInitiator()) {
             trade.getInterruptTradeInitiator().set(Role.fromProto(bisqEasyTradeProto.getInterruptTradeInitiator()));
         }
+        if (bisqEasyTradeProto.hasTradeCompletedDate()) {
+            trade.setTradeCompletedDate(Optional.of(bisqEasyTradeProto.getTradeCompletedDate()));
+        }
+
         return trade;
     }
 

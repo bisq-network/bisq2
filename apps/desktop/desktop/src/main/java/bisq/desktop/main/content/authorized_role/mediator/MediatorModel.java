@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatMessage;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.components.table.TableList;
 import javafx.beans.property.*;
@@ -26,23 +24,31 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.function.Predicate;
 
 @Slf4j
 @Getter
 public class MediatorModel implements Model {
-    private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
-    private final StringProperty selectedChatMessages = new SimpleStringProperty("");
-    private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
-
     private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     private final BooleanProperty noOpenCases = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
-    private final TableList<MediatorView.ListItem> listItems = new TableList<>();
-    private final ObjectProperty<MediatorView.ListItem> selectedItem = new SimpleObjectProperty<>();
+    private final TableList<MediationCaseListItem> listItems = new TableList<>();
+    private final ObjectProperty<MediationCaseListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
+    private final ObjectProperty<Predicate<MediationCaseListItem>> searchPredicate = new SimpleObjectProperty<>(item -> true);
+    private final ObjectProperty<Predicate<MediationCaseListItem>> closedCasesPredicate = new SimpleObjectProperty<>(item -> true);
 
     public MediatorModel() {
+    }
+
+    public void reset() {
+        // We dont reset showClosedCases
+        noOpenCases.setValue(false);
+        chatWindowTitle.setValue(null);
+        listItems.clear();
+        selectedItem.set(null);
+        chatWindow.set(null);
+        searchPredicate.set(item -> true);
+        closedCasesPredicate.set(item -> true);
     }
 }

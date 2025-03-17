@@ -27,6 +27,6 @@ public enum ReputationSource {
     BISQ1_SIGNED_ACCOUNT_AGE_WITNESS;
 
     public String getDisplayString() {
-        return Res.get("user.reputation.source." + name());
+        return Res.get("reputation.source." + name());
     }
 }

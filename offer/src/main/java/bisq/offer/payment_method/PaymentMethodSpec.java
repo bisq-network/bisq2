@@ -73,27 +73,19 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
     // By using specific methods we avoid those issues and the code is more readable without generics overhead.
 
     public static FiatPaymentMethodSpec protoToFiatPaymentMethodSpec(bisq.offer.protobuf.PaymentMethodSpec proto) {
-        switch (proto.getMessageCase()) {
-            case FIATPAYMENTMETHODSPEC: {
-                return FiatPaymentMethodSpec.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            default -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
     public static BitcoinPaymentMethodSpec protoToBitcoinPaymentMethodSpec(bisq.offer.protobuf.PaymentMethodSpec proto) {
-        switch (proto.getMessageCase()) {
-            case BITCOINPAYMENTMETHODSPEC: {
-                return BitcoinPaymentMethodSpec.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+        return switch (proto.getMessageCase()) {
+            case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
+            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            default -> throw new UnresolvableProtobufMessageException(proto);
+        };
     }
 
     public String getPaymentMethodName() {

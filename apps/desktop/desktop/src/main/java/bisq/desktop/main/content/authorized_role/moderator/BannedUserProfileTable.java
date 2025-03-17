@@ -27,17 +27,14 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.RichTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.moderator.ModeratorService;
-import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -76,12 +73,10 @@ public class BannedUserProfileTable {
         private final Model model;
         private final BannedUserService bannedUserService;
         private final ModeratorService moderatorService;
-        private final UserProfileService userProfileService;
         private Pin bannedUserListItemsPin;
 
         private Controller(ServiceProvider serviceProvider) {
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
-            userProfileService = serviceProvider.getUserService().getUserProfileService();
             moderatorService = serviceProvider.getSupportService().getModeratorService();
 
             model = new Model();
@@ -91,7 +86,7 @@ public class BannedUserProfileTable {
         @Override
         public void onActivate() {
             bannedUserListItemsPin = FxBindings.<BannedUserProfileData, View.ListItem>bind(model.getListItems())
-                    .map(bannedUserProfileData -> new View.ListItem(bannedUserProfileData, userProfileService))
+                    .map(View.ListItem::new)
                     .to(bannedUserService.getBannedUserProfileDataSet());
         }
 
@@ -101,32 +96,22 @@ public class BannedUserProfileTable {
         }
 
         void onContactUser(BannedUserProfileData data) {
-            ChatChannelDomain chatChannelDomain = ChatChannelDomain.SUPPORT;
-            moderatorService.contactUser(chatChannelDomain, data.getUserProfile(), Optional.empty(), false)
-                    .whenComplete((result, throwable) -> {
-                        UIThread.run(() -> {
-                            if (throwable == null) {
-                                SendMessageResult.findAnyErrorMsg(result)
-                                        .ifPresent(errorMsg -> new Popup().error(errorMsg).show());
-                                navigateToChannel(chatChannelDomain);
-                                UIThread.runOnNextRenderFrame(() -> navigateToChannel(chatChannelDomain));
-                            } else {
-                                new Popup().error(throwable).show();
-                            }
-                        });
-                    });
-        }
-
-        void onBan(ReportToModeratorMessage message) {
-            moderatorService.banReportedUser(message);
+            ChatChannelDomain chatChannelDomain = ChatChannelDomain.DISCUSSION;
+            moderatorService.contactUser(data.getUserProfile(), Optional.empty(), false)
+                    .whenComplete((result, throwable) -> UIThread.run(() -> {
+                        if (throwable == null) {
+                            SendMessageResult.findAnyErrorMsg(result)
+                                    .ifPresent(errorMsg -> new Popup().error(errorMsg).show());
+                            navigateToChannel(chatChannelDomain);
+                            UIThread.runOnNextRenderFrame(() -> navigateToChannel(chatChannelDomain));
+                        } else {
+                            new Popup().error(throwable).show();
+                        }
+                    }));
         }
 
         void onRemoveBan(BannedUserProfileData data) {
             moderatorService.unBanReportedUser(data);
-        }
-
-        void onDeleteMessage(ReportToModeratorMessage message) {
-            moderatorService.deleteReportToModeratorMessage(message);
         }
 
         private void navigateToChannel(ChatChannelDomain chatChannelDomain) {
@@ -137,10 +122,7 @@ public class BannedUserProfileTable {
                     Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
                     break;
                 case DISCUSSION:
-                    Navigation.navigateTo(NavigationTarget.DISCUSSION);
-                    break;
-                case EVENTS:
-                    Navigation.navigateTo(NavigationTarget.EVENTS);
+                    Navigation.navigateTo(NavigationTarget.CHAT);
                     break;
                 case SUPPORT:
                     Navigation.navigateTo(NavigationTarget.SUPPORT);
@@ -155,63 +137,60 @@ public class BannedUserProfileTable {
     private static class Model implements bisq.desktop.common.view.Model {
         private BondedRole bondedRole;
         private final ObservableList<View.ListItem> listItems = FXCollections.observableArrayList();
-
     }
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final BisqTableView<ListItem> tableView;
+        private final RichTableView<ListItem> richTableView;
 
         private View(Model model, Controller controller) {
             super(new VBox(5), model, controller);
 
             root.setAlignment(Pos.TOP_LEFT);
 
-            Label headline = new Label(Res.get("authorizedRole.moderator.bannedUserProfile.table.headline"));
-            headline.getStyleClass().add("large-thin-headline");
-
-            tableView = new BisqTableView<>(model.getListItems());
-            tableView.setMinHeight(200);
-            tableView.getStyleClass().add("user-bonded-roles-table-view");
+            richTableView = new RichTableView<>(model.getListItems(), Res.get("authorizedRole.moderator.bannedUserProfile.table.headline"));
             configTableView();
 
-            root.getChildren().addAll(headline, tableView);
+            root.getChildren().addAll(richTableView);
         }
 
         @Override
         protected void onViewAttached() {
-            tableView.initialize();
+            richTableView.initialize();
         }
 
         @Override
         protected void onViewDetached() {
-            tableView.dispose();
+            richTableView.dispose();
         }
 
         private void configTableView() {
-            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("authorizedRole.moderator.bannedUserProfile.table.userProfile"))
                     .minWidth(150)
                     .left()
                     .comparator(Comparator.comparing(ListItem::getUserName))
+                    .valueSupplier(ListItem::getUserName)
                     .setCellFactory(getUserProfileCellFactory())
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .isSortable(false)
                     .fixWidth(200)
                     .setCellFactory(getContactCellFactory())
+                    .includeForCsv(false)
                     .build());
-            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+            richTableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                     .isSortable(false)
                     .fixWidth(250)
                     .setCellFactory(getRemoveBanCellFactory())
+                    .includeForCsv(false)
                     .build());
         }
 
         private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
             return column -> new TableCell<>() {
                 private final Label userName = new Label();
-                private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+                private final UserProfileIcon userProfileIcon = new UserProfileIcon();
                 private final HBox hBox = new HBox(10, userProfileIcon, userName);
 
                 {
@@ -220,14 +199,15 @@ public class BannedUserProfileTable {
                 }
 
                 @Override
-                public void updateItem(final ListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
                         userName.setText(item.getUserName());
-                        userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
+                        userProfileIcon.setUserProfile(item.getUserProfile());
                         setGraphic(hBox);
                     } else {
+                        userProfileIcon.dispose();
                         setGraphic(null);
                     }
                 }
@@ -239,7 +219,7 @@ public class BannedUserProfileTable {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.bannedUserProfile.table.contact"));
 
                 @Override
-                public void updateItem(final ListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -258,7 +238,7 @@ public class BannedUserProfileTable {
                 private final Button button = new Button(Res.get("authorizedRole.moderator.table.removeBan"));
 
                 @Override
-                public void updateItem(final ListItem item, boolean empty) {
+                protected void updateItem(ListItem item, boolean empty) {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
@@ -277,18 +257,15 @@ public class BannedUserProfileTable {
         private static class ListItem {
             @EqualsAndHashCode.Include
             private final BannedUserProfileData bannedUserProfileData;
-            @EqualsAndHashCode.Include
+
             private final UserProfile userProfile;
             private final String userName;
-            private final long lastSeen;
-            private final String lastSeenAsString;
 
-            private ListItem(BannedUserProfileData bannedUserProfileData, UserProfileService userProfileService) {
+            private ListItem(BannedUserProfileData bannedUserProfileData) {
                 this.bannedUserProfileData = bannedUserProfileData;
+
                 userProfile = bannedUserProfileData.getUserProfile();
                 userName = userProfile.getUserName();
-                lastSeen = userProfileService.getLastSeen(userProfile);
-                lastSeenAsString = TimeFormatter.formatAge(lastSeen);
             }
         }
     }

@@ -29,6 +29,7 @@ import lombok.ToString;
 public final class NetworkLoad implements NetworkProto {
     public final static double INITIAL_LOAD = 0.1;
     public final static double DEFAULT_DIFFICULTY_ADJUSTMENT = 1;
+    public final static double MIN_DIFFICULTY_ADJUSTMENT = 0;
     public final static double MAX_DIFFICULTY_ADJUSTMENT = 160000; // 1048576/65536/0.01/0.01=160000
     public final static NetworkLoad INITIAL_NETWORK_LOAD = new NetworkLoad();
 

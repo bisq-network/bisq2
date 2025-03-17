@@ -3,11 +3,13 @@ plugins {
     id("bisq.protobuf")
 }
 
+version = rootProject.version
+
 dependencies {
     implementation(project(":i18n"))
     implementation(project(":persistence"))
     implementation(project(":security"))
     implementation(project(":identity"))
 
-    implementation("network:network")
+    implementation("network:network:$version")
 }

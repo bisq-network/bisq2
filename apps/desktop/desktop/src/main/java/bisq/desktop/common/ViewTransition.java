@@ -38,8 +38,6 @@ public class ViewTransition {
     @Nullable
     private Region oldViewRoot, newViewRoot;
     @Nullable
-    private final View<? extends Parent, ? extends Model, ? extends Controller> oldView;
-    @Nullable
     private View<? extends Parent, ? extends Model, ? extends Controller> newView;
     @Nullable
     private Timeline slideOutTimeline;
@@ -51,7 +49,6 @@ public class ViewTransition {
 
     public ViewTransition(@Nullable View<? extends Parent, ? extends Model, ? extends Controller> oldView,
                           View<? extends Parent, ? extends Model, ? extends Controller> newView) {
-        this.oldView = oldView;
         this.newView = newView;
         oldViewRoot = oldView != null ? oldView.getRoot() : null;
         newViewRoot = newView.getRoot();
@@ -124,8 +121,7 @@ public class ViewTransition {
     private void remove(Region region) {
         if (region != null) {
             Parent parent = region.getParent();
-            if (parent instanceof Pane) {
-                Pane pane = (Pane) parent;
+            if (parent instanceof Pane pane) {
                 pane.getChildren().remove(region);
             }
         }

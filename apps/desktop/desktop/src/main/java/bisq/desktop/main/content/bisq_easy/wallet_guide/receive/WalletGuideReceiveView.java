@@ -40,8 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, WalletGuideReceiveController> {
     private final Button backButton, closeButton;
     private final Hyperlink link1, link2;
-    private final ImageView image1, image2;
-    private FadeTransition fadeTransition1, fadeTransition2;
+    private final ImageView image2;
+    private final FadeTransition fadeTransition1;
+    private final FadeTransition fadeTransition2;
     private UIScheduler scheduler1, scheduler2, scheduler3;
 
     public WalletGuideReceiveView(WalletGuideReceiveModel model, WalletGuideReceiveController controller) {
@@ -70,7 +71,7 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
         VBox.setMargin(link2, new Insets(0, 0, 0, 0));
         vBox.getChildren().addAll(headline, content, link1, link2, buttons);
 
-        image1 = ImageUtil.getImageViewById("blue-wallet-tx");
+        ImageView image1 = ImageUtil.getImageViewById("blue-wallet-tx");
         image2 = ImageUtil.getImageViewById("blue-wallet-qr");
         StackPane images = new StackPane(image1, image2);
         images.setAlignment(Pos.TOP_LEFT);
@@ -94,18 +95,18 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
 
         // TODO (low prio) create carousel component for it (See https://github.com/bisq-network/bisq2/issues/1262)
         image2.setOpacity(0);
-        scheduler1 = UIScheduler.run(() -> fadeTransition1.playFromStart()).after(2000);
+        scheduler1 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
         fadeTransition1.setOnFinished(e -> {
             if (scheduler2 != null) {
                 scheduler2.stop();
             }
-            scheduler2 = UIScheduler.run(() -> fadeTransition2.playFromStart()).after(2000);
+            scheduler2 = UIScheduler.run(fadeTransition2::playFromStart).after(2000);
         });
         fadeTransition2.setOnFinished(e -> {
             if (scheduler3 != null) {
                 scheduler3.stop();
             }
-            scheduler3 = UIScheduler.run(() -> fadeTransition1.playFromStart()).after(2000);
+            scheduler3 = UIScheduler.run(fadeTransition1::playFromStart).after(2000);
         });
     }
 

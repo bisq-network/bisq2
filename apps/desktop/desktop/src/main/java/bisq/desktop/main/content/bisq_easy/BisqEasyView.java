@@ -32,6 +32,5 @@ public class BisqEasyView extends ContentTabView<BisqEasyModel, BisqEasyControll
         addTab(Res.get("bisqEasy.offerbook"), NavigationTarget.BISQ_EASY_OFFERBOOK);
         TabButton openTrades = addTab(Res.get("bisqEasy.openTrades"), NavigationTarget.BISQ_EASY_OPEN_TRADES);
         openTrades.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
-        addTab(Res.get("bisqEasy.privateChat"), NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
     }
 }

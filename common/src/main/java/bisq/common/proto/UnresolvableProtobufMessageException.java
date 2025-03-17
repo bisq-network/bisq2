@@ -24,6 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UnresolvableProtobufMessageException extends RuntimeException {
+    public UnresolvableProtobufMessageException(String message, Message proto) {
+        super(message + ". Message case not found for proto message: \n" + proto.toString());
+    }
+
     public UnresolvableProtobufMessageException(Message proto) {
         super("Message case not found for proto message: \n" + proto.toString());
     }

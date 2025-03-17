@@ -7,5 +7,5 @@ dependencies {
     implementation(project(":persistence"))
     implementation(project(":i18n"))
 
-    implementation("network:network")
+    implementation("network:network:$version")
 }

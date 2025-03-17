@@ -21,14 +21,11 @@ import bisq.common.proto.ProtoResolver;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.spy;
 
 public class PersistableStoreReaderWriterTests {
 
@@ -84,29 +81,5 @@ public class PersistableStoreReaderWriterTests {
 
         // Triggers rename
         persistableStoreReaderWriter.write(timestampStore);
-    }
-
-    @Test
-    void failRenameTempFileToCurrentFile(@TempDir Path tempDir) throws IOException {
-        var timestampStore = new TimestampStore();
-        Map<String, Long> timestampsByProfileId = timestampStore.getTimestampsByProfileId();
-        timestampsByProfileId.put("A", 1L);
-        timestampsByProfileId.put("B", 2L);
-        timestampsByProfileId.put("C", 3L);
-
-        Path storeFilePath = tempDir.resolve("protoFile");
-        PersistableStoreFileManagerTests.createEmptyFile(storeFilePath);
-
-        var storeFileManagerImpl = new PersistableStoreFileManager(storeFilePath);
-        PersistableStoreFileManager storeFileManager = spy(storeFileManagerImpl);
-        doThrow(new IOException("Rename failed.")).when(storeFileManager).renameTempFileToCurrentFile();
-
-        var persistableStoreReaderWriter = new PersistableStoreReaderWriter<TimestampStore>(storeFileManager);
-        persistableStoreReaderWriter.write(timestampStore);
-
-        assertThat(storeFilePath).exists();
-
-        Path backupFilePath = tempDir.resolve("backup_protoFile");
-        assertThat(backupFilePath).doesNotExist();
     }
 }

@@ -5,17 +5,18 @@
 # Convention: mark all versions using 'strictly'. This ensures only one version is allowed in the dependency tree, even
 # when multiple versions are attempted to be brought in as transitive dependencies of other requirements.
 [versions]
+bisq = '2.1.6'
 annotations-lib = { strictly = '23.0.0' }
 
 apache-commons-lang-lib = { strictly = '3.14.0' }
-apache-httpcomponents-core-lib = { strictly = '4.4.13' }
-apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
+apache-httpcomponents-core-lib = { strictly = '5.3.1' }
+apache-httpcomponents-httpclient-lib = { strictly = '5.4.1' }
 apache-tomcat-annotations-api = { strictly = '6.0.53' }
 
 assertj-core-lib = { strictly = '3.22.0' }
-bouncycastle-lib = { strictly = '1.69' } # Oldest version without known CVEs
+bouncycastle-lib = { strictly = '1.78.1' }
 
-commons-codec = { strictly = '1.13' }
+commons-codec = { strictly = '1.17.1' }
 
 chimp-jsocks-lib = { strictly = '567e1cd6' }
 chimp-jtorctl-lib = { strictly = '9b5ba203' }
@@ -29,63 +30,69 @@ fontawesomefx-materialdesignfont-lib = { strictly = '2.0.26-9.1.2' }
 fxmisc-easybind-lib = { strictly = '1.0.3' }
 fxmisc-richtextfx-lib = { strictly = '0.10.9' }
 
-glassfish-jersey-lib = { strictly = '3.0.4' }
-glassfish-jaxb-runtime-lib = { strictly = '3.0.2' }
+glassfish-jersey-lib = { strictly = '3.1.8' }
+glassfish-jaxb-runtime-lib = { strictly = '4.0.5' }
+
+grizzly-websockets-server-lib = { strictly = '2.4.4' }
 
 google-gson-lib = { strictly = '2.9.0' }
-google-guava-lib = { strictly = '31.1-jre' }
+google-guava-lib = { strictly = '33.2.1-jre' }
 
 grpc = { strictly = '1.61.0' }
 
 i2p-lib = { strictly = '1.8.0' }
 i2p-v2 = { strictly = '2.4.0' }
 
-jackson-lib = { strictly = '2.13.3' }
+jackson-lib = { strictly = '2.17.2' }
+jakarta-lib = { strictly = '2.2.0' }
+javacv = { strictly = '1.5.10' }
 java-dev-jna-lib = { strictly = '5.13.0' }
 jeromq-lib = { strictly = '0.5.2' }
 junit-jupiter-lib = { strictly = '5.8.2' }
 kotlindsl-plugin = { strictly = '2.1.7' }
-logback-lib = { strictly = '1.2.11' }
-lombok-lib = { strictly = '1.18.22' }
+logback-lib = { strictly = '1.2.13' }
+lombok-lib = { strictly = '1.18.34' }
 mockito-lib = { strictly = '4.11.0' }
-openjfx-plugin = { strictly = '0.0.12' }
-openjfx-monocle-lib = { strictly = 'jdk-12.0.1+2'}
+openjfx-plugin = { strictly = '0.0.13' }
+openjfx-monocle-lib = { strictly = 'jdk-12.0.1+2' }
 
-protobuf-java-lib = { strictly = '3.19.4' }
-protobuf-gradle-plugin-lib = { strictly = '0.9.3' }
+protobuf-java-lib = { strictly = '4.28.2' }
+protobuf-gradle-plugin-lib = { strictly = '0.9.4' }
 
-shadow-plugin = { strictly = '7.1.2' }
+sarxos-lib = { strictly = '0.3.12' }
+shadow-plugin = { strictly = '8.3.0' }
 slf4j-lib = { strictly = '1.7.36' }
 spring-boot-starter-web-lib = { strictly = '2.5.6' }
 springfox-lib = { strictly = '3.0.0' }
 
-square-moshi-lib = { strictly = '1.14.0' }
-square-okhttp-libs = { strictly = '4.10.0' }
+square-moshi-lib = { strictly = '1.15.1' }
+square-okhttp-libs = { strictly = '4.12.0' }
 
-swagger-jaxrs2-jakarta-lib = { strictly = '2.2.0' }
+swagger-lib = { strictly = '2.2.0' }
 testfx-junit5-lib = { strictly = '4.0.16-alpha' }
 tukaani-lib = { strictly = '1.9' }
-typesafe-config-lib = { strictly = '1.4.2' }
+typesafe-config-lib = { strictly = '1.4.3' }
 
+zxing-lib = { strictly = '3.5.3' }
 
 # Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
 apache-commons-lang = { module = 'org.apache.commons:commons-lang3', version.ref = 'apache-commons-lang-lib' }
-apache-httpcomponents-core = { module = 'org.apache.httpcomponents:httpcore', version.ref = 'apache-httpcomponents-core-lib' }
-apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents:httpclient', version.ref = 'apache-httpcomponents-httpclient-lib' }
+apache-httpcomponents-core = { module = 'org.apache.httpcomponents.core5:httpcore5', version.ref = 'apache-httpcomponents-core-lib' }
+apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents.client5:httpclient5', version.ref = 'apache-httpcomponents-httpclient-lib' }
 apache-tomcat-annotations-api = { module = 'org.apache.tomcat:annotations-api', version.ref = 'apache-tomcat-annotations-api' }
 assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
 
 annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations-lib' }
 
-bouncycastle = { module = 'org.bouncycastle:bcprov-jdk15on', version.ref = 'bouncycastle-lib' }
-bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk15on', version.ref = 'bouncycastle-lib' }
+bouncycastle = { module = 'org.bouncycastle:bcprov-jdk18on', version.ref = 'bouncycastle-lib' }
+bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk18on', version.ref = 'bouncycastle-lib' }
 
 commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons-codec" }
 
-chimp-jsocks = { module = 'com.github.chimp1984:jsocks', version.ref = 'chimp-jsocks-lib'  }
+chimp-jsocks = { module = 'com.github.chimp1984:jsocks', version.ref = 'chimp-jsocks-lib' }
 chimp-jtorctl = { module = 'com.github.chimp1984:jtorctl', version.ref = 'chimp-jtorctl-lib' }
 
 failsafe = { module = 'dev.failsafe:failsafe', version.ref = 'failsafe-lib' }
@@ -101,6 +108,9 @@ glassfish-jersey-jdk-http = { module = 'org.glassfish.jersey.containers:jersey-c
 glassfish-jersey-json-jackson = { module = 'org.glassfish.jersey.media:jersey-media-json-jackson', version.ref = 'glassfish-jersey-lib' }
 glassfish-jersey-inject-hk2 = { module = 'org.glassfish.jersey.inject:jersey-hk2', version.ref = 'glassfish-jersey-lib' }
 glassfish-jaxb-runtime = { module = 'org.glassfish.jaxb:jaxb-runtime', version.ref = 'glassfish-jaxb-runtime-lib' }
+glassfish-jersey-server = { module = 'org.glassfish.jersey.core:jersey-server', version.ref = 'glassfish-jersey-lib' }
+glassfish-jersey-containers-grizzly = { module = 'org.glassfish.jersey.containers:jersey-container-grizzly2-http', version.ref = 'glassfish-jersey-lib' }
+glassfish-grizzly-websockets-server = { module = 'org.glassfish.grizzly:grizzly-websockets-server', version.ref = 'grizzly-websockets-server-lib' }
 
 google-gson = { module = 'com.google.code.gson:gson', version.ref = 'google-gson-lib' }
 google-guava = { module = 'com.google.guava:guava', version.ref = 'google-guava-lib' }
@@ -119,7 +129,11 @@ i2p-router = { module = 'net.i2p:router', version.ref = 'i2p-lib' }
 jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref = 'jackson-lib' }
 jackson-annotations = { module = 'com.fasterxml.jackson.core:jackson-annotations', version.ref = 'jackson-lib' }
 jackson-databind = { module = 'com.fasterxml.jackson.core:jackson-databind', version.ref = 'jackson-lib' }
+jackson-datatype = { module = 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8', version.ref = 'jackson-lib' }
 
+jakarta-websocket = { module = 'jakarta.websocket:jakarta.websocket-api', version.ref = 'jakarta-lib' }
+
+javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 java-dev-jna = { module = 'net.java.dev.jna:jna', version.ref = 'java-dev-jna-lib' }
 jeromq = { module = 'org.zeromq:jeromq', version.ref = 'jeromq-lib' }
 junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter-lib' }
@@ -135,6 +149,7 @@ protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'p
 protobuf-gradle-plugin = { module = 'com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
 protobuf-java-util = { module = 'com.google.protobuf:protobuf-java-util', version.ref = 'protobuf-java-lib' }
 
+sarxos = { module = 'com.github.sarxos:webcam-capture', version.ref = 'sarxos-lib' }
 slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
 spring-boot-starter-web = { module = 'org.springframework.boot:spring-boot-starter-web', version.ref = 'spring-boot-starter-web-lib' }
 
@@ -142,25 +157,35 @@ springfox-boot-starter = { module = 'io.springfox:springfox-boot-starter', versi
 springfox-swagger2 = { module = 'io.springfox:springfox-swagger2', version.ref = 'springfox-lib' }
 springfox-swagger-ui = { module = 'io.springfox:springfox-swagger-ui', version.ref = 'springfox-lib' }
 
-square-okhttp-bom =  { module = 'com.squareup.okhttp3:okhttp-bom', version.ref = 'square-okhttp-libs' }
-square-moshi =  { module = 'com.squareup.moshi:moshi', version.ref = 'square-moshi-lib' }
+square-okhttp-bom = { module = 'com.squareup.okhttp3:okhttp-bom', version.ref = 'square-okhttp-libs' }
+square-moshi = { module = 'com.squareup.moshi:moshi', version.ref = 'square-moshi-lib' }
 
-swagger-jaxrs2-jakarta = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 'swagger-jaxrs2-jakarta-lib' }
+swagger-jaxrs2-jakarta = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 'swagger-lib' }
+swagger-swagger-annotations = { module = 'io.swagger.core.v3:swagger-annotations', version.ref = 'swagger-lib' }
+
 testfx-junit5 = { module = 'org.testfx:testfx-junit5', version.ref = 'testfx-junit5-lib' }
 tukaani = { module = 'org.tukaani:xz', version.ref = 'tukaani-lib' }
 typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config-lib' }
+
+zxing = { module = 'com.google.zxing:javase', version.ref = 'zxing-lib' }
 
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'
 [bundles]
 fontawesomefx = ['fontawesomefx', 'fontawesomefx-commons', 'fontawesomefx-materialdesignfont']
 fxmisc-libs = ['fxmisc-easybind', 'fxmisc-richtextfx']
-glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson', 'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime']
+glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson', 'glassfish-jersey-inject-hk2',
+    'glassfish-jaxb-runtime']
 grpc = ['grpc-protobuf', 'grpc-services', 'grpc-stub']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
 i2p-v2 = ['i2p-core-v2', 'i2p-streaming-v2']
-jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind']
+jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
 springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swagger-ui']
+rest-api-libs = ['swagger-jaxrs2-jakarta', 'glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson',
+    'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime',
+    'jackson-core', 'jackson-annotations', 'jackson-databind', 'jackson-datatype']
+websocket-libs = ['glassfish-jersey-json-jackson', 'glassfish-jersey-server', 'glassfish-jersey-containers-grizzly',
+    'glassfish-grizzly-websockets-server', 'jakarta-websocket', 'jackson-databind', 'jackson-datatype', 'swagger-swagger-annotations']
 
 # Referenced in subproject's build.gradle > plugin block as alias: `alias(libs.plugins.protobuf)`
 # Note: plugin version constraints are not supported by the java-platform plugin, so cannot be enforced there. However,
@@ -169,4 +194,5 @@ springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swa
 [plugins]
 kotlindsl = { id = 'org.gradle.kotlin.kotlin-dsl', version.ref = 'kotlindsl-plugin' }
 openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx-plugin' }
-shadow = { id = 'com.github.johnrengelman.shadow', version.ref = 'shadow-plugin' }
+shadow = { id = 'com.gradleup.shadow', version.ref = 'shadow-plugin' }
+gradle-javacpp-platform = { id = "org.bytedeco.gradle-javacpp-platform", version.ref = "javacv" }

@@ -11,7 +11,7 @@ public interface AckRequestingMessage extends Request {
     /**
      * @return The message ID
      */
-    String getId();
+    String getAckRequestingMessageId();
 
     /**
      * @return The NetworkId of the sender of that message.
@@ -23,7 +23,13 @@ public interface AckRequestingMessage extends Request {
      */
     NetworkId getReceiver();
 
+    // This was added for supporting backward compatibility with messages which have been previously not
+    // implemented AckRequestingMessage and thus would not have the required fields set.
+    default boolean allFieldsValid() {
+        return true;
+    }
+
     default String getRequestId() {
-        return getId();
+        return getAckRequestingMessageId();
     }
 }

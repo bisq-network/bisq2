@@ -131,14 +131,14 @@ Start a desktop client with:
 
 ```
 # Using default settings
-./gradlew desktop:desktop-app:run
+./gradlew apps:desktop:desktop-app:run
 ```
 
 To start a custom desktop client connecting only to clearnet:
 
 ```
 # Local client on clearnet only
-./gradlew desktop:desktop-app:run \
+./gradlew apps:desktop:desktop-app:run \
     -Dapplication.appName=bisq_Alice_clear \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \

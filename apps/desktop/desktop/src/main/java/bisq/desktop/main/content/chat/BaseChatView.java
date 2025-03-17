@@ -17,38 +17,44 @@
 
 package bisq.desktop.main.content.chat;
 
+import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownTitleMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
-import javafx.scene.control.*;
+import javafx.css.PseudoClass;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatModel, BaseChatController<?, ?>> {
-    protected final static double HEADER_HEIGHT = 61;
+    public final static double HEADER_HEIGHT = 61;
 
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();
-    protected Label channelIcon = new Label();
-    protected DropdownMenuItem helpButton, infoButton;
+    protected final Label channelIcon = new Label();
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
     protected final HBox titleHBox = new HBox(10);
     protected final HBox containerHBox = new HBox();
     protected final Pane channelSidebar, chatMessagesComponent;
-    protected Pane chatUserOverviewRoot;
-    protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
-    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("ellipsis-v-grey", "ellipsis-v-white", true);
+    protected final DropdownMenu ellipsisMenu = new DropdownMenu("ellipsis-v-grey", "ellipsis-v-white", true);
+    protected final DropdownMenu notificationsSettingsMenu = new DropdownMenu("icon-bell-grey", "icon-bell-white", true);
+    protected DropdownBisqMenuItem helpButton, infoButton;
+    private NotificationSettingMenuItem globalDefault, all, mention, off;
+    protected Subscription channelIconPin, selectedNotificationSettingPin;
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -59,7 +65,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
 
-        setUpHeaderDropdownMenu();
+        setUpEllipsisMenu();
+        setupNotificationsSettingMenu();
 
         configTitleHBox();
         configCenterVBox();
@@ -68,14 +75,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
-    }
-
-    private void setUpHeaderDropdownMenu() {
-        helpButton = new DropdownMenuItem("icon-help-grey", "icon-help-white");
-        infoButton = new DropdownMenuItem("icon-info-grey", "icon-info-white",
-                Res.get("chat.dropdownMenu.channelInfo"));
-        headerDropdownMenu.addMenuItems(helpButton, infoButton);
-        headerDropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));
     }
 
     protected abstract void configTitleHBox();
@@ -103,19 +102,18 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         if (infoButton != null) {
             infoButton.setOnAction(e -> controller.onToggleChannelInfo());
         }
-
-        chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
-                pane -> {
-                    if (chatUserOverviewRoot != null) {
-                        sideBar.getChildren().remove(chatUserOverviewRoot);
-                        chatUserOverviewRoot = null;
-                    }
-
-                    if (pane != null) {
-                        sideBar.getChildren().add(pane);
-                        chatUserOverviewRoot = pane;
-                    }
-                });
+        if (globalDefault != null) {
+            globalDefault.setOnAction(e -> controller.onSetNotificationType(globalDefault.getType()));
+        }
+        if (all != null) {
+            all.setOnAction(e -> controller.onSetNotificationType(all.getType()));
+        }
+        if (mention != null) {
+            mention.setOnAction(e -> controller.onSetNotificationType(mention.getType()));
+        }
+        if (off != null) {
+            off.setOnAction(e -> controller.onSetNotificationType(off.getType()));
+        }
 
         channelIconPin = EasyBind.subscribe(model.getChannelIconId(), channelIconId -> {
             ImageView image = ImageUtil.getImageViewById(channelIconId);
@@ -123,6 +121,9 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
             image.setScaleY(1.25);
             channelIcon.setGraphic(image);
         });
+
+        selectedNotificationSettingPin = EasyBind.subscribe(model.getSelectedNotificationSetting(),
+                this::applySelectedNotificationSetting);
     }
 
     @Override
@@ -141,8 +142,77 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         if (infoButton != null) {
             infoButton.setOnAction(null);
         }
+        if (globalDefault != null) {
+            globalDefault.dispose();
+        }
+        if (all != null) {
+            all.dispose();
+        }
+        if (mention != null) {
+            mention.dispose();
+        }
+        if (off != null) {
+            off.dispose();
+        }
 
-        chatUserOverviewRootSubscription.unsubscribe();
         channelIconPin.unsubscribe();
+        selectedNotificationSettingPin.unsubscribe();
+    }
+
+    private void setUpEllipsisMenu() {
+        helpButton = new DropdownBisqMenuItem("icon-help-grey", "icon-help-white");
+        infoButton = new DropdownBisqMenuItem("icon-info-grey", "icon-info-white",
+                Res.get("chat.ellipsisMenu.channelInfo"));
+        ellipsisMenu.addMenuItems(helpButton, infoButton);
+        ellipsisMenu.setTooltip(Res.get("chat.ellipsisMenu.tooltip"));
+    }
+
+    private void setupNotificationsSettingMenu() {
+        DropdownTitleMenuItem title = new DropdownTitleMenuItem(Res.get("chat.notificationsSettingsMenu.title"));
+        globalDefault = new NotificationSettingMenuItem("check-white", "check-white",
+                Res.get("chat.notificationsSettingsMenu.globalDefault"), ChatChannelNotificationType.GLOBAL_DEFAULT);
+        all = new NotificationSettingMenuItem("check-white", "check-white",
+                Res.get("chat.notificationsSettingsMenu.all"), ChatChannelNotificationType.ALL);
+        mention = new NotificationSettingMenuItem("check-white", "check-white",
+                Res.get("chat.notificationsSettingsMenu.mention"), ChatChannelNotificationType.MENTION);
+        off = new NotificationSettingMenuItem("check-white", "check-white",
+                Res.get("chat.notificationsSettingsMenu.off"), ChatChannelNotificationType.OFF);
+        notificationsSettingsMenu.getStyleClass().add("notifications-settings-menu");
+        notificationsSettingsMenu.addMenuItems(title, globalDefault, all, mention, off);
+        notificationsSettingsMenu.setTooltip(Res.get("chat.notificationsSettingsMenu.tooltip"));
+    }
+
+    private void applySelectedNotificationSetting(ChatChannelNotificationType type) {
+        globalDefault.updateSelection(type == globalDefault.getType());
+        all.updateSelection(type == all.getType());
+        mention.updateSelection(type == mention.getType());
+        off.updateSelection(type == off.getType());
+    }
+
+    @Getter
+    private static final class NotificationSettingMenuItem extends DropdownBisqMenuItem {
+        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+
+        private final ChatChannelNotificationType type;
+
+        private NotificationSettingMenuItem(String defaultIconId, String activeIconId, String text, ChatChannelNotificationType type) {
+            super(defaultIconId, activeIconId, text);
+
+            this.type = type;
+            getStyleClass().add("dropdown-menu-item");
+            updateSelection(false);
+            initialize();
+        }
+
+        public void initialize() {
+        }
+
+        public void dispose() {
+            setOnAction(null);
+        }
+
+        void updateSelection(boolean isSelected) {
+            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
     }
 }

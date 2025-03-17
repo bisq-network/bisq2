@@ -21,14 +21,12 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -46,14 +44,14 @@ public final class MarketPrice implements NetworkProto {
 
     private final PriceQuote priceQuote;
     private final long timestamp;
-    private final MarketPriceProvider marketPriceProvider;
+    private final MarketPriceProviderInfo marketPriceProviderInfo;
     @Setter
     private transient Source source;
 
-    public MarketPrice(PriceQuote priceQuote, long timestamp, MarketPriceProvider marketPriceProvider) {
+    public MarketPrice(PriceQuote priceQuote, long timestamp, MarketPriceProviderInfo marketPriceProviderInfo) {
         this.priceQuote = priceQuote;
         this.timestamp = timestamp;
-        this.marketPriceProvider = marketPriceProvider;
+        this.marketPriceProviderInfo = marketPriceProviderInfo;
 
         verify();
     }
@@ -68,7 +66,7 @@ public final class MarketPrice implements NetworkProto {
         return bisq.bonded_roles.protobuf.MarketPrice.newBuilder()
                 .setPriceQuote(priceQuote.toProto(serializeForHash))
                 .setTimestamp(timestamp)
-                .setMarketPriceProvider(marketPriceProvider.toProtoEnum());
+                .setMarketPriceProvider(marketPriceProviderInfo.getMarketPriceProvider().toProtoEnum());
     }
 
     @Override
@@ -77,9 +75,11 @@ public final class MarketPrice implements NetworkProto {
     }
 
     public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto) {
+        MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromProto(proto.getMarketPriceProvider());
+        MarketPriceProviderInfo marketPriceProviderInfo= new MarketPriceProviderInfo(marketPriceProvider);
         return new MarketPrice(PriceQuote.fromProto(proto.getPriceQuote()),
                 proto.getTimestamp(),
-                MarketPriceProvider.fromProto(proto.getMarketPriceProvider()));
+                marketPriceProviderInfo);
     }
 
     public Market getMarket() {
@@ -87,7 +87,7 @@ public final class MarketPrice implements NetworkProto {
     }
 
     public String getProviderName() {
-        return Optional.ofNullable(marketPriceProvider.getDisplayName()).orElse(Res.get("data.na"));
+        return marketPriceProviderInfo.getDisplayName();
     }
 
     public long getAge() {
@@ -107,7 +107,7 @@ public final class MarketPrice implements NetworkProto {
         return "MarketPrice{" +
                 "priceQuote=" + priceQuote +
                 ", timestamp=" + new Date(timestamp) +
-                ", marketPriceProvider=" + marketPriceProvider +
+                ", marketPriceProvider=" + marketPriceProviderInfo +
                 ", source=" + source +
                 '}';
     }

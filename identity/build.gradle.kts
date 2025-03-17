@@ -7,9 +7,9 @@ dependencies {
     implementation(project(":persistence"))
     implementation(project(":security"))
 
-    implementation("network:network-common")
-    implementation("network:network")
-    implementation("network:network-identity")
+    implementation("network:network:$version")
+    implementation("network:network-identity:$version")
 
     implementation(libs.typesafe.config)
+    implementation(libs.bundles.jackson)
 }

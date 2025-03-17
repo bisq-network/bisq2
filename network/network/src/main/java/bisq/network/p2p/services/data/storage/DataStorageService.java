@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
@@ -29,6 +30,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.persistence.backup.MaxBackupSize;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,11 +46,13 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     @Getter
     protected final Persistence<DataStore<T>> persistence;
     @Getter
-    public final DataStore<T> persistableStore = new DataStore<>();
+    protected final DataStore<T> persistableStore = new DataStore<>();
     @Getter
     private final String storeKey;
     @Getter
     protected final String subDirectory;
+    @Getter
+    protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
     protected Optional<Integer> maxMapSize = Optional.empty();
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
@@ -56,11 +60,13 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
         this.storeKey = storeKey;
         String storageFileName = storeKey + STORE_POST_FIX;
-        subDirectory = DbSubDirectory.NETWORK_DB.getDbPath() + File.separator + storeName;
+        DbSubDirectory dbSubDirectory = DbSubDirectory.NETWORK_DB;
+        subDirectory = dbSubDirectory.getDbPath() + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this,
                 subDirectory,
                 storageFileName,
-                persistableStore);
+                persistableStore,
+                MaxBackupSize.from(dbSubDirectory));
     }
 
     public void shutdown() {
@@ -75,7 +81,14 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
         int maxSize = getMaxMapSize();
         Map<ByteArray, T> pruned = map.entrySet().stream()
-                .filter(entry -> !entry.getValue().isExpired())
+                .filter(entry -> {
+                    T dataRequest = entry.getValue();
+                    boolean isExpired = dataRequest.isExpired();
+                    if (isExpired) {
+                        prunedAndExpiredDataRequests.add(dataRequest);
+                    }
+                    return !isExpired;
+                })
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(maxSize)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -90,8 +103,8 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                     .map(DataRequest::getMaxMapSize)
                     .findFirst()
                     .orElse(100_000);
-            // Until the too low values in some MetaData are fixed we use 5000 as min size
-            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_5000, size));
+            // Until the too low values in some MetaData are fixed we use 10000 as min size
+            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_10_000, size));
         }
         return maxMapSize.get();
     }
@@ -103,28 +116,21 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             String className = persistableStore.getMap().values().stream()
                     .findFirst()
                     .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                            AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                            return addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                            RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                        if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
+                            return addRequest.getDistributedData().getClass().getSimpleName();
+                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
                             return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
-                            RefreshAuthenticatedDataRequest request = (RefreshAuthenticatedDataRequest) dataRequest;
+                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
                             return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
-                            AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
+                        } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
                             return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest) {
-                            AddMailboxRequest addRequest = (AddMailboxRequest) dataRequest;
+                        } else if (dataRequest instanceof AddMailboxRequest addRequest) {
                             return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) dataRequest;
+                        } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
                             return removeRequest.getClassName();
                         }
                         return "N/A";
                     }).orElse("N/A");
-
             log.warn("Max. map size reached for {}. map.size()={}, getMaxMapSize={}",
                     className, size, getMaxMapSize());
         }
@@ -132,28 +138,21 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             String className = persistableStore.getMap().values().stream()
                     .findFirst()
                     .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest) {
-                            AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
-                            return addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-                            RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                        if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
+                            return addRequest.getDistributedData().getClass().getSimpleName();
+                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
                             return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
-                            RefreshAuthenticatedDataRequest request = (RefreshAuthenticatedDataRequest) dataRequest;
+                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
                             return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
-                            AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
+                        } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
                             return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest) {
-                            AddMailboxRequest addRequest = (AddMailboxRequest) dataRequest;
+                        } else if (dataRequest instanceof AddMailboxRequest addRequest) {
                             return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest) {
-                            RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) dataRequest;
+                        } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
                             return removeRequest.getClassName();
                         }
                         return "N/A";
                     }).orElse("N/A");
-
             log.info("Map size for {} reached > 20 000 entries. map.size()={}", className, size);
         }
         return isExceeding;

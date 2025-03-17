@@ -26,9 +26,10 @@ import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
 import bisq.bonded_roles.security_manager.min_reputation_score.AuthorizedMinRequiredReputationScoreData;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.reactions.*;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
@@ -52,6 +53,7 @@ public class ResolverConfig {
         // Register resolvers for distributedData
         // Abstract classes
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
+        DistributedDataResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.getDistributedDataResolver());
 
         // Final classes
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
@@ -59,6 +61,7 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRole", AuthorizedBondedRole.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedAlertData", AuthorizedAlertData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedDifficultyAdjustmentData", AuthorizedDifficultyAdjustmentData.getResolver());
+        //noinspection deprecation
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedMinRequiredReputationScoreData", AuthorizedMinRequiredReputationScoreData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.ReleaseNotification", ReleaseNotification.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedMarketPriceData", AuthorizedMarketPriceData.getResolver());
@@ -74,6 +77,7 @@ public class ResolverConfig {
         // Abstract classes
         NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.getNetworkMessageResolver());
 
         // Final classes
         NetworkMessageResolver.addResolver("user.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.getNetworkMessageResolver());
@@ -105,6 +109,12 @@ public class ResolverConfig {
         NetworkStorageWhiteList.add(BisqEasyReportErrorMessage.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
+
+        // ChatMessageReaction subclasses
+        NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);
+        NetworkStorageWhiteList.add(BisqEasyOfferbookMessageReaction.class);
+        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessageReaction.class);
+        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessageReaction.class);
 
         // From network module. As it is used as mailbox message we add it here as well.
         NetworkStorageWhiteList.add(AckMessage.class);

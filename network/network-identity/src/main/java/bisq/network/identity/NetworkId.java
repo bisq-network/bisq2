@@ -17,8 +17,8 @@
 
 package bisq.network.identity;
 
+import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.NetworkProto;
-import bisq.network.common.AddressByTransportTypeMap;
 import bisq.security.keys.PubKey;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
@@ -67,7 +67,11 @@ public final class NetworkId implements NetworkProto {
     }
 
     public String getInfo() {
-        return "ID: " + getId().substring(0, 8) + "; Addresses: " +
+        return "ID: " + getId().substring(0, 8) + "; " + getAddresses();
+    }
+
+    public String getAddresses() {
+        return "Addresses: " +
                 Joiner.on(", ").join(addressByTransportTypeMap.values());
     }
 

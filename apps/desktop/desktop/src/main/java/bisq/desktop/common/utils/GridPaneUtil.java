@@ -26,12 +26,19 @@ public class GridPaneUtil {
     }
 
     /**
-     * Set the grid pane with two column constraints.
+     * Set the grid pane with multiple column constraints.
      */
     public static void setGridPaneMultiColumnsConstraints(GridPane pane, int numColumns) {
+        setGridPaneMultiColumnsConstraints(pane, numColumns, 100d / numColumns);
+    }
+
+    /**
+     * Set the grid pane with multiple column constraints and custom percent width.
+     */
+    public static void setGridPaneMultiColumnsConstraints(GridPane pane, int numColumns, double percentWidth) {
         for (int i = 0; i < numColumns; i++) {
             ColumnConstraints col = new ColumnConstraints();
-            col.setPercentWidth(100d / numColumns);
+            col.setPercentWidth(percentWidth);
             pane.getColumnConstraints().add(col);
         }
     }

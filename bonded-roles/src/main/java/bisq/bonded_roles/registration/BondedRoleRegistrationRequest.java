@@ -21,7 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.common.AddressByTransportTypeMap;
+import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -42,8 +42,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class BondedRoleRegistrationRequest implements MailboxMessage, ExternalNetworkMessage {
-    @EqualsAndHashCode.Exclude
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
+    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;

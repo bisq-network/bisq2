@@ -39,20 +39,20 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
         BisqEasyBtcAddressMessage message = (BisqEasyBtcAddressMessage) event;
         verifyMessage(message);
 
-        commitToModel(message.getBtcAddress());
+        commitToModel(message.getBitcoinPaymentData());
     }
 
     @Override
     protected void verifyMessage(BisqEasyBtcAddressMessage message) {
         super.verifyMessage(message);
 
-        checkArgument(StringUtils.isNotEmpty(message.getBtcAddress()));
+        checkArgument(StringUtils.isNotEmpty(message.getBitcoinPaymentData()));
         // We leave it flexible so that users can use other than a BTC address data as btcAddress
-        checkArgument(message.getBtcAddress().length() <= 1000);
+        checkArgument(message.getBitcoinPaymentData().length() <= 1000);
         checkNotNull(message.getBisqEasyOffer());
     }
 
     private void commitToModel(String btcAddress) {
-        trade.getBtcAddress().set(btcAddress);
+        trade.getBitcoinPaymentData().set(btcAddress);
     }
 }

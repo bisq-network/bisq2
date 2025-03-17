@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.common.Address;
-import bisq.network.common.TransportType;
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -124,7 +124,7 @@ public class PeerConnectionsManager {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, node.getKeyBundle());
         List<TransportType> supportedTransportTypes = new ArrayList<>(config.getSupportedTransportTypes());
         List<Feature> features = new ArrayList<>(config.getFeatures());
-        Capability serverCapability = new Capability(serverSocketResult.getAddress(), supportedTransportTypes, features);
+        Capability serverCapability = Capability.myCapability(serverSocketResult.getAddress(), supportedTransportTypes, features);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
                 myNetworkLoad,

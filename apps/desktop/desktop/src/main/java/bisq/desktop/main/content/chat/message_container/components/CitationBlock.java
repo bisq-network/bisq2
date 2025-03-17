@@ -18,8 +18,8 @@
 package bisq.desktop.main.content.chat.message_container.components;
 
 import bisq.chat.ChatMessage;
-import bisq.chat.ChatService;
 import bisq.chat.Citation;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
@@ -70,30 +70,31 @@ public class CitationBlock {
         if (text == null || text.isEmpty() || userProfile == null) {
             return Optional.empty();
         }
-        return Optional.of(new Citation(userProfile.getId(), text));
+
+        String truncated = StringUtils.truncate(text, Citation.MAX_TEXT_LENGTH);
+        String chatMessageId = controller.model.chatMessageId;
+        return Optional.of(new Citation(userProfile.getId(), truncated, Optional.of(chatMessageId)));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
-        private final ChatService chatService;
         private final UserProfileService userProfileService;
 
-
         private Controller(ServiceProvider serviceProvider) {
-            this.chatService = serviceProvider.getChatService();
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             model = new Model();
             view = new View(model, this);
         }
 
         private void reply(ChatMessage chatMessage) {
+            model.chatMessageId = chatMessage.getId();
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getUserName());
-                model.catHashNode.set(CatHash.getImage(author));
-                model.citation.set(chatMessage.getText());
+                model.catHashImage.set(CatHash.getImage(author, Model.CAT_HASH_IMAGE_SIZE));
+                model.citation.set(chatMessage.getTextOrNA());
                 model.visible.set(true);
             });
         }
@@ -101,6 +102,7 @@ public class CitationBlock {
         private void close() {
             model.visible.set(false);
             model.citation.set(null);
+            model.catHashImage.set(null);
         }
 
         @Override
@@ -109,14 +111,18 @@ public class CitationBlock {
 
         @Override
         public void onDeactivate() {
+            model.catHashImage.set(null);
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
+        private static final double CAT_HASH_IMAGE_SIZE = 25;
+
         private final BooleanProperty visible = new SimpleBooleanProperty();
         private final StringProperty citation = new SimpleStringProperty("");
-        private final ObjectProperty<Image> catHashNode = new SimpleObjectProperty<>();
+        private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
+        private String chatMessageId;
         private UserProfile author;
 
         private Model() {
@@ -125,14 +131,15 @@ public class CitationBlock {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ImageView catIconImageView;
+        private final ImageView catHashImageView;
         private final Label userName;
         private final Button closeButton;
         private final Label citation;
-        private Subscription catHashNodeSubscription;
+        private Subscription catHashImagePin;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
+
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setStyle("-fx-background-color: -bisq-dark-grey-10;");
@@ -155,10 +162,10 @@ public class CitationBlock {
             userName.getStyleClass().add("font-medium");
             userName.setStyle("-fx-text-fill: -bisq-mid-grey-30");
 
-            catIconImageView = new ImageView();
-            catIconImageView.setFitWidth(25);
-            catIconImageView.setFitHeight(25);
-            HBox userBox = new HBox(15, catIconImageView, userName);
+            catHashImageView = new ImageView();
+            catHashImageView.setFitWidth(Model.CAT_HASH_IMAGE_SIZE);
+            catHashImageView.setFitHeight(catHashImageView.getFitWidth());
+            HBox userBox = new HBox(15, catHashImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
             citation = new Label();
             citation.setWrapText(true);
@@ -173,9 +180,9 @@ public class CitationBlock {
             root.managedProperty().bind(model.visible);
             userName.textProperty().bind(model.userName);
             citation.textProperty().bind(model.citation);
-            catHashNodeSubscription = EasyBind.subscribe(model.catHashNode, catIcon -> {
-                if (catIcon != null) {
-                    catIconImageView.setImage(catIcon);
+            catHashImagePin = EasyBind.subscribe(model.catHashImage, catHashImage -> {
+                if (catHashImage != null) {
+                    catHashImageView.setImage(catHashImage);
                 }
             });
 
@@ -186,8 +193,9 @@ public class CitationBlock {
         protected void onViewDetached() {
             userName.textProperty().unbind();
             citation.textProperty().unbind();
-            catHashNodeSubscription.unsubscribe();
+            catHashImagePin.unsubscribe();
             closeButton.setOnAction(null);
+            catHashImageView.setImage(null);
         }
     }
 }

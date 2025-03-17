@@ -20,7 +20,9 @@ package bisq.chat.common;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.Citation;
 import bisq.chat.pub.PublicChatChannelService;
-import bisq.common.observable.collection.ObservableArray;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.Reaction;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -29,6 +31,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +41,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public final class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage, CommonPublicChatChannel, CommonPublicChatChannelStore> {
+public final class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage,
+        CommonPublicChatChannel, CommonPublicChatChannelStore, CommonPublicChatMessageReaction> {
     @Getter
     private final CommonPublicChatChannelStore persistableStore = new CommonPublicChatChannelStore();
     @Getter
@@ -62,9 +66,9 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
@@ -76,6 +80,8 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof CommonPublicChatMessage) {
             processRemovedMessage((CommonPublicChatMessage) distributedData);
+        } else if (distributedData instanceof CommonPublicChatMessageReaction) {
+            processRemovedReaction((CommonPublicChatMessageReaction) distributedData);
         }
     }
 
@@ -84,23 +90,25 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof CommonPublicChatMessage) {
             processAddedMessage((CommonPublicChatMessage) distributedData);
+        } else if (distributedData instanceof CommonPublicChatMessageReaction) {
+            processAddedReaction((CommonPublicChatMessageReaction) distributedData);
         }
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
-    public ObservableArray<CommonPublicChatChannel> getChannels() {
+    public ObservableSet<CommonPublicChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Protected 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     protected CommonPublicChatMessage createChatMessage(String text,
@@ -137,5 +145,19 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
 
         getChannels().setAll(channels);
         persist();
+    }
+
+    @Override
+    protected CommonPublicChatMessageReaction createChatMessageReaction(CommonPublicChatMessage message,
+                                                                        Reaction reaction,
+                                                                        UserIdentity userIdentity) {
+        return new CommonPublicChatMessageReaction(
+                StringUtils.createUid(),
+                userIdentity.getId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                new Date().getTime());
     }
 }

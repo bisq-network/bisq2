@@ -54,6 +54,8 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.annotation.Nullable;
+import java.net.URL;
+import java.util.Objects;
 
 /**
  * This view is not following strictly the MVC patters (doing too much in the View). Reason is that lot of the relevant data
@@ -76,8 +78,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     private final ImageView startImage, endImage, soundImage, soundOffImage, largePause, largePlay, largeReplay;
     private final HBox volumeHBox;
     private final ProgressBar positionProgressBar;
-    private final StackPane progressPane;
-    private final VBox controlsVBox, controlsWrapperVBox;
+    private final VBox controlsVBox;
     private final Button playButton, pauseButton, soundButton, closeButton;
     private Subscription windowSizePin, currentTimePin, volumePin, statusPin;
     private Timeline showControlsTimeline, hideControlsTimeline, pausePlayTimeline;
@@ -102,7 +103,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         positionSlider.getStyleClass().add("video-position-slider");
 
         StackPane.setMargin(positionProgressBar, new Insets(0, 6, 0, 6));
-        progressPane = new StackPane(positionProgressBar, positionSlider);
+        StackPane progressPane = new StackPane(positionProgressBar, positionSlider);
         progressPane.setPadding(new Insets(0, 10, 0, 10));
 
         playButton = BisqIconButton.createIconButton("play");
@@ -156,7 +157,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         StackPane.setAlignment(largePause, Pos.CENTER);
         StackPane.setAlignment(largePlay, Pos.CENTER);
         StackPane.setAlignment(largeReplay, Pos.CENTER);
-        controlsWrapperVBox = new VBox(Spacer.fillVBox(), controlsVBox);
+        VBox controlsWrapperVBox = new VBox(Spacer.fillVBox(), controlsVBox);
         root.getChildren().addAll(mediaView, startImage, endImage, largePause, largePlay, largeReplay, controlsWrapperVBox);
     }
 
@@ -168,7 +169,8 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         windowSizePin = EasyBind.subscribe(binding, this::resize);
 
         try {
-            Media media = new Media(getClass().getClassLoader().getResource("bisq-easy-intro.mp4").toExternalForm());
+            URL resource = getClass().getClassLoader().getResource("bisq-easy-intro.mp4");
+            Media media = new Media(Objects.requireNonNull(resource).toExternalForm());
             mediaPlayer = new MediaPlayer(media);
             mediaView.setMediaPlayer(mediaPlayer);
 
@@ -416,14 +418,16 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     }
 
     private void pause() {
-        mediaPlayer.pause();
+        if (mediaPlayer != null) {
+            mediaPlayer.pause();
+        }
         if (checkActivityScheduler != null) {
             checkActivityScheduler.stop();
         }
     }
 
     private void play() {
-        if (model.getLastPositionBeforeClose() != 0) {
+        if (mediaPlayer != null && model.getLastPositionBeforeClose() != 0) {
             mediaPlayer.seek(Duration.millis(model.getLastPositionBeforeClose()));
             model.setLastPositionBeforeClose(0);
             largePlay.setOpacity(0);
@@ -439,12 +443,16 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         endImage.setManaged(false);
         endImage.setVisible(false);
 
-        mediaPlayer.play();
+        if (mediaPlayer != null) {
+            mediaPlayer.play();
+        }
         restartCheckActivityScheduler();
     }
 
     private void replay() {
-        mediaPlayer.stop();
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+        }
         play();
         largePlay.setOpacity(0);
     }
@@ -481,7 +489,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             showControlsTimeline.stop();
             controlsVBox.setOpacity(1);
         }
-        if (mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING && controlsVBox.getOpacity() > 0) {
+        if (mediaPlayer != null && mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING && controlsVBox.getOpacity() > 0) {
             if (Transitions.getUseAnimations()) {
                 hideControlsTimeline = new Timeline();
                 ObservableList<KeyFrame> keyFrames = hideControlsTimeline.getKeyFrames();
@@ -552,6 +560,6 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     }
 
     private double getTotalDuration() {
-        return mediaPlayer.getTotalDuration().toMillis();
+        return mediaPlayer != null ? mediaPlayer.getTotalDuration().toMillis() : 0;
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.chat.common;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
@@ -27,15 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonChatTabController> {
-
     CommonChatTabView(CommonChatTabModel model, CommonChatTabController controller) {
         super(model, controller);
 
-        model.getChannelTabButtonModelByChannelId().values().stream()
-                .sorted(model.getChannelTabButtonComparator())
-                .forEach(channel -> addTab(channel.getChannelTitle(), channel.getNavigationTarget())
-        );
-        addTab(Res.get("chat.private.title"), model.getPrivateChatsNavigationTarget());
+        model.getChannelTabButtonModelByChannelId().values()
+                .forEach(channel -> addTab(channel.getChannelTitle(), channel.getNavigationTarget()));
+        if (model.getPrivateChatsNavigationTarget() != NavigationTarget.NONE) {
+            addTab(Res.get("chat.private.title"), model.getPrivateChatsNavigationTarget());
+        }
     }
 
     @Override

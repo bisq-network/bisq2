@@ -18,7 +18,7 @@
 package bisq.offer;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
 
 public enum Direction implements ProtoEnum {
@@ -50,7 +50,7 @@ public enum Direction implements ProtoEnum {
         return Res.get("offer." + name().toLowerCase());
     }
 
-    public String getDisplayStringForTraderPair() {
+    public String getDirectionalTitle() {
         return isBuy() ? Res.get("bisqEasy.openTrades.table.direction.buyer") :
                 Res.get("bisqEasy.openTrades.table.direction.seller");
     }

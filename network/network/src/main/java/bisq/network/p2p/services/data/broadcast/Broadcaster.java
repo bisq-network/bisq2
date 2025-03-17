@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.broadcast;
 
+import bisq.common.threading.ThreadName;
 import bisq.common.util.CollectionUtil;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
@@ -66,7 +67,8 @@ public class Broadcaster {
         return Failsafe.with(retryPolicy).getAsync(() -> doBroadcast(broadcastMessage, distributionFactor).join());
     }
 
-    public CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage, double distributionFactor) {
+    public CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage,
+                                                          double distributionFactor) {
         if (!node.isInitialized()) {
             throw new IllegalStateException("Node not initialized. node=" + node.getNetworkId() +
                     "; transportType=" + node.getTransportType());
@@ -83,6 +85,7 @@ public class Broadcaster {
                 broadcastMessage.getClass().getSimpleName(), numBroadcasts, numConnections, distributionFactor);
         List<Connection> allConnections = CollectionUtil.toShuffledList(node.getAllActiveConnections());
         NetworkService.NETWORK_IO_POOL.submit(() -> {
+            ThreadName.set(this, "broadcast");
             allConnections.stream()
                     .limit(numBroadcasts)
                     .forEach(connection -> {

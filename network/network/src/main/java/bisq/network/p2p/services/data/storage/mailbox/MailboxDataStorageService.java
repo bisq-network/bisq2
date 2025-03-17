@@ -19,18 +19,16 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
-import bisq.common.timer.Scheduler;
-import bisq.network.p2p.services.data.storage.DataStorageResult;
-import bisq.network.p2p.services.data.storage.DataStorageService;
-import bisq.network.p2p.services.data.storage.DataStore;
+import bisq.common.formatter.DataSizeFormatter;
+import bisq.network.p2p.services.data.storage.*;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,11 +42,13 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
-    private final Scheduler scheduler;
 
-    public MailboxDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+    public MailboxDataStorageService(PersistenceService persistenceService,
+                                     PruneExpiredEntriesService pruneExpiredEntriesService,
+                                     String storeName,
+                                     String storeKey) {
         super(persistenceService, storeName, storeKey);
-        scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);
+        pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
 
     @Override
@@ -60,7 +60,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     public void shutdown() {
         maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
-        scheduler.stop();
     }
 
     public DataStorageResult add(AddMailboxRequest request) {
@@ -75,13 +74,13 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             if (isExceedingMapSize()) {
                 return new DataStorageResult(false).maxMapSizeReached();
             }
-            requestFromMap = map.get(byteArray);
-            int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
 
+            requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
                 return new DataStorageResult(false).requestAlreadyReceived();
             }
 
+            int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
             if (requestFromMap != null && mailboxSequentialData.isSequenceNrInvalid(sequenceNumberFromMap)) {
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
@@ -103,13 +102,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
             map.put(byteArray, request);
         }
-        persist();
 
-        // If we had already the data (only updated seq nr) we return false as well and do not notify listeners.
-        // This should only happen if client re-publishes mailbox data 
-        if (requestFromMap != null) {
-            return new DataStorageResult(false).payloadAlreadyStored();
-        }
+        persist();
 
         listeners.forEach(listener -> {
             try {
@@ -135,7 +129,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 // track of the sequence number
                 map.put(byteArray, request);
                 persist();
-                return new DataStorageResult(false).noEntry();
+                return new DataStorageResult(true).noEntry();
             }
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
@@ -145,7 +139,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     map.put(byteArray, request);
                     persist();
                 }
-                return new DataStorageResult(false).alreadyRemoved();
+                return new DataStorageResult(true).alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddMailboxRequest
@@ -164,6 +158,20 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
             if (request.isSignatureInvalid()) {
                 return new DataStorageResult(false).signatureInvalid();
+            }
+
+            // As metaData from mailboxData is taken from the users current code base but the one from RemoveMailboxRequest
+            // is from the senders version (taken from senders mailboxData) it could be different if both users had
+            // different versions and metaData has changed between those versions.
+            // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
+            MetaData metaDataFromMailboxData = sequentialDataFromMap.getMailboxData().getMetaData();
+            if (!request.getMetaDataFromProto().equals(metaDataFromMailboxData)) {
+                request.setMetaDataFromDistributedData(Optional.of(metaDataFromMailboxData));
+                log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
+                                "metadata with the one we have from the associated mailbox data." +
+                                "{} vs. {}",
+                        request.getMetaDataFromProto(),
+                        metaDataFromMailboxData);
             }
 
             map.put(byteArray, request);
@@ -190,9 +198,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     int getSequenceNumber(byte[] hash) {
         ByteArray byteArray = new ByteArray(hash);
@@ -220,31 +228,41 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
-                .filter(entry -> entry.getValue().isExpired())
+                .filter(entry -> {
+                    MailboxRequest dataRequest = entry.getValue();
+                    boolean isExpired = dataRequest.isExpired();
+                    if (isExpired) {
+                        prunedAndExpiredDataRequests.add(dataRequest);
+                    }
+                    return isExpired;
+                })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our map", expiredEntries.size());
+            log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> persistableStore.getMap().remove(entry.getKey()));
         }
     }
 
     // Useful for debugging state of the store
-    private void maybeLogMapState(String methodName, DataStore<MailboxRequest> persisted) {
+    private void maybeLogMapState(String methodName, DataStore<MailboxRequest> dataStore) {
         if (DevMode.isDevMode() || methodName.equals("onPersistedApplied")) {
-            var added = persisted.getMap().values().stream()
+            var dataSize = dataStore.getMap().values().stream()
+                    .mapToLong(authenticatedDataRequest -> authenticatedDataRequest.serializeForHash().length)
+                    .sum();
+            var added = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddMailboxRequest)
                     .map(authenticatedDataRequest -> (AddMailboxRequest) authenticatedDataRequest)
                     .map(e -> e.getMailboxSequentialData().getMailboxData().getClassName())
-                    .collect(Collectors.toList());
-            var removed = persisted.getMap().values().stream()
+                    .toList();
+            var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveMailboxRequest)
                     .map(authenticatedDataRequest -> (RemoveMailboxRequest) authenticatedDataRequest)
                     .map(RemoveMailboxRequest::getClassName)
-                    .collect(Collectors.toList());
+                    .toList();
             var className = Stream.concat(added.stream(), removed.stream())
                     .findAny().orElse(persistence.getFileName().replace("Store", ""));
-            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
-                    methodName, className, added.size(), removed.size(), persisted.getMap().size());
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}, data size: {}",
+                    methodName, className, added.size(), removed.size(), dataStore.getMap().size(), DataSizeFormatter.format(dataSize));
         }
     }
 }

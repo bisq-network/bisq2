@@ -7,6 +7,7 @@ import "chat.proto";
 import "offer.proto";
 import "contract.proto";
 import "network.proto";
+import "network_identity.proto";
 
 message MediationRequest {
   string tradeId = 1;
@@ -14,7 +15,9 @@ message MediationRequest {
   user.UserProfile requester = 3;
   user.UserProfile peer = 4;
   repeated chat.ChatMessage chatMessages = 5;
+  optional network.identity.NetworkId mediatorNetworkId = 6;
 }
+
 message MediatorsResponse {
   string tradeId = 1;
 }
@@ -23,6 +26,7 @@ message MediationCase {
   MediationRequest mediationRequest = 1;
   sint64 requestDate = 2;
   bool isClosed = 3;
+  optional sint64 closeCaseDate = 4;
 }
 message MediatorStore {
   repeated MediationCase mediationCases = 1;

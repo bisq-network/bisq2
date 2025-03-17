@@ -18,10 +18,11 @@
 package bisq.network.p2p;
 
 
+import bisq.common.network.Address;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.platform.MemoryReportService;
 import bisq.network.NetworkService;
-import bisq.network.common.Address;
-import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -29,6 +30,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -41,6 +43,9 @@ import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.BanList;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
+import bisq.network.p2p.services.reporting.Report;
+import bisq.network.p2p.services.reporting.ReportRequestService;
+import bisq.network.p2p.services.reporting.ReportResponseService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.PubKey;
@@ -96,7 +101,9 @@ public class ServiceNode implements Node.Listener {
         DATA,
         CONFIDENTIAL,
         ACK,
-        MONITOR
+        MONITOR,
+        REPORT_REQUEST,
+        REPORT_RESPONSE
     }
 
     private final Config config;
@@ -106,9 +113,12 @@ public class ServiceNode implements Node.Listener {
     private final PeerGroupService peerGroupService;
     private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
-    private final Optional<ResendMessageService> resendMessageService;
     private final KeyBundleService keyBundleService;
     private final Set<Address> seedNodeAddresses;
+    @Getter
+    private final TransportType transportType;
+    private final MemoryReportService memoryReportService;
+    private final NetworkLoadSnapshot networkLoadSnapshot;
 
     @Getter
     private final NodesById nodesById;
@@ -121,39 +131,49 @@ public class ServiceNode implements Node.Listener {
     @Getter
     private Optional<ConfidentialMessageService> confidentialMessageService = Optional.empty();
     @Getter
+    private Optional<ReportRequestService> reportRequestService = Optional.empty();
+    @Getter
+    private Optional<ReportResponseService> reportResponseService = Optional.empty();
+    @Getter
     private Optional<PeerGroupManager> peerGroupManager = Optional.empty();
     @Getter
     private Optional<InventoryService> inventoryService = Optional.empty();
     @Getter
     private Optional<DataNetworkService> dataNetworkService = Optional.empty();
+    @Getter
+    private Optional<NetworkLoadService> networkLoadService = Optional.empty();
+
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<ConfidentialMessageService.Listener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
     @Getter
-    public Observable<State> state = new Observable<>(State.NEW);
+    public final Observable<State> state = new Observable<>(State.NEW);
 
     ServiceNode(Config config,
                 Node.Config nodeConfig,
                 PeerGroupManager.Config peerGroupServiceConfig,
                 InventoryService.Config inventoryServiceConfig,
+                KeyBundleService keyBundleService,
+                PersistenceService persistenceService,
                 Optional<DataService> dataService,
                 Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                 Optional<ResendMessageService> resendMessageService,
-                KeyBundleService keyBundleService,
-                PersistenceService persistenceService,
                 AuthorizationService authorizationService,
                 Set<Address> seedNodeAddresses,
                 TransportType transportType,
-                NetworkLoadSnapshot networkLoadSnapshot) {
+                MemoryReportService memoryReportService) {
         this.config = config;
         this.nodeConfig = nodeConfig;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
         this.inventoryServiceConfig = inventoryServiceConfig;
-        this.messageDeliveryStatusService = messageDeliveryStatusService;
-        this.dataService = dataService;
-        this.resendMessageService = resendMessageService;
         this.keyBundleService = keyBundleService;
+        this.dataService = dataService;
+        this.messageDeliveryStatusService = messageDeliveryStatusService;
         this.seedNodeAddresses = seedNodeAddresses;
+        this.transportType = transportType;
+        this.memoryReportService = memoryReportService;
+
+        this.networkLoadSnapshot = new NetworkLoadSnapshot();
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
@@ -163,9 +183,9 @@ public class ServiceNode implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Node.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -187,9 +207,9 @@ public class ServiceNode implements Node.Listener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     Node getInitializedDefaultNode(NetworkId defaultNetworkId) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, true);
@@ -221,8 +241,29 @@ public class ServiceNode implements Node.Listener {
                 Optional.of(new ConfidentialMessageService(nodesById,
                         keyBundleService,
                         dataService,
-                        messageDeliveryStatusService,
-                        resendMessageService)) :
+                        messageDeliveryStatusService)) :
+                Optional.empty();
+
+        reportRequestService = supportedServices.contains(ServiceNode.SupportedService.REPORT_REQUEST) ?
+                Optional.of(new ReportRequestService(defaultNode)) :
+                Optional.empty();
+        reportResponseService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
+                supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
+                supportedServices.contains(ServiceNode.SupportedService.MONITOR) &&
+                supportedServices.contains(ServiceNode.SupportedService.REPORT_RESPONSE) ?
+                Optional.of(new ReportResponseService(defaultNode,
+                        dataService.orElseThrow(),
+                        networkLoadSnapshot,
+                        memoryReportService)) :
+                Optional.empty();
+
+        networkLoadService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
+                supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
+                supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
+                Optional.of(new NetworkLoadService(this,
+                        dataService.orElseThrow().getStorageService(),
+                        networkLoadSnapshot,
+                        peerGroupServiceConfig.getPeerGroupConfig().getMaxNumConnectedPeers())) :
                 Optional.empty();
 
         setState(State.INITIALIZING);
@@ -285,7 +326,7 @@ public class ServiceNode implements Node.Listener {
     }
 
     Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return getNodesById().send(senderNetworkId, envelopePayloadMessage, address);
+        return nodesById.send(senderNetworkId, envelopePayloadMessage, address);
     }
 
     void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
@@ -314,6 +355,10 @@ public class ServiceNode implements Node.Listener {
         return nodesById.findNode(networkId);
     }
 
+    boolean isPeerOnline(NetworkId networkId, Address address) {
+        return nodesById.isPeerOnline(networkId, address);
+    }
+
     private void setState(State newState) {
         if (newState == state.get()) {
             return;
@@ -329,5 +374,10 @@ public class ServiceNode implements Node.Listener {
                 log.error("Calling onMessage at onStateChanged {} failed", listener, e);
             }
         }), NetworkService.DISPATCHER);
+    }
+
+    CompletableFuture<Report> requestReport(Address address) {
+        checkArgument(reportRequestService.isPresent(), "ReportRequestService not present at requestReport");
+        return reportRequestService.get().request(address);
     }
 }

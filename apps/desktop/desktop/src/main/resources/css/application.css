@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Splash                                                              *
+ * Splash                                                                      *
  ******************************************************************************/
 
 .splash-application-state {
@@ -8,27 +8,41 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
-.splash-bootstrap-state {
+.splash-application-duration {
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq2-green;
+}
+
+
+.splash-initializing-info {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -fx-light-text-color;
 }
 
-.splash-bootstrap-details {
-    -fx-font-size: 1em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-mid-grey-20;
-}
-
-.splash-bootstrap-progress {
+.splash-initializing-duration {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq2-green;
 }
 
 
+.splash-initialized-info {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-mid-grey-20;
+}
+
+.splash-initialized-duration {
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-mid-grey-20;
+}
+
+
 /*******************************************************************************
- * TAC                                                              *
+ * TAC                                                                         *
  ******************************************************************************/
 
 .tac-headline {
@@ -71,7 +85,7 @@
 
 
 /*******************************************************************************
- * Updater                                                              *
+ * Updater                                                                     *
  ******************************************************************************/
 
 .updater-headline {
@@ -190,6 +204,7 @@
 .notification-hyperlink:visited:hover {
     -fx-text-fill: -bisq-white-dim;
 }
+
 .notification-hyperlink:visited,
 .notification-hyperlink:armed:visited,
 .notification-hyperlink:hover:armed {
@@ -197,7 +212,7 @@
 }
 
 /*******************************************************************************
- * Settings                                                              *
+ * Settings                                                                    *
  ******************************************************************************/
 
 .settings-sub-headline {
@@ -209,10 +224,10 @@
 
 
 /*******************************************************************************
- * Components                                                              *
+ * Components                                                                  *
  ******************************************************************************/
 
-.user-profile-display {
+.user-profile-display-name {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.1em;
@@ -221,7 +236,7 @@
 
 
 /*******************************************************************************
- * Video                                                           *
+ * Video                                                                       *
  ******************************************************************************/
 
 .video-bg {
@@ -277,4 +292,163 @@
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans";
+}
+
+
+/*******************************************************************************
+ * Error popup                                                                 *
+ ******************************************************************************/
+
+.error-log {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
+.error-log .content {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
+.error-log:focused .content {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
+
+/*******************************************************************************
+ * OverlappedIconsPane                                                         *
+ ******************************************************************************/
+
+.overlapped-icons {
+    -fx-fill: -bisq-dark-grey-20;
+}
+
+
+/*******************************************************************************
+ * QR code                                                                     *
+ ******************************************************************************/
+
+.qr-code-display-bg {
+    -fx-background-color: white;
+}
+
+.qr-code-display-text {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.1em;
+}
+
+.qr-code-window {
+    -fx-background-color: -bisq-popup-bg-grey;
+}
+
+.qr-code-window-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.7em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.qr-code-window-data {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.1em;
+}
+
+.qr-code-webcam {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.3em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+
+/*******************************************************************************
+ * Reputation                                                                  *
+ ******************************************************************************/
+
+.reputation .user-profile-selection {
+    -fx-padding: 0 5 0 20;
+}
+
+.reputation .label {
+    -fx-font-size: 1.15em;
+    -fx-line-spacing: 5px;
+    -fx-wrap-text: true;
+    -fx-fill: -fx-mid-text-color !important;
+    -fx-text-fill: -fx-mid-text-color !important;
+}
+
+.reputation .reputation-card-small .card-title,
+.reputation .reputation-card-large .card-title {
+    -fx-font-size: 1.7em;
+}
+
+.reputation .reputation-card-large {
+    -fx-max-width: 1000;
+    -fx-min-width: 800;
+}
+
+.reputation .reputation-card-small {
+    -fx-max-width: 490;
+    -fx-pref-width: 490;
+    -fx-min-width: 490;
+}
+
+.reputation .reputation-headline {
+    -fx-font-size: 2.5em;
+}
+
+.reputation .reputation-title {
+    -fx-font-size: 1.9em;
+}
+
+.reputation .reputation-headline,
+.reputation .reputation-title,
+.reputation .card-title {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.reputation .reputation-learn-more {
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.reputation .reputation-learn-more-link {
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-underline: true;
+}
+
+.reputation .reputation-learn-more-link:hover {
+    -fx-fill: -bisq2-green !important;
+    -fx-text-fill: -bisq2-green !important;
+}
+
+.reputation .max-trade-amount-formula {
+    -fx-max-width: 1000;
+    -fx-min-width: 1000;
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-padding: 20 0 20 0;
+    -fx-background-radius: 8 8 8 8;
+    -fx-background-insets: 0 250 0 250;
+}
+
+.reputation .max-trade-amount-formula .label {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+}
+
+.reputation .max-trade-amount-formula-footnote {
+    -fx-font-size: 1.02em;
+}
+
+.popup-bg .bisq-common-bg {
+    -fx-padding: 10 30 30 30 !important;
+}
+
+.network-details-view {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-border-color: transparent;
+    -fx-padding: 10;
 }

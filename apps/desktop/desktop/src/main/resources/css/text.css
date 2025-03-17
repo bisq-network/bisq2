@@ -12,6 +12,10 @@
     -fx-font-size: 0.769em;
 }
 
+.compact-text {
+    -fx-font-size: 0.9em !important;
+}
+
 .medium-text {
     -fx-font-size: 1.02em !important;
 }
@@ -40,6 +44,7 @@
 .error {
     -fx-text-fill: -bisq-error !important;
     -fx-fill: -bisq-error !important;
+    /*-fx-background-color: -bisq-error !important; might have be used in some validation context at materialtextfield but need to be moved to another error style class */
 }
 
 .hand-cursor {
@@ -58,7 +63,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-background-radius: 2;
-    -fx-border-style: none;;
+    -fx-border-style: none;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
@@ -421,7 +426,7 @@
     -fx-border-style: none;
     -fx-text-fill: -fx-light-text-color;
     -fx-highlight-fill: -bisq2-green;
-    -fx-font-size: 5.2em;
+    -fx-font-size: 3.75em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
@@ -431,6 +436,15 @@
     -fx-text-fill: -fx-light-text-color;
     -fx-highlight-fill: -bisq2-green;
     -fx-font-size: 3em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+#base-amount-text-field-very-small {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-highlight-fill: -bisq2-green;
+    -fx-font-size: 2em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
@@ -523,6 +537,10 @@
     -fx-text-fill: -bisq2-yellow !important;
 }
 
+.bisq-text-yellow-dim {
+    -fx-text-fill: -bisq2-yellow-dim-10 !important;
+}
+
 .bisq-text-error {
     -fx-text-fill: -bisq-error !important;
 }
@@ -577,12 +595,6 @@
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Mono";
     -fx-font-size: 1em;
-    -fx-background-color: -bisq-dark-grey-30;
-    -fx-padding: 1 7;
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
-    -fx-border-width: 1px;
-    -fx-border-color: -bisq-dark-grey-50;
 }
 
 
@@ -648,13 +660,17 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.material-text-field-selection-line:error,
+.material-text-field-selection-line:error {
+    -fx-background-color: -bisq2-red;
+}
+
 .material-text-field-description-deselected:error,
 .material-text-field-description-read-only:error,
 .material-text-field-description-selected:error,
 .material-text-field-description-small:error,
 .material-text-field-description-big:error {
     -fx-text-fill: -bisq2-red;
+    -fx-fill: -bisq2-red;
 }
 
 .material-text-field-error {
@@ -697,4 +713,34 @@
 
 .bisq-input-box-text-input:focused .content {
     -fx-background-color: transparent;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * SelectableLabel                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.selectable-label {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-border-style: none;;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.selectable-label .content {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.selectable-label:focused .content {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
 }

@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.common.Address;
+import bisq.common.network.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
@@ -28,7 +28,7 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.services.peer_group.BanList;
-import bisq.tor.TorAddressOwnershipProofGenerator;
+import bisq.network.tor.TorAddressOwnershipProofGenerator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,7 +110,7 @@ public class OutboundConnectionManager {
             }
 
         } catch (IOException e) {
-            log.warn("Couldn't create connection to " + address.getFullAddress(), e);
+            log.warn("Couldn't create connection to {}", address.getFullAddress(), e);
         }
 
         return completableFuture;
@@ -124,6 +124,7 @@ public class OutboundConnectionManager {
         } catch (ConnectException e) {
             // Couldn't connect to peer, nothing we can do.
             Address address = addressByChannel.get(socketChannel);
+            //noinspection resource
             channelByAddress.remove(address);
 
             addressByChannel.remove(socketChannel);
@@ -235,6 +236,7 @@ public class OutboundConnectionManager {
 
             // Connection closed.
             Address address = addressByChannel.get(socketChannel);
+            //noinspection resource
             channelByAddress.remove(address);
 
             addressByChannel.remove(socketChannel);

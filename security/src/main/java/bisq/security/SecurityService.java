@@ -18,17 +18,31 @@
 package bisq.security;
 
 import bisq.common.application.Service;
+import bisq.common.platform.OS;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.security.Security;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class SecurityService implements Service {
+    static {
+        if (OS.isAndroid()) {
+            // Androids default BC version does not support all algorithms we need, thus we remove
+            // it and add our BC provider
+            Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
+            Security.addProvider(new BouncyCastleProvider());
+        } else if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
+
     @Getter
     public static class Config {
         private final com.typesafe.config.Config keyBundle;

@@ -29,11 +29,15 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String formatBaseSideAmount(BisqEasyContract contract) {
-        return AmountFormatter.formatAmount(BisqEasyTradeUtils.getBaseSideMonetary(contract), false);
+        return AmountFormatter.formatBaseAmount(BisqEasyTradeUtils.getBaseSideMonetary(contract));
     }
 
     public static String formatQuoteSideAmount(BisqEasyTrade trade) {
-        return AmountFormatter.formatAmount(BisqEasyTradeUtils.getQuoteSideMonetary(trade), true);
+        return AmountFormatter.formatQuoteAmount(BisqEasyTradeUtils.getQuoteSideMonetary(trade));
+    }
+
+    public static String formatQuoteSideAmount(BisqEasyContract contract) {
+        return AmountFormatter.formatQuoteAmount(BisqEasyTradeUtils.getQuoteSideMonetary(contract));
     }
 
     public static String formatQuoteSideAmountWithCode(BisqEasyTrade trade) {
@@ -41,7 +45,7 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String formatQuoteSideAmountWithCode(BisqEasyContract contract) {
-        return AmountFormatter.formatAmountWithCode(BisqEasyTradeUtils.getQuoteSideMonetary(contract), true);
+        return AmountFormatter.formatQuoteAmountWithCode(BisqEasyTradeUtils.getQuoteSideMonetary(contract));
     }
 
     public static String formatPriceWithCode(BisqEasyTrade trade) {
@@ -52,33 +56,21 @@ public class BisqEasyTradeFormatter {
         return PriceFormatter.formatWithCode(BisqEasyTradeUtils.getPriceQuote(contract));
     }
 
-    public static String getDirection(BisqEasyTrade trade) {
-        switch (trade.getTradeRole()) {
-            case BUYER_AS_TAKER:
-            case BUYER_AS_MAKER:
-                return getDirection(Direction.BUY);
-            case SELLER_AS_TAKER:
-            case SELLER_AS_MAKER:
-                return getDirection(Direction.SELL);
-            default:
-                throw new RuntimeException("Invalid trade role");
-        }
+    public static String getDirectionalTitle(BisqEasyTrade trade) {
+        return getDirection(trade).getDirectionalTitle();
     }
 
-    public static String getDirection(Direction direction) {
-        return direction.getDisplayStringForTraderPair();
+    public static Direction getDirection(BisqEasyTrade trade) {
+        return switch (trade.getTradeRole()) {
+            case BUYER_AS_TAKER, BUYER_AS_MAKER -> Direction.BUY;
+            case SELLER_AS_TAKER, SELLER_AS_MAKER -> Direction.SELL;
+        };
     }
 
     public static String getMakerTakerRole(BisqEasyTrade trade) {
-        switch (trade.getTradeRole()) {
-            case BUYER_AS_TAKER:
-            case SELLER_AS_TAKER:
-                return Res.get("bisqEasy.openTrades.table.makerTakerRole.taker");
-            case BUYER_AS_MAKER:
-            case SELLER_AS_MAKER:
-                return Res.get("bisqEasy.openTrades.table.makerTakerRole.maker");
-            default:
-                throw new RuntimeException("Invalid trade role");
-        }
+        return switch (trade.getTradeRole()) {
+            case BUYER_AS_TAKER, SELLER_AS_TAKER -> Res.get("bisqEasy.openTrades.table.makerTakerRole.taker");
+            case BUYER_AS_MAKER, SELLER_AS_MAKER -> Res.get("bisqEasy.openTrades.table.makerTakerRole.maker");
+        };
     }
 }

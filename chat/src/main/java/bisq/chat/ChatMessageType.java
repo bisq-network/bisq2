@@ -18,13 +18,14 @@
 package bisq.chat;
 
 import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.common.proto.ProtobufUtils;
 
 public enum ChatMessageType implements ProtoEnum {
     TEXT,
     LEAVE,
     TAKE_BISQ_EASY_OFFER,
-    PROTOCOL_LOG_MESSAGE;
+    PROTOCOL_LOG_MESSAGE,
+    CHAT_RULES_WARNING;
 
     @Override
     public bisq.chat.protobuf.ChatMessageType toProtoEnum() {

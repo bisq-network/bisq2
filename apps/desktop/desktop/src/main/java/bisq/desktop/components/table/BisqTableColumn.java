@@ -106,8 +106,12 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                 titleProperty.ifPresent(tableColumn::applyTitleProperty);
             }
             tableColumn.isVisibleFunction = isVisibleFunction;
+
             minWidth.ifPresent(tableColumn::setMinWidth);
+            // We set prefWidth to the minWidth
+            minWidth.ifPresent(tableColumn::setPrefWidth);
             maxWidth.ifPresent(tableColumn::setMaxWidth);
+
             tableColumn.value = value;
             tableColumn.valueSupplier = valueSupplier;
             tableColumn.tooltipSupplier = tooltipSupplier;
@@ -273,7 +277,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         }
     }
 
-    public BisqTableColumn(DefaultCellFactory defaultCellFactory, Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory) {
+    public BisqTableColumn(DefaultCellFactory defaultCellFactory,
+                           Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory) {
         super();
 
         setCellValueFactory((data) -> new ReadOnlyObjectWrapper<>(data.getValue()));
@@ -368,8 +373,10 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     @Override
                     public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
+                            private final BisqTooltip tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
+
                             @Override
-                            public void updateItem(final S item, boolean empty) {
+                            protected void updateItem(S item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -386,17 +393,18 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     }
 
                                     if (tooltipSupplier.isPresent()) {
-                                        setTooltip(new BisqTooltip(tooltipSupplier.get().apply(item), true));
+                                        tooltip.setText(tooltipSupplier.get().apply(item));
+                                        setTooltip(tooltip);
                                     } else if (tooltipPropertySupplier.isPresent()) {
-                                        BisqTooltip tooltip = new BisqTooltip(true);
                                         tooltipPropertySupplier.ifPresent(supplier ->
                                                 tooltip.textProperty().bind(supplier.apply(item)));
                                         setTooltip(tooltip);
                                     }
                                 } else {
-                                    valuePropertySupplier.ifPresent(supplier -> textProperty().unbind());
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
-
+                                    textProperty().unbind();
+                                    tooltip.textProperty().unbind();
+                                    setTooltip(null);
                                     setText("");
                                 }
                             }
@@ -415,7 +423,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             private final TextField textField = new TextField();
 
                             @Override
-                            public void updateItem(final S item, boolean empty) {
+                            protected void updateItem(S item, boolean empty) {
                                 super.updateItem(item, empty);
                                 updateItemWithInputTextFieldHandler.accept(item, textField);
 
@@ -435,9 +443,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                                 textField.textProperty().bindBidirectional(supplier.apply(item)));
                                     }
                                 } else {
-                                    valuePropertySupplier.ifPresent(supplier -> textProperty().unbind());
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
-
+                                    textProperty().unbind();
                                     setGraphic(null);
                                 }
                             }
@@ -450,8 +457,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<S, S> call(TableColumn<S,
-                            S> column) {
+                    public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
                             private ButtonBase button;
 
@@ -464,8 +470,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             }
 
                             @Override
-                            public void updateItem(final S item, boolean empty) {
+                            protected void updateItem(S item, boolean empty) {
                                 super.updateItem(item, empty);
+
                                 updateItemWithButtonHandler.accept(item, button);
 
                                 if (item != null && !empty) {
@@ -485,9 +492,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                                 button.textProperty().bindBidirectional(supplier.apply(item)));
                                     }
                                 } else {
-                                    valuePropertySupplier.ifPresent(supplier -> textProperty().unbind());
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
-
+                                    textProperty().unbind();
                                     button.setOnAction(null);
                                     setGraphic(null);
                                 }
@@ -507,8 +513,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             private final CheckBox checkBox = new CheckBox();
 
                             @Override
-                            public void updateItem(final S item, boolean empty) {
+                            protected void updateItem(S item, boolean empty) {
                                 super.updateItem(item, empty);
+
                                 if (item != null && !empty) {
                                     checkBox.setOnAction(event -> onToggleHandler.accept(item, checkBox.isSelected()));
                                     isVisibleFunction.ifPresent(function -> checkBox.setVisible(function.apply(item)));
@@ -526,9 +533,10 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                                 checkBox.textProperty().bindBidirectional(supplier.apply(item)));
                                     }
                                 } else {
-                                    valuePropertySupplier.ifPresent(supplier -> textProperty().unbind());
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
-
+                                    textProperty().unbind();
+                                    checkBox.setText(null);
+                                    checkBox.setVisible(true);
                                     checkBox.setOnAction(null);
                                     checkBox.setSelected(false);
                                     setGraphic(null);

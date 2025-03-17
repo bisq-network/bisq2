@@ -23,14 +23,15 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.validator.ValidationControl;
 import bisq.desktop.components.controls.validator.ValidatorBase;
-import bisq.desktop.components.controls.validator.deprecated.InputValidator;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.event.WeakEventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -43,8 +44,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CLASS_ERROR;
 
@@ -52,6 +53,7 @@ import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CL
 public class MaterialTextField extends Pane {
     protected final Region bg = new Region();
     protected final Region line = new Region();
+    @Getter
     protected final Region selectionLine = new Region();
     protected final Label descriptionLabel = new Label();
     protected final TextInputControl textInputControl;
@@ -60,11 +62,36 @@ public class MaterialTextField extends Pane {
     @Getter
     protected final Label errorLabel = new Label();
     @Getter
-    private final BisqIconButton iconButton = new BisqIconButton();
-    private ChangeListener<Number> iconButtonHeightListener;
-    protected ValidationControl validationControl;
+    protected final BisqIconButton iconButton = new BisqIconButton();
+    protected final ValidationControl validationControl;
     private final BooleanProperty isValid = new SimpleBooleanProperty(false);
     private Optional<StringConverter<Number>> stringConverter = Optional.empty();
+
+    private ChangeListener<Number> iconButtonHeightListener;
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Number> widthListener = (observable, oldValue, newValue) -> onWidthChanged((double) newValue);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> textInputControlFocusListener = (observable, oldValue, newValue) -> onInputTextFieldFocus(newValue);
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> descriptionLabelTextListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> promptTextListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> helpListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> textInputControlEditableListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<Boolean> disabledListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
+    private final ChangeListener<String> textInputControlTextListener = (observable, oldValue, newValue) -> update();
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
+    private final EventHandler<ActionEvent> iconButtonOnActionHandler = event -> ClipboardUtil.copyToClipboard(getText());
+    @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakEventHandler
+    private final EventHandler<MouseEvent> textInputControlMouseEventFilter = event -> {
+        if (!getTextInputControl().isEditable()) {
+            event.consume();
+        }
+    };
 
     public MaterialTextField() {
         this(null, null, null);
@@ -82,7 +109,10 @@ public class MaterialTextField extends Pane {
         this(description, prompt, help, null);
     }
 
-    public MaterialTextField(@Nullable String description, @Nullable String prompt, @Nullable String help, @Nullable String value) {
+    public MaterialTextField(@Nullable String description,
+                             @Nullable String prompt,
+                             @Nullable String help,
+                             @Nullable String value) {
         bg.getStyleClass().add("material-text-field-bg");
 
         line.setPrefHeight(1);
@@ -131,25 +161,15 @@ public class MaterialTextField extends Pane {
 
         getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel, errorLabel);
 
-        widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                onWidthChanged((double) newValue)).get());
 
-        textInputControl.focusedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                onInputTextFieldFocus(newValue)).get());
-        descriptionLabel.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
-        promptTextProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
-        helpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
-        textInputControl.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                update()).get());
-        disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                update()).get());
-        widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
-                layoutIconButton()).get());
-        textInputControl.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-                update()).get());
+        widthProperty().addListener(new WeakChangeListener<>(widthListener));
+        textInputControl.focusedProperty().addListener(new WeakChangeListener<>(textInputControlFocusListener));
+        descriptionLabel.textProperty().addListener(new WeakChangeListener<>(descriptionLabelTextListener));
+        promptTextProperty().addListener(new WeakChangeListener<>(promptTextListener));
+        helpProperty().addListener(new WeakChangeListener<>(helpListener));
+        textInputControl.editableProperty().addListener(new WeakChangeListener<>(textInputControlEditableListener));
+        disabledProperty().addListener(new WeakChangeListener<>(disabledListener));
+        textInputControl.textProperty().addListener(new WeakChangeListener<>(textInputControlTextListener));
 
         bg.setOnMousePressed(e -> textInputControl.requestFocus());
         bg.setOnMouseEntered(e -> onMouseEntered());
@@ -164,9 +184,9 @@ public class MaterialTextField extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Validation
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public Optional<ValidatorBase> getActiveValidator() {
         return Optional.ofNullable(validationControl.getActiveValidator());
@@ -181,7 +201,14 @@ public class MaterialTextField extends Pane {
     }
 
     public void setValidators(ValidatorBase... validators) {
-        validationControl.setValidators(validators);
+        Stream.of(validators).forEach(this::setValidator);
+    }
+
+    public void setValidator(ValidatorBase validator) {
+        validationControl.setValidators(validator);
+
+        // TODO that cause an endless loop if hasErrors is set to false in the eval method in validators (as in NumberValidator).
+        // validator.hasErrorsProperty().addListener((observable, oldValue, newValue) -> validate());
     }
 
     public boolean validate() {
@@ -190,6 +217,7 @@ public class MaterialTextField extends Pane {
         isValid.set(valid);
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
+        textInputControl.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
         errorLabel.setVisible(!valid);
         errorLabel.setManaged(errorLabel.isVisible());
         Optional<ValidatorBase> activeValidator = getActiveValidator();
@@ -211,9 +239,9 @@ public class MaterialTextField extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Description
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public String getDescription() {
         return descriptionLabel.getText();
@@ -232,9 +260,9 @@ public class MaterialTextField extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Text
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public String getText() {
         return textInputControl.getText();
@@ -262,18 +290,14 @@ public class MaterialTextField extends Pane {
         update();
     }
 
-    public void setValidator(InputValidator validator) {
-        //todo
-    }
-
     public void setStringConverter(StringConverter<Number> stringConverter) {
         this.stringConverter = Optional.of(stringConverter);
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // PromptText
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public String getPromptText() {
         return textInputControl.getPromptText();
@@ -288,9 +312,9 @@ public class MaterialTextField extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Help
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public String getHelpText() {
         return helpLabel.getText();
@@ -305,9 +329,9 @@ public class MaterialTextField extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Icon
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void setIcon(AwesomeIcon icon) {
         iconButton.setIcon(icon);
@@ -338,8 +362,7 @@ public class MaterialTextField extends Pane {
     public void showCopyIcon() {
         setIcon(AwesomeIcon.COPY);
         setIconTooltip(Res.get("action.copyToClipboard"));
-        iconButton.setOnAction(new WeakReference<EventHandler<ActionEvent>>(e ->
-                ClipboardUtil.copyToClipboard(getText())).get());
+        iconButton.setOnAction(new WeakEventHandler<>(iconButtonOnActionHandler));
     }
 
     public void showEditIcon() {
@@ -348,9 +371,9 @@ public class MaterialTextField extends Pane {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Focus
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public ReadOnlyBooleanProperty textInputFocusedProperty() {
         return textInputControl.focusedProperty();
@@ -362,14 +385,19 @@ public class MaterialTextField extends Pane {
         textInputControl.selectHome();
     }
 
+    public void requestFocusWithCursor() {
+        requestFocus();
+        textInputControl.selectRange(textInputControl.getLength(), textInputControl.getLength());
+    }
+
     public void deselect() {
         textInputControl.deselect();
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Event handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     public void setOnMousePressedHandler(EventHandler<? super MouseEvent> handler) {
         setOnMousePressed(handler);
@@ -395,22 +423,27 @@ public class MaterialTextField extends Pane {
     }
 
     protected void onInputTextFieldFocus(boolean focus) {
-        if (focus && textInputControl.isEditable()) {
-            selectionLine.setPrefWidth(0);
-            selectionLine.setOpacity(1);
-            Transitions.animateWidth(selectionLine, getWidth());
+        if (textInputControl.isEditable()) {
+            if (focus) {
+                resetValidation();
+                selectionLine.setPrefWidth(0);
+                selectionLine.setOpacity(1);
+                Transitions.animatePrefWidth(selectionLine, getWidth());
+            } else {
+                Transitions.fadeOut(selectionLine, 200);
+                stringConverter.ifPresent(stringConverter -> {
+                    try {
+                        setText(stringConverter.toString(stringConverter.fromString(getText())));
+                    } catch (Exception ignore) {
+                    }
+                });
+                validate();
+            }
+            onMouseExited();
+            update();
         } else {
-            Transitions.fadeOut(selectionLine, 200);
-            stringConverter.ifPresent(stringConverter -> {
-                try {
-                    setText(stringConverter.toString(stringConverter.fromString(getText())));
-                } catch (Exception ignore) {
-                }
-            });
-            validate();
+            super.requestFocus();
         }
-        onMouseExited();
-        update();
     }
 
     protected void onWidthChanged(double width) {
@@ -424,23 +457,17 @@ public class MaterialTextField extends Pane {
             helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
             errorLabel.setPrefWidth(width - 2 * errorLabel.getLayoutX());
         }
+        layoutIconButton();
     }
 
     public void filterMouseEventOnNonEditableText() {
-        javafx.event.EventHandler<MouseEvent> weakEventFilter = new WeakReference<>((javafx.event.EventHandler<MouseEvent>) event -> {
-            if (!textInputControl.isEditable()) {
-                event.consume();
-            }
-        }).get();
-        if (weakEventFilter != null) {
-            textInputControl.addEventFilter(MouseEvent.ANY, weakEventFilter);
-        }
+        textInputControl.addEventFilter(MouseEvent.ANY, new WeakEventHandler<>(textInputControlMouseEventFilter));
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Layout
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
 
     protected void doLayout() {
         bg.setMinHeight(getBgHeight());
@@ -484,7 +511,7 @@ public class MaterialTextField extends Pane {
             }
         }
 
-        helpLabel.setVisible(isValid.get() && StringUtils.isNotEmpty(getHelpText()));
+        helpLabel.setVisible(StringUtils.isNotEmpty(getHelpText()) && StringUtils.isEmpty(errorLabel.getText()));
         helpLabel.setManaged(helpLabel.isVisible());
 
         descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");

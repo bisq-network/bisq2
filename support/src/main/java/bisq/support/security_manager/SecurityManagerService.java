@@ -19,11 +19,9 @@ package bisq.support.security_manager;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
-import bisq.bonded_roles.security_manager.min_reputation_score.AuthorizedMinRequiredReputationScoreData;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
@@ -57,7 +55,6 @@ public class SecurityManagerService implements Service {
     private final NetworkService networkService;
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
-    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
     private final boolean staticPublicKeysProvided;
 
@@ -67,14 +64,14 @@ public class SecurityManagerService implements Service {
                                   BondedRolesService bondedRolesService) {
         userIdentityService = userService.getUserIdentityService();
         this.networkService = networkService;
-        authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         staticPublicKeysProvided = config.isStaticPublicKeysProvided();
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -87,9 +84,10 @@ public class SecurityManagerService implements Service {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /* --------------------------------------------------------------------- */
     // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> publishAlert(AlertType alertType,
                                                    Optional<String> headline,
@@ -97,9 +95,11 @@ public class SecurityManagerService implements Service {
                                                    boolean haltTrading,
                                                    boolean requireVersionForTrading,
                                                    Optional<String> minVersion,
-                                                   Optional<AuthorizedBondedRole> bannedRole) {
+                                                   Optional<AuthorizedBondedRole> bannedRole,
+                                                   Optional<String> bannedAccountData
+    ) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
                 new Date().getTime(),
@@ -110,9 +110,15 @@ public class SecurityManagerService implements Service {
                 requireVersionForTrading,
                 minVersion,
                 bannedRole,
-                profileId,
-                staticPublicKeysProvided);
+                securityManagerProfileId,
+                staticPublicKeysProvided,
+                bannedAccountData);
         return networkService.publishAuthorizedData(authorizedAlertData, keyPair)
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    public CompletableFuture<Boolean> rePublishAlert(AuthorizedAlertData authorizedAlertData, KeyPair ownerKeyPair) {
+        return networkService.publishAuthorizedData(authorizedAlertData, ownerKeyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -123,35 +129,18 @@ public class SecurityManagerService implements Service {
 
     public CompletableFuture<Boolean> publishDifficultyAdjustment(double difficultyAdjustmentFactor) {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
+        String securityManagerProfileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(new Date().getTime(),
                 difficultyAdjustmentFactor,
-                profileId,
+                securityManagerProfileId,
                 staticPublicKeysProvided);
         return networkService.publishAuthorizedData(data, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
-    public CompletableFuture<Boolean> publishMinRequiredReputationScore(long minRequiredReputationScore) {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        String profileId = userIdentity.getId();
-        KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        AuthorizedMinRequiredReputationScoreData data = new AuthorizedMinRequiredReputationScoreData(new Date().getTime(),
-                minRequiredReputationScore,
-                profileId,
-                staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(data, keyPair)
-                .thenApply(broadCastDataResult -> true);
-    }
-
-    public CompletableFuture<Boolean> removeDifficultyAdjustment(AuthorizedDifficultyAdjustmentData data, KeyPair ownerKeyPair) {
-        return networkService.removeAuthorizedData(data, ownerKeyPair, ownerKeyPair.getPublic())
-                .thenApply(broadCastDataResult -> true);
-    }
-
-    public CompletableFuture<Boolean> removeMinRequiredReputationScore(AuthorizedMinRequiredReputationScoreData data,
-                                                                       KeyPair ownerKeyPair) {
+    public CompletableFuture<Boolean> removeDifficultyAdjustment(AuthorizedDifficultyAdjustmentData data,
+                                                                 KeyPair ownerKeyPair) {
         return networkService.removeAuthorizedData(data, ownerKeyPair, ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);
     }

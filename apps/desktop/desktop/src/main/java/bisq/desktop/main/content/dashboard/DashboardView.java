@@ -50,7 +50,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
     private static final Insets DEFAULT_PADDING = new Insets(30, 40, 40, 40);
     private static final Insets NOTIFICATION_PADDING = new Insets(10, 40, 40, 40);
 
-    private final Button tradeProtocols, learnMore;
+    private final Button tradeProtocols, buildReputation;
     private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
     private final GridPane gridPane;
     private Subscription isNotificationVisiblePin;
@@ -82,6 +82,8 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
 
         HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
+        hBox.getStyleClass().add("bisq-box-2");
+        hBox.setPadding(new Insets(20, 40, 20, 40));
         gridPane.add(hBox, 0, 0, 2, 1);
 
         //Second row
@@ -123,15 +125,15 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
                 groupPaneStyleClass,
                 groupInsets);
 
-        learnMore = new Button(Res.get("dashboard.third.button"));
+        buildReputation = new Button(Res.get("dashboard.third.button"));
         GridPaneUtil.fillColumn(subGridPane,
                 1,
-                learnMore,
+                buildReputation,
                 buttonStyleClass,
                 buttonInsets,
                 Res.get("dashboard.third.headline"),
                 headlineLabelStyleClass,
-                "learn",
+                "reputation-ribbon",
                 16d,
                 headlineInsets,
                 Res.get("dashboard.third.content"),
@@ -154,17 +156,16 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         activeUsersLabel.textProperty().bind(model.getActiveUsers());
 
         isNotificationVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), visible -> {
-                    if (!visible) {
-                        UIScheduler.run(() -> gridPane.setPadding(DEFAULT_PADDING))
-                                .after(NotificationPanelView.DURATION);
-                    } else {
-                        gridPane.setPadding(NOTIFICATION_PADDING);
-                    }
-                }
-        );
+            if (!visible) {
+                UIScheduler.run(() -> gridPane.setPadding(DEFAULT_PADDING))
+                        .after(NotificationPanelView.DURATION);
+            } else {
+                gridPane.setPadding(NOTIFICATION_PADDING);
+            }
+        });
 
         tradeProtocols.setOnAction(e -> controller.onOpenTradeOverview());
-        learnMore.setOnAction(e -> controller.onLearn());
+        buildReputation.setOnAction(e -> controller.onBuildReputation());
     }
 
     @Override
@@ -177,7 +178,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         isNotificationVisiblePin.unsubscribe();
 
         tradeProtocols.setOnAction(null);
-        learnMore.setOnAction(null);
+        buildReputation.setOnAction(null);
     }
 
     private Triple<VBox, Label, Label> getPriceBox(String title) {
