@@ -17,16 +17,22 @@
 
 package bisq.desktop.main.content.chat.message_container.list.message_box;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.main.content.bisq_easy.offerbook.offer_details.BisqEasyOfferDetailsController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -43,6 +49,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
     private static final double OFFER_MESSAGE_BOX_MIN_WIDTH = 310;
 
     private Button takeOfferButton;
+    private Button moreInfoButton;
     private Label peerNickName;
 
     public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
@@ -71,6 +78,21 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         HBox takeOfferTitle = takeOfferLabelAndButton.getFirst();
         takeOfferButton = takeOfferLabelAndButton.getSecond();
 
+        // Right next to the buy/sell button
+        //  add info icon which triggers info popup with more information about the offer.
+        moreInfoButton = BisqIconButton.createInfoIconButton(Res.get("offer.moreInfo"));
+        BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
+        BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
+        moreInfoButton.setOnAction(e-> {
+            Navigation.navigateTo(NavigationTarget.BISQ_EASY_OFFER_DETAILS, new BisqEasyOfferDetailsController.InitData(bisqEasyOffer));
+        });
+
+        // Message
+        message.getStyleClass().add("chat-peer-offer-message");
+
+        // Offer content
+        HBox buttonRow = new HBox(30, takeOfferButton, moreInfoButton);
+        VBox offerMessage = new VBox(10, takeOfferTitle, message, buttonRow);
         // Offer content
         paymentAndSettlementMethodsBox.setPadding(new Insets(0, 0, 2, 0));
         HBox methodsAndTakeOfferButtonBox = new HBox(10, paymentAndSettlementMethodsBox, Spacer.fillHBox(), takeOfferButton);

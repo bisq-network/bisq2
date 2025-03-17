@@ -58,6 +58,8 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.options.OfferOptionUtil;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
