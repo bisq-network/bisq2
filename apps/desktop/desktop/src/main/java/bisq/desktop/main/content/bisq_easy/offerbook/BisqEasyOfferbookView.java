@@ -57,7 +57,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private static final double EXPANDED_OFFER_LIST_WIDTH = 545;
     public static final double COLLAPSED_LIST_WIDTH = 40;
     public static final double LIST_CELL_HEIGHT = 53;
-    public static final long SPLITPANE_ANIMATION_DURATION = 200;
+    public static final long SPLITPANE_ANIMATION_DURATION = 300;
+    private static final long WIDTH_ANIMATION_DURATION = 200;
     private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
 
     private final ListChangeListener<MarketChannelItem> favouriteChannelItemsChangeListener;
@@ -208,13 +209,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketSelectionListTitle.setOnMouseClicked(e ->
                 Transitions.animateWidth(marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
-                        COLLAPSED_LIST_WIDTH, SPLITPANE_ANIMATION_DURATION, () -> getController().toggleMarketSelectionList()));
+                        COLLAPSED_LIST_WIDTH, WIDTH_ANIMATION_DURATION, () -> getController().toggleMarketSelectionList()));
         marketSelectionListTitle.setOnMouseEntered(e -> marketSelectionListTitle.setGraphic(marketsWhiteIcon));
         marketSelectionListTitle.setOnMouseExited(e -> marketSelectionListTitle.setGraphic(marketsGreenIcon));
 
         collapsedMarketSelectionListTitle.setOnMouseClicked(e -> {
             getController().toggleMarketSelectionList();
-            Transitions.animateWidth(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH, SPLITPANE_ANIMATION_DURATION);
+            Transitions.animateWidth(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH, WIDTH_ANIMATION_DURATION);
         });
         collapsedMarketSelectionListTitle.setOnMouseEntered(e -> collapsedMarketSelectionListTitle.setGraphic(marketsWhiteIcon));
         collapsedMarketSelectionListTitle.setOnMouseExited(e -> collapsedMarketSelectionListTitle.setGraphic(marketsGreyIcon));

@@ -65,10 +65,11 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     private static final long SPLITPANE_ANIMATION_DURATION = BisqEasyOfferbookView.SPLITPANE_ANIMATION_DURATION;
     private static final String ACTIVE_FILTER_CLASS = "active-filter";
 
-    private final Label showMyOffersOnlyLabel, expandOfferListLabel, collapseOfferListLabel;
+    private final Label showMyOffersOnlyLabel, expandOfferListLabel, collapseOfferListLabel, offerListCollapsedIconLabel, headline;
     private final BisqTableView<OfferbookListItem> tableView;
     private final HBox showOnlyMyMessagesHBox, titleAndCollapseOfferListHBox;
-    private final ImageView expandOfferListWhiteIcon, expandOfferListGreyIcon, collapseOfferListWhiteIcon, collapseOfferListGreyIcon;
+    private final ImageView expandOfferListWhiteIcon, expandOfferListGreyIcon, collapseOfferListWhiteIcon, collapseOfferListGreyIcon,
+            offerListGreyIcon, offerListCollapsedWhiteIcon, offerListGreenIcon, offerListExpandedWhiteIcon;
     private final DropdownMenu offerDirectionFilterMenu, paymentsFilterMenu;
     private final ListChangeListener<FiatPaymentMethod> availablePaymentsChangeListener;
     private final SetChangeListener<FiatPaymentMethod> selectedPaymentsChangeListener;
@@ -83,31 +84,39 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
     OfferbookListView(OfferbookListModel model, OfferbookListController controller) {
         super(new VBox(), model, controller);
 
-        ImageView offerListGreenIcon = ImageUtil.getImageViewById("list-view-green");
+        offerListGreenIcon = ImageUtil.getImageViewById("list-view-green");
+        offerListGreyIcon = ImageUtil.getImageViewById("list-view-grey");
+        offerListCollapsedWhiteIcon = ImageUtil.getImageViewById("list-view-white");
+        offerListExpandedWhiteIcon = ImageUtil.getImageViewById("list-view-white");
         expandOfferListWhiteIcon = ImageUtil.getImageViewById("expand-white");
         expandOfferListGreyIcon = ImageUtil.getImageViewById("expand-grey");
         collapseOfferListWhiteIcon = ImageUtil.getImageViewById("collapse-white");
         collapseOfferListGreyIcon = ImageUtil.getImageViewById("collapse-grey");
 
         // expanded header title
-        Label title = new Label(Res.get("bisqEasy.offerbook.offerList"), offerListGreenIcon);
+        headline = new Label(Res.get("bisqEasy.offerbook.offerList"), offerListGreenIcon);
+        headline.setCursor(Cursor.HAND);
+        headline.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip")));
+
         collapseOfferListLabel = new Label("", collapseOfferListGreyIcon);
         collapseOfferListLabel.setCursor(Cursor.HAND);
-        BisqTooltip collapseOfferListTooltip = new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip"));
-        collapseOfferListLabel.setTooltip(collapseOfferListTooltip);
-        titleAndCollapseOfferListHBox = new HBox(title, Spacer.fillHBox(), collapseOfferListLabel);
+        collapseOfferListLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.expandedList.tooltip")));
+        titleAndCollapseOfferListHBox = new HBox(headline, Spacer.fillHBox(), collapseOfferListLabel);
         HBox.setHgrow(titleAndCollapseOfferListHBox, Priority.ALWAYS);
         titleAndCollapseOfferListHBox.setFillHeight(true);
         titleAndCollapseOfferListHBox.setAlignment(Pos.CENTER);
         titleAndCollapseOfferListHBox.setPadding(new Insets(0, 12, 0, 12));
 
         // collapsed header title
+        offerListCollapsedIconLabel = new Label("", offerListGreyIcon);
+        offerListCollapsedIconLabel.setCursor(Cursor.HAND);
+        offerListCollapsedIconLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip")));
+
         expandOfferListLabel = new Label("", expandOfferListGreyIcon);
         expandOfferListLabel.setCursor(Cursor.HAND);
-        BisqTooltip expandOfferListTooltip = new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip"));
-        expandOfferListLabel.setTooltip(expandOfferListTooltip);
+        expandOfferListLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.collapsedList.tooltip")));
 
-        HBox header = new HBox(titleAndCollapseOfferListHBox, expandOfferListLabel);
+        HBox header = new HBox(titleAndCollapseOfferListHBox, offerListCollapsedIconLabel);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.getStyleClass().add("chat-header-title");
@@ -138,7 +147,12 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         VBox.setVgrow(tableView, Priority.ALWAYS);
         configOffersTableView();
 
-        content = new VBox(header, Layout.hLine(), subheader, tableView);
+        HBox expandOfferListLabelBox = new HBox(expandOfferListLabel);
+        VBox.setVgrow(expandOfferListLabelBox, Priority.ALWAYS);
+        expandOfferListLabelBox.setAlignment(Pos.CENTER);
+        expandOfferListLabelBox.setPadding(new Insets(0, 0, 60, 0));
+
+        content = new VBox(header, Layout.hLine(), subheader, tableView, expandOfferListLabelBox);
         VBox.setVgrow(content, Priority.ALWAYS);
         root.getChildren().add(content);
     }
@@ -162,6 +176,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 titleAndCollapseOfferListHBox.setManaged(showOfferListExpanded);
                 expandOfferListLabel.setVisible(!showOfferListExpanded);
                 expandOfferListLabel.setManaged(!showOfferListExpanded);
+                offerListCollapsedIconLabel.setVisible(!showOfferListExpanded);
+                offerListCollapsedIconLabel.setManaged(!showOfferListExpanded);
                 if (showOfferListExpanded) {
                     expandListView();
                 } else {
@@ -222,13 +238,18 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         model.getSelectedMarketPayments().addListener(selectedPaymentsChangeListener);
         updatePaymentsSelection();
 
+        headline.setOnMouseEntered(e -> headline.setGraphic(offerListExpandedWhiteIcon));
+        headline.setOnMouseExited(e -> headline.setGraphic(offerListGreenIcon));
+        headline.setOnMouseClicked(e -> controller.toggleOfferList());
         collapseOfferListLabel.setOnMouseEntered(e -> collapseOfferListLabel.setGraphic(collapseOfferListWhiteIcon));
         collapseOfferListLabel.setOnMouseExited(e -> collapseOfferListLabel.setGraphic(collapseOfferListGreyIcon));
         collapseOfferListLabel.setOnMouseClicked(e -> controller.toggleOfferList());
-
         expandOfferListLabel.setOnMouseEntered(e -> expandOfferListLabel.setGraphic(expandOfferListWhiteIcon));
         expandOfferListLabel.setOnMouseExited(e -> expandOfferListLabel.setGraphic(expandOfferListGreyIcon));
         expandOfferListLabel.setOnMouseClicked(e -> controller.toggleOfferList());
+        offerListCollapsedIconLabel.setOnMouseEntered(e -> offerListCollapsedIconLabel.setGraphic(offerListCollapsedWhiteIcon));
+        offerListCollapsedIconLabel.setOnMouseExited(e -> offerListCollapsedIconLabel.setGraphic(offerListGreyIcon));
+        offerListCollapsedIconLabel.setOnMouseClicked(e -> controller.toggleOfferList());
 
         buyFromOffers.setOnAction(e -> controller.onSelectBuyFromFilter());
         sellToOffers.setOnAction(e -> controller.onSelectSellToFilter());
@@ -250,19 +271,26 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         model.getAvailableMarketPayments().removeListener(availablePaymentsChangeListener);
         model.getSelectedMarketPayments().removeListener(selectedPaymentsChangeListener);
 
+        headline.setOnMouseEntered(null);
+        headline.setOnMouseExited(null);
+        headline.setOnMouseClicked(null);
         collapseOfferListLabel.setOnMouseEntered(null);
         collapseOfferListLabel.setOnMouseExited(null);
         collapseOfferListLabel.setOnMouseClicked(null);
-
         expandOfferListLabel.setOnMouseEntered(null);
         expandOfferListLabel.setOnMouseExited(null);
         expandOfferListLabel.setOnMouseClicked(null);
+        offerListCollapsedIconLabel.setOnMouseEntered(null);
+        offerListCollapsedIconLabel.setOnMouseExited(null);
+        offerListCollapsedIconLabel.setOnMouseClicked(null);
 
         buyFromOffers.setOnAction(null);
         sellToOffers.setOnAction(null);
 
+        headline.setTooltip(null);
         collapseOfferListLabel.setTooltip(null);
         expandOfferListLabel.setTooltip(null);
+        offerListCollapsedIconLabel.setTooltip(null);
 
         cleanUpPaymentsFilterMenu();
     }
