@@ -80,7 +80,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.function.Function;
@@ -350,7 +349,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
             public void put(String ackRequestingMessageId, Observable<MessageDeliveryStatus> value) {
-                if (chatMessage instanceof AckRequestingMessage ackRequestingMessage) {
+                if (ackRequestingMessageId != null && chatMessage instanceof AckRequestingMessage ackRequestingMessage) {
                     String messageId = ackRequestingMessageId;
                     String chatMessageId = ackRequestingMessage.getAckRequestingMessageId();
                     String peersProfileId = null;
@@ -393,9 +392,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     private void updateMessageStatus(String ackRequestingMessageId,
                                      Observable<MessageDeliveryStatus> value,
-                                     @Nullable String peersProfileId) {
+                                     String peersProfileId) {
         // Delay to avoid ConcurrentModificationException
         UIThread.runOnNextRenderFrame(() -> statusPins.add(value.addObserver(status -> UIThread.run(() -> {
+            if (peersProfileId == null) {
+                return;
+            }
             Map<String, Triple<MessageDeliveryStatus, String, Boolean>> map = messageDeliveryStatusByPeerProfileId.get();
             if (map == null) {
                 map = new HashMap<>();
