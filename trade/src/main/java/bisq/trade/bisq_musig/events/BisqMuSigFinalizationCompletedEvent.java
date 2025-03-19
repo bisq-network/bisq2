@@ -1,3 +1,4 @@
+
 /*
  * This file is part of Bisq.
  *
@@ -14,39 +15,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package bisq.common.fsm;
+
+package bisq.trade.bisq_musig.events;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
-@Slf4j
-@ToString
 
 @Getter
+@ToString
+@EqualsAndHashCode(callSuper = true)
+public class BisqMuSigFinalizationCompletedEvent extends BisqMuSigTradeEvent {
+    private final String txId;
+    private final byte[] signature;
 
-@EqualsAndHashCode
-public class Transition {
-    private final Set<State> sourceStates = new HashSet<>();
-    @Setter
-    private State targetState;
-    @Setter
-    private Class<? extends Event> eventClass;
-    @Setter
-    private Optional<Class<? extends EventHandler>> eventHandlerClass = Optional.empty();
-    @Setter
-    private Optional<EventHandler> eventHandler = Optional.empty();
-
-    boolean isValid() {
-        return !sourceStates.isEmpty() &&
-                targetState != null &&
-                eventClass != null &&
-                !sourceStates.contains(targetState);
+    public BisqMuSigFinalizationCompletedEvent(String txId, byte[] signature) {
+        this.txId = txId;
+        this.signature = signature;
     }
 }

@@ -15,29 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.bisq_musig.protocol;
+package bisq.trade.bisq_musig.events;
 
-import bisq.common.fsm.State;
-import lombok.Getter;
-import lombok.ToString;
-
-@ToString
-@Getter
-public enum BisqMuSigTradeState implements State {
-    INIT,
-
-    COMPLETED(true),
-    FAILED(true);
-
-    private final boolean isFinalState;
-    private final int ordinal;
-
-    BisqMuSigTradeState() {
-        this(false);
-    }
-
-    BisqMuSigTradeState(boolean isFinalState) {
-        this.isFinalState = isFinalState;
-        ordinal = ordinal();
-    }
+public class BisqMuSigTakeOfferEvent extends BisqMuSigTradeEvent {
 }

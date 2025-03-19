@@ -440,7 +440,7 @@ public class FsmTest {
             fsm.addTransition()
                     .from(MockState.INIT)
                     .on(MockEvent1.class)
-                    .run(null)
+                    .run((EventHandler) null)
                     .to(MockState.S1);
             fsm.handle(new MockEvent1(model, ""));
         });
