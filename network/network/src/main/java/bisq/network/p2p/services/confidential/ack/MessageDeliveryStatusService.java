@@ -118,6 +118,10 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     /* --------------------------------------------------------------------- */
 
     public void applyMessageDeliveryStatus(String ackRequestingMessageId, MessageDeliveryStatus status) {
+        if (ackRequestingMessageId == null) {
+            log.warn("ackRequestingMessageId must not be null");
+            return;
+        }
         Map<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId = getMessageDeliveryStatusByMessageId();
         synchronized (messageDeliveryStatusByMessageId) {
             if (messageDeliveryStatusByMessageId.containsKey(ackRequestingMessageId)) {
