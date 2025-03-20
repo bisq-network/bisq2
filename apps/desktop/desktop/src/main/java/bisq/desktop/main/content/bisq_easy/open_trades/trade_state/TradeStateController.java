@@ -54,7 +54,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -178,19 +177,6 @@ public class TradeStateController implements Controller {
                 @Override
                 public void put(String messageId, Observable<MessageDeliveryStatus> value) {
                     handleNewMessageDeliveryStatus(messageId, value);
-                }
-
-                @Override
-                public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
-                    map.forEach(this::put);
-                }
-
-                @Override
-                public void remove(Object key) {
-                }
-
-                @Override
-                public void clear() {
                 }
             });
         });
