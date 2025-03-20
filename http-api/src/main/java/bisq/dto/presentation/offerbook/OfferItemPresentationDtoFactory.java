@@ -103,7 +103,8 @@ public class OfferItemPresentationDtoFactory {
                 .collect(Collectors.toList());
 
         UserProfile userProfile = userProfileService.findUserProfile(authorUserProfileId).orElseThrow();
-        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile);
+        long profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile).orElse(-1L);
+        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(userProfile, profileAge);
         ReputationScore reputationScore = reputationService.getReputationScore(authorUserProfileId);
         ReputationScoreDto reputationScoreDto = DtoMappings.ReputationScoreMapping.fromBisq2Model(reputationScore);
         return new OfferItemPresentationDto(bisqEasyOfferDto,

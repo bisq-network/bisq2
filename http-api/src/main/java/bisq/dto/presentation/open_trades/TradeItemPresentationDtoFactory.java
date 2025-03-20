@@ -67,11 +67,14 @@ public class TradeItemPresentationDtoFactory {
 
         String formattedMyRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
 
-        BisqEasyOpenTradeChannelDto channelDto = DtoMappings.BisqEasyOpenTradeChannelMapping.fromBisq2Model(channel);
-        BisqEasyTradeDto tradeDto = DtoMappings.BisqEasyTradeMapping.fromBisq2Model(trade);
+        long profileAge = reputationService.getProfileAgeService().getProfileAge(myUserProfile).orElse(-1L);
+        long peerProfileAge = reputationService.getProfileAgeService().getProfileAge(peersUserProfile).orElse(-1L);
 
-        UserProfileDto myUserProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(myUserProfile);
-        UserProfileDto peersUserProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(peersUserProfile);
+        BisqEasyOpenTradeChannelDto channelDto = DtoMappings.BisqEasyOpenTradeChannelMapping.fromBisq2Model(channel, profileAge);
+        BisqEasyTradeDto tradeDto = DtoMappings.BisqEasyTradeMapping.fromBisq2Model(trade, profileAge);
+
+        UserProfileDto myUserProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(myUserProfile, profileAge);
+        UserProfileDto peersUserProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(peersUserProfile, peerProfileAge);
 
         UserProfileDto makerUserProfile;
         UserProfileDto takerUserProfile;
@@ -84,7 +87,7 @@ public class TradeItemPresentationDtoFactory {
         }
 
         Optional<UserProfileDto> mediatorUserProfile = contract.getMediator()
-                .map(DtoMappings.UserProfileMapping::fromBisq2Model);
+                .map((UserProfile up) -> DtoMappings.UserProfileMapping.fromBisq2Model(up, profileAge));
 
         ReputationScore peersReputationScore = reputationService.getReputationScore(peersUserProfile.getId());
         ReputationScoreDto peersRReputationScoreDto = DtoMappings.ReputationScoreMapping.fromBisq2Model(peersReputationScore);

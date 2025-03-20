@@ -246,16 +246,16 @@ public class DtoMappings {
             );
         }*/
 
-        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel value) {
+        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel value, long profileAge) {
             return new BisqEasyOpenTradeChannelDto(
                     value.getId(),
                     value.getTradeId(),
                     BisqEasyOfferMapping.fromBisq2Model(value.getBisqEasyOffer()),
-                    UserIdentityMapping.fromBisq2Model(value.getMyUserIdentity()),
+                    UserIdentityMapping.fromBisq2Model(value.getMyUserIdentity(), profileAge),
                     value.getTraders().stream()
-                            .map(UserProfileMapping::fromBisq2Model)
+                            .map((UserProfile up) -> UserProfileMapping.fromBisq2Model(up, profileAge))
                             .collect(Collectors.toSet()),
-                    value.getMediator().map(UserProfileMapping::fromBisq2Model)
+                    value.getMediator().map((UserProfile up) -> UserProfileMapping.fromBisq2Model(up, profileAge))
             );
         }
     }
@@ -338,7 +338,7 @@ public class DtoMappings {
             );
         }
 
-        public static BisqEasyContractDto fromBisq2Model(BisqEasyContract value) {
+        public static BisqEasyContractDto fromBisq2Model(BisqEasyContract value, long profileAge) {
             return new BisqEasyContractDto(
                     value.getTakeOfferDate(),
                     BisqEasyOfferMapping.fromBisq2Model(value.getOffer()),
@@ -348,7 +348,7 @@ public class DtoMappings {
                     value.getQuoteSideAmount(),
                     BitcoinPaymentMethodSpecMapping.fromBisq2Model(value.getBaseSidePaymentMethodSpec()),
                     FiatPaymentMethodSpecMapping.fromBisq2Model(value.getQuoteSidePaymentMethodSpec()),
-                    value.getMediator().map(UserProfileMapping::fromBisq2Model),
+                    value.getMediator().map((UserProfile up) -> UserProfileMapping.fromBisq2Model(up, profileAge)),
                     PriceSpecMapping.fromBisq2Model(value.getPriceSpec()),
                     value.getMarketPrice()
             );
@@ -1059,9 +1059,9 @@ public class DtoMappings {
             );
         }*/
 
-        public static BisqEasyTradeDto fromBisq2Model(BisqEasyTrade value) {
+        public static BisqEasyTradeDto fromBisq2Model(BisqEasyTrade value, long profileAge) {
             return new BisqEasyTradeDto(
-                    BisqEasyContractMapping.fromBisq2Model(value.getContract()),
+                    BisqEasyContractMapping.fromBisq2Model(value.getContract(), profileAge),
                     value.getId(),
                     TradeRoleMapping.fromBisq2Model(value.getTradeRole()),
                     IdentityMapping.fromBisq2Model(value.getMyIdentity()),
@@ -1243,10 +1243,10 @@ public class DtoMappings {
             );
         }
 
-        public static UserIdentityDto fromBisq2Model(UserIdentity value) {
+        public static UserIdentityDto fromBisq2Model(UserIdentity value, long profileAge) {
             return new UserIdentityDto(
                     IdentityMapping.fromBisq2Model(value.getIdentity()),
-                    UserProfileMapping.fromBisq2Model(value.getUserProfile())
+                    UserProfileMapping.fromBisq2Model(value.getUserProfile(), profileAge)
             );
         }
     }
@@ -1267,7 +1267,7 @@ public class DtoMappings {
             );
         }
 
-        public static UserProfileDto fromBisq2Model(UserProfile value) {
+        public static UserProfileDto fromBisq2Model(UserProfile value, long profileAge) {
             return new UserProfileDto(
                     value.getVersion(),
                     value.getNickName(),
@@ -1279,7 +1279,8 @@ public class DtoMappings {
                     value.getApplicationVersion(),
                     value.getNym(),
                     value.getUserName(),
-                    value.getPublishDate()
+                    value.getPublishDate(),
+                    profileAge
             );
         }
     }

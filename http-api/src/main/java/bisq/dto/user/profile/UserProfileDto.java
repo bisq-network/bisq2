@@ -30,5 +30,6 @@ public record UserProfileDto(int version,
                              String applicationVersion,
                              String nym,
                              String userName,
-                             long publishDate) {
+                             long publishDate,
+                             long profileAge) {
 }

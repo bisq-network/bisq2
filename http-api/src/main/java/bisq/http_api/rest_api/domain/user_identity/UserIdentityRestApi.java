@@ -29,6 +29,8 @@ import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.reputation.ReputationService;
+import bisq.presentation.formatters.TimeFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -58,10 +61,14 @@ public class UserIdentityRestApi extends RestApiBase {
 
     private final SecurityService securityService;
     private final UserIdentityService userIdentityService;
+    private final ReputationService reputationService;
 
-    public UserIdentityRestApi(SecurityService securityService, UserIdentityService userIdentityService) {
+    public UserIdentityRestApi(SecurityService securityService, 
+                              UserIdentityService userIdentityService,
+                              ReputationService reputationService) {
         this.securityService = securityService;
         this.userIdentityService = userIdentityService;
+        this.reputationService = reputationService;
     }
 
     @GET
@@ -203,7 +210,9 @@ public class UserIdentityRestApi extends RestApiBase {
         if (selectedUserIdentity == null) {
             return buildNotFoundResponse("No selected user identity found.");
         }
-        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(selectedUserIdentity.getUserProfile());
+
+        long profileAge = reputationService.getProfileAgeService().getProfileAge(selectedUserIdentity.getUserProfile()).orElse(-1L);
+        UserProfileDto userProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(selectedUserIdentity.getUserProfile(), profileAge);
         return buildOkResponse(userProfileDto);
     }
 }
