@@ -67,7 +67,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
 
     private final Label showMyOffersOnlyLabel, expandOfferListLabel, collapseOfferListLabel, offerListCollapsedIconLabel, headline;
     private final BisqTableView<OfferbookListItem> tableView;
-    private final HBox showOnlyMyMessagesHBox, titleAndCollapseOfferListHBox;
+    private final HBox showOnlyMyMessagesHBox, titleAndCollapseOfferListHBox, expandOfferListLabelBox;
     private final ImageView expandOfferListWhiteIcon, expandOfferListGreyIcon, collapseOfferListWhiteIcon, collapseOfferListGreyIcon,
             offerListGreyIcon, offerListCollapsedWhiteIcon, offerListGreenIcon, offerListExpandedWhiteIcon;
     private final DropdownMenu offerDirectionFilterMenu, paymentsFilterMenu;
@@ -147,7 +147,7 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
         VBox.setVgrow(tableView, Priority.ALWAYS);
         configOffersTableView();
 
-        HBox expandOfferListLabelBox = new HBox(expandOfferListLabel);
+        expandOfferListLabelBox = new HBox(expandOfferListLabel);
         VBox.setVgrow(expandOfferListLabelBox, Priority.ALWAYS);
         expandOfferListLabelBox.setAlignment(Pos.CENTER);
         expandOfferListLabelBox.setPadding(new Insets(0, 0, 60, 0));
@@ -174,8 +174,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 showOnlyMyMessagesHBox.setManaged(showOfferListExpanded);
                 titleAndCollapseOfferListHBox.setVisible(showOfferListExpanded);
                 titleAndCollapseOfferListHBox.setManaged(showOfferListExpanded);
-                expandOfferListLabel.setVisible(!showOfferListExpanded);
-                expandOfferListLabel.setManaged(!showOfferListExpanded);
+                expandOfferListLabelBox.setVisible(!showOfferListExpanded);
+                expandOfferListLabelBox.setManaged(!showOfferListExpanded);
                 offerListCollapsedIconLabel.setVisible(!showOfferListExpanded);
                 offerListCollapsedIconLabel.setManaged(!showOfferListExpanded);
                 if (showOfferListExpanded) {
