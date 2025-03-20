@@ -374,19 +374,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     }
                 }
             }
-
-            @Override
-            public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
-                map.forEach(this::put);
-            }
-
-            @Override
-            public void remove(Object key) {
-            }
-
-            @Override
-            public void clear() {
-            }
         }));
     }
 
