@@ -48,7 +48,6 @@ import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -75,7 +74,6 @@ public class TradeStateController implements Controller {
     private final MediationRequestService mediationRequestService;
     private final DontShowAgainService dontShowAgainService;
     private final LeavePrivateChatManager leavePrivateChatManager;
-    private final UserIdentityService userIdentityService;
     private final Optional<ResendMessageService> resendMessageService;
     private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
             requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin;
@@ -90,7 +88,6 @@ public class TradeStateController implements Controller {
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
 
         tradePhaseBox = new TradePhaseBox(serviceProvider);
@@ -226,7 +223,10 @@ public class TradeStateController implements Controller {
             hasBuyerAcceptedPriceSpecPin.unsubscribe();
             hasBuyerAcceptedPriceSpecPin = null;
         }
-        messageDeliveryStatusByMessageIdPin.unbind();
+        if (messageDeliveryStatusByMessageIdPin != null) {
+            messageDeliveryStatusByMessageIdPin.unbind();
+            messageDeliveryStatusByMessageIdPin = null;
+        }
         if (requestMediationDeliveryStatusPin != null) {
             requestMediationDeliveryStatusPin.unbind();
             requestMediationDeliveryStatusPin = null;
