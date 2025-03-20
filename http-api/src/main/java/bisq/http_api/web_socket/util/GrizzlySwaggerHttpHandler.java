@@ -25,6 +25,7 @@ import org.glassfish.grizzly.http.server.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,7 +55,6 @@ public class GrizzlySwaggerHttpHandler extends HttpHandler {
             
             // Read all bytes to determine content length instead of using Paths which causes a crash in most cases
             byte[] data = inputStream.readAllBytes();
-            response.setContentLengthLong(data.length);
             setContentType(response, resourceName);
             response.getOutputStream().write(data);
         } catch (IOException e) {
@@ -70,23 +70,11 @@ public class GrizzlySwaggerHttpHandler extends HttpHandler {
      * @param resourceName to determine the content type of
      */
     private void setContentType(Response response, String resourceName) {
-        if (resourceName.endsWith(".html")) {
-            response.setContentType("text/html");
-        } else if (resourceName.endsWith(".css")) {
-            response.setContentType("text/css");
-        } else if (resourceName.endsWith(".js")) {
-            response.setContentType("application/javascript");
-        } else if (resourceName.endsWith(".json")) {
-            response.setContentType("application/json");
-        } else if (resourceName.endsWith(".png")) {
-            response.setContentType("image/png");
-        } else if (resourceName.endsWith(".jpg") || resourceName.endsWith(".jpeg")) {
-            response.setContentType("image/jpeg");
-        } else if (resourceName.endsWith(".svg")) {
-            response.setContentType("image/svg+xml");
-        } else {
-            response.setContentType("application/octet-stream");
+        String contentType = URLConnection.guessContentTypeFromName(resourceName);
+        if (contentType == null) {
+            contentType = "application/octet-stream"; // Default binary
         }
+        response.setContentType(contentType);
     }
 }
 
