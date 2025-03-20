@@ -108,9 +108,7 @@ public class TradeStateController implements Controller {
             tradeDataHeader.setSelectedChannel(channel);
             tradePhaseBox.setSelectedChannel(channel);
 
-            if (bisqEasyTradeStatePin != null) {
-                bisqEasyTradeStatePin.unbind();
-            }
+            removeChannelRelatedBindings();
 
             if (channel == null) {
                 model.resetAll();
@@ -125,9 +123,7 @@ public class TradeStateController implements Controller {
 
             model.reset();
 
-            if (isInMediationPin != null) {
-                isInMediationPin.unbind();
-            }
+
             isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
 
             BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
@@ -203,30 +199,7 @@ public class TradeStateController implements Controller {
     @Override
     public void onDeactivate() {
         channelPin.unsubscribe();
-        if (bisqEasyTradeStatePin != null) {
-            bisqEasyTradeStatePin.unbind();
-            bisqEasyTradeStatePin = null;
-        }
-        if (errorMessagePin != null) {
-            errorMessagePin.unbind();
-            errorMessagePin = null;
-        }
-        if (peersErrorMessagePin != null) {
-            peersErrorMessagePin.unbind();
-            peersErrorMessagePin = null;
-        }
-        if (isInMediationPin != null) {
-            isInMediationPin.unbind();
-            isInMediationPin = null;
-        }
-        if (hasBuyerAcceptedPriceSpecPin != null) {
-            hasBuyerAcceptedPriceSpecPin.unsubscribe();
-            hasBuyerAcceptedPriceSpecPin = null;
-        }
-        if (messageDeliveryStatusByMessageIdPin != null) {
-            messageDeliveryStatusByMessageIdPin.unbind();
-            messageDeliveryStatusByMessageIdPin = null;
-        }
+        removeChannelRelatedBindings();
         if (requestMediationDeliveryStatusPin != null) {
             requestMediationDeliveryStatusPin.unbind();
             requestMediationDeliveryStatusPin = null;
@@ -608,5 +581,32 @@ public class TradeStateController implements Controller {
         );
         boolean isInValidStateToRejectPrice = validStatesToRejectPrice.contains(model.getBisqEasyTrade().get().tradeStateObservable().get());
         return priceSpecChanged && isInValidStateToRejectPrice;
+    }
+
+    private void removeChannelRelatedBindings() {
+        if (bisqEasyTradeStatePin != null) {
+            bisqEasyTradeStatePin.unbind();
+            bisqEasyTradeStatePin = null;
+        }
+        if (errorMessagePin != null) {
+            errorMessagePin.unbind();
+            errorMessagePin = null;
+        }
+        if (peersErrorMessagePin != null) {
+            peersErrorMessagePin.unbind();
+            peersErrorMessagePin = null;
+        }
+        if (isInMediationPin != null) {
+            isInMediationPin.unbind();
+            isInMediationPin = null;
+        }
+        if (hasBuyerAcceptedPriceSpecPin != null) {
+            hasBuyerAcceptedPriceSpecPin.unsubscribe();
+            hasBuyerAcceptedPriceSpecPin = null;
+        }
+        if (messageDeliveryStatusByMessageIdPin != null) {
+            messageDeliveryStatusByMessageIdPin.unbind();
+            messageDeliveryStatusByMessageIdPin = null;
+        }
     }
 }
