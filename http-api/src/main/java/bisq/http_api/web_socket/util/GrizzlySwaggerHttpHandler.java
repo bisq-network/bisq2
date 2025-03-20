@@ -51,16 +51,41 @@ public class GrizzlySwaggerHttpHandler extends HttpHandler {
             }
 
             response.setStatus(200);
-            URL resourceUrl = classLoader.getResource(resourceName);
-            if (resourceUrl != null) {
-                Path path = Paths.get(resourceUrl.toURI());
-                response.setContentLengthLong(Files.size(path));
-            }
-            inputStream.transferTo(response.getOutputStream());
+            
+            // Read all bytes to determine content length instead of using Paths which causes a crash in most cases
+            byte[] data = inputStream.readAllBytes();
+            response.setContentLengthLong(data.length);
+            setContentType(response, resourceName);
+            response.getOutputStream().write(data);
         } catch (IOException e) {
             response.setStatus(500);
             response.getWriter().write("500 Internal Server Error");
-            log.error("Error", e);
+            log.error("Error serving resource: {}", resourceName, e);
+        }
+    }
+
+    /**
+     * Sets the content type based on extension of resourceName
+     * @param response to set the content type of
+     * @param resourceName to determine the content type of
+     */
+    private void setContentType(Response response, String resourceName) {
+        if (resourceName.endsWith(".html")) {
+            response.setContentType("text/html");
+        } else if (resourceName.endsWith(".css")) {
+            response.setContentType("text/css");
+        } else if (resourceName.endsWith(".js")) {
+            response.setContentType("application/javascript");
+        } else if (resourceName.endsWith(".json")) {
+            response.setContentType("application/json");
+        } else if (resourceName.endsWith(".png")) {
+            response.setContentType("image/png");
+        } else if (resourceName.endsWith(".jpg") || resourceName.endsWith(".jpeg")) {
+            response.setContentType("image/jpeg");
+        } else if (resourceName.endsWith(".svg")) {
+            response.setContentType("image/svg+xml");
+        } else {
+            response.setContentType("application/octet-stream");
         }
     }
 }

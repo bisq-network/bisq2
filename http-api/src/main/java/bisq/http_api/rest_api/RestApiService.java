@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * JAX-RS application for the Bisq REST API
- * Swagger docs at: http://localhost:8082/doc/v1/index.html
+ * Swagger docs at: http://localhost:8090/doc/v1/index.html
  */
 @Slf4j
 public class RestApiService implements Service {

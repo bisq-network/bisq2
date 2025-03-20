@@ -45,7 +45,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * JAX-RS application for the Bisq REST API
- * Swagger docs at: http://localhost:8082/doc/v1/index.html
+ * Swagger docs at: http://localhost:8090/doc/v1/index.html
  */
 @Slf4j
 public class HttpApiService implements Service {

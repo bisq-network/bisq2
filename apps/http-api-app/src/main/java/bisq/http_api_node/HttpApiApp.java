@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * JAX-RS application for the Bisq REST API
- * Swagger docs at: http://localhost:8082/doc/v1/index.html
+ * Swagger docs at: http://localhost:8090/doc/v1/index.html
  */
 @Slf4j
 public class HttpApiApp extends Executable<HttpApiApplicationService> {
