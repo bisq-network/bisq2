@@ -307,6 +307,22 @@
     -fx-image: url("/images/new.png");
 }
 
+#expand-white {
+    -fx-image: url("/images/icons/expand-white.png");
+}
+
+#expand-grey {
+    -fx-image: url("/images/icons/expand-grey.png");
+}
+
+#collapse-white {
+    -fx-image: url("/images/icons/collapse-white.png");
+}
+
+#collapse-grey {
+    -fx-image: url("/images/icons/collapse-grey.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */
