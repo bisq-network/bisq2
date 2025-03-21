@@ -122,7 +122,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
 
         public void openExplorer() {
             ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            String url = provider.getBaseUrl() + provider.getTxPath() + model.getPaymentProof();
+            String url = provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof();
             Browser.open(url);
         }
 

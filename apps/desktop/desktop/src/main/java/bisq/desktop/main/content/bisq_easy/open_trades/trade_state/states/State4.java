@@ -144,7 +144,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
 
         protected String getBlockExplorerUrl() {
             ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            return provider.getBaseUrl() + provider.getTxPath() + model.getPaymentProof();
+            return provider.getBaseUrl() + "/" + provider.getTxPath() + model.getPaymentProof();
         }
     }
 

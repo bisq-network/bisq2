@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.common.util.MathUtils;
+import bisq.common.util.StringUtils;
 import bisq.desktop.CssConfig;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
@@ -152,16 +153,13 @@ public class SellerState3a extends BaseState {
         private void onConfirmedBtcSent() {
             BitcoinPaymentRail paymentRail = getPaymentRail();
             boolean isMainChain = paymentRail == BitcoinPaymentRail.MAIN_CHAIN;
-            String paymentProof = model.getPaymentProof().get();
+            // model.getPaymentProof().get() can be null (default) or empty (if user has edited and cleared input)
+            Optional<String> paymentProof = StringUtils.toOptional(model.getPaymentProof().get());
             boolean isValid;
             if (isMainChain) {
-                isValid = paymentProof != null && model.getPaymentProofValidator().validateAndGet();
+                isValid = paymentProof.isPresent() && model.getPaymentProofValidator().validateAndGet();
             } else {
-                if (paymentProof == null) {
-                    isValid = true;
-                } else {
-                    isValid = model.getPaymentProofValidator().validateAndGet();
-                }
+                isValid = paymentProof.isEmpty() || model.getPaymentProofValidator().validateAndGet();
             }
 
             String userName = model.getChannel().getMyUserIdentity().getUserName();
@@ -177,14 +175,14 @@ public class SellerState3a extends BaseState {
             }
         }
 
-        private void confirmedBtcSent(String paymentProof, String userName, String proofType) {
-            if (paymentProof == null) {
+        private void confirmedBtcSent(Optional<String> paymentProof, String userName, String proofType) {
+            if (paymentProof.isEmpty()) {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.noProofProvided", userName));
             } else {
                 sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
-                        userName, proofType, paymentProof));
+                        userName, proofType, paymentProof.get()));
             }
-            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), Optional.ofNullable(paymentProof));
+            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), paymentProof);
         }
 
         void onShowQrCodeDisplay() {
