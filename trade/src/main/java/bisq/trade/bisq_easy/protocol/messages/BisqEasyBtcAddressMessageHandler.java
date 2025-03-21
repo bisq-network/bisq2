@@ -55,11 +55,11 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
         if (isMainChain) {
             // We do not check for the min. length as we do not enforce the validation in the UI
             checkArgument(bitcoinPaymentData.length() <= BitcoinAddressValidation.MAX_LENGTH,
-                    "Bitcoin address must not be longer than " + BitcoinAddressValidation.MAX_LENGTH);
+                    "Bitcoin address length must not be longer than " + BitcoinAddressValidation.MAX_LENGTH);
         } else {
             // We do not check for the min. length as we do not enforce the validation in the UI
             checkArgument(bitcoinPaymentData.length() <= LightningInvoiceValidation.MAX_LENGTH,
-                    "Lightning invoice must not be longer than " + LightningInvoiceValidation.MAX_LENGTH);
+                    "Lightning invoice length must not be longer than " + LightningInvoiceValidation.MAX_LENGTH);
         }
 
         checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
