@@ -94,7 +94,7 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
                 .ifPresent(file -> {
                     try {
                         String json = FileUtils.readStringFromFile(file);
-                        checkArgument(StringUtils.isNotEmpty(json));
+                        checkArgument(StringUtils.isNotEmpty(json), "Json must not be empty");
                         getNodesRegistrationModel().getAddressInfoJson().set(json);
                     } catch (Exception e) {
                         new Popup().error(e).show();
