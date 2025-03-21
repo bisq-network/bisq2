@@ -211,12 +211,12 @@ public class UserProfileController implements Controller {
                     if (throwable != null) {
                         UIThread.run(() -> new Popup().error(throwable).show());
                     } else {
-                        if (!model.getUserIdentities().isEmpty()) {
-                            UIThread.runOnNextRenderFrame(() -> {
+                        UIThread.runOnNextRenderFrame(() -> {
+                            if (!model.getUserIdentities().isEmpty()) {
                                 UserIdentity value = model.getUserIdentities().get(0);
                                 model.getSelectedUserIdentity().set(value);
-                            });
-                        }
+                            }
+                        });
                     }
                 });
     }
