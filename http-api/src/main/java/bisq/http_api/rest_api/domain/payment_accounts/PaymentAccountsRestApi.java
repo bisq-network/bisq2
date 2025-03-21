@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Path("/payment_accounts")
@@ -56,7 +57,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
     @GET
     @Operation(
             summary = "Get payment accounts",
-            description = "Retrieve all the payment accounts",
+            description = "Retrieve all the payment accounts (only UserDefinedFiatAccount)",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Payment accounts retrieved successfully",
                             content = @Content(schema = @Schema(implementation = UserDefinedFiatAccountDto.class))),
@@ -65,15 +66,11 @@ public class PaymentAccountsRestApi extends RestApiBase {
     )
     public Response getPaymentAccounts() {
         try {
-            Map<String, Account<?, ? extends PaymentMethod<?>>> accountByNameMap = accountService.getAccountByNameMap();
-            List<Account<?, ? extends PaymentMethod<?>>> accountsList = new ArrayList<>(accountByNameMap.values());
-
-            List<UserDefinedFiatAccountDto> userAccounts = new ArrayList<>();
-            for (Account<?, ? extends PaymentMethod<?>> account : accountsList) {
-                if (account instanceof UserDefinedFiatAccount castedAccount) {
-                    userAccounts.add(DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount));
-                }
-            }
+            List<UserDefinedFiatAccountDto> userAccounts = accountService.getAccountByNameMap().values().stream()
+                    .filter(account -> account instanceof UserDefinedFiatAccount)
+                    .map(account -> (UserDefinedFiatAccount) account)
+                    .map(DtoMappings.UserDefinedFiatAccountMapping::fromBisq2Model)
+                    .collect(Collectors.toList());
 
             return buildOkResponse(userAccounts);
         } catch (Exception e) {
@@ -85,7 +82,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
     @GET
     @Operation(
             summary = "Get selected payment account",
-            description = "Get selected payment account",
+            description = "Get selected payment account (only UserDefinedFiatAccount)",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Selected payment account retrieved successfully",
                             content = @Content(schema = @Schema(implementation = UserDefinedFiatAccountDto.class))),
@@ -97,12 +94,12 @@ public class PaymentAccountsRestApi extends RestApiBase {
         try {
             if (accountService.getSelectedAccount().isPresent()) {
                 Account<?, ? extends PaymentMethod<?>> account = accountService.getSelectedAccount().get();
-                    if (account instanceof UserDefinedFiatAccount castedAccount) {
-                        UserDefinedFiatAccountDto userAccount = DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount);
-                        return buildOkResponse(userAccount);
-                    } else {
-                        return buildResponse(Response.Status.NO_CONTENT, "");
-                    }
+                if (account instanceof UserDefinedFiatAccount castedAccount) {
+                    UserDefinedFiatAccountDto userAccount = DtoMappings.UserDefinedFiatAccountMapping.fromBisq2Model(castedAccount);
+                    return buildOkResponse(userAccount);
+                } else {
+                    return buildResponse(Response.Status.NO_CONTENT, "");
+                }
             }
 
             return buildResponse(Response.Status.NO_CONTENT, "");
@@ -115,7 +112,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
     @POST
     @Operation(
             summary = "Add new payment account",
-            description = "Add new payment account",
+            description = "Add new payment account (only UserDefinedFiatAccount)",
             requestBody = @RequestBody(
                     description = "",
                     content = @Content(schema = @Schema(implementation = AddAccountRequest.class))
@@ -161,10 +158,8 @@ public class PaymentAccountsRestApi extends RestApiBase {
         try {
             Optional<Account<?, ? extends PaymentMethod<?>>> result = accountService.findAccount(accountName);
             if (result.isPresent()) {
-                UserDefinedFiatAccount account = new UserDefinedFiatAccount(
-                        accountName, ""
-                );
-                accountService.removePaymentAccount(account);
+                Account<?, ? extends PaymentMethod<?>> toRemove = result.get();
+                accountService.removePaymentAccount(toRemove);
                 asyncResponse.resume(buildResponse(Response.Status.NO_CONTENT, ""));
             } else {
                 asyncResponse.resume(buildErrorResponse(Response.Status.BAD_REQUEST, "Payment account not found"));
@@ -177,7 +172,7 @@ public class PaymentAccountsRestApi extends RestApiBase {
     @PATCH
     @Operation(
             summary = "Update selected payment account",
-            description = "Update selected payment account",
+            description = "Update selected payment account (only UserDefinedFiatAccount)",
             requestBody = @RequestBody(
                     description = "The setting key and value to be updated",
                     required = true,
