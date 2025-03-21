@@ -142,7 +142,7 @@ public class TradeStateController implements Controller {
                             if (dontShowAgainService.showAgain(key)) {
                                 UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
                                                 errorMessage,
-                                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
+                                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000)))
                                         .dontShowAgainId(key)
                                         .show());
                             }
@@ -155,7 +155,7 @@ public class TradeStateController implements Controller {
                             if (dontShowAgainService.showAgain(key)) {
                                 UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
                                                 peersErrorMessage,
-                                                StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 500)))
+                                                StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000)))
                                         .dontShowAgainId(key)
                                         .show());
                             }

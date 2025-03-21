@@ -217,6 +217,7 @@ public class DesktopController extends NavigationController {
             // by a try/catch. It is unclear from where it gets called as the stacktrace does not expose the path to a
             // Bisq source code caller.
             // See https://github.com/bisq-network/bisq2/issues/2832
+            log.error("System tray not supported", throwable);
             return;
         }
         UIThread.run(() -> new Popup().error(throwable).show());

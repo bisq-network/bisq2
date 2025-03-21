@@ -98,8 +98,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
     protected void verifyMessage(BisqEasyTakeOfferRequest message) {
         super.verifyMessage(message);
 
-        BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract());
-        BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer());
+        BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract(), "Takers contract must not be null");
+        BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer(), "Offer from takers contract must not be null");
 
         List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
                 .flatMap(channel -> channel.getChatMessages().stream())
@@ -144,26 +144,31 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
             }
         }
 
-        checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
+        checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()),
+                "Senders networkId must be same as takers networkId from takers contract");
 
         validateAmount(takersOffer, takersContract);
 
-        checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()));
-        checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()));
+        checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()),
+                "BaseSidePaymentMethodSpec from takers contract must be present in the offers baseSidePaymentMethodSpecs");
+        checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()),
+                "QuoteSidePaymentMethodSpec from takers contract must be present in the offers quoteSidePaymentMethodSpecs");
 
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
                 .selectMediator(takersOffer.getMakersUserProfileId(),
                         trade.getTaker().getNetworkId().getId(),
                         trade.getOffer().getId());
-        checkArgument(mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId)), "Mediators do not match. " +
-                "\nmediator=" + mediator +
-                "\ntakersContract.getMediator()=" + takersContract.getMediator());
+        checkArgument(mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId)),
+                "Mediators do not match. " +
+                        "\nmediator=" + mediator +
+                        "\ntakersContract.getMediator()=" + takersContract.getMediator());
 
         log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         try {
-            checkArgument(serviceProvider.getContractService().verifyContractSignature(takersContract, takersContractSignatureData));
+            checkArgument(serviceProvider.getContractService().verifyContractSignature(takersContract, takersContractSignatureData),
+                    "Verifying takers contract signature failed");
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -181,10 +186,10 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(market);
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService,
                 takersContract.getPriceSpec(), market);
+        checkArgument(priceQuote.isPresent(),
+                "PriceQuote is empty. Might be that no market price is available. marketPrice=" + marketPrice);
         Optional<Monetary> amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
                 market.getQuoteCurrencyCode())));
-
-        checkArgument(amount.isPresent(), "No priceQuote present. Might be that no market price is available. marketPrice=" + marketPrice);
 
         long takersAmount = takersContract.getBaseSideAmount();
         long myAmount = amount.get().getValue(); // I am maker
