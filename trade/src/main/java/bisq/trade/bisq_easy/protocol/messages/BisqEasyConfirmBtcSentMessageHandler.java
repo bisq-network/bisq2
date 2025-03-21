@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
@@ -47,7 +48,11 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
         super.verifyMessage(message);
 
         message.getPaymentProof().ifPresent(paymentProof -> {
-            checkArgument(StringUtils.isNotEmpty(paymentProof));
+            boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
+            if (isMainChain) {
+                // We only require the paymentProof for BTC mainnet, not for LN as the pre-image is optional
+                checkArgument(StringUtils.isNotEmpty(paymentProof));
+            }
             // We leave it flexible so that users can use other than BTC mainnet data as txId
             checkArgument(paymentProof.length() <= 1000);
         });
