@@ -38,6 +38,7 @@ import com.google.common.base.Joiner;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -106,6 +107,10 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     private transient ByteArray proofOfBurnHash;
     private transient ByteArray bondedReputationHash;
     private transient long publishDate;
+
+    @Setter
+    @Getter
+    private transient long profileAge;
 
     private UserProfile(String nickName,
                         ProofOfWork proofOfWork,
