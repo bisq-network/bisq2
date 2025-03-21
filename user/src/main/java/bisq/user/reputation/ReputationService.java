@@ -18,6 +18,7 @@
 package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
@@ -133,10 +134,16 @@ public class ReputationService implements Service {
     }
 
     public Optional<ReputationScore> findReputationScore(String userProfileId) {
-        if (!scoreByUserProfileId.containsKey(userProfileId)) {
-            return Optional.empty();
+        long score;
+        if (DevMode.isDevMode() && DevMode.devModeReputationScore() > 0) {
+            score = DevMode.devModeReputationScore();
+        } else {
+            if (!scoreByUserProfileId.containsKey(userProfileId)) {
+                return Optional.empty();
+            }
+            score = scoreByUserProfileId.get(userProfileId);
         }
-        long score = scoreByUserProfileId.get(userProfileId);
+
         double fiveSystemScore = getFiveSystemScore(score);
         int index = getIndex(score, scoreByUserProfileId.values());
         int rank = scoreByUserProfileId.size() - index;
