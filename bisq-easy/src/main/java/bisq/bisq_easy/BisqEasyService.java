@@ -205,17 +205,21 @@ public class BisqEasyService implements Service {
     // We wait until all broadcast futures are completed or timeout if it takes longer as expected.
     private CompletableFuture<Boolean> getStorePendingMessagesInMailboxFuture() {
         return CompletableFutureUtils.allOf(getStorePendingMessagesInMailboxFutures())
-                .orTimeout(20, TimeUnit.SECONDS)
+                .orTimeout(5, TimeUnit.SECONDS)
                 .handle((broadcastResultList, throwable) -> {
                     if (throwable != null) {
                         log.warn("flushPendingMessagesToMailboxAtShutdown failed", throwable);
                         return false;
                     } else {
-                        log.info("All broadcast futures at getStorePendingMessagesInMailboxFuture completed. broadcastResultList={}", broadcastResultList);
-                        try {
-                            // We delay a bit before continuing shutdown process. Usually we only have 1 pending message...
-                            Thread.sleep(100 + broadcastResultList.size() * 500L);
-                        } catch (InterruptedException ignore) {
+                        int size = broadcastResultList.size();
+                        if (size > 0) {
+                            log.info("All {} broadcast futures at getStorePendingMessagesInMailboxFuture completed. broadcastResultList={}", size, broadcastResultList);
+                            try {
+                                // We delay up to 2 seconds before continuing shutdown process. Usually we only have 1 pending message...
+                                long delay = Math.min(2000, size * 300L);
+                                Thread.sleep(delay);
+                            } catch (InterruptedException ignore) {
+                            }
                         }
                         return true;
                     }

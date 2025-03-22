@@ -157,6 +157,7 @@ public class UpdaterService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         if (releaseNotificationsPin != null) {
             releaseNotificationsPin.unbind();
         }

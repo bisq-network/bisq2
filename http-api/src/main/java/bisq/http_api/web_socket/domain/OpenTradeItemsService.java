@@ -112,6 +112,7 @@ public class OpenTradeItemsService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         if (channelsPin != null) {
             channelsPin.unbind();
         }
