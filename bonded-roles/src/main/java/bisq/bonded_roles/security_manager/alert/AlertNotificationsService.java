@@ -83,6 +83,7 @@ public class AlertNotificationsService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         if (authorizedAlertDataSetPin != null) {
             authorizedAlertDataSetPin.unbind();
             unconsumedAlertsPin.unbind();
