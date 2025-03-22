@@ -17,6 +17,7 @@
 
 package bisq.http_api;
 
+import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
@@ -26,6 +27,7 @@ import bisq.http_api.rest_api.RestApiService;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
+import bisq.http_api.rest_api.domain.payment_accounts.PaymentAccountsRestApi;
 import bisq.http_api.rest_api.domain.settings.SettingsRestApi;
 import bisq.http_api.rest_api.domain.trades.TradeRestApi;
 import bisq.http_api.rest_api.domain.user_identity.UserIdentityRestApi;
@@ -63,7 +65,8 @@ public class HttpApiService implements Service {
                           SupportService supportedService,
                           TradeService tradeService,
                           SettingsService settingsService,
-                          OpenTradeItemsService openTradeItemsService) {
+                          OpenTradeItemsService openTradeItemsService,
+                          AccountService accountService) {
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
         boolean webSocketConfigEnabled = webSocketConfig.isEnabled();
         if (restApiConfigEnabled || webSocketConfigEnabled) {
@@ -78,6 +81,7 @@ public class HttpApiService implements Service {
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
+            PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
@@ -86,7 +90,8 @@ public class HttpApiService implements Service {
                         userIdentityRestApi,
                         marketPriceRestApi,
                         settingsRestApi,
-                        explorerRestApi);
+                        explorerRestApi,
+                        paymentAccountsRestApi);
                 this.restApiService = Optional.of(new RestApiService(restApiConfig, restApiResourceConfig));
             } else {
                 this.restApiService = Optional.empty();
@@ -99,7 +104,8 @@ public class HttpApiService implements Service {
                         userIdentityRestApi,
                         marketPriceRestApi,
                         settingsRestApi,
-                        explorerRestApi);
+                        explorerRestApi,
+                        paymentAccountsRestApi);
                 this.webSocketService = Optional.of(new WebSocketService(webSocketConfig,
                         webSocketConfig.getRestApiBaseAddress(),
                         webSocketResourceConfig,
