@@ -25,7 +25,6 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
@@ -496,9 +495,9 @@ public class TradeWizardAmountController implements Controller {
         Monetary minQuoteSideAmount = amountSelectionController.getMinQuoteSideAmount().get();
         Monetary maxOrFixedQuoteSideAmount = amountSelectionController.getMaxOrFixedQuoteSideAmount().get();
 
-        Market usdBitcoinMarket = MarketRepository.getUSDBitcoinMarket();
-        long requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, usdBitcoinMarket, maxOrFixedQuoteSideAmount).orElse(0L);
-        long requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, usdBitcoinMarket, minQuoteSideAmount).orElse(0L);
+        Market market = model.getMarket();
+        long requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, market, maxOrFixedQuoteSideAmount).orElse(0L);
+        long requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, market, minQuoteSideAmount).orElse(0L);
         long numPotentialTakersForMaxOrFixedAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
                 .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMaxOrFixedAmount)
@@ -613,9 +612,10 @@ public class TradeWizardAmountController implements Controller {
                     .mapToLong(Map.Entry::getValue)
                     .max()
                     .orElse(0L);
-            Monetary highestPossibleUsdAmount = BisqEasyTradeAmountLimits.getUsdAmountFromReputationScore(highestScore);
+            Monetary highestPossibleAmountFromSellers = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, model.getMarket(), highestScore)
+                    .orElse(Fiat.from(0, model.getMarket().getQuoteCurrencyCode()));
             if (isCreateOfferMode) {
-                amountSelectionController.setRightMarkerQuoteSideValue(highestPossibleUsdAmount);
+                amountSelectionController.setRightMarkerQuoteSideValue(highestPossibleAmountFromSellers);
             }
             if (amountSelectionController.getMaxOrFixedQuoteSideAmount().get() == null) {
                 amountSelectionController.setMaxOrFixedQuoteSideAmount(defaultFiatAmount);
