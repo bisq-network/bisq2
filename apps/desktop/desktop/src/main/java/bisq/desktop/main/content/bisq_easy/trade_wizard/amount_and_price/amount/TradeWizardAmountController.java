@@ -501,11 +501,11 @@ public class TradeWizardAmountController implements Controller {
         long requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, usdBitcoinMarket, minQuoteSideAmount).orElse(0L);
         long numPotentialTakersForMaxOrFixedAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMaxOrFixedAmount || requiredReputationScoreForMaxOrFixedAmount <= MIN_REPUTATION_SCORE)
+                .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMaxOrFixedAmount)
                 .count();
         long numPotentialTakersForMinAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMinAmount || requiredReputationScoreForMinAmount <= MIN_REPUTATION_SCORE)
+                .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMinAmount)
                 .count();
         String formattedMaxOrFixedAmount = formatQuoteAmountWithCode(maxOrFixedQuoteSideAmount);
         model.getShouldShowWarningIcon().set(false);
