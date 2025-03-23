@@ -557,15 +557,16 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void applyQuoteSideMinMaxRange() {
-        Monetary maxRangeValue = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, model.getMarket(), MAX_USD_TRADE_AMOUNT)
+        Market market = model.getMarket();
+        Monetary maxRangeValue = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, market, MAX_USD_TRADE_AMOUNT)
                 .orElseThrow().round(0);
-        Monetary minRangeValue = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, model.getMarket(), DEFAULT_MIN_USD_TRADE_AMOUNT)
+        Monetary minRangeValue = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, market, DEFAULT_MIN_USD_TRADE_AMOUNT)
                 .orElseThrow().round(0);
 
         applyMaxAmountBasedOnReputation();
 
         Fiat defaultUsdAmount = MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.multiply(2);
-        Monetary defaultFiatAmount = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, model.getMarket(), defaultUsdAmount)
+        Monetary defaultFiatAmount = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, market, defaultUsdAmount)
                 .orElseThrow().round(0);
         boolean isCreateOfferMode = model.isCreateOfferMode();
         boolean isBuyer = model.getDirection().isBuy();
@@ -612,8 +613,8 @@ public class TradeWizardAmountController implements Controller {
                     .mapToLong(Map.Entry::getValue)
                     .max()
                     .orElse(0L);
-            Monetary highestPossibleAmountFromSellers = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, model.getMarket(), highestScore)
-                    .orElse(Fiat.from(0, model.getMarket().getQuoteCurrencyCode()));
+            Monetary highestPossibleAmountFromSellers = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, highestScore)
+                    .orElse(Fiat.from(0, market.getQuoteCurrencyCode()));
             if (isCreateOfferMode) {
                 amountSelectionController.setRightMarkerQuoteSideValue(highestPossibleAmountFromSellers);
             }
