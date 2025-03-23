@@ -41,6 +41,7 @@ public class SystemNotificationService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         systemNotificationDelegate.ifPresent(Service::shutdown);
         return CompletableFuture.completedFuture(true);
     }

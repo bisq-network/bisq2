@@ -136,6 +136,7 @@ public class HttpApiService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return CompletableFutureUtils.allOf(
                         restApiService.map(RestApiService::shutdown)
                                 .orElse(CompletableFuture.completedFuture(true)),

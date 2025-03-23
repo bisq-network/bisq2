@@ -290,8 +290,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         if (envelopePayloadMessage instanceof MailboxMessage) {
             PubKey receiverPubKey = pendingMessage.getReceiverNetworkId().getPubKey();
             ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
-            Optional<SendConfidentialMessageResult> sendConfidentialMessageResult = Optional.of(storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
-                    confidentialMessage, receiverPubKey, senderKeyPair));
+            MetaData metaData = ((MailboxMessage) envelopePayloadMessage).getMetaData();
+            Optional<SendConfidentialMessageResult> sendConfidentialMessageResult = Optional.of(storeMailBoxMessage(metaData, confidentialMessage, receiverPubKey, senderKeyPair));
             sendConfidentialMessageResult.ifPresent(result -> handleResult(envelopePayloadMessage, result));
             return sendConfidentialMessageResult;
         } else {
