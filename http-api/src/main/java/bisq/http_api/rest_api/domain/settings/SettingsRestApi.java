@@ -17,8 +17,10 @@
 
 package bisq.http_api.rest_api.domain.settings;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.dto.DtoMappings;
+import bisq.dto.settings.SettingsApiVersionDto;
 import bisq.dto.settings.SettingsDto;
 import bisq.http_api.rest_api.domain.RestApiBase;
 import bisq.settings.SettingsService;
@@ -62,6 +64,19 @@ public class SettingsRestApi extends RestApiBase {
             return buildOkResponse(settingsDto);
         } catch (Exception e) {
             log.error("Failed to retrieve user settings", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @GET
+    @Path("/version")
+    @Operation(description = "Get the current Bisq2 version")
+    public Response getVersion() {
+        try {
+            String version = ApplicationVersion.getVersion().toString();
+            return Response.ok(new SettingsApiVersionDto(version)).build();
+        } catch (Exception e) {
+            log.error("Error getting version", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
     }
