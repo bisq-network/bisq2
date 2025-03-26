@@ -17,7 +17,6 @@
 
 package bisq.java_se.utils;
 
-import com.sun.nio.file.ExtendedWatchEventModifier;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
