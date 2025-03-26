@@ -17,7 +17,7 @@
 
 package bisq.java_se.utils;
 
-import com.sun.nio.file.SensitivityWatchEventModifier;
+import com.sun.nio.file.ExtendedWatchEventModifier;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -48,8 +48,7 @@ public class FileCreationWatcher {
     private Path waitForNewFile(Optional<Path> optionalPath) {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
             directoryToWatch.register(watchService,
-                    new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE},
-                    SensitivityWatchEventModifier.HIGH);
+                    new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE});
             while (true) {
                 WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
