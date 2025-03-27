@@ -47,9 +47,12 @@ public class FileCreationWatcher {
     private Path waitForNewFile(Optional<Path> optionalPath) {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
             directoryToWatch.register(watchService,
-                    new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE});
+                    StandardWatchEventKinds.ENTRY_CREATE);
             while (true) {
                 WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
+                if(watchKey==null){
+                    continue;
+                }
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
 
@@ -67,7 +70,9 @@ public class FileCreationWatcher {
                     } else if (optionalPath.get().equals(newFilePath)) {
                         return newFilePath;
                     }
-                    watchKey.reset();
+                }
+                if(!watchKey.reset()){
+                    throw new IllegalStateException("File watcher is no longer valid.");
                 }
             }
         } catch (IOException | InterruptedException e) {
