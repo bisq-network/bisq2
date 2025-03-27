@@ -72,7 +72,7 @@ public class FileCreationWatcher {
                     }
                 }
                 if(!watchKey.reset()){
-                    throw new IllegalStateException("File watcher is no longer valid.");
+                    log.warn("File watcher is no longer valid.");
                 }
             }
         } catch (IOException | InterruptedException e) {
