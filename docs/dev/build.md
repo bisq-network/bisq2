@@ -8,7 +8,7 @@
    ```
 
 2. **Install Dependencies:**
-   Bisq requires JDK 22. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+   Bisq requires JDK 21. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
 
 3. **Setup bitcoind git submodule:**
    At project setup run first:
@@ -70,7 +70,7 @@ For a quick full cleanup/rebuild you can use
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
 
-2. Bisq requires JDK 22. You can find out which
+2. Bisq requires JDK 21. You can find out which
    version you have with:
 
    ```sh
