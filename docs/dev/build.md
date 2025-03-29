@@ -12,14 +12,22 @@
 
 3. **Setup bitcoind git submodule:**
    At project setup run first:
-   ```sh
-   git submodule init
-   git submodule update
+   ```bash
+   git submodule update --init --remote
    ```
 
    In case the submodule has changed after a project update, run:
-   ```sh
-   git submodule update
+   ```bash
+   cd wallets/bitcoind
+   git checkout main
+   git pull
+   cd ../..
+   ```
+
+   Commit the updated submodule
+   ```bash
+   git add wallets/bitcoind
+   git commit -m "Update submodule to latest commit on main"
    ```
 
 4. **Build Bisq**
