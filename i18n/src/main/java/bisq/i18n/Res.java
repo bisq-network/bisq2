@@ -112,7 +112,6 @@ public class Res {
         return bundles.stream().anyMatch(bundle -> bundle.containsKey(key));
     }
 
-
     public static String encode(String key, Object... arguments) {
         if (arguments.length == 0) {
             return key;

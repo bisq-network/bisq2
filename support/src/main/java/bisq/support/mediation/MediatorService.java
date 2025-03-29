@@ -186,13 +186,13 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
             networkService.confidentialSend(new MediatorsResponse(tradeId),
                     requester.getNetworkId(),
                     networkIdWithKeyPair);
-            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toRequester"));
+            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
 
             // Send to peer
             networkService.confidentialSend(new MediatorsResponse(tradeId),
                     peer.getNetworkId(),
                     networkIdWithKeyPair);
-            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toNonRequester"));
+            bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
         });
     }
 
