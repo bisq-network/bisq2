@@ -7,7 +7,7 @@ plugins {
 // this one needs specific setup otherwise gives "invalid source release" error
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
