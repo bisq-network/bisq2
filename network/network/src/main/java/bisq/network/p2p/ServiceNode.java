@@ -280,6 +280,9 @@ public class ServiceNode implements Node.Listener {
 
     CompletableFuture<Boolean> shutdown() {
         setState(State.STOPPING);
+        reportRequestService.ifPresent(ReportRequestService::shutdown);
+        reportResponseService.ifPresent(ReportResponseService::shutdown);
+        networkLoadService.ifPresent(NetworkLoadService::shutdown);
         peerGroupManager.ifPresent(PeerGroupManager::shutdown);
         dataNetworkService.ifPresent(DataNetworkService::shutdown);
         inventoryService.ifPresent(InventoryService::shutdown);
@@ -288,7 +291,6 @@ public class ServiceNode implements Node.Listener {
                 .thenCompose(result -> transportService.shutdown())
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
-
 
     Node initializeNode(NetworkId networkId) {
         return nodesById.initializeNode(networkId);

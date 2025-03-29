@@ -25,6 +25,7 @@ import org.glassfish.grizzly.http.server.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,17 +52,29 @@ public class GrizzlySwaggerHttpHandler extends HttpHandler {
             }
 
             response.setStatus(200);
-            URL resourceUrl = classLoader.getResource(resourceName);
-            if (resourceUrl != null) {
-                Path path = Paths.get(resourceUrl.toURI());
-                response.setContentLengthLong(Files.size(path));
-            }
-            inputStream.transferTo(response.getOutputStream());
+            
+            // Read all bytes to determine content length instead of using Paths which causes a crash in most cases
+            byte[] data = inputStream.readAllBytes();
+            setContentType(response, resourceName);
+            response.getOutputStream().write(data);
         } catch (IOException e) {
             response.setStatus(500);
             response.getWriter().write("500 Internal Server Error");
-            log.error("Error", e);
+            log.error("Error serving resource: {}", resourceName, e);
         }
+    }
+
+    /**
+     * Sets the content type based on extension of resourceName
+     * @param response to set the content type of
+     * @param resourceName to determine the content type of
+     */
+    private void setContentType(Response response, String resourceName) {
+        String contentType = URLConnection.guessContentTypeFromName(resourceName);
+        if (contentType == null) {
+            contentType = "application/octet-stream"; // Default binary
+        }
+        response.setContentType(contentType);
     }
 }
 

@@ -84,6 +84,7 @@ public abstract class ApplicationService implements Service {
             return new Config(appDataDir,
                     appName,
                     config.getBoolean("devMode"),
+                    config.getLong("devModeReputationScore"),
                     config.getString("keyIds"),
                     config.getBoolean("ignoreSigningKeyInResourcesCheck"),
                     config.getBoolean("ignoreSignatureVerification"),
@@ -94,6 +95,7 @@ public abstract class ApplicationService implements Service {
         private final Path baseDir;
         private final String appName;
         private final boolean devMode;
+        private final long devModeReputationScore;
         private final List<String> keyIds;
         private final boolean ignoreSigningKeyInResourcesCheck;
         private final boolean ignoreSignatureVerification;
@@ -103,6 +105,7 @@ public abstract class ApplicationService implements Service {
         public Config(Path baseDir,
                       String appName,
                       boolean devMode,
+                      long devModeReputationScore,
                       String keyIds,
                       boolean ignoreSigningKeyInResourcesCheck,
                       boolean ignoreSignatureVerification,
@@ -111,6 +114,7 @@ public abstract class ApplicationService implements Service {
             this.baseDir = baseDir;
             this.appName = appName;
             this.devMode = devMode;
+            this.devModeReputationScore = devModeReputationScore;
             // We want to use the keyIds at the DesktopApplicationLauncher as a simple format. 
             // Using the typesafe format with indexes would require a more complicate parsing as we do not use 
             // typesafe at the DesktopApplicationLauncher class. Thus, we use a simple comma separated list instead and treat it as sting in typesafe.
@@ -177,6 +181,9 @@ public abstract class ApplicationService implements Service {
         }
 
         DevMode.setDevMode(config.isDevMode());
+        if (config.isDevMode()) {
+            DevMode.setDevModeReputationScore(config.getDevModeReputationScore());
+        }
 
         Locale locale = LocaleRepository.getDefaultLocale();
         CountryRepository.applyDefaultLocale(locale);

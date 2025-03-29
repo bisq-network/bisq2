@@ -17,8 +17,11 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.common.fsm.Event;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.BitcoinTransactionValidation;
+import bisq.common.validation.LightningPreImageValidation;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
@@ -47,9 +50,18 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
         super.verifyMessage(message);
 
         message.getPaymentProof().ifPresent(paymentProof -> {
-            checkArgument(StringUtils.isNotEmpty(paymentProof));
-            // We leave it flexible so that users can use other than BTC mainnet data as txId
-            checkArgument(paymentProof.length() <= 1000);
+            boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
+            if (isMainChain) {
+                // We only require the paymentProof for BTC mainnet, not for LN as the pre-image is optional
+                checkArgument(StringUtils.isNotEmpty(paymentProof), "Transaction ID must not be empty");
+                // We allow shorter values as we do not enforce the validation in the UI
+                checkArgument(paymentProof.length() <= BitcoinTransactionValidation.LENGTH,
+                        "Transaction ID must have a length of " + BitcoinTransactionValidation.LENGTH + " characters.");
+            } else {
+                // We allow shorter values as we do not enforce the validation in the UI
+                checkArgument(paymentProof.length() <= LightningPreImageValidation.LENGTH,
+                        "Lightning pre-image must have a length of " + LightningPreImageValidation.LENGTH + " characters.");
+            }
         });
     }
 

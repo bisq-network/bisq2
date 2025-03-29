@@ -4,7 +4,7 @@ plugins {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -12,7 +12,7 @@ allprojects {
     plugins.apply("java")
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(22))
+            languageVersion.set(JavaLanguageVersion.of(21))
         }
     }
 }

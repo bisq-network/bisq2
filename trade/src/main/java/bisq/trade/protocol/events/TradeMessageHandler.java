@@ -31,9 +31,11 @@ public abstract class TradeMessageHandler<M extends Trade<?, ?, ?>, S extends Bi
     }
 
     protected void verifyMessage(S message) {
-        checkArgument(message.getTradeId().equals(trade.getId()), "TradeId of message not matching the on from the trade data");
+        checkArgument(message.getTradeId().equals(trade.getId()),
+                "TradeId of message not matching the tradeId from the trade data");
         NetworkId sender = message.getSender();
-        checkArgument(sender.equals(trade.getPeer().getNetworkId()), "Message sender networkID not matching the networkId in the trade data");
+        checkArgument(sender.equals(trade.getPeer().getNetworkId()),
+                "Message sender networkID not matching the peers networkId from the trade data");
         // We verify if the sender of the message is banned at the message handler in the service class.
         // As the message handler is optional we prefer to block banned messages at the level instead of handling it here.
     }
