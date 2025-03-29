@@ -8,7 +8,7 @@
    ```
 
 2. **Install Dependencies:**
-   Bisq requires JDK 21. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+   Bisq requires JDK 21.
 
 3. **Setup bitcoind git submodule:**
    At project setup run first:
