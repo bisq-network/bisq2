@@ -1075,3 +1075,17 @@
     -fx-border-insets: 2 0 2 0;
     -fx-padding: -2 2 -2 2;
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * Drawer Menu                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+.btc-text-field {
+    -fx-background-color: #2D3338;
+    -fx-background-radius: 6;
+    -fx-border-color: #565E63;
+    -fx-border-radius: 6;
+    -fx-border-width: 0 0 2 0;
+}
