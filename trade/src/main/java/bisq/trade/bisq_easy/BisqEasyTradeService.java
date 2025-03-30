@@ -158,7 +158,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         if (authorizedAlertDataSetPin != null) {
             authorizedAlertDataSetPin.unbind();
             authorizedAlertDataSetPin = null;

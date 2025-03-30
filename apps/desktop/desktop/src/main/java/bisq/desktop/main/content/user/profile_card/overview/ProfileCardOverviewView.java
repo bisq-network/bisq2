@@ -19,6 +19,7 @@ package bisq.desktop.main.content.user.profile_card.overview;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BtcSatsText;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -31,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel, ProfileCardOverviewController> {
-    private final Label totalBaseToBuyLabel, totalBaseToSellLabel, profileAgeLabel, lastUserActivityLabel,
-            statementLabel, sellingLimitLabel, tradeTermsTextArea;
+    private final Label profileAgeLabel, lastUserActivityLabel, statementLabel, sellingLimitLabel, tradeTermsTextArea;
+    private final BtcSatsText totalBaseToBuyBtcText, totalBaseToSellBtcText;
 
     public ProfileCardOverviewView(ProfileCardOverviewModel model,
                                    ProfileCardOverviewController controller) {
@@ -44,17 +45,17 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         profileAgeLabel = new Label();
         VBox profileAgeBox = createAndGetTitleAndMetricBox("user.profileCard.details.profileAge", profileAgeLabel);
 
-        totalBaseToBuyLabel = new Label();
-        Label toBuyUnitLabel = new Label("BTC");
-        VBox totalBaseToBuyBox = createAndGetTitleAndMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyLabel, toBuyUnitLabel);
+        totalBaseToBuyBtcText = new BtcSatsText("0");
+        configureBtcSatsText(totalBaseToBuyBtcText);
+        VBox totalBaseToBuyBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyBtcText);
 
-        Label toSellUnitLabel = new Label("BTC");
-        totalBaseToSellLabel = new Label();
-        VBox totalBaseToSellBox = createAndGetTitleAndMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellLabel, toSellUnitLabel);
+        totalBaseToSellBtcText = new BtcSatsText("0");
+        configureBtcSatsText(totalBaseToSellBtcText);
+        VBox totalBaseToSellBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellBtcText);
 
         sellingLimitLabel = new Label();
         Label sellingLimitUnitLabel = new Label("USD");
-        VBox sellingLimitBox = createAndGetTitleAndMetricBox("user.profileCard.overview.sellingLimit", sellingLimitLabel, sellingLimitUnitLabel);
+        VBox sellingLimitBox = createAndGetTitleAndMetricBox(sellingLimitLabel, sellingLimitUnitLabel);
 
         HBox metricsHBox = new HBox(
                 lastUserActivityBox,
@@ -66,6 +67,7 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
                 totalBaseToSellBox,
                 Spacer.fillHBox(),
                 sellingLimitBox);
+        metricsHBox.setAlignment(Pos.BASELINE_CENTER);
 
         statementLabel = new Label();
         VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 20);
@@ -88,8 +90,8 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
     @Override
     protected void onViewAttached() {
         profileAgeLabel.setText(model.getProfileAge());
-        totalBaseToBuyLabel.setText(model.getTotalBaseOfferAmountToBuy());
-        totalBaseToSellLabel.setText(model.getTotalBaseOfferAmountToSell());
+        totalBaseToBuyBtcText.setBtcAmount(model.getTotalBaseOfferAmountToBuy());
+        totalBaseToSellBtcText.setBtcAmount(model.getTotalBaseOfferAmountToSell());
         sellingLimitLabel.setText(model.getSellingLimit());
         statementLabel.setText(model.getStatement());
         tradeTermsTextArea.setText(model.getTradeTerms());
@@ -97,11 +99,19 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         lastUserActivityLabel.textProperty().bind(model.getLastUserActivity());
 
         root.requestFocus();
+        root.layoutBoundsProperty().addListener((obs, old, newVal) -> {
+            totalBaseToBuyBtcText.applySmallCompactConfig();
+            totalBaseToSellBtcText.applySmallCompactConfig();
+        });
     }
 
     @Override
     protected void onViewDetached() {
         lastUserActivityLabel.textProperty().unbind();
+    }
+
+    private void configureBtcSatsText(BtcSatsText btcText) {
+        btcText.applySmallCompactConfig();
     }
 
     private VBox createAndGetTitleAndMetricBox(String title, Label detailsLabel) {
@@ -113,8 +123,17 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         return vBox;
     }
 
-    private VBox createAndGetTitleAndMetricBox(String title, Label detailsLabel, Label unitLabel) {
+    private VBox createAndGetTitleAndBtcMetricBox(String title, BtcSatsText btcSatsText) {
         Label titleLabel = new Label(Res.get(title).toUpperCase());
+        titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
+
+        VBox vBox = new VBox(titleLabel, btcSatsText);
+        vBox.setAlignment(Pos.CENTER);
+        return vBox;
+    }
+
+    private VBox createAndGetTitleAndMetricBox(Label detailsLabel, Label unitLabel) {
+        Label titleLabel = new Label(Res.get("user.profileCard.overview.sellingLimit").toUpperCase());
         titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
         detailsLabel.getStyleClass().addAll("text-fill-white", "metric");
         unitLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
