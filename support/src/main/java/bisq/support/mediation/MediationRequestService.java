@@ -218,10 +218,10 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
                 .ifPresentOrElse(channel -> {
                             // Requester had it activated at request time
                             if (channel.isInMediation()) {
-                                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toRequester"));
+                                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toRequester"));
                             } else {
                                 bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
-                                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toNonRequester"));
+                                bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
 
                                 //todo (Critical) - check if we do sent from both peers
                                 // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
