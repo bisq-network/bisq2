@@ -1078,33 +1078,14 @@
 
 /*******************************************************************************
  *                                                                             *
- * BtcSatsText                                                                 *
+ * Drawer Menu                                                                 *
  *                                                                             *
  ******************************************************************************/
 
-.btc-sats-text {
-    -fx-font-family: "IBM Plex Sans Light"
-    -fx-background-color: transparent;
-}
-
-.btc-integer-part {
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -fx-light-text-color;
-}
-
-.btc-leading-zeros {
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -fx-light-text-color;
-}
-
-.btc-significant-digits {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.btc-code {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
+.btc-text-field {
+    -fx-background-color: #2D3338;
+    -fx-background-radius: 6;
+    -fx-border-color: #565E63;
+    -fx-border-radius: 6;
+    -fx-border-width: 0 0 2 0;
 }

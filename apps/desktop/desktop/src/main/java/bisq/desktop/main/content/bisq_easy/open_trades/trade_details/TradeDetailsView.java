@@ -14,14 +14,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_details;
-
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.BtcSatsText;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -34,42 +33,35 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.Optional;
-
 @Slf4j
 public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, TradeDetailsController> {
     private final Button closeButton;
     private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, fiatAmountLabel,
-            fiatCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
+            fiatCurrencyLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodLabel,
             settlementMethodLabel, tradeIdLabel, peerNetworkAddressLabel, btcPaymentAddressTitleLabel,
             btcPaymentAddressDetailsLabel, paymentProofTitleLabel, paymentProofDetailsLabel,
             paymentAccountDataLabel, assignedMediatorLabel;
+    private final BtcSatsText btcAmountText;
     private final HBox assignedMediatorBox;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
             btcPaymentAddressCopyButton, paymentProofCopyButton, paymentAccountDataCopyButton;
     private final HBox paymentProofBox, tradeDurationBox;
-
     public TradeDetailsView(TradeDetailsModel model, TradeDetailsController controller) {
         super(new VBox(), model, controller);
-
         closeButton = BisqIconButton.createIconButton("close");
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
         closeButtonRow.setPadding(new Insets(15, 15, 0, 0));
-
         Label headline = new Label(Res.get("bisqEasy.openTrades.tradeDetails.headline"));
         headline.getStyleClass().add("bisq-text-17");
         headline.setAlignment(Pos.CENTER);
         headline.setMaxWidth(Double.MAX_VALUE);
-
         // Trade date
         tradeDateLabel = getValueLabel();
         HBox tradeDateBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradeDate", tradeDateLabel);
-
         // Trade duration
         tradeDurationLabel = getValueLabel();
         tradeDurationBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradeDuration", tradeDurationLabel);
-
         // Traders / Roles
         Label mePrefixLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.me"));
         mePrefixLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
@@ -84,7 +76,6 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         tradersAndRoleCopyButton = getTradeIdCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.tradersAndRole.copy"));
         HBox tradersAndRoleBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradersAndRole",
                 tradersAndRoleDetailsHBox, tradersAndRoleCopyButton);
-
         // Offer type and market
         offerTypeLabel = getValueLabel();
         Label offerAndMarketslashLabel = new Label("/");
@@ -94,23 +85,27 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         offerTypeAndMarketDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
         HBox offerTypeAndMarketBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.offerTypeAndMarket",
                 offerTypeAndMarketDetailsHBox);
-
         // Amount and price
         fiatAmountLabel = getValueLabel();
         fiatCurrencyLabel = new Label();
         fiatCurrencyLabel.getStyleClass().addAll("text-fill-white", "small-text");
-
         Label openParenthesisLabel = new Label("(");
         openParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        btcAmountLabel = getValueLabel();
-        btcAmountLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        btcAmountLabel.setPadding(new Insets(0, 5, 0, 0));
+
+        // Initialize BtcSatsText
+        btcAmountText = new BtcSatsText();
+        btcAmountText.setShowBtcCode(false);
+
         Label btcLabel = new Label("BTC");
         btcLabel.getStyleClass().addAll("text-fill-grey-dimmed", "small-text");
         Label closingParenthesisLabel = new Label(")");
         closingParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        HBox btcAmountHBoxbtcAmountHBox = new HBox(openParenthesisLabel, btcAmountLabel, btcLabel, closingParenthesisLabel);
-        btcAmountHBoxbtcAmountHBox.setAlignment(Pos.BASELINE_LEFT);
+
+        HBox btcAmountHBox = new HBox(btcAmountText, btcLabel);
+        btcAmountHBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox btcAmountParenthesisHBox = new HBox(openParenthesisLabel, btcAmountHBox, closingParenthesisLabel);
+        btcAmountParenthesisHBox.setAlignment(Pos.BASELINE_LEFT);
+
         Label atLabel = new Label("@");
         atLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
         priceLabel = getValueLabel();
@@ -118,10 +113,11 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         priceCodesLabel.getStyleClass().addAll("text-fill-white", "small-text");
         priceSpecLabel = new Label();
         priceSpecLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        HBox amountAndPriceDetailsHBox = new HBox(5, fiatAmountLabel, fiatCurrencyLabel, btcAmountHBoxbtcAmountHBox,
+        HBox amountAndPriceDetailsHBox = new HBox(5, fiatAmountLabel, fiatCurrencyLabel, btcAmountParenthesisHBox,
                 atLabel, priceLabel, priceCodesLabel, priceSpecLabel);
         amountAndPriceDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox amountAndPriceBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.amountAndPrice", amountAndPriceDetailsHBox);
+        HBox amountAndPriceBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.amountAndPrice",
+                amountAndPriceDetailsHBox);
 
         // Payment and settlement methods
         paymentMethodLabel = getValueLabel();
@@ -132,50 +128,42 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         paymentMethodsDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
         HBox paymentMethodsBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAndSettlementMethods",
                 paymentMethodsDetailsHBox);
-
         // Trade ID
         tradeIdLabel = getValueLabel();
         tradeIdCopyButton = getTradeIdCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.tradeId.copy"));
         HBox tradeIdBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.tradeId",
                 tradeIdLabel, tradeIdCopyButton);
-
         // Peer network address
         peerNetworkAddressLabel = getValueLabel();
         peerNetworkAddressCopyButton = getTradeIdCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.peerNetworkAddress.copy"));
         HBox peerNetworkAddressBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.peerNetworkAddress",
                 peerNetworkAddressLabel, peerNetworkAddressCopyButton);
-
         // Payment account data
         paymentAccountDataLabel = getValueLabel();
         paymentAccountDataCopyButton = getTradeIdCopyButton(Res.get("bisqEasy.openTrades.tradeDetails.paymentAccountData.copy"));
         HBox paymentAccountDataBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.paymentAccountData",
                 paymentAccountDataLabel, paymentAccountDataCopyButton);
-
         // BTC payment address
         btcPaymentAddressTitleLabel = getDescriptionLabel("");
         btcPaymentAddressDetailsLabel = getValueLabel();
         btcPaymentAddressCopyButton = getTradeIdCopyButton("");
         HBox btcPaymentAddressBox = createAndGetDescriptionAndValueBox(btcPaymentAddressTitleLabel,
                 btcPaymentAddressDetailsLabel, btcPaymentAddressCopyButton);
-
         // Payment proof (tx ID or optional LN pre-image)
         paymentProofTitleLabel = getDescriptionLabel("");
         paymentProofDetailsLabel = getValueLabel();
         paymentProofCopyButton = getTradeIdCopyButton("");
         paymentProofBox = createAndGetDescriptionAndValueBox(paymentProofTitleLabel,
                 paymentProofDetailsLabel, paymentProofCopyButton);
-
         // Assigned mediator
         assignedMediatorLabel = getValueLabel();
         assignedMediatorBox = createAndGetDescriptionAndValueBox("bisqEasy.openTrades.tradeDetails.assignedMediator", assignedMediatorLabel);
-
         Region overviewLine = getLine();
         Label overviewLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.overview").toUpperCase());
         overviewLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
         Label detailsLabel = new Label(Res.get("bisqEasy.openTrades.tradeDetails.details").toUpperCase());
         detailsLabel.getStyleClass().addAll("text-fill-grey-dimmed", "font-light", "medium-text");
         Region detailsLine = getLine();
-
         VBox.setMargin(headline, new Insets(-5, 0, 5, 0));
         VBox.setMargin(overviewLabel, new Insets(0, 0, -5, 0));
         VBox.setMargin(detailsLabel, new Insets(15, 0, -5, 0));
@@ -199,37 +187,34 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
                 assignedMediatorBox
         );
         content.setAlignment(Pos.CENTER_LEFT);
-
         root.setAlignment(Pos.TOP_CENTER);
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
-
         VBox.setMargin(content, new Insets(-40, 80, 0, 80));
         VBox.setVgrow(content, Priority.ALWAYS);
         root.getChildren().addAll(closeButtonRow, content);
     }
-
     private static BisqMenuItem getTradeIdCopyButton(String tooltip) {
         BisqMenuItem bisqMenuItem = new BisqMenuItem("copy-grey", "copy-white");
         bisqMenuItem.setTooltip(tooltip);
         return bisqMenuItem;
     }
-
     @Override
     protected void onViewAttached() {
         tradeDateLabel.setText(model.getTradeDate());
-
         tradeDurationBox.setVisible(model.getTradeDuration().isPresent());
         tradeDurationBox.setManaged(model.getTradeDuration().isPresent());
         tradeDurationLabel.setText(model.getTradeDuration().orElse(""));
-
         meLabel.setText(model.getMe());
         peerLabel.setText(model.getPeer());
         offerTypeLabel.setText(model.getOfferType());
         marketLabel.setText(model.getMarket());
         fiatAmountLabel.setText(model.getFiatAmount());
         fiatCurrencyLabel.setText(model.getFiatCurrency());
-        btcAmountLabel.setText(model.getBtcAmount());
+
+        // Use BtcSatsText instead of btcAmountLabel
+        btcAmountText.setBtcAmount(model.getBtcAmount());
+
         priceLabel.setText(model.getPrice());
         priceCodesLabel.setText(model.getPriceCodes());
         priceSpecLabel.setText(model.getPriceSpec());
@@ -244,7 +229,6 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         btcPaymentAddressCopyButton.setTooltip(model.isOnChainSettlement()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.btcPaymentAddress.copy")
                 : Res.get("bisqEasy.openTrades.tradeDetails.lightningInvoice.copy"));
-
         paymentProofTitleLabel.setText(model.isOnChainSettlement()
                 ? Res.get("bisqEasy.openTrades.tradeDetails.txId")
                 : Res.get("bisqEasy.openTrades.tradeDetails.lightningPreImage"));
@@ -254,7 +238,6 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
                 : Res.get("bisqEasy.openTrades.tradeDetails.lightningPreImage.copy"));
         paymentProofBox.setVisible(model.isPaymentProofVisible());
         paymentProofBox.setManaged(model.isPaymentProofVisible());
-
         paymentAccountDataLabel.setText(model.getPaymentAccountData());
         assignedMediatorLabel.setText(model.getAssignedMediator());
         assignedMediatorBox.setVisible(model.isHasMediatorBeenAssigned());
@@ -265,25 +248,21 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         btcPaymentAddressCopyButton.setManaged(!model.isBtcPaymentDataEmpty());
         paymentProofCopyButton.setVisible(!model.isPaymentProofEmpty());
         paymentProofCopyButton.setVisible(!model.isPaymentProofEmpty());
-
         paymentAccountDataLabel.getStyleClass().clear();
         paymentAccountDataLabel.getStyleClass().add(model.isPaymentAccountDataEmpty()
                 ? "text-fill-grey-dimmed"
                 : "text-fill-white");
         paymentAccountDataLabel.getStyleClass().add("normal-text");
-
         btcPaymentAddressDetailsLabel.getStyleClass().clear();
         btcPaymentAddressDetailsLabel.getStyleClass().add(model.isBtcPaymentDataEmpty()
                 ? "text-fill-grey-dimmed"
                 : "text-fill-white");
         btcPaymentAddressDetailsLabel.getStyleClass().add("normal-text");
-
         paymentProofDetailsLabel.getStyleClass().clear();
         paymentProofDetailsLabel.getStyleClass().add(model.isPaymentProofEmpty()
                 ? "text-fill-grey-dimmed"
                 : "text-fill-white");
         paymentProofDetailsLabel.getStyleClass().add("normal-text");
-
         closeButton.setOnAction(e -> controller.onClose());
         tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer()));
         tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
@@ -292,7 +271,6 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         btcPaymentAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBtcPaymentAddress()));
         paymentProofCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPaymentProof()));
     }
-
     @Override
     protected void onViewDetached() {
         closeButton.setOnAction(null);
@@ -303,27 +281,22 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         btcPaymentAddressCopyButton.setOnAction(null);
         paymentProofCopyButton.setOnAction(null);
     }
-
     private HBox createAndGetDescriptionAndValueBox(String descriptionKey, Node valueNode) {
         return createAndGetDescriptionAndValueBox(descriptionKey, valueNode, Optional.empty());
     }
-
     private HBox createAndGetDescriptionAndValueBox(String descriptionKey, Node detailsNode, BisqMenuItem button) {
         return createAndGetDescriptionAndValueBox(descriptionKey, detailsNode, Optional.of(button));
     }
-
     private HBox createAndGetDescriptionAndValueBox(String descriptionKey,
                                                     Node detailsNode,
                                                     Optional<BisqMenuItem> button) {
         return createAndGetDescriptionAndValueBox(getDescriptionLabel(Res.get(descriptionKey)), detailsNode, button);
     }
-
     private HBox createAndGetDescriptionAndValueBox(Label descriptionLabel,
                                                     Node detailsNode,
                                                     BisqMenuItem button) {
         return createAndGetDescriptionAndValueBox(descriptionLabel, detailsNode, Optional.of(button));
     }
-
     private HBox createAndGetDescriptionAndValueBox(Label descriptionLabel,
                                                     Node detailsNode,
                                                     Optional<BisqMenuItem> button) {
@@ -331,10 +304,8 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         descriptionLabel.setMaxWidth(width);
         descriptionLabel.setMinWidth(width);
         descriptionLabel.setPrefWidth(width);
-
         HBox hBox = new HBox(descriptionLabel, detailsNode);
         hBox.setAlignment(Pos.BASELINE_LEFT);
-
         if (button.isPresent()) {
             button.get().useIconOnly(17);
             HBox.setMargin(button.get(), new Insets(0, 0, 0, 40));
@@ -342,19 +313,16 @@ public class TradeDetailsView extends NavigationView<VBox, TradeDetailsModel, Tr
         }
         return hBox;
     }
-
     private static Label getDescriptionLabel(String description) {
         Label label = new Label(description);
         label.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text", "font-light");
         return label;
     }
-
     private static Label getValueLabel() {
         Label label = new Label();
         label.getStyleClass().addAll("text-fill-white", "normal-text", "font-light");
         return label;
     }
-
     private Region getLine() {
         Region line = new Region();
         line.setMinHeight(1);
