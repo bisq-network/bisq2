@@ -38,6 +38,7 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 // Data size about 200-250 bytes
 @Slf4j
@@ -193,7 +194,10 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, getMetaData().getTtl());
+        // As the remove messages are only relevant to avoid race conditions when add and remove data arrive out of
+        // order, we can reduce the TTL by half (or at least 2 days) for remove messages to lower memory usage and data storage
+        long ttl = Math.max(TimeUnit.DAYS.toMillis(2), Math.min(MailboxData.MAX_TLL, getMetaData().getTtl() / 2));
+        return (System.currentTimeMillis() - created) > ttl;
     }
 
     @Override
