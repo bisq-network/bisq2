@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.components;
 
+import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BtcSatsText;
@@ -31,6 +32,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
@@ -67,7 +69,7 @@ public class ReviewDataDisplay {
 
     public void setToSendCode(String value) {
         controller.model.getToSendCode().set(value);
-        controller.model.getIsSendBtc().set("BTC".equals(value));
+        controller.model.getIsSendBtc().set(TradeCurrency.isBtc(value));
     }
 
     public void setToReceiveAmountDescription(String value) {
@@ -80,7 +82,7 @@ public class ReviewDataDisplay {
 
     public void setToReceiveCode(String value) {
         controller.model.getToReceiveCode().set(value);
-        controller.model.getIsReceiveBtc().set("BTC".equals(value));
+        controller.model.getIsReceiveBtc().set(TradeCurrency.isBtc(value));
     }
 
     public void setBitcoinPaymentMethodDescription(String value) {
@@ -131,18 +133,8 @@ public class ReviewDataDisplay {
         private final StringProperty bitcoinPaymentMethod = new SimpleStringProperty();
         private final StringProperty fiatPaymentMethodDescription = new SimpleStringProperty();
         private final StringProperty fiatPaymentMethod = new SimpleStringProperty();
-
-        // Observable properties to track Bitcoin display status
         private final BooleanProperty isSendBtc = new SimpleBooleanProperty(false);
         private final BooleanProperty isReceiveBtc = new SimpleBooleanProperty(false);
-
-        public BooleanProperty getIsSendBtc() {
-            return isSendBtc;
-        }
-
-        public BooleanProperty getIsReceiveBtc() {
-            return isReceiveBtc;
-        }
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
@@ -151,8 +143,8 @@ public class ReviewDataDisplay {
         private final Triple<Text, Label, VBox> direction, paymentMethod;
         private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSend, toReceive;
 
-        // BtcSatsText components for Bitcoin display
-        private final BtcSatsText toSendBtcAmount, toReceiveBtcAmount;
+        private final BtcSatsText toSendBtcAmount = new BtcSatsText("", null, BtcSatsText.Style.DEFAULT);
+        private final BtcSatsText toReceiveBtcAmount = new BtcSatsText("", null, BtcSatsText.Style.DEFAULT);
 
         private final VBox rangeAmountVBox = new VBox(0);
         private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
@@ -164,69 +156,79 @@ public class ReviewDataDisplay {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
 
+            configureBtcSatsTextForReview(toSendBtcAmount);
+            configureBtcSatsTextForReview(toReceiveBtcAmount);
+
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSend = getAmountElements();
             toReceive = getAmountElements();
             paymentMethod = getElements();
+        }
 
-            // Create BtcSatsText components
-            toSendBtcAmount = new BtcSatsText();
-            toSendBtcAmount.setShowBtcCode(false); // We'll show the code with the regular label
-            toSendBtcAmount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
-            toSendBtcAmount.setVisible(false); // Hidden by default
+        private void configureBtcSatsTextForReview(BtcSatsText btcText) {
+            Text significantDigits = btcText.getSignificantDigits();
+            Font currentFont = significantDigits.getFont();
+            significantDigits.setFont(Font.font(currentFont.getFamily(), 20));
 
-            toReceiveBtcAmount = new BtcSatsText();
-            toReceiveBtcAmount.setShowBtcCode(false); // We'll show the code with the regular label
-            toReceiveBtcAmount.getStyleClass().add("bisq-easy-trade-wizard-review-header-value");
-            toReceiveBtcAmount.setVisible(false); // Hidden by default
+            btcText.setShowBtcCode(true);
+            Text btcCode = btcText.getBtcCode();
+            Font btcCurrentFont = btcCode.getFont();
+            btcCode.setFont(Font.font(btcCurrentFont.getFamily(), 17));
 
-            // Add BtcSatsText to the HBoxes - keeping regular Text components for non-BTC display
-            HBox toSendHBox = toSend.getSecond();
-            toSendHBox.getChildren().add(0, toSendBtcAmount);
-
-            HBox toReceiveHBox = toReceive.getSecond();
-            toReceiveHBox.getChildren().add(0, toReceiveBtcAmount);
+            btcText.setBaselineAlignment();
+            btcText.setHeightConstraints(28, 28);
+            btcText.setPaddings(new Insets(0));
+            btcText.setSpacing(0);
         }
 
         @Override
         protected void onViewAttached() {
             direction.getSecond().textProperty().bind(model.getDirection());
             toSend.getFirst().getFirst().textProperty().bind(model.getToSendAmountDescription());
+            toSend.getFirst().getSecond().textProperty().bind(model.getToSendAmount());
             toSend.getFirst().getThird().textProperty().bind(model.getToSendCode());
             toReceive.getFirst().getFirst().textProperty().bind(model.getToReceiveAmountDescription());
+            toReceive.getFirst().getSecond().textProperty().bind(model.getToReceiveAmount());
             toReceive.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
             paymentMethod.getFirst().textProperty().bind(model.getFiatPaymentMethodDescription());
             paymentMethod.getSecond().textProperty().bind(model.getFiatPaymentMethod());
 
-            // Set up Bitcoin display handlers
-            isSendBtcPin = EasyBind.subscribe(model.getIsSendBtc(), isBtc -> {
-                updateSendAmountDisplay(isBtc);
-            });
+            toSendBtcAmount.btcAmountProperty().bind(model.getToSendAmount());
+            toReceiveBtcAmount.btcAmountProperty().bind(model.getToReceiveAmount());
 
-            isReceiveBtcPin = EasyBind.subscribe(model.getIsReceiveBtc(), isBtc -> {
-                updateReceiveAmountDisplay(isBtc);
-            });
+            VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
 
-            // Handle amount changes
-            model.toSendAmount.addListener((obs, old, newVal) -> {
-                if (model.getIsSendBtc().get()) {
-                    toSendBtcAmount.setBtcAmount(newVal);
+            isSendBtcPin = EasyBind.subscribe(model.getIsSendBtc(), isSendBtc -> {
+                HBox amountHBox = toSend.getSecond();
+                amountHBox.getChildren().clear();
+
+                if (isSendBtc) {
+                    amountHBox.getChildren().add(toSendBtcAmount);
                 } else {
-                    toSend.getFirst().getSecond().setText(newVal);
+                    amountHBox.getChildren().addAll(
+                            toSend.getFirst().getSecond(),
+                            toSend.getFirst().getThird()
+                    );
+                    HBox.setMargin(toSend.getFirst().getSecond(), new Insets(0.5, 0, 0, 0));
+                    toSendBtcAmount.applyStyleToTextNodes();
                 }
             });
 
-            model.toReceiveAmount.addListener((obs, old, newVal) -> {
-                if (model.getIsReceiveBtc().get()) {
-                    toReceiveBtcAmount.setBtcAmount(newVal);
+            isReceiveBtcPin = EasyBind.subscribe(model.getIsReceiveBtc(), isReceiveBtc -> {
+                HBox amountHBox = toReceive.getSecond();
+                amountHBox.getChildren().clear();
+
+                if (isReceiveBtc) {
+                    amountHBox.getChildren().add(toReceiveBtcAmount);
                 } else {
-                    toReceive.getFirst().getSecond().setText(newVal);
+                    amountHBox.getChildren().addAll(
+                            toReceive.getFirst().getSecond(),
+                            toReceive.getFirst().getThird()
+                    );
+                    HBox.setMargin(toReceive.getFirst().getSecond(), new Insets(0.5, 0, 0, 0));
+                    toReceiveBtcAmount.applyStyleToTextNodes();
                 }
             });
-
-            // Initial setup of displays
-            updateSendAmountDisplay(model.getIsSendBtc().get());
-            updateReceiveAmountDisplay(model.getIsReceiveBtc().get());
 
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
                 VBox toSendVBox = toSend.getThird();
@@ -257,40 +259,20 @@ public class ReviewDataDisplay {
         protected void onViewDetached() {
             direction.getSecond().textProperty().unbind();
             toSend.getFirst().getFirst().textProperty().unbind();
+            toSend.getFirst().getSecond().textProperty().unbind();
             toSend.getFirst().getThird().textProperty().unbind();
             toReceive.getFirst().getFirst().textProperty().unbind();
+            toReceive.getFirst().getSecond().textProperty().unbind();
             toReceive.getFirst().getThird().textProperty().unbind();
             paymentMethod.getFirst().textProperty().unbind();
             paymentMethod.getSecond().textProperty().unbind();
 
+            toSendBtcAmount.btcAmountProperty().unbind();
+            toReceiveBtcAmount.btcAmountProperty().unbind();
+
             isRangeAmountPin.unsubscribe();
             isSendBtcPin.unsubscribe();
             isReceiveBtcPin.unsubscribe();
-        }
-
-        // Helper methods to update the display components
-        private void updateSendAmountDisplay(boolean isBtc) {
-            if (isBtc) {
-                toSendBtcAmount.setVisible(true);
-                toSend.getFirst().getSecond().setVisible(false);
-                toSendBtcAmount.setBtcAmount(model.getToSendAmount().get());
-            } else {
-                toSendBtcAmount.setVisible(false);
-                toSend.getFirst().getSecond().setVisible(true);
-                toSend.getFirst().getSecond().setText(model.getToSendAmount().get());
-            }
-        }
-
-        private void updateReceiveAmountDisplay(boolean isBtc) {
-            if (isBtc) {
-                toReceiveBtcAmount.setVisible(true);
-                toReceive.getFirst().getSecond().setVisible(false);
-                toReceiveBtcAmount.setBtcAmount(model.getToReceiveAmount().get());
-            } else {
-                toReceiveBtcAmount.setVisible(false);
-                toReceive.getFirst().getSecond().setVisible(true);
-                toReceive.getFirst().getSecond().setText(model.getToReceiveAmount().get());
-            }
         }
 
         private Triple<Text, Label, VBox> getElements() {

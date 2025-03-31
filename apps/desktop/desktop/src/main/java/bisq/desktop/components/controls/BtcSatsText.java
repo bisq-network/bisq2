@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.components.controls;
 
 import javafx.beans.property.BooleanProperty;
@@ -11,83 +28,72 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
+import lombok.Getter;
 
-/**
- * A simple component for displaying Bitcoin amounts with formatted sats.
- */
 public class BtcSatsText extends VBox {
 
-    // Style options
     public enum Style {
         DEFAULT,
         TEXT_FIELD
     }
 
-    // Properties
     private final StringProperty btcAmount = new SimpleStringProperty("");
     private final StringProperty labelText = new SimpleStringProperty("");
     private final BooleanProperty showBtcCode = new SimpleBooleanProperty(true);
 
-    // UI components
     private final Label label = new Label();
-    private final HBox contentBox = new HBox(8);
+    private final HBox contentBox = new HBox(0);
     private final TextFlow valueTextFlow = new TextFlow();
 
-    // Text parts
     private final Text integerPart = new Text();
     private final Text leadingZeros = new Text();
+
+    @Getter
     private final Text significantDigits = new Text();
 
-    /**
-     * Creates a new BtcSatsText with default style.
-     */
+    @Getter
+    private final Text btcCode = new Text();
+
     public BtcSatsText() {
         this("", null, Style.DEFAULT);
     }
 
-    /**
-     * Creates a new BtcSatsText with the specified amount.
-     */
     public BtcSatsText(String amount) {
         this(amount, null, Style.DEFAULT);
     }
 
-    /**
-     * Creates a new BtcSatsText with the specified configuration.
-     */
     public BtcSatsText(String amount, String label, Style style) {
-        // Setup
-        setSpacing(4);
+        setSpacing(0);
+        setPadding(new Insets(0));
 
-        // Initialize components
         this.label.getStyleClass().add("bisq-text-3");
-        contentBox.setAlignment(Pos.CENTER_LEFT);
-        valueTextFlow.getChildren().addAll(integerPart, leadingZeros, significantDigits);
+        contentBox.setAlignment(Pos.BASELINE_LEFT);
+        valueTextFlow.setLineSpacing(0);
+        valueTextFlow.getChildren().addAll(integerPart, leadingZeros, significantDigits, btcCode);
         contentBox.getChildren().add(valueTextFlow);
 
-        // Apply style
         if (style == Style.TEXT_FIELD) {
             setupTextFieldStyle();
         }
 
-        // Add components to the view
-        getChildren().addAll(this.label, contentBox);
-
-        // Set initial values
-        btcAmount.set(amount);
         if (label != null) {
             labelText.set(label);
             this.label.setText(label);
             this.label.setVisible(true);
             this.label.setManaged(true);
+            getChildren().addAll(this.label, contentBox);
         } else {
             this.label.setVisible(false);
             this.label.setManaged(false);
+            getChildren().add(contentBox);
         }
 
-        // Setup listeners
+        btcAmount.set(amount);
+
         btcAmount.addListener((obs, old, newVal) -> updateDisplay());
         labelText.addListener((obs, old, newVal) -> {
             this.label.setText(newVal);
@@ -97,13 +103,14 @@ public class BtcSatsText extends VBox {
         });
         showBtcCode.addListener((obs, old, newVal) -> updateDisplay());
 
-        // Initial update
         updateDisplay();
+
+        getStyleClass().add("btc-sats-text");
+
+        setAlignment(Pos.BASELINE_LEFT);
+        contentBox.setAlignment(Pos.BASELINE_LEFT);
     }
 
-    /**
-     * Updates the display based on current property values.
-     */
     private void updateDisplay() {
         String amount = btcAmount.get();
         if (amount == null || amount.isEmpty()) {
@@ -115,30 +122,27 @@ public class BtcSatsText extends VBox {
         formatBtcAmount(amount, showBtcCode.get());
     }
 
-    /**
-     * Formats the Bitcoin amount for display.
-     */
     private void formatBtcAmount(String amount, boolean showCode) {
-        // Ensure we have a decimal point
         if (!amount.contains(".")) {
             amount = amount + ".0";
         }
 
-        // Split into parts
         String[] parts = amount.split("\\.");
         String integerPart = parts[0];
         String fractionalPart = parts.length > 1 ? parts[1] : "";
 
-        // Format fractional part with spaces
-        StringBuilder formattedFractional = new StringBuilder();
-        for (int i = 0; i < fractionalPart.length(); i++) {
-            formattedFractional.append(fractionalPart.charAt(i));
-            if ((i + 1) % 3 == 0 && i < fractionalPart.length() - 1) {
-                formattedFractional.append(' ');
+        StringBuilder reversedFractional = new StringBuilder(fractionalPart).reverse();
+
+        StringBuilder chunkedReversed = new StringBuilder();
+        for (int i = 0; i < reversedFractional.length(); i++) {
+            chunkedReversed.append(reversedFractional.charAt(i));
+            if ((i + 1) % 3 == 0 && i < reversedFractional.length() - 1) {
+                chunkedReversed.append(' ');
             }
         }
 
-        // Find leading zeros and significant digits
+        String formattedFractional = chunkedReversed.reverse().toString();
+
         StringBuilder leadingZeros = new StringBuilder();
         int i = 0;
         while (i < formattedFractional.length() &&
@@ -149,23 +153,51 @@ public class BtcSatsText extends VBox {
 
         String significantDigits = formattedFractional.substring(i);
 
-        // Set colors based on value
-        Color prefixColor = Integer.parseInt(integerPart) > 0 ? Color.WHITE : Color.GRAY;
-
-        // Update text nodes
         this.integerPart.setText(integerPart + ".");
-        this.integerPart.setFill(prefixColor);
+        this.integerPart.setFill(Integer.parseInt(integerPart) > 0 ? Color.WHITE : Color.GRAY);
+        this.integerPart.getStyleClass().add("btc-integer-part");
 
         this.leadingZeros.setText(leadingZeros.toString());
-        this.leadingZeros.setFill(prefixColor);
+        this.leadingZeros.setFill(Color.GRAY);
+        this.leadingZeros.getStyleClass().add("btc-leading-zeros");
 
-        this.significantDigits.setText(significantDigits + (showCode ? " BTC" : ""));
+        this.significantDigits.setText(significantDigits);
         this.significantDigits.setFill(Color.WHITE);
+        this.significantDigits.getStyleClass().add("btc-significant-digits");
+
+        if (showCode) {
+            this.btcCode.setText(" BTC");
+            this.btcCode.setFill(Color.GRAY);
+            this.btcCode.setVisible(true);
+            this.btcCode.getStyleClass().add("btc-code");
+        } else {
+            this.btcCode.setVisible(false);
+        }
     }
 
-    /**
-     * Set up the text field style.
-     */
+    public void applyStyleToTextNodes() {
+        for (String styleClass : getStyleClass()) {
+            if (!styleClass.equals("btc-sats-text") && !styleClass.equals("vbox")) {
+                for (Text textNode : new Text[]{integerPart, leadingZeros, significantDigits, btcCode}) {
+                    if (!textNode.getStyleClass().contains(styleClass)) {
+                        textNode.getStyleClass().add(styleClass);
+                    }
+                }
+            }
+        }
+
+        for (String styleClass : getStyleClass()) {
+            if (!styleClass.equals("btc-sats-text") && !styleClass.equals("vbox")) {
+                if (!contentBox.getStyleClass().contains(styleClass)) {
+                    contentBox.getStyleClass().add(styleClass);
+                }
+                if (!valueTextFlow.getStyleClass().contains(styleClass)) {
+                    valueTextFlow.getStyleClass().add(styleClass);
+                }
+            }
+        }
+    }
+
     private void setupTextFieldStyle() {
         contentBox.getStyleClass().add("btc-text-field");
         contentBox.setPadding(new Insets(8, 12, 8, 12));
@@ -173,10 +205,26 @@ public class BtcSatsText extends VBox {
         HBox.setHgrow(contentBox, Priority.ALWAYS);
     }
 
-    // Property getters and setters
+    public void setBaselineAlignment() {
+        setAlignment(Pos.BASELINE_LEFT);
+        setSpacing(0);
+        contentBox.setAlignment(Pos.BASELINE_LEFT);
+        valueTextFlow.setLineSpacing(0);
+    }
 
-    public String getBtcAmount() {
-        return btcAmount.get();
+    public void setTextAlignment(TextAlignment alignment) {
+        valueTextFlow.setTextAlignment(alignment);
+    }
+
+    public void setHeightConstraints(double minHeight, double maxHeight) {
+        setMinHeight(minHeight);
+        setMaxHeight(maxHeight);
+    }
+
+    public void setPaddings(Insets padding) {
+        setPadding(padding);
+        contentBox.setPadding(new Insets(0));
+        valueTextFlow.setPadding(new Insets(0));
     }
 
     public void setBtcAmount(String amount) {
@@ -187,27 +235,7 @@ public class BtcSatsText extends VBox {
         return btcAmount;
     }
 
-    public String getLabelText() {
-        return labelText.get();
-    }
-
-    public void setLabelText(String text) {
-        labelText.set(text);
-    }
-
-    public StringProperty labelTextProperty() {
-        return labelText;
-    }
-
-    public boolean getShowBtcCode() {
-        return showBtcCode.get();
-    }
-
     public void setShowBtcCode(boolean show) {
         showBtcCode.set(show);
-    }
-
-    public BooleanProperty showBtcCodeProperty() {
-        return showBtcCode;
     }
 }
