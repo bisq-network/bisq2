@@ -69,6 +69,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+// TODO (refactor, low prio) Consider to use a base class to avoid code duplication with TradeWizardReviewController
 @Slf4j
 public class TakeOfferReviewController implements Controller {
     private final TakeOfferReviewModel model;
@@ -208,7 +209,7 @@ public class TakeOfferReviewController implements Controller {
                     if (errorMessage != null) {
                         UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
                                         errorMessage,
-                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 2000)))
+                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
                                 .show());
                     }
                 }
@@ -217,7 +218,7 @@ public class TakeOfferReviewController implements Controller {
                     if (peersErrorMessage != null) {
                         UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
                                         peersErrorMessage,
-                                        StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 2000)))
+                                        StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 500)))
                                 .show());
                     }
                 }
@@ -263,18 +264,11 @@ public class TakeOfferReviewController implements Controller {
         String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
         Monetary fixBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary fixQuoteSideAmount = model.getTakersQuoteSideAmount();
-
-        // Format amounts with the appropriate formatters
-        String formattedBaseAmount = fixBaseSideAmount != null ?
-                AmountFormatter.formatBaseAmount(fixBaseSideAmount) : "";
-
-        String formattedQuoteAmount = fixQuoteSideAmount != null ?
-                AmountFormatter.formatQuoteAmount(fixQuoteSideAmount) : "";
-
+        String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
+        String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
         Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
         boolean isMainChain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
         model.setFeeDetailsVisible(isMainChain);
-
         if (takersDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
@@ -314,7 +308,6 @@ public class TakeOfferReviewController implements Controller {
         reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
         reviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
-        reviewDataDisplay.setBitcoinPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.bitcoin").toUpperCase());
         reviewDataDisplay.setBitcoinPaymentMethod(model.getBitcoinPaymentMethod());
         reviewDataDisplay.setFiatPaymentMethod(model.getFiatPaymentMethod());
     }
