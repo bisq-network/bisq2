@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Path("/payment_accounts")
+@Path("/payment-accounts")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Payment Accounts API", description = "API for managing user payment accounts. Right now UserDefinedFiatAccount")
