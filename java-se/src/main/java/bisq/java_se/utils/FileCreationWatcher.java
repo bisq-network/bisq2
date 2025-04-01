@@ -50,9 +50,10 @@ public class FileCreationWatcher {
                     StandardWatchEventKinds.ENTRY_CREATE);
             while (true) {
                 WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
-                if(watchKey==null){
+                if (watchKey == null) {
                     continue;
                 }
+
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
 
@@ -71,7 +72,8 @@ public class FileCreationWatcher {
                         return newFilePath;
                     }
                 }
-                if(!watchKey.reset()){
+
+                if (!watchKey.reset()) {
                     log.warn("File watcher is no longer valid.");
                 }
             }
