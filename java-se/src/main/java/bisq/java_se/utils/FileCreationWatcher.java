@@ -40,10 +40,6 @@ public class FileCreationWatcher {
         return executor.submit(() -> waitForNewFile(Optional.empty()));
     }
 
-    public Future<Path> waitForFile(Path path) {
-        return executor.submit(() -> waitForNewFile(Optional.of(path)));
-    }
-
     private Path waitForNewFile(Optional<Path> optionalPath) {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
             directoryToWatch.register(watchService,
