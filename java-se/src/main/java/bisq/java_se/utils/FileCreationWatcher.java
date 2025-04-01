@@ -48,10 +48,11 @@ public class FileCreationWatcher {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
             directoryToWatch.register(watchService,
                     StandardWatchEventKinds.ENTRY_CREATE);
+
             while (true) {
                 WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
                 if (watchKey == null) {
-                    continue;
+                    throw new FileCreationWatcherTimeoutException("No changes detected for 1 minute (timeout).");
                 }
 
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
