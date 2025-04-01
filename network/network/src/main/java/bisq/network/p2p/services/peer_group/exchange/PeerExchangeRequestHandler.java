@@ -77,7 +77,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
                 removeListeners();
                 future.complete(new HashSet<>(response.getPeers()));
             } else {
-                log.warn("Received a PeerExchangeResponse from {} with an invalid nonce. response.nonce()={}, nonce={}",
+                log.info("Received PeerExchangeResponse from {} does not match this requestHandler. ignore it. response.nonce()={}, nonce={}",
                         connection.getPeerAddress(), response.getNonce(), nonce);
             }
         }
