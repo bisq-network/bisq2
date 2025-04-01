@@ -23,20 +23,19 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class ChatRulesWarningMessageBox extends MessageBox {
     private final Hyperlink learnMoreLink;
-    private final ChangeListener<Number> widthListener;
 
     public ChatRulesWarningMessageBox(
             ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
@@ -70,29 +69,15 @@ public final class ChatRulesWarningMessageBox extends MessageBox {
         setPadding(new Insets(0));
 
         VBox contentVBox = new VBox(messageBg);
-        int minWidth = 507;
-        int margin = 42;
-        contentVBox.setMaxWidth(minWidth - margin);
+        contentVBox.setPrefWidth(Region.USE_PREF_SIZE);
+        contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+        contentVBox.setPadding(new Insets(0, 70, 0, 70));
         getChildren().setAll(contentVBox);
         setAlignment(Pos.CENTER);
-        widthListener = (o, oldValue, newValue) -> {
-            double newWidth = newValue.doubleValue();
-            if (newWidth > 0) {
-                if (newWidth >= CHAT_BOX_MAX_WIDTH) {
-                    contentVBox.setPadding(new Insets(0, 70, 0, 70));
-                    contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
-                } else {
-                    contentVBox.setPadding(new Insets(0));
-                    contentVBox.setMaxWidth(newWidth - margin);
-                }
-            }
-        };
-        widthProperty().addListener(widthListener);
     }
 
     @Override
     public void dispose() {
         learnMoreLink.setOnAction(null);
-        widthProperty().removeListener(widthListener);
     }
 }
