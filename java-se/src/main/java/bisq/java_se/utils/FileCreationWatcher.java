@@ -40,19 +40,17 @@ public class FileCreationWatcher {
         return executor.submit(() -> waitForNewFile(Optional.empty()));
     }
 
-    public Future<Path> waitForFile(Path path) {
-        return executor.submit(() -> waitForNewFile(Optional.of(path)));
-    }
-
     private Path waitForNewFile(Optional<Path> optionalPath) {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
             directoryToWatch.register(watchService,
                     StandardWatchEventKinds.ENTRY_CREATE);
+
             while (true) {
                 WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
-                if(watchKey==null){
-                    continue;
+                if (watchKey == null) {
+                    throw new FileCreationWatcherTimeoutException("No changes detected for 1 minute (timeout).");
                 }
+
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
 
@@ -71,7 +69,8 @@ public class FileCreationWatcher {
                         return newFilePath;
                     }
                 }
-                if(!watchKey.reset()){
+
+                if (!watchKey.reset()) {
                     log.warn("File watcher is no longer valid.");
                 }
             }
