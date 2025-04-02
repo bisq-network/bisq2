@@ -76,11 +76,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private SortAndFilterDropdownMenuItem<BisqEasyMarketFilter> filterShowAll, filterWithOffers, filterFavourites;
     private SortAndFilterDropdownMenuItem<ChatMessageType> showAllMessages, showOnlyOfferMessages, showOnlyTextMessages;
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter,
-            collapsedMarketSelectionListTitle, marketSelectionListTitle;
+            collapsedMarketSelectionListTitle, marketSelectionListTitle, expandMarketsListIconLabel,
+            collapseMarketsListIconLabel;
     private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon, marketsGreenIcon, marketsGreyIcon,
-            marketsWhiteIcon;
+            marketsWhiteIcon, expandMarketsListWhiteIcon, expandMarketsListGreyIcon, collapseMarketsListWhiteIcon,
+            collapseMarketsListGreyIcon;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
                                  BisqEasyOfferbookController controller,
@@ -207,18 +209,21 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.setOnMouseEntered(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterActiveIcon));
         onlyFavouritesDisplayHint.setOnMouseExited(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterDefaultIcon));
 
-        marketSelectionListTitle.setOnMouseClicked(e ->
-                Transitions.animateWidth(marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
-                        COLLAPSED_LIST_WIDTH, WIDTH_ANIMATION_DURATION, () -> getController().toggleMarketSelectionList()));
+        marketSelectionListTitle.setOnMouseClicked(e -> collapseMarketsList());
         marketSelectionListTitle.setOnMouseEntered(e -> marketSelectionListTitle.setGraphic(marketsWhiteIcon));
         marketSelectionListTitle.setOnMouseExited(e -> marketSelectionListTitle.setGraphic(marketsGreenIcon));
 
-        collapsedMarketSelectionListTitle.setOnMouseClicked(e -> {
-            getController().toggleMarketSelectionList();
-            Transitions.animateWidth(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH, WIDTH_ANIMATION_DURATION);
-        });
+        collapsedMarketSelectionListTitle.setOnMouseClicked(e -> expandMarketsList());
         collapsedMarketSelectionListTitle.setOnMouseEntered(e -> collapsedMarketSelectionListTitle.setGraphic(marketsWhiteIcon));
         collapsedMarketSelectionListTitle.setOnMouseExited(e -> collapsedMarketSelectionListTitle.setGraphic(marketsGreyIcon));
+
+        expandMarketsListIconLabel.setOnMouseClicked(e -> expandMarketsList());
+        expandMarketsListIconLabel.setOnMouseEntered(e -> expandMarketsListIconLabel.setGraphic(expandMarketsListWhiteIcon));
+        expandMarketsListIconLabel.setOnMouseExited(e -> expandMarketsListIconLabel.setGraphic(expandMarketsListGreyIcon));
+
+        collapseMarketsListIconLabel.setOnMouseClicked(e -> collapseMarketsList());
+        collapseMarketsListIconLabel.setOnMouseEntered(e -> collapseMarketsListIconLabel.setGraphic(collapseMarketsListWhiteIcon));
+        collapseMarketsListIconLabel.setOnMouseExited(e -> collapseMarketsListIconLabel.setGraphic(collapseMarketsListGreyIcon));
     }
 
     @Override
@@ -279,6 +284,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         collapsedMarketSelectionListTitle.setOnMouseClicked(null);
         collapsedMarketSelectionListTitle.setOnMouseEntered(null);
         collapsedMarketSelectionListTitle.setOnMouseExited(null);
+
+        expandMarketsListIconLabel.setOnMouseClicked(null);
+        expandMarketsListIconLabel.setOnMouseEntered(null);
+        expandMarketsListIconLabel.setOnMouseExited(null);
+
+        collapseMarketsListIconLabel.setOnMouseClicked(null);
+        collapseMarketsListIconLabel.setOnMouseEntered(null);
+        collapseMarketsListIconLabel.setOnMouseExited(null);
 
         getModel().getFavouriteMarketChannelItems().removeListener(favouriteChannelItemsChangeListener);
     }
@@ -364,15 +377,22 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketsGreenIcon = ImageUtil.getImageViewById("market-green");
         marketsGreyIcon = ImageUtil.getImageViewById("market-grey");
         marketsWhiteIcon = ImageUtil.getImageViewById("market-white");
-
         marketSelectionListTitle = new Label(Res.get("bisqEasy.offerbook.markets"), marketsGreenIcon);
         marketSelectionListTitle.setCursor(Cursor.HAND);
         marketSelectionListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.ExpandedList.Tooltip")));
-        HBox header = new HBox(marketSelectionListTitle);
+        HBox.setHgrow(marketSelectionListTitle, Priority.ALWAYS);
+
+        collapseMarketsListWhiteIcon = ImageUtil.getImageViewById("expand-white");
+        collapseMarketsListGreyIcon = ImageUtil.getImageViewById("expand-grey");
+        collapseMarketsListIconLabel = new Label("", collapseMarketsListGreyIcon);
+        collapseMarketsListIconLabel.setCursor(Cursor.HAND);
+        collapseMarketsListIconLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.ExpandedList.Tooltip")));
+
+        HBox header = new HBox(marketSelectionListTitle, Spacer.fillHBox(), collapseMarketsListIconLabel);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(4, 0, 0, 15));
+        header.setPadding(new Insets(4, 12, 0, 12));
         header.getStyleClass().add("chat-header-title");
 
         marketSelectorSearchBox = new SearchBox();
@@ -438,7 +458,17 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 
-        collapsedMarketSelectionList = new VBox(header, Layout.hLine(), subheader, Spacer.fillVBox());
+        expandMarketsListWhiteIcon = ImageUtil.getImageViewById("collapse-white");
+        expandMarketsListGreyIcon = ImageUtil.getImageViewById("collapse-grey");
+        expandMarketsListIconLabel = new Label("", expandMarketsListGreyIcon);
+        expandMarketsListIconLabel.setCursor(Cursor.HAND);
+        expandMarketsListIconLabel.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.CollapsedList.Tooltip")));
+        HBox expandMarketsListLabelBox = new HBox(expandMarketsListIconLabel);
+        VBox.setVgrow(expandMarketsListLabelBox, Priority.ALWAYS);
+        expandMarketsListLabelBox.setAlignment(Pos.CENTER);
+        expandMarketsListLabelBox.setPadding(new Insets(0, 0, 60, 0));
+
+        collapsedMarketSelectionList = new VBox(header, Layout.hLine(), subheader, expandMarketsListLabelBox);
         collapsedMarketSelectionList.setMaxWidth(COLLAPSED_LIST_WIDTH);
         collapsedMarketSelectionList.setPrefWidth(COLLAPSED_LIST_WIDTH);
         collapsedMarketSelectionList.setMinWidth(COLLAPSED_LIST_WIDTH);
@@ -591,6 +621,16 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         appliedFiltersSection.getStyleClass().add(shouldShowAppliedFilters
                 ? "market-selection-show-applied-filters"
                 : "market-selection-no-filters");
+    }
+
+    private void expandMarketsList() {
+        getController().onToggleMarketSelectionList();
+        Transitions.animateWidth(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH, WIDTH_ANIMATION_DURATION);
+    }
+
+    private void collapseMarketsList() {
+        Transitions.animateWidth(marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
+                COLLAPSED_LIST_WIDTH, WIDTH_ANIMATION_DURATION, () -> getController().onToggleMarketSelectionList());
     }
 
     void updateMessageTypeFilter(ChatMessageType messageType) {
