@@ -346,7 +346,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         }
     }
 
-    void toggleMarketSelectionList() {
+    void onToggleMarketSelectionList() {
         model.getShowMarketSelectionListCollapsed().set(!model.getShowMarketSelectionListCollapsed().get());
     }
 
