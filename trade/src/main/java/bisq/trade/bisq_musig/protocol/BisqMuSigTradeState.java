@@ -26,8 +26,10 @@ import lombok.ToString;
 public enum BisqMuSigTradeState implements State {
     INIT,
 
-    COMPLETED(true),
-    FAILED(true);
+    STATE1,
+    STATE2,
+
+    COMPLETED(true);
 
     private final boolean isFinalState;
     private final int ordinal;

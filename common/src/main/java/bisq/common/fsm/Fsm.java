@@ -18,7 +18,6 @@ package bisq.common.fsm;
 
 import bisq.common.data.Pair;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
@@ -29,23 +28,21 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Enhanced finite state machine implementation with support for hierarchical FSMs.
- * Allows for elegant definition of complex state machines with nested sub-states.
- * Features event bubbling from child to parent FSMs when appropriate.
- * In case of out-of-order events we bubbled it to the top-FSM and store the un-handled
- * events (we do not persist it)
+ * Minimalistic finite state machine implementation inspired by <a href="https://github.com/j-easy/easy-states">easy-states</a>
+ * <br/>
+ * In case of out-of-order events we store the un-handled events (we do not persist it) and retry to apply those
+ * pending states after the next state transition.
+ * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
+ * support the use of the same event for multiple transitions. Though that is not a restriction of the transition config.
+ * <br/>
+ * The Fsm does not allow cycle graphs or transitions to previous states. For determining the order of the states we
+ * use getOrdinal() which returns in case of enums the ordinal.
  */
 @Slf4j
 public abstract class Fsm<M extends FsmModel> {
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
     @Getter
     protected final M model;
-
-    private final Map<State, StateFsmDefinition<?, ?>> stateFsms = new HashMap<>();
-    private Fsm<?> activeFsm = null;
-    private State activeFsmState = null;
-    @Setter
-    private Fsm<?> parent = null;
 
     protected Fsm(M model) {
         this.model = model;
@@ -58,186 +55,73 @@ public abstract class Fsm<M extends FsmModel> {
 
     abstract protected void configTransitions();
 
-    protected <F extends FsmModel> void associateFsm(State state, Fsm<F> fsm,
-                                                     State successTarget, State failureTarget) {
-        stateFsms.put(state, new StateFsmDefinition<>(fsm, successTarget, failureTarget));
-        fsm.setParent(this);
-    }
-
-    private boolean isChildFsm() {
-        return parent != null;
-    }
-
-
     public void handle(Event event) {
         synchronized (this) {
             try {
                 checkNotNull(event, "event must not be null");
                 State currentState = model.getState();
                 checkNotNull(currentState, "currentState must not be null");
-                if (currentState.isFinalState() && !(event instanceof FsmCompletedEvent)) {
+                if (currentState.isFinalState()) {
                     log.warn("We have reached the final state and do not allow further state transition. New event was: {}", event);
                     return;
                 }
-
                 log.info("Start transition from currentState {}", currentState);
-
-                if (activeFsm != null) {
-                    activeFsm.handle(event);
-
-                    if (isFsmInFinalState(activeFsm)) {
-                        handleFsmCompletion();
-
-                        if (!(event instanceof FsmCompletedEvent)) {
-                            handleInMainFsm(event);
-                            checkForNewStateFsm();
-                        }
+                Class<? extends Event> eventClass = event.getClass();
+                var transitionMapEntriesForEvent = findTransitionMapEntriesForEvent(eventClass);
+                checkArgument(!transitionMapEntriesForEvent.isEmpty(), "No transition found for given event " + event);
+                Optional<Transition> transition = findTransition(currentState, transitionMapEntriesForEvent);
+                if (transition.isPresent()) {
+                    State targetState = transition.get().getTargetState();
+                    checkArgument(targetState.getOrdinal() > currentState.getOrdinal(),
+                            "The target state ordinal must be higher than the current state ordinal. " +
+                                    "currentState=%s, targetState=%s", currentState, targetState);
+                    Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
+                    if (eventHandlerClass.isPresent()) {
+                        EventHandler eventHandler = newEventHandlerFromClass(eventHandlerClass.get());
+                        String eventHandlerName = eventHandler.getClass().getSimpleName();
+                        log.info("Handle {} at {}", event.getClass().getSimpleName(), eventHandlerName);
+                        eventHandler.handle(event);
                     }
-                    return;
+
+                    log.info("Transition completed to new state {}", targetState);
+                    model.setNewState(targetState);
+                    model.eventQueue.remove(event);
+                    if (targetState.isFinalState()) {
+                        model.processedEvents.clear();
+                        model.eventQueue.clear();
+                    } else {
+                        model.processedEvents.add(eventClass);
+                        // Apply all pending events to see if any of those match our current state.
+                        // If an exception is thrown by the processed pending event it will get thrown to the
+                        // caller. This would be a different triggering event as the event which cause
+                        // the exception (the one from the queue).
+                        // Clone set to avoid ConcurrentModificationException
+                        new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                    }
+                } else {
+                    log.info("We did not find a transition with state {} and event {}. " +
+                                    "We add the event to the eventQueue for potential later processing.",
+                            currentState, eventClass.getSimpleName());
+                    // In case we get an event which does not match our current state we add the event to our
+                    // event queue if the event was not already processed.
+                    transitionMap.keySet().stream()
+                            .filter(key -> key.getSecond().equals(eventClass) &&
+                                    !model.processedEvents.contains(eventClass))
+                            .forEach(e -> model.eventQueue.add(event));
                 }
-
-                handleInMainFsm(event);
-
-                checkForNewStateFsm();
-
             } catch (Exception exception) {
                 log.error("Error at handling {}.", event, exception);
                 FsmException fsmException = new FsmException(exception, event);
+                // In case of an exception we fire the FsmErrorEvent to trigger an error state.
+                // We apply that only if the event which triggered the exception was not the FsmErrorEvent itself
+                // to avoid potential recursive calls if the error handling code causes a follow-up exception.
                 if (!(fsmException.getEvent() instanceof FsmErrorEvent)) {
                     handle(new FsmErrorEvent(fsmException));
                 }
+                // We throw the exception and leave further error handling to the concrete Fsm implementation.
                 throw fsmException;
             }
         }
-    }
-
-    private void handleInMainFsm(Event event) {
-        State currentState = model.getState();
-        Class<? extends Event> eventClass = event.getClass();
-
-        var transitionMapEntriesForEvent = findTransitionMapEntriesForEvent(eventClass);
-        if (transitionMapEntriesForEvent.isEmpty()) {
-            log.info("No transition found for given event {} in FSM", event);
-
-            if (isChildFsm()) {
-                log.info("No transition for event {} in child FSM, bubbling up",
-                        eventClass.getSimpleName());
-                return;
-            }
-
-            log.warn("No transition found for event {} at any level, transitioning to ERROR",
-                    eventClass.getSimpleName());
-            model.setNewState(State.FsmState.ERROR);
-            return;
-        }
-
-        Optional<Transition> transition = findTransition(currentState, transitionMapEntriesForEvent);
-        if (transition.isPresent()) {
-            State targetState = transition.get().getTargetState();
-
-            // Check if the target state has a lower or equal ordinal than the current state
-            if (targetState.getOrdinal() <= currentState.getOrdinal()) {
-                log.error("Invalid state transition attempted: The target state ordinal must be higher than the current state ordinal. " +
-                        "currentState={}, targetState={}", currentState, targetState);
-                model.setNewState(State.FsmState.ERROR);
-                return;
-            }
-
-            Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
-            if (eventHandlerClass.isPresent()) {
-                try {
-                    EventHandler eventHandler = newEventHandlerFromClass(eventHandlerClass.get());
-                    String eventHandlerName = eventHandler.getClass().getSimpleName();
-                    log.info("Handle {} at {}", event.getClass().getSimpleName(), eventHandlerName);
-                    eventHandler.handle(event);
-                } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                    log.error("Failed to instantiate event handler: {}", eventHandlerClass.get().getSimpleName(), e);
-                    throw new RuntimeException("Failed to instantiate event handler", e);
-                }
-            }
-
-            Optional<EventHandler> eventHandler = transition.get().getEventHandler();
-            eventHandler.ifPresent(handler -> handler.handle(event));
-
-            log.info("Transition completed to new state {}", targetState);
-            model.setNewState(targetState);
-            model.eventQueue.remove(event);
-
-            if (targetState.isFinalState()) {
-                model.processedEvents.clear();
-                model.eventQueue.clear();
-            } else {
-                model.processedEvents.add(eventClass);
-                // Apply all pending events to see if any of those match our current state.
-                new HashSet<>(model.getEventQueue()).forEach(this::handle);
-            }
-        } else {
-            log.info("We did not find a transition with state {} and event {}. " +
-                            "We add the event to the eventQueue for potential later processing.",
-                    currentState, eventClass.getSimpleName());
-
-            transitionMap.keySet().stream()
-                    .filter(key -> key.getSecond().equals(eventClass) &&
-                            !model.processedEvents.contains(eventClass))
-                    .forEach(e -> model.eventQueue.add(event));
-        }
-    }
-
-    private void handleFsmCompletion() {
-        log.info("State-specific FSM completed in state: {}", activeFsm.getModel().getState());
-
-        StateFsmDefinition<?, ?> definition = stateFsms.get(activeFsmState);
-
-        boolean isSuccess = isFsmInSuccessState(activeFsm);
-        State nextState = isSuccess ? definition.getSuccessTarget() : definition.getFailureTarget();
-
-        log.info("FSM completed with {}, transitioning main FSM to: {}",
-                isSuccess ? "success" : "failure", nextState);
-
-        Fsm<?> completedFsm = activeFsm;
-        activeFsm = null;
-        activeFsmState = null;
-
-        FsmCompletedEvent completionEvent = new FsmCompletedEvent(completedFsm, isSuccess);
-
-        // Directly set the next state
-        model.setNewState(nextState);
-
-        // Handle the completion event to trigger any transitions that might be waiting for it
-        Optional<Transition> transition = findTransitionForEvent(nextState, FsmCompletedEvent.class);
-        if (transition.isPresent()) {
-            handleInMainFsm(completionEvent);
-        }
-    }
-
-    private void checkForNewStateFsm() {
-        State currentState = model.getState();
-
-        if (stateFsms.containsKey(currentState) && activeFsm == null) {
-            activateFsmForState(currentState);
-        }
-    }
-
-    private void activateFsmForState(State state) {
-        if (stateFsms.containsKey(state)) {
-            activeFsmState = state;
-            activeFsm = stateFsms.get(state).getFsm();
-            log.info("Activated FSM for state: {}, initial sub-state: {}",
-                    state, activeFsm.getModel().getState());
-        }
-    }
-
-    private Optional<Transition> findTransitionForEvent(State state, Class<? extends Event> eventClass) {
-        var entries = findTransitionMapEntriesForEvent(eventClass);
-        return findTransition(state, entries);
-    }
-
-    private boolean isFsmInFinalState(Fsm<?> fsm) {
-        return fsm.getModel().getState().isFinalState();
-    }
-
-    private boolean isFsmInSuccessState(Fsm<?> fsm) {
-        return fsm.getModel().getState().isSuccessState();
     }
 
     public TransitionBuilder<M> addTransition() {
@@ -292,37 +176,6 @@ public abstract class Fsm<M extends FsmModel> {
         }
     }
 
-    /**
-     * Event fired when a state-specific FSM completes.
-     */
-    public static class FsmCompletedEvent implements Event {
-        @Getter
-        private final Fsm<?> completedFsm;
-        private final boolean success;
-
-        public FsmCompletedEvent(Fsm<?> completedFsm, boolean success) {
-            this.completedFsm = completedFsm;
-            this.success = success;
-        }
-    }
-
-    /**
-     * Definition of an FSM associated with a specific state, including
-     * the transitions to take when the FSM completes.
-     */
-    @Getter
-    private static class StateFsmDefinition<S extends State, F extends FsmModel> {
-        private final Fsm<F> fsm;
-        private final State successTarget;
-        private final State failureTarget;
-
-        public StateFsmDefinition(Fsm<F> fsm, State successTarget, State failureTarget) {
-            this.fsm = fsm;
-            this.successTarget = successTarget;
-            this.failureTarget = failureTarget;
-        }
-    }
-
     public static class TransitionBuilder<M extends FsmModel> {
         private final Transition transition;
         private final Fsm<M> fsm;
@@ -369,26 +222,10 @@ public abstract class Fsm<M extends FsmModel> {
             return this;
         }
 
-        public TransitionBuilder<M> run(EventHandler eventHandler) {
-            if (eventHandler == null) {
-                throw new FsmConfigException("eventHandler must not be null");
-            }
-            transition.setEventHandler(Optional.of(eventHandler));
-            return this;
-        }
-
         public TransitionBuilder<M> to(State targetState) {
             transition.setTargetState(targetState);
             fsm.insertTransition(transition);
             return this;
-        }
-
-        public ChildFsmBuilder<M> withFSM() {
-            if (transition.getTargetState() == null) {
-                throw new FsmConfigException("Target state must be set before defining a child FSM");
-            }
-
-            return new ChildFsmBuilder<>(fsm, transition.getTargetState(), this);
         }
 
         // The paths param is not used. It is just to allow nesting the paths inside the branch for better readability.
@@ -398,145 +235,6 @@ public abstract class Fsm<M extends FsmModel> {
 
         public TransitionBuilder<M> then() {
             return new TransitionBuilder<>(fsm);
-        }
-    }
-
-    public static class ChildFsmBuilder<M extends FsmModel> {
-        private final Fsm<M> parentFsm;
-        private final State parentSourceState;
-        private final TransitionBuilder<M> parentBuilder;
-
-        private State initialState;
-        private State errorTargetState;
-        private Class<? extends Event> errorEventClass;
-        private final Set<TransitionDefinition> transitions = new HashSet<>();
-        private State successTarget;
-        private State failureTarget;
-
-        ChildFsmBuilder(Fsm<M> parentFsm, State parentSourceState, TransitionBuilder<M> parentBuilder) {
-            this.parentFsm = parentFsm;
-            this.parentSourceState = parentSourceState;
-            this.parentBuilder = parentBuilder;
-        }
-
-        public ChildFsmBuilder<M> initialState(State initialState) {
-            this.initialState = initialState;
-            return this;
-        }
-
-        public ChildFsmBuilder<M> errorHandler(Class<? extends Event> errorEventClass, State errorTargetState) {
-            this.errorEventClass = errorEventClass;
-            this.errorTargetState = errorTargetState;
-            return this;
-        }
-
-        public TransitionDefinitionBuilder transition() {
-            return new TransitionDefinitionBuilder(this);
-        }
-
-        public ChildFsmBuilder<M> onSuccess(State successTarget) {
-            this.successTarget = successTarget;
-            return this;
-        }
-
-        public ChildFsmBuilder<M> onFailure(State failureTarget) {
-            this.failureTarget = failureTarget;
-            return this;
-        }
-
-        public TransitionBuilder<M> then() {
-            buildAndAssociateFsm();
-            return parentBuilder;
-        }
-
-        private void buildAndAssociateFsm() {
-            // Create the child FSM
-            Fsm<FsmModel> childFsm = new Fsm<>(new FsmModel(initialState)) {
-                @Override
-                protected void configErrorHandling() {
-                    if (errorEventClass != null && errorTargetState != null) {
-                        fromAny()
-                                .on(errorEventClass)
-                                .to(errorTargetState);
-                    }
-                }
-
-                @Override
-                protected void configTransitions() {
-                    for (TransitionDefinition transition : transitions) {
-                        from(transition.getSourceState())
-                                .on(transition.getEventClass())
-                                .run(transition.getHandlerClass())
-                                .to(transition.getTargetState());
-                    }
-                }
-
-                @Override
-                protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
-                        throws NoSuchMethodException, InvocationTargetException, InstantiationException,
-                        IllegalAccessException {
-                    return parentFsm.newEventHandlerFromClass(handlerClass);
-                }
-            };
-
-            parentFsm.associateFsm(parentSourceState, childFsm, successTarget, failureTarget);
-        }
-
-        public class TransitionDefinitionBuilder {
-            private final ChildFsmBuilder<M> parent;
-            private State sourceState;
-            private Class<? extends Event> eventClass;
-            private Class<? extends EventHandler> handlerClass;
-            private State targetState;
-
-            TransitionDefinitionBuilder(ChildFsmBuilder<M> parent) {
-                this.parent = parent;
-            }
-
-            public TransitionDefinitionBuilder from(State sourceState) {
-                this.sourceState = sourceState;
-                return this;
-            }
-
-            public TransitionDefinitionBuilder on(Class<? extends Event> eventClass) {
-                this.eventClass = eventClass;
-                return this;
-            }
-
-            public TransitionDefinitionBuilder run(Class<? extends EventHandler> handlerClass) {
-                this.handlerClass = handlerClass;
-                return this;
-            }
-
-            public ChildFsmBuilder<M> to(State targetState) {
-                this.targetState = targetState;
-                addTransition();
-                return parent;
-            }
-
-            private void addTransition() {
-                TransitionDefinition transition = new TransitionDefinition(
-                        sourceState, eventClass, handlerClass, targetState);
-                parent.transitions.add(transition);
-            }
-        }
-
-        @Getter
-        private static class TransitionDefinition {
-            private final State sourceState;
-            private final Class<? extends Event> eventClass;
-            private final Class<? extends EventHandler> handlerClass;
-            private final State targetState;
-
-            TransitionDefinition(State sourceState,
-                                 Class<? extends Event> eventClass,
-                                 Class<? extends EventHandler> handlerClass,
-                                 State targetState) {
-                this.sourceState = sourceState;
-                this.eventClass = eventClass;
-                this.handlerClass = handlerClass;
-                this.targetState = targetState;
-            }
         }
     }
 }
