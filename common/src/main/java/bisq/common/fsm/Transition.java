@@ -40,8 +40,6 @@ public class Transition {
     private Class<? extends Event> eventClass;
     @Setter
     private Optional<Class<? extends EventHandler>> eventHandlerClass = Optional.empty();
-    @Setter
-    private Optional<EventHandler> eventHandler = Optional.empty();
 
     boolean isValid() {
         return !sourceStates.isEmpty() &&
