@@ -37,8 +37,6 @@ import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
-import bisq.user.identity.UserIdentity;
-import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import javafx.stage.Stage;
@@ -46,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -56,7 +53,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
     private final SettingsService settingsService;
     private final ReputationService reputationService;
     private final ChatNotificationService chatNotificationService;
-    private final UserIdentityService userIdentityService;
     private TradeStateController tradeStateController;
     private Pin channelsPin, tradesPin, tradeRulesConfirmedPin;
     private OpenTradesWelcome openTradesWelcome;
@@ -71,7 +67,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         settingsService = serviceProvider.getSettingsService();
         reputationService = serviceProvider.getUserService().getReputationService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
     }
 
     @Override
@@ -100,9 +95,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
     @Override
     public void onActivate() {
         model.getFilteredList().setPredicate(e -> false);
-
-        // Add mock trades for testing/demo purposes
-        addMockTrades();
 
         tradesPin = bisqEasyTradeService.getTrades().addObserver(new CollectionObserver<>() {
             @Override
@@ -155,42 +147,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
 
         maybeSelectFirst();
         updateVisibility();
-    }
-
-    private void addMockTrades() {
-        // Get completed mock trades from the service
-        List<BisqEasyTrade> mockTrades = bisqEasyTradeService.createAndAddCompletedMockTrades();
-
-        // Create and add channels for each mock trade
-        for (BisqEasyTrade trade : mockTrades) {
-            UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-            UserProfile peerProfile = createMockPeerProfile();
-
-            // Create channel using the proper factory method
-            BisqEasyOpenTradeChannel mockChannel = BisqEasyOpenTradeChannel.createByTrader(
-                    trade.getId(),                                   // tradeId
-                    trade.getOffer(),                                // bisqEasyOffer
-                    userIdentityService.getSelectedUserIdentity(),   // myUserIdentity
-                    peerProfile,                                     // peer
-                    Optional.empty()                                 // mediator (none for mock)
-            );
-
-            // Add channel to service
-            channelService.getChannels().add(mockChannel);
-
-            log.info("Added mock channel for trade: {}", trade.getId());
-        }
-    }
-
-    private UserProfile createMockPeerProfile() {
-        // Get a random user profile that's not our own
-        UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-
-        return userIdentityService.getUserIdentities().stream()
-                .map(UserIdentity::getUserProfile)
-                .filter(profile -> !profile.equals(myProfile))
-                .findFirst()
-                .orElse(myProfile); // Fallback to using our own profile if no other is available
     }
 
     @Override
@@ -314,7 +270,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         bisqEasyTradeService.findTrade(tradeId)
                 .ifPresentOrElse(this::handleTradeAndChannelRemoved,
                         () -> {
-                            java.util.Optional<OpenTradeListItem> listItem = findListItem(tradeId);
+                            Optional<OpenTradeListItem> listItem = findListItem(tradeId);
                             if (listItem.isEmpty()) {
                                 log.debug("Channel with tradeId {} was removed but associated trade and the listItem is not found. " +
                                         "This is expected as we first remove the trade and then the channel.", tradeId);
@@ -436,11 +392,11 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
         });
     }
 
-    private java.util.Optional<OpenTradeListItem> findListItem(BisqEasyTrade trade) {
+    private Optional<OpenTradeListItem> findListItem(BisqEasyTrade trade) {
         return findListItem(trade.getId());
     }
 
-    private java.util.Optional<OpenTradeListItem> findListItem(String tradeId) {
+    private Optional<OpenTradeListItem> findListItem(String tradeId) {
         return model.getListItems().stream()
                 .filter(item -> item.getTrade().getId().equals(tradeId))
                 .findAny();

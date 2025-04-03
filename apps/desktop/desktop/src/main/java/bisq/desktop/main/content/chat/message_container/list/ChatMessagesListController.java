@@ -385,7 +385,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 //  I am as taker the seller. We check if my reputation permits to take the offer
                 sellersScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
                 boolean canSellerTakeOffer = sellersScore >= requiredReputationScoreForMinOrFixed;
-            /*    if (!canSellerTakeOffer) {
+                if (!canSellerTakeOffer) {
                     new Popup()
                             .headline(Res.get("chat.message.takeOffer.seller.insufficientScore.headline"))
                             .warning(Res.get(isAmountRangeOffer
@@ -398,8 +398,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                             .actionButtonText(Res.get("bisqEasy.offerbook.offerList.popup.offersWithInsufficientReputationWarning.buildReputation"))
                             .show();
                 } else {
-              */      Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
-                //}
+                    Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+                }
             }
         } else {
             log.warn("requiredReputationScoreForMaxOrFixedAmount is not present. requiredReputationScoreForMaxOrFixedAmount={}; requiredReputationScoreForMinAmount={}",
