@@ -17,14 +17,11 @@
 
 package bisq.trade.bisq_easy;
 
-import bisq.account.payment_method.*;
-import bisq.account.protocol_type.TradeProtocolType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
-import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -32,7 +29,6 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
-import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
@@ -41,12 +37,9 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpec;
-import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -60,15 +53,14 @@ import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.user.banned.BannedUserService;
-import bisq.user.identity.UserIdentity;
-import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -85,7 +77,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private final SettingsService settingsService;
     private final BannedUserService bannedUserService;
     private final AlertService alertService;
-    private final UserIdentityService userIdentityService;
 
     private final Persistence<BisqEasyTradeStore> persistence;
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
@@ -107,7 +98,6 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
@@ -464,267 +454,5 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         if (numChanges > 0) {
             persist();
         }
-    }
-
-    private void addMockTrades() {
-        try {
-            // Create first mock trade - BUY 0.000232512 BTC (23,251,200 satoshis)
-            createAndAddMockTrade(true, 2325120L, "BTC/USD");
-
-            // Create second mock trade - SELL 0.00124564 BTC (124,564,000 satoshis)
-            createAndAddMockTrade(false, 124564L, "BTC/EUR");
-        } catch (Exception e) {
-            log.error("Error creating mock trades: {}", e.getMessage(), e);
-        }
-    }
-
-    private void createAndAddMockTrade(boolean isBuyer, long baseSideAmount, String marketCode) {
-        // Generate unique IDs for this mock trade
-        String tradeId = "mock-trade-" + System.currentTimeMillis() + "-" + Math.abs(baseSideAmount);
-
-        // Get current user identity and create a peer profile
-        UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-        UserProfile peerProfile = createMockPeerProfile();
-
-        // Create mock contract
-        BisqEasyContract contract = createMockContract(baseSideAmount, marketCode, isBuyer);
-
-        // Create mock trade
-        BisqEasyTrade mockTrade = createMockBisqEasyTrade(tradeId, isBuyer, contract);
-
-        // Create mock channel
-        BisqEasyOpenTradeChannel mockChannel = createMockChannel(tradeId, myUserProfile, peerProfile);
-
-            // Add trade to service (will trigger handleTradeAdded)
-            getTrades().add(mockTrade);
-
-            log.info("Mock trade created and added to the service");
-            // Note: The channel would need to be added to channelService which is outside the scope
-            // of this class. Consider injecting that service if you need this functionality.
-    }
-
-    private UserProfile createMockPeerProfile() {
-        // Get a random user profile that's not our own
-        UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-
-        return userIdentityService.getUserIdentities().stream()
-                .map(UserIdentity::getUserProfile)
-                .filter(profile -> !profile.equals(myProfile))
-                .findFirst()
-                .orElse(myProfile); // Fallback to using our own profile if no other is available
-
-    }
-
-    private BisqEasyTrade createMockBisqEasyTrade(String tradeId, boolean isBuyer, BisqEasyContract contract) {
-        // Get the UserProfile of the current user
-        UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-
-        // Get the NetworkId from the UserProfile
-        NetworkId makerNetworkId = myUserProfile.getNetworkId();
-
-        // Rest of the method remains the same as in your original implementation
-        List<BitcoinPaymentMethod> bitcoinPaymentMethods = Collections.singletonList(
-                BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)
-        );
-        List<FiatPaymentMethod> fiatPaymentMethods = Collections.singletonList(
-                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)
-        );
-
-        BisqEasyOffer offer = new BisqEasyOffer(
-                makerNetworkId,
-                isBuyer ? Direction.BUY : Direction.SELL,
-                contract.getOffer().getMarket(),
-                null,
-                contract.getPriceSpec(),
-                bitcoinPaymentMethods,
-                fiatPaymentMethods,
-                "Mock trade terms",
-                Collections.singletonList("en")
-        );
-
-        // Get the Identity from the current selected UserIdentity
-        Identity myIdentity = userIdentityService.getSelectedUserIdentity().getIdentity();
-
-        return new BisqEasyTrade(
-                contract,
-                isBuyer,
-                false,
-                myIdentity,
-                offer,
-                makerNetworkId,
-                makerNetworkId
-        );
-    }
-
-    private BisqEasyOpenTradeChannel createMockChannel(String tradeId, UserProfile myUserProfile, UserProfile peerProfile) {
-        return BisqEasyOpenTradeChannel.createByTrader(
-                tradeId,
-                createMockOffer(tradeId, myUserProfile, peerProfile),  // Create a mock offer
-                userIdentityService.getSelectedUserIdentity(),  // Current user's identity
-                peerProfile,  // Peer profile
-                Optional.empty()  // No mediator
-        );
-    }
-
-    private BisqEasyOffer createMockOffer(String tradeId, UserProfile myUserProfile, UserProfile peerProfile) {
-        // Create a mock market
-        Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
-
-        // Get the NetworkId from the UserProfile
-        NetworkId makerNetworkId = myUserProfile.getNetworkId();
-
-        // For mocks, we'll use these basic payment methods
-        List<BitcoinPaymentMethod> bitcoinPaymentMethods = List.of(
-                BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)
-        );
-
-        List<FiatPaymentMethod> fiatPaymentMethods = List.of(
-                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)
-        );
-
-        // Using the constructor that takes payment methods directly
-        return new BisqEasyOffer(
-                makerNetworkId,
-                Direction.BUY,  // Example direction
-                market,
-                null,  // AmountSpec can be null for mock
-                new MarketPriceSpec(),
-                bitcoinPaymentMethods,
-                fiatPaymentMethods,
-                "Mock trade terms",  // Maker's trade terms
-                List.of("en")  // Supported language codes
-        );
-    }
-
-    private BisqEasyContract createMockContract(long baseSideAmount, String marketCode, boolean isBuyer) {
-        // Parse market code to get base and quote currencies
-        String[] marketParts = marketCode.split("/");
-        String baseCurrency = marketParts[0];
-        String quoteCurrency = marketParts[1];
-
-        // Create market with proper names for the currencies
-        String baseCurrencyName = baseCurrency.equals("BTC") ? "Bitcoin" : baseCurrency;
-        String quoteCurrencyName = quoteCurrency.equals("USD") ? "US Dollar" :
-                quoteCurrency.equals("EUR") ? "Euro" : quoteCurrency;
-        Market market = new Market(baseCurrency, quoteCurrency, baseCurrencyName, quoteCurrencyName);
-
-        // Create mock price (e.g., BTC at $50,000)
-        long price = 5000000L; // $50,000
-        long quoteSideAmount = (baseSideAmount * price) / 100000000L; // Convert to quote currency
-
-        // Create payment methods
-        BitcoinPaymentRail paymentRail = BitcoinPaymentRail.MAIN_CHAIN;
-        BitcoinPaymentMethod btcMethod = BitcoinPaymentMethod.fromPaymentRail(paymentRail);
-        FiatPaymentMethod fiatMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
-
-        // Create price spec (market price)
-        PriceSpec priceSpec = new MarketPriceSpec();
-
-        // Create a unique offer ID
-        String offerId = "mock-offer-" + System.currentTimeMillis() + "-" + Math.abs(baseSideAmount);
-
-        // Get the NetworkId from the UserProfile
-        NetworkId makerNetworkId = userIdentityService.getSelectedUserIdentity().getUserProfile().getNetworkId();
-
-        // Create the BisqEasyOffer using the correct constructor
-        BisqEasyOffer offer = new BisqEasyOffer(
-                offerId,
-                System.currentTimeMillis(),
-                makerNetworkId,
-                isBuyer ? Direction.BUY : Direction.SELL,
-                market,
-                null,  // AmountSpec can be null for mock
-                priceSpec,
-                List.of(TradeProtocolType.BISQ_EASY),
-                List.of(new BitcoinPaymentMethodSpec(btcMethod, Optional.empty())),
-                List.of(new FiatPaymentMethodSpec(fiatMethod, Optional.empty())),
-                new ArrayList<>(),  // OfferOptions
-                List.of("en")  // Supported language codes
-        );
-
-        // Get the taker's NetworkId - for mocks we'll use our own identity
-        NetworkId takerNetworkId = userIdentityService.getSelectedUserIdentity().getUserProfile().getNetworkId();
-
-        // Create the payment method specs
-        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = new BitcoinPaymentMethodSpec(btcMethod, Optional.empty());
-        FiatPaymentMethodSpec fiatPaymentMethodSpec = new FiatPaymentMethodSpec(fiatMethod, Optional.empty());
-
-        // Create the contract
-        return new BisqEasyContract(
-                System.currentTimeMillis(), // takeOfferDate
-                offer,
-                takerNetworkId,
-                baseSideAmount,
-                quoteSideAmount,
-                bitcoinPaymentMethodSpec,
-                fiatPaymentMethodSpec,
-                Optional.empty(), // No mediator
-                priceSpec,
-                price // Current market price
-        );
-    }
-
-    /**
-     * Creates and adds completed mock trades for testing purposes
-     * @return List of created mock trades
-     */
-    public List<BisqEasyTrade> createAndAddCompletedMockTrades() {
-        List<BisqEasyTrade> mockTrades = new ArrayList<>();
-        try {
-            // Create first mock trade - BUY 0.000232512 BTC
-            BisqEasyTrade buyTrade = createAndAddCompletedMockTrade(true, 2325120L, "BTC/USD");
-            mockTrades.add(buyTrade);
-
-            // Create second mock trade - SELL 0.00124564 BTC
-            BisqEasyTrade sellTrade = createAndAddCompletedMockTrade(false, 124564L, "BTC/EUR");
-            mockTrades.add(sellTrade);
-        } catch (Exception e) {
-            log.error("Error creating mock completed trades: {}", e.getMessage(), e);
-        }
-        return mockTrades;
-    }
-
-    private BisqEasyTrade createAndAddCompletedMockTrade(boolean isBuyer, long baseSideAmount, String marketCode) {
-        // Generate unique IDs for this mock trade
-        String tradeId = "mock-trade-" + System.currentTimeMillis() + "-" + Math.abs(baseSideAmount);
-
-        // Get current user identity
-        UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-        NetworkId myNetworkId = myUserProfile.getNetworkId();
-        Identity myIdentity = userIdentityService.getSelectedUserIdentity().getIdentity();
-
-        // Create mock contract
-        BisqEasyContract contract = createMockContract(baseSideAmount, marketCode, isBuyer);
-
-        // For completed mock trades, we'll set them as the maker role
-        TradeRole tradeRole = isBuyer ? TradeRole.BUYER_AS_MAKER : TradeRole.SELLER_AS_MAKER;
-
-        // Create taker and maker parties
-        BisqEasyTradeParty taker = new BisqEasyTradeParty(myNetworkId);
-        BisqEasyTradeParty maker = new BisqEasyTradeParty(myNetworkId);
-
-        // Create the trade with BTC_CONFIRMED state
-        BisqEasyTrade mockTrade = new BisqEasyTrade(
-                contract,
-                BisqEasyTradeState.BTC_CONFIRMED,
-                tradeId,
-                tradeRole,
-                myIdentity,
-                taker,
-                maker
-        );
-
-        // Set completion date and other data
-        mockTrade.setTradeCompletedDate(Optional.of(System.currentTimeMillis() - 86400000)); // 24 hours ago
-        mockTrade.getPaymentAccountData().set("mock-account-data for " + marketCode);
-        mockTrade.getBitcoinPaymentData().set("mock-btc-payment-data-" + tradeId);
-        mockTrade.getPaymentProof().set("mock-transaction-id-" + tradeId);
-
-        // Add trade to service
-        persistableStore.addTrade(mockTrade);
-        createAndAddTradeProtocol(mockTrade);
-
-        log.info("Created and added completed mock trade: {}", tradeId);
-        return mockTrade;
     }
 }

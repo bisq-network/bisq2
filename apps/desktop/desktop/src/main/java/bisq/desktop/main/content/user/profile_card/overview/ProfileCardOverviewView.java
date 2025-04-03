@@ -21,17 +21,13 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BtcSatsText;
 import bisq.i18n.Res;
-import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -49,13 +45,11 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         profileAgeLabel = new Label();
         VBox profileAgeBox = createAndGetTitleAndMetricBox("user.profileCard.details.profileAge", profileAgeLabel);
 
-        // Create and configure BtcSatsText for totalBaseToBuy
-        totalBaseToBuyBtcText = new BtcSatsText("", BtcSatsText.Style.DEFAULT);
+        totalBaseToBuyBtcText = new BtcSatsText("0");
         configureBtcSatsText(totalBaseToBuyBtcText);
         VBox totalBaseToBuyBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyBtcText);
 
-        // Create and configure BtcSatsText for totalBaseToSell
-        totalBaseToSellBtcText = new BtcSatsText("", BtcSatsText.Style.DEFAULT);
+        totalBaseToSellBtcText = new BtcSatsText("0");
         configureBtcSatsText(totalBaseToSellBtcText);
         VBox totalBaseToSellBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellBtcText);
 
@@ -74,6 +68,7 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
                 Spacer.fillHBox(),
                 sellingLimitBox);
         metricsHBox.setAlignment(Pos.BASELINE_CENTER);
+
         statementLabel = new Label();
         VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 20);
 
@@ -131,9 +126,6 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
     private VBox createAndGetTitleAndBtcMetricBox(String title, BtcSatsText btcSatsText) {
         Label titleLabel = new Label(Res.get(title).toUpperCase());
         titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
-
-        // Add negative top margin to align with other labels
-      //  VBox.setMargin(btcSatsText, new Insets(-2, 0, 0, 0));
 
         VBox vBox = new VBox(titleLabel, btcSatsText);
         vBox.setAlignment(Pos.CENTER);
