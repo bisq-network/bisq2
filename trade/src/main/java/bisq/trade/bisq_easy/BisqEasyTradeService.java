@@ -47,7 +47,6 @@ import bisq.persistence.PersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.TradeRole;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
