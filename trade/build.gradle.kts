@@ -20,6 +20,5 @@ dependencies {
 
     implementation("network:network:$version")
     implementation("network:network-identity:$version")
-    implementation("com.google.code.gson:gson:2.9.0")
     implementation(libs.typesafe.config)
 }
