@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.top;
 
-import bisq.common.data.Triple;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BtcSatsText;

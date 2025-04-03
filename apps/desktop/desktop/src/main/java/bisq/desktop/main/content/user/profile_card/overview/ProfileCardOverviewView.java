@@ -55,7 +55,7 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
 
         sellingLimitLabel = new Label();
         Label sellingLimitUnitLabel = new Label("USD");
-        VBox sellingLimitBox = createAndGetTitleAndMetricBox("user.profileCard.overview.sellingLimit", sellingLimitLabel, sellingLimitUnitLabel);
+        VBox sellingLimitBox = createAndGetTitleAndMetricBox(sellingLimitLabel, sellingLimitUnitLabel);
 
         HBox metricsHBox = new HBox(
                 lastUserActivityBox,
@@ -132,8 +132,8 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         return vBox;
     }
 
-    private VBox createAndGetTitleAndMetricBox(String title, Label detailsLabel, Label unitLabel) {
-        Label titleLabel = new Label(Res.get(title).toUpperCase());
+    private VBox createAndGetTitleAndMetricBox(Label detailsLabel, Label unitLabel) {
+        Label titleLabel = new Label(Res.get("user.profileCard.overview.sellingLimit").toUpperCase());
         titleLabel.getStyleClass().addAll("text-fill-grey-dimmed", "compact-text", "font-light");
         detailsLabel.getStyleClass().addAll("text-fill-white", "metric");
         unitLabel.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
