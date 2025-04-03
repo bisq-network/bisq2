@@ -23,10 +23,6 @@ public interface State {
 
     boolean isFinalState();
 
-    default boolean isSuccessState() {
-        return false;
-    }
-
     default boolean isAnyState() {
         return false;
     }
@@ -37,24 +33,17 @@ public interface State {
 
     @Getter
     enum FsmState implements State {
-        ANY(false, false, true, 0),
-        ERROR(true, false, false, Integer.MAX_VALUE);
+        ANY(false, true, 0),
+        ERROR(true, false, Integer.MAX_VALUE);
 
         private final boolean isFinalState;
-        private final boolean isSuccessState;
         private final boolean isAnyState;
         private final int ordinal;
 
-        FsmState(boolean isFinalState, boolean isSuccessState, boolean isAnyState, int ordinal) {
+        FsmState(boolean isFinalState, boolean isAnyState, int ordinal) {
             this.isFinalState = isFinalState;
-            this.isSuccessState = isSuccessState;
             this.isAnyState = isAnyState;
             this.ordinal = ordinal;
-        }
-
-        @Override
-        public boolean isSuccessState() {
-            return isSuccessState;
         }
     }
 }

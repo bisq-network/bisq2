@@ -18,10 +18,8 @@
 package bisq.trade.bisq_musig.protocol;
 
 import bisq.common.fsm.EventHandler;
-import bisq.common.fsm.FsmErrorEvent;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_musig.BisqMuSigTrade;
-import bisq.trade.bisq_musig.events.BisqMuSigErrorEventHandler;
 import bisq.trade.protocol.TradeProtocol;
 
 import java.lang.reflect.InvocationTargetException;
@@ -45,9 +43,5 @@ public abstract class BisqMuSigProtocol extends TradeProtocol<BisqMuSigTrade> {
 
     @Override
     protected void configErrorHandling() {
-        fromAny()
-                .on(FsmErrorEvent.class)
-                .run(new BisqMuSigErrorEventHandler(serviceProvider, model))
-                .to(BisqMuSigTradeState.FAILED);
     }
 }
