@@ -34,6 +34,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -143,8 +144,8 @@ public class ReviewDataDisplay {
         private final Triple<Text, Label, VBox> direction, paymentMethod;
         private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSend, toReceive;
 
-        private final BtcSatsText toSendBtcAmount = new BtcSatsText("", null, BtcSatsText.Style.DEFAULT);
-        private final BtcSatsText toReceiveBtcAmount = new BtcSatsText("", null, BtcSatsText.Style.DEFAULT);
+        private final BtcSatsText toSendBtcAmount = new BtcSatsText("", BtcSatsText.Style.DEFAULT);
+        private final BtcSatsText toReceiveBtcAmount = new BtcSatsText("",  BtcSatsText.Style.DEFAULT);
 
         private final VBox rangeAmountVBox = new VBox(0);
         private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
@@ -166,19 +167,12 @@ public class ReviewDataDisplay {
         }
 
         private void configureBtcSatsTextForReview(BtcSatsText btcText) {
-            Text significantDigits = btcText.getSignificantDigits();
-            Font currentFont = significantDigits.getFont();
-            significantDigits.setFont(Font.font(currentFont.getFamily(), 20));
+            btcText.applyMediumCompactConfig();
+            btcText.setPadding(new Insets(-6, 0, 0, 0));
 
-            btcText.setShowBtcCode(true);
-            Text btcCode = btcText.getBtcCode();
-            Font btcCurrentFont = btcCode.getFont();
-            btcCode.setFont(Font.font(btcCurrentFont.getFamily(), 17));
-
-            btcText.setBaselineAlignment();
-            btcText.setHeightConstraints(28, 28);
-            btcText.setPaddings(new Insets(0));
-            btcText.setSpacing(0);
+            // Add these lines to override the center alignment set by applyMediumCompactConfig
+            btcText.setTextAlignment(TextAlignment.LEFT);
+            btcText.setAlignment(Pos.CENTER_LEFT); // Change from CENTER to CENTER_LEFT
         }
 
         @Override
@@ -196,7 +190,6 @@ public class ReviewDataDisplay {
             toSendBtcAmount.btcAmountProperty().bind(model.getToSendAmount());
             toReceiveBtcAmount.btcAmountProperty().bind(model.getToReceiveAmount());
 
-            VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
 
             isSendBtcPin = EasyBind.subscribe(model.getIsSendBtc(), isSendBtc -> {
                 HBox amountHBox = toSend.getSecond();
@@ -204,13 +197,16 @@ public class ReviewDataDisplay {
 
                 if (isSendBtc) {
                     amountHBox.getChildren().add(toSendBtcAmount);
+                    amountHBox.setAlignment(Pos.CENTER_LEFT); // Ensure the HBox is left-aligned]
+                    VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
                 } else {
                     amountHBox.getChildren().addAll(
                             toSend.getFirst().getSecond(),
                             toSend.getFirst().getThird()
                     );
-                    HBox.setMargin(toSend.getFirst().getSecond(), new Insets(0.5, 0, 0, 0));
-                    toSendBtcAmount.applyStyleToTextNodes();
+                    amountHBox.setAlignment(Pos.BASELINE_LEFT); // Keep consistent alignment
+                    //Box.setMargin(toSend.getFirst().getSecond(), new Insets(-10, 0, 0, 0));
+                    //toSendBtcAmount.applyStyleToTextNodes();
                 }
             });
 
@@ -220,13 +216,16 @@ public class ReviewDataDisplay {
 
                 if (isReceiveBtc) {
                     amountHBox.getChildren().add(toReceiveBtcAmount);
+                    amountHBox.setAlignment(Pos.CENTER_LEFT); // Ensure the HBox is left-aligned
+                    VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
                 } else {
                     amountHBox.getChildren().addAll(
                             toReceive.getFirst().getSecond(),
                             toReceive.getFirst().getThird()
                     );
-                    HBox.setMargin(toReceive.getFirst().getSecond(), new Insets(0.5, 0, 0, 0));
-                    toReceiveBtcAmount.applyStyleToTextNodes();
+                    amountHBox.setAlignment(Pos.BASELINE_LEFT); // Keep consistent alignment
+                   // HBox.setMargin(toReceive.getFirst().getSecond(), new Insets(0.5, 0, 0, 0));
+                    //toReceiveBtcAmount.applyStyleToTextNodes();
                 }
             });
 
@@ -306,7 +305,7 @@ public class ReviewDataDisplay {
 
             HBox.setMargin(amount, new Insets(0.5, 0, 0, 0));
             HBox hBox = new HBox(5, amount, code);
-            hBox.setAlignment(Pos.BASELINE_LEFT);
+            hBox.setAlignment(Pos.BASELINE_LEFT); // Ensure consistent alignment from creation
             VBox.setMargin(hBox, new Insets(-2, 0, 0, 0));
             VBox.setVgrow(hBox, Priority.ALWAYS);
             VBox vBox = new VBox(0, descriptionLabel, hBox);

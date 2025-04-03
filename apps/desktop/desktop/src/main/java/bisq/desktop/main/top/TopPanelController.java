@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.top;
 
+import bisq.common.monetary.Coin;
+import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -48,8 +50,14 @@ public class TopPanelController implements Controller {
 
     @Override
     public void onActivate() {
-        walletService.ifPresent(walletService -> balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
-                .to(walletService.getBalance()));
+        // Create a mock version of the actual code that would run if wallet service was present
+        Coin fixedBalance = Coin.parseBtc("0.00013243"); // 0.0001324354 BTC in satoshis
+        Observable<Coin> mockBalance = new Observable<>();
+        mockBalance.set(fixedBalance);
+
+        // Bind to our mock observable
+        balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
+                .to(mockBalance);
     }
 
     @Override
