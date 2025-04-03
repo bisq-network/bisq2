@@ -23,17 +23,16 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import lombok.Getter;
 
-public class BtcSatsText extends VBox {
+public class BtcSatsText extends HBox {
 
     public enum Style {
         DEFAULT,
@@ -41,11 +40,8 @@ public class BtcSatsText extends VBox {
     }
 
     private final StringProperty btcAmount = new SimpleStringProperty("");
-    private final StringProperty labelText = new SimpleStringProperty("");
     private final BooleanProperty showBtcCode = new SimpleBooleanProperty(true);
 
-    private final Label label = new Label();
-    private final HBox contentBox = new HBox(0);
     private final TextFlow valueTextFlow = new TextFlow();
 
     private final Text integerPart = new Text();
@@ -58,56 +54,50 @@ public class BtcSatsText extends VBox {
     private final Text btcCode = new Text();
 
     public BtcSatsText() {
-        this("", null, Style.DEFAULT);
+        this("", Style.DEFAULT);
     }
 
     public BtcSatsText(String amount) {
-        this(amount, null, Style.DEFAULT);
+        this(amount, Style.DEFAULT);
     }
 
-    public BtcSatsText(String amount, String label, Style style) {
+    public BtcSatsText(String amount, Style style) {
+        // Initialize core component
         setSpacing(0);
         setPadding(new Insets(0));
+        setAlignment(Pos.CENTER);
 
-        this.label.getStyleClass().add("bisq-text-3");
-        contentBox.setAlignment(Pos.BASELINE_LEFT);
+        // Set up TextFlow and add to HBox
         valueTextFlow.setLineSpacing(0);
-        valueTextFlow.getChildren().addAll(integerPart, leadingZeros, significantDigits, btcCode);
-        contentBox.getChildren().add(valueTextFlow);
+        valueTextFlow.setTextAlignment(TextAlignment.CENTER);
+        getChildren().add(valueTextFlow);
 
+        // Initialize text components with their style classes
+        integerPart.getStyleClass().add("btc-integer-part");
+        leadingZeros.getStyleClass().add("btc-leading-zeros");
+        significantDigits.getStyleClass().add("btc-significant-digits");
+        btcCode.getStyleClass().add("btc-code");
+
+        // Add all text elements to the TextFlow
+        valueTextFlow.getChildren().addAll(integerPart, leadingZeros, significantDigits, btcCode);
+
+        // Apply style configuration
         if (style == Style.TEXT_FIELD) {
             setupTextFieldStyle();
         }
 
-        if (label != null) {
-            labelText.set(label);
-            this.label.setText(label);
-            this.label.setVisible(true);
-            this.label.setManaged(true);
-            getChildren().addAll(this.label, contentBox);
-        } else {
-            this.label.setVisible(false);
-            this.label.setManaged(false);
-            getChildren().add(contentBox);
-        }
-
+        // Set initial amount
         btcAmount.set(amount);
 
+        // Set up property listeners
         btcAmount.addListener((obs, old, newVal) -> updateDisplay());
-        labelText.addListener((obs, old, newVal) -> {
-            this.label.setText(newVal);
-            boolean hasText = newVal != null && !newVal.isEmpty();
-            this.label.setVisible(hasText);
-            this.label.setManaged(hasText);
-        });
         showBtcCode.addListener((obs, old, newVal) -> updateDisplay());
 
+        // Initial display update
         updateDisplay();
 
+        // Set default style class
         getStyleClass().add("btc-sats-text");
-
-        setAlignment(Pos.BASELINE_LEFT);
-        contentBox.setAlignment(Pos.BASELINE_LEFT);
     }
 
     private void updateDisplay() {
@@ -154,21 +144,17 @@ public class BtcSatsText extends VBox {
 
         this.integerPart.setText(integerPart + ".");
         this.integerPart.setFill(Integer.parseInt(integerPart) > 0 ? Color.WHITE : Color.GRAY);
-        this.integerPart.getStyleClass().add("btc-integer-part");
 
         this.leadingZeros.setText(leadingZeros.toString());
         this.leadingZeros.setFill(Color.GRAY);
-        this.leadingZeros.getStyleClass().add("btc-leading-zeros");
 
         this.significantDigits.setText(significantDigits);
         this.significantDigits.setFill(Color.WHITE);
-        this.significantDigits.getStyleClass().add("btc-significant-digits");
 
         if (showCode) {
             this.btcCode.setText(" BTC");
             this.btcCode.setFill(Color.GRAY);
             this.btcCode.setVisible(true);
-            this.btcCode.getStyleClass().add("btc-code");
         } else {
             this.btcCode.setVisible(false);
         }
@@ -176,7 +162,7 @@ public class BtcSatsText extends VBox {
 
     public void applyStyleToTextNodes() {
         for (String styleClass : getStyleClass()) {
-            if (!styleClass.equals("btc-sats-text") && !styleClass.equals("vbox")) {
+            if (!styleClass.equals("btc-sats-text") && !styleClass.equals("hbox")) {
                 for (Text textNode : new Text[]{integerPart, leadingZeros, significantDigits, btcCode}) {
                     if (!textNode.getStyleClass().contains(styleClass)) {
                         textNode.getStyleClass().add(styleClass);
@@ -186,10 +172,7 @@ public class BtcSatsText extends VBox {
         }
 
         for (String styleClass : getStyleClass()) {
-            if (!styleClass.equals("btc-sats-text") && !styleClass.equals("vbox")) {
-                if (!contentBox.getStyleClass().contains(styleClass)) {
-                    contentBox.getStyleClass().add(styleClass);
-                }
+            if (!styleClass.equals("btc-sats-text") && !styleClass.equals("hbox")) {
                 if (!valueTextFlow.getStyleClass().contains(styleClass)) {
                     valueTextFlow.getStyleClass().add(styleClass);
                 }
@@ -198,16 +181,15 @@ public class BtcSatsText extends VBox {
     }
 
     private void setupTextFieldStyle() {
-        contentBox.getStyleClass().add("btc-text-field");
-        contentBox.setPadding(new Insets(8, 12, 8, 12));
-        contentBox.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(contentBox, Priority.ALWAYS);
+        getStyleClass().add("btc-text-field");
+        setPadding(new Insets(8, 12, 8, 12));
+        setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(this, Priority.ALWAYS);
     }
 
     public void setBaselineAlignment() {
-        setAlignment(Pos.BASELINE_LEFT);
+        setAlignment(Pos.CENTER);
         setSpacing(0);
-        contentBox.setAlignment(Pos.BASELINE_LEFT);
         valueTextFlow.setLineSpacing(0);
     }
 
@@ -222,7 +204,6 @@ public class BtcSatsText extends VBox {
 
     public void setPaddings(Insets padding) {
         setPadding(padding);
-        contentBox.setPadding(new Insets(0));
         valueTextFlow.setPadding(new Insets(0));
     }
 
@@ -236,5 +217,55 @@ public class BtcSatsText extends VBox {
 
     public void setShowBtcCode(boolean show) {
         showBtcCode.set(show);
+    }
+
+    public void setFontSize(double fontSize) {
+        Font font = Font.font("IBM Plex Sans Light", fontSize);
+        integerPart.setFont(font);
+        leadingZeros.setFont(font);
+        significantDigits.setFont(font);
+    }
+
+    /**
+     * Sets the font size for the BTC code label
+     * @param fontSize The font size to apply
+     */
+    public void setBtcCodeFontSize(double fontSize) {
+        Text btcCodeText = getBtcCode();
+        Font currentFont = btcCodeText.getFont();
+        btcCodeText.setFont(Font.font(currentFont.getFamily(), fontSize));
+    }
+
+    /**
+     * Applies a common compact configuration for displaying BTC amounts
+     * @param mainFontSize The font size for the main amount text
+     * @param btcCodeFontSize The font size for the BTC code label
+     * @param height The height constraint for the component (min and max)
+     */
+    public void applyCompactConfig(double mainFontSize, double btcCodeFontSize, double height) {
+        setFontSize(mainFontSize);
+        setBtcCodeFontSize(btcCodeFontSize);
+        setBaselineAlignment();
+        setHeightConstraints(height, height);
+        setPaddings(new Insets(0));
+        setSpacing(0);
+    }
+
+    /**
+     * Applies a small compact configuration (18pt font size)
+     */
+    public void applySmallCompactConfig() {
+        applyCompactConfig(18, 13, 28);
+    }
+
+    /**
+     * Applies a medium compact configuration (21pt font size)
+     */
+    public void applyMediumCompactConfig() {
+        applyCompactConfig(21, 18, 28);
+    }
+
+    public void applyMicroCompactConfig() {
+        applyCompactConfig(12, 12, 24);
     }
 }
