@@ -28,6 +28,7 @@ java {
 
 application {
     mainClass.set("bisq.desktop_app.DesktopApp")
+    applicationDefaultJvmArgs = listOf("-XX:MaxRAM=8g", "-XX:MaxHeapFreeRatio=10", "-XX:MinHeapFreeRatio=5")
 }
 
 val properties = readPropertiesFile("../../../gradle.properties")
