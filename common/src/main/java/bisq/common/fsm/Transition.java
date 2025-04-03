@@ -15,22 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 package bisq.common.fsm;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-
 @Slf4j
 @ToString
-
 @Getter
-
 @EqualsAndHashCode
 public class Transition {
     private final Set<State> sourceStates = new HashSet<>();
@@ -40,7 +35,6 @@ public class Transition {
     private Class<? extends Event> eventClass;
     @Setter
     private Optional<Class<? extends EventHandler>> eventHandlerClass = Optional.empty();
-
     boolean isValid() {
         return !sourceStates.isEmpty() &&
                 targetState != null &&
