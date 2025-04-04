@@ -58,6 +58,11 @@ public class AmountSelectionController implements Controller {
             maxOrFixedQuoteSideAmountValidPin, minQuoteAmountFromModelPin, minBaseAmountFromCompPin, minQuoteAmountFromCompPin,
             minQuoteSideAmountValidPin, priceFromCompPin, minRangeCustomValuePin, maxRangeCustomValuePin, isRangeAmountEnabledPin;
 
+    private boolean isUpdatingMaxOrFixedBase = false;
+    private boolean isUpdatingMaxOrFixedQuote = false;
+    private boolean isUpdatingMinBase = false;
+    private boolean isUpdatingMinQuote = false;
+
     public AmountSelectionController(ServiceProvider serviceProvider) {
         // max or fixed amount
         maxOrFixedQuoteSideAmountInput = new QuoteAmountInputBox(false, true);
@@ -79,8 +84,18 @@ public class AmountSelectionController implements Controller {
         // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
         // apply the conversion before the other component has processed the market change event.
         // The order of the event notification is not deterministic.
-        maxOrFixedQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMaxOrFixedBaseFromQuote);
-        minQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(this::setMinBaseFromQuote);
+        maxOrFixedQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(() -> {
+            if (!isUpdatingMaxOrFixedQuote) {
+                setMaxOrFixedBaseFromQuote();
+            }
+        });
+
+        minQuoteSideAmountFromModelListener = (observable, oldValue, newValue) -> UIThread.runOnNextRenderFrame(() -> {
+            if (!isUpdatingMinQuote) {
+                setMinBaseFromQuote();
+            }
+        });
+
         quoteListener = (observable, oldValue, newValue) -> {
             model.getMinRangeBaseSideValue().set(null);
             model.getMaxRangeBaseSideValue().set(null);
@@ -252,69 +267,101 @@ public class AmountSelectionController implements Controller {
 
         maxOrFixedBaseAmountFromCompPin = EasyBind.subscribe(maxOrFixedBaseSideAmountInput.amountProperty(),
                 amount -> {
-                    Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
-                    if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
-                        model.getMaxOrFixedBaseSideAmount().set(maxRangeValue);
-                        setMaxOrFixedQuoteFromBase();
-                        maxOrFixedBaseSideAmountInput.setAmount(maxRangeValue);
-                    } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
-                        model.getMaxOrFixedBaseSideAmount().set(minRangeValue);
-                        setMaxOrFixedQuoteFromBase();
-                        maxOrFixedBaseSideAmountInput.setAmount(minRangeValue);
-                    } else {
-                        model.getMaxOrFixedBaseSideAmount().set(amount);
+                    if (isUpdatingMaxOrFixedBase) return;
+
+                    isUpdatingMaxOrFixedBase = true;
+                    try {
+                        Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
+                        Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
+                        if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
+                            model.getMaxOrFixedBaseSideAmount().set(maxRangeValue);
+                            setMaxOrFixedQuoteFromBase();
+                            maxOrFixedBaseSideAmountInput.setAmount(maxRangeValue);
+                        } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
+                            model.getMaxOrFixedBaseSideAmount().set(minRangeValue);
+                            setMaxOrFixedQuoteFromBase();
+                            maxOrFixedBaseSideAmountInput.setAmount(minRangeValue);
+                        } else {
+                            model.getMaxOrFixedBaseSideAmount().set(amount);
+                            setMaxOrFixedQuoteFromBase();
+                        }
+                    } finally {
+                        isUpdatingMaxOrFixedBase = false;
                     }
                 });
 
         minBaseAmountFromCompPin = EasyBind.subscribe(minBaseSideAmountInput.amountProperty(),
                 amount -> {
-                    Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
-                    if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
-                        model.getMinBaseSideAmount().set(maxRangeValue);
-                        setMinQuoteFromBase();
-                        minBaseSideAmountInput.setAmount(maxRangeValue);
-                    } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
-                        model.getMinBaseSideAmount().set(minRangeValue);
-                        setMinQuoteFromBase();
-                        minBaseSideAmountInput.setAmount(minRangeValue);
-                    } else {
-                        model.getMinBaseSideAmount().set(amount);
+                    if (isUpdatingMinBase) return;
+
+                    isUpdatingMinBase = true;
+                    try {
+                        Monetary minRangeValue = model.getMinRangeBaseSideValue().get();
+                        Monetary maxRangeValue = model.getMaxRangeBaseSideValue().get();
+                        if (amount != null && amount.getValue() > maxRangeValue.getValue()) {
+                            model.getMinBaseSideAmount().set(maxRangeValue);
+                            setMinQuoteFromBase();
+                            minBaseSideAmountInput.setAmount(maxRangeValue);
+                        } else if (amount != null && amount.getValue() < minRangeValue.getValue()) {
+                            model.getMinBaseSideAmount().set(minRangeValue);
+                            setMinQuoteFromBase();
+                            minBaseSideAmountInput.setAmount(minRangeValue);
+                        } else {
+                            model.getMinBaseSideAmount().set(amount);
+                            setMinQuoteFromBase();
+                        }
+                    } finally {
+                        isUpdatingMinBase = false;
                     }
                 });
 
         maxOrFixedQuoteAmountFromCompPin = EasyBind.subscribe(maxOrFixedQuoteSideAmountInput.amountProperty(),
                 amount -> {
-                    Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
-                    if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
-                        model.getMaxOrFixedQuoteSideAmount().set(maxRangeValue);
-                        setMaxOrFixedBaseFromQuote();
-                        maxOrFixedQuoteSideAmountInput.setAmount(maxRangeValue);
-                    } else if (minRangeValue != null && amount != null && amount.getValue() < minRangeValue.getValue()) {
-                        model.getMaxOrFixedQuoteSideAmount().set(minRangeValue);
-                        setMaxOrFixedBaseFromQuote();
-                        maxOrFixedQuoteSideAmountInput.setAmount(minRangeValue);
-                    } else {
-                        model.getMaxOrFixedQuoteSideAmount().set(amount);
+                    if (isUpdatingMaxOrFixedQuote) return;
+
+                    isUpdatingMaxOrFixedQuote = true;
+                    try {
+                        Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
+                        Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
+                        if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
+                            model.getMaxOrFixedQuoteSideAmount().set(maxRangeValue);
+                            setMaxOrFixedBaseFromQuote();
+                            maxOrFixedQuoteSideAmountInput.setAmount(maxRangeValue);
+                        } else if (minRangeValue != null && amount != null && amount.getValue() < minRangeValue.getValue()) {
+                            model.getMaxOrFixedQuoteSideAmount().set(minRangeValue);
+                            setMaxOrFixedBaseFromQuote();
+                            maxOrFixedQuoteSideAmountInput.setAmount(minRangeValue);
+                        } else {
+                            model.getMaxOrFixedQuoteSideAmount().set(amount);
+                            setMaxOrFixedBaseFromQuote();
+                        }
+                    } finally {
+                        isUpdatingMaxOrFixedQuote = false;
                     }
                 });
 
         minQuoteAmountFromCompPin = EasyBind.subscribe(minQuoteSideAmountInput.amountProperty(),
                 amount -> {
-                    Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
-                    Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
-                    if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
-                        model.getMinQuoteSideAmount().set(maxRangeValue);
-                        setMinBaseFromQuote();
-                        minQuoteSideAmountInput.setAmount(maxRangeValue);
-                    } else if (minRangeValue != null && amount != null && amount.getValue() < minRangeValue.getValue()) {
-                        model.getMinQuoteSideAmount().set(minRangeValue);
-                        setMinBaseFromQuote();
-                        minQuoteSideAmountInput.setAmount(minRangeValue);
-                    } else {
-                        model.getMinQuoteSideAmount().set(amount);
+                    if (isUpdatingMinQuote) return;
+
+                    isUpdatingMinQuote = true;
+                    try {
+                        Monetary minRangeValue = model.getMinRangeQuoteSideValue().get();
+                        Monetary maxRangeValue = model.getMaxRangeQuoteSideValue().get();
+                        if (maxRangeValue != null && amount != null && amount.getValue() > maxRangeValue.getValue()) {
+                            model.getMinQuoteSideAmount().set(maxRangeValue);
+                            setMinBaseFromQuote();
+                            minQuoteSideAmountInput.setAmount(maxRangeValue);
+                        } else if (minRangeValue != null && amount != null && amount.getValue() < minRangeValue.getValue()) {
+                            model.getMinQuoteSideAmount().set(minRangeValue);
+                            setMinBaseFromQuote();
+                            minQuoteSideAmountInput.setAmount(minRangeValue);
+                        } else {
+                            model.getMinQuoteSideAmount().set(amount);
+                            setMinBaseFromQuote();
+                        }
+                    } finally {
+                        isUpdatingMinQuote = false;
                     }
                 });
 
@@ -503,6 +550,8 @@ public class AmountSelectionController implements Controller {
     }
 
     private void setMaxOrFixedQuoteFromBase() {
+        if (isUpdatingMaxOrFixedQuote) return;
+
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote == null) {
             return;
@@ -511,10 +560,18 @@ public class AmountSelectionController implements Controller {
         if (baseSideAmount == null) {
             return;
         }
-        maxOrFixedQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
+
+        isUpdatingMaxOrFixedQuote = true;
+        try {
+            maxOrFixedQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
+        } finally {
+            isUpdatingMaxOrFixedQuote = false;
+        }
     }
 
     private void setMinQuoteFromBase() {
+        if (isUpdatingMinQuote) return;
+
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote == null) {
             return;
@@ -523,10 +580,18 @@ public class AmountSelectionController implements Controller {
         if (baseSideAmount == null) {
             return;
         }
-        minQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
+
+        isUpdatingMinQuote = true;
+        try {
+            minQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount).round(0));
+        } finally {
+            isUpdatingMinQuote = false;
+        }
     }
 
     private void setMaxOrFixedBaseFromQuote() {
+        if (isUpdatingMaxOrFixedBase) return;
+
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote == null) {
             return;
@@ -535,10 +600,18 @@ public class AmountSelectionController implements Controller {
         if (quoteSideAmount == null) {
             return;
         }
-        maxOrFixedBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+
+        isUpdatingMaxOrFixedBase = true;
+        try {
+            maxOrFixedBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+        } finally {
+            isUpdatingMaxOrFixedBase = false;
+        }
     }
 
     private void setMinBaseFromQuote() {
+        if (isUpdatingMinBase) return;
+
         PriceQuote priceQuote = price.getQuote().get();
         if (priceQuote == null) {
             return;
@@ -547,7 +620,13 @@ public class AmountSelectionController implements Controller {
         if (quoteSideAmount == null) {
             return;
         }
-        minBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+
+        isUpdatingMinBase = true;
+        try {
+            minBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+        } finally {
+            isUpdatingMinBase = false;
+        }
     }
 
     private void applyQuote() {
