@@ -476,6 +476,13 @@
     -fx-background-color: -bisq-dark-grey-40;
 }
 
+/*******************************************************************************
+ * BisqEasyOpenTradesView.tableView.BaseAmount (btc)                           *
+ ******************************************************************************/
+
+.bisq-easy-open-trades-btc {
+    -fx-font-size: 1.0em !important;
+}
 
 /*******************************************************************************
  * Header                                                                      *
@@ -694,6 +701,21 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.bisq-easy-trade-state-headline-btc {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-headline-btc-leading-zeros {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-headline-btc-integer {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /*******************************************************************************
  * Trade completed                                                             *

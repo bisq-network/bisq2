@@ -29,9 +29,7 @@ import bisq.desktop.common.qr.QrCodeDisplay;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.*;
 import bisq.desktop.components.controls.validator.*;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
@@ -264,12 +262,21 @@ public class SellerState3a extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
+        private enum BitcoinAmountDisplayStyleType {
+            HEADLINE,
+            BASE_AMOUNT
+        }
+
         private static final Interpolator INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
         private final Button sentButton;
         private final MaterialTextField paymentProof;
-        private final WrappingText sendBtcHeadline, fiatReceiptConfirmed;
-        private final MaterialTextField baseAmount;
+        @SuppressWarnings("FieldCanBeLocal")
+        private final WrappingText sendBtcPrefix, sendBtcSuffix;
+        private final BitcoinAmountDisplay sendBtcAmount;
+        private final HBox sendBtcHeadline;
+        private final WrappingText fiatReceiptConfirmed;
+        private final MaterialBtcTextField baseAmount;
         private final MaterialTextField bitcoinPayment;
         private final Label qrCodeLabel;
         private final ImageView qrCodeImageView, openQrCodeWindowIcon;
@@ -284,9 +291,21 @@ public class SellerState3a extends BaseState {
             fiatReceiptConfirmed = confirmPair.getFirst();
             HBox fiatReceiptConfirmedHBox = confirmPair.getSecond();
 
-            sendBtcHeadline = FormUtils.getHeadline();
+            sendBtcPrefix =
+                    FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.prefix") + " ");
+            sendBtcAmount = new BitcoinAmountDisplay("0");
+            configureBitcoinAmountDisplay(sendBtcAmount, BitcoinAmountDisplayStyleType.HEADLINE);
+            sendBtcSuffix =
+                    FormUtils.getHeadline(" " + Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.suffix"));
 
-            baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3a.baseAmount"), "", false);
+            sendBtcHeadline = new HBox(2, sendBtcPrefix, sendBtcAmount, sendBtcSuffix);
+            sendBtcHeadline.setAlignment(Pos.BASELINE_LEFT);
+
+            HBox.setMargin(sendBtcAmount, new Insets(8, 0, 0, 0));
+
+            baseAmount =
+                    FormUtils.getBtcTextField(Res.get("bisqEasy.tradeState.info.seller.phase3a.baseAmount"), "", false);
+            configureBitcoinAmountDisplay(baseAmount.getBitcoinAmountDisplay(), BitcoinAmountDisplayStyleType.BASE_AMOUNT);
             bitcoinPayment = FormUtils.getTextField("", "", false);
             paymentProof = FormUtils.getTextField("", "", true);
 
@@ -339,6 +358,7 @@ public class SellerState3a extends BaseState {
             paymentProof.setValidator(model.getPaymentProofValidator());
             bitcoinPayment.setValidators(model.getBitcoinPaymentValidator());
 
+            sendBtcAmount.setBtcAmount(model.getBaseAmount());
             baseAmount.setText(model.getFormattedBaseAmount());
             bitcoinPayment.setDescription(model.getBitcoinPaymentDescription());
             qrCodeLabel.setText(model.getBitcoinPaymentDescription());
@@ -347,7 +367,6 @@ public class SellerState3a extends BaseState {
 
             paymentProof.setDescription(model.getPaymentProofDescription());
             paymentProof.setPromptText(model.getPaymentProofPrompt());
-            sendBtcHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc", model.getFormattedBaseAmount()));
             fiatReceiptConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.fiatPaymentReceivedCheckBox", model.getFormattedQuoteAmount()));
             sentButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.btcSentButton", model.getFormattedBaseAmount()));
             qrCodeImageView.setImage(model.getSmallQrCodeImage());
@@ -362,6 +381,12 @@ public class SellerState3a extends BaseState {
             baseAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBaseAmount()));
             qrCodeVBox.setOnMouseClicked(e -> controller.onShowQrCodeDisplay());
             sentButton.setOnAction(e -> controller.onConfirmedBtcSent());
+            sendBtcHeadline.setFocusTraversable(true);
+            root.layoutBoundsProperty().addListener((obs, old, newVal) -> {
+                sendBtcAmount.getSignificantDigits().getStyleClass().add("bisq-easy-trade-state-headline");
+                sendBtcAmount.getBtcCode().getStyleClass().add("bisq-easy-trade-state-headline");
+                sendBtcAmount.applyCompactConfig(22, 22, 30);
+            });
         }
 
         @Override
@@ -388,6 +413,25 @@ public class SellerState3a extends BaseState {
 
             paymentProof.resetValidation();
             bitcoinPayment.resetValidation();
+        }
+
+        private void configureBitcoinAmountDisplay(BitcoinAmountDisplay display, BitcoinAmountDisplayStyleType bitcoinAmountDisplayStyleType) {
+            switch (bitcoinAmountDisplayStyleType) {
+                case HEADLINE:
+                    display.getSignificantDigits().getStyleClass().add("bisq-easy-trade-state-headline");
+                    display.getBtcCode().getStyleClass().add("bisq-easy-trade-state-headline");
+                    display.applyCompactConfig(22, 22, 30);
+                    display.setBaselineAlignment();
+                    display.setTranslateY(7.5);
+                    break;
+
+                case BASE_AMOUNT:
+                    display.getSignificantDigits().getStyleClass().add("bisq-easy-trade-state-headline-btc");
+                    display.getBtcCode().getStyleClass().add("bisq-easy-trade-state-headline-btc");
+                    display.getIntegerPart().getStyleClass().add(".bisq-easy-trade-state-headline-btc-integer");
+                    display.getLeadingZeros().getStyleClass().add("bisq-easy-trade-state-headline-btc-leading-zeros");
+                    break;
+            }
         }
 
         private void qrCodeWindowChanged(Stage qrCodeWindow) {

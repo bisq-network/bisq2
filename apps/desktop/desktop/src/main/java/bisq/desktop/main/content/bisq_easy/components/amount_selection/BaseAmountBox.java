@@ -18,9 +18,11 @@
 package bisq.desktop.main.content.bisq_easy.components.amount_selection;
 
 import bisq.common.currency.Market;
+import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.property.*;
@@ -103,6 +105,7 @@ public class BaseAmountBox {
                 return;
             }
             model.code.set(model.selectedMarket.getBaseCurrencyCode());
+            model.isBtc.set(TradeCurrency.isBtc(model.code.get()));
         }
     }
 
@@ -111,6 +114,7 @@ public class BaseAmountBox {
         private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final StringProperty code = new SimpleStringProperty();
         private final StringProperty tooltip = new SimpleStringProperty(Res.get(DEFAULT_TOOLTIP));
+        private final BooleanProperty isBtc = new SimpleBooleanProperty(false);
         private Market selectedMarket;
 
         private Model(boolean showCurrencyCode) {
@@ -120,13 +124,18 @@ public class BaseAmountBox {
         void reset() {
             amount.set(null);
             code.set(null);
+            isBtc.set(false);
             selectedMarket = null;
         }
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final ChangeListener<Monetary> amountListener;
+        private final ChangeListener<Boolean> isBtcListener;
+        private final ChangeListener<String> codeListener;
+
         private final Label baseAmountLabel, codeLabel, baseAmountInfoIcon;
+        private final BitcoinAmountDisplay bitcoinAmountDisplay;
         private final BisqTooltip tooltip;
 
         private View(Model model, Controller controller) {
@@ -144,6 +153,11 @@ public class BaseAmountBox {
             codeLabel.setVisible(model.showCurrencyCode);
             codeLabel.setManaged(model.showCurrencyCode);
 
+            bitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+            configureBitcoinAmountDisplay(bitcoinAmountDisplay);
+            bitcoinAmountDisplay.setVisible(false);
+            bitcoinAmountDisplay.setManaged(false);
+
             tooltip = new BisqTooltip(BisqTooltip.Style.DARK);
             baseAmountInfoIcon = new Label();
             baseAmountInfoIcon.setGraphic(ImageUtil.getImageViewById("info"));
@@ -155,23 +169,36 @@ public class BaseAmountBox {
             baseAmountInfoIcon.setMinWidth(Label.USE_PREF_SIZE);
 
             HBox.setMargin(baseAmountInfoIcon, new Insets(0, 0, 0, 4));
-            root.getChildren().addAll(baseAmountLabel, codeLabel, baseAmountInfoIcon);
+            HBox.setMargin(bitcoinAmountDisplay, new Insets(0, 7, 0, 0));
+
+            root.getChildren().addAll(baseAmountLabel, codeLabel, bitcoinAmountDisplay, baseAmountInfoIcon);
             root.setAlignment(Pos.CENTER);
             root.getStyleClass().add("base-amount-box");
 
             amountListener = this::onAmountChanged;
+            isBtcListener = this::onIsBtcChanged;
+            codeListener = this::onCodeChanged;
         }
 
         @Override
         protected void onViewAttached() {
+            boolean isBtc = model.isBtc.get();
+
             baseAmountInfoIcon.setVisible(model.showCurrencyCode);
             baseAmountInfoIcon.setManaged(model.showCurrencyCode);
+
+            if (isBtc) {
+                baseAmountInfoIcon.setTranslateY(-2);
+            }
 
             codeLabel.textProperty().bind(model.code);
             tooltip.textProperty().bind(model.tooltip);
 
             model.amount.addListener(amountListener);
+            model.isBtc.addListener(isBtcListener);
+            model.code.addListener(codeListener);
 
+            updateDisplayMode(isBtc);
             applyAmount(model.amount.get());
         }
 
@@ -181,6 +208,21 @@ public class BaseAmountBox {
             tooltip.textProperty().unbind();
 
             model.amount.removeListener(amountListener);
+            model.isBtc.removeListener(isBtcListener);
+            model.code.removeListener(codeListener);
+        }
+
+        private void onIsBtcChanged(ObservableValue<? extends Boolean> observable,
+                                    Boolean oldValue,
+                                    Boolean newValue) {
+            updateDisplayMode(newValue);
+            applyAmount(model.amount.get());
+        }
+
+        private void onCodeChanged(ObservableValue<? extends String> observable,
+                                   String oldValue,
+                                   String newValue) {
+            model.isBtc.set(TradeCurrency.isBtc(newValue));
         }
 
         private void onAmountChanged(ObservableValue<? extends Monetary> observable,
@@ -189,8 +231,36 @@ public class BaseAmountBox {
             applyAmount(newValue);
         }
 
+        private void updateDisplayMode(boolean isBtc) {
+            baseAmountLabel.setVisible(!isBtc);
+            baseAmountLabel.setManaged(!isBtc);
+            codeLabel.setVisible(!isBtc && model.showCurrencyCode);
+            codeLabel.setManaged(!isBtc && model.showCurrencyCode);
+
+            bitcoinAmountDisplay.setVisible(isBtc);
+            bitcoinAmountDisplay.setManaged(isBtc);
+        }
+
         private void applyAmount(Monetary newValue) {
-            baseAmountLabel.setText(newValue == null ? "" : AmountFormatter.formatBaseAmount(newValue));
+            if (newValue == null) {
+                baseAmountLabel.setText("");
+                bitcoinAmountDisplay.setBtcAmount("0");
+                return;
+            }
+
+            String formattedAmount = AmountFormatter.formatBaseAmount(newValue);
+            baseAmountLabel.setText(formattedAmount);
+
+            if (model.isBtc.get()) {
+                bitcoinAmountDisplay.setBtcAmount(formattedAmount);
+            }
+        }
+
+        private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
+            btcText.setBaselineAlignment();
+            btcText.applyCompactConfig(16, 13, 28);
+            btcText.getBtcCode().setVisible(model.showCurrencyCode);
+            btcText.getBtcCode().setManaged(model.showCurrencyCode);
         }
     }
 }
