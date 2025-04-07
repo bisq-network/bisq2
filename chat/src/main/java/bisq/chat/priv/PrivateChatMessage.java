@@ -65,7 +65,7 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
                                  long date,
                                  boolean wasEdited,
                                  ChatMessageType chatMessageType,
-                                 Set<R> reactions) {
+                                 Set<R> chatMessageReactions) {
         this(messageId,
                 chatChannelDomain,
                 channelId,
@@ -77,7 +77,7 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
                 date,
                 wasEdited,
                 chatMessageType,
-                reactions);
+                chatMessageReactions);
     }
 
     protected PrivateChatMessage(String messageId,
@@ -91,7 +91,7 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
                                  long date,
                                  boolean wasEdited,
                                  ChatMessageType chatMessageType,
-                                 Set<R> reactions) {
+                                 Set<R> chatMessageReactions) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -106,7 +106,7 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
         this.senderUserProfile = senderUserProfile;
         this.receiverNetworkId = receiverNetworkId;
 
-        chatMessageReactions.addAll(reactions);
+        this.chatMessageReactions.addAll(chatMessageReactions);
 
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
     }
