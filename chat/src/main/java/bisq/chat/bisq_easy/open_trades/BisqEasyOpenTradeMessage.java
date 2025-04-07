@@ -87,7 +87,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                                     Optional<UserProfile> mediator,
                                     ChatMessageType chatMessageType,
                                     Optional<BisqEasyOffer> bisqEasyOffer,
-                                    Set<BisqEasyOpenTradeMessageReaction> reactions) {
+                                    Set<BisqEasyOpenTradeMessageReaction> chatMessageReactions) {
         this(tradeId,
                 messageId,
                 ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
@@ -102,7 +102,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                 mediator,
                 chatMessageType,
                 bisqEasyOffer,
-                reactions);
+                chatMessageReactions);
     }
 
     public BisqEasyOpenTradeMessage(String tradeId,
@@ -119,9 +119,9 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyO
                                     Optional<UserProfile> mediator,
                                     ChatMessageType chatMessageType,
                                     Optional<BisqEasyOffer> bisqEasyOffer,
-                                    Set<BisqEasyOpenTradeMessageReaction> reactions) {
+                                    Set<BisqEasyOpenTradeMessageReaction> chatMessageReactions) {
         super(messageId, chatChannelDomain, channelId, senderUserProfile, receiverUserProfileId,
-                receiverNetworkId, text, citation, date, wasEdited, chatMessageType, reactions);
+                receiverNetworkId, text, citation, date, wasEdited, chatMessageType, chatMessageReactions);
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
