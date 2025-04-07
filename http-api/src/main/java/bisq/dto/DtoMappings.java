@@ -17,7 +17,6 @@
 
 package bisq.dto;
 
-import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
@@ -27,6 +26,8 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.common.currency.Market;
 import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
@@ -43,10 +44,13 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.dto.account.UserDefinedFiatAccountDto;
 import bisq.dto.account.UserDefinedFiatAccountPayloadDto;
 import bisq.dto.account.protocol_type.TradeProtocolTypeDto;
+import bisq.dto.chat.ChatChannelDomainDto;
 import bisq.dto.chat.ChatMessageTypeDto;
 import bisq.dto.chat.CitationDto;
 import bisq.dto.chat.bisq_easy.offerbook.BisqEasyOfferbookMessageDto;
 import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelDto;
+import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessageDto;
+import bisq.dto.chat.reactions.BisqEasyOpenTradeMessageReactionDto;
 import bisq.dto.common.currency.MarketDto;
 import bisq.dto.common.monetary.CoinDto;
 import bisq.dto.common.monetary.FiatDto;
@@ -164,6 +168,34 @@ public class DtoMappings {
 
     // chat
 
+    public static class ChatChannelDomainMapping {
+        public static ChatChannelDomain toBisq2Model(ChatChannelDomainDto value) {
+            if (value == null) {
+                return null;
+            }
+            return switch (value) {
+                case BISQ_EASY_OFFERBOOK -> ChatChannelDomain.BISQ_EASY_OFFERBOOK;
+                case BISQ_EASY_OPEN_TRADES -> ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
+                case DISCUSSION -> ChatChannelDomain.DISCUSSION;
+                case SUPPORT -> ChatChannelDomain.SUPPORT;
+            };
+        }
+
+        public static ChatChannelDomainDto fromBisq2Model(ChatChannelDomain value) {
+            if (value == null) {
+                return null;
+            }
+            return switch (value) {
+                case BISQ_EASY_OFFERBOOK -> ChatChannelDomainDto.BISQ_EASY_OFFERBOOK;
+                case BISQ_EASY_OPEN_TRADES -> ChatChannelDomainDto.BISQ_EASY_OPEN_TRADES;
+                case DISCUSSION -> ChatChannelDomainDto.DISCUSSION;
+                case SUPPORT -> ChatChannelDomainDto.SUPPORT;
+                case BISQ_EASY_PRIVATE_CHAT -> ChatChannelDomainDto.DISCUSSION;
+                case EVENTS -> ChatChannelDomainDto.DISCUSSION;
+            };
+        }
+    }
+
     public static class CitationMapping {
         public static Citation toBisq2Model(CitationDto value) {
             return new Citation(
@@ -191,6 +223,42 @@ public class DtoMappings {
             return ChatMessageTypeDto.valueOf(value.name());
         }
     }
+
+
+    // chat.reactions
+
+    public static class BisqEasyOpenTradeMessageReactionMapping {
+        public static BisqEasyOpenTradeMessageReaction toBisq2Model(BisqEasyOpenTradeMessageReactionDto value) {
+            return new BisqEasyOpenTradeMessageReaction(
+                    value.id(),
+                    UserProfileMapping.toBisq2Model(value.senderUserProfile()),
+                    value.receiverUserProfileId(),
+                    NetworkIdMapping.toBisq2Model(value.receiverNetworkId()),
+                    value.chatChannelId(),
+                    ChatChannelDomainMapping.toBisq2Model(value.chatChannelDomain()),
+                    value.chatMessageId(),
+                    value.reactionId(),
+                    value.date(),
+                    value.isRemoved()
+            );
+        }
+
+        public static BisqEasyOpenTradeMessageReactionDto fromBisq2Model(BisqEasyOpenTradeMessageReaction value) {
+            return new BisqEasyOpenTradeMessageReactionDto(
+                    value.getId(),
+                    UserProfileMapping.fromBisq2Model(value.getSenderUserProfile()),
+                    value.getReceiverUserProfileId(),
+                    NetworkIdMapping.fromBisq2Model(value.getReceiverNetworkId()),
+                    value.getChatChannelId(),
+                    ChatChannelDomainMapping.fromBisq2Model(value.getChatChannelDomain()),
+                    value.getChatMessageId(),
+                    value.getReactionId(),
+                    value.getDate(),
+                    value.isRemoved()
+            );
+        }
+    }
+
 
     // chat.bisq_easy.open_trades
 
@@ -256,6 +324,45 @@ public class DtoMappings {
                             .map(UserProfileMapping::fromBisq2Model)
                             .collect(Collectors.toSet()),
                     value.getMediator().map(UserProfileMapping::fromBisq2Model)
+            );
+        }
+    }
+
+    public static class BisqEasyOpenTradeMessageMapping {
+        public static BisqEasyOpenTradeMessage toBisq2Model(BisqEasyOpenTradeMessageDto value) {
+            return new BisqEasyOpenTradeMessage(
+                    value.tradeId(),
+                    value.messageId(),
+                    value.channelId(),
+                    UserProfileMapping.toBisq2Model(value.senderUserProfile()),
+                    value.receiverUserProfileId(),
+                    NetworkIdMapping.toBisq2Model(value.receiverNetworkId()),
+                    value.text().orElse(null),
+                    value.citation().map(CitationMapping::toBisq2Model),
+                    value.date(),
+                   false,
+                    value.mediator().map(UserProfileMapping::toBisq2Model),
+                    ChatMessageTypeMapping.toBisq2Model(value.chatMessageType()),
+                    value.bisqEasyOffer().map(BisqEasyOfferMapping::toBisq2Model),
+                    value.chatMessageReactions().stream().map(BisqEasyOpenTradeMessageReactionMapping::toBisq2Model).collect(Collectors.toSet())
+            );
+        }
+
+        public static BisqEasyOpenTradeMessageDto fromBisq2Model(BisqEasyOpenTradeMessage value) {
+            return new BisqEasyOpenTradeMessageDto(
+                    value.getTradeId(),
+                    value.getId(),
+                    value.getChannelId(),
+                    UserProfileMapping.fromBisq2Model(value.getSenderUserProfile()),
+                    value.getReceiverUserProfileId(),
+                    NetworkIdMapping.fromBisq2Model(value.getReceiverNetworkId()),
+                    value.getText(),
+                    value.getCitation().map(CitationMapping::fromBisq2Model),
+                    value.getDate(),
+                    value.getMediator().map(UserProfileMapping::fromBisq2Model),
+                    ChatMessageTypeMapping.fromBisq2Model(value.getChatMessageType()),
+                    value.getBisqEasyOffer().map(BisqEasyOfferMapping::fromBisq2Model),
+                    value.getChatMessageReactions().stream().map(BisqEasyOpenTradeMessageReactionMapping::fromBisq2Model).collect(Collectors.toSet())
             );
         }
     }
