@@ -48,12 +48,10 @@ public class EmbeddedTorProcess {
         createTorControlDirectory();
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
-        String ownerPid = getJdkFacade().getMyPid();
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
                 "--torrc-file", absoluteTorrcPathAsString,
-                "--defaults-torrc", absoluteTorrcPathAsString,
-                ARG_OWNER_PID, ownerPid
+                "--defaults-torrc", absoluteTorrcPathAsString
         );
 
         if (torBinaryPath.startsWith(torDataDirPath)) {

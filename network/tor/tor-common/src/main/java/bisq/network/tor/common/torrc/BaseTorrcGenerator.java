@@ -28,6 +28,8 @@ import static bisq.network.tor.common.torrc.Torrc.Values.EmbeddedTor.*;
 
 public class BaseTorrcGenerator implements TorrcConfigGenerator {
     public static final String CONTROL_DIR_NAME = "control";
+    public static final String CONTROL_PORT_FILE = "control";
+    public static final String CONTROL_PASSWORD = "password";
 
     private final Path dataDirPath;
     private final Path controlPortWriteFile;
@@ -37,7 +39,7 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
     @Builder
     public BaseTorrcGenerator(Path dataDirPath, String hashedControlPassword, boolean isTestNetwork) {
         this.dataDirPath = dataDirPath;
-        this.controlPortWriteFile = dataDirPath.resolve(CONTROL_DIR_NAME).resolve("control");
+        this.controlPortWriteFile = dataDirPath.resolve(CONTROL_DIR_NAME).resolve(CONTROL_PORT_FILE);
         this.hashedControlPassword = hashedControlPassword;
         this.isTestNetwork = isTestNetwork;
     }
