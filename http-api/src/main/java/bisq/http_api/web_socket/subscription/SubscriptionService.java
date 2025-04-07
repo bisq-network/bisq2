@@ -23,6 +23,7 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
+import bisq.http_api.web_socket.domain.chat.trade.TradeChatWebSocketService;
 import bisq.http_api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.http_api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.http_api.web_socket.domain.offers.OffersWebSocketService;
@@ -47,6 +48,7 @@ public class SubscriptionService implements Service {
     private final OffersWebSocketService offersWebSocketService;
     private final TradesWebSocketService tradesWebSocketService;
     private final TradePropertiesWebSocketService tradePropertiesWebSocketService;
+    private final TradeChatWebSocketService tradeChatWebSocketService;
 
     public SubscriptionService(ObjectMapper objectMapper,
                                BondedRolesService bondedRolesService,
@@ -62,6 +64,7 @@ public class SubscriptionService implements Service {
         offersWebSocketService = new OffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bondedRolesService);
         tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService);
         tradePropertiesWebSocketService = new TradePropertiesWebSocketService(objectMapper, subscriberRepository, tradeService);
+        tradeChatWebSocketService = new TradeChatWebSocketService(objectMapper, subscriberRepository, chatService.getBisqEasyOpenTradeChannelService());
     }
 
     @Override
@@ -70,7 +73,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> numOffersWebSocketService.initialize())
                 .thenCompose(e -> offersWebSocketService.initialize())
                 .thenCompose(e -> tradesWebSocketService.initialize())
-                .thenCompose(e -> tradePropertiesWebSocketService.initialize());
+                .thenCompose(e -> tradePropertiesWebSocketService.initialize())
+                .thenCompose(e -> tradeChatWebSocketService.initialize());
     }
 
     @Override
@@ -79,7 +83,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> numOffersWebSocketService.shutdown())
                 .thenCompose(e -> offersWebSocketService.shutdown())
                 .thenCompose(e -> tradesWebSocketService.shutdown())
-                .thenCompose(e -> tradePropertiesWebSocketService.shutdown());
+                .thenCompose(e -> tradePropertiesWebSocketService.shutdown())
+                .thenCompose(e -> tradeChatWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -129,6 +134,9 @@ public class SubscriptionService implements Service {
             }
             case TRADE_PROPERTIES -> {
                 return Optional.of(tradePropertiesWebSocketService);
+            }
+            case TRADE_CHATS -> {
+                return Optional.of(tradeChatWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);

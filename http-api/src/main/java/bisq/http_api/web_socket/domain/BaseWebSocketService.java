@@ -34,7 +34,8 @@ public abstract class BaseWebSocketService implements Service {
     protected final Topic topic;
 
     public BaseWebSocketService(ObjectMapper objectMapper,
-                                SubscriberRepository subscriberRepository, Topic topic) {
+                                SubscriberRepository subscriberRepository,
+                                Topic topic) {
         this.objectMapper = objectMapper;
         this.subscriberRepository = subscriberRepository;
         this.topic = topic;
