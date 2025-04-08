@@ -43,7 +43,7 @@ public class ControlPasswordFile {
         try {
             FileUtils.writeToFile(Hex.encode(content), path.toFile());
         } catch (IOException e) {
-            throw new IllegalStateException("Couldn't read password file: " + path.toAbsolutePath());
+            throw new IllegalStateException("Couldn't write password file: " + path.toAbsolutePath());
         }
     }
 
