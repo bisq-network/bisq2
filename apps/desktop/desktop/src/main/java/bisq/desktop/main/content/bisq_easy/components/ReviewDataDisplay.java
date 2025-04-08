@@ -143,8 +143,8 @@ public class ReviewDataDisplay {
         private final Triple<Text, Label, VBox> direction, paymentMethod;
         private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSend, toReceive;
 
-        private final BitcoinAmountDisplay toSendBtcAmount = new BitcoinAmountDisplay("0");
-        private final BitcoinAmountDisplay toReceiveBtcAmount = new BitcoinAmountDisplay("0");
+        private final BitcoinAmountDisplay toSendBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        private final BitcoinAmountDisplay toReceiveBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
 
         private final VBox rangeAmountVBox = new VBox(0);
         private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
@@ -156,21 +156,13 @@ public class ReviewDataDisplay {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
 
-            configureBitcoinAmountDisplay(toSendBtcAmount);
-            configureBitcoinAmountDisplay(toReceiveBtcAmount);
+            configureBitcoinAmountDisplay(toSendBitcoinAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinAmountDisplay);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSend = getAmountElements();
             toReceive = getAmountElements();
             paymentMethod = getElements();
-        }
-
-        private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
-            btcText.applyMediumCompactConfig();
-            btcText.setPadding(new Insets(-6, 0, 0, 0));
-
-            btcText.setTextAlignment(TextAlignment.LEFT);
-            btcText.setAlignment(Pos.CENTER_LEFT);
         }
 
         @Override
@@ -185,8 +177,8 @@ public class ReviewDataDisplay {
             paymentMethod.getFirst().textProperty().bind(model.getFiatPaymentMethodDescription());
             paymentMethod.getSecond().textProperty().bind(model.getFiatPaymentMethod());
 
-            toSendBtcAmount.btcAmountProperty().bind(model.getToSendAmount());
-            toReceiveBtcAmount.btcAmountProperty().bind(model.getToReceiveAmount());
+            toSendBitcoinAmountDisplay.getBtcAmount().bind(model.getToSendAmount());
+            toReceiveBitcoinAmountDisplay.getBtcAmount().bind(model.getToReceiveAmount());
 
 
             isSendBtcPin = EasyBind.subscribe(model.getIsSendBtc(), isSendBtc -> {
@@ -194,7 +186,7 @@ public class ReviewDataDisplay {
                 amountHBox.getChildren().clear();
 
                 if (isSendBtc) {
-                    amountHBox.getChildren().add(toSendBtcAmount);
+                    amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
                     VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
                 } else {
@@ -211,7 +203,7 @@ public class ReviewDataDisplay {
                 amountHBox.getChildren().clear();
 
                 if (isReceiveBtc) {
-                    amountHBox.getChildren().add(toReceiveBtcAmount);
+                    amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
                     amountHBox.setAlignment(Pos.CENTER_LEFT);
                     VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
                 } else {
@@ -260,12 +252,20 @@ public class ReviewDataDisplay {
             paymentMethod.getFirst().textProperty().unbind();
             paymentMethod.getSecond().textProperty().unbind();
 
-            toSendBtcAmount.btcAmountProperty().unbind();
-            toReceiveBtcAmount.btcAmountProperty().unbind();
+            toSendBitcoinAmountDisplay.getBtcAmount().unbind();
+            toReceiveBitcoinAmountDisplay.getBtcAmount().unbind();
 
             isRangeAmountPin.unsubscribe();
             isSendBtcPin.unsubscribe();
             isReceiveBtcPin.unsubscribe();
+        }
+
+        private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
+            bitcoinAmountDisplay.applyMediumCompactConfig();
+            bitcoinAmountDisplay.setPadding(new Insets(-6, 0, 0, 0));
+
+            bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
+            bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
         }
 
         private Triple<Text, Label, VBox> getElements() {

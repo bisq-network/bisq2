@@ -30,7 +30,7 @@ import javafx.scene.layout.Pane;
 
 public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> {
     public static final int HEIGHT = 57;
-    private BitcoinAmountDisplay balanceText;
+    private BitcoinAmountDisplay balanceBitcoinAmountDisplay;
 
     public TopPanelView(TopPanelModel model,
                         TopPanelController controller,
@@ -60,23 +60,23 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
     @Override
     protected void onViewAttached() {
-        balanceText.btcAmountProperty().bind(model.getFormattedBalanceProperty());
+        balanceBitcoinAmountDisplay.getBtcAmount().bind(model.getFormattedBalanceProperty());
     }
 
     @Override
     protected void onViewDetached() {
-        balanceText.btcAmountProperty().unbind();
+        balanceBitcoinAmountDisplay.getBtcAmount().unbind();
     }
 
     private HBox createBalanceBox() {
         Label titleLabel = new Label(Res.get("topPanel.wallet.balance").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-18");
 
-        balanceText = new BitcoinAmountDisplay("0");
-        configureBitcoinAmountDisplay(balanceText);
+        balanceBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        configureBitcoinAmountDisplay(balanceBitcoinAmountDisplay);
 
-        HBox hBox = new HBox(12, titleLabel, balanceText);
-        balanceText.setTranslateY(4);
+        HBox hBox = new HBox(12, titleLabel, balanceBitcoinAmountDisplay);
+        balanceBitcoinAmountDisplay.setTranslateY(4);
         hBox.setAlignment(Pos.CENTER_LEFT);
 
         return hBox;

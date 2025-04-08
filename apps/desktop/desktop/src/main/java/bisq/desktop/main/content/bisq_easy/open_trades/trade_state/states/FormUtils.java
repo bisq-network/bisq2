@@ -21,7 +21,7 @@ import bisq.common.data.Pair;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.controls.MaterialBtcTextField;
+import bisq.desktop.components.controls.MaterialBitcoinAmountDisplay;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
@@ -105,15 +105,18 @@ public class FormUtils {
         return field;
     }
 
-    public static MaterialBtcTextField getBtcTextField(String description, String value, boolean isEditable) {
-        MaterialBtcTextField field = new MaterialBtcTextField(description, null);
-        field.setText(value);
-        field.showCopyIcon();
-        field.setEditable(isEditable);
+    public static MaterialBitcoinAmountDisplay getMaterialBitcoinAmountDisplay(
+            String description,
+            String value,
+            boolean isEditable) {
+        MaterialBitcoinAmountDisplay materialBitcoinAmountDisplay = new MaterialBitcoinAmountDisplay(description, null);
+        materialBitcoinAmountDisplay.setText(value);
+        materialBitcoinAmountDisplay.showCopyIcon();
+        materialBitcoinAmountDisplay.setEditable(isEditable);
         if (isEditable) {
-            UIThread.runOnNextRenderFrame(field::requestFocus);
+            UIThread.runOnNextRenderFrame(materialBitcoinAmountDisplay::requestFocus);
         }
-        return field;
+        return materialBitcoinAmountDisplay;
     }
 
     public static MaterialTextArea addTextArea(String description, String value, boolean isEditable) {

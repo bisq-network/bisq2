@@ -25,42 +25,50 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
-public class MaterialBtcTextField extends MaterialTextField {
+public class MaterialBitcoinAmountDisplay extends MaterialTextField {
     @Getter
     private final BitcoinAmountDisplay bitcoinAmountDisplay;
     @SuppressWarnings("FieldCanBeLocal")
-    private final ChangeListener<Boolean> focusListener;
+    private final ChangeListener<Boolean> focusListener = this::handleFocusChange;
     @SuppressWarnings("FieldCanBeLocal")
-    private final ChangeListener<String> textChangeListener;
+    private final ChangeListener<String> textChangeListener = this::handleTextChange;
 
-    public MaterialBtcTextField() {
+    public MaterialBitcoinAmountDisplay() {
         this(null, null, null);
     }
 
-    public MaterialBtcTextField(String description) {
+    public MaterialBitcoinAmountDisplay(String description) {
         this(description, null, null);
     }
 
-    public MaterialBtcTextField(String description, String prompt) {
+    public MaterialBitcoinAmountDisplay(String description, String prompt) {
         this(description, prompt, null);
     }
 
-    public MaterialBtcTextField(@Nullable String description,
-                                @Nullable String prompt,
-                                @Nullable String help) {
+    public MaterialBitcoinAmountDisplay(@Nullable String description,
+                                        @Nullable String prompt,
+                                        @Nullable String help) {
         super(description, prompt, help);
 
         bitcoinAmountDisplay = new BitcoinAmountDisplay("0");
         configureBitcoinAmountDisplay();
         addBitcoinAmountDisplayToComponent();
 
-        focusListener = this::handleFocusChange;
-        textChangeListener = this::handleTextChange;
-
         textInputControl.focusedProperty().addListener(new WeakChangeListener<>(focusListener));
         textInputControl.textProperty().addListener(new WeakChangeListener<>(textChangeListener));
         updateInitialText();
         doLayout();
+    }
+
+    @Override
+    protected void doLayout() {
+        super.doLayout();
+
+        if (bitcoinAmountDisplay != null && textInputControl != null) {
+            bitcoinAmountDisplay.setLayoutX(textInputControl.getLayoutX());
+            bitcoinAmountDisplay.setLayoutY(getFieldLayoutY());
+            bitcoinAmountDisplay.setPrefWidth(textInputControl.getPrefWidth());
+        }
     }
 
     private void configureBitcoinAmountDisplay() {
@@ -77,17 +85,6 @@ public class MaterialBtcTextField extends MaterialTextField {
             getChildren().add(textFieldIndex + 1, bitcoinAmountDisplay);
         } else {
             getChildren().add(bitcoinAmountDisplay);
-        }
-    }
-
-    @Override
-    protected void doLayout() {
-        super.doLayout();
-
-        if (bitcoinAmountDisplay != null && textInputControl != null) {
-            bitcoinAmountDisplay.setLayoutX(textInputControl.getLayoutX());
-            bitcoinAmountDisplay.setLayoutY(getFieldLayoutY());
-            bitcoinAmountDisplay.setPrefWidth(textInputControl.getPrefWidth());
         }
     }
 

@@ -18,10 +18,10 @@
 package bisq.desktop.components.controls;
 
 import bisq.common.locale.LocaleRepository;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
@@ -30,16 +30,13 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.text.DecimalFormatSymbols;
 import java.util.regex.Pattern;
 
 public class BitcoinAmountDisplay extends HBox {
-
+    @Getter
     private final StringProperty btcAmount = new SimpleStringProperty("");
-    @Setter
-    public BooleanProperty showBtcCode = new SimpleBooleanProperty(true);
     private final TextFlow valueTextFlow = new TextFlow();
     @Getter
     private final Text integerPart = new Text();
@@ -49,6 +46,14 @@ public class BitcoinAmountDisplay extends HBox {
     private final Text significantDigits = new Text();
     @Getter
     private final Text btcCode = new Text();
+    @SuppressWarnings("FieldCanBeLocal")
+    private final ChangeListener<String> amountChangeListener =
+            (obs, old, newVal) -> updateDisplay();
+
+    public BitcoinAmountDisplay(String amount, boolean showBtcCode) {
+        this(amount);
+        btcCode.setVisible(showBtcCode);
+    }
 
     public BitcoinAmountDisplay(String amount) {
         setAlignment(Pos.CENTER);
@@ -65,92 +70,13 @@ public class BitcoinAmountDisplay extends HBox {
 
         btcAmount.set(amount);
 
-        btcAmount.addListener((obs, old, newVal) -> updateDisplay());
-        showBtcCode.addListener((obs, old, newVal) -> updateDisplay());
+        btcAmount.addListener(new WeakChangeListener<>(amountChangeListener));
+
+        btcCode.setText(" BTC");
+        getStyleClass().add("btc-sats-text");
 
         updateDisplay();
 
-        getStyleClass().add("btc-sats-text");
-    }
-
-    private void updateDisplay() {
-        String amount = btcAmount.get();
-        if (amount == null || amount.isEmpty()) {
-            valueTextFlow.setVisible(false);
-            return;
-        }
-
-        valueTextFlow.setVisible(true);
-        formatBtcAmount(amount, showBtcCode.get());
-    }
-
-    private void setExclusiveStyle(Text textNode, String styleToAdd, String styleToRemove) {
-        textNode.getStyleClass().remove(styleToRemove);
-        if (!textNode.getStyleClass().contains(styleToAdd)) {
-            textNode.getStyleClass().add(styleToAdd);
-        }
-    }
-
-    private void formatBtcAmount(String amount, boolean showCode) {
-        char decimalSeparator =
-                DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
-
-        if (!amount.contains(String.valueOf(decimalSeparator))) {
-            amount = amount + decimalSeparator + "0";
-        }
-
-        String[] parts = amount.split(Pattern.quote(String.valueOf(decimalSeparator)));
-
-        String integerPart = parts[0];
-        String fractionalPart = parts.length > 1 ? parts[1] : "";
-
-        StringBuilder reversedFractional = new StringBuilder(fractionalPart).reverse();
-
-        StringBuilder chunkedReversed = new StringBuilder();
-        for (int i = 0; i < reversedFractional.length(); i++) {
-            chunkedReversed.append(reversedFractional.charAt(i));
-            if ((i + 1) % 3 == 0 && i < reversedFractional.length() - 1) {
-                chunkedReversed.append(' ');
-            }
-        }
-
-        String formattedFractional = chunkedReversed.reverse().toString();
-
-        StringBuilder leadingZeros = new StringBuilder();
-        int i = 0;
-        while (i < formattedFractional.length() &&
-                (formattedFractional.charAt(i) == '0' || formattedFractional.charAt(i) == ' ')) {
-            leadingZeros.append(formattedFractional.charAt(i));
-            i++;
-        }
-
-        String significantDigits = formattedFractional.substring(i);
-
-        if (Integer.parseInt(integerPart) > 0) {
-            setExclusiveStyle(this.integerPart, "btc-integer-part", "btc-integer-part-dimmed");
-        } else {
-            setExclusiveStyle(this.integerPart, "btc-integer-part-dimmed", "btc-integer-part");
-        }
-        this.integerPart.setText(integerPart + decimalSeparator);
-
-        this.leadingZeros.setText(leadingZeros.toString());
-
-        if (leadingZeros.isEmpty()) {
-            setExclusiveStyle(this.leadingZeros,
-                    "btc-leading-zeros-empty", "btc-leading-zeros-dimmed");
-        } else {
-            setExclusiveStyle(this.leadingZeros, "btc-leading-zeros-dimmed",
-                    "btc-leading-zeros-empty");
-        }
-
-        this.significantDigits.setText(significantDigits);
-
-        if (showCode) {
-            this.btcCode.setText(" BTC");
-            this.btcCode.setVisible(true);
-        } else {
-            this.btcCode.setVisible(false);
-        }
     }
 
     public void setBaselineAlignment() {
@@ -163,8 +89,8 @@ public class BitcoinAmountDisplay extends HBox {
         valueTextFlow.setTextAlignment(alignment);
     }
 
-    public void setHeightConstraints(double minHeight, double maxHeight) {
-        setMinHeight(minHeight);
+    public void setFixedHeight(double maxHeight) {
+        setMinHeight(maxHeight);
         setMaxHeight(maxHeight);
     }
 
@@ -177,10 +103,6 @@ public class BitcoinAmountDisplay extends HBox {
         btcAmount.set(amount);
     }
 
-    public StringProperty btcAmountProperty() {
-        return btcAmount;
-    }
-
     public void setFontSize(double fontSize) {
         integerPart.setFont(new Font(integerPart.getFont().getName(), fontSize));
         leadingZeros.setFont(new Font(leadingZeros.getFont().getName(), fontSize));
@@ -188,16 +110,15 @@ public class BitcoinAmountDisplay extends HBox {
     }
 
     public void setBtcCodeFontSize(double fontSize) {
-        Text btcCodeText = getBtcCode();
-        Font btcCodeFont = btcCodeText.getFont();
-        btcCodeText.setFont(new Font(btcCodeFont.getName(), fontSize));
+        Font btcCodeFont = btcCode.getFont();
+        btcCode.setFont(new Font(btcCodeFont.getName(), fontSize));
     }
 
     public void applyCompactConfig(double mainFontSize, double btcCodeFontSize, double height) {
         setFontSize(mainFontSize);
         setBtcCodeFontSize(btcCodeFontSize);
         setBaselineAlignment();
-        setHeightConstraints(height, height);
+        setFixedHeight(height);
         setPaddings(new Insets(0));
         setSpacing(0);
     }
@@ -212,5 +133,86 @@ public class BitcoinAmountDisplay extends HBox {
 
     public void applyMicroCompactConfig() {
         applyCompactConfig(12, 12, 24);
+    }
+
+    private void updateDisplay() {
+        String amount = btcAmount.get();
+        if (amount == null || amount.isEmpty()) {
+            valueTextFlow.setVisible(false);
+            return;
+        }
+
+        valueTextFlow.setVisible(true);
+        formatBtcAmount(amount);
+    }
+
+    private void setExclusiveStyle(Text textNode, String styleToAdd, String styleToRemove) {
+        textNode.getStyleClass().remove(styleToRemove);
+        if (!textNode.getStyleClass().contains(styleToAdd)) {
+            textNode.getStyleClass().add(styleToAdd);
+        }
+    }
+
+    private void formatBtcAmount(String amount) {
+        char decimalSeparator =
+                DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
+
+        if (!amount.contains(String.valueOf(decimalSeparator))) {
+            amount = amount + decimalSeparator + "0";
+        }
+
+        String[] parts = amount.split(Pattern.quote(String.valueOf(decimalSeparator)));
+
+        String integerPartValue = parts.length > 0 ? parts[0] : "";
+        if (integerPartValue.isEmpty()) {
+            integerPartValue = "0";
+        }
+        String fractionalPart = parts.length > 1 ? parts[1] : "";
+        if (fractionalPart.isEmpty() && amount.contains(String.valueOf(decimalSeparator))) {
+            fractionalPart = "0";
+        }
+        StringBuilder reversedFractional = new StringBuilder(fractionalPart).reverse();
+
+        StringBuilder chunkedReversed = new StringBuilder();
+        for (int i = 0; i < reversedFractional.length(); i++) {
+            chunkedReversed.append(reversedFractional.charAt(i));
+            if ((i + 1) % 3 == 0 && i < reversedFractional.length() - 1) {
+                chunkedReversed.append(' ');
+            }
+        }
+
+        String formattedFractional = chunkedReversed.reverse().toString();
+
+        StringBuilder leadingZerosValue = new StringBuilder();
+        int integerValue = Integer.parseInt(integerPartValue);
+        int i = 0;
+        if (integerValue == 0) {
+            while (i < formattedFractional.length() &&
+                    (formattedFractional.charAt(i) == '0' || formattedFractional.charAt(i) == ' ')) {
+                leadingZerosValue.append(formattedFractional.charAt(i));
+                i++;
+            }
+        }
+
+        String significantDigitsValue = formattedFractional.substring(i);
+
+        if (integerValue > 0) {
+            setExclusiveStyle(integerPart, "btc-integer-part", "btc-integer-part-dimmed");
+        } else {
+            setExclusiveStyle(integerPart, "btc-integer-part-dimmed", "btc-integer-part");
+        }
+        integerPart.setText(integerPartValue + decimalSeparator);
+
+        leadingZeros.setText(leadingZerosValue.toString());
+
+        if (leadingZerosValue.isEmpty()) {
+            setExclusiveStyle(leadingZeros,
+                    "btc-leading-zeros-empty", "btc-leading-zeros-dimmed");
+        } else {
+            setExclusiveStyle(leadingZeros, "btc-leading-zeros-dimmed",
+                    "btc-leading-zeros-empty");
+        }
+
+        significantDigits.setText(significantDigitsValue);
     }
 }

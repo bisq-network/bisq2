@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel, ProfileCardOverviewController> {
     private final Label profileAgeLabel, lastUserActivityLabel, statementLabel, sellingLimitLabel, tradeTermsTextArea;
-    private final BitcoinAmountDisplay totalBaseToBuyBtcText, totalBaseToSellBtcText;
+    private final BitcoinAmountDisplay totalBaseToBuyBitcoinAmountDisplay, totalBaseToSellBitcoinAmountDisplay;
 
     public ProfileCardOverviewView(ProfileCardOverviewModel model,
                                    ProfileCardOverviewController controller) {
@@ -45,13 +45,13 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         profileAgeLabel = new Label();
         VBox profileAgeBox = createAndGetTitleAndMetricBox("user.profileCard.details.profileAge", profileAgeLabel);
 
-        totalBaseToBuyBtcText = new BitcoinAmountDisplay("0");
-        configureBitcoinAmountDisplay(totalBaseToBuyBtcText);
-        VBox totalBaseToBuyBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyBtcText);
+        totalBaseToBuyBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        configureBitcoinAmountDisplay(totalBaseToBuyBitcoinAmountDisplay);
+        VBox totalBaseToBuyBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyBitcoinAmountDisplay);
 
-        totalBaseToSellBtcText = new BitcoinAmountDisplay("0");
-        configureBitcoinAmountDisplay(totalBaseToSellBtcText);
-        VBox totalBaseToSellBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellBtcText);
+        totalBaseToSellBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        configureBitcoinAmountDisplay(totalBaseToSellBitcoinAmountDisplay);
+        VBox totalBaseToSellBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellBitcoinAmountDisplay);
 
         sellingLimitLabel = new Label();
         Label sellingLimitUnitLabel = new Label("USD");
@@ -90,8 +90,8 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
     @Override
     protected void onViewAttached() {
         profileAgeLabel.setText(model.getProfileAge());
-        totalBaseToBuyBtcText.setBtcAmount(model.getTotalBaseOfferAmountToBuy());
-        totalBaseToSellBtcText.setBtcAmount(model.getTotalBaseOfferAmountToSell());
+        totalBaseToBuyBitcoinAmountDisplay.setBtcAmount(model.getTotalBaseOfferAmountToBuy());
+        totalBaseToSellBitcoinAmountDisplay.setBtcAmount(model.getTotalBaseOfferAmountToSell());
         sellingLimitLabel.setText(model.getSellingLimit());
         statementLabel.setText(model.getStatement());
         tradeTermsTextArea.setText(model.getTradeTerms());
@@ -99,10 +99,6 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         lastUserActivityLabel.textProperty().bind(model.getLastUserActivity());
 
         root.requestFocus();
-        root.layoutBoundsProperty().addListener((obs, old, newVal) -> {
-            totalBaseToBuyBtcText.applySmallCompactConfig();
-            totalBaseToSellBtcText.applySmallCompactConfig();
-        });
     }
 
     @Override
@@ -110,8 +106,15 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         lastUserActivityLabel.textProperty().unbind();
     }
 
-    private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
-        btcText.applySmallCompactConfig();
+    private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
+        bitcoinAmountDisplay.getBtcCode().getStyleClass().clear();
+        bitcoinAmountDisplay.getBtcCode().setStyle("-fx-fill: -fx-mid-text-color;\n" +
+                "-fx-text-fill: -fx-mid-text-color;");
+        bitcoinAmountDisplay.getBtcCode().getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
+        bitcoinAmountDisplay.getLeadingZeros().getStyleClass().addAll("text-fill-grey-dimmed", "metric");
+        bitcoinAmountDisplay.getSignificantDigits().getStyleClass().addAll("text-fill-white", "metric");
+        bitcoinAmountDisplay.getIntegerPart().getStyleClass().addAll("text-fill-grey-dimmed", "metric");
+        bitcoinAmountDisplay.applySmallCompactConfig();
     }
 
     private VBox createAndGetTitleAndMetricBox(String title, Label detailsLabel) {

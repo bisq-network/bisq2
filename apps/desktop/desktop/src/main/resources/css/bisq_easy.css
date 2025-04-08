@@ -502,6 +502,32 @@
     -fx-font-size: 1.4em;
 }
 
+.bisq-easy-open-trades-header-value-btc-significant-digits {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.4em;
+}
+
+.bisq-easy-open-trades-header-value-btc-leading-zeros {
+    -fx-font-size: 1.4em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-open-trades-header-value-btc-integer {
+    -fx-font-size: 1.4em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-open-trades-header-code-btc {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.15em;
+}
+
 .bisq-easy-open-trades-header-code {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
@@ -703,16 +729,35 @@
 
 .bisq-easy-trade-state-headline-btc {
     -fx-fill: -fx-light-text-color;
+    -fx-font-size: 1.7em;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-easy-trade-state-headline-btc-leading-zeros {
+    -fx-font-size: 1.7em;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-easy-trade-state-headline-btc-integer {
+    -fx-font-size: 1.7em;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-base-amount-btc {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-base-amount-btc-leading-zeros {
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-state-base-amount-btc-integer {
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }

@@ -26,8 +26,6 @@ import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -35,6 +33,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BaseAmountBox {
@@ -130,9 +130,7 @@ public class BaseAmountBox {
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private final ChangeListener<Monetary> amountListener;
-        private final ChangeListener<Boolean> isBtcListener;
-        private final ChangeListener<String> codeListener;
+        private Subscription amountListener, isBtcListener, codeListener;
 
         private final Label baseAmountLabel, codeLabel, baseAmountInfoIcon;
         private final BitcoinAmountDisplay bitcoinAmountDisplay;
@@ -153,7 +151,7 @@ public class BaseAmountBox {
             codeLabel.setVisible(model.showCurrencyCode);
             codeLabel.setManaged(model.showCurrencyCode);
 
-            bitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+            bitcoinAmountDisplay = new BitcoinAmountDisplay("0", model.showCurrencyCode);
             configureBitcoinAmountDisplay(bitcoinAmountDisplay);
             bitcoinAmountDisplay.setVisible(false);
             bitcoinAmountDisplay.setManaged(false);
@@ -174,10 +172,6 @@ public class BaseAmountBox {
             root.getChildren().addAll(baseAmountLabel, codeLabel, bitcoinAmountDisplay, baseAmountInfoIcon);
             root.setAlignment(Pos.CENTER);
             root.getStyleClass().add("base-amount-box");
-
-            amountListener = this::onAmountChanged;
-            isBtcListener = this::onIsBtcChanged;
-            codeListener = this::onCodeChanged;
         }
 
         @Override
@@ -194,40 +188,30 @@ public class BaseAmountBox {
             codeLabel.textProperty().bind(model.code);
             tooltip.textProperty().bind(model.tooltip);
 
-            model.amount.addListener(amountListener);
-            model.isBtc.addListener(isBtcListener);
-            model.code.addListener(codeListener);
-
-            updateDisplayMode(isBtc);
-            applyAmount(model.amount.get());
+            amountListener = EasyBind.subscribe(model.amount, this::onAmountChanged);
+            isBtcListener = EasyBind.subscribe(model.isBtc, this::onIsBtcChanged);
+            codeListener = EasyBind.subscribe(model.code, this::onCodeChanged);
         }
 
         @Override
         protected void onViewDetached() {
             codeLabel.textProperty().unbind();
             tooltip.textProperty().unbind();
-
-            model.amount.removeListener(amountListener);
-            model.isBtc.removeListener(isBtcListener);
-            model.code.removeListener(codeListener);
+            amountListener.unsubscribe();
+            isBtcListener.unsubscribe();
+            codeListener.unsubscribe();
         }
 
-        private void onIsBtcChanged(ObservableValue<? extends Boolean> observable,
-                                    Boolean oldValue,
-                                    Boolean newValue) {
+        private void onIsBtcChanged(Boolean newValue) {
             updateDisplayMode(newValue);
             applyAmount(model.amount.get());
         }
 
-        private void onCodeChanged(ObservableValue<? extends String> observable,
-                                   String oldValue,
-                                   String newValue) {
+        private void onCodeChanged(String newValue) {
             model.isBtc.set(TradeCurrency.isBtc(newValue));
         }
 
-        private void onAmountChanged(ObservableValue<? extends Monetary> observable,
-                                     Monetary oldValue,
-                                     Monetary newValue) {
+        private void onAmountChanged(Monetary newValue) {
             applyAmount(newValue);
         }
 
@@ -259,8 +243,6 @@ public class BaseAmountBox {
         private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
             btcText.setBaselineAlignment();
             btcText.applyCompactConfig(16, 13, 28);
-            btcText.getBtcCode().setVisible(model.showCurrencyCode);
-            btcText.getBtcCode().setManaged(model.showCurrencyCode);
         }
     }
 }

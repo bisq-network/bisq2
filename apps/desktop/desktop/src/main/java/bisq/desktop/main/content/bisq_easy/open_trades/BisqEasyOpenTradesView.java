@@ -379,14 +379,13 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
 
     private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getBaseCellFactory() {
         return column -> new TableCell<>() {
-            private final BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+            private final BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0", false);
 
             {
                 bitcoinAmountDisplay.getSignificantDigits().getStyleClass().add("bisq-easy-open-trades-btc");
                 bitcoinAmountDisplay.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-btc");
                 bitcoinAmountDisplay.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-btc");
                 bitcoinAmountDisplay.setTranslateY(8);
-                bitcoinAmountDisplay.showBtcCode.set(false);
             }
 
             @Override

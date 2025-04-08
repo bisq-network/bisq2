@@ -44,7 +44,7 @@ public class TradeCompletedTable extends VBox {
     @Getter
     private final BisqMenuItem copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton;
     private final WaitingAnimation waitingAnimation;
-    private final BitcoinAmountDisplay btcAmountText;
+    private final BitcoinAmountDisplay bitcoinAmountDisplay;
 
     public TradeCompletedTable() {
         waitingAnimation = new WaitingAnimation(WaitingState.TRADE_COMPLETED);
@@ -71,8 +71,8 @@ public class TradeCompletedTable extends VBox {
         valueCol.setPercentWidth(75);
         bodyGridPane.getColumnConstraints().add(valueCol);
 
-        btcAmountText = new BitcoinAmountDisplay("0");
-        configureBitcoinAmountDisplay(btcAmountText);
+        bitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        configureBitcoinAmountDisplay(bitcoinAmountDisplay);
 
         copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");
         copyTxIdButton.useIconOnly();
@@ -131,11 +131,11 @@ public class TradeCompletedTable extends VBox {
                 : new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.seller").toUpperCase());
         myDirection.getStyleClass().addAll("dimmed-text");
 
-        btcAmountText.setBtcAmount(btcAmount);
+        bitcoinAmountDisplay.setBtcAmount(btcAmount);
 
-        HBox btcBox = new HBox(5, btcAmountText);
+        HBox btcBox = new HBox(5, bitcoinAmountDisplay);
         btcBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox.setMargin(btcAmountText, new Insets(1, 0, 0, 0));
+        HBox.setMargin(bitcoinAmountDisplay, new Insets(1, 0, 0, 0));
 
         headerGridPane.add(myDirection, col, rowTitle);
         headerGridPane.add(btcBox, col, rowValue);
