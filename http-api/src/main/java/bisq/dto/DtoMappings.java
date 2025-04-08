@@ -298,22 +298,7 @@ public class DtoMappings {
     // chat.bisq_easy.open_trades
 
     public static class BisqEasyOpenTradeChannelMapping {
-        //todo we dont have the mutable data in the dto
-        /*public static BisqEasyOpenTradeChannel toBisq2Model(BisqEasyOpenTradeChannelDto value) {
-            return new BisqEasyOpenTradeChannel(
-                    value.id(),
-                    value.tradeId(),
-                    BisqEasyOfferMapping.toBisq2Model(value.bisqEasyOffer()),
-                    UserIdentityMapping.toBisq2Model(value.myUserIdentity()),
-                    value.traders().stream()
-                            .map(UserProfileMapping::toBisq2Model)
-                            .collect(Collectors.toSet()),
-                    value.mediator().map(UserProfileMapping::toBisq2Model),
-                    new HashSet<>(),
-                    false,
-                    ChatChannelNotificationType.GLOBAL_DEFAULT
-            );
-        }*/
+        // toBisq2Model not provided as we don't have the mutable data in the dto
 
         public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel value) {
             return new BisqEasyOpenTradeChannelDto(
