@@ -24,9 +24,11 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.dto.DtoMappings;
 import bisq.dto.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessageDto;
+import bisq.dto.user.profile.UserProfileDto;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.subscription.ModificationType;
 import bisq.http_api.web_socket.subscription.SubscriberRepository;
+import bisq.user.profile.UserProfileService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,16 +42,19 @@ import static bisq.http_api.web_socket.subscription.Topic.TRADE_CHATS;
 @Slf4j
 public class TradeChatWebSocketService extends BaseWebSocketService {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+    private final UserProfileService userProfileService;
 
     private Pin channelsPin;
     private final Map<String, Pin> messagesByChannelIdPins = new HashMap<>();
 
     public TradeChatWebSocketService(ObjectMapper objectMapper,
                                      SubscriberRepository subscriberRepository,
-                                     BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService) {
+                                     BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService,
+                                     UserProfileService userProfileService) {
         super(objectMapper, subscriberRepository, TRADE_CHATS);
 
         this.bisqEasyOpenTradeChannelService = bisqEasyOpenTradeChannelService;
+        this.userProfileService = userProfileService;
     }
 
     @Override
@@ -120,7 +125,7 @@ public class TradeChatWebSocketService extends BaseWebSocketService {
                         channel.getChatMessages().stream()
                                 .map(message -> {
                                     try {
-                                        return DtoMappings.BisqEasyOpenTradeMessageMapping.fromBisq2Model(message);
+                                        return toDto(message);
                                     } catch (Exception e) {
                                         log.error("Failed to create BisqEasyOpenTradeMessageDto", e);
                                         return null;
@@ -132,16 +137,24 @@ public class TradeChatWebSocketService extends BaseWebSocketService {
     }
 
     private void send(BisqEasyOpenTradeMessage message, String channelId) {
-        BisqEasyOpenTradeMessageDto dto = DtoMappings.BisqEasyOpenTradeMessageMapping.fromBisq2Model(message);
+        BisqEasyOpenTradeMessageDto dto = toDto(message);
         send(Collections.singletonList(dto), channelId);
     }
 
-    private void send(List<BisqEasyOpenTradeMessageDto> dtos, String channelId) {
+    private void send(List<BisqEasyOpenTradeMessageDto> messages, String channelId) {
         // The payload is defined as a list to support batch data delivery at subscribe.
         subscriberRepository.findSubscribers(topic).ifPresent(subscribers -> {
-            toJson(dtos).ifPresent(json -> {
+            toJson(messages).ifPresent(json -> {
                 subscribers.forEach(subscriber -> send(json, subscriber, ModificationType.ADDED));
             });
         });
     }
+
+    private BisqEasyOpenTradeMessageDto toDto(BisqEasyOpenTradeMessage message) {
+        Optional<UserProfileDto> citationAuthorUserProfile = message.getCitation()
+                .flatMap(citation -> userProfileService.findUserProfile(citation.getAuthorUserProfileId()))
+                .map(DtoMappings.UserProfileMapping::fromBisq2Model);
+        return DtoMappings.BisqEasyOpenTradeMessageMapping.fromBisq2Model(message, citationAuthorUserProfile);
+    }
+
 }

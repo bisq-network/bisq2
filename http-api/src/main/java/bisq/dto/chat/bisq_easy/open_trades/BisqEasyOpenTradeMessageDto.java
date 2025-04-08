@@ -39,6 +39,7 @@ public record BisqEasyOpenTradeMessageDto(String tradeId,
                                           Optional<UserProfileDto> mediator,
                                           ChatMessageTypeDto chatMessageType,
                                           Optional<BisqEasyOfferDto> bisqEasyOffer,
-                                          Set<BisqEasyOpenTradeMessageReactionDto> chatMessageReactions
+                                          Set<BisqEasyOpenTradeMessageReactionDto> chatMessageReactions,
+                                          Optional<UserProfileDto> citationAuthorUserProfile
                                           ) {
 }

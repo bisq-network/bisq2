@@ -123,6 +123,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DtoMappings {
@@ -330,6 +331,7 @@ public class DtoMappings {
 
     public static class BisqEasyOpenTradeMessageMapping {
         public static BisqEasyOpenTradeMessage toBisq2Model(BisqEasyOpenTradeMessageDto value) {
+            // citationAuthorUserProfile is not mapped to Bisq 2 model as we use our services for obtaining it.
             return new BisqEasyOpenTradeMessage(
                     value.tradeId(),
                     value.messageId(),
@@ -348,7 +350,8 @@ public class DtoMappings {
             );
         }
 
-        public static BisqEasyOpenTradeMessageDto fromBisq2Model(BisqEasyOpenTradeMessage value) {
+        public static BisqEasyOpenTradeMessageDto fromBisq2Model(BisqEasyOpenTradeMessage value,
+                                                                 Optional<UserProfileDto> citationAuthorUserProfile) {
             return new BisqEasyOpenTradeMessageDto(
                     value.getTradeId(),
                     value.getId(),
@@ -362,7 +365,8 @@ public class DtoMappings {
                     value.getMediator().map(UserProfileMapping::fromBisq2Model),
                     ChatMessageTypeMapping.fromBisq2Model(value.getChatMessageType()),
                     value.getBisqEasyOffer().map(BisqEasyOfferMapping::fromBisq2Model),
-                    value.getChatMessageReactions().stream().map(BisqEasyOpenTradeMessageReactionMapping::fromBisq2Model).collect(Collectors.toSet())
+                    value.getChatMessageReactions().stream().map(BisqEasyOpenTradeMessageReactionMapping::fromBisq2Model).collect(Collectors.toSet()),
+                    citationAuthorUserProfile
             );
         }
     }
