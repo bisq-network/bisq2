@@ -1,6 +1,7 @@
 package bisq.http_api.web_socket;
 
 import bisq.http_api.rest_api.RestApiResourceConfig;
+import bisq.http_api.rest_api.domain.chat.trade.TradeChatRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
@@ -17,11 +18,12 @@ public class WebSocketRestApiResourceConfig extends RestApiResourceConfig {
     public WebSocketRestApiResourceConfig(String swaggerBaseUrl,
                                           OfferbookRestApi offerbookRestApi,
                                           TradeRestApi tradeRestApi,
+                                          TradeChatRestApi tradeChatRestApi,
                                           UserIdentityRestApi userIdentityRestApi,
                                           MarketPriceRestApi marketPriceRestApi,
                                           SettingsRestApi settingsRestApi,
                                           ExplorerRestApi explorerRestApi,
                                           PaymentAccountsRestApi paymentAccountsRestApi) {
-        super(swaggerBaseUrl, offerbookRestApi, tradeRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, paymentAccountsRestApi);
+        super(swaggerBaseUrl, offerbookRestApi, tradeRestApi, tradeChatRestApi, userIdentityRestApi, marketPriceRestApi, settingsRestApi, explorerRestApi, paymentAccountsRestApi);
     }
 }

@@ -15,6 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.payment_accounts;
+package bisq.http_api.rest_api.domain.chat.trade;
 
-public record AddAccountRequest(String accountName, String accountData) { }
+import javax.annotation.Nullable;
+
+public record SendChatMessageReactionRequest(int reactionId, boolean isRemoved, @Nullable String senderUserProfileId) {
+}
