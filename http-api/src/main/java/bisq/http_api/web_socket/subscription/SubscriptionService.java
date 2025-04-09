@@ -24,7 +24,7 @@ import bisq.common.application.Service;
 import bisq.http_api.web_socket.domain.BaseWebSocketService;
 import bisq.http_api.web_socket.domain.OpenTradeItemsService;
 import bisq.http_api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
-import bisq.http_api.web_socket.domain.chat.trade.TradeChatWebSocketService;
+import bisq.http_api.web_socket.domain.chat.trade.TradeChatMessagesWebSocketService;
 import bisq.http_api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.http_api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.http_api.web_socket.domain.offers.OffersWebSocketService;
@@ -49,7 +49,7 @@ public class SubscriptionService implements Service {
     private final OffersWebSocketService offersWebSocketService;
     private final TradesWebSocketService tradesWebSocketService;
     private final TradePropertiesWebSocketService tradePropertiesWebSocketService;
-    private final TradeChatWebSocketService tradeChatWebSocketService;
+    private final TradeChatMessagesWebSocketService tradeChatMessagesWebSocketService;
     private final ChatReactionsWebSocketService chatReactionsWebSocketService;
 
     public SubscriptionService(ObjectMapper objectMapper,
@@ -66,7 +66,7 @@ public class SubscriptionService implements Service {
         offersWebSocketService = new OffersWebSocketService(objectMapper, subscriberRepository, chatService, userService, bondedRolesService);
         tradesWebSocketService = new TradesWebSocketService(objectMapper, subscriberRepository, openTradeItemsService);
         tradePropertiesWebSocketService = new TradePropertiesWebSocketService(objectMapper, subscriberRepository, tradeService);
-        tradeChatWebSocketService = new TradeChatWebSocketService(objectMapper,
+        tradeChatMessagesWebSocketService = new TradeChatMessagesWebSocketService(objectMapper,
                 subscriberRepository,
                 chatService.getBisqEasyOpenTradeChannelService(),
                 userService.getUserProfileService());
@@ -82,7 +82,7 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> offersWebSocketService.initialize())
                 .thenCompose(e -> tradesWebSocketService.initialize())
                 .thenCompose(e -> tradePropertiesWebSocketService.initialize())
-                .thenCompose(e -> tradeChatWebSocketService.initialize())
+                .thenCompose(e -> tradeChatMessagesWebSocketService.initialize())
                 .thenCompose(e -> chatReactionsWebSocketService.initialize());
     }
 
@@ -93,7 +93,7 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> offersWebSocketService.shutdown())
                 .thenCompose(e -> tradesWebSocketService.shutdown())
                 .thenCompose(e -> tradePropertiesWebSocketService.shutdown())
-                .thenCompose(e -> tradeChatWebSocketService.shutdown())
+                .thenCompose(e -> tradeChatMessagesWebSocketService.shutdown())
                 .thenCompose(e -> chatReactionsWebSocketService.shutdown());
     }
 
@@ -145,8 +145,8 @@ public class SubscriptionService implements Service {
             case TRADE_PROPERTIES -> {
                 return Optional.of(tradePropertiesWebSocketService);
             }
-            case TRADE_CHATS -> {
-                return Optional.of(tradeChatWebSocketService);
+            case TRADE_CHAT_MESSAGES -> {
+                return Optional.of(tradeChatMessagesWebSocketService);
             }
             case CHAT_REACTIONS -> {
                 return Optional.of(chatReactionsWebSocketService);

@@ -50,11 +50,11 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Bisq Easy Trade Chat API", description = "Endpoints for chat communication between Bisq Easy Trade participants")
-public class TradeChatRestApi extends RestApiBase {
+public class TradeChatMessagesRestApi extends RestApiBase {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final UserIdentityService userIdentityService;
 
-    public TradeChatRestApi(ChatService chatService, UserService userService) {
+    public TradeChatMessagesRestApi(ChatService chatService, UserService userService) {
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
         userIdentityService = userService.getUserIdentityService();
     }

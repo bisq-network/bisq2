@@ -23,6 +23,6 @@ public enum Topic {
     OFFERS,
     TRADES,
     TRADE_PROPERTIES,
-    TRADE_CHATS,
+    TRADE_CHAT_MESSAGES,
     CHAT_REACTIONS
 }

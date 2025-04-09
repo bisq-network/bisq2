@@ -24,7 +24,7 @@ import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.http_api.rest_api.RestApiResourceConfig;
 import bisq.http_api.rest_api.RestApiService;
-import bisq.http_api.rest_api.domain.chat.trade.TradeChatRestApi;
+import bisq.http_api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
@@ -79,7 +79,7 @@ public class HttpApiService implements Service {
                     userService,
                     supportedService,
                     tradeService);
-            TradeChatRestApi tradeChatRestApi= new TradeChatRestApi(chatService, userService);
+            TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
             UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService());
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
@@ -89,7 +89,7 @@ public class HttpApiService implements Service {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         tradeRestApi,
-                        tradeChatRestApi,
+                        tradeChatMessagesRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi,
                         settingsRestApi,
@@ -104,7 +104,7 @@ public class HttpApiService implements Service {
                 var webSocketResourceConfig = new WebSocketRestApiResourceConfig(webSocketConfig.getRestApiBaseUrl(),
                         offerbookRestApi,
                         tradeRestApi,
-                        tradeChatRestApi,
+                        tradeChatMessagesRestApi,
                         userIdentityRestApi,
                         marketPriceRestApi,
                         settingsRestApi,

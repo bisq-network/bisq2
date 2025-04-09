@@ -37,21 +37,21 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.http_api.web_socket.subscription.Topic.TRADE_CHATS;
+import static bisq.http_api.web_socket.subscription.Topic.TRADE_CHAT_MESSAGES;
 
 @Slf4j
-public class TradeChatWebSocketService extends BaseWebSocketService {
+public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final UserProfileService userProfileService;
 
     private Pin channelsPin;
     private final Map<String, Pin> messagesByChannelIdPins = new HashMap<>();
 
-    public TradeChatWebSocketService(ObjectMapper objectMapper,
-                                     SubscriberRepository subscriberRepository,
-                                     BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService,
-                                     UserProfileService userProfileService) {
-        super(objectMapper, subscriberRepository, TRADE_CHATS);
+    public TradeChatMessagesWebSocketService(ObjectMapper objectMapper,
+                                             SubscriberRepository subscriberRepository,
+                                             BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService,
+                                             UserProfileService userProfileService) {
+        super(objectMapper, subscriberRepository, TRADE_CHAT_MESSAGES);
 
         this.bisqEasyOpenTradeChannelService = bisqEasyOpenTradeChannelService;
         this.userProfileService = userProfileService;
