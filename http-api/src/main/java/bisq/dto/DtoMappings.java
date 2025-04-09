@@ -520,7 +520,14 @@ public class DtoMappings {
         }
 
         public static PriceQuoteDto fromBisq2Model(PriceQuote value) {
-            return new PriceQuoteDto(value.getValue(), MarketMapping.fromBisq2Model(value.getMarket()));
+            return new PriceQuoteDto(
+                    value.getValue(),
+                    value.getPrecision(),
+                    value.getLowPrecision(),
+                    MarketMapping.fromBisq2Model(value.getMarket()),
+                    MonetaryMapping.fromBisq2Model(value.getBaseSideMonetary()),
+                    MonetaryMapping.fromBisq2Model(value.getQuoteSideMonetary())
+            );
         }
     }
 
