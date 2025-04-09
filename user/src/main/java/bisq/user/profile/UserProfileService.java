@@ -21,6 +21,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -154,6 +155,17 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         } else {
             return nickName + SEPARATOR_START + nym + SEPARATOR_END;
         }
+    }
+
+    public static String getClearedUserName(String userName) {
+        if (StringUtils.isEmpty(userName)) {
+            return userName;
+        }
+        int lastSeparatorIndex = userName.lastIndexOf(SEPARATOR_START);
+        if (lastSeparatorIndex > 0) {
+            return userName.substring(0, lastSeparatorIndex);
+        }
+        return userName;
     }
 
     private void processUserProfileAddedOrRefreshed(UserProfile userProfile) {

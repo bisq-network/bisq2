@@ -33,6 +33,7 @@ import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.user.profile.UserProfileService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -100,8 +101,19 @@ public class SellerStateLightning3b extends BaseState {
                             if (message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE && message.getText().isPresent()) {
                                 String encodedLogMessage = message.getText().get();
                                 String expectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
-                                if (encodedLogMessage.equals(expectedEncoded)) {
-                                    UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
+                                boolean shouldUpdateUI = encodedLogMessage.equals(expectedEncoded);
+                                if (!shouldUpdateUI) {
+                                    String clearedPeersUserName = UserProfileService.getClearedUserName(peersUserName);
+                                    if (!clearedPeersUserName.equals(peersUserName)) {
+                                        String simplifiedExpectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
+                                                clearedPeersUserName);
+                                        shouldUpdateUI = encodedLogMessage.equals(simplifiedExpectedEncoded);
+                                    }
+                                }
+
+                                if (shouldUpdateUI) {
+                                    UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(
+                                            Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
                                 }
                             }
                         }
