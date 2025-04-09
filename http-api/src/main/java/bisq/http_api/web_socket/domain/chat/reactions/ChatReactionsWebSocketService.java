@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,8 +44,8 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
 
     private Pin channelsPin;
-    private final Map<String, Pin> chatMessagesPinsByChannelId = new HashMap<>();
-    private final Map<String, Pin> chatMessageReactionsPinsByMessageId = new HashMap<>();
+    private final Map<String, Pin> chatMessagesPinsByChannelId = new ConcurrentHashMap<>();
+    private final Map<String, Pin> chatMessageReactionsPinsByMessageId = new ConcurrentHashMap<>();
 
     public ChatReactionsWebSocketService(ObjectMapper objectMapper,
                                          SubscriberRepository subscriberRepository,
@@ -60,78 +61,83 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
             @Override
             public void add(BisqEasyOpenTradeChannel channel) {
                 String channelId = channel.getId();
-                if (chatMessagesPinsByChannelId.containsKey(channelId)) {
-                    chatMessagesPinsByChannelId.get(channelId).unbind();
-                }
-                Pin pin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
-                    @Override
-                    public void add(BisqEasyOpenTradeMessage message) {
-                        String messageId = message.getId();
-                        if (chatMessageReactionsPinsByMessageId.containsKey(messageId)) {
-                            chatMessageReactionsPinsByMessageId.get(messageId).unbind();
-                        }
-                        Pin chatMessageReactions = message.getChatMessageReactions().addObserver(new CollectionObserver<>() {
-                            @Override
-                            public void add(BisqEasyOpenTradeMessageReaction reaction) {
-                                send(reaction, ModificationType.ADDED);
-                            }
+                // Atomic operation
+                chatMessagesPinsByChannelId.compute(channelId, (key, oldPin) -> {
+                    if (oldPin != null) {
+                        oldPin.unbind();
+                    }
 
-                            @Override
-                            public void remove(Object element) {
-                                if (element instanceof BisqEasyOpenTradeMessageReaction reaction) {
-                                    send(reaction, ModificationType.REMOVED);
+                    return channel.getChatMessages().addObserver(new CollectionObserver<>() {
+                        @Override
+                        public void add(BisqEasyOpenTradeMessage message) {
+                            String messageId = message.getId();
+
+                            chatMessageReactionsPinsByMessageId.compute(messageId, (key, oldReactionPin) -> {
+                                if (oldReactionPin != null) {
+                                    oldReactionPin.unbind();
                                 }
-                            }
 
-                            @Override
-                            public void clear() {
-                            }
-                        });
+                                return message.getChatMessageReactions().addObserver(new CollectionObserver<>() {
+                                    @Override
+                                    public void add(BisqEasyOpenTradeMessageReaction reaction) {
+                                        handleReaction(reaction, ModificationType.ADDED);
+                                    }
 
-                        chatMessageReactionsPinsByMessageId.put(messageId, chatMessageReactions);
-                    }
+                                    @Override
+                                    public void remove(Object element) {
+                                        if (element instanceof BisqEasyOpenTradeMessageReaction reaction) {
+                                            handleReaction(reaction, ModificationType.REMOVED);
+                                        }
+                                    }
 
-                    @Override
-                    public void remove(Object element) {
-                        // BisqEasyOpenTradeMessages cannot be removed
-                    }
+                                    @Override
+                                    public void clear() {
+                                        throw new UnsupportedOperationException("Clear method is not supported for chatMessageReactions.");
+                                    }
+                                });
+                            });
+                        }
 
-                    @Override
-                    public void clear() {
-                        // BisqEasyOpenTradeMessages cannot be removed
-                    }
+                        @Override
+                        public void remove(Object element) {
+                            // Messages cannot be removed
+                        }
+
+                        @Override
+                        public void clear() {
+                            // Messages cannot be cleared
+                        }
+                    });
                 });
-
-                chatMessagesPinsByChannelId.put(channelId, pin);
             }
 
             @Override
             public void remove(Object element) {
                 if (element instanceof BisqEasyOpenTradeChannel channel) {
                     String channelId = channel.getId();
-                    if (chatMessagesPinsByChannelId.containsKey(channelId)) {
-                        chatMessagesPinsByChannelId.get(channelId).unbind();
-                        chatMessagesPinsByChannelId.remove(channelId);
-                    }
+                    // Atomic operation
+                    chatMessagesPinsByChannelId.computeIfPresent(channelId, (key, pin) -> {
+                        pin.unbind();
+                        return null;  // returning null removes the key
+                    });
                 }
             }
 
             @Override
             public void clear() {
-                chatMessagesPinsByChannelId.values().forEach(Pin::unbind);
+                new ArrayList<>(chatMessagesPinsByChannelId.values()).forEach(Pin::unbind);
             }
         });
         return CompletableFuture.completedFuture(true);
     }
-
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         if (channelsPin != null) {
             channelsPin.unbind();
         }
-        chatMessagesPinsByChannelId.values().forEach(Pin::unbind);
-        chatMessageReactionsPinsByMessageId.values().forEach(Pin::unbind);
+        new ArrayList<>(chatMessagesPinsByChannelId.values()).forEach(Pin::unbind);
+        new ArrayList<>(chatMessageReactionsPinsByMessageId.values()).forEach(Pin::unbind);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -159,12 +165,13 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
         return toJson(payload);
     }
 
-    private void send(BisqEasyOpenTradeMessageReaction reaction, ModificationType modificationType) {
+    private void handleReaction(BisqEasyOpenTradeMessageReaction reaction, ModificationType modificationType) {
         BisqEasyOpenTradeMessageReactionDto dto = toDto(reaction);
-        send(Collections.singletonList(dto), modificationType);
+        handleReaction(Collections.singletonList(dto), modificationType);
     }
 
-    private void send(List<BisqEasyOpenTradeMessageReactionDto> reactions, ModificationType modificationType) {
+    private void handleReaction(List<BisqEasyOpenTradeMessageReactionDto> reactions,
+                                ModificationType modificationType) {
         // The payload is defined as a list to support batch data delivery at subscribe.
         subscriberRepository.findSubscribers(topic).ifPresent(subscribers -> {
             toJson(reactions).ifPresent(json -> {

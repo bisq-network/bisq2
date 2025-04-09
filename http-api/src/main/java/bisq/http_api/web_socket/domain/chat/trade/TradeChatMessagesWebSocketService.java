@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,7 +46,7 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
     private final UserProfileService userProfileService;
 
     private Pin channelsPin;
-    private final Map<String, Pin> messagesByChannelIdPins = new HashMap<>();
+    private final Map<String, Pin> messagesByChannelIdPins = new ConcurrentHashMap<>();
 
     public TradeChatMessagesWebSocketService(ObjectMapper objectMapper,
                                              SubscriberRepository subscriberRepository,
@@ -63,54 +64,58 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
             @Override
             public void add(BisqEasyOpenTradeChannel channel) {
                 String channelId = channel.getId();
-                if (messagesByChannelIdPins.containsKey(channelId)) {
-                    messagesByChannelIdPins.get(channelId).unbind();
-                }
-                Pin pin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
-                    @Override
-                    public void add(BisqEasyOpenTradeMessage message) {
-                        send(message, channelId);
+                // Atomic operation
+                messagesByChannelIdPins.compute(channelId, (key, oldPin) -> {
+                    if (oldPin != null) {
+                        oldPin.unbind();
                     }
 
-                    @Override
-                    public void remove(Object element) {
-                        // BisqEasyOpenTradeMessages cannot be removed
-                    }
+                    return channel.getChatMessages().addObserver(new CollectionObserver<>() {
+                        @Override
+                        public void add(BisqEasyOpenTradeMessage message) {
+                            handleAddedMessage(message, channelId);
+                        }
 
-                    @Override
-                    public void clear() {
-                        // BisqEasyOpenTradeMessages cannot be removed
-                    }
+                        @Override
+                        public void remove(Object element) {
+                            // BisqEasyOpenTradeMessages cannot be removed
+                        }
+
+                        @Override
+                        public void clear() {
+                            // BisqEasyOpenTradeMessages cannot be removed
+                        }
+                    });
                 });
-                messagesByChannelIdPins.put(channelId, pin);
             }
 
             @Override
             public void remove(Object element) {
                 if (element instanceof BisqEasyOpenTradeChannel channel) {
                     String channelId = channel.getId();
-                    if (messagesByChannelIdPins.containsKey(channelId)) {
-                        messagesByChannelIdPins.get(channelId).unbind();
-                        messagesByChannelIdPins.remove(channelId);
-                    }
+                    // Atomic operation
+                    messagesByChannelIdPins.computeIfPresent(channelId, (key, pin) -> {
+                        pin.unbind();
+                        return null;  // returning null removes the key
+                    });
                 }
             }
 
             @Override
             public void clear() {
-                messagesByChannelIdPins.values().forEach(Pin::unbind);
+                new ArrayList<>(messagesByChannelIdPins.values()).forEach(Pin::unbind);
+
             }
         });
         return CompletableFuture.completedFuture(true);
     }
-
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         if (channelsPin != null) {
             channelsPin.unbind();
         }
-        messagesByChannelIdPins.values().forEach(Pin::unbind);
+        new ArrayList<>(messagesByChannelIdPins.values()).forEach(Pin::unbind);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -136,12 +141,12 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
         return toJson(payload);
     }
 
-    private void send(BisqEasyOpenTradeMessage message, String channelId) {
+    private void handleAddedMessage(BisqEasyOpenTradeMessage message, String channelId) {
         BisqEasyOpenTradeMessageDto dto = toDto(message);
-        send(Collections.singletonList(dto), channelId);
+        handleAddedMessage(Collections.singletonList(dto), channelId);
     }
 
-    private void send(List<BisqEasyOpenTradeMessageDto> messages, String channelId) {
+    private void handleAddedMessage(List<BisqEasyOpenTradeMessageDto> messages, String channelId) {
         // The payload is defined as a list to support batch data delivery at subscribe.
         subscriberRepository.findSubscribers(topic).ifPresent(subscribers -> {
             toJson(messages).ifPresent(json -> {
@@ -156,5 +161,4 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
                 .map(DtoMappings.UserProfileMapping::fromBisq2Model);
         return DtoMappings.BisqEasyOpenTradeMessageMapping.fromBisq2Model(message, citationAuthorUserProfile);
     }
-
 }
