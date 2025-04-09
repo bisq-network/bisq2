@@ -15,21 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.http_api.rest_api.domain.user_identity;
+package bisq.dto.chat;
 
-import bisq.dto.user.profile.UserProfileDto;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-
-@Getter
-@Schema(name = "UserProfileResponse", description = "Response payload containing the user profile.")
-public class CreateUserIdentityResponse {
-    private final UserProfileDto userProfile;
-
-    @JsonCreator
-    public CreateUserIdentityResponse(@JsonProperty("userProfile") UserProfileDto userProfile) {
-        this.userProfile = userProfile;
-    }
+public enum ChatChannelDomainDto {
+    BISQ_EASY_OFFERBOOK,
+    BISQ_EASY_OPEN_TRADES,
+    DISCUSSION,
+    SUPPORT
 }

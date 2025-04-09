@@ -1,5 +1,6 @@
 package bisq.http_api.rest_api;
 
+import bisq.http_api.rest_api.domain.chat.trade.TradeChatMessagesRestApi;
 import bisq.http_api.rest_api.domain.explorer.ExplorerRestApi;
 import bisq.http_api.rest_api.domain.market_price.MarketPriceRestApi;
 import bisq.http_api.rest_api.domain.offers.OfferbookRestApi;
@@ -17,6 +18,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
     public RestApiResourceConfig(String swaggerBaseUrl,
                                  OfferbookRestApi offerbookRestApi,
                                  TradeRestApi tradeRestApi,
+                                 TradeChatMessagesRestApi tradeChatMessagesRestApi,
                                  UserIdentityRestApi userIdentityRestApi ,
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
@@ -31,6 +33,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
         // with AbstractBinder to register resources as classes for Swagger
         register(OfferbookRestApi.class);
         register(TradeRestApi.class);
+        register(TradeChatMessagesRestApi.class);
         register(UserIdentityRestApi.class);
         register(MarketPriceRestApi.class);
         register(SettingsRestApi.class);
@@ -42,6 +45,7 @@ public class RestApiResourceConfig extends BaseRestApiResourceConfig {
             protected void configure() {
                 bind(offerbookRestApi).to(OfferbookRestApi.class);
                 bind(tradeRestApi).to(TradeRestApi.class);
+                bind(tradeChatMessagesRestApi).to(TradeChatMessagesRestApi.class);
                 bind(userIdentityRestApi).to(UserIdentityRestApi.class);
                 bind(marketPriceRestApi).to(MarketPriceRestApi.class);
                 bind(settingsRestApi).to(SettingsRestApi.class);

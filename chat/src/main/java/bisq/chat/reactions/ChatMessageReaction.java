@@ -40,7 +40,7 @@ public abstract class ChatMessageReaction implements NetworkProto {
     private final String chatChannelId;
     private final ChatChannelDomain chatChannelDomain;
     private final String chatMessageId;
-    private final int reactionId;
+    private final int reactionId; // ordinal of Reaction icon enum
     private final long date;
 
     public ChatMessageReaction(String id,
