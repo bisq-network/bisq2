@@ -5,5 +5,6 @@ enum class PackageFormat(val fileExtension: String) {
     DMG("dmg"),
     EXE("exe"),
     MSI("msi"),
-    RPM("rpm")
+    RPM("rpm"),
+    AUR("aur")
 }

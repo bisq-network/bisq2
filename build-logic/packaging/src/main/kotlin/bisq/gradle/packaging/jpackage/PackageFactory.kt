@@ -14,12 +14,18 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
         val packageFormatConfigs = jPackageConfig.packageFormatConfigs
         val perPackageCommand = packageFormatConfigs.packageFormats
-                .map { Pair(it.fileExtension, packageFormatConfigs.createArgumentsForJPackage(it) + listOf("--type", it.fileExtension)) }
+            .filter { it.fileExtension != "aur" } // Skip AUR packages as they're handled separately
+            .map {
+                Pair(
+                    it.fileExtension,
+                    packageFormatConfigs.createArgumentsForJPackage(it) + listOf("--type", it.fileExtension)
+                )
+            }
 
         val absoluteBinaryPath = jPackagePath.toAbsolutePath().toString()
         perPackageCommand.forEach { filetypeAndCustomCommands ->
             val processBuilder = ProcessBuilder(absoluteBinaryPath)
-                    .inheritIO()
+                .inheritIO()
 
             var commonArgs: Map<String, String> = jPackageCommonArgs
 
@@ -60,39 +66,39 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
     }
 
     private fun createCommonArguments(appConfig: JPackageAppConfig): Map<String, String> =
-            mutableMapOf(
-                    "--dest" to jPackageConfig.outputDirPath.toAbsolutePath().toString(),
+        mutableMapOf(
+            "--dest" to jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
-                    "--name" to appConfig.name,
-                    "--description" to "A decentralized bitcoin exchange network.",
-                    "--copyright" to "Copyright © 2013-${Year.now()} - The Bisq developers",
-                    "--vendor" to "Bisq",
-                    "--license-file" to appConfig.licenceFilePath,
-                    "--app-version" to appConfig.appVersion,
+            "--name" to appConfig.name,
+            "--description" to "A decentralized bitcoin exchange network.",
+            "--copyright" to "Copyright © 2013-${Year.now()} - The Bisq developers",
+            "--vendor" to "Bisq",
+            "--license-file" to appConfig.licenceFilePath,
+            "--app-version" to appConfig.appVersion,
 
-                    "--input" to jPackageConfig.inputDirPath.toAbsolutePath().toString(),
-                    "--main-jar" to appConfig.mainJarFileName,
+            "--input" to jPackageConfig.inputDirPath.toAbsolutePath().toString(),
+            "--main-jar" to appConfig.mainJarFileName,
 
-                    "--main-class" to appConfig.mainClassName,
-                    "--java-options" to appConfig.jvmArgs.joinToString(separator = " "),
+            "--main-class" to appConfig.mainClassName,
+            "--java-options" to appConfig.jvmArgs.joinToString(separator = " "),
 
-                    "--runtime-image" to jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
-            )
+            "--runtime-image" to jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
+        )
 
     private fun getOsSpecificOverrideArgs(fileType: String): Map<String, String> =
-            if (jPackageConfig.appConfig.name == "Bisq" && fileType == "exe") {
-                // Needed for Windows OS notification support
-                mutableMapOf("--description" to "Bisq2")
-            } else {
-                emptyMap()
-            }
+        if (jPackageConfig.appConfig.name == "Bisq" && fileType == "exe") {
+            // Needed for Windows OS notification support
+            mutableMapOf("--description" to "Bisq2")
+        } else {
+            emptyMap()
+        }
 
     private fun deleteFileOrDirectory(dir: File) {
         if (dir.exists()) {
             Files.walk(dir.toPath())
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete)
         }
     }
 }

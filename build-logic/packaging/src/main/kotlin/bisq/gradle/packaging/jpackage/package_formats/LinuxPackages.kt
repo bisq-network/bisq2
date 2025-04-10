@@ -3,24 +3,28 @@ package bisq.gradle.packaging.jpackage.package_formats
 import java.nio.file.Path
 
 class LinuxPackages(private val resourcesPath: Path, private val appName: String) : JPackagePackageFormatConfigs {
-    override val packageFormats = setOf(PackageFormat.DEB, PackageFormat.RPM)
+    override val packageFormats = setOf(PackageFormat.DEB, PackageFormat.RPM, PackageFormat.AUR)
 
     override fun createArgumentsForJPackage(packageFormat: PackageFormat): List<String> {
+        if (packageFormat == PackageFormat.AUR) {
+            return emptyList()
+        }
+
         val arguments = mutableListOf(
-                "--icon",
-                resourcesPath.resolve("icon.png")
-                        .toAbsolutePath().toString(),
+            "--icon",
+            resourcesPath.resolve("icon.png")
+                .toAbsolutePath().toString(),
 
-                "--linux-package-name", appName.lowercase().replace(" ", ""),
-                "--linux-app-release", "1",
+            "--linux-package-name", appName.lowercase().replace(" ", ""),
+            "--linux-app-release", "1",
 
-                "--linux-package-deps", "tor",
+            "--linux-package-deps", "tor",
 
-                "--linux-menu-group", "Network",
-                "--linux-shortcut",
+            "--linux-menu-group", "Network",
+            "--linux-shortcut",
 
-                "--linux-deb-maintainer",
-                "noreply@bisq.network",
+            "--linux-deb-maintainer",
+            "noreply@bisq.network",
         )
 
         if (packageFormat == PackageFormat.DEB) {
