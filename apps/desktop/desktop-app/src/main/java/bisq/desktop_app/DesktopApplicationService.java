@@ -54,7 +54,6 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.user.reputation.ReputationService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
@@ -94,7 +93,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final OfferService offerService;
     private final ContractService contractService;
     private final UserService userService;
-    private final ReputationService reputationService;
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
@@ -155,8 +153,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 identityService,
                 networkService,
                 bondedRolesService);
-
-        reputationService = userService.getReputationService();
 
         settingsService = new SettingsService(persistenceService);
 
@@ -247,8 +243,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 tradeService,
                 settingsService,
                 openTradeItemsService,
-                accountService,
-                reputationService);
+                accountService);
     }
 
     @Override

@@ -150,10 +150,6 @@ public class ReputationService implements Service {
         return Optional.of(new ReputationScore(score, fiveSystemScore, rank));
     }
 
-    public Map<String, Long> getScoreByUserProfileId() {
-        return scoreByUserProfileId;
-    }
-
     private void onUserProfileScoreChanged(Pair<String, Long> userProfileIdScorePair) {
         if (userProfileIdScorePair == null) {
             return;

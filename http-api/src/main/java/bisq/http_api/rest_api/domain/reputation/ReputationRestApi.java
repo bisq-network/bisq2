@@ -48,37 +48,40 @@ public class ReputationRestApi extends RestApiBase {
 
     @GET
     @Operation(
-            summary = "Get reputation of a user",
-            description = "Retrieves the reputation of the user, whose userId is given",
+            summary = "Retrieve reputation score for a specific user",
+            description = "Fetches the reputation score associated with the given user profile ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "User reputation retrieved successfully",
                             content = @Content(schema = @Schema(implementation = ReputationScoreDto.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @Path("/user/{userId}")
-    public Response getReputationForUser(@PathParam("userId") String userId) {
+    @Path("/scores/{userProfileId}")
+    public Response getReputationForUser(@PathParam("userProfileId") String userProfileId) {
         try {
-            ReputationScore reputationScore = reputationService.getReputationScore(userId);
+            if (userProfileId == null || userProfileId.trim().isEmpty()) {
+                return buildErrorResponse("User profile ID must not be empty.");
+            }
+            ReputationScore reputationScore = reputationService.getReputationScore(userProfileId);
             ReputationScoreDto dto = DtoMappings.ReputationScoreMapping.fromBisq2Model(reputationScore);
             return buildOkResponse(dto);
         } catch (Exception e) {
-            log.error("Failed to retrieve user reputation", e);
+            log.error("Failed to retrieve reputation for userProfileId={}", userProfileId, e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
     }
 
     @GET
     @Operation(
-            summary = "Get list of profile IDs and reputations",
-            description = "Get a list of all profile IDs and their reputation scores",
+            summary = "Retrieve reputation scores for all users",
+            description = "Returns a mapping of user profile IDs to their corresponding reputation scores.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Profile IDs and reputations retrieved successfully",
                             content = @Content(schema = @Schema(implementation = Map.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @Path("/getScoreByUserProfileId")
+    @Path("/scores")
     public Response getScoreByUserProfileId() {
         try {
             Map<String, Long> map = reputationService.getScoreByUserProfileId();

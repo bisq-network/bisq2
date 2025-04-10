@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
-@Getter
-@Setter
 public class LanguageRepository {
     @Getter
     @Setter

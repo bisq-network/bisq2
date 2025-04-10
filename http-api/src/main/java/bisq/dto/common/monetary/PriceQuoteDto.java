@@ -21,10 +21,10 @@ import bisq.dto.common.currency.MarketDto;
 
 public record PriceQuoteDto(
         long value,
+        MonetaryDto baseSideMonetary,
+        MonetaryDto quoteSideMonetary,
         int precision,
         int lowPrecision,
-        MarketDto market,
-        MonetaryDto baseSideMonetary,
-        MonetaryDto quoteSideMonetary
+        MarketDto market
 ) {
 }

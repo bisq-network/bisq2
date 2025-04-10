@@ -21,7 +21,6 @@ import bisq.account.AccountService;
 import bisq.application.State;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.platform.OS;
@@ -47,10 +46,6 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.user.banned.BannedUserService;
-import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
@@ -78,7 +73,6 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
     private final IdentityService identityService;
     private final BondedRolesService bondedRolesService;
     private final AccountService accountService;
-    private final ReputationService reputationService;
     private final OfferService offerService;
     private final ContractService contractService;
     private final UserService userService;
@@ -137,8 +131,6 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 networkService,
                 bondedRolesService);
 
-        reputationService = userService.getReputationService();
-
         settingsService = new SettingsService(persistenceService);
 
         systemNotificationService = new SystemNotificationService(findSystemNotificationDelegate());
@@ -187,8 +179,7 @@ public class HttpApiApplicationService extends JavaSeApplicationService {
                 tradeService,
                 settingsService,
                 openTradeItemsService,
-                accountService,
-                reputationService);
+                accountService);
     }
 
     @Override

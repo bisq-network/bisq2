@@ -42,7 +42,6 @@ import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
-import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -69,8 +68,7 @@ public class HttpApiService implements Service {
                           TradeService tradeService,
                           SettingsService settingsService,
                           OpenTradeItemsService openTradeItemsService,
-                          AccountService accountService,
-                          ReputationService reputationService) {
+                          AccountService accountService) {
         boolean restApiConfigEnabled = restApiConfig.isEnabled();
         boolean webSocketConfigEnabled = webSocketConfig.isEnabled();
         if (restApiConfigEnabled || webSocketConfigEnabled) {
@@ -87,7 +85,7 @@ public class HttpApiService implements Service {
             MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
             SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
             PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
-            ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService);
+            ReputationRestApi reputationRestApi = new ReputationRestApi(userService.getReputationService());
             ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
             if (restApiConfigEnabled) {
                 var restApiResourceConfig = new RestApiResourceConfig(restApiConfig.getRestApiBaseUrl(),
