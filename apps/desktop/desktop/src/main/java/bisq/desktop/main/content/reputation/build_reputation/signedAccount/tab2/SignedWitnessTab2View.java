@@ -20,6 +20,7 @@ package bisq.desktop.main.content.reputation.build_reputation.signedAccount.tab2
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.user.reputation.SignedWitnessService;
@@ -59,6 +60,7 @@ public class SignedWitnessTab2View extends View<VBox, SignedWitnessTab2Model, Si
         nextButton.setDefaultButton(true);
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore.setTooltip(new BisqTooltip("https://bisq.wiki/Reputation"));
 
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
