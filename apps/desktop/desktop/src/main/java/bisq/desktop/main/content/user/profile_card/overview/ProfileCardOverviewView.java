@@ -45,11 +45,11 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         profileAgeLabel = new Label();
         VBox profileAgeBox = createAndGetTitleAndMetricBox("user.profileCard.details.profileAge", profileAgeLabel);
 
-        totalBaseToBuyBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        totalBaseToBuyBitcoinAmountDisplay = new BitcoinAmountDisplay();
         configureBitcoinAmountDisplay(totalBaseToBuyBitcoinAmountDisplay);
         VBox totalBaseToBuyBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalBuying", totalBaseToBuyBitcoinAmountDisplay);
 
-        totalBaseToSellBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        totalBaseToSellBitcoinAmountDisplay = new BitcoinAmountDisplay();
         configureBitcoinAmountDisplay(totalBaseToSellBitcoinAmountDisplay);
         VBox totalBaseToSellBox = createAndGetTitleAndBtcMetricBox("user.profileCard.overview.totalSelling", totalBaseToSellBitcoinAmountDisplay);
 

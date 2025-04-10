@@ -143,8 +143,8 @@ public class ReviewDataDisplay {
         private final Triple<Text, Label, VBox> direction, paymentMethod;
         private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSend, toReceive;
 
-        private final BitcoinAmountDisplay toSendBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
-        private final BitcoinAmountDisplay toReceiveBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        private final BitcoinAmountDisplay toSendBitcoinAmountDisplay = new BitcoinAmountDisplay();
+        private final BitcoinAmountDisplay toReceiveBitcoinAmountDisplay = new BitcoinAmountDisplay();
 
         private final VBox rangeAmountVBox = new VBox(0);
         private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;

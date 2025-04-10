@@ -130,7 +130,7 @@ public class BaseAmountBox {
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
-        private Subscription amountListener, isBtcListener, codeListener;
+        private Subscription amountListenerPin, isBtcListenerPin, codeListenerPin;
 
         private final Label baseAmountLabel, codeLabel, baseAmountInfoIcon;
         private final BitcoinAmountDisplay bitcoinAmountDisplay;
@@ -176,30 +176,28 @@ public class BaseAmountBox {
 
         @Override
         protected void onViewAttached() {
-            boolean isBtc = model.isBtc.get();
-
             baseAmountInfoIcon.setVisible(model.showCurrencyCode);
             baseAmountInfoIcon.setManaged(model.showCurrencyCode);
 
-            if (isBtc) {
+            if (model.isBtc.get()) {
                 baseAmountInfoIcon.setTranslateY(-2);
             }
 
             codeLabel.textProperty().bind(model.code);
             tooltip.textProperty().bind(model.tooltip);
 
-            amountListener = EasyBind.subscribe(model.amount, this::onAmountChanged);
-            isBtcListener = EasyBind.subscribe(model.isBtc, this::onIsBtcChanged);
-            codeListener = EasyBind.subscribe(model.code, this::onCodeChanged);
+            amountListenerPin = EasyBind.subscribe(model.amount, this::onAmountChanged);
+            isBtcListenerPin = EasyBind.subscribe(model.isBtc, this::onIsBtcChanged);
+            codeListenerPin = EasyBind.subscribe(model.code, this::onCodeChanged);
         }
 
         @Override
         protected void onViewDetached() {
             codeLabel.textProperty().unbind();
             tooltip.textProperty().unbind();
-            amountListener.unsubscribe();
-            isBtcListener.unsubscribe();
-            codeListener.unsubscribe();
+            amountListenerPin.unsubscribe();
+            isBtcListenerPin.unsubscribe();
+            codeListenerPin.unsubscribe();
         }
 
         private void onIsBtcChanged(Boolean newValue) {

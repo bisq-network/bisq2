@@ -72,7 +72,7 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         Label titleLabel = new Label(Res.get("topPanel.wallet.balance").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-18");
 
-        balanceBitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        balanceBitcoinAmountDisplay = new BitcoinAmountDisplay();
         configureBitcoinAmountDisplay(balanceBitcoinAmountDisplay);
 
         HBox hBox = new HBox(12, titleLabel, balanceBitcoinAmountDisplay);

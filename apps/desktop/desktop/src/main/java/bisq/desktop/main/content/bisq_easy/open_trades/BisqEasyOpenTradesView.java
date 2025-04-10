@@ -382,9 +382,9 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             private final BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0", false);
 
             {
-                bitcoinAmountDisplay.getSignificantDigits().getStyleClass().add("bisq-easy-open-trades-btc");
-                bitcoinAmountDisplay.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-btc");
-                bitcoinAmountDisplay.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-btc");
+                bitcoinAmountDisplay.getSignificantDigits().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
                 bitcoinAmountDisplay.setTranslateY(8);
             }
 

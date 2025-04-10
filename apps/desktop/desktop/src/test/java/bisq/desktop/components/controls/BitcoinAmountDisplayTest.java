@@ -18,9 +18,9 @@
 package bisq.desktop.components.controls;
 
 import bisq.common.locale.LocaleRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
@@ -47,25 +47,25 @@ class BitcoinAmountDisplayTest {
     @Test
     void testZeroBtcAmount() {
         bitcoinAmountDisplay.setBtcAmount("0.0");
-        //0.0
+        //0.00 000 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("0", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("00 000 000", bitcoinAmountDisplay.getLeadingZeros().getText());
         assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testWholeNumberBtcAmount() {
         bitcoinAmountDisplay.setBtcAmount("5");
-        //5.0
+        //5.00 000 000
         assertEquals("5" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("0", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("00 000 000", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part"));
-        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part"));
+        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
     }
 
     @Test
@@ -76,20 +76,20 @@ class BitcoinAmountDisplayTest {
         assertEquals("00 ", bitcoinAmountDisplay.getLeadingZeros().getText());
         assertEquals("123 456", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testLargeBtcAmount() {
         bitcoinAmountDisplay.setBtcAmount("1234.56789");
-        //1234.56 789
+        //1234.56 789 000
         assertEquals("1234" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("56 789", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("56 789 000", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part"));
-        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part"));
+        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
     }
 
     @Test
@@ -100,164 +100,164 @@ class BitcoinAmountDisplayTest {
         assertEquals("00 000 00", bitcoinAmountDisplay.getLeadingZeros().getText());
         assertEquals("1", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testVerySmallBtcAmount() {
         bitcoinAmountDisplay.setBtcAmount("0.000000124");
-        //0.000 000 124
+        //0.00 000 001 (last digit should be truncated)
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("000 000 ", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("124", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("00 000 0", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("12", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testSmallBtcAmountWith6LeadingZeros() {
         bitcoinAmountDisplay.setBtcAmount("0.000002146");
-        //0.000 002 146
+        //0.00 000 214 (last digit should be trancated)
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("000 00", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("2 146", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("00 000 ", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("214", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testSmallBtcAmountWith5LeadingZeros() {
         bitcoinAmountDisplay.setBtcAmount("0.000019754");
-        //0.000 019 754
+        //0.00 001 975 (last digit should be trancated)
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("000 0", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("19 754", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("00 00", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("1 975", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testSmallBtcAmountWith4LeadingZeros() {
         bitcoinAmountDisplay.setBtcAmount("0.0006942");
-        //0.0 006 942
+        //0.00 069 420
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("0 00", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("6 942", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("00 0", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("69 420", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testSmallBtcAmountWith3LeadingZeros() {
         bitcoinAmountDisplay.setBtcAmount("0.00582");
-        //0.00 582
+        //0.00 582 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("00 ", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("582", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("582 000", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testSmallBtcAmountWith2LeadingZeros() {
         bitcoinAmountDisplay.setBtcAmount("0.024");
-        //0.024
+        //0.02 400 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("0", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("24", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("2 400 000", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testBtcAmountWithOneLeadingZeroAndMultipleSignificantDigits() {
         bitcoinAmountDisplay.setBtcAmount("0.120011");
-        //0.120 011
+        //0.12 001 100
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("120 011", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("12 001 100", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-empty"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-empty"));
     }
 
     @Test
     void testBtcAmountPointTwelve() {
         bitcoinAmountDisplay.setBtcAmount("0.12");
-        //0.12
+        //0.12 000 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("12", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("12 000 000", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-empty"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-empty"));
     }
 
     @Test
     void testBtcAmountPointOne() {
         bitcoinAmountDisplay.setBtcAmount("0.1");
-        //0.1
+        //0.10 000 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("1", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("10 000 000", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-empty"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-empty"));
     }
 
     @Test
     void testBtcAmountOnePointFive() {
         bitcoinAmountDisplay.setBtcAmount("1.5");
-        //1.5
+        //1.50 000 000
         assertEquals("1" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("5", bitcoinAmountDisplay.getSignificantDigits().getText());
-        
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part"));
-        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-empty"));
+        assertEquals("50 000 000", bitcoinAmountDisplay.getSignificantDigits().getText());
+
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part"));
+        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-empty"));
     }
 
     @Test
     void testBtcAmountWithJustDecimalPoint() {
         bitcoinAmountDisplay.setBtcAmount(String.valueOf(decimalSeparator));
-        //0.0
+        //0.00 000 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("0", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("00 000 000", bitcoinAmountDisplay.getLeadingZeros().getText());
         assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testBtcAmountWithDecimalPointZero() {
         bitcoinAmountDisplay.setBtcAmount(".0");
-        //0.0
+        //0.00 000 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("0", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("00 000 000", bitcoinAmountDisplay.getLeadingZeros().getText());
         assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
     void testBtcAmountWithDecimalPointAndNumber() {
         bitcoinAmountDisplay.setBtcAmount(".0112");
-        //0.0 112
+        //0.01 120 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("0 ", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("112", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("0", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("1 120 000", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
     }
 
     @Test
@@ -272,23 +272,23 @@ class BitcoinAmountDisplayTest {
     @Test
     void testBtcAmountWithTrailingDecimalPoint() {
         bitcoinAmountDisplay.setBtcAmount("0.");
-        //0.0
+        //0.00 000 000
         assertEquals("0" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
-        assertEquals("0", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("00 000 000", bitcoinAmountDisplay.getLeadingZeros().getText());
         assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-dimmed"));
 
         bitcoinAmountDisplay.setBtcAmount("1.");
-        //1.0
+        //1.00 000 000
         assertEquals("1" + decimalSeparator, bitcoinAmountDisplay.getIntegerPart().getText());
         assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
-        assertEquals("0", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertEquals("00 000 000", bitcoinAmountDisplay.getSignificantDigits().getText());
 
-        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part"));
-        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("btc-integer-part-dimmed"));
-        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("btc-leading-zeros-empty"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part"));
+        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getLeadingZeros().getStyleClass().contains("bitcoin-amount-display-leading-zeros-empty"));
     }
 
     @Test
@@ -308,66 +308,45 @@ class BitcoinAmountDisplayTest {
         assertEquals(12, testDisplay.getBtcCode().getFont().getSize());
     }
 
-
-
-    /**
-     * Tests for locale-dependent decimal separator
-     */
     @Test
     void testDecimalSeparatorWithGermanLocale() {
-        // Save the original locale from the repository
         Locale originalLocale = LocaleRepository.getDefaultLocale();
         try {
-            // Set German locale in the repository, not just JVM default
             LocaleRepository.setDefaultLocale(Locale.GERMANY);
-
-            // Create a new instance with German locale
             BitcoinAmountDisplay germanDisplay = new BitcoinAmountDisplay("1,234");
-
-            // Get the decimal separator for German locale
             char germanSeparator = DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
 
-            // Verify the decimal separator is a comma
             assertEquals(',', germanSeparator);
-
-            // Verify formatting with German locale
             assertEquals("1" + germanSeparator, germanDisplay.getIntegerPart().getText());
             assertEquals("", germanDisplay.getLeadingZeros().getText());
-            assertEquals("234", germanDisplay.getSignificantDigits().getText());
+            assertEquals("23 400 000", germanDisplay.getSignificantDigits().getText());
         } finally {
-            // Restore the original locale in the repository
             LocaleRepository.setDefaultLocale(originalLocale);
         }
     }
 
     @Test
     void testDecimalSeparatorWithFrenchLocale() {
-        // Save the original locale from the repository
         Locale originalLocale = LocaleRepository.getDefaultLocale();
         try {
-            // Set French locale in the repository
             LocaleRepository.setDefaultLocale(Locale.FRANCE);
 
-            // Create instances with various amounts
             BitcoinAmountDisplay frenchDisplayZero = new BitcoinAmountDisplay("0,0");
             BitcoinAmountDisplay frenchDisplaySmall = new BitcoinAmountDisplay("0,00123");
             BitcoinAmountDisplay frenchDisplayLarge = new BitcoinAmountDisplay("123,456");
 
-            // Get the decimal separator for French locale
             char frenchSeparator = DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
 
-            // Verify formatting with French locale
             assertEquals("0" + frenchSeparator, frenchDisplayZero.getIntegerPart().getText());
             assertEquals("0" + frenchSeparator, frenchDisplaySmall.getIntegerPart().getText());
             assertEquals("123" + frenchSeparator, frenchDisplayLarge.getIntegerPart().getText());
 
             assertEquals("00 ", frenchDisplaySmall.getLeadingZeros().getText());
-            assertEquals("123", frenchDisplaySmall.getSignificantDigits().getText());
+            assertEquals("123 000", frenchDisplaySmall.getSignificantDigits().getText());
 
             assertEquals("", frenchDisplayLarge.getLeadingZeros().getText());
-            assertEquals("456", frenchDisplayLarge.getSignificantDigits().getText());
+            assertEquals("45 600 000", frenchDisplayLarge.getSignificantDigits().getText());
         } finally {
-            // Restore the original locale in the repository
             LocaleRepository.setDefaultLocale(originalLocale);
         }
     }

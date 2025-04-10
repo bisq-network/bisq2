@@ -1082,40 +1082,40 @@
  *                                                                             *
  ******************************************************************************/
 
-.btc-sats-text {
+.bitcoin-amount-display-text {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-background-color: transparent;
 }
 
-.btc-integer-part {
+.bitcoin-amount-display-integer-part {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
 }
 
-.btc-integer-part-dimmed {
+.bitcoin-amount-display-integer-part-dimmed {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
 }
 
-.btc-leading-zeros-dimmed {
+.bitcoin-amount-display-leading-zeros-dimmed {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
 }
 
-.btc-leading-zeros-empty {
+.bitcoin-amount-display-leading-zeros-empty {
     -fx-fill: -fx-light-text-color;
 }
 
-.btc-significant-digits {
+.bitcoin-amount-display-significant-digits {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.btc-code {
+.bitcoin-amount-display-code {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";

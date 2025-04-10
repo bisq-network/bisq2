@@ -291,7 +291,7 @@ public class SellerState3a extends BaseState {
             WrappingText sendBtcPrefix =
                     FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc.prefix") + " ");
 
-            sendBtcAmount = new BitcoinAmountDisplay("0");
+            sendBtcAmount = new BitcoinAmountDisplay();
             configureBitcoinAmountDisplay(sendBtcAmount, BitcoinAmountDisplayStyleType.HEADLINE);
 
             WrappingText sendBtcSuffix =
@@ -413,28 +413,19 @@ public class SellerState3a extends BaseState {
                 BitcoinAmountDisplayStyleType bitcoinAmountDisplayStyleType) {
             switch (bitcoinAmountDisplayStyleType) {
                 case HEADLINE:
-                    display.getIntegerPart().getStyleClass().addAll("bisq-easy-trade-state-headline-btc-integer");
-                    display
-                            .getLeadingZeros()
-                            .getStyleClass()
-                            .addAll("bisq-easy-trade-state-headline-btc-leading-zeros");
-                    display.getBtcCode().getStyleClass().addAll("bisq-easy-trade-state-headline-btc");
-                    display.getSignificantDigits().getStyleClass().addAll("bisq-easy-trade-state-headline-btc");
+                    display.getIntegerPart().getStyleClass().addAll("bisq-easy-trade-state-headline-bitcoin-amount-display-integer");
+                    display.getLeadingZeros().getStyleClass().addAll("bisq-easy-trade-state-headline-bitcoin-amount-display-leading-zeros");
+                    display.getBtcCode().getStyleClass().addAll("bisq-easy-trade-state-headline-bitcoin-amount-display");
+                    display.getSignificantDigits().getStyleClass().addAll("bisq-easy-trade-state-headline-bitcoin-amount-display");
                     display.setBaselineAlignment();
                     display.setTranslateY(7.5);
                     break;
 
                 case BASE_AMOUNT:
-                    display
-                            .getIntegerPart()
-                            .getStyleClass()
-                            .addAll("bisq-easy-trade-state-base-amount-btc-integer");
-                    display
-                            .getLeadingZeros()
-                            .getStyleClass()
-                            .addAll("bisq-easy-trade-state-base-amount-btc-leading-zeros");
-                    display.getBtcCode().getStyleClass().addAll("bisq-easy-trade-state-base-amount-btc");
-                    display.getSignificantDigits().getStyleClass().addAll("bisq-easy-trade-state-base-amount-btc");
+                    display.getIntegerPart().getStyleClass().addAll("bisq-easy-trade-state-base-amount-bitcoin-amount-display-integer");
+                    display.getLeadingZeros().getStyleClass().addAll("bisq-easy-trade-state-base-amount-bitcoin-amount-display-leading-zeros");
+                    display.getBtcCode().getStyleClass().addAll("bisq-easy-trade-state-base-amount-bitcoin-amount-display");
+                    display.getSignificantDigits().getStyleClass().addAll("bisq-easy-trade-state-base-amount-bitcoin-amount-display");
                     break;
             }
         }

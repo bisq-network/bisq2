@@ -71,7 +71,7 @@ public class TradeCompletedTable extends VBox {
         valueCol.setPercentWidth(75);
         bodyGridPane.getColumnConstraints().add(valueCol);
 
-        bitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        bitcoinAmountDisplay = new BitcoinAmountDisplay();
         configureBitcoinAmountDisplay(bitcoinAmountDisplay);
 
         copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");

@@ -52,9 +52,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 public class TradeDataHeader {
     private final Controller controller;
@@ -178,7 +178,7 @@ public class TradeDataHeader {
         private final Triple<Triple<Text, Node, Text>, HBox, VBox> leftAmount, rightAmount;
         private Subscription userProfilePin, reputationScorePin;
         private final BitcoinAmountDisplay leftBitcoinAmountDisplay, rightBitcoinAmountDisplay;
-        private final List<Subscription> amountAndCodeSubscriptions = new ArrayList<>();
+        private final Set<Subscription> amountAndCodePins = new HashSet<>();
 
         private View(Model model, Controller controller) {
             super(new HBox(40), model, controller);
@@ -223,22 +223,6 @@ public class TradeDataHeader {
                     tradeId.getThird());
         }
 
-        public void refreshBitcoinAmountDisplayComponents() {
-            updateAmountDisplayWithCurrency(
-                    leftAmount,
-                    leftBitcoinAmountDisplay,
-                    model.getLeftAmount().get(),
-                    model.getLeftCode().get(),
-                    false);
-
-            updateAmountDisplayWithCurrency(
-                    rightAmount,
-                    rightBitcoinAmountDisplay,
-                    model.getRightAmount().get(),
-                    model.getRightCode().get(),
-                    false);
-        }
-
         @Override
         protected void onViewAttached() {
             peerDescription.setText(model.getPeerDescription());
@@ -275,8 +259,8 @@ public class TradeDataHeader {
             leftAmount.getFirst().getFirst().textProperty().unbind();
             rightAmount.getFirst().getFirst().textProperty().unbind();
             tradeId.getSecond().textProperty().unbind();
-            amountAndCodeSubscriptions.forEach(Subscription::unsubscribe);
-            amountAndCodeSubscriptions.clear();
+            amountAndCodePins.forEach(Subscription::unsubscribe);
+            amountAndCodePins.clear();
 
             userProfilePin.unsubscribe();
             reputationScorePin.unsubscribe();
@@ -284,14 +268,27 @@ public class TradeDataHeader {
             peersUserProfileDisplay.dispose();
         }
 
+        private void refreshBitcoinAmountDisplayComponents() {
+            updateAmountDisplayWithCurrency(
+                    leftAmount,
+                    leftBitcoinAmountDisplay,
+                    model.getLeftAmount().get(),
+                    model.getLeftCode().get(),
+                    false);
+
+            updateAmountDisplayWithCurrency(
+                    rightAmount,
+                    rightBitcoinAmountDisplay,
+                    model.getRightAmount().get(),
+                    model.getRightCode().get(),
+                    false);
+        }
+
         private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
-            btcText.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-header-value-btc-integer");
-            btcText.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-header-value-btc-leading-zeros");
-            btcText.getBtcCode().getStyleClass().add("bisq-easy-open-trades-header-code-btc");
-            btcText
-                    .getSignificantDigits()
-                    .getStyleClass()
-                    .add("bisq-easy-open-trades-header-value-btc-significant-digits");
+            btcText.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-header-value-bitcoin-amount-display-integer");
+            btcText.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-header-value-bitcoin-amount-display-leading-zeros");
+            btcText.getBtcCode().getStyleClass().add("bisq-easy-open-trades-header-code-bitcoin-amount-display");
+            btcText.getSignificantDigits().getStyleClass().add("bisq-easy-open-trades-header-value-bitcoin-amount-display-significant-digits");
 
             btcText.setBaselineAlignment();
             btcText.setFixedHeight(28);
@@ -351,7 +348,7 @@ public class TradeDataHeader {
 
             Text descriptionLabel = amountComponents.getFirst().getFirst();
             descriptionLabel.textProperty().bind(descriptionProperty);
-            amountAndCodeSubscriptions.add(EasyBind.subscribe(amountProperty, newVal -> {
+            amountAndCodePins.add(EasyBind.subscribe(amountProperty, newVal -> {
                 if (newVal != null) {
                     updateAmountDisplayWithCurrency(
                             amountComponents,
@@ -362,7 +359,7 @@ public class TradeDataHeader {
                 }
             }));
 
-            amountAndCodeSubscriptions.add(EasyBind.subscribe(codeProperty,
+            amountAndCodePins.add(EasyBind.subscribe(codeProperty,
                             newVal -> updateAmountDisplayWithCurrency(
                                     amountComponents,
                                     btcText,
@@ -393,7 +390,7 @@ public class TradeDataHeader {
         private Triple<Triple<Text, Node, Text>, HBox, VBox> getAmountElements() {
             Text descriptionLabel = new Text();
             descriptionLabel.getStyleClass().add("bisq-easy-open-trades-header-description");
-            BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+            BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay();
             configureBitcoinAmountDisplay(bitcoinAmountDisplay);
             Text regularAmountText = new Text();
             regularAmountText.getStyleClass().add("bisq-easy-open-trades-header-value");

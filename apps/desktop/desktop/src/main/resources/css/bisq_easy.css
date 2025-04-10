@@ -480,7 +480,7 @@
  * BisqEasyOpenTradesView.tableView.BaseAmount (btc)                           *
  ******************************************************************************/
 
-.bisq-easy-open-trades-btc {
+.bisq-easy-open-trades-bitcoin-amount-display {
     -fx-font-size: 1.0em !important;
 }
 
@@ -502,26 +502,26 @@
     -fx-font-size: 1.4em;
 }
 
-.bisq-easy-open-trades-header-value-btc-significant-digits {
+.bisq-easy-open-trades-header-value-bitcoin-amount-display-significant-digits {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.4em;
 }
 
-.bisq-easy-open-trades-header-value-btc-leading-zeros {
+.bisq-easy-open-trades-header-value-bitcoin-amount-display-leading-zeros {
     -fx-font-size: 1.4em;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-open-trades-header-value-btc-integer {
+.bisq-easy-open-trades-header-value-bitcoin-amount-display-integer {
     -fx-font-size: 1.4em;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-open-trades-header-code-btc {
+.bisq-easy-open-trades-header-code-bitcoin-amount-display {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";
@@ -727,37 +727,37 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-headline-btc {
+.bisq-easy-trade-state-headline-bitcoin-amount-display {
     -fx-fill: -fx-light-text-color;
     -fx-font-size: 1.7em;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-headline-btc-leading-zeros {
+.bisq-easy-trade-state-headline-bitcoin-amount-display-leading-zeros {
     -fx-font-size: 1.7em;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-headline-btc-integer {
+.bisq-easy-trade-state-headline-bitcoin-amount-display-integer {
     -fx-font-size: 1.7em;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-base-amount-btc {
+.bisq-easy-trade-state-base-amount-bitcoin-amount-display {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-base-amount-btc-leading-zeros {
+.bisq-easy-trade-state-base-amount-bitcoin-amount-display-leading-zeros {
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-easy-trade-state-base-amount-btc-integer {
+.bisq-easy-trade-state-base-amount-bitcoin-amount-display-integer {
     -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
 }

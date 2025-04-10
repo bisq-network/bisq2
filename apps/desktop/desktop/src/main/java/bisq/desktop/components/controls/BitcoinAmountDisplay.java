@@ -45,10 +45,14 @@ public class BitcoinAmountDisplay extends HBox {
     @Getter
     private final Text significantDigits = new Text();
     @Getter
-    private final Text btcCode = new Text();
+    private final Text btcCode = new Text(" BTC");
     @SuppressWarnings("FieldCanBeLocal")
     private final ChangeListener<String> amountChangeListener =
             (obs, old, newVal) -> updateDisplay();
+
+    public BitcoinAmountDisplay() {
+        this("0");
+    }
 
     public BitcoinAmountDisplay(String amount, boolean showBtcCode) {
         this(amount);
@@ -61,10 +65,10 @@ public class BitcoinAmountDisplay extends HBox {
         valueTextFlow.setTextAlignment(TextAlignment.CENTER);
         getChildren().add(valueTextFlow);
 
-        integerPart.getStyleClass().add("btc-integer-part");
-        leadingZeros.getStyleClass().add("btc-leading-zeros-empty");
-        significantDigits.getStyleClass().add("btc-significant-digits");
-        btcCode.getStyleClass().add("btc-code");
+        integerPart.getStyleClass().add("bitcoin-amount-display-integer-part");
+        leadingZeros.getStyleClass().add("bitcoin-amount-display-leading-zeros-empty");
+        significantDigits.getStyleClass().add("bitcoin-amount-display-significant-digits");
+        btcCode.getStyleClass().add("bitcoin-amount-display-code");
 
         valueTextFlow.getChildren().addAll(integerPart, leadingZeros, significantDigits, btcCode);
 
@@ -72,11 +76,9 @@ public class BitcoinAmountDisplay extends HBox {
 
         btcAmount.addListener(new WeakChangeListener<>(amountChangeListener));
 
-        btcCode.setText(" BTC");
-        getStyleClass().add("btc-sats-text");
+        getStyleClass().add("bitcoin-amount-display-text");
 
         updateDisplay();
-
     }
 
     public void setBaselineAlignment() {
@@ -89,9 +91,9 @@ public class BitcoinAmountDisplay extends HBox {
         valueTextFlow.setTextAlignment(alignment);
     }
 
-    public void setFixedHeight(double maxHeight) {
-        setMinHeight(maxHeight);
-        setMaxHeight(maxHeight);
+    public void setFixedHeight(double height) {
+        setMinHeight(height);
+        setMaxHeight(height);
     }
 
     public void setPaddings(Insets padding) {
@@ -158,7 +160,7 @@ public class BitcoinAmountDisplay extends HBox {
                 DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
 
         if (!amount.contains(String.valueOf(decimalSeparator))) {
-            amount = amount + decimalSeparator + "0";
+            amount = amount + decimalSeparator + "00000000";
         }
 
         String[] parts = amount.split(Pattern.quote(String.valueOf(decimalSeparator)));
@@ -168,8 +170,10 @@ public class BitcoinAmountDisplay extends HBox {
             integerPartValue = "0";
         }
         String fractionalPart = parts.length > 1 ? parts[1] : "";
-        if (fractionalPart.isEmpty() && amount.contains(String.valueOf(decimalSeparator))) {
-            fractionalPart = "0";
+        if (fractionalPart.length() < 8) {
+            fractionalPart = fractionalPart + "0".repeat(8 - fractionalPart.length());
+        } else if (fractionalPart.length() > 8) {
+            fractionalPart = fractionalPart.substring(0, 8);
         }
         StringBuilder reversedFractional = new StringBuilder(fractionalPart).reverse();
 
@@ -197,9 +201,9 @@ public class BitcoinAmountDisplay extends HBox {
         String significantDigitsValue = formattedFractional.substring(i);
 
         if (integerValue > 0) {
-            setExclusiveStyle(integerPart, "btc-integer-part", "btc-integer-part-dimmed");
+            setExclusiveStyle(integerPart, "bitcoin-amount-display-integer-part", "bitcoin-amount-display-integer-part-dimmed");
         } else {
-            setExclusiveStyle(integerPart, "btc-integer-part-dimmed", "btc-integer-part");
+            setExclusiveStyle(integerPart, "bitcoin-amount-display-integer-part-dimmed", "bitcoin-amount-display-integer-part");
         }
         integerPart.setText(integerPartValue + decimalSeparator);
 
@@ -207,10 +211,10 @@ public class BitcoinAmountDisplay extends HBox {
 
         if (leadingZerosValue.isEmpty()) {
             setExclusiveStyle(leadingZeros,
-                    "btc-leading-zeros-empty", "btc-leading-zeros-dimmed");
+                    "bitcoin-amount-display-leading-zeros-empty", "bitcoin-amount-display-leading-zeros-dimmed");
         } else {
-            setExclusiveStyle(leadingZeros, "btc-leading-zeros-dimmed",
-                    "btc-leading-zeros-empty");
+            setExclusiveStyle(leadingZeros, "bitcoin-amount-display-leading-zeros-dimmed",
+                    "bitcoin-amount-display-leading-zeros-empty");
         }
 
         significantDigits.setText(significantDigitsValue);

@@ -50,7 +50,7 @@ public class MaterialBitcoinAmountDisplay extends MaterialTextField {
                                         @Nullable String help) {
         super(description, prompt, help);
 
-        bitcoinAmountDisplay = new BitcoinAmountDisplay("0");
+        bitcoinAmountDisplay = new BitcoinAmountDisplay();
         configureBitcoinAmountDisplay();
         addBitcoinAmountDisplayToComponent();
 
