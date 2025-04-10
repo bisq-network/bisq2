@@ -68,6 +68,7 @@ public class DesktopAppLauncher {
 
     private final Options options;
 
+    //test commit
     public static void main(String[] args) {
         ThreadName.set(DesktopAppLauncher.class, "main");
         try {
