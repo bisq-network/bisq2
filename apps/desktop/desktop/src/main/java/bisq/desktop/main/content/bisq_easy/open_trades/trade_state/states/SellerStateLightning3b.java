@@ -33,7 +33,6 @@ import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.user.profile.UserProfileService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -103,12 +102,17 @@ public class SellerStateLightning3b extends BaseState {
                                 String expectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
                                 boolean shouldUpdateUI = encodedLogMessage.equals(expectedEncoded);
                                 if (!shouldUpdateUI) {
-                                    String clearedPeersUserName = UserProfileService.getClearedUserName(peersUserName);
-                                    if (!clearedPeersUserName.equals(peersUserName)) {
-                                        String simplifiedExpectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
-                                                clearedPeersUserName);
-                                        shouldUpdateUI = encodedLogMessage.equals(simplifiedExpectedEncoded);
-                                    }
+                                    /*
+                                     * userName formats may differ between sender and receiver. A userName appears as
+                                     * simple "nickname" if unique in user's storage, or as "nickname [nym-id]" if
+                                     * multiple users share that nickname. Due to persistence state differences, one
+                                     * peer might use the simple format while the other uses the extended format.
+                                     * We therefore compare the encoded message against both the userName and the
+                                     * nickname alone to ensure reliable message matching.
+                                     */
+                                    String simplifiedExpectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
+                                            bisqEasyOpenTradeChannel.getPeer().getNickName());
+                                    shouldUpdateUI = encodedLogMessage.equals(simplifiedExpectedEncoded);
                                 }
 
                                 if (shouldUpdateUI) {
