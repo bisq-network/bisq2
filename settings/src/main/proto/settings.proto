@@ -73,4 +73,5 @@ message SettingsStore {
   double totalMaxBackupSizeInMB = 25;
   ChatMessageType bisqEasyOfferbookMessageTypeFilter = 26;
   sint32 numDaysAfterRedactingTradeData = 27;
+  bool keepTorRunning = 28;
 }

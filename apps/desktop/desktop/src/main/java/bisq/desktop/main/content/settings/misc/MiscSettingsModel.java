@@ -37,6 +37,8 @@ public class MiscSettingsModel implements Model {
     private final BooleanProperty ignoreDiffAdjustmentFromSecManager = new SimpleBooleanProperty();
     private final DoubleProperty totalMaxBackupSizeInMB = new SimpleDoubleProperty();
 
+    private final BooleanProperty keepTorRunning = new SimpleBooleanProperty();
+
     private final DoubleStringConverter difficultyAdjustmentFactorConverter = new DoubleStringConverter(NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT);
     private final ValidatorBase difficultyAdjustmentFactorValidator =
             new NumberValidator(Res.get("settings.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),

@@ -71,6 +71,8 @@ public class TorService implements Service {
     @Getter
     private final Observable<Boolean> useExternalTor = new Observable<>();
     private final AtomicBoolean isRunning = new AtomicBoolean();
+    @Getter
+    private final Observable<Boolean> keepRunning = new Observable<>(false);
 
     private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
@@ -136,7 +138,7 @@ public class TorService implements Service {
         }
 
         if (torController != null) {
-            torController.shutdown();
+            torController.shutdown(true);
         }
         torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
 
@@ -200,7 +202,7 @@ public class TorService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
-            torController.shutdown();
+            torController.shutdown(keepRunning.get());
 //            torProcess.ifPresent(EmbeddedTorProcess::waitUntilExited);
             return true;
         });
@@ -261,7 +263,7 @@ public class TorService implements Service {
         }
 
         if (torController != null) {
-            torController.shutdown();
+            torController.shutdown(true);
         }
         torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
         torController.initialize(controlPort);

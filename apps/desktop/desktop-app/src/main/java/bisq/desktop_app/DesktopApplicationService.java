@@ -25,6 +25,7 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
@@ -41,6 +42,7 @@ import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.offer.OfferService;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
 import bisq.os_specific.notifications.osx.OsxNotificationService;
@@ -321,6 +323,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         // We shut down services in opposite order as they are initialized
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
+        TorTransportService.updateFromSettings(settingsService.getKeepTorRunning().get());
         return supplyAsync(() -> httpApiService.shutdown().exceptionally(this::logError)
                 .thenCompose(result -> openTradeItemsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> webcamAppService.shutdown().exceptionally(this::logError))
