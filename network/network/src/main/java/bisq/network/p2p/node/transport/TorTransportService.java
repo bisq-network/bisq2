@@ -44,6 +44,12 @@ public class TorTransportService implements TransportService {
         }
     }
 
+    public static void updateFromSettings(boolean keepRunning){
+        if (torService != null) {
+            torService.getKeepRunning().set(keepRunning);
+        }
+    }
+
     @Override
     public void initialize() {
         log.info("Initialize Tor");

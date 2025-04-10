@@ -153,6 +153,15 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
+    public void shutdown() {
+        String command = "SIGNAL SHUTDOWN\r\n";
+        sendCommand(command);
+        String reply = receiveReply().findFirst().orElseThrow();
+        if (!isSuccessReply(reply)) {
+            throw new ControlCommandFailedException("Couldn't shutdown tor");
+        }
+    }
+
     public void addBootstrapEventListener(BootstrapEventListener listener) {
         Set<String> previous = getEventTypesOfBootstrapEventListeners();
         torControlReader.addBootstrapEventListener(listener);
