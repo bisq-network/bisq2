@@ -141,13 +141,14 @@ public class SellerState3a extends BaseState {
             super.onDeactivate();
 
             model.getBtcSentButtonDisabled().unbind();
-
+            //QrCodeWindow closes if model.getQrCodeWindow() is not null
+            //So, close QrCodeWindow first, before clearing model
+            doCloseQrCodeWindow();
             model.getQrCodeWindow().set(null);
             model.setLargeQrCodeImage(null);
             model.setSmallQrCodeImage(null);
             model.setPaymentProofValidator(null);
             model.setBitcoinPaymentValidator(null);
-            doCloseQrCodeWindow();
         }
 
         private void onConfirmedBtcSent() {

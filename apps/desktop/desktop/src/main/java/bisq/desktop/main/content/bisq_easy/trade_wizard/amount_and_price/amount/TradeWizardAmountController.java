@@ -514,6 +514,7 @@ public class TradeWizardAmountController implements Controller {
                 // Use min amount
                 String numSellers = Res.getPluralization("bisqEasy.tradeWizard.amount.buyer.numSellers", numPotentialTakersForMinAmount);
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo", numSellers));
+                model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.more"));
 
                 String formattedMinAmount = formatQuoteAmountWithCode(minQuoteSideAmount);
                 if (numPotentialTakersForMinAmount == 0) {
@@ -528,6 +529,7 @@ public class TradeWizardAmountController implements Controller {
                 // Use maxOrFixed amount
                 String numSellers = Res.getPluralization("bisqEasy.tradeWizard.amount.buyer.numSellers", numPotentialTakersForMaxOrFixedAmount);
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo", numSellers));
+                model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.more"));
 
                 if (numPotentialTakersForMaxOrFixedAmount == 0) {
                     model.getShouldShowWarningIcon().set(true);
