@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.wallet_guide.download;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -59,6 +60,7 @@ public class WalletGuideDownloadView extends View<HBox, WalletGuideDownloadModel
         HBox buttons = new HBox(20, backButton, nextButton);
 
         download = new Hyperlink(Res.get("bisqEasy.walletGuide.download.link"));
+        download.setTooltip(new BisqTooltip("https://bluewallet.io"));
 
         VBox.setMargin(headline, new Insets(0, 0, -5, 0));
         VBox.setMargin(download, new Insets(0, 0, 10, 0));

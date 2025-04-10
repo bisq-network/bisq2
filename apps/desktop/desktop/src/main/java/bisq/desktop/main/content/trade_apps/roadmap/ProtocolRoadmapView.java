@@ -19,11 +19,13 @@ package bisq.desktop.main.content.trade_apps.roadmap;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.UnorderedList;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,6 +65,7 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
         UnorderedList con = new UnorderedList(Res.get("tradeApps." + name + ".con"), "trade-protocols-roadmap-text", "- ", "- ");
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore.setTooltip(new BisqTooltip(model.getUrl()));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
 
         VBox.setMargin(overviewHeadline, new Insets(25, 0, 0, 0));

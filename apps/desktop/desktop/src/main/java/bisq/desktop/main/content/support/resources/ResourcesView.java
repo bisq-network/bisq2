@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.support.resources;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.DirectoryPathValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
@@ -28,6 +29,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -102,6 +104,14 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
+
+        // Display the urls while mouse hovering for all external links
+        webpage.setTooltip(new Tooltip("https://bisq.network/"));
+        dao.setTooltip(new BisqTooltip("https://bisq.network/dao"));
+        sourceCode.setTooltip(new BisqTooltip("https://github.com/bisq-network/bisq2"));
+        community.setTooltip(new BisqTooltip("https://matrix.to/#/%23bisq:bitcoin.kyoto"));
+        contribute.setTooltip(new BisqTooltip("https://bisq.wiki/Contributor_checklist"));
+        license.setTooltip(new BisqTooltip("https://github.com/bisq-network/bisq2/blob/main/LICENSE"));
     }
 
     @Override
