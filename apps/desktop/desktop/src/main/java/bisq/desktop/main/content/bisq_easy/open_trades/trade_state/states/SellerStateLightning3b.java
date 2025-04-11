@@ -100,8 +100,24 @@ public class SellerStateLightning3b extends BaseState {
                             if (message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE && message.getText().isPresent()) {
                                 String encodedLogMessage = message.getText().get();
                                 String expectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
-                                if (encodedLogMessage.equals(expectedEncoded)) {
-                                    UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
+                                boolean shouldUpdateUI = encodedLogMessage.equals(expectedEncoded);
+                                if (!shouldUpdateUI) {
+                                    /*
+                                     * userName formats may differ between sender and receiver. A userName appears as
+                                     * simple "nickname" if unique in user's storage, or as "nickname [nym-id]" if
+                                     * multiple users share that nickname. Due to persistence state differences, one
+                                     * peer might use the simple format while the other uses the extended format.
+                                     * We therefore compare the encoded message against both the userName and the
+                                     * nickname alone to ensure reliable message matching.
+                                     */
+                                    String simplifiedExpectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
+                                            bisqEasyOpenTradeChannel.getPeer().getNickName());
+                                    shouldUpdateUI = encodedLogMessage.equals(simplifiedExpectedEncoded);
+                                }
+
+                                if (shouldUpdateUI) {
+                                    UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(
+                                            Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
                                 }
                             }
                         }
