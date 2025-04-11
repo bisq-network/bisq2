@@ -3,10 +3,7 @@ package bisq.gradle.packaging
 import bisq.gradle.packaging.jpackage.JPackageAppConfig
 import bisq.gradle.packaging.jpackage.JPackageConfig
 import bisq.gradle.packaging.jpackage.PackageFactory
-import bisq.gradle.packaging.jpackage.package_formats.JPackagePackageFormatConfigs
-import bisq.gradle.packaging.jpackage.package_formats.LinuxPackages
-import bisq.gradle.packaging.jpackage.package_formats.MacPackage
-import bisq.gradle.packaging.jpackage.package_formats.WindowsPackage
+import bisq.gradle.packaging.jpackage.package_formats.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -55,24 +52,38 @@ abstract class JPackageTask : DefaultTask() {
         val jPackagePath = jdkDirectory.asFile.get().toPath().resolve("bin").resolve("jpackage")
 
         val jPackageConfig = JPackageConfig(
-                inputDirPath = distDirFile.get().toPath().resolve("lib"),
-                outputDirPath = outputDirectory.asFile.get().toPath(),
-                runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
+            inputDirPath = distDirFile.get().toPath().resolve("lib"),
+            outputDirPath = outputDirectory.asFile.get().toPath(),
+            runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
 
-                appConfig = JPackageAppConfig(
-                    name = appName.get(),
-                    appVersion = appVersion.get(),
-                    mainJarFileName = mainJarFile.asFile.get().name,
-                    mainClassName = mainClassName.get(),
-                    jvmArgs = jvmArgs.get(),
-                    licenceFilePath = licenseFile.get().absolutePath
-                ),
+            appConfig = JPackageAppConfig(
+                name = appName.get(),
+                appVersion = appVersion.get(),
+                mainJarFileName = mainJarFile.asFile.get().name,
+                mainClassName = mainClassName.get(),
+                jvmArgs = jvmArgs.get(),
+                licenceFilePath = licenseFile.get().absolutePath
+            ),
 
-                packageFormatConfigs = getPackageFormatConfigs()
+            packageFormatConfigs = getPackageFormatConfigs()
         )
 
         val packageFactory = PackageFactory(jPackagePath, jPackageConfig)
         packageFactory.createPackages()
+
+        if (getOS() == OS.LINUX) {
+            val packageFormatConfigs = jPackageConfig.packageFormatConfigs
+            if (packageFormatConfigs is LinuxPackages &&
+                packageFormatConfigs.packageFormats.contains(PackageFormat.AUR)
+            ) {
+                val aurGenerator = AurPackageGenerator()
+                aurGenerator.generateAurPackage(
+                    appName.get(),
+                    appVersion.get(),
+                    outputDirectory.asFile.get().toPath()
+                )
+            }
+        }
     }
 
     private fun getPackageFormatConfigs(): JPackagePackageFormatConfigs {
