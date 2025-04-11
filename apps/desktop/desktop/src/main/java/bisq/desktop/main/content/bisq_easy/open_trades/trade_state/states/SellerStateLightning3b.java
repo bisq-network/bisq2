@@ -99,23 +99,21 @@ public class SellerStateLightning3b extends BaseState {
                         public void add(BisqEasyOpenTradeMessage message) {
                             if (message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE && message.getText().isPresent()) {
                                 String encodedLogMessage = message.getText().get();
-                                String expectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
-                                boolean shouldUpdateUI = encodedLogMessage.equals(expectedEncoded);
-                                if (!shouldUpdateUI) {
-                                    /*
-                                     * userName formats may differ between sender and receiver. A userName appears as
-                                     * simple "nickname" if unique in user's storage, or as "nickname [nym-id]" if
-                                     * multiple users share that nickname. Due to persistence state differences, one
-                                     * peer might use the simple format while the other uses the extended format.
-                                     * We therefore compare the encoded message against both the userName and the
-                                     * nickname alone to ensure reliable message matching.
-                                     */
-                                    String simplifiedExpectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
-                                            bisqEasyOpenTradeChannel.getPeer().getNickName());
-                                    shouldUpdateUI = encodedLogMessage.equals(simplifiedExpectedEncoded);
-                                }
 
-                                if (shouldUpdateUI) {
+                                /*
+                                 * Username formats differ between peers due to how nicknames are displayed. When a
+                                 * peer's nickname is unique in a node's network view, it appears as just "nickname".
+                                 * When multiple users have chosen the same nickname independently, it displays as
+                                 * "nickname [nym-id]" to prevent confusion. Since peers' network views aren't
+                                 * guaranteed to be identical, we need to check against both the full username and
+                                 * simple nickname formats.
+                                 */
+
+                                String expectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
+                                String nickNameEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
+                                        bisqEasyOpenTradeChannel.getPeer().getNickName());
+
+                                if (encodedLogMessage.equals(expectedEncoded) || encodedLogMessage.equals(nickNameEncoded)) {
                                     UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(
                                             Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
                                 }
