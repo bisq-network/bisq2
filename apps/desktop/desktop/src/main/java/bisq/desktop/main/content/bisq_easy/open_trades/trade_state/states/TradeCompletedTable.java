@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
@@ -43,6 +44,7 @@ public class TradeCompletedTable extends VBox {
     @Getter
     private final BisqMenuItem copyTxIdButton, copyTxExplorerLinkButton, openTxExplorerButton;
     private final WaitingAnimation waitingAnimation;
+    private final BitcoinAmountDisplay bitcoinAmountDisplay;
 
     public TradeCompletedTable() {
         waitingAnimation = new WaitingAnimation(WaitingState.TRADE_COMPLETED);
@@ -68,6 +70,9 @@ public class TradeCompletedTable extends VBox {
         ColumnConstraints valueCol = new ColumnConstraints();
         valueCol.setPercentWidth(75);
         bodyGridPane.getColumnConstraints().add(valueCol);
+
+        bitcoinAmountDisplay = new BitcoinAmountDisplay();
+        configureBitcoinAmountDisplay(bitcoinAmountDisplay);
 
         copyTxIdButton = new BisqMenuItem("copy-grey", "copy-white");
         copyTxIdButton.useIconOnly();
@@ -125,12 +130,13 @@ public class TradeCompletedTable extends VBox {
                 ? new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.buyer").toUpperCase())
                 : new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.seller").toUpperCase());
         myDirection.getStyleClass().addAll("dimmed-text");
-        Label myDirectionValue = new Label(btcAmount);
-        myDirectionValue.getStyleClass().add("medium-text");
-        Label directionBtc = new Label(Res.get("bisqEasy.tradeCompleted.header.myDirection.btc").toUpperCase());
-        directionBtc.getStyleClass().addAll("small-text", "text-fill-grey-dimmed");
-        HBox btcBox = new HBox(5, myDirectionValue, directionBtc);
+
+        bitcoinAmountDisplay.setBtcAmount(btcAmount);
+
+        HBox btcBox = new HBox(5, bitcoinAmountDisplay);
         btcBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox.setMargin(bitcoinAmountDisplay, new Insets(1, 0, 0, 0));
+
         headerGridPane.add(myDirection, col, rowTitle);
         headerGridPane.add(btcBox, col, rowValue);
 
@@ -239,6 +245,13 @@ public class TradeCompletedTable extends VBox {
         copyTxExplorerLinkButton.setManaged(true);
         openTxExplorerButton.setVisible(true);
         openTxExplorerButton.setManaged(true);
+    }
+
+    private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
+        btcText.getIntegerPart().getStyleClass().add("medium-text");
+        btcText.getSignificantDigits().getStyleClass().add("medium-text");
+        btcText.getBtcCode().getStyleClass().addAll("small-text", "text-fill-grey-dimmed");
+        btcText.applyCompactConfig(13, 10, 24);
     }
 
     private Region getLine() {

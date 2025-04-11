@@ -25,6 +25,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateColumnUtil;
@@ -347,7 +348,7 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
                 .fixWidth(120)
                 .comparator(Comparator.comparing(OpenTradeListItem::getBaseAmount))
-                .valueSupplier(OpenTradeListItem::getBaseAmountString)
+                .setCellFactory(getBaseCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
@@ -374,6 +375,32 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
                 .comparator(Comparator.comparing(OpenTradeListItem::getMyRole))
                 .valueSupplier(OpenTradeListItem::getMyRole)
                 .build());
+    }
+
+    private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getBaseCellFactory() {
+        return column -> new TableCell<>() {
+            private final BitcoinAmountDisplay bitcoinAmountDisplay = new BitcoinAmountDisplay("0", false);
+
+            {
+                bitcoinAmountDisplay.getSignificantDigits().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.getLeadingZeros().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.getIntegerPart().getStyleClass().add("bisq-easy-open-trades-bitcoin-amount-display");
+                bitcoinAmountDisplay.setTranslateY(8);
+            }
+
+            @Override
+            protected void updateItem(OpenTradeListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    bitcoinAmountDisplay.applySmallCompactConfig();
+                    bitcoinAmountDisplay.setBtcAmount(item.getBaseAmountString());
+                    setGraphic(bitcoinAmountDisplay);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
     }
 
     private Callback<TableColumn<OpenTradeListItem, OpenTradeListItem>, TableCell<OpenTradeListItem, OpenTradeListItem>> getMyUserCellFactory() {

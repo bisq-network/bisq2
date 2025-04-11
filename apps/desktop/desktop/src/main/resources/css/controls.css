@@ -1075,3 +1075,48 @@
     -fx-border-insets: 2 0 2 0;
     -fx-padding: -2 2 -2 2;
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * BitcoinAmountDisplay                                                        *
+ *                                                                             *
+ ******************************************************************************/
+
+.bitcoin-amount-display-text {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-background-color: transparent;
+}
+
+.bitcoin-amount-display-integer-part {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.bitcoin-amount-display-integer-part-dimmed {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.bitcoin-amount-display-leading-zeros-dimmed {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.bitcoin-amount-display-leading-zeros-empty {
+    -fx-fill: -fx-light-text-color;
+}
+
+.bitcoin-amount-display-significant-digits {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bitcoin-amount-display-code {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+}

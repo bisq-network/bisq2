@@ -17,8 +17,10 @@
 
 package bisq.desktop.main.content.bisq_easy.components;
 
+import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Triple;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -31,6 +33,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import lombok.Getter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -66,6 +69,7 @@ public class ReviewDataDisplay {
 
     public void setToSendCode(String value) {
         controller.model.getToSendCode().set(value);
+        controller.model.getIsSendBtc().set(TradeCurrency.isBtc(value));
     }
 
     public void setToReceiveAmountDescription(String value) {
@@ -78,6 +82,7 @@ public class ReviewDataDisplay {
 
     public void setToReceiveCode(String value) {
         controller.model.getToReceiveCode().set(value);
+        controller.model.getIsReceiveBtc().set(TradeCurrency.isBtc(value));
     }
 
     public void setBitcoinPaymentMethodDescription(String value) {
@@ -128,6 +133,8 @@ public class ReviewDataDisplay {
         private final StringProperty bitcoinPaymentMethod = new SimpleStringProperty();
         private final StringProperty fiatPaymentMethodDescription = new SimpleStringProperty();
         private final StringProperty fiatPaymentMethod = new SimpleStringProperty();
+        private final BooleanProperty isSendBtc = new SimpleBooleanProperty(false);
+        private final BooleanProperty isReceiveBtc = new SimpleBooleanProperty(false);
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
@@ -135,8 +142,12 @@ public class ReviewDataDisplay {
 
         private final Triple<Text, Label, VBox> direction, paymentMethod;
         private final Triple<Triple<Text, Text, Text>, HBox, VBox> toSend, toReceive;
+
+        private final BitcoinAmountDisplay toSendBitcoinAmountDisplay = new BitcoinAmountDisplay();
+        private final BitcoinAmountDisplay toReceiveBitcoinAmountDisplay = new BitcoinAmountDisplay();
+
         private final VBox rangeAmountVBox = new VBox(0);
-        private Subscription isRangeAmountPin;
+        private Subscription isRangeAmountPin, isSendBtcPin, isReceiveBtcPin;
 
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
@@ -144,6 +155,9 @@ public class ReviewDataDisplay {
             root.setMinHeight(HEIGHT);
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.TOP_LEFT);
+
+            configureBitcoinAmountDisplay(toSendBitcoinAmountDisplay);
+            configureBitcoinAmountDisplay(toReceiveBitcoinAmountDisplay);
 
             direction = getElements(Res.get("bisqEasy.tradeState.header.direction"));
             toSend = getAmountElements();
@@ -162,6 +176,44 @@ public class ReviewDataDisplay {
             toReceive.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
             paymentMethod.getFirst().textProperty().bind(model.getFiatPaymentMethodDescription());
             paymentMethod.getSecond().textProperty().bind(model.getFiatPaymentMethod());
+
+            toSendBitcoinAmountDisplay.getBtcAmount().bind(model.getToSendAmount());
+            toReceiveBitcoinAmountDisplay.getBtcAmount().bind(model.getToReceiveAmount());
+
+
+            isSendBtcPin = EasyBind.subscribe(model.getIsSendBtc(), isSendBtc -> {
+                HBox amountHBox = toSend.getSecond();
+                amountHBox.getChildren().clear();
+
+                if (isSendBtc) {
+                    amountHBox.getChildren().add(toSendBitcoinAmountDisplay);
+                    amountHBox.setAlignment(Pos.CENTER_LEFT);
+                    VBox.setMargin(toSend.getSecond(), new Insets(-7, 0, 0, 0));
+                } else {
+                    amountHBox.getChildren().addAll(
+                            toSend.getFirst().getSecond(),
+                            toSend.getFirst().getThird()
+                    );
+                    amountHBox.setAlignment(Pos.BASELINE_LEFT);
+                }
+            });
+
+            isReceiveBtcPin = EasyBind.subscribe(model.getIsReceiveBtc(), isReceiveBtc -> {
+                HBox amountHBox = toReceive.getSecond();
+                amountHBox.getChildren().clear();
+
+                if (isReceiveBtc) {
+                    amountHBox.getChildren().add(toReceiveBitcoinAmountDisplay);
+                    amountHBox.setAlignment(Pos.CENTER_LEFT);
+                    VBox.setMargin(toReceive.getSecond(), new Insets(-7, 0, 0, 0));
+                } else {
+                    amountHBox.getChildren().addAll(
+                            toReceive.getFirst().getSecond(),
+                            toReceive.getFirst().getThird()
+                    );
+                    amountHBox.setAlignment(Pos.BASELINE_LEFT);
+                }
+            });
 
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
                 VBox toSendVBox = toSend.getThird();
@@ -200,7 +252,20 @@ public class ReviewDataDisplay {
             paymentMethod.getFirst().textProperty().unbind();
             paymentMethod.getSecond().textProperty().unbind();
 
+            toSendBitcoinAmountDisplay.getBtcAmount().unbind();
+            toReceiveBitcoinAmountDisplay.getBtcAmount().unbind();
+
             isRangeAmountPin.unsubscribe();
+            isSendBtcPin.unsubscribe();
+            isReceiveBtcPin.unsubscribe();
+        }
+
+        private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {
+            bitcoinAmountDisplay.applyMediumCompactConfig();
+            bitcoinAmountDisplay.setPadding(new Insets(-6, 0, 0, 0));
+
+            bitcoinAmountDisplay.setTextAlignment(TextAlignment.LEFT);
+            bitcoinAmountDisplay.setAlignment(Pos.CENTER_LEFT);
         }
 
         private Triple<Text, Label, VBox> getElements() {
