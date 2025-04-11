@@ -327,7 +327,7 @@ public class DtoMappings {
                     value.text().orElse(null),
                     value.citation().map(CitationMapping::toBisq2Model),
                     value.date(),
-                   false,
+                    false,
                     value.mediator().map(UserProfileMapping::toBisq2Model),
                     ChatMessageTypeMapping.toBisq2Model(value.chatMessageType()),
                     value.bisqEasyOffer().map(BisqEasyOfferMapping::toBisq2Model),
@@ -508,19 +508,23 @@ public class DtoMappings {
 
     public static class PriceQuoteMapping {
         public static PriceQuote toBisq2Model(PriceQuoteDto value) {
-            String baseCurrencyCode = value.market().baseCurrencyCode();
-            String quoteCurrencyCode = value.market().quoteCurrencyCode();
-            if (baseCurrencyCode.equals("BTC")) {
-                Monetary baseSideMonetary = Coin.asBtcFromFaceValue(1);
-                Monetary quoteSideMonetary = Fiat.from(value.value(), quoteCurrencyCode);
-                return new PriceQuote(value.value(), baseSideMonetary, quoteSideMonetary);
-            } else {
-                throw new UnsupportedOperationException("Altcoin price quote mapping is not supported yet");
-            }
+            return new PriceQuote(
+                    value.value(),
+                    MonetaryMapping.toBisq2Model(value.baseSideMonetary()),
+                    MonetaryMapping.toBisq2Model(value.quoteSideMonetary())
+            );
         }
 
         public static PriceQuoteDto fromBisq2Model(PriceQuote value) {
-            return new PriceQuoteDto(value.getValue(), MarketMapping.fromBisq2Model(value.getMarket()));
+            return new PriceQuoteDto(
+                    value.getValue(),
+                    MonetaryMapping.fromBisq2Model(value.getBaseSideMonetary()),
+                    MonetaryMapping.fromBisq2Model(value.getQuoteSideMonetary()),
+                    value.getPrecision(),
+                    value.getLowPrecision(),
+                    MarketMapping.fromBisq2Model(value.getMarket())
+
+            );
         }
     }
 

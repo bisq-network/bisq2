@@ -45,8 +45,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @Slf4j
 public final class PriceQuote implements Comparable<PriceQuote>, PersistableProto {
-    @Setter
-    private static String QUOTE_SEPARATOR = "/";
+    private final static String QUOTE_SEPARATOR = "/";
 
     private final long value;
     private final Monetary baseSideMonetary;
