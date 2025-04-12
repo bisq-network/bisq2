@@ -69,6 +69,11 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
 
     protected void exitJvm() {
         log.info("Exiting JVM");
+        //Give a chance for resources to be released
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ignored) {
+        }
         System.exit(PlatformUtils.EXIT_SUCCESS);
     }
 
