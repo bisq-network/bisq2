@@ -99,9 +99,23 @@ public class SellerStateLightning3b extends BaseState {
                         public void add(BisqEasyOpenTradeMessage message) {
                             if (message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE && message.getText().isPresent()) {
                                 String encodedLogMessage = message.getText().get();
+
+                                /*
+                                 * Username formats differ between peers due to how nicknames are displayed. When a
+                                 * peer's nickname is unique in a node's network view, it appears as just "nickname".
+                                 * When multiple users have chosen the same nickname independently, it displays as
+                                 * "nickname [nym-id]" to prevent confusion. Since peers' network views aren't
+                                 * guaranteed to be identical, we need to check against both the full username and
+                                 * simple nickname formats.
+                                 */
+
                                 String expectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
-                                if (encodedLogMessage.equals(expectedEncoded)) {
-                                    UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
+                                String nickNameEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
+                                        bisqEasyOpenTradeChannel.getPeer().getNickName());
+
+                                if (encodedLogMessage.equals(expectedEncoded) || encodedLogMessage.equals(nickNameEncoded)) {
+                                    UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(
+                                            Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
                                 }
                             }
                         }
