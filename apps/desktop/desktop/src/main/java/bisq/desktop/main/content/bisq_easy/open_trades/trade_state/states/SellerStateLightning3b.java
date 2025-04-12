@@ -98,22 +98,22 @@ public class SellerStateLightning3b extends BaseState {
                         @Override
                         public void add(BisqEasyOpenTradeMessage message) {
                             if (message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE && message.getText().isPresent()) {
+                                // The peersUserName is set to the nickName if it is unique within the user's current
+                                // view of the network data. If multiple user profiles have identical nickNames, we
+                                // append the nym (Bot ID) to distinguish them and prevent impersonation attacks.
+                                //
+                                // Since the network is dynamic—user profiles can expire and identical nickNames may
+                                // disappear—each user might have a different view of the network state. Additionally,
+                                // there's an unresolved issue in how user profile data is persisted: users who have
+                                // had the app running for a long time are more likely to retain outdated profiles and
+                                // thus see multiple instances of the same nickName.
+                                //
+                                // Because of these factors, we perform checks using both the full userName
+                                // (nickName + nym) and the nickName alone.
                                 String encodedLogMessage = message.getText().get();
-
-                                /*
-                                 * Username formats differ between peers due to how nicknames are displayed. When a
-                                 * peer's nickname is unique in a node's network view, it appears as just "nickname".
-                                 * When multiple users have chosen the same nickname independently, it displays as
-                                 * "nickname [nym-id]" to prevent confusion. Since peers' network views aren't
-                                 * guaranteed to be identical, we need to check against both the full username and
-                                 * simple nickname formats.
-                                 */
-
-                                String expectedEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
-                                String nickNameEncoded = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
-                                        bisqEasyOpenTradeChannel.getPeer().getNickName());
-
-                                if (encodedLogMessage.equals(expectedEncoded) || encodedLogMessage.equals(nickNameEncoded)) {
+                                String encodedWithUserName = Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln", peersUserName);
+                                String encodedWithNickName = getEncodedWithNickName(bisqEasyOpenTradeChannel);
+                                if (encodedLogMessage.equals(encodedWithUserName) || encodedLogMessage.equals(encodedWithNickName)) {
                                     UIThread.run(() -> model.getBuyerHasConfirmedBitcoinReceipt().set(
                                             Res.get("bisqEasy.tradeState.info.seller.phase3b.receiptConfirmed.ln")));
                                 }
@@ -147,6 +147,11 @@ public class SellerStateLightning3b extends BaseState {
             // todo should we send a system message? if so we should change the text
             //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
             bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
+        }
+
+        private String getEncodedWithNickName(BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            return Res.encode("bisqEasy.tradeState.info.buyer.phase3b.tradeLogMessage.ln",
+                    bisqEasyOpenTradeChannel.getPeer().getNickName());
         }
     }
 
