@@ -141,6 +141,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
         VBox bottomBarContainer = new VBox(bottomBar);
         bottomBarContainer.setAlignment(Pos.CENTER);
+        bottomBarContainer.setId("chat-messages-bottom-bar-container");
+
         return bottomBarContainer;
     }
 

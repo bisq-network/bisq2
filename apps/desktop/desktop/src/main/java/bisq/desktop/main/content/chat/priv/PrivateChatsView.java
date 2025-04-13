@@ -117,8 +117,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         myUserProfilePin = EasyBind.subscribe(model.getMyUserProfile(), userProfile -> {
             if (userProfile != null) {
-                chatMyUserProfileDisplay.setUserProfile(userProfile);
-                chatMyUserProfileDisplay.setReputationScore(model.getMyUserReputationScore());
+                updateAndShowMyProfile(userProfile, model);
             }
         });
 
@@ -261,12 +260,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     private void createHeaderVBox(boolean hasPeerToDisplay) {
         chatHeaderVBox.getChildren().clear();
         if (hasPeerToDisplay) {
-            chatMyUserProfileDisplay = new UserProfileDisplay(25);
             chatPeerUserProfileDisplay = new UserProfileDisplay(25);
-            HBox hBox = new HBox(30,
-                    createUserProfileVBox(chatMyUserProfileDisplay, "bisqEasy.privateChats.table.myUser"),
-                    createUserProfileVBox(chatPeerUserProfileDisplay, "bisqEasy.openTrades.chat.peer.description")
-            );
+            HBox hBox = new HBox(30, createUserProfileVBox(chatPeerUserProfileDisplay, "bisqEasy.openTrades.chat.peer.description"));
             chatHeaderVBox.getChildren().add(hBox);
             chatHeaderVBox.setAlignment(Pos.CENTER_LEFT);
         } else {
@@ -290,6 +285,28 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         VBox vbox = new VBox(0, peerDescription, userProfileDisplay);
         vbox.setAlignment(Pos.CENTER_LEFT);
         return vbox;
+    }
+
+    private void updateAndShowMyProfile(UserProfile userProfile, PrivateChatsModel model) {
+        if (null == chatMyUserProfileDisplay) {
+            chatMyUserProfileDisplay = new UserProfileDisplay(25);
+        }
+        chatMyUserProfileDisplay.setReputationScore(model.getMyUserReputationScore());
+        chatMyUserProfileDisplay.setUserProfile(userProfile);
+        chatMyUserProfileDisplay.setReputationScore(model.getMyUserReputationScore());
+        chatMessagesComponent.getChildren().stream()
+                .filter(node -> "chat-messages-bottom-bar-container".equals(node.getId()))
+                .findFirst()
+                .ifPresent(node -> {
+                    VBox container = (VBox)node;
+                    HBox sendMessageBox = (HBox) container.getChildren().getFirst();
+                    sendMessageBox.getChildren().removeFirst();
+                    VBox profileVBox = new VBox(0, chatMyUserProfileDisplay);
+                    profileVBox.getStyleClass().add("chat-send-message-box");
+                    profileVBox.setPadding(new Insets(0.0,6.0,0.0,6.0));
+                    sendMessageBox.getChildren().addFirst(profileVBox);
+                });
+
     }
 
     @Getter
