@@ -58,3 +58,4 @@ seed2-i2p-destination
 docker/data_dirs
 /tx
 /.java-version
+/.vscode/
