@@ -170,6 +170,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                 ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
                 synchronized (persistableStore) {
                     addNymToNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
+                    existingUserProfile.ifPresent(e -> userProfileById.remove(e.getId()));
                     userProfileById.put(userProfile.getId(), userProfile);
                 }
                 numUserProfiles.set(userProfileById.size());

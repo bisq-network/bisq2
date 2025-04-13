@@ -88,7 +88,6 @@ public class ReputationRankingController implements Controller {
                             ReputationRankingController.this,
                             model.getFilterMenuItemToggleGroup(),
                             userProfileService);
-                    remove(key);
                     model.getListItems().add(listItem);
                 });
             }
