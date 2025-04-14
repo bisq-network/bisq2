@@ -29,6 +29,7 @@ import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
 
@@ -92,6 +93,13 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             log.error("Uncaught exception:", throwable);
+            if (throwable instanceof NullPointerException &&
+                    Arrays.stream(throwable.getStackTrace()).anyMatch(e -> e.getClassName().contains("GraphicsPipeline"))) {
+                // Ignore known JavaFX shutdown issue when runLater tasks are executed after the rendering subsystem
+                // is already torn down
+                return;
+            }
+
             UIThread.run(() -> {
                 if (desktopController != null) {
                     desktopController.onUncaughtException(thread, throwable);
