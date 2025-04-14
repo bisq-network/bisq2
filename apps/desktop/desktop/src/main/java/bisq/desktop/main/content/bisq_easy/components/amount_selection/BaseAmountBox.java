@@ -31,6 +31,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.TextAlignment;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -239,8 +240,9 @@ public class BaseAmountBox {
         }
 
         private void configureBitcoinAmountDisplay(BitcoinAmountDisplay btcText) {
-            btcText.setBaselineAlignment();
-            btcText.applyCompactConfig(16, 13, 28);
+            btcText.setTextAlignment(model.showCurrencyCode ? TextAlignment.LEFT : TextAlignment.RIGHT);
+            btcText.setTranslateY(2);
+            btcText.applyCompactConfig(15, 12, 28);
         }
     }
 }

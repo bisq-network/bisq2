@@ -57,6 +57,7 @@ public class BitcoinAmountDisplay extends HBox {
     public BitcoinAmountDisplay(String amount, boolean showBtcCode) {
         this(amount);
         btcCode.setVisible(showBtcCode);
+        btcCode.setManaged(showBtcCode);
     }
 
     public BitcoinAmountDisplay(String amount) {
