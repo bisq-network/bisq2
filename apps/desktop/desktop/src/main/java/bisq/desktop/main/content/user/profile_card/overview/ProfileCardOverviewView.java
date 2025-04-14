@@ -70,12 +70,13 @@ public class ProfileCardOverviewView extends View<VBox, ProfileCardOverviewModel
         metricsHBox.setAlignment(Pos.BASELINE_CENTER);
 
         statementLabel = new Label();
-        VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 20);
+        VBox statementBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.statement", statementLabel, 40);
+        statementBox.setPadding(new Insets(5, 0, 0, 0));
 
         tradeTermsTextArea = new Label();
         VBox tradeTermsBox = createAndGetTitleAndDetailsBox("user.profileCard.overview.tradeTerms", tradeTermsTextArea, 80);
 
-        VBox contentBox = new VBox(20, metricsHBox, getLine(), statementBox, tradeTermsBox);
+        VBox contentBox = new VBox(10, metricsHBox, getLine(), statementBox, tradeTermsBox);
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.TOP_LEFT);
         contentBox.setMinHeight(307);
