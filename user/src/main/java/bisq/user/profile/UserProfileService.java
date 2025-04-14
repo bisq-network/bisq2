@@ -68,6 +68,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
                 persist();
             }
         }));
+        purgeExpiredUserProfiles();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -238,5 +239,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.remove(nym);
         persist();
+    }
+
+    private void purgeExpiredUserProfiles() {
+        ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
+        userProfileById.values().stream()
+                .filter(userProfile -> userProfile.getPublishDate() == 0)
+                .forEach(this::processUserProfileRemoved);
     }
 }
