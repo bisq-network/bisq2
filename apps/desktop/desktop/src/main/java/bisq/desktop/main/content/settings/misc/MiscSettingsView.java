@@ -54,7 +54,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         difficultyAdjustmentFactor.setMaxWidth(TEXT_FIELD_WIDTH);
         difficultyAdjustmentFactor.setValidators(model.getDifficultyAdjustmentFactorValidator());
         ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
-        keepTorRunningSwitch  = new Switch(Res.get("settings.network.tor.keep.running"));
+        keepTorRunningSwitch = new Switch(Res.get("settings.network.tor.keep.running"));
         VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch, keepTorRunningSwitch);
 
         Label backupHeadline = new Label(Res.get("settings.backup.headline"));

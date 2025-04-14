@@ -26,8 +26,8 @@ import bisq.common.platform.LinuxDistribution;
 import bisq.common.platform.OS;
 import bisq.common.util.StringUtils;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
-import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.network.tor.common.torrc.ControlPasswordFile;
+import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.network.tor.controller.TorControlAuthenticationFailed;
 import bisq.network.tor.controller.TorController;
 import bisq.network.tor.controller.events.events.TorBootstrapEvent;
@@ -144,14 +144,14 @@ public class TorService implements Service {
 
         PasswordDigest hashedControlPassword;
         ControlPasswordFile controlPasswordFile = new ControlPasswordFile(torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).resolve(BaseTorrcGenerator.CONTROL_PASSWORD));
-        if(!skipStartTor) {
+        if (!skipStartTor) {
             hashedControlPassword = PasswordDigest.generateDigest();
             controlPasswordFile.savePassword(hashedControlPassword.getSecret().clone());
             createTorrcConfigFile(torDataDirPath, hashedControlPassword);
             var embeddedTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath);
             torProcess = Optional.of(embeddedTorProcess);
             embeddedTorProcess.start();
-        }else {
+        } else {
             hashedControlPassword = new PasswordDigest(controlPasswordFile.readPassword());
         }
 
@@ -163,7 +163,7 @@ public class TorService implements Service {
                 .thenAccept(controlPort -> {
                     torController.initialize(controlPort);
                     torController.authenticate(hashedControlPassword);
-                    if(skipBootstrap) {
+                    if (skipBootstrap) {
                         torController.bootstrap();
                     }
                     int port = torController.getSocksPort();

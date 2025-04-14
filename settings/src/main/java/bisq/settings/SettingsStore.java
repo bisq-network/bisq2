@@ -97,7 +97,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB,
                 ChatMessageType.ALL,
-                DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA,false);
+                DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA, false);
     }
 
     public SettingsStore(Cookie cookie,

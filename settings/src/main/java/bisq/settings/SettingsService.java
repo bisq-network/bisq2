@@ -108,7 +108,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         });
         getBisqEasyOfferbookMessageTypeFilter().addObserver(value -> persist());
         getNumDaysAfterRedactingTradeData().addObserver(value -> persist());
-        getKeepTorRunning().addObserver(value->persist());
+        getKeepTorRunning().addObserver(value -> persist());
         isInitialized = true;
 
         return CompletableFuture.completedFuture(true);
@@ -239,7 +239,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.numDaysAfterRedactingTradeData;
     }
 
-    public ReadOnlyObservable<Boolean> getKeepTorRunning(){
+    public ReadOnlyObservable<Boolean> getKeepTorRunning() {
         return persistableStore.keepTorRunning;
     }
 
@@ -338,7 +338,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         }
     }
 
-    public void setTorKeepRunning(boolean keepRunning){
+    public void setTorKeepRunning(boolean keepRunning) {
         persistableStore.keepTorRunning.set(keepRunning);
     }
 

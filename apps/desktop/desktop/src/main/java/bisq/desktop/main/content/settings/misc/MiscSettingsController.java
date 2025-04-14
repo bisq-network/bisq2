@@ -77,7 +77,7 @@ public class MiscSettingsController implements Controller {
 
         totalMaxBackupSizeInMBPin = FxBindings.bindBiDir(model.getTotalMaxBackupSizeInMB())
                 .to(settingsService.getTotalMaxBackupSizeInMB(), settingsService::setTotalMaxBackupSizeInMB);
-        keepTorRunningPin = FxBindings.bindBiDir(model.getKeepTorRunning()).to(settingsService.getKeepTorRunning(),settingsService::setTorKeepRunning);
+        keepTorRunningPin = FxBindings.bindBiDir(model.getKeepTorRunning()).to(settingsService.getKeepTorRunning(), settingsService::setTorKeepRunning);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class MiscSettingsController implements Controller {
         if (mostRecentDifficultyAdjustmentFactorOrDefaultPin != null) {
             mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
         }
-        if(keepTorRunningPin!=null){
+        if (keepTorRunningPin != null) {
             keepTorRunningPin.unbind();
         }
     }
