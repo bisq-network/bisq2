@@ -29,6 +29,7 @@ import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
 
@@ -92,6 +93,13 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             log.error("Uncaught exception:", throwable);
+            if (throwable instanceof NullPointerException &&
+                    Arrays.stream(throwable.getStackTrace()).anyMatch(e -> e.getClassName().contains("GraphicsPipeline"))) {
+                // Ignore known JavaFX shutdown issue when runLater tasks are executed after the rendering subsystem
+                // is already torn down
+                return;
+            }
+
             UIThread.run(() -> {
                 if (desktopController != null) {
                     desktopController.onUncaughtException(thread, throwable);
@@ -120,19 +128,28 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
 
     @Override
     protected void exitJvm() {
-        if (applicationService != null && applicationService.getShutDownErrorMessage().get() == null) {
-            exitJavaFXPlatform();
+        if (applicationService == null) {
+            log.warn("Shutdown before applicationService have been created");
+            super.exitJvm();
+        } else if (applicationService.getShutDownErrorMessage().get() == null) {
+            // If shutDownErrorMessage is set we display an error popup we leave it to the user to close it and
+            // shutdown the app by clicking the shutdown button
+            try {
+                // We might get called from a non UI thread
+                UIThread.run(this::exitJavaFXPlatform);
+            } catch (Exception e) {
+                log.error("Could not map shutdown handler to UI thread", e);
+                super.exitJvm();
+            }
         }
-        // If we have an error popup we leave it to the user to close it and shutdown the app by clicking the shutdown button
     }
 
     private void exitJavaFXPlatform() {
-        if (Platform.isFxApplicationThread()) {
-            // See https://openjfx.io/javadoc/19/javafx.graphics/javafx/application/Application.html
-            // Calling System.exit after Platform.exit causes exception
-            log.info("Exiting JavaFX Platform");
+        log.info("Exiting JavaFX Platform");
+        try {
             Platform.exit();
-        } else {
+        } catch (Exception e) {
+            log.error("Platform.exit failed", e);
             super.exitJvm();
         }
     }

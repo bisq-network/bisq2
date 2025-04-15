@@ -352,7 +352,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                             log.info("ApplicationService shutdown completed");
                             return true;
                         } else {
-                            startupErrorMessage.set("Shutdown applicationService failed with result=false");
+                            shutDownErrorMessage.set("Shutdown applicationService failed with result=false");
                             log.error(shutDownErrorMessage.get());
                         }
                     } else {
