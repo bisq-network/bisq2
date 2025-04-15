@@ -517,28 +517,33 @@ public class TradeWizardAmountController implements Controller {
                 model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.more"));
 
                 String formattedMinAmount = formatQuoteAmountWithCode(minQuoteSideAmount);
+                String firstPart = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.firstPart", formattedMinAmount, requiredReputationScoreForMinAmount);
+                String secondPart;
                 if (numPotentialTakersForMinAmount == 0) {
                     model.getShouldShowWarningIcon().set(true);
-                    model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.noSellers",
-                            formattedMinAmount, requiredReputationScoreForMinAmount) + "\n\n");
+                    secondPart = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.noSellers");
                 } else {
-                    model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.wSellers",
-                            formattedMinAmount, requiredReputationScoreForMinAmount, numSellers) + "\n\n");
+                    secondPart = numPotentialTakersForMinAmount == 1
+                            ? Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.singular", numSellers)
+                            : Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.plural", numSellers);
                 }
+                model.getAmountLimitInfoOverlayInfo().set(firstPart + "\n\n" + secondPart + "\n\n");
             } else {
                 // Use maxOrFixed amount
                 String numSellers = Res.getPluralization("bisqEasy.tradeWizard.amount.buyer.numSellers", numPotentialTakersForMaxOrFixedAmount);
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo", numSellers));
                 model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.more"));
-
+                String firstPart = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.firstPart", formattedMaxOrFixedAmount, requiredReputationScoreForMinAmount);
+                String secondPart;
                 if (numPotentialTakersForMaxOrFixedAmount == 0) {
                     model.getShouldShowWarningIcon().set(true);
-                    model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.noSellers",
-                            formattedMaxOrFixedAmount, requiredReputationScoreForMaxOrFixedAmount) + "\n\n");
+                    secondPart = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.noSellers");
                 } else {
-                    model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.wSellers",
-                            formattedMaxOrFixedAmount, requiredReputationScoreForMaxOrFixedAmount, numSellers) + "\n\n");
+                    secondPart = numPotentialTakersForMinAmount == 1
+                            ? Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.singular", numSellers)
+                            : Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.plural", numSellers);
                 }
+                model.getAmountLimitInfoOverlayInfo().set(firstPart + "\n\n" + secondPart + "\n\n");
             }
         } else {
             // Wizard
