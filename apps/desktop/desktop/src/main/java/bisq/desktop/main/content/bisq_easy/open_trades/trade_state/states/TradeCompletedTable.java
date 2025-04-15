@@ -251,6 +251,7 @@ public class TradeCompletedTable extends VBox {
         btcText.getIntegerPart().getStyleClass().add("medium-text");
         btcText.getSignificantDigits().getStyleClass().add("medium-text");
         btcText.getBtcCode().getStyleClass().addAll("small-text", "text-fill-grey-dimmed");
+        btcText.getLeadingZeros().getStyleClass().addAll("medium-text", "text-fill-grey-dimmed");
         btcText.applyCompactConfig(13, 10, 24);
     }
 
