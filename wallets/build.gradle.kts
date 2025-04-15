@@ -2,12 +2,6 @@ plugins {
     java
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 allprojects {
     plugins.apply("java")
     java {
