@@ -2,21 +2,6 @@ plugins {
     java
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
-allprojects {
-    plugins.apply("java")
-    java {
-        toolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
-        }
-    }
-}
-
 tasks.named("clean") {
     dependsOn(subprojects.map { it.tasks.named("clean") })
 }
