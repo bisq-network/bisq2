@@ -55,6 +55,7 @@ public class TorTransportService implements TransportService {
         log.info("Initialize Tor");
         long ts = System.currentTimeMillis();
         setTransportState(TransportState.INITIALIZE);
+        log.info("Tor keep running: {}", torService.getKeepRunning().get());
         torService.initialize().join();
         setTransportState(TransportState.INITIALIZED);
         log.info("Initializing Tor took {} ms", System.currentTimeMillis() - ts);

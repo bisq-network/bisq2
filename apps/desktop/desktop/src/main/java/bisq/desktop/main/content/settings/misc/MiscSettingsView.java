@@ -40,7 +40,6 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
     private final MaterialTextField difficultyAdjustmentFactor, totalMaxBackupSizeInMB;
     private Subscription ignoreDiffAdjustFromSecManagerSwitchPin;
     private final Switch keepTorRunningSwitch;
-    private Subscription keepTorRunningSwitchPin;
 
     public MiscSettingsView(MiscSettingsModel model, MiscSettingsController controller) {
         super(new VBox(), model, controller);
@@ -91,9 +90,6 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         ignoreDiffAdjustFromSecManagerSwitchPin = EasyBind.subscribe(
                 ignoreDiffAdjustFromSecManagerSwitch.selectedProperty(), s -> difficultyAdjustmentFactor.validate());
         keepTorRunningSwitch.selectedProperty().bindBidirectional(model.getKeepTorRunning());
-        keepTorRunningSwitchPin = EasyBind.subscribe(keepTorRunningSwitch.selectedProperty(), s -> {
-            model.getKeepTorRunning().set(s);
-        });
     }
 
     @Override
@@ -110,6 +106,5 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
 
         ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
         keepTorRunningSwitch.selectedProperty().unbindBidirectional(model.getKeepTorRunning());
-        keepTorRunningSwitchPin.unsubscribe();
     }
 }

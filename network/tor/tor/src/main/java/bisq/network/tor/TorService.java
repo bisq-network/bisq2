@@ -123,14 +123,19 @@ public class TorService implements Service {
                 boolean isSuccess = lockFile.delete();
                 if (!isSuccess) {
                     skipStartTor = true;
+                    log.info("Could not delete Tor lock file. Assuming Tor is still running externally.");
                 } else {
                     File control = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).resolve(BaseTorrcGenerator.CONTROL_PORT_FILE).toFile();
                     if (control.exists()) {
-                        control.delete();
+                        if (!control.delete()) {
+                            log.warn("Could not delete Tor control port file: {}", control.getAbsolutePath());
+                        }
                     }
                     File password = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).resolve(BaseTorrcGenerator.CONTROL_PASSWORD).toFile();
                     if (password.exists()) {
-                        password.delete();
+                        if (!password.delete()) {
+                            log.warn("Could not delete Tor password file: {}", password.getAbsolutePath());
+                        }
                     }
                 }
 
@@ -157,13 +162,13 @@ public class TorService implements Service {
 
         Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
         Path controlPortFilePath = controlDirPath.resolve(BaseTorrcGenerator.CONTROL_PORT_FILE);
-        final boolean skipBootstrap = !skipStartTor;
+        final boolean shouldBootstrap = !skipStartTor;
         return new ControlPortFilePoller(controlPortFilePath)
                 .parsePort()
                 .thenAccept(controlPort -> {
                     torController.initialize(controlPort);
                     torController.authenticate(hashedControlPassword);
-                    if (skipBootstrap) {
+                    if (shouldBootstrap) {
                         torController.bootstrap();
                     }
                     int port = torController.getSocksPort();

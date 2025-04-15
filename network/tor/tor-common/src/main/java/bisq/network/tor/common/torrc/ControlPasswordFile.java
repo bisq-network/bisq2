@@ -42,11 +42,11 @@ public class ControlPasswordFile {
     public void savePassword(byte[] content) {
         try {
             if(!path.getParent().toFile().exists()){
-                path.getParent().toFile().mkdir();
+                path.getParent().toFile().mkdirs();
             }
             FileUtils.writeToFile(Hex.encode(content), path.toFile());
         } catch (IOException e) {
-            throw new IllegalStateException("Couldn't write password file: " + path.toAbsolutePath());
+            throw new IllegalStateException("Couldn't write password file: " + path.toAbsolutePath(), e);
         }
     }
 

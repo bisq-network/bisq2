@@ -25,7 +25,6 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import bisq.common.util.CompletableFutureUtils;
@@ -252,9 +251,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     public CompletableFuture<Boolean> initialize() {
         return memoryReportService.initialize()
                 .thenCompose(result -> securityService.initialize())
+                .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
-
+                    settingsService.getKeepTorRunning().addObserver(TorTransportService::updateFromSettings);
                     CompletableFuture<Boolean> networkFuture = networkService.initialize();
                     CompletableFuture<Boolean> walletFuture = walletService.map(Service::initialize)
                             .orElse(CompletableFuture.completedFuture(true));
@@ -283,7 +283,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
-                .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> systemNotificationService.initialize())
@@ -323,7 +322,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         // We shut down services in opposite order as they are initialized
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
-        TorTransportService.updateFromSettings(settingsService.getKeepTorRunning().get());
         return supplyAsync(() -> httpApiService.shutdown().exceptionally(this::logError)
                 .thenCompose(result -> openTradeItemsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> webcamAppService.shutdown().exceptionally(this::logError))
@@ -337,15 +335,18 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> systemNotificationService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> chatService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> offerService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> settingsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> userService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> contractService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> accountService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> bondedRolesService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> identityService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> networkService.shutdown().exceptionally(this::logError))
+                .thenCompose(result -> {
+                    settingsService.getKeepTorRunning().addObserver(TorTransportService::updateFromSettings);
+                    return networkService.shutdown().exceptionally(this::logError);
+                })
                 .thenCompose(result -> walletService.map(service -> service.shutdown().exceptionally(this::logError))
                         .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> settingsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> memoryReportService.shutdown().exceptionally(this::logError))
                 .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
