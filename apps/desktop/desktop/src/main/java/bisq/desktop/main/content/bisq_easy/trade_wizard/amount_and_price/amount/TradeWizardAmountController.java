@@ -533,13 +533,13 @@ public class TradeWizardAmountController implements Controller {
                 String numSellers = Res.getPluralization("bisqEasy.tradeWizard.amount.buyer.numSellers", numPotentialTakersForMaxOrFixedAmount);
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo", numSellers));
                 model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.more"));
-                String firstPart = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.firstPart", formattedMaxOrFixedAmount, requiredReputationScoreForMinAmount);
+                String firstPart = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.firstPart", formattedMaxOrFixedAmount, requiredReputationScoreForMaxOrFixedAmount);
                 String secondPart;
                 if (numPotentialTakersForMaxOrFixedAmount == 0) {
                     model.getShouldShowWarningIcon().set(true);
                     secondPart = Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.noSellers");
                 } else {
-                    secondPart = numPotentialTakersForMinAmount == 1
+                    secondPart = numPotentialTakersForMaxOrFixedAmount == 1
                             ? Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.singular", numSellers)
                             : Res.get("bisqEasy.tradeWizard.amount.buyer.limitInfo.overlay.info.secondPart.plural", numSellers);
                 }
