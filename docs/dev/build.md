@@ -1,33 +1,19 @@
 ## Building Bisq 2
 
 1. **Clone Bisq 2**
-
-   ```sh
-   git clone https://github.com/bisq-network/bisq2
+   ```bash
+   git clone --recurse-submodules https://github.com/bisq-network/bisq2.git
+   ```
+   ```bash
    cd bisq2
    ```
 
 2. **Install Dependencies:**
    Bisq requires JDK 21.
 
-3. **Setup bitcoind git submodule:**
-   At project setup run first:
+3. **Update to latest GitHub version:**
    ```bash
-   git submodule update --init --remote
-   ```
-
-   In case the submodule has changed after a project update, run:
-   ```bash
-   cd wallets/bitcoind
-   git checkout main
-   git pull
-   cd ../..
-   ```
-
-   Commit the updated submodule
-   ```bash
-   git add wallets/bitcoind
-   git commit -m "Update submodule to latest commit on main"
+   git pull --recurse-submodules
    ```
 
 4. **Build Bisq**
@@ -96,7 +82,7 @@ For a quick full cleanup/rebuild you can use
 To run the Bisq 2 desktop app with Gradle and the default settings (using the Tor network) use:
 
 ```sh
-./gradlew apps:desktop:desktop-app:run
+apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
 ```
 
 In that configuration the desktop app connects to the public seed nodes via the Tor network.
