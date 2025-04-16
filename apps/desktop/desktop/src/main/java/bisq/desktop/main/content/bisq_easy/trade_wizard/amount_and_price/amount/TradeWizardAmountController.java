@@ -578,8 +578,8 @@ public class TradeWizardAmountController implements Controller {
         boolean isCreateOfferMode = model.isCreateOfferMode();
         boolean isBuyer = model.getDirection().isBuy();
         Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount().round(0);
+        amountSelectionController.setMaxAllowedLimitation(maxRangeValue);
         if (isCreateOfferMode) {
-            amountSelectionController.setMaxAllowedLimitation(maxRangeValue);
             if (isBuyer) {
                 model.getShouldShowAmountLimitInfo().set(true);
                 amountSelectionController.setMinMaxRange(minRangeValue, maxRangeValue);
