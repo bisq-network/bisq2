@@ -82,7 +82,7 @@ For a quick full cleanup/rebuild you can use
 To run the Bisq 2 desktop app with Gradle and the default settings (using the Tor network) use:
 
 ```sh
-./gradlew apps:desktop:desktop-app:run
+apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
 ```
 
 In that configuration the desktop app connects to the public seed nodes via the Tor network.
