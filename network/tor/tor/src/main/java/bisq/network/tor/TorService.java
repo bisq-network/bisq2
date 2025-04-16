@@ -26,6 +26,7 @@ import bisq.common.platform.LinuxDistribution;
 import bisq.common.platform.OS;
 import bisq.common.util.StringUtils;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
+import bisq.network.tor.common.torrc.ControlPasswordFile;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.network.tor.controller.TorControlAuthenticationFailed;
 import bisq.network.tor.controller.TorController;
@@ -70,6 +71,8 @@ public class TorService implements Service {
     @Getter
     private final Observable<Boolean> useExternalTor = new Observable<>();
     private final AtomicBoolean isRunning = new AtomicBoolean();
+    @Getter
+    private final Observable<Boolean> keepRunning = new Observable<>(false);
 
     private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
@@ -112,38 +115,62 @@ public class TorService implements Service {
             installTorIfNotUpToDate();
         }
 
+        boolean skipStartTor = false;
         Path torBinaryPath = getTorBinaryPath();
         if (!isTorRunning(torBinaryPath.toString())) {
             File lockFile = torDataDirPath.resolve("lock").toFile();
             if (lockFile.exists()) {
                 boolean isSuccess = lockFile.delete();
                 if (!isSuccess) {
-                    throw new IllegalStateException("Couldn't remove tor lock file.");
+                    skipStartTor = true;
+                    log.info("Could not delete Tor lock file. Assuming Tor is still running externally.");
+                } else {
+                    File control = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).resolve(BaseTorrcGenerator.CONTROL_PORT_FILE).toFile();
+                    if (control.exists()) {
+                        if (!control.delete()) {
+                            log.warn("Could not delete Tor control port file: {}", control.getAbsolutePath());
+                        }
+                    }
+                    File password = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).resolve(BaseTorrcGenerator.CONTROL_PASSWORD).toFile();
+                    if (password.exists()) {
+                        if (!password.delete()) {
+                            log.warn("Could not delete Tor password file: {}", password.getAbsolutePath());
+                        }
+                    }
                 }
+
             }
         }
 
         if (torController != null) {
-            torController.shutdown();
+            torController.shutdown(true);
         }
         torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
 
-        PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
-        Map<String, String> torrcConfigMap = createTorrcConfigFile(torDataDirPath, hashedControlPassword);
-
-        var embeddedTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath);
-        torProcess = Optional.of(embeddedTorProcess);
-        embeddedTorProcess.start();
+        PasswordDigest hashedControlPassword;
+        ControlPasswordFile controlPasswordFile = new ControlPasswordFile(torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).resolve(BaseTorrcGenerator.CONTROL_PASSWORD));
+        if (!skipStartTor) {
+            hashedControlPassword = PasswordDigest.generateDigest();
+            controlPasswordFile.savePassword(hashedControlPassword.getSecret().clone());
+            createTorrcConfigFile(torDataDirPath, hashedControlPassword);
+            var embeddedTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath);
+            torProcess = Optional.of(embeddedTorProcess);
+            embeddedTorProcess.start();
+        } else {
+            hashedControlPassword = new PasswordDigest(controlPasswordFile.readPassword());
+        }
 
         Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
-        Path controlPortFilePath = controlDirPath.resolve("control");
+        Path controlPortFilePath = controlDirPath.resolve(BaseTorrcGenerator.CONTROL_PORT_FILE);
+        final boolean shouldBootstrap = !skipStartTor;
         return new ControlPortFilePoller(controlPortFilePath)
                 .parsePort()
                 .thenAccept(controlPort -> {
                     torController.initialize(controlPort);
                     torController.authenticate(hashedControlPassword);
-                    torController.bootstrap();
-
+                    if (shouldBootstrap) {
+                        torController.bootstrap();
+                    }
                     int port = torController.getSocksPort();
                     torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
                 })
@@ -180,8 +207,8 @@ public class TorService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
-            torController.shutdown();
-            torProcess.ifPresent(EmbeddedTorProcess::waitUntilExited);
+            torController.shutdown(keepRunning.get());
+//            torProcess.ifPresent(EmbeddedTorProcess::waitUntilExited);
             return true;
         });
     }
@@ -241,7 +268,7 @@ public class TorService implements Service {
         }
 
         if (torController != null) {
-            torController.shutdown();
+            torController.shutdown(true);
         }
         torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
         torController.initialize(controlPort);

@@ -39,6 +39,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
     private final Switch ignoreDiffAdjustFromSecManagerSwitch;
     private final MaterialTextField difficultyAdjustmentFactor, totalMaxBackupSizeInMB;
     private Subscription ignoreDiffAdjustFromSecManagerSwitchPin;
+    private final Switch keepTorRunningSwitch;
 
     public MiscSettingsView(MiscSettingsModel model, MiscSettingsController controller) {
         super(new VBox(), model, controller);
@@ -52,8 +53,8 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         difficultyAdjustmentFactor.setMaxWidth(TEXT_FIELD_WIDTH);
         difficultyAdjustmentFactor.setValidators(model.getDifficultyAdjustmentFactorValidator());
         ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
-
-        VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
+        keepTorRunningSwitch = new Switch(Res.get("settings.network.tor.keep.running"));
+        VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch, keepTorRunningSwitch);
 
         Label backupHeadline = new Label(Res.get("settings.backup.headline"));
         backupHeadline.getStyleClass().add("large-thin-headline");
@@ -88,6 +89,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
 
         ignoreDiffAdjustFromSecManagerSwitchPin = EasyBind.subscribe(
                 ignoreDiffAdjustFromSecManagerSwitch.selectedProperty(), s -> difficultyAdjustmentFactor.validate());
+        keepTorRunningSwitch.selectedProperty().bindBidirectional(model.getKeepTorRunning());
     }
 
     @Override
@@ -103,5 +105,6 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         totalMaxBackupSizeInMB.resetValidation();
 
         ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
+        keepTorRunningSwitch.selectedProperty().unbindBidirectional(model.getKeepTorRunning());
     }
 }

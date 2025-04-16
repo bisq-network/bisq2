@@ -58,10 +58,9 @@ public class BootstrapService extends BootstrapEventListener {
         future = Optional.of(CompletableFuture.runAsync(() -> {
                     torControlProtocol.addBootstrapEventListener(this);
 
-                    torControlProtocol.takeOwnership();
-                    torControlProtocol.resetConf(EmbeddedTorProcess.ARG_OWNER_PID);
+//                    torControlProtocol.takeOwnership();
+//                    torControlProtocol.resetConf(EmbeddedTorProcess.ARG_OWNER_PID);
                     torControlProtocol.setConfig(DISABLE_NETWORK, "0");
-
                     try {
                         boolean isSuccess = countDownLatch.await(timeout, TimeUnit.MILLISECONDS);
                         if (!isSuccess) {

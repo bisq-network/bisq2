@@ -49,11 +49,18 @@ public class TorController {
         torControlProtocol.authenticate(hashedControlPassword);
     }
 
-    public void shutdown() {
+    public void shutdownTor(){
+        torControlProtocol.shutdown();
+    }
+
+    public void shutdown(boolean keepRunning) {
         isShutdownInProgress = true;
         bootstrapService.ifPresent(BootstrapService::shutdown);
         publishOnionAddressServiceMap.values().forEach(PublishOnionAddressService::shutdown);
         onionServiceOnlineStateServiceMap.values().forEach(OnionServiceOnlineStateService::shutdown);
+        if(!keepRunning) {
+            shutdownTor();
+        }
         torControlProtocol.close();
     }
 
