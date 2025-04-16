@@ -1,33 +1,19 @@
 ## Building Bisq 2
 
 1. **Clone Bisq 2**
-
-   ```sh
-   git clone https://github.com/bisq-network/bisq2
+   ```bash
+   git clone --recurse-submodules https://github.com/bisq-network/bisq2.git
+   ```
+   ```bash
    cd bisq2
    ```
 
 2. **Install Dependencies:**
    Bisq requires JDK 21.
 
-3. **Setup bitcoind git submodule:**
-   At project setup run first:
+3. **Update to latest GitHub version:**
    ```bash
-   git submodule update --init --remote
-   ```
-
-   In case the submodule has changed after a project update, run:
-   ```bash
-   cd wallets/bitcoind
-   git checkout main
-   git pull
-   cd ../..
-   ```
-
-   Commit the updated submodule
-   ```bash
-   git add wallets/bitcoind
-   git commit -m "Update submodule to latest commit on main"
+   git pull --recurse-submodules
    ```
 
 4. **Build Bisq**
