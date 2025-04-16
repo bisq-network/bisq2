@@ -18,13 +18,18 @@
 package bisq.bisq_easy;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.data.Pair;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
+import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
+import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -34,6 +39,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -216,7 +222,98 @@ public class BisqEasyTradeAmountLimits {
         return MathUtils.roundDoubleToLong(makersReputationScore * (1 + TOLERANCE));
     }
 
+    public static Pair<Optional<Monetary>, Optional<Monetary>> getLowestAndHighestAmountInAvailableOffers(
+            BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService,
+            ReputationService reputationService,
+            UserIdentityService userIdentityService,
+            UserProfileService userProfileService,
+            MarketPriceService marketPriceService,
+            Market market,
+            Direction direction) {
 
+        BisqEasyOfferbookChannel channel = bisqEasyOfferbookChannelService.findChannel(market).orElseThrow();
+        List<BisqEasyOffer> filteredOffers = channel.getBisqEasyOffers()
+                .filter(offer -> {
+                    if (!offer.getTakersDirection().equals(direction)) {
+                        return false;
+                    }
+                    if (!offer.getMarket().equals(market)) {
+                        return false;
+                    }
+                    if (!isValidMakerProfile(userProfileService, userIdentityService, offer)) {
+                        return false;
+                    }
+
+                    Optional<Result> result = checkOfferAmountLimitForMinAmount(reputationService,
+                            userIdentityService,
+                            userProfileService,
+                            marketPriceService,
+                            offer);
+                    if (!result.map(Result::isValid).orElse(false)) {
+                        return false;
+                    }
+
+                    return true;
+                })
+                .toList();
+        Optional<Monetary> lowest = filteredOffers.stream()
+                .map(offer -> OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, offer))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .min(Monetary::compareTo);
+
+        Optional<Monetary> highest = filteredOffers.stream()
+                .map(offer -> {
+                    try {
+                        long sellersReputationScore = getSellersReputationScore(reputationService, userIdentityService, userProfileService, offer);
+                        long sellersReputationScoreWithTolerance = withTolerance(sellersReputationScore);
+
+                        Market offerMarket = offer.getMarket();
+                        Monetary quoteSideMaxOrFixedFiatAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, offer).orElseThrow().round(0);
+                        Monetary quoteSideMaxOrFixedUsdAmount = fiatToUsd(marketPriceService, offerMarket, quoteSideMaxOrFixedFiatAmount).orElseThrow().round(0);
+                        long requiredReputationScoreByUsdAmount = getRequiredReputationScoreByUsdAmount(quoteSideMaxOrFixedUsdAmount);
+
+                        if (sellersReputationScoreWithTolerance >= requiredReputationScoreByUsdAmount) {
+                            return Optional.of(quoteSideMaxOrFixedFiatAmount);
+                        } else if (offer.getAmountSpec() instanceof FixedAmountSpec) {
+                            // If we have not a range amount we know that offer is not valid, and we return a 0 entry
+                            return Optional.<Monetary>empty();
+                        }
+
+                        // We have a range amount and max amount is higher as rep score. We use rep score based amount as result.
+                        // Min amounts are handled by the filtered collection already.
+                        Monetary usdAmountFromSellersReputationScore = getUsdAmountFromReputationScore(sellersReputationScore);
+                        Monetary fiatAmountFromSellersReputationScore = usdToFiat(marketPriceService, offerMarket, usdAmountFromSellersReputationScore).orElseThrow();
+                        return Optional.of(fiatAmountFromSellersReputationScore);
+                    } catch (Exception e) {
+                        return Optional.<Monetary>empty();
+                    }
+                })
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .max(Monetary::compareTo);
+        return new Pair<>(lowest, highest);
+    }
+
+    private static boolean isValidMakerProfile(UserProfileService userProfileService,
+                                               UserIdentityService userIdentityService,
+                                               BisqEasyOffer peersOffer) {
+        Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
+        if (optionalMakersUserProfile.isEmpty()) {
+            return false;
+        }
+        UserProfile makersUserProfile = optionalMakersUserProfile.get();
+        if (userProfileService.isChatUserIgnored(makersUserProfile)) {
+            return false;
+        }
+        if (userIdentityService.getUserIdentities().stream()
+                .map(userIdentity -> userIdentity.getUserProfile().getId())
+                .anyMatch(userProfileId -> userProfileId.equals(optionalMakersUserProfile.get().getId()))) {
+            return false;
+        }
+
+        return true;
+    }
 
     @Getter
     public enum Result {

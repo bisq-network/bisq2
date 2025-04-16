@@ -658,7 +658,13 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void applyMarkerRange() {
-        Pair<Optional<Monetary>, Optional<Monetary>> availableOfferAmountRange = getLowestAndHighestAmountInAvailableOffers();
+        Pair<Optional<Monetary>, Optional<Monetary>> availableOfferAmountRange = getLowestAndHighestAmountInAvailableOffers(bisqEasyOfferbookChannelService,
+                reputationService,
+                userIdentityService,
+                userProfileService,
+                marketPriceService,
+                model.getMarket(),
+                model.getDirection());
         amountSelectionController.setLeftMarkerQuoteSideValue(availableOfferAmountRange.getFirst().orElse(null));
         amountSelectionController.setRightMarkerQuoteSideValue(availableOfferAmountRange.getSecond().orElse(null));
     }
@@ -667,70 +673,6 @@ public class TradeWizardAmountController implements Controller {
         if (model.isCreateOfferMode()) {
             amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
         }
-    }
-
-    private Pair<Optional<Monetary>, Optional<Monetary>> getLowestAndHighestAmountInAvailableOffers() {
-        List<BisqEasyOffer> filteredOffers = bisqEasyOfferbookChannelService.findChannel(model.getMarket()).orElseThrow().getChatMessages().stream()
-                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
-                .filter(offer -> {
-                    if (!isValidDirection(offer)) {
-                        return false;
-                    }
-                    if (!isValidMarket(offer)) {
-                        return false;
-                    }
-                    if (!isValidMakerProfile(offer)) {
-                        return false;
-                    }
-
-                    Optional<Result> result = checkOfferAmountLimitForMinAmount(reputationService,
-                            userIdentityService,
-                            userProfileService,
-                            marketPriceService,
-                            offer);
-                    if (!result.map(Result::isValid).orElse(false)) {
-                        return false;
-                    }
-
-                    return true;
-                })
-                .toList();
-        Optional<Monetary> lowest = filteredOffers.stream()
-                .map(offer -> OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, offer))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .min(Monetary::compareTo);
-
-        Optional<Monetary> highest = filteredOffers.stream()
-                .map(offer -> {
-                    try {
-                        Market market = offer.getMarket();
-                        Monetary quoteSideMaxOrFixedFiatAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, offer).orElseThrow().round(0);
-                        long sellersReputationScore = getSellersReputationScore(reputationService, userIdentityService, userProfileService, offer);
-                        Monetary quoteSideMaxOrFixedUsdAmount = fiatToUsd(marketPriceService, market, quoteSideMaxOrFixedFiatAmount).orElseThrow().round(0);
-                        long requiredReputationScoreByUsdAmount = getRequiredReputationScoreByUsdAmount(quoteSideMaxOrFixedUsdAmount);
-                        long sellersReputationScoreWithTolerance = withTolerance(sellersReputationScore);
-                        if (sellersReputationScoreWithTolerance >= requiredReputationScoreByUsdAmount) {
-                            return Optional.of(quoteSideMaxOrFixedFiatAmount);
-                        } else if (offer.getAmountSpec() instanceof FixedAmountSpec) {
-                            // If we have not a range amount we know that offer is not valid, and we return a 0 entry
-                            return Optional.<Monetary>empty();
-                        }
-
-                        // We have a range amount and max amount is higher as rep score. We use rep score based amount as result.
-                        // Min amounts are handled by the filtered collection already.
-                        Monetary usdAmountFromSellersReputationScore = getUsdAmountFromReputationScore(sellersReputationScore);
-                        Monetary fiatAmountFromSellersReputationScore = usdToFiat(marketPriceService, market, usdAmountFromSellersReputationScore).orElseThrow();
-                        return Optional.of(fiatAmountFromSellersReputationScore);
-                    } catch (Exception e) {
-                        return Optional.<Monetary>empty();
-                    }
-                })
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .max(Monetary::compareTo);
-        return new Pair<>(lowest, highest);
     }
 
     private long getNumMatchingOffers(Monetary quoteSideAmount) {
