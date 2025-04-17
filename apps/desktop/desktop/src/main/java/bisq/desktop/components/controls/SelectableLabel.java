@@ -26,6 +26,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -43,6 +44,8 @@ public class SelectableLabel extends StackPane {
     private final Label label = new Label();
     private final TextArea textArea = new TextArea();
     boolean isInSelectionMode;
+    @Getter
+    private String text = "";
     @SuppressWarnings("FieldCanBeLocal") // Need to keep a reference as used in WeakChangeListener
     private final ListChangeListener<String> styleClassListener = c -> {
         c.next();
@@ -72,6 +75,7 @@ public class SelectableLabel extends StackPane {
     }
 
     public SelectableLabel(String text) {
+        this.text = text;
         getChildren().add(label);
         label.setText(text);
         label.setCursor(Cursor.TEXT);
@@ -80,6 +84,10 @@ public class SelectableLabel extends StackPane {
         textArea.getStyleClass().addAll("selectable-label", "hide-vertical-scrollbar");
         label.heightProperty().addListener(labelHeightListener);
         getStyleClass().addListener(new WeakListChangeListener<>(styleClassListener));
+    }
+
+    public void setEditable(boolean editable){
+        this.textArea.setEditable(editable);
     }
 
     private void swap() {
@@ -95,6 +103,7 @@ public class SelectableLabel extends StackPane {
     // If we support change of text after initialization we need to adjust the size of the textArea
     // Label API
     public void setText(String value) {
+        this.text = value;
         label.setText(value);
         textArea.setText(value);
     }
