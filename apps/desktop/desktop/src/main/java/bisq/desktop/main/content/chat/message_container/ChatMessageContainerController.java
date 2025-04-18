@@ -212,7 +212,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     private void applyUserProfileOrChannelChange() {
         boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
         ChatChannel<?> selectedChatChannel = model.getSelectedChannel().get();
-        model.getUserProfileSelectionVisible().set(multipleProfiles && selectedChatChannel instanceof PublicChatChannel);
+        model.getShouldShowUserProfileSelection().set(multipleProfiles && selectedChatChannel instanceof PublicChatChannel);
 
         if (chatMessagesPin != null) {
             chatMessagesPin.unbind();
@@ -282,7 +282,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
     private void maybeSwitchUserProfile() {
         UIThread.run(() -> {
-            if (model.getUserProfileSelectionVisible().get()) {
+            if (model.getShouldShowUserProfileSelection().get()) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
                 if (!myUserProfilesInChannel.isEmpty()) {
                     userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));

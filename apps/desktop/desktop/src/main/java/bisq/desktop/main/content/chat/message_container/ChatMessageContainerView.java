@@ -81,8 +81,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
     @Override
     protected void onViewAttached() {
-        userProfileSelectionRoot.visibleProperty().bind(model.getUserProfileSelectionVisible());
-        userProfileSelectionRoot.managedProperty().bind(model.getUserProfileSelectionVisible());
+        userProfileSelectionRoot.visibleProperty().bind(model.getShouldShowUserProfileSelection());
+        userProfileSelectionRoot.managedProperty().bind(model.getShouldShowUserProfileSelection());
         inputField.textProperty().bindBidirectional(model.getTextInput());
 
         caretPositionPin = EasyBind.subscribe(model.getCaretPosition(), position -> {
