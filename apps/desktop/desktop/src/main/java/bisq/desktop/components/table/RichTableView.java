@@ -244,6 +244,12 @@ public class RichTableView<T> extends VBox {
         tableView.refresh();
     }
 
+    public void sort() {
+        if (!tableView.getSortOrder().isEmpty()) {
+            tableView.sort();
+        }
+    }
+
     public ObservableList<TableColumn<T, ?>> getSortOrder() {
         return tableView.getSortOrder();
     }
