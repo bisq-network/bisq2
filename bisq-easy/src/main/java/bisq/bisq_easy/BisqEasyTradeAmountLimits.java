@@ -38,7 +38,11 @@ import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class BisqEasyTradeAmountLimits {
@@ -217,6 +221,41 @@ public class BisqEasyTradeAmountLimits {
 
     public static long withTolerance(long makersReputationScore) {
         return MathUtils.roundDoubleToLong(makersReputationScore * (1 + TOLERANCE));
+    }
+
+    public static Set<BisqEasyOffer> getAllAvailableSellOffers(
+            BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService,
+            ReputationService reputationService,
+            UserIdentityService userIdentityService,
+            UserProfileService userProfileService,
+            MarketPriceService marketPriceService,
+            Market market,
+            Direction direction) {
+        BisqEasyOfferbookChannel channel = bisqEasyOfferbookChannelService.findChannel(market).orElseThrow();
+        return channel.getBisqEasyOffers()
+                .filter(offer -> {
+                    if (!offer.getTakersDirection().equals(direction)) {
+                        return false;
+                    }
+                    if (!offer.getMarket().equals(market)) {
+                        return false;
+                    }
+                    if (!isValidMakerProfile(userProfileService, userIdentityService, offer)) {
+                        return false;
+                    }
+
+                    Optional<Result> result = checkOfferAmountLimitForMinAmount(reputationService,
+                            userIdentityService,
+                            userProfileService,
+                            marketPriceService,
+                            offer);
+                    if (!result.map(Result::isValid).orElse(false)) {
+                        return false;
+                    }
+
+                    return true;
+                })
+                .collect(Collectors.toSet());
     }
 
     public static Pair<Optional<Monetary>, Optional<Monetary>> getLowestAndHighestAmountInAvailableOffers(

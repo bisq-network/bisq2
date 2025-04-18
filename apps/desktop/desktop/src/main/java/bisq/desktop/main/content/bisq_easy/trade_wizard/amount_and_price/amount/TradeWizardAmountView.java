@@ -43,7 +43,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
     private final AmountSelectionController amountSelectionController;
     private final Label amountLimitInfo, amountLimitInfoOverlayInfo, linkToWikiText, warningIcon;
-    private final Hyperlink learnMoreHyperLink, linkToWiki;
+    private final Hyperlink learnMore, linkToWiki;
     @Getter
     private final VBox overlay;
     private final Button learnHowToBuildReputation, closeOverlayButton, fixedAmount, rangeAmount;
@@ -72,11 +72,11 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         amountLimitInfo = new Label();
         amountLimitInfo.getStyleClass().add("trade-wizard-amount-limit-info");
 
-        learnMoreHyperLink = new Hyperlink();
-        learnMoreHyperLink.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
-        learnMoreHyperLink.setMinWidth(Hyperlink.USE_PREF_SIZE);
+        learnMore = new Hyperlink();
+        learnMore.getStyleClass().add("trade-wizard-amount-limit-info-overlay-link");
+        learnMore.setMinWidth(Hyperlink.USE_PREF_SIZE);
 
-        amountLimitInfoHBox = new HBox(2.5, warningIcon, amountLimitInfo, learnMoreHyperLink);
+        amountLimitInfoHBox = new HBox(2.5, warningIcon, amountLimitInfo, learnMore);
         amountLimitInfoHBox.setAlignment(Pos.CENTER);
 
         // Amount model selection
@@ -113,13 +113,15 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
     @Override
     protected void onViewAttached() {
-        learnMoreHyperLink.setText(model.getAmountLimitInfoLink());
+        learnMore.setText(model.getAmountLimitInfoLink());
         linkToWikiText.setText(model.getLinkToWikiText());
 
         amountLimitInfo.textProperty().bind(model.getAmountLimitInfo());
         amountLimitInfoOverlayInfo.textProperty().bind(model.getAmountLimitInfoOverlayInfo());
         amountLimitInfoHBox.visibleProperty().bind(model.getShouldShowAmountLimitInfo());
         amountLimitInfoHBox.managedProperty().bind(model.getShouldShowAmountLimitInfo());
+        learnMore.visibleProperty().bind(model.getLearnMoreVisible());
+        learnMore.managedProperty().bind(model.getLearnMoreVisible());
         amountModelsBox.visibleProperty().bind(model.getShowRangeAmounts());
         amountModelsBox.managedProperty().bind(model.getShowRangeAmounts());
         learnHowToBuildReputation.visibleProperty().bind(model.getShouldShowHowToBuildReputationButton());
@@ -138,7 +140,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
             amountSelectionController.setIsRangeAmountEnabled(isRangeAmountEnabled);
         });
 
-        learnMoreHyperLink.setOnAction(e -> controller.onShowOverlay());
+        learnMore.setOnAction(e -> controller.onShowOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
         closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
@@ -150,6 +152,8 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
     protected void onViewDetached() {
         amountLimitInfo.textProperty().unbind();
         amountLimitInfoOverlayInfo.textProperty().unbind();
+        learnMore.visibleProperty().unbind();
+        learnMore.managedProperty().unbind();
         amountLimitInfoHBox.visibleProperty().unbind();
         amountLimitInfoHBox.managedProperty().unbind();
         amountModelsBox.visibleProperty().unbind();
@@ -161,7 +165,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
 
         isRangeAmountEnabledPin.unsubscribe();
 
-        learnMoreHyperLink.setOnAction(null);
+        learnMore.setOnAction(null);
         linkToWiki.setOnAction(null);
         closeOverlayButton.setOnAction(null);
         learnHowToBuildReputation.setOnAction(null);
